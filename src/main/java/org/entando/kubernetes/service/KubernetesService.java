@@ -40,7 +40,7 @@ import static java.util.Optional.ofNullable;
 @Component
 public class KubernetesService {
 
-    private static final String ENTANDOPLUGIN_CRD_NAME = "entandoplugins.entando.org";
+    public static final String ENTANDOPLUGIN_CRD_NAME = "entandoplugins.entando.org";
 
     private final @NonNull KubernetesClient client;
     private final @NonNull String namespace;
@@ -100,7 +100,6 @@ public class KubernetesService {
         response.setPlugin(pluginId);
         response.setReplicas(deployment.getSpec().getReplicas());
         response.setDeploymentPhase(deploymentPhase.toValue());
-
 
         ofNullable(entandoStatus.getJeeServerStatus())
                 .filter(list -> !list.isEmpty())
