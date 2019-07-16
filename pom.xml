@@ -99,7 +99,7 @@
                 <version>0.8.3</version>
                 <configuration>
                     <excludes>
-                        <exclude>**/*EntandoPluginJavaApplication*.*</exclude>
+                        <exclude>**/*EntandoKubernetesJavaApplication*.*</exclude>
                     </excludes>
                 </configuration>
                 <executions>

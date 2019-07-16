@@ -97,6 +97,7 @@ public class KubernetesService {
         final EntandoCustomResourceStatus entandoStatus = deployment.getSpec().getEntandoStatus();
         final EntandoDeploymentPhase deploymentPhase = entandoStatus.getEntandoDeploymentPhase();
 
+        response.setPath(deployment.getSpec().getIngressPath());
         response.setPlugin(pluginId);
         response.setReplicas(deployment.getSpec().getReplicas());
         response.setDeploymentPhase(deploymentPhase.toValue());
