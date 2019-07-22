@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.Gettable;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import lombok.NonNull;
@@ -22,6 +23,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginList;
 import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
 import org.entando.kubernetes.model.DeploymentStatus;
+import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -31,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
@@ -54,11 +57,19 @@ public class KubernetesService {
         this.entandoAppName = entandoAppName;
     }
 
-
     public EntandoPluginDeploymentResponse getDeployment(final String pluginId) {
-        return ofNullable(getOperation().withName(pluginId).get())
-                .map(this::map)
+        return getDeploymentOptional(pluginId)
                 .orElseThrow(PluginNotFoundException::new);
+    }
+
+    public Optional<EntandoPluginDeploymentResponse> getDeploymentOptional(final String pluginId) {
+        return ofNullable(getOperation().withName(pluginId).get())
+                .map(this::map);
+    }
+
+    public void deleteDeployment(final String pluginId) {
+        ofNullable(getOperation().withName(pluginId).get())
+                .ifPresent(getOperation()::delete);
     }
 
     public List<EntandoPluginDeploymentResponse> getDeployments() {
@@ -68,7 +79,7 @@ public class KubernetesService {
                 .collect(Collectors.toList());
     }
 
-    public void deploy(final EntandoPluginDeploymentRequest request) {
+    public void deploy(final EntandoPluginDeploymentRequest request, final DigitalExchange digitalExchange) {
         final EntandoPlugin plugin = new EntandoPlugin();
         final EntandoPluginSpec spec = new EntandoPluginSpec();
         final ObjectMeta objectMeta = new ObjectMeta();
@@ -82,6 +93,8 @@ public class KubernetesService {
         spec.setIngressPath(request.getIngressPath());
         spec.setHealthCheckPath(request.getHealthCheckPath());
         spec.setEntandoAppName(entandoAppName);
+        spec.setDigitalExchangeId(digitalExchange.getId());
+        spec.setDigitalExchangeUrl(digitalExchange.getUrl());
         spec.setReplicas(1);
 
         plugin.setMetadata(objectMeta);
@@ -95,19 +108,25 @@ public class KubernetesService {
         final String pluginId = deployment.getMetadata().getName();
         final EntandoPluginDeploymentResponse response = new EntandoPluginDeploymentResponse();
         final EntandoCustomResourceStatus entandoStatus = deployment.getSpec().getEntandoStatus();
-        final EntandoDeploymentPhase deploymentPhase = entandoStatus.getEntandoDeploymentPhase();
+        final EntandoDeploymentPhase deploymentPhase = ofNullable(entandoStatus)
+                .map(EntandoCustomResourceStatus::getEntandoDeploymentPhase)
+                .orElse(EntandoDeploymentPhase.STARTED);
 
         response.setPath(deployment.getSpec().getIngressPath());
         response.setPlugin(pluginId);
         response.setReplicas(deployment.getSpec().getReplicas());
         response.setDeploymentPhase(deploymentPhase.toValue());
+        response.setDigitalExchangeId(deployment.getSpec().getDigitalExchangeId());
+        response.setDigitalExchangeUrl(deployment.getSpec().getDigitalExchangeUrl());
 
-        ofNullable(entandoStatus.getJeeServerStatus())
+        ofNullable(entandoStatus)
+                .map(EntandoCustomResourceStatus::getJeeServerStatus)
                 .filter(list -> !list.isEmpty())
                 .map(list -> convert(list.get(0), "jeeServer"))
                 .ifPresent(response::setServerStatus);
 
-        ofNullable(entandoStatus.getDbServerStatus())
+        ofNullable(entandoStatus)
+                .map(EntandoCustomResourceStatus::getDbServerStatus)
                 .map(list -> list.stream().map(item -> convert(item, "dbServer")).collect(Collectors.toList()))
                 .ifPresent(response::setExternalServiceStatuses);
 
