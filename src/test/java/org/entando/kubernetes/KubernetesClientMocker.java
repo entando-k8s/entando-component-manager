@@ -14,9 +14,11 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginList;
 import org.entando.kubernetes.service.KubernetesService;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -34,7 +36,6 @@ public class KubernetesClientMocker {
     @Mock public MixedOperation<EntandoPlugin, EntandoPluginList, DoneableEntandoPlugin,
             Resource<EntandoPlugin, DoneableEntandoPlugin>> mixedOperation;
     @Mock public EntandoPluginList pluginList;
-    @Mock public Resource<EntandoPlugin, DoneableEntandoPlugin> pluginResource;
 
     public KubernetesClientMocker(final KubernetesClient client) {
         this.client = client;
@@ -56,7 +57,13 @@ public class KubernetesClientMocker {
                 .thenReturn(mixedOperation);
         when(mixedOperation.inNamespace(anyString())).thenReturn(operation);
         when(operation.list()).thenReturn(pluginList);
-        when(operation.withName(anyString())).thenReturn(pluginResource);
+    }
+
+    public void mockResult(final String pluginId, final EntandoPlugin plugin) {
+        @SuppressWarnings("unchecked")
+        final Resource<EntandoPlugin, DoneableEntandoPlugin> pluginResource = Mockito.mock(Resource.class);
+        when(operation.withName(eq(pluginId))).thenReturn(pluginResource);
+        when(pluginResource.get()).thenReturn(plugin);
     }
 
     public DeploymentCondition mockDeploymentCondition(final String ts, final String message,

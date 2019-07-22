@@ -60,7 +60,7 @@ public class PluginControllerTest {
     @Test
     public void testNotFound() throws Exception {
         final String pluginId = "arbitrary-plugin";
-        when(mocker.pluginResource.get()).thenReturn(null);
+        mocker.mockResult(pluginId, null);
 
         mockMvc.perform(get(String.format("/plugin/%s", pluginId)))
                 .andDo(print()).andExpect(status().isNotFound());
@@ -102,7 +102,7 @@ public class PluginControllerTest {
                 .andExpect(jsonPath("payload", hasSize(1)));
         validate(resultActions, "payload[0].");
 
-        when(mocker.pluginResource.get()).thenReturn(pluginMocker.plugin);
+        mocker.mockResult("plugin-name", pluginMocker.plugin);
         resultActions = mockMvc.perform(get("/plugin/plugin-name"))
                 .andDo(print()).andExpect(status().isOk());
         validate(resultActions, "payload.");
