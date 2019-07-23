@@ -5,12 +5,12 @@ import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.Gettable;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.PluginNotFoundException;
+import org.entando.kubernetes.model.DeploymentStatus;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.model.EntandoPluginDeploymentResponse;
 import org.entando.kubernetes.model.PluginServiceStatus;
@@ -22,7 +22,6 @@ import org.entando.kubernetes.model.plugin.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginList;
 import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
-import org.entando.kubernetes.model.DeploymentStatus;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,8 +67,10 @@ public class KubernetesService {
     }
 
     public void deleteDeployment(final String pluginId) {
-        ofNullable(getOperation().withName(pluginId).get())
-                .ifPresent(getOperation()::delete);
+        final NonNamespaceOperation<EntandoPlugin, EntandoPluginList, DoneableEntandoPlugin,
+                Resource<EntandoPlugin, DoneableEntandoPlugin>> operation = getOperation();
+        ofNullable(operation.withName(pluginId).get())
+                .ifPresent(operation::delete);
     }
 
     public List<EntandoPluginDeploymentResponse> getDeployments() {
