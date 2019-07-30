@@ -15,8 +15,8 @@ package org.entando.kubernetes.service.digitalexchange.client;
 
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.model.ResilientPagedMetadata;
+import org.entando.web.request.PagedListRequest;
 import org.entando.web.request.RequestListProcessor;
-import org.entando.web.request.RestListRequest;
 import org.entando.web.response.PagedMetadata;
 import org.entando.web.response.PagedRestResponse;
 import org.entando.web.response.RestError;
@@ -33,20 +33,20 @@ import java.util.Map;
  */
 public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<PagedRestResponse<T>, ResilientPagedMetadata<T>> {
 
-    private final RestListRequest request;
+    private final PagedListRequest request;
 
     public PagedDigitalExchangeCall(final HttpMethod method,
-                                    final RestListRequest restListRequest,
+                                    final PagedListRequest listRequest,
                                     final ParameterizedTypeReference<PagedRestResponse<T>> parameterizedTypeReference,
                                     final String ... urlSegments) {
         super(method, parameterizedTypeReference, urlSegments);
-        this.request = restListRequest;
+        this.request = listRequest;
     }
 
-    public PagedDigitalExchangeCall(final RestListRequest restListRequest,
+    public PagedDigitalExchangeCall(final PagedListRequest listRequest,
                                     final ParameterizedTypeReference<PagedRestResponse<T>> parameterizedTypeReference,
                                     final String ... urlSegments) {
-        this(HttpMethod.GET, restListRequest, parameterizedTypeReference, urlSegments);
+        this(HttpMethod.GET, listRequest, parameterizedTypeReference, urlSegments);
     }
 
     @Override
@@ -57,11 +57,11 @@ public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<Pa
     @Override
     protected String getURL(final DigitalExchange digitalExchange) {
         String url = super.getURL(digitalExchange);
-        return new RestListRequestUriBuilder(url, transformRequest(request)).toUriString();
+        return new PagedListRequestUriBuilder(url, transformRequest(request)).toUriString();
     }
 
     /**
-     * When we forward a RestListRequest to a DE instance we need to modify the
+     * When we forward a PagedListRequest to a DE instance we need to modify the
      * pagination parameters, because filtering, sorting and pagination will be
      * applied to the combined result and we need to retrieve all the
      * potentially useful items.<br/>
@@ -69,8 +69,8 @@ public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<Pa
      * to retrieve the first 10 results from each DE instance in order to be
      * sure to obtain the correct combined result.
      */
-    private RestListRequest transformRequest(RestListRequest userRequest) {
-        RestListRequest digitalExchangeRequest = new RestListRequest();
+    private PagedListRequest transformRequest(PagedListRequest userRequest) {
+        PagedListRequest digitalExchangeRequest = new PagedListRequest();
 
         // retrieve all the items in one page
         digitalExchangeRequest.setPage(1);
@@ -129,5 +129,5 @@ public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<Pa
         return pagedMetadata;
     }
 
-    protected abstract RequestListProcessor<T> getRequestListProcessor(RestListRequest request, List<T> joinedList);
+    protected abstract RequestListProcessor<T> getRequestListProcessor(PagedListRequest request, List<T> joinedList);
 }

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.EntandoPluginDeploymentResponse;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,23 +28,23 @@ public class PluginController {
     private final @NonNull KubernetesService kubernetesService;
 
     @GetMapping(path = "", produces = JSON)
-    public EntandoEntity<List<EntandoPluginDeploymentResponse>> list()  {
+    public SimpleRestResponse<List<EntandoPluginDeploymentResponse>> list()  {
         log.info("Listing all deployed plugins");
         final List<EntandoPluginDeploymentResponse> list = kubernetesService.getDeployments();
-        final EntandoEntity<List<EntandoPluginDeploymentResponse>> entity = new EntandoEntity<>();
+        final SimpleRestResponse<List<EntandoPluginDeploymentResponse>> entity = new SimpleRestResponse<>();
         entity.setPayload(list);
         list.forEach(this::applyRel);
         return entity;
     }
 
     @GetMapping(path = "/{plugin}", produces = JSON)
-    public EntandoEntity<EntandoPluginDeploymentResponse> get(@PathVariable final String plugin)  {
+    public SimpleRestResponse<EntandoPluginDeploymentResponse> get(@PathVariable final String plugin)  {
         log.info("Requesting plugin with identifier {}", plugin);
         return toResponse(kubernetesService.getDeployment(plugin));
     }
 
-    private EntandoEntity<EntandoPluginDeploymentResponse> toResponse(final EntandoPluginDeploymentResponse response) {
-        final EntandoEntity<EntandoPluginDeploymentResponse> entity = new EntandoEntity<>();
+    private SimpleRestResponse<EntandoPluginDeploymentResponse> toResponse(final EntandoPluginDeploymentResponse response) {
+        final SimpleRestResponse<EntandoPluginDeploymentResponse> entity = new SimpleRestResponse<>();
         entity.setPayload(response);
         entity.addMetadata("plugin", response.getPlugin());
         applyRel(response);

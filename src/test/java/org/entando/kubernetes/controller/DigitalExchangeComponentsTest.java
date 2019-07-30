@@ -109,7 +109,7 @@ public class DigitalExchangeComponentsTest {
                 "    \"errors\": [] \n" +
                 "  }";
 
-        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components?page=1&pageSize=2147483647&direction=ASC&sort=code"))
+        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components?page=1&pageSize=2147483647&direction=ASC&sort=id"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody(response)));
 

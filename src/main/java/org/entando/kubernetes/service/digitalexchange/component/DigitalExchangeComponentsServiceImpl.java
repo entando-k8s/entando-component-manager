@@ -23,8 +23,8 @@ import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchan
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.model.ResilientPagedMetadata;
 import org.entando.web.request.Filter;
-import org.entando.web.request.RestListRequest;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.request.PagedListRequest;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     private final @NonNull KubernetesService kubernetesService;
 
     @Override
-    public ResilientPagedMetadata<DigitalExchangeComponent> getComponents(final RestListRequest requestList) {
+    public ResilientPagedMetadata<DigitalExchangeComponent> getComponents(final PagedListRequest requestList) {
         final ResilientPagedMetadata<DigitalExchangeComponent> combinedResult = client.getCombinedResult(
                 exchangesService.getDigitalExchanges(),
                 new ComponentsCall(exchangesService, buildForwardedRequest(requestList)));
@@ -61,11 +61,11 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     }
 
     @Override
-    public EntandoEntity<DigitalExchangeComponent> getComponent(final DigitalExchange digitalExchange, final String componentId) {
+    public SimpleRestResponse<DigitalExchangeComponent> getComponent(final DigitalExchange digitalExchange, final String componentId) {
         final SimpleDigitalExchangeCall<DigitalExchangeComponent> call = new SimpleDigitalExchangeCall<>(
-                HttpMethod.GET, new ParameterizedTypeReference<EntandoEntity<DigitalExchangeComponent>>() {
+                HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<DigitalExchangeComponent>>() {
         }, "digitalExchange", "components", componentId);
-        final EntandoEntity<DigitalExchangeComponent> response = client.getSingleResponse(digitalExchange, call);
+        final SimpleRestResponse<DigitalExchangeComponent> response = client.getSingleResponse(digitalExchange, call);
         processInstalled(response.getPayload());
         return response;
     }
@@ -75,8 +75,8 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
             .ifPresent(deployment -> component.setInstalled(true));
     }
 
-    private RestListRequest buildForwardedRequest(final RestListRequest originalRequest) {
-        final RestListRequest forwaredRequest = new RestListRequest();
+    private PagedListRequest buildForwardedRequest(final PagedListRequest originalRequest) {
+        final PagedListRequest forwaredRequest = new PagedListRequest();
         forwaredRequest.setDirection(originalRequest.getDirection());
         forwaredRequest.setSort(originalRequest.getSort());
         forwaredRequest.setPageSize(Integer.MAX_VALUE);

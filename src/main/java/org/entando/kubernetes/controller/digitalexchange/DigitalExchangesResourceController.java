@@ -16,8 +16,8 @@ package org.entando.kubernetes.controller.digitalexchange;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
-import org.entando.web.response.EntandoEntity;
 import org.entando.web.response.RestError;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,44 +34,44 @@ public class DigitalExchangesResourceController implements DigitalExchangesResou
     private final DigitalExchangesService digitalExchangeService;
 
     @Override
-    public ResponseEntity<EntandoEntity<List<DigitalExchange>>> list() {
-        return ResponseEntity.ok(new EntandoEntity<>(digitalExchangeService.getDigitalExchanges()));
+    public ResponseEntity<SimpleRestResponse<List<DigitalExchange>>> list() {
+        return ResponseEntity.ok(new SimpleRestResponse<>(digitalExchangeService.getDigitalExchanges()));
     }
 
     @Override
-    public ResponseEntity<EntandoEntity<DigitalExchange>> create(@Valid @RequestBody DigitalExchange digitalExchange) {
+    public ResponseEntity<SimpleRestResponse<DigitalExchange>> create(@Valid @RequestBody DigitalExchange digitalExchange) {
         final DigitalExchange de = digitalExchangeService.create(digitalExchange);
-        final EntandoEntity<DigitalExchange> response = new EntandoEntity<>(de);
+        final SimpleRestResponse<DigitalExchange> response = new SimpleRestResponse<>(de);
         return ResponseEntity.ok(response);
     }
 
     @Override
-    public ResponseEntity<EntandoEntity<DigitalExchange>> get(@PathVariable("id") String id) {
-        return ResponseEntity.ok(new EntandoEntity<>(digitalExchangeService.findById(id)));
+    public ResponseEntity<SimpleRestResponse<DigitalExchange>> get(@PathVariable("id") String id) {
+        return ResponseEntity.ok(new SimpleRestResponse<>(digitalExchangeService.findById(id)));
     }
 
     @Override
-    public ResponseEntity<EntandoEntity<DigitalExchange>> update(@PathVariable("id") String id, @Valid @RequestBody DigitalExchange digitalExchange) {
+    public ResponseEntity<SimpleRestResponse<DigitalExchange>> update(@PathVariable("id") String id, @Valid @RequestBody DigitalExchange digitalExchange) {
         digitalExchange.setId(id);
         final DigitalExchange de = digitalExchangeService.update(digitalExchange);
-        return ResponseEntity.ok(new EntandoEntity<>(de));
+        return ResponseEntity.ok(new SimpleRestResponse<>(de));
     }
 
     @Override
-    public ResponseEntity<EntandoEntity<String>> delete(@PathVariable("id") String id) {
+    public ResponseEntity<SimpleRestResponse<String>> delete(@PathVariable("id") String id) {
         digitalExchangeService.delete(id);
-        return ResponseEntity.ok(new EntandoEntity<>(id));
+        return ResponseEntity.ok(new SimpleRestResponse<>(id));
     }
 
     @Override
-    public ResponseEntity<EntandoEntity<Map<String, List<RestError>>>> testAll() {
-        return ResponseEntity.ok(new EntandoEntity<>(digitalExchangeService.testAll()));
+    public ResponseEntity<SimpleRestResponse<Map<String, List<RestError>>>> testAll() {
+        return ResponseEntity.ok(new SimpleRestResponse<>(digitalExchangeService.testAll()));
     }
 
     @Override
-    public ResponseEntity<EntandoEntity<String>> test(@PathVariable("id") String id) {
+    public ResponseEntity<SimpleRestResponse<String>> test(@PathVariable("id") String id) {
         final List<RestError> errors = digitalExchangeService.test(id);
-        final EntandoEntity<String> response = new EntandoEntity<>(errors.isEmpty() ? "OK" : "");
+        final SimpleRestResponse<String> response = new SimpleRestResponse<>(errors.isEmpty() ? "OK" : "");
         response.setErrors(errors);
 
         return ResponseEntity.ok(response);

@@ -18,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.rating.DEComponentRatingResult;
 import org.entando.kubernetes.service.digitalexchange.rating.DERatingService;
 import org.entando.kubernetes.service.digitalexchange.rating.DERatingsSummary;
-import org.entando.web.response.EntandoEntity;
 import org.entando.web.response.RestError;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +37,7 @@ public class DEComponentRatingResourceController implements DEComponentRatingRes
     private final @NonNull DERatingService ratingService;
 
     @Override
-    public ResponseEntity<EntandoEntity<DERatingsSummary>> rateComponent(@PathVariable("exchange") final String exchangeId,
+    public ResponseEntity<SimpleRestResponse<DERatingsSummary>> rateComponent(@PathVariable("exchange") final String exchangeId,
                                                                          @PathVariable("component") final String componentId,
                                                                          @Valid @RequestBody final DERatingValue rating) {
 
@@ -46,7 +46,7 @@ public class DEComponentRatingResourceController implements DEComponentRatingRes
         ratingRequest.setRating(rating.getRating());
 
         final DEComponentRatingResult result = ratingService.rateComponent(exchangeId, ratingRequest);
-        final EntandoEntity<DERatingsSummary> response = new EntandoEntity<>();
+        final SimpleRestResponse<DERatingsSummary> response = new SimpleRestResponse<>();
 
         if (!result.isRatingSupported()) {
             response.addError(new RestError(ERROR_CODE_RATING_NOT_SUPPORTED, "digitalExchange.rating.notSupported"));

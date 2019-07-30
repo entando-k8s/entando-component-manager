@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.entando.web.request.RestListRequest;
+import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.PagedMetadata;
 import org.entando.web.response.RestError;
 
@@ -18,7 +18,7 @@ public class ResilientPagedMetadata<T> extends PagedMetadata<T> {
     @JsonIgnore
     private List<RestError> errors = new ArrayList<>();
 
-    public ResilientPagedMetadata(final RestListRequest req, final List<T> body, final int totalItems) {
+    public ResilientPagedMetadata(final PagedListRequest req, final List<T> body, final int totalItems) {
         super(req, body, totalItems);
     }
 

@@ -21,7 +21,7 @@ import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesCli
 import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchangeCall;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.web.exception.NotFoundException;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -39,7 +39,7 @@ public class DERatingService {
 
     public DEComponentRatingResult rateComponent(final String exchangeId, final DEComponentRatingRequest ratingRequest) {
         final SimpleDigitalExchangeCall<DERatingsSummary> call = new SimpleDigitalExchangeCall<>(
-                HttpMethod.POST, new ParameterizedTypeReference<EntandoEntity<DERatingsSummary>>() {
+                HttpMethod.POST, new ParameterizedTypeReference<SimpleRestResponse<DERatingsSummary>>() {
         }, "digitalExchange", "components", ratingRequest.getComponentId(), "rate");
         final DEComponentRatingResult result = new DEComponentRatingResult();
 
@@ -56,7 +56,7 @@ public class DERatingService {
         });
 
         final DigitalExchange digitalExchange = digitalExchangesService.findById(exchangeId);
-        final EntandoEntity<DERatingsSummary> response = client.getSingleResponse(digitalExchange, call);
+        final SimpleRestResponse<DERatingsSummary> response = client.getSingleResponse(digitalExchange, call);
 
         if (result.isRatingSupported()) {
             result.setRatingsSummary(response.getPayload());

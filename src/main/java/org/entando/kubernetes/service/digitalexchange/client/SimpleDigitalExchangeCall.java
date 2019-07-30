@@ -14,7 +14,7 @@
 package org.entando.kubernetes.service.digitalexchange.client;
 
 import org.entando.kubernetes.service.digitalexchange.model.ResilientListWrapper;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 
@@ -24,27 +24,27 @@ import java.util.Map;
  * Provides the logic for combining a set of SimpleRestResponse retrieved from
  * DE instances.
  */
-public class SimpleDigitalExchangeCall<T> extends DigitalExchangeCall<EntandoEntity<T>, ResilientListWrapper<T>> {
+public class SimpleDigitalExchangeCall<T> extends DigitalExchangeCall<SimpleRestResponse<T>, ResilientListWrapper<T>> {
 
     public SimpleDigitalExchangeCall(HttpMethod method,
-                                     ParameterizedTypeReference<EntandoEntity<T>> parameterizedTypeReference, String... urlSegments) {
+                                     ParameterizedTypeReference<SimpleRestResponse<T>> parameterizedTypeReference, String... urlSegments) {
         super(method, parameterizedTypeReference, urlSegments);
     }
 
     @Override
-    protected EntandoEntity<T> getEmptyRestResponse() {
-        return new EntandoEntity<>(null);
+    protected SimpleRestResponse<T> getEmptyRestResponse() {
+        return new SimpleRestResponse<>(null);
     }
 
     @Override
-    protected ResilientListWrapper<T> combineResults(Map<String, EntandoEntity<T>> results) {
+    protected ResilientListWrapper<T> combineResults(Map<String, SimpleRestResponse<T>> results) {
         ResilientListWrapper<T> wrapper = new ResilientListWrapper<>();
         results.values().forEach(wrapper::addValueFromResponse);
         return wrapper;
     }
 
     @Override
-    protected boolean isResponseParsable(EntandoEntity<T> response) {
+    protected boolean isResponseParsable(SimpleRestResponse<T> response) {
         return super.isResponseParsable(response) && response.getPayload() != null;
     }
 }

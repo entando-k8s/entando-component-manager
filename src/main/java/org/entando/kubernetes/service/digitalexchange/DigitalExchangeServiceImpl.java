@@ -8,8 +8,8 @@ import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesCli
 import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchangeCall;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.web.exception.NotFoundException;
-import org.entando.web.response.EntandoEntity;
 import org.entando.web.response.RestError;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -75,7 +75,7 @@ public class DigitalExchangeServiceImpl implements DigitalExchangesService {
 
     private List<RestError> test(final DigitalExchange digitalExchange) {
         final SimpleDigitalExchangeCall<Map<String, List<RestError>>> call = new SimpleDigitalExchangeCall<>(
-                HttpMethod.GET, new ParameterizedTypeReference<EntandoEntity<Map<String, List<RestError>>>>() {
+                HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<Map<String, List<RestError>>>>() {
         }, "digitalExchange", "exchanges", "test");
         return client.getSingleResponse(digitalExchange, call).getErrors();
     }

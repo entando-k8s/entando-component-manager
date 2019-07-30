@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.entando.kubernetes.controller.Roles;
 import org.entando.kubernetes.service.digitalexchange.rating.DERatingsSummary;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -25,8 +25,8 @@ public interface DEComponentRatingResource {
     @ApiOperation(value = "Rate a component")
     @ApiResponses(@ApiResponse(code = 201, message = "Created"))
     @PostMapping(value = "/{exchange}/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<DERatingsSummary>> rateComponent(@PathVariable("exchange") String exchangeId,
-                                                                  @PathVariable("component") String componentId,
-                                                                  @Valid @RequestBody DERatingValue rating);
+    ResponseEntity<SimpleRestResponse<DERatingsSummary>> rateComponent(@PathVariable("exchange") String exchangeId,
+                                                                       @PathVariable("component") String componentId,
+                                                                       @Valid @RequestBody DERatingValue rating);
 
 }

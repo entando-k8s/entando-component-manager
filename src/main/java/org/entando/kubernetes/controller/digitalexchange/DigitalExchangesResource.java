@@ -19,12 +19,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.entando.kubernetes.controller.Roles;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
-import org.entando.web.response.EntandoEntity;
 import org.entando.web.response.RestError;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +46,7 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.WRITE_DIGITAL_EXCHANGE)
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<DigitalExchange>> create(@Valid @RequestBody DigitalExchange digitalExchange);
+    ResponseEntity<SimpleRestResponse<DigitalExchange>> create(@Valid @RequestBody DigitalExchange digitalExchange);
 
     @ApiOperation(value = "Returns a Digital Exchange configuration")
     @ApiResponses({
@@ -56,7 +55,7 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.READ_DIGITAL_EXCHANGE)
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<DigitalExchange>> get(@PathVariable("id") String id);
+    ResponseEntity<SimpleRestResponse<DigitalExchange>> get(@PathVariable("id") String id);
 
     @ApiOperation(value = "Returns the list of all Digital Exchange configurations")
     @ApiResponses({
@@ -64,7 +63,7 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.READ_DIGITAL_EXCHANGE)
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<List<DigitalExchange>>> list();
+    ResponseEntity<SimpleRestResponse<List<DigitalExchange>>> list();
 
     @ApiOperation(value = "Update a Digital Exchange configuration")
     @ApiResponses({
@@ -73,7 +72,7 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.WRITE_DIGITAL_EXCHANGE)
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<DigitalExchange>> update(@PathVariable("id") String id, @Valid @RequestBody DigitalExchange digitalExchange);
+    ResponseEntity<SimpleRestResponse<DigitalExchange>> update(@PathVariable("id") String id, @Valid @RequestBody DigitalExchange digitalExchange);
 
     @ApiOperation(value = "Delete a Digital Exchange configuration")
     @ApiResponses({
@@ -82,7 +81,7 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.WRITE_DIGITAL_EXCHANGE)
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<String>> delete(@PathVariable("id") String id);
+    ResponseEntity<SimpleRestResponse<String>> delete(@PathVariable("id") String id);
     
     @ApiOperation(value = "Test the connection to all Digital Exchange instances")
     @ApiResponses({
@@ -90,7 +89,7 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.READ_DIGITAL_EXCHANGE)
     @GetMapping(value = "/test", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<Map<String, List<RestError>>>> testAll();
+    ResponseEntity<SimpleRestResponse<Map<String, List<RestError>>>> testAll();
     
     @ApiOperation(value = "Test the connection to a Digital Exchange instance")
     @ApiResponses({
@@ -99,5 +98,5 @@ public interface DigitalExchangesResource {
     })
     @Secured(Roles.READ_DIGITAL_EXCHANGE)
     @GetMapping(value = "/test/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoEntity<String>> test(@PathVariable("id") String id);
+    ResponseEntity<SimpleRestResponse<String>> test(@PathVariable("id") String id);
 }

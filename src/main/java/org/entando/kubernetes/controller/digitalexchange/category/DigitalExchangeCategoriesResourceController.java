@@ -16,7 +16,7 @@ package org.entando.kubernetes.controller.digitalexchange.category;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.category.DigitalExchangeCategoriesService;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class DigitalExchangeCategoriesResourceController implements DigitalExcha
     private final @NonNull DigitalExchangeCategoriesService service;
 
     @Override
-    public EntandoEntity<List<String>> getCategories() {
+    public SimpleRestResponse<List<String>> getCategories() {
         return service.getCategories().toEntity();
     }
 }

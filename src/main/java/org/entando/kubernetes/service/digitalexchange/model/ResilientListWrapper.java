@@ -14,8 +14,8 @@
 package org.entando.kubernetes.service.digitalexchange.model;
 
 import lombok.Getter;
-import org.entando.web.response.EntandoEntity;
 import org.entando.web.response.RestError;
+import org.entando.web.response.SimpleRestResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class ResilientListWrapper<T> {
         errors = new ArrayList<>();
     }
 
-    public void addValueFromResponse(final EntandoEntity<T> response) {
+    public void addValueFromResponse(final SimpleRestResponse<T> response) {
         if (response.getErrors() != null && !response.getErrors().isEmpty()) {
             errors.addAll(response.getErrors());
         } else {
@@ -42,8 +42,8 @@ public class ResilientListWrapper<T> {
         }
     }
 
-    public EntandoEntity<List<T>> toEntity() {
-        final EntandoEntity<List<T>> result = new EntandoEntity<>(getList());
+    public SimpleRestResponse<List<T>> toEntity() {
+        final SimpleRestResponse<List<T>> result = new SimpleRestResponse<>(getList());
         result.setErrors(getErrors());
         return result;
     }

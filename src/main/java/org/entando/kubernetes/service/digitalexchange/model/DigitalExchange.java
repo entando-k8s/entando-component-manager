@@ -15,19 +15,21 @@ package org.entando.kubernetes.service.digitalexchange.model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
+import lombok.NoArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 
 @Data
+@Builder
 @Validated
 @ApiModel
-@XmlAccessorType(XmlAccessType.FIELD)
+@NoArgsConstructor
+@AllArgsConstructor
 public class DigitalExchange {
 
     private String id;
@@ -48,26 +50,4 @@ public class DigitalExchange {
     private String clientSecret;
     private String publicKey;
 
-    public DigitalExchange() {
-    }
-
-    public DigitalExchange(DigitalExchange other) {
-        this.id = other.id;
-        this.name = other.name;
-        this.url = other.url;
-        this.timeout = other.timeout;
-        this.active = other.active;
-        this.clientKey = other.clientKey;
-        this.clientSecret = other.clientSecret;
-        this.publicKey = other.publicKey;
-    }
-
-    public boolean hasNoPublicKey() {
-        return StringUtils.isEmpty(this.getPublicKey());
-    }
-
-    public void invalidate() {
-        this.setPublicKey(null);
-        this.setActive(false);
-    }
 }

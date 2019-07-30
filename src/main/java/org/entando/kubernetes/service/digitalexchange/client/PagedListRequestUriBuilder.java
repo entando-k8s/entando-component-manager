@@ -14,24 +14,23 @@
 package org.entando.kubernetes.service.digitalexchange.client;
 
 import org.entando.web.request.Filter;
-import org.entando.web.request.RestListRequest;
+import org.entando.web.request.PagedListRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import static java.util.Optional.ofNullable;
 
 /**
  * Adds to an URL all the query parameters necessary for representing a
- * RestListRequest. It is used to forward a RestListRequest to a DE instance.
+ * PagedListRequest. It is used to forward a PagedListRequest to a DE instance.
  */
-public class RestListRequestUriBuilder {
+public class PagedListRequestUriBuilder {
 
-    private final RestListRequest request;
+    private final PagedListRequest request;
     private final UriComponentsBuilder builder;
 
-    public RestListRequestUriBuilder(String url, RestListRequest request) {
+    public PagedListRequestUriBuilder(String url, PagedListRequest request) {
         this.request = request;
         this.builder = UriComponentsBuilder.fromHttpUrl(url);
     }

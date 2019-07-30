@@ -18,8 +18,8 @@ import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.service.digitalexchange.client.PagedDigitalExchangeCall;
 import org.entando.web.request.Filter;
 import org.entando.web.request.FilterOperator;
+import org.entando.web.request.PagedListRequest;
 import org.entando.web.request.RequestListProcessor;
-import org.entando.web.request.RestListRequest;
 import org.entando.web.response.PagedRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 
@@ -29,13 +29,13 @@ public class ComponentsCall extends PagedDigitalExchangeCall<DigitalExchangeComp
 
     private final DigitalExchangesService exchangesService;
 
-    public ComponentsCall(DigitalExchangesService exchangesService, RestListRequest requestList) {
+    public ComponentsCall(DigitalExchangesService exchangesService, PagedListRequest requestList) {
         super(requestList, new ParameterizedTypeReference<PagedRestResponse<DigitalExchangeComponent>>() {
         }, "digitalExchange", "components");
         this.exchangesService = exchangesService;
     }
 
-    public ComponentsCall(DigitalExchangesService exchangesService, RestListRequest requestList, String componentType) {
+    public ComponentsCall(DigitalExchangesService exchangesService, PagedListRequest requestList, String componentType) {
         this(exchangesService, filterByType(requestList, componentType));
     }
 
@@ -51,11 +51,11 @@ public class ComponentsCall extends PagedDigitalExchangeCall<DigitalExchangeComp
     }
 
     @Override
-    protected RequestListProcessor<DigitalExchangeComponent> getRequestListProcessor(RestListRequest request, List<DigitalExchangeComponent> joinedList) {
+    protected RequestListProcessor<DigitalExchangeComponent> getRequestListProcessor(PagedListRequest request, List<DigitalExchangeComponent> joinedList) {
         return new DigitalExchangeComponentListProcessor(request, joinedList);
     }
 
-    private static RestListRequest filterByType(final RestListRequest requestList, final String componentType) {
+    private static PagedListRequest filterByType(final PagedListRequest requestList, final String componentType) {
         final Filter filter = new Filter();
         filter.setAttribute("type");
         filter.setValue(componentType);

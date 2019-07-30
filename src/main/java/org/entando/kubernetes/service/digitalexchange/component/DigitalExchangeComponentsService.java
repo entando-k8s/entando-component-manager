@@ -16,13 +16,13 @@ package org.entando.kubernetes.service.digitalexchange.component;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.model.ResilientPagedMetadata;
-import org.entando.web.request.RestListRequest;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.request.PagedListRequest;
+import org.entando.web.response.SimpleRestResponse;
 
 public interface DigitalExchangeComponentsService {
 
-    ResilientPagedMetadata<DigitalExchangeComponent> getComponents(RestListRequest requestList);
+    ResilientPagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest requestList);
 
-    EntandoEntity<DigitalExchangeComponent> getComponent(DigitalExchange digitalExchange, String componentId);
+    SimpleRestResponse<DigitalExchangeComponent> getComponent(DigitalExchange digitalExchange, String componentId);
 
 }

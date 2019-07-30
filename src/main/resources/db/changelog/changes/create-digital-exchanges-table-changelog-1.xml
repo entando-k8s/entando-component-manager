@@ -7,7 +7,7 @@
     <changeSet author="s.marcelino@entando.com" id="1">
         <createTable tableName="digital_exchange">
             <column name="id" type="uuid">
-                <constraints primaryKey="true"/>
+                <constraints primaryKey="true" nullable="false" />
             </column>
 
             <column name="name" type="varchar(64)">

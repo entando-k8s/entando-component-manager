@@ -16,9 +16,8 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.service.digitalexchange.model.ResilientPagedMetadata;
-import org.entando.web.request.RestListRequest;
+import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.PagedRestResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,8 +28,8 @@ public class DigitalExchangeComponentsController implements DigitalExchangeCompo
     private final DigitalExchangeComponentsService componentsService;
 
     @Override
-    public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(RestListRequest requestList) {
-//        paginationValidator.validateRestListRequest(requestList, DigitalExchangeComponent.class);
+    public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(PagedListRequest requestList) {
+//        paginationValidator.validatePagedListRequest(requestList, DigitalExchangeComponent.class);
         final ResilientPagedMetadata<DigitalExchangeComponent> resilientPagedMetadata = componentsService.getComponents(requestList);
         final PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse<>(resilientPagedMetadata);
         response.setErrors(resilientPagedMetadata.getErrors());

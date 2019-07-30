@@ -20,7 +20,7 @@ import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
 import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchangeCall;
 import org.entando.kubernetes.service.digitalexchange.model.ResilientListWrapper;
-import org.entando.web.response.EntandoEntity;
+import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DigitalExchangeCategoriesServiceImpl implements DigitalExchangeCategoriesService {
 
-    private static final ParameterizedTypeReference<EntandoEntity<List<String>>> TYPE_REFERENCE =
-            new ParameterizedTypeReference<EntandoEntity<List<String>>>() {};
+    private static final ParameterizedTypeReference<SimpleRestResponse<List<String>>> TYPE_REFERENCE =
+            new ParameterizedTypeReference<SimpleRestResponse<List<String>>>() {};
 
     private final @NonNull DigitalExchangesClient client;
     private final @NonNull DigitalExchangesService digitalExchangesService;

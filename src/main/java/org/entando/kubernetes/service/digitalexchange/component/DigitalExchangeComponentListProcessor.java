@@ -18,8 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.web.request.Filter;
 import org.entando.web.request.FilterUtils;
+import org.entando.web.request.PagedListRequest;
 import org.entando.web.request.RequestListProcessor;
-import org.entando.web.request.RestListRequest;
 
 import java.util.Comparator;
 import java.util.List;
@@ -40,12 +40,12 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
     private static final String DIGITAL_EXCHANGE_NAME = "digitalExchangeName";
     private static final String DIGITAL_EXCHANGE_ID = "digitalExchangeId";
 
-    public DigitalExchangeComponentListProcessor(RestListRequest restListRequest, List<DigitalExchangeComponent> components) {
-        super(restListRequest, components);
+    public DigitalExchangeComponentListProcessor(PagedListRequest listRequest, List<DigitalExchangeComponent> components) {
+        super(listRequest, components);
     }
 
-    public DigitalExchangeComponentListProcessor(RestListRequest restListRequest, Stream<DigitalExchangeComponent> components) {
-        super(restListRequest, components);
+    public DigitalExchangeComponentListProcessor(PagedListRequest listRequest, Stream<DigitalExchangeComponent> components) {
+        super(listRequest, components);
     }
 
     @Override
