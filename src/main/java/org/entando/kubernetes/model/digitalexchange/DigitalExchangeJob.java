@@ -26,10 +26,10 @@ public class DigitalExchangeJob {
     private String componentId;
     private String componentName;
     private String componentVersion;
-//    private byte[] componentSignature;
-//    private Date started;
-//    private Date ended;
-//    private String user;
+    private byte[] componentSignature;
+    private Date started;
+    private Date ended;
+    private String user;
     private double progress;
     private JobStatus status;
     private JobType jobType;

@@ -1,0 +1,5 @@
+version: entando.org/v1alpha1
+id: 8880002
+contentType: CNG
+description: Demo Content Model
+contentShapePath: contentmodel.ftl
