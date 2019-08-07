@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.entando.keycloak.security.AuthenticatedUser;
 import org.entando.kubernetes.controller.Roles;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.web.response.SimpleRestResponse;
@@ -43,8 +44,7 @@ public interface DigitalExchangeInstallResource {
     @Secured(Roles.INSTALL)
     @PostMapping(value = "{exchange}/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> install(@PathVariable("exchange") String digitalExchangeId,
-                                              @PathVariable("component") String componentId,
-                                              HttpServletRequest request);
+                                                   @PathVariable("component") String componentId);
 
     @ApiOperation(value = "Starts component remove job ")
     @ApiResponses({

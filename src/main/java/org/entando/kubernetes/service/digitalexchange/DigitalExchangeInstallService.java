@@ -13,6 +13,7 @@ import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangeBaseCall;
 import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
+import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
 import org.entando.kubernetes.service.digitalexchange.job.JobExecutionException;
 import org.entando.kubernetes.service.digitalexchange.job.ZipReader;
 import org.entando.kubernetes.service.digitalexchange.job.model.ComponentDescriptor;
@@ -54,6 +55,7 @@ public class DigitalExchangeInstallService {
     private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
     private final @NonNull DigitalExchangesClient client;
     private final @NonNull ComponentProcessorResolver processorResolver;
+    private final @NonNull EntandoEngineService entandoEngineService;
 
     private static final Map<String, JobStatus> statusMap = new HashMap<>();
 
@@ -135,6 +137,7 @@ public class DigitalExchangeInstallService {
     }
 
     public void extractZip(final Path tempZipPath, final DigitalExchange digitalExchange, final String componentId) {
+        log.info("Processing DEPKG File");
         try (final ZipFile zip = new ZipFile(tempZipPath.toFile())) {
             final ZipReader zipReader = new ZipReader(zip);
             final ComponentDescriptor descriptor = zipReader.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class)
@@ -143,16 +146,31 @@ public class DigitalExchangeInstallService {
                     .map(ComponentSpecDescriptor::getService);
 
             if (serviceDescriptor.isPresent()) {
-                // deploy service
-                // deployService(serviceDescriptor.get());
                 final ComponentProcessor<ServiceDescriptor> processor = processorResolver.resolve(ServiceDescriptor.class);
-                processor.processComponent(digitalExchange, componentId, serviceDescriptor.get(), zipReader);
+                processor.processComponent(digitalExchange, componentId, serviceDescriptor.get(), zipReader, null);
             }
 
             final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getWidgets);
             final Optional<List<String>> pageModelsDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPageModels);
+
+            final String componentFolder = "/" + componentId;
+            entandoEngineService.createFolder(componentFolder);
+            final List<String> resourceFolders = zipReader.getResourceFolders();
+            for (final String resourceFolder : resourceFolders) {
+                log.info("Creating folder {}", resourceFolder);
+                entandoEngineService.createFolder(componentFolder + "/" + resourceFolder);
+            }
+
+            final List<String> resourceFiles = zipReader.getResourceFiles();
+            for (final String resourceFile : resourceFiles) {
+                log.info("Uploading file {}", resourceFile);
+                zipReader.readFileAsDescriptor(resourceFile).ifPresent(file -> {
+                    file.setFolder(componentFolder + "/" + file.getFolder());
+                    entandoEngineService.uploadFile(file);
+                });
+            }
 
             if (widgetsDescriptor.isPresent()) {
                 processDescriptor(digitalExchange, componentId, zipReader, widgetsDescriptor.get(), WidgetDescriptor.class);
@@ -175,10 +193,11 @@ public class DigitalExchangeInstallService {
         final ComponentProcessor<T> processor = processorResolver.resolve(clazz);
         for (final String fileName : descriptors) {
             final T descriptor = zipReader.readDescriptorFile(fileName, clazz).orElse(null);
+            final String folder = fileName.contains("/") ? fileName.substring(0, fileName.lastIndexOf("/")) : "";
             if (descriptor == null) {
                 log.warn("File {} not found in the package", fileName);
             }
-            processor.processComponent(digitalExchange, componentId, descriptor, zipReader);
+            processor.processComponent(digitalExchange, componentId, descriptor, zipReader, folder);
         }
     }
 

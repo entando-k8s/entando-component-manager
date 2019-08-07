@@ -8,6 +8,6 @@ import java.io.IOException;
 public interface ComponentProcessor<T> {
 
     void processComponent(DigitalExchange digitalExchange, String componentId,
-                          T descriptor, ZipReader zipReader) throws IOException;
+                          T descriptor, ZipReader zipReader, String folder) throws IOException;
 
 }

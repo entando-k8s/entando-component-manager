@@ -8,5 +8,6 @@ public class FrameDescriptor {
     private String pos;
     private String description;
     private boolean mainFrame;
+    private SketchDescriptor sketch;
 
 }

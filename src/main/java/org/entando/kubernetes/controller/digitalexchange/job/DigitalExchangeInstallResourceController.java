@@ -21,8 +21,7 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
     @Override
     public SimpleRestResponse<DigitalExchangeJob> install(
             @PathVariable("exchange") String digitalExchangeId,
-            @PathVariable("component") String componentId,
-            HttpServletRequest request) {
+            @PathVariable("component") String componentId) {
         return new SimpleRestResponse<>(digitalExchangeInstallService.install(digitalExchangeId, componentId));
     }
 
