@@ -147,7 +147,7 @@ public class DigitalExchangeInstallTest {
 
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
-        WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
+        WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
         WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
 
         final List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
