@@ -4,42 +4,40 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangeInstallService;
+import org.entando.kubernetes.service.digitalexchange.DigitalExchangeUninstallService;
 import org.entando.web.response.SimpleRestResponse;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.URISyntaxException;
 
 @RestController
 @RequiredArgsConstructor
 public class DigitalExchangeInstallResourceController implements DigitalExchangeInstallResource {
 
-    private final @NonNull DigitalExchangeInstallService digitalExchangeInstallService;
+    private final @NonNull DigitalExchangeInstallService installService;
+    private final @NonNull DigitalExchangeUninstallService uninstallService;
 
     @Override
     public SimpleRestResponse<DigitalExchangeJob> install(
             @PathVariable("exchange") String digitalExchangeId,
             @PathVariable("component") String componentId) {
-        return new SimpleRestResponse<>(digitalExchangeInstallService.install(digitalExchangeId, componentId));
+        return new SimpleRestResponse<>(installService.install(digitalExchangeId, componentId));
     }
 
     @Override
     public SimpleRestResponse<DigitalExchangeJob> getLastInstallJob(@PathVariable("component") String componentId) {
-        return new SimpleRestResponse<>(digitalExchangeInstallService.getJob(componentId));
+        return new SimpleRestResponse<>(installService.getJob(componentId));
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<DigitalExchangeJob>> uninstall(
-            @PathVariable("component") String componentId,
-            HttpServletRequest request) throws URISyntaxException {
-        return null;
+    public SimpleRestResponse<DigitalExchangeJob> uninstall(
+            @PathVariable("component") String componentId, HttpServletRequest request) {
+        return new SimpleRestResponse<>(uninstallService.uninstall(componentId));
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<DigitalExchangeJob>> getLastUninstallJob(
-            @PathVariable("component") String componentId) {
-        return null;
+    public SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId) {
+        return new SimpleRestResponse<>(installService.getJob(componentId));
     }
 }

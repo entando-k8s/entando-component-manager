@@ -10,7 +10,6 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
@@ -51,6 +50,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import static java.util.Optional.ofNullable;
@@ -86,7 +86,6 @@ public class DigitalExchangeInstallService {
         job.setComponentName(component.getName());
         job.setComponentVersion(component.getVersion());
         job.setDigitalExchange(digitalExchange);
-        job.setJobType(JobType.INSTALL);
         job.setProgress(0);
         job.setStartedAt(LocalDateTime.now());
         job.setStatus(JobStatus.CREATED);
@@ -162,7 +161,7 @@ public class DigitalExchangeInstallService {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) { e.printStackTrace(); }
 
-                installables.forEach(installable -> {
+                final List<? extends CompletableFuture<?>> futures = installables.stream().map(installable -> {
                     final DigitalExchangeJobComponent component = installable.getComponent();
                     componentRepository.updateJobStatus(component.getId(), JobStatus.IN_PROGRESS);
 
@@ -178,6 +177,14 @@ public class DigitalExchangeInstallService {
                         componentRepository.updateJobStatus(component.getId(), JobStatus.COMPLETED);
                         return null;
                     });
+
+                    return future;
+                }).collect(Collectors.toList());
+
+                final CompletableFuture[] completableFutures = futures.toArray(new CompletableFuture[0]);
+                CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
+                    final JobStatus status = ex == null ? JobStatus.COMPLETED : JobStatus.ERROR;
+                    jobRepository.updateJobStatus(job.getId(), status);
                 });
             }).start();
 

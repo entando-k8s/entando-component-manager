@@ -40,12 +40,25 @@ public class EntandoEngineService {
         restTemplate.postForEntity(resolveUrl("/api/widgets"), new EntandoCoreWidget(descriptor), Void.class);
     }
 
+    public void deleteWidget(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/widgets/%s", code)));
+    }
+
     public void registerPageModel(final PageModelDescriptor descriptor) {
         restTemplate.postForEntity(resolveUrl("/api/pageModels"), new EntandoCorePageModel(descriptor), Void.class);
     }
 
+    public void deletePageModel(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/pageModels/%s", code)));
+    }
+
     public void createFolder(final String folder) {
         restTemplate.postForEntity(resolveUrl("/api/fileBrowser/directory"), new EntandoCoreFolder(folder), Void.class);
+    }
+
+    public void deleteFolder(final String code) {
+        // TODO fix this
+        restTemplate.delete(resolveUrl(String.format("/api/fileBrowser/directory/%s", code)));
     }
 
     public void uploadFile(final FileDescriptor descriptor) {

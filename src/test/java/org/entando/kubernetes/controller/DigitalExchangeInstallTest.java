@@ -33,15 +33,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -128,9 +132,7 @@ public class DigitalExchangeInstallTest {
         mockMvc.perform(post(String.format("%s/%s/install/todomvc", URL, digitalExchangeId)))
                 .andDo(print()).andExpect(status().isOk());
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) { e.printStackTrace(); }
+        waitFor(2000);
 
         final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
         verify(mocker.operation, times(1)).create(captor.capture());
@@ -160,6 +162,32 @@ public class DigitalExchangeInstallTest {
         final List<LoggedRequest> fileRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
 
         checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests);
+
+        WireMock.reset();
+
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/todomvc_widget")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fileBrowser/directory/todomvc")).willReturn(aResponse().withStatus(200)));
+
+        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("payload.status").value("COMPLETED"));
+
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk());
+
+        waitFor(2000);
+
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/todomvc_widget")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory/todomvc")));
+
+        verify(mocker.operation, times(1)).delete(same(pluginMocker.plugin));
     }
 
     private byte [] readFromFile(final String fileName) throws IOException {
@@ -182,6 +210,12 @@ public class DigitalExchangeInstallTest {
         for (final LoggedRequest req : allRequests) {
             assertThat(req.getHeader("Authorization")).isEqualTo("Bearer iddqd");
         }
+    }
+
+    public void waitFor(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) { e.printStackTrace(); }
     }
 
 }

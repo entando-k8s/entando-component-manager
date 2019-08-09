@@ -105,11 +105,6 @@ databaseChangeLog:
                   type: double
                   constraints:
                     nullable: false
-              - column:
-                  name: job_type
-                  type: integer
-                  constraints:
-                    nullable: false
 
         - createTable:
             tableName: digital_exchange_job_component

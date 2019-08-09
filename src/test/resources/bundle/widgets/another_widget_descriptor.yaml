@@ -1,5 +1,5 @@
 version: entando.org/v1alpha1
-code: todomvc_widget
+code: another_todomvc_widget
 titles:
   en: TODO MVC Widget
   it: TODO MVC Widget

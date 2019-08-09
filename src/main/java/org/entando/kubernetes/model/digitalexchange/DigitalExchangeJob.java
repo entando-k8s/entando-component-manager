@@ -13,6 +13,7 @@
  */
 package org.entando.kubernetes.model.digitalexchange;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
@@ -38,6 +39,7 @@ public class DigitalExchangeJob {
     private UUID id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "digital_exchange_id")
     private DigitalExchangeEntity digitalExchange;
 
@@ -64,9 +66,6 @@ public class DigitalExchangeJob {
 
     @Column(name = "status")
     private JobStatus status;
-
-    @Column(name = "job_type")
-    private JobType jobType;
 
     @PrePersist
     public void generateId() {

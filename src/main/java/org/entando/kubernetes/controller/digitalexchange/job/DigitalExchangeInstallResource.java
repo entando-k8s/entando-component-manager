@@ -52,8 +52,8 @@ public interface DigitalExchangeInstallResource {
     })
     @Secured(Roles.INSTALL)
     @PostMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<DigitalExchangeJob>> uninstall(@PathVariable("component") String componentId,
-                                                                HttpServletRequest request) throws URISyntaxException ;
+    SimpleRestResponse<DigitalExchangeJob> uninstall(@PathVariable("component") String componentId,
+                                                     HttpServletRequest request) throws URISyntaxException ;
 
     @ApiOperation(value = "Checks installation job status")
     @ApiResponses({
@@ -69,6 +69,6 @@ public interface DigitalExchangeInstallResource {
     })
     @Secured(Roles.INSTALL)
     @GetMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<DigitalExchangeJob>> getLastUninstallJob(@PathVariable("component") String componentId);
+    SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId);
 
 }

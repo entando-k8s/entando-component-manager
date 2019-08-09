@@ -47,7 +47,7 @@ public class ServiceInstallable extends Installable<ServiceDescriptor> {
 
     @Override
     public String getName() {
-        return representation.getImage();
+        return job.getComponentId();
     }
 
 }
