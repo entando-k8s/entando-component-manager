@@ -18,5 +18,9 @@ public enum JobStatus {
     CREATED,
     IN_PROGRESS,
     COMPLETED,
-    ERROR
+    ERROR,
+
+    UNINSTALLING,
+    ERROR_UNINSTALLING,
+    UNINSTALLED
 }

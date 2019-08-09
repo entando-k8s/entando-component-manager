@@ -128,6 +128,10 @@ public class DigitalExchangeInstallTest {
         mockMvc.perform(post(String.format("%s/%s/install/todomvc", URL, digitalExchangeId)))
                 .andDo(print()).andExpect(status().isOk());
 
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) { e.printStackTrace(); }
+
         final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
         verify(mocker.operation, times(1)).create(captor.capture());
         final EntandoPlugin plugin = captor.getValue();

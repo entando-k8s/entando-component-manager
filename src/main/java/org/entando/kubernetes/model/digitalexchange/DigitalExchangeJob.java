@@ -14,24 +14,63 @@
 package org.entando.kubernetes.model.digitalexchange;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 
-import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
+@Entity
+@NoArgsConstructor
+@Table(name = "digital_exchange_job")
 public class DigitalExchangeJob {
 
-    private String id;
-    private String digitalExchangeId;
-    private String digitalExchangeUrl;
+    @Id
+    @Column(name = "id")
+    private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "digital_exchange_id")
+    private DigitalExchangeEntity digitalExchange;
+
+    @Column(name = "component_id")
     private String componentId;
+
+    @Column(name = "component_name")
     private String componentName;
+
+    @Column(name = "component_version")
     private String componentVersion;
-    private byte[] componentSignature;
-    private Date started;
-    private Date ended;
-    private String user;
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "finished_at")
+    private LocalDateTime finishedAt;
+
+    @Column(name = "user_id")
+    private String userId;
+
+    @Column(name = "progress")
     private double progress;
+
+    @Column(name = "status")
     private JobStatus status;
+
+    @Column(name = "job_type")
     private JobType jobType;
+
+    @PrePersist
+    public void generateId() {
+        this.id = UUID.randomUUID();
+    }
 
 }

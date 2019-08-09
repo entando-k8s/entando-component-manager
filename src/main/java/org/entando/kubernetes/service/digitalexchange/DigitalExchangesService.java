@@ -1,37 +1,87 @@
-/*
- * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- * 
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- */
 package org.entando.kubernetes.service.digitalexchange;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
+import org.entando.kubernetes.repository.DigitalExchangeRepository;
+import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
+import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchangeCall;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.web.exception.NotFoundException;
 import org.entando.web.response.RestError;
+import org.entando.web.response.SimpleRestResponse;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-public interface DigitalExchangesService {
+@Service
+@RequiredArgsConstructor
+public class DigitalExchangesService {
 
-    List<DigitalExchange> getDigitalExchanges();
+    private final @NonNull DigitalExchangeRepository repository;
+    private final @NonNull DigitalExchangesClient client;
 
-    DigitalExchange findById(String id);
+    public List<DigitalExchange> getDigitalExchanges() {
+        return repository.findAll().stream()
+                .map(DigitalExchangeEntity::convert)
+                .collect(Collectors.toList());
+    }
 
-    DigitalExchange create(DigitalExchange digitalExchange);
+    public DigitalExchange findById(final String id) {
+        return repository.findById(UUID.fromString(id))
+                .map(DigitalExchangeEntity::convert)
+                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+    }
 
-    DigitalExchange update(DigitalExchange digitalExchange);
+    public DigitalExchangeEntity findEntityById(final String id) {
+        return repository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+    }
 
-    void delete(String digitalExchangeId);
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
+    public DigitalExchange create(final DigitalExchange digitalExchange) {
+        // TODO validate
+        return repository.save(new DigitalExchangeEntity(digitalExchange)).convert();
+    }
 
-    List<RestError> test(String digitalExchangeId);
+    public DigitalExchange update(final DigitalExchange digitalExchange) {
+        final DigitalExchangeEntity digitalExchangeEntity = repository.findById(UUID.fromString(digitalExchange.getId()))
+                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
 
-    Map<String, List<RestError>> testAll();
+        // TODO validate
+        digitalExchangeEntity.apply(digitalExchange);
+        repository.save(digitalExchangeEntity);
+        return digitalExchangeEntity.convert();
+    }
+
+    public void delete(final String digitalExchangeId) {
+        final DigitalExchangeEntity digitalExchangeEntity = repository.findById(UUID.fromString(digitalExchangeId))
+                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+        repository.delete(digitalExchangeEntity);
+    }
+
+    public List<RestError> test(final String digitalExchangeId) {
+        return test(findById(digitalExchangeId));
+    }
+
+    private List<RestError> test(final DigitalExchange digitalExchange) {
+        final SimpleDigitalExchangeCall<Map<String, List<RestError>>> call = new SimpleDigitalExchangeCall<>(
+                HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<Map<String, List<RestError>>>>() {
+        }, "digitalExchange", "exchanges", "test");
+        return client.getSingleResponse(digitalExchange, call).getErrors();
+    }
+
+    public Map<String, List<RestError>> testAll() {
+        final Map<String, List<RestError>> result = new HashMap<>();
+        getDigitalExchanges().forEach(de -> result.put(de.getId(), test(de)));
+        return result;
+    }
 }

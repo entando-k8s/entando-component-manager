@@ -8,6 +8,7 @@ import org.entando.kubernetes.service.digitalexchange.job.model.Descriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -34,6 +35,10 @@ public class ZipReader {
                 .collect(Collectors.toMap(ZipEntry::getName, self -> self));
     }
 
+    public boolean containsResourceFolder() {
+        return zipEntries.get("resources/") != null;
+    }
+
     public List<String> getResourceFolders() {
         return zipEntries.keySet().stream().filter(path -> path.startsWith("resources"))
                 .filter(path -> zipEntries.get(path).isDirectory())
@@ -49,36 +54,40 @@ public class ZipReader {
                 .collect(Collectors.toList());
     }
 
-    public <T extends Descriptor> Optional<T> readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
-        final ZipEntry zipEntry = zipEntries.get(fileName);
-        return zipEntry != null ? Optional.of(readDescriptorFile(zipFile.getInputStream(zipEntry), clazz)) : Optional.empty();
+    public <T extends Descriptor> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
+        final ZipEntry zipEntry = getFile(fileName);
+        return readDescriptorFile(zipFile.getInputStream(zipEntry), clazz);
     }
 
-    public Optional<String> readFileAsString(final String folder, final String fileName) throws IOException {
-        final ZipEntry zipEntry = zipEntries.get(isEmpty(folder) ? fileName : folder + "/" + fileName);
-        if (zipEntry == null) return Optional.empty();
+    public String readFileAsString(final String folder, final String fileName) throws IOException {
+        final ZipEntry zipEntry = getFile(isEmpty(folder) ? fileName : folder + "/" + fileName);
 
         try (final StringWriter writer = new StringWriter()) {
             IOUtils.copy(zipFile.getInputStream(zipEntry), writer);
-            return Optional.of(writer.toString());
+            return writer.toString();
         }
     }
 
-    public Optional<FileDescriptor> readFileAsDescriptor(final String fileName) throws IOException {
-        final ZipEntry zipEntry = zipEntries.get(fileName);
-        if (zipEntry == null) return Optional.empty();
+    public FileDescriptor readFileAsDescriptor(final String fileName) throws IOException {
+        final ZipEntry zipEntry = getFile(fileName);
 
         try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             IOUtils.copy(zipFile.getInputStream(zipEntry), outputStream);
             final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
             final String filename = fileName.substring(fileName.lastIndexOf('/') + 1);
             final String folder = fileName.substring("resources/".length(), fileName.lastIndexOf('/'));
-            return Optional.of(new FileDescriptor(folder, filename, base64));
+            return new FileDescriptor(folder, filename, base64);
         }
     }
 
     private <T extends Descriptor> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
         return mapper.readValue(file, clazz);
+    }
+
+    private ZipEntry getFile(final String fileName) throws FileNotFoundException {
+        final ZipEntry zipEntry = zipEntries.get(fileName);
+        if (zipEntry == null) throw new FileNotFoundException("File " + fileName + " not found");
+        return zipEntry;
     }
 
 }
