@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.client.token.grant.client.ClientCrede
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class EntandoEngineService {
@@ -37,38 +38,40 @@ public class EntandoEngineService {
     }
 
     public void registerWidget(final WidgetDescriptor descriptor) {
-        restTemplate.postForEntity(resolveUrl("/api/widgets"), new EntandoCoreWidget(descriptor), Void.class);
+        restTemplate.postForEntity(resolveUrl("/api/widgets").build().toUri(), new EntandoCoreWidget(descriptor), Void.class);
     }
 
     public void deleteWidget(final String code) {
-        restTemplate.delete(resolveUrl(String.format("/api/widgets/%s", code)));
+        restTemplate.delete(resolveUrl(String.format("/api/widgets/%s", code)).build().toUri());
     }
 
     public void registerPageModel(final PageModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolveUrl("/api/pageModels"), new EntandoCorePageModel(descriptor), Void.class);
+        restTemplate.postForEntity(resolveUrl("/api/pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
     }
 
     public void deletePageModel(final String code) {
-        restTemplate.delete(resolveUrl(String.format("/api/pageModels/%s", code)));
+        restTemplate.delete(resolveUrl(String.format("/api/pageModels/%s", code)).build().toUri());
     }
 
     public void createFolder(final String folder) {
-        restTemplate.postForEntity(resolveUrl("/api/fileBrowser/directory"), new EntandoCoreFolder(folder), Void.class);
+        restTemplate.postForEntity(resolveUrl("/api/fileBrowser/directory").build().toUri(), new EntandoCoreFolder(folder), Void.class);
     }
 
     public void deleteFolder(final String code) {
-        // TODO fix this
-        restTemplate.delete(resolveUrl(String.format("/api/fileBrowser/directory/%s", code)));
+        final UriComponentsBuilder builder = resolveUrl("/api/fileBrowser/directory");
+        builder.queryParam("protectedFolder", "false");
+        builder.queryParam("currentPath", code);
+        restTemplate.delete(builder.build().toUri());
     }
 
     public void uploadFile(final FileDescriptor descriptor) {
         final String path = descriptor.getFolder() + "/" + descriptor.getFilename();
         final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
-        restTemplate.postForEntity(resolveUrl("/api/fileBrowser/file"), file, Void.class);
+        restTemplate.postForEntity(resolveUrl("/api/fileBrowser/file").build().toUri(), file, Void.class);
     }
 
-    private String resolveUrl(final String uri) {
-        return entandoUrl + uri;
+    private UriComponentsBuilder resolveUrl(final String uri) {
+        return UriComponentsBuilder.fromUriString(entandoUrl + uri);
     }
 
 }

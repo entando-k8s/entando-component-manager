@@ -250,7 +250,8 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fileBrowser/directory/todomvc")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc"))
+                .willReturn(aResponse().withStatus(200)));
 
         mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk())
@@ -266,7 +267,7 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")));
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory/todomvc")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc")));
 
         verify(mocker.operation, times(1)).delete(same(pluginMocker.plugin));
     }
