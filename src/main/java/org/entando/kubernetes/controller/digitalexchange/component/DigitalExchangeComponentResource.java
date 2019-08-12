@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Api(tags = {"digital-exchange", "components"})
-@RequestMapping(value = "/digitalExchange/components")
+@RequestMapping(value = "/components")
 public interface DigitalExchangeComponentResource {
     
     @ApiOperation(value = "Returns available Digital Exchange components")

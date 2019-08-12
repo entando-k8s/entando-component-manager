@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import javax.validation.Valid;
 
 @Api(tags = {"digital-exchange", "installation"})
-@RequestMapping(value = "/digitalExchange/rate")
+@RequestMapping(value = "/components/rate")
 public interface DEComponentRatingResource {
 
     @Secured(Roles.RATE)

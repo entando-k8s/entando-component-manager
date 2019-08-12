@@ -38,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class })
 public class PluginControllerTest {
 
+    private static final String URL = "/plugins";
+
     @Autowired private MockMvc mockMvc;
     @Autowired private KubernetesClient client;
 
@@ -52,7 +54,7 @@ public class PluginControllerTest {
     public void testListEmpty() throws Exception {
         when(mocker.pluginList.getItems()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/plugin"))
+        mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
     }
@@ -62,7 +64,7 @@ public class PluginControllerTest {
         final String pluginId = "arbitrary-plugin";
         mocker.mockResult(pluginId, null);
 
-        mockMvc.perform(get(String.format("/plugin/%s", pluginId)))
+        mockMvc.perform(get(String.format("%s/%s", URL, pluginId)))
                 .andDo(print()).andExpect(status().isNotFound());
 
         verify(mocker.operation, times(1)).withName(eq(pluginId));
@@ -97,13 +99,13 @@ public class PluginControllerTest {
         pluginMocker.setMetadataName("plugin-name");
         when(mocker.pluginList.getItems()).thenReturn(singletonList(pluginMocker.plugin));
 
-        ResultActions resultActions = mockMvc.perform(get("/plugin"))
+        ResultActions resultActions = mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)));
         validate(resultActions, "payload[0].");
 
         mocker.mockResult("plugin-name", pluginMocker.plugin);
-        resultActions = mockMvc.perform(get("/plugin/plugin-name"))
+        resultActions = mockMvc.perform(get(String.format("%s/plugin-name", URL)))
                 .andDo(print()).andExpect(status().isOk());
         validate(resultActions, "payload.");
     }

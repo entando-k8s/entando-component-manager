@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 @Api(tags = {"digital-exchange"})
-@RequestMapping(value = "/digitalExchange/exchanges")
+@RequestMapping(value = "/exchanges")
 public interface DigitalExchangesResource {
 
     @ApiOperation(value = "Create a new Digital Exchange configuration")

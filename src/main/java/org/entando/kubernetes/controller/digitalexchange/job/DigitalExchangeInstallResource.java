@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.URISyntaxException;
 
 @Api(tags = {"digital-exchange", "installation"})
-@RequestMapping(value = "/digitalExchange")
+@RequestMapping(value = "/components")
 public interface DigitalExchangeInstallResource {
 
     @ApiOperation(value = "Starts component installation job")

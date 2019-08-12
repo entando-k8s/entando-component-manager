@@ -19,7 +19,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
-@RequestMapping("/plugin")
+@RequestMapping("/plugins")
 @RequiredArgsConstructor
 public class PluginController {
 

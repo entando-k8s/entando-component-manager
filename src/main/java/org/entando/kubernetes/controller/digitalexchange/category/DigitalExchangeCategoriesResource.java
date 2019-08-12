@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 
 @Api(tags = {"digital-exchange"})
-@RequestMapping(value = "/digitalExchange/categories")
+@RequestMapping(value = "/categories")
 public interface DigitalExchangeCategoriesResource {
 
     @Secured(Roles.LIST_CATEGORIES)

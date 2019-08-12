@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DigitalExchangeRatingTest {
 
-    private static final String URL = "/digitalExchange/rate";
+    private static final String URL = "/components/rate";
 
     @Autowired private MockMvc mockMvc;
     @Autowired private DatabaseCleaner databaseCleaner;

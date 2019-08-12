@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class DigitalExchangeTestApi {
 
-    static final String EXCHANGES_URL = "/digitalExchange/exchanges";
+    static final String EXCHANGES_URL = "/exchanges";
 
     private final ObjectMapper objectMapper;
     private final MockMvc mockMvc;
