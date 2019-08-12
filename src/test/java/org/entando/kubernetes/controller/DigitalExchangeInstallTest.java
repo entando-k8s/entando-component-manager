@@ -9,6 +9,7 @@ import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.KubernetesPluginMocker;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,6 +29,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +44,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.entando.kubernetes.DigitalExchangeTestUtils.getTestPrivateKey;
+import static org.entando.kubernetes.DigitalExchangeTestUtils.getTestPublicKey;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -82,6 +89,11 @@ public class DigitalExchangeInstallTest {
         digitalExchange.setUrl("http://localhost:8099/community");
         digitalExchange.setTimeout(10000);
         digitalExchange.setActive(true);
+        digitalExchange.setPublicKey(getTestPublicKey());
+
+        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.depkg").toURI();
+        final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
+        final String signature = SignatureUtil.signPackage(in, SignatureUtil.privateKeyFromPEM(getTestPrivateKey()));
 
         final String digitalExchangeId = digitalExchangeTestApi.createDigitalExchange(digitalExchange);
 
@@ -94,7 +106,8 @@ public class DigitalExchangeInstallTest {
                 "    \"version\": \"latest\", \n" +
                 "    \"image\": \"http://todomvc.com/site-assets/logo-icon.png\", \n" +
                 "    \"description\": \"A great example to show a widget working\", \n" +
-                "    \"rating\": 5 \n" +
+                "    \"rating\": 5, \n" +
+                "    \"signature\": \"" + signature + "\" \n" +
                 "}";
 
         final String response =

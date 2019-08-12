@@ -161,7 +161,7 @@ public class DigitalExchangeInstallService {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) { e.printStackTrace(); }
 
-                final List<? extends CompletableFuture<?>> futures = installables.stream().map(installable -> {
+                final CompletableFuture[] completableFutures = installables.stream().map(installable -> {
                     final DigitalExchangeJobComponent component = installable.getComponent();
                     componentRepository.updateJobStatus(component.getId(), JobStatus.IN_PROGRESS);
 
@@ -179,9 +179,7 @@ public class DigitalExchangeInstallService {
                     });
 
                     return future;
-                }).collect(Collectors.toList());
-
-                final CompletableFuture[] completableFutures = futures.toArray(new CompletableFuture[0]);
+                }).toArray(CompletableFuture[]::new);
                 CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
                     final JobStatus status = ex == null ? JobStatus.COMPLETED : JobStatus.ERROR;
                     jobRepository.updateJobStatus(job.getId(), status);

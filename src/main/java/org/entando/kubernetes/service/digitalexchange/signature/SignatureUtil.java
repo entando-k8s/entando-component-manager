@@ -48,7 +48,7 @@ public class SignatureUtil {
      */
     public static KeyPair createKeyPair() {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
+            final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
             keyGen.initialize(KEY_SIZE);
             return keyGen.generateKeyPair();
         } catch (GeneralSecurityException ex) {
@@ -62,7 +62,6 @@ public class SignatureUtil {
      * @return the public key in PEM format
      */
     public static String publicKeyToPEM(PublicKey publicKey) {
-
         return BEGIN_RSA_PUBLIC_KEY +
                 getBase64Key(publicKey) +
                 END_RSA_PUBLIC_KEY;
@@ -74,17 +73,16 @@ public class SignatureUtil {
      * @return {@link PublicKey} object
      */
     public static PublicKey publicKeyFromPEM(String pemPublicKey) {
-        String base64Key = pemPublicKey
+        final String base64Key = pemPublicKey
                 .replace(BEGIN_RSA_PUBLIC_KEY, "")
                 .replace(END_RSA_PUBLIC_KEY, "")
                 .replace("\n", "")
                 .trim();
-
-        byte[] bytes = Base64.getDecoder().decode(base64Key);
+        final byte[] bytes = Base64.getDecoder().decode(base64Key);
 
         try {
-            X509EncodedKeySpec ks = new X509EncodedKeySpec(bytes);
-            KeyFactory kf = KeyFactory.getInstance(ALGORITHM);
+            final X509EncodedKeySpec ks = new X509EncodedKeySpec(bytes);
+            final KeyFactory kf = KeyFactory.getInstance(ALGORITHM);
             return kf.generatePublic(ks);
         } catch (GeneralSecurityException ex) {
             throw new RuntimeException(ex);
@@ -94,8 +92,8 @@ public class SignatureUtil {
 
     public static PrivateKey getPrivateKeyFromBytes(byte[] privateKeyBytes) {
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
-            PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+            final KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
+            final PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
             return keyFactory.generatePrivate(privKeySpec);
         } catch (GeneralSecurityException ex) {
             throw new RuntimeException(ex);
@@ -103,25 +101,22 @@ public class SignatureUtil {
     }
 
     public static String privateKeyToPEM(PrivateKey privateKey) {
-
         return BEGIN_RSA_PRIVATE_KEY +
                 getBase64Key(privateKey) +
                 END_RSA_PRIVATE_KEY;
-
     }
 
     public static PrivateKey privateKeyFromPEM(String pemPrivateKey) {
-        String base64Key = pemPrivateKey
+        final String base64Key = pemPrivateKey
                 .replace(BEGIN_RSA_PRIVATE_KEY, "")
                 .replace(END_RSA_PRIVATE_KEY, "")
                 .replace("\n", "")
                 .trim();
-
-        byte[] bytes = Base64.getDecoder().decode(base64Key);
+        final byte[] bytes = Base64.getDecoder().decode(base64Key);
 
         try {
-            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(bytes);
-            KeyFactory kf = KeyFactory.getInstance(ALGORITHM);
+            final PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(bytes);
+            final KeyFactory kf = KeyFactory.getInstance(ALGORITHM);
             return kf.generatePrivate(privateKeySpec);
         } catch (GeneralSecurityException ex) {
             throw new RuntimeException(ex);
@@ -130,15 +125,12 @@ public class SignatureUtil {
     }
 
     private static String getBase64Key(Key key) {
-        StringBuilder sb = new StringBuilder();
-        String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        int lineLength = 64;
-        for (int i = 0;; i += lineLength) {
-            if (i >= base64.length()) {
-                break;
-            }
-            int chars = Math.min(base64.length(), i + lineLength);
-            sb.append(base64.substring(i, chars)).append("\n");
+        final StringBuilder sb = new StringBuilder();
+        final String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
+        final int lineLength = 64;
+        for (int i = 0; i < base64.length(); i += lineLength) {
+            final int chars = Math.min(base64.length(), i + lineLength);
+            sb.append(base64, i, chars).append("\n");
         }
         return sb.toString();
     }
@@ -151,7 +143,7 @@ public class SignatureUtil {
      */
     public static String signPackage(InputStream in, PrivateKey privateKey) {
         try {
-            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
             signature.initSign(privateKey);
             updateSignature(signature, in);
             return Base64.getEncoder().encodeToString(signature.sign());
@@ -170,8 +162,8 @@ public class SignatureUtil {
      */
     public static boolean verifySignature(InputStream in, PublicKey publicKey, String base64Signature) {
         try {
-            byte[] bytes = Base64.getDecoder().decode(base64Signature);
-            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+            final byte[] bytes = Base64.getDecoder().decode(base64Signature);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
             signature.initVerify(publicKey);
             updateSignature(signature, in);
             return signature.verify(bytes);
@@ -183,9 +175,9 @@ public class SignatureUtil {
     private static void updateSignature(Signature signature, InputStream in) throws GeneralSecurityException, IOException {
 
         try (BufferedInputStream bin = new BufferedInputStream(in)) {
-            byte[] buffer = new byte[1024];
+            final byte[] buffer = new byte[1024];
             while (bin.available() != 0) {
-                int len = bin.read(buffer);
+                final int len = bin.read(buffer);
                 signature.update(buffer, 0, len);
             }
         }

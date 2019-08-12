@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,6 +39,7 @@ public class DigitalExchangeUninstallService {
         final List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(job);
 
         jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALLING);
+        job.setStatus(JobStatus.UNINSTALLING);
 
         final Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
                 component.getComponentType() == ComponentType.RESOURCE
@@ -50,7 +52,7 @@ public class DigitalExchangeUninstallService {
                     .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALLED));
         }
 
-        components.forEach(component -> {
+        final CompletableFuture[] completableFutures = components.stream().map(component -> {
             if (component.getStatus() == JobStatus.COMPLETED && component.getComponentType() != ComponentType.RESOURCE) {
                 final CompletableFuture<?> future = deleteComponent(component);
                 future.exceptionally(ex -> {
@@ -62,10 +64,18 @@ public class DigitalExchangeUninstallService {
                     componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALLED);
                     return object;
                 });
+
+                return future;
             }
+
+            return null;
+        }).filter(Objects::nonNull).toArray(CompletableFuture[]::new);
+
+        CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
+            final JobStatus status = ex == null ? JobStatus.UNINSTALLING : JobStatus.ERROR_UNINSTALLING;
+            jobRepository.updateJobStatus(job.getId(), status);
         });
 
-        job.setStatus(JobStatus.UNINSTALLING);
         return job;
     }
 

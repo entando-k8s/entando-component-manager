@@ -34,7 +34,7 @@ databaseChangeLog:
                     nullable: true
               - column:
                   name: public_key
-                  type: varchar(128)
+                  type: text
                   constraints:
                     nullable: true
               - column:
