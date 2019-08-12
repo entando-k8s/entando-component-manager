@@ -128,7 +128,7 @@ public class DigitalExchangeInstallTest {
 
         stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components/todomvc/package"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromFile("bundle.depkg"))));
+                        .withBody(readFromDEPackage())));
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -272,8 +272,8 @@ public class DigitalExchangeInstallTest {
         verify(mocker.operation, times(1)).delete(same(pluginMocker.plugin));
     }
 
-    private byte [] readFromFile(final String fileName) throws IOException {
-        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName)) {
+    private byte [] readFromDEPackage() throws IOException {
+        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("bundle.depkg")) {
             try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 Assert.assertNotNull(inputStream);
                 IOUtils.copy(inputStream, outputStream);
