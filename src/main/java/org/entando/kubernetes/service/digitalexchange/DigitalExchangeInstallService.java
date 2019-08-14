@@ -50,7 +50,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipFile;
 
 import static java.util.Optional.ofNullable;
@@ -166,17 +166,15 @@ public class DigitalExchangeInstallService {
                     componentRepository.updateJobStatus(component.getId(), JobStatus.IN_PROGRESS);
 
                     final CompletableFuture<?> future = installable.install();
-                    future.exceptionally(ex -> {
+                    try {
+                        future.get();
+                        log.info("Installable '{}' finished successfully", installable.getName());
+                        componentRepository.updateJobStatus(component.getId(), JobStatus.COMPLETED);
+                    } catch (InterruptedException | ExecutionException ex) {
                         log.error("Installable '{}' has errors", installable.getName(), ex);
                         component.setStatus(JobStatus.ERROR);
                         componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR, ex.getMessage());
-                        return null;
-                    });
-                    future.thenApply(object -> {
-                        log.info("Installable '{}' finished successfully", installable.getName());
-                        componentRepository.updateJobStatus(component.getId(), JobStatus.COMPLETED);
-                        return null;
-                    });
+                    }
 
                     return future;
                 }).toArray(CompletableFuture[]::new);
@@ -185,7 +183,6 @@ public class DigitalExchangeInstallService {
                     jobRepository.updateJobStatus(job.getId(), status);
                 });
             }).start();
-
 
             log.info("Finished processing. Have a nice day!");
             // add contentModel, contentType, labels, etc
@@ -223,7 +220,6 @@ public class DigitalExchangeInstallService {
 
             final List<String> resourceFiles = zipReader.getResourceFiles();
             for (final String resourceFile : resourceFiles) {
-                log.info("Uploading file {}", resourceFile);
                 final FileDescriptor fileDescriptor = zipReader.readFileAsDescriptor(resourceFile);
                 fileDescriptor.setFolder(componentFolder + "/" + fileDescriptor.getFolder());
                 installables.add(new AssetInstallable(fileDescriptor, entandoEngineService));
