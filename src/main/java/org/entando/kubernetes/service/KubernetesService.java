@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.PluginNotFoundException;
+import org.entando.kubernetes.model.DeploymentStatus;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.model.EntandoPluginDeploymentResponse;
 import org.entando.kubernetes.model.PluginServiceStatus;
@@ -21,7 +22,7 @@ import org.entando.kubernetes.model.plugin.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginList;
 import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
-import org.entando.kubernetes.model.DeploymentStatus;
+import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
@@ -54,11 +56,21 @@ public class KubernetesService {
         this.entandoAppName = entandoAppName;
     }
 
-
     public EntandoPluginDeploymentResponse getDeployment(final String pluginId) {
-        return ofNullable(getOperation().withName(pluginId).get())
-                .map(this::map)
+        return getDeploymentOptional(pluginId)
                 .orElseThrow(PluginNotFoundException::new);
+    }
+
+    public Optional<EntandoPluginDeploymentResponse> getDeploymentOptional(final String pluginId) {
+        return ofNullable(getOperation().withName(pluginId).get())
+                .map(this::map);
+    }
+
+    public void deleteDeployment(final String pluginId) {
+        final NonNamespaceOperation<EntandoPlugin, EntandoPluginList, DoneableEntandoPlugin,
+                Resource<EntandoPlugin, DoneableEntandoPlugin>> operation = getOperation();
+        ofNullable(operation.withName(pluginId).get())
+                .ifPresent(operation::delete);
     }
 
     public List<EntandoPluginDeploymentResponse> getDeployments() {
@@ -95,19 +107,23 @@ public class KubernetesService {
         final String pluginId = deployment.getMetadata().getName();
         final EntandoPluginDeploymentResponse response = new EntandoPluginDeploymentResponse();
         final EntandoCustomResourceStatus entandoStatus = deployment.getSpec().getEntandoStatus();
-        final EntandoDeploymentPhase deploymentPhase = entandoStatus.getEntandoDeploymentPhase();
+        final EntandoDeploymentPhase deploymentPhase = ofNullable(entandoStatus)
+                .map(EntandoCustomResourceStatus::getEntandoDeploymentPhase)
+                .orElse(EntandoDeploymentPhase.STARTED);
 
         response.setPath(deployment.getSpec().getIngressPath());
         response.setPlugin(pluginId);
         response.setReplicas(deployment.getSpec().getReplicas());
         response.setDeploymentPhase(deploymentPhase.toValue());
 
-        ofNullable(entandoStatus.getJeeServerStatus())
+        ofNullable(entandoStatus)
+                .map(EntandoCustomResourceStatus::getJeeServerStatus)
                 .filter(list -> !list.isEmpty())
                 .map(list -> convert(list.get(0), "jeeServer"))
                 .ifPresent(response::setServerStatus);
 
-        ofNullable(entandoStatus.getDbServerStatus())
+        ofNullable(entandoStatus)
+                .map(EntandoCustomResourceStatus::getDbServerStatus)
                 .map(list -> list.stream().map(item -> convert(item, "dbServer")).collect(Collectors.toList()))
                 .ifPresent(response::setExternalServiceStatuses);
 

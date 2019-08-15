@@ -1,0 +1,16 @@
+version: entando.org/v1alpha1
+code: todomvc_another_page_model
+description: TODO MVC another page model
+
+titles:
+  en: TODO MVC PageModel
+  it: TODO MVC PageModel
+
+group: free
+
+configuration:
+  frames:
+    - pos: 0
+      description: Simple Frame
+
+templatePath: page.ftl

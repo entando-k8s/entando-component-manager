@@ -1,0 +1,46 @@
+version: entando.org/v1alpha1
+code: CNG
+name: Demo
+status: 0 # what the heck means 0?
+
+attributes:
+  - code: title
+    type: Text
+    name: Title
+    roles:
+      - code: jacms:title
+        descr: The main title of a Content
+    disablingCodes: []
+    mandatory: true
+    listFilter: false
+    indexable: false
+
+    enumeratorStaticItems:
+    enumeratorStaticItemsSeparator:
+    enumeratorExtractorBean:
+    nestedAttribute:
+    compositeAttributes:
+
+    validationRules:
+      minLength:
+      maxLength:
+      regex:
+      rangeStartString:
+      rangeEndString:
+      rangeStartStringAttribute:
+      rangeEndStringAttribute:
+      equalString:
+      equalStringAttribute:
+      rangeStartDate:
+      rangeEndDate:
+      rangeStartDateAttribute:
+      rangeEndDateAttribute:
+      equalDate:
+      equalDateAttribute:
+      rangeStartNumber:
+      rangeStartNumberAttribute:
+      rangeEndNumber:
+      rangeEndNumberAttribute:
+      equalNumber:
+      equalNumberAttribute:
+      ognlValidation:

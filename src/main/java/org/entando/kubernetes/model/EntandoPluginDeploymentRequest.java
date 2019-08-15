@@ -12,13 +12,13 @@ import java.util.List;
 @Data
 public class EntandoPluginDeploymentRequest {
 
-    @NotEmpty private String image;
-    @NotEmpty private String plugin;
-    @NotEmpty private String ingressPath;
-    @NotEmpty private String healthCheckPath;
-    @NotEmpty private String dbms;
+    private @NotEmpty String image;
+    private @NotEmpty String plugin;
+    private @NotEmpty String ingressPath;
+    private @NotEmpty String healthCheckPath;
+    private @NotEmpty String dbms;
 
-    @Valid private List<ExpectedRole> roles = new ArrayList<>();
-    @Valid private List<Permission> permissions = new ArrayList<>();
+    private @Valid List<ExpectedRole> roles = new ArrayList<>();
+    private @Valid List<Permission> permissions = new ArrayList<>();
 
 }

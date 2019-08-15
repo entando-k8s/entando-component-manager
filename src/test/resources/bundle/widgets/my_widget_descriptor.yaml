@@ -1,0 +1,7 @@
+version: entando.org/v1alpha1
+code: todomvc_widget
+titles:
+  en: TODO MVC Widget
+  it: TODO MVC Widget
+group: free
+customUi: <h2>Bundle 1 Widget</h2>
