@@ -60,14 +60,11 @@ public class PluginInstallTest {
         digitalExchange.setId(DIGITAL_EXCHANGE_ID);
         digitalExchange.setUrl(DIGITAL_EXCHANGE_URL);
 
-        kubernetesService.deploy(request, digitalExchange);
+        kubernetesService.deploy(request);
 
         final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
         verify(mocker.operation, times(1)).create(captor.capture());
         final EntandoPlugin plugin = captor.getValue();
-
-        assertThat(plugin.getSpec().getDigitalExchangeId()).isEqualTo(DIGITAL_EXCHANGE_ID);
-        assertThat(plugin.getSpec().getDigitalExchangeUrl()).isEqualTo(DIGITAL_EXCHANGE_URL);
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/avatar");
         assertThat(plugin.getSpec().getDbms()).isEqualTo("mysql");

@@ -152,9 +152,6 @@ public class DigitalExchangeInstallTest {
         verify(mocker.operation, times(1)).create(captor.capture());
         final EntandoPlugin plugin = captor.getValue();
 
-        assertThat(plugin.getSpec().getDigitalExchangeId()).isEqualTo(digitalExchangeId);
-        assertThat(plugin.getSpec().getDigitalExchangeUrl()).isEqualTo(digitalExchange.getUrl());
-
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/todomvc");
         assertThat(plugin.getSpec().getDbms()).isEqualTo("mysql");
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/todomvc");

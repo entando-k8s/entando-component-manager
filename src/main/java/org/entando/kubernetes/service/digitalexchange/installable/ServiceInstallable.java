@@ -36,7 +36,7 @@ public class ServiceInstallable extends Installable<ServiceDescriptor> {
             deploymentRequest.setRoles(representation.getRoles());
 
             log.info("Deploying a new service {}", deploymentRequest.getImage());
-            kubernetesService.deploy(deploymentRequest, job.getDigitalExchange().convert());
+            kubernetesService.deploy(deploymentRequest);
         });
     }
 

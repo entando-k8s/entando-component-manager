@@ -80,7 +80,7 @@ public class KubernetesService {
                 .collect(Collectors.toList());
     }
 
-    public void deploy(final EntandoPluginDeploymentRequest request, final DigitalExchange digitalExchange) {
+    public void deploy(final EntandoPluginDeploymentRequest request) {
         final EntandoPlugin plugin = new EntandoPlugin();
         final EntandoPluginSpec spec = new EntandoPluginSpec();
         final ObjectMeta objectMeta = new ObjectMeta();
@@ -94,8 +94,6 @@ public class KubernetesService {
         spec.setIngressPath(request.getIngressPath());
         spec.setHealthCheckPath(request.getHealthCheckPath());
         spec.setEntandoAppName(entandoAppName);
-        spec.setDigitalExchangeId(digitalExchange.getId());
-        spec.setDigitalExchangeUrl(digitalExchange.getUrl());
         spec.setReplicas(1);
 
         plugin.setMetadata(objectMeta);
@@ -117,8 +115,6 @@ public class KubernetesService {
         response.setPlugin(pluginId);
         response.setReplicas(deployment.getSpec().getReplicas());
         response.setDeploymentPhase(deploymentPhase.toValue());
-        response.setDigitalExchangeId(deployment.getSpec().getDigitalExchangeId());
-        response.setDigitalExchangeUrl(deployment.getSpec().getDigitalExchangeUrl());
 
         ofNullable(entandoStatus)
                 .map(EntandoCustomResourceStatus::getJeeServerStatus)

@@ -22,8 +22,6 @@ public class EntandoPluginSpec implements KubernetesResource {
     private String ingressPath;
     private String healthCheckPath;
     private EntandoCustomResourceStatus entandoStatus;
-    private String digitalExchangeId;
-    private String digitalExchangeUrl;
 
     @JsonSerialize
     @JsonDeserialize
