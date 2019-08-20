@@ -103,9 +103,15 @@ public class DigitalExchangeUninstallService {
 
                 // add support
                 case CONTENT_MODEL:
+                    log.info("Removing Content Model {}", component.getName());
+                    engineService.deleteContentModel(component.getName());
                     break;
+
                 case CONTENT_TYPE:
+                    log.info("Removing Content Type {}", component.getName());
+                    engineService.deleteContentType(component.getName());
                     break;
+
                 case LABEL:
                     break;
             }

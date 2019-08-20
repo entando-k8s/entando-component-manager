@@ -1,9 +1,13 @@
 package org.entando.kubernetes.service.digitalexchange.entandocore;
 
+import org.apache.http.entity.ContentType;
+import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreContentModel;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreFile;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreFolder;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCorePageModel;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreWidget;
+import org.entando.kubernetes.service.digitalexchange.job.model.ContentModelDescriptor;
+import org.entando.kubernetes.service.digitalexchange.job.model.ContentTypeDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.PageModelDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.WidgetDescriptor;
@@ -13,6 +17,7 @@ import org.springframework.security.oauth2.client.token.grant.client.ClientCrede
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
@@ -49,6 +54,22 @@ public class EntandoEngineService {
         restTemplate.postForEntity(resolveUrl("/api/pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
     }
 
+    public void registerContentModel(final ContentModelDescriptor descriptor) {
+        restTemplate.postForEntity(resolveUrl("/api/plugins/cms/contentmodels").build().toUri(), new EntandoCoreContentModel(descriptor), Void.class);
+    }
+
+    public void registerContentType(final ContentTypeDescriptor descriptor) {
+        restTemplate.postForEntity(resolveUrl("/api/plugins/cms/contentTypes").build().toUri(), descriptor, Void.class);
+    }
+
+    public void deleteContentModel(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/plugins/cms/contentmodels/%s", code)).build().toUri());
+    }
+
+    public void deleteContentType(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/plugins/cms/contentTypes/%s", code)).build().toUri());
+    }
+
     public void deletePageModel(final String code) {
         restTemplate.delete(resolveUrl(String.format("/api/pageModels/%s", code)).build().toUri());
     }
@@ -72,6 +93,11 @@ public class EntandoEngineService {
 
     private UriComponentsBuilder resolveUrl(final String uri) {
         return UriComponentsBuilder.fromUriString(entandoUrl + uri);
+    }
+
+    private void capture(final HttpClientErrorException exception) {
+        final String message = exception.getMessage();
+        exception.getResponseBodyAsString();
     }
 
 }

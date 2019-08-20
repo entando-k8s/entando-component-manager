@@ -12,31 +12,24 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
-import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangeBaseCall;
 import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
-import org.entando.kubernetes.service.digitalexchange.installable.AssetInstallable;
-import org.entando.kubernetes.service.digitalexchange.installable.DirectoryInstallable;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
-import org.entando.kubernetes.service.digitalexchange.installable.PageModelInstallable;
-import org.entando.kubernetes.service.digitalexchange.installable.ServiceInstallable;
-import org.entando.kubernetes.service.digitalexchange.installable.WidgetInstallable;
+import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.job.JobExecutionException;
 import org.entando.kubernetes.service.digitalexchange.job.ZipReader;
 import org.entando.kubernetes.service.digitalexchange.job.model.ComponentDescriptor;
-import org.entando.kubernetes.service.digitalexchange.job.model.ComponentSpecDescriptor;
-import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
-import org.entando.kubernetes.service.digitalexchange.job.model.PageModelDescriptor;
-import org.entando.kubernetes.service.digitalexchange.job.model.ServiceDescriptor;
-import org.entando.kubernetes.service.digitalexchange.job.model.WidgetDescriptor;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureMatchingException;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -58,15 +53,15 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DigitalExchangeInstallService {
+public class DigitalExchangeInstallService implements ApplicationContextAware {
 
-    private final @NonNull KubernetesService kubernetesService;
     private final @NonNull DigitalExchangesService exchangesService;
     private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
     private final @NonNull DigitalExchangesClient client;
-    private final @NonNull EntandoEngineService entandoEngineService;
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
+
+    private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     @Transactional(rollbackFor = Throwable.class)
     public DigitalExchangeJob install(final String digitalExchangeId, final String componentId) {
@@ -173,7 +168,17 @@ public class DigitalExchangeInstallService {
                     } catch (InterruptedException | ExecutionException ex) {
                         log.error("Installable '{}' has errors", installable.getName(), ex);
                         component.setStatus(JobStatus.ERROR);
-                        componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR, ex.getMessage());
+
+                        if (ex.getCause() != null) {
+                            String message = ex.getCause().getMessage();
+                            if (ex.getCause() instanceof HttpClientErrorException) {
+                                final HttpClientErrorException httpException = (HttpClientErrorException) ex.getCause();
+                                message = httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
+                            }
+                            componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR, message);
+                        } else {
+                            componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR, ex.getMessage());
+                        }
                     }
 
                     return future;
@@ -185,69 +190,20 @@ public class DigitalExchangeInstallService {
             }).start();
 
             log.info("Finished processing. Have a nice day!");
-            // add contentModel, contentType, labels, etc
+            // add labels, etc
         } catch (IOException ex) {
             log.error("Error while extracting zip file", ex);
             throw new JobExecutionException("Unable to extract zip file", ex);
         }
     }
 
-    private List<Installable> getInstallables(final DigitalExchangeJob job,
-                                              final ZipReader zipReader,
+    private List<Installable> getInstallables(final DigitalExchangeJob job, final ZipReader zipReader,
                                               final ComponentDescriptor descriptor) throws IOException {
-
         final List<Installable> installables = new LinkedList<>();
-        final Optional<ServiceDescriptor> serviceDescriptor = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getService);
-        final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getWidgets);
-        final Optional<List<String>> pageModelsDescriptor = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getPageModels);
-
-        if (serviceDescriptor.isPresent()) {
-            final ServiceDescriptor service = serviceDescriptor.get();
-            installables.add(new ServiceInstallable(service, kubernetesService, job));
+        for (final ComponentProcessor processor : componentProcessors) {
+            ofNullable(processor.process(job, zipReader, descriptor))
+                .ifPresent(installables::addAll);
         }
-
-        if (zipReader.containsResourceFolder()) {
-            final String componentFolder = "/" + job.getComponentId();
-            installables.add(new DirectoryInstallable(componentFolder, entandoEngineService));
-
-            final List<String> resourceFolders = zipReader.getResourceFolders();
-            for (final String resourceFolder : resourceFolders) {
-                installables.add(new DirectoryInstallable(componentFolder + "/" + resourceFolder, entandoEngineService));
-            }
-
-            final List<String> resourceFiles = zipReader.getResourceFiles();
-            for (final String resourceFile : resourceFiles) {
-                final FileDescriptor fileDescriptor = zipReader.readFileAsDescriptor(resourceFile);
-                fileDescriptor.setFolder(componentFolder + "/" + fileDescriptor.getFolder());
-                installables.add(new AssetInstallable(fileDescriptor, entandoEngineService));
-            }
-        }
-
-        if (widgetsDescriptor.isPresent()) {
-            for (final String fileName : widgetsDescriptor.get()) {
-                final WidgetDescriptor widgetDescriptor = zipReader.readDescriptorFile(fileName, WidgetDescriptor.class);
-                if (widgetDescriptor.getCustomUiPath() != null) {
-                    final String folder = fileName.contains("/") ? fileName.substring(0, fileName.lastIndexOf("/")) : "";
-                    widgetDescriptor.setCustomUi(zipReader.readFileAsString(folder, widgetDescriptor.getCustomUiPath()));
-                }
-                installables.add(new WidgetInstallable(widgetDescriptor, entandoEngineService));
-            }
-        }
-
-        if (pageModelsDescriptor.isPresent()) {
-            for (final String fileName : pageModelsDescriptor.get()) {
-                final PageModelDescriptor pageModelDescriptor = zipReader.readDescriptorFile(fileName, PageModelDescriptor.class);
-                if (pageModelDescriptor.getTemplatePath() != null) {
-                    final String folder = fileName.contains("/") ? fileName.substring(0, fileName.lastIndexOf("/")) : "";
-                    pageModelDescriptor.setTemplate(zipReader.readFileAsString(folder, pageModelDescriptor.getTemplatePath()));
-                }
-                installables.add(new PageModelInstallable(pageModelDescriptor, entandoEngineService));
-            }
-        }
-
         return installables;
     }
 
@@ -261,4 +217,8 @@ public class DigitalExchangeInstallService {
         return componentRepository.save(component);
     }
 
+    @Override
+    public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+        componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
+    }
 }
