@@ -136,6 +136,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")).willReturn(aResponse().withStatus(200)));
 
@@ -166,13 +167,19 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
         WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+        WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+        WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/labels")));
 
         final List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         final List<LoggedRequest> pageModelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         final List<LoggedRequest> directoryRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
         final List<LoggedRequest> fileRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        final List<LoggedRequest> contentTypeRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+        final List<LoggedRequest> contentModelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+        final List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
 
-        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests);
+        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests, contentModelRequests, labelRequests);
 
         widgetRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         pageModelRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
@@ -250,6 +257,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.delete(urlEqualTo("/api/plugins/cms/contentmodels/8880003")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/api/plugins/cms/contentmodels/8880002")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentTypes/CNG")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/labels/HELLO")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc"))
                 .willReturn(aResponse().withStatus(200)));
 

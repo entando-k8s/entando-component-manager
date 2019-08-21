@@ -9,6 +9,7 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoC
 import org.entando.kubernetes.service.digitalexchange.job.model.ContentModelDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.ContentTypeDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
+import org.entando.kubernetes.service.digitalexchange.job.model.LabelDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.PageModelDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.WidgetDescriptor;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,8 +51,24 @@ public class EntandoEngineService {
         restTemplate.delete(resolveUrl(String.format("/api/widgets/%s", code)).build().toUri());
     }
 
+    public void registerLabel(final LabelDescriptor descriptor) {
+        restTemplate.postForEntity(resolveUrl("/api/labels").build().toUri(), descriptor, Void.class);
+    }
+
+    public void deleteLabel(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/labels/%s", code)).build().toUri());
+    }
+
     public void registerPageModel(final PageModelDescriptor descriptor) {
         restTemplate.postForEntity(resolveUrl("/api/pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
+    }
+
+    public void deletePageModel(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/pageModels/%s", code)).build().toUri());
+    }
+
+    public void deleteContentModel(final String code) {
+        restTemplate.delete(resolveUrl(String.format("/api/plugins/cms/contentmodels/%s", code)).build().toUri());
     }
 
     public void registerContentModel(final ContentModelDescriptor descriptor) {
@@ -62,17 +79,13 @@ public class EntandoEngineService {
         restTemplate.postForEntity(resolveUrl("/api/plugins/cms/contentTypes").build().toUri(), descriptor, Void.class);
     }
 
-    public void deleteContentModel(final String code) {
-        restTemplate.delete(resolveUrl(String.format("/api/plugins/cms/contentmodels/%s", code)).build().toUri());
-    }
-
     public void deleteContentType(final String code) {
         restTemplate.delete(resolveUrl(String.format("/api/plugins/cms/contentTypes/%s", code)).build().toUri());
     }
 
-    public void deletePageModel(final String code) {
-        restTemplate.delete(resolveUrl(String.format("/api/pageModels/%s", code)).build().toUri());
-    }
+
+
+
 
     public void createFolder(final String folder) {
         restTemplate.postForEntity(resolveUrl("/api/fileBrowser/directory").build().toUri(), new EntandoCoreFolder(folder), Void.class);

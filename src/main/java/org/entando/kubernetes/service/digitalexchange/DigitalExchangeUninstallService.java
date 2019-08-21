@@ -101,7 +101,6 @@ public class DigitalExchangeUninstallService {
                     // do nothing because we already removed the parent folder
                     break;
 
-                // add support
                 case CONTENT_MODEL:
                     log.info("Removing Content Model {}", component.getName());
                     engineService.deleteContentModel(component.getName());
@@ -113,11 +112,11 @@ public class DigitalExchangeUninstallService {
                     break;
 
                 case LABEL:
+                    log.info("Removing Label {}", component.getName());
+                    engineService.deleteLabel(component.getName());
                     break;
             }
         });
-
-
     }
 
 }
