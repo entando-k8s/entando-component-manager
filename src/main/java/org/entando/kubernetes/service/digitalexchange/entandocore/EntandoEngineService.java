@@ -1,6 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange.entandocore;
 
-import org.apache.http.entity.ContentType;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreContentModel;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreFile;
 import org.entando.kubernetes.service.digitalexchange.entandocore.model.EntandoCoreFolder;
@@ -18,7 +17,6 @@ import org.springframework.security.oauth2.client.token.grant.client.ClientCrede
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
@@ -83,10 +81,6 @@ public class EntandoEngineService {
         restTemplate.delete(resolveUrl(String.format("/api/plugins/cms/contentTypes/%s", code)).build().toUri());
     }
 
-
-
-
-
     public void createFolder(final String folder) {
         restTemplate.postForEntity(resolveUrl("/api/fileBrowser/directory").build().toUri(), new EntandoCoreFolder(folder), Void.class);
     }
@@ -106,11 +100,6 @@ public class EntandoEngineService {
 
     private UriComponentsBuilder resolveUrl(final String uri) {
         return UriComponentsBuilder.fromUriString(entandoUrl + uri);
-    }
-
-    private void capture(final HttpClientErrorException exception) {
-        final String message = exception.getMessage();
-        exception.getResponseBodyAsString();
     }
 
 }
