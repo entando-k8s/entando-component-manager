@@ -221,4 +221,5 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
         componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
+
 }

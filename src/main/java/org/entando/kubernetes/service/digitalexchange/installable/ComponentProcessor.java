@@ -1,11 +1,14 @@
 package org.entando.kubernetes.service.digitalexchange.installable;
 
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.service.digitalexchange.job.ZipReader;
 import org.entando.kubernetes.service.digitalexchange.job.model.ComponentDescriptor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the
@@ -27,6 +30,20 @@ public interface ComponentProcessor {
      */
     List<? extends Installable> process(DigitalExchangeJob job, ZipReader zipReader,
                                         ComponentDescriptor descriptor) throws IOException;
+
+    /**
+     * This method will be executed on the uninstallation or modification of a component.
+     *
+     * @param componentType The component type being processed
+     * @return true if this ComponentType can be processed by this processor
+     */
+    boolean shouldProcess(ComponentType componentType);
+
+    /**
+     * Performs the uninstallation of this component
+     * @param component the component to be uninstalled
+     */
+    void uninstall(DigitalExchangeJobComponent component);
 
     default String getFolder(final String fileName) {
         return fileName.contains("/") ? fileName.substring(0, fileName.lastIndexOf("/")) : "";

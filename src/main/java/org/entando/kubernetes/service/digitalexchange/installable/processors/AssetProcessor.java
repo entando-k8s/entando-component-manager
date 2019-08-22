@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.service.digitalexchange.DigitalExchangeUninstallService;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
@@ -60,6 +62,21 @@ public class AssetProcessor implements ComponentProcessor {
         }
 
         return installables;
+    }
+
+    /**
+     * This process will be hard coded in the {@link DigitalExchangeUninstallService}
+     * @param componentType The component type being processed
+     * @return always false
+     */
+    @Override
+    public boolean shouldProcess(final ComponentType componentType) {
+        return false;
+    }
+
+    @Override
+    public void uninstall(final DigitalExchangeJobComponent component) {
+        // Not necessary
     }
 
     public class AssetInstallable extends Installable<FileDescriptor> {

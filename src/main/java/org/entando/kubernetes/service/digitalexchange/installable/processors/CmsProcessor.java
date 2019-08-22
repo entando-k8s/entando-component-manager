@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
@@ -63,6 +64,22 @@ public class CmsProcessor implements ComponentProcessor {
         }
 
         return installables;
+    }
+
+    @Override
+    public boolean shouldProcess(final ComponentType componentType) {
+        return componentType == ComponentType.CONTENT_MODEL || componentType == ComponentType.CONTENT_TYPE;
+    }
+
+    @Override
+    public void uninstall(final DigitalExchangeJobComponent component) {
+        if (component.getComponentType() == ComponentType.CONTENT_MODEL) {
+            log.info("Removing Content Model {}", component.getName());
+            engineService.deleteContentModel(component.getName());
+        } else if (component.getComponentType() == ComponentType.CONTENT_TYPE) {
+            log.info("Removing Content Type {}", component.getName());
+            engineService.deleteContentType(component.getName());
+        }
     }
 
     public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {

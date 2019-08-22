@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
@@ -42,6 +43,17 @@ public class ServiceProcessor implements ComponentProcessor {
                 .map(serviceDescriptor -> new ServiceInstallable(serviceDescriptor, job))
                 .map(Collections::singletonList)
                 .orElseGet(Collections::emptyList);
+    }
+
+    @Override
+    public boolean shouldProcess(final ComponentType componentType) {
+        return componentType == ComponentType.DEPLOYMENT;
+    }
+
+    @Override
+    public void uninstall(final DigitalExchangeJobComponent component) {
+        log.info("Removing deployment {}", component.getName());
+        kubernetesService.deleteDeployment(component.getName());
     }
 
     public class ServiceInstallable extends Installable<ServiceDescriptor> {

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
@@ -52,6 +53,17 @@ public class PageModelProcessor implements ComponentProcessor {
         }
 
         return installables;
+    }
+
+    @Override
+    public boolean shouldProcess(final ComponentType componentType) {
+        return componentType == ComponentType.PAGE_MODEL;
+    }
+
+    @Override
+    public void uninstall(final DigitalExchangeJobComponent component) {
+        log.info("Removing PageModel {}", component.getName());
+        engineService.deletePageModel(component.getName());
     }
 
     public class PageModelInstallable extends Installable<PageModelDescriptor> {
