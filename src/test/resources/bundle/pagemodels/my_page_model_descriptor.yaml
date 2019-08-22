@@ -13,13 +13,13 @@ configuration:
     - pos: 0
       description: Header
       sketch:
-        x1: "0"
-        y1: "0"
-        x2: "11"
-        y2: "0"
+        x1: 0
+        y1: 0
+        x2: 11
+        y2: 0
     - pos: 1
       description: Breadcrumb
-      sketch: { x1: "0", y1: "1", x2: "11", y2: "1" }
+      sketch: { x1: 0, y1: 1, x2: 11, y2: 1 }
 
 template: >-
   <#assign wp=JspTaglibs[\"/aps-core\"]>
