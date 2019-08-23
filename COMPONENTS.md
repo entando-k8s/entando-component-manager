@@ -25,13 +25,13 @@ components: # All components will be here
     # Optional (but has to be defined as `roles: []`)
     roles:
       - code: read-anything # The role identifier
-      - name: Read anything # The role name to be shown on the UI
+        name: Read anything # The role name to be shown on the UI
 
     # Permissions will add a permission to this service to access an external service on the cluster
     # Optional (but has to be defined as `permissions: []`)
     permissions:
       - clientId: entando-app # The client id to add the permission
-      - role: superuser # The specific role to add to this service
+        role: superuser # The specific role to add to this service
 
   # To create widgets you will need to add references to the descriptor files
   widgets:
