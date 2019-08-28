@@ -5,14 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ComponentDescriptor extends Descriptor {
+public class LabelDescriptor {
 
-    private String code;
-    private String description;
-
-    private ComponentSpecDescriptor components;
+    private String key;
+    private Map<String, String> titles;
 
 }

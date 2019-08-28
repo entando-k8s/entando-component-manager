@@ -9,24 +9,46 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * This class will represent something that can be installed on Entando
+ * architecture.
+ *
+ * @param <T> Can be essentially anything. A service, a component or any other part on the
+ *            Entando architecture
+ *
+ * @author Sergio Marcelino
+ */
 @Slf4j
 public abstract class Installable<T> {
 
     protected final T representation;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private DigitalExchangeJobComponent component;
 
     public Installable(T representation) {
         this.representation = representation;
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
+    /**
+     * This method will be called when every component was validated on the Digital Exchange bundle file
+     * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
+     */
     public abstract CompletableFuture install();
 
+    /**
+     * Should return the component type to understand what to do in case of a rollback
+     * @return {@link ComponentType}
+     */
     public abstract ComponentType getComponentType();
 
     public abstract String getName();
 
+    /**
+     * Important to understand if something has changed in case of an updated
+     * If the checksum didn't change, we don't need to modify this component
+     *
+     * @return md5 checksum of the component's payload
+     */
     public String getChecksum() {
         try {
             return DigestUtils.md5Hex(objectMapper.writeValueAsString(representation));

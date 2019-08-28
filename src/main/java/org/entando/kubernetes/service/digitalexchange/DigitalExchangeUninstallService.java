@@ -9,11 +9,16 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
-import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
+import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,12 +27,13 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DigitalExchangeUninstallService {
+public class DigitalExchangeUninstallService implements ApplicationContextAware {
 
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
     private final @NonNull EntandoEngineService engineService;
-    private final @NonNull KubernetesService kubernetesService;
+
+    private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     @Transactional(noRollbackFor = Throwable.class)
     public DigitalExchangeJob uninstall(final String componentId) {
@@ -80,38 +86,16 @@ public class DigitalExchangeUninstallService {
     }
 
     private CompletableFuture<?> deleteComponent(final DigitalExchangeJobComponent component) {
-        return CompletableFuture.runAsync(() -> {
-            switch (component.getComponentType()) {
-                case WIDGET:
-                    log.info("Removing Widget {}", component.getName());
-                    engineService.deleteWidget(component.getName());
-                    break;
+        return CompletableFuture.runAsync(() ->
+            componentProcessors.stream()
+                    .filter(processor -> processor.shouldProcess(component.getComponentType()))
+                    .forEach(processor -> processor.uninstall(component))
+        );
+    }
 
-                case PAGE_MODEL:
-                    log.info("Removing PageModel {}", component.getName());
-                    engineService.deletePageModel(component.getName());
-                    break;
-
-                case DEPLOYMENT:
-                    log.info("Removing deployment {}", component.getName());
-                    kubernetesService.deleteDeployment(component.getName());
-                    break;
-
-                case RESOURCE:
-                    // do nothing because we already removed the parent folder
-                    break;
-
-                // add support
-                case CONTENT_MODEL:
-                    break;
-                case CONTENT_TYPE:
-                    break;
-                case LABEL:
-                    break;
-            }
-        });
-
-
+    @Override
+    public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+        componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
 
 }

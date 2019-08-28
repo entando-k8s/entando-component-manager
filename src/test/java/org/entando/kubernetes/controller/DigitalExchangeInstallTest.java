@@ -96,12 +96,10 @@ public class DigitalExchangeInstallTest {
         digitalExchange.setActive(true);
         digitalExchange.setPublicKey(getTestPublicKey());
 
-        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.depkg").toURI();
+        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
         final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
         final String signature = SignatureUtil.signPackage(in, SignatureUtil.privateKeyFromPEM(getTestPrivateKey()));
-
         final String digitalExchangeId = digitalExchangeTestApi.createDigitalExchange(digitalExchange);
-
         final String pluginA =
                 "{ \n" +
                 "    \"id\": \"todomvc\", \n" +
@@ -138,6 +136,9 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")).willReturn(aResponse().withStatus(200)));
 
         final KubernetesPluginMocker pluginMocker = new KubernetesPluginMocker();
         mocker.mockResult("todomvc", pluginMocker.plugin);
@@ -166,13 +167,19 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
         WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+        WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+        WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/labels")));
 
         final List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         final List<LoggedRequest> pageModelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         final List<LoggedRequest> directoryRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
         final List<LoggedRequest> fileRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        final List<LoggedRequest> contentTypeRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+        final List<LoggedRequest> contentModelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+        final List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
 
-        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests);
+        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests, contentModelRequests, labelRequests);
 
         widgetRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         pageModelRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
@@ -247,6 +254,10 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/api/plugins/cms/contentmodels/8880003")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/api/plugins/cms/contentmodels/8880002")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentTypes/CNG")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/labels/HELLO")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc"))
                 .willReturn(aResponse().withStatus(200)));
 
@@ -270,7 +281,7 @@ public class DigitalExchangeInstallTest {
     }
 
     private byte [] readFromDEPackage() throws IOException {
-        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("bundle.depkg")) {
+        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("bundle.zip")) {
             try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 Assert.assertNotNull(inputStream);
                 IOUtils.copy(inputStream, outputStream);

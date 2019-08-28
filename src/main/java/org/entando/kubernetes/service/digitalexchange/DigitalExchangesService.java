@@ -41,22 +41,14 @@ public class DigitalExchangesService {
                 .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
     }
 
-    public DigitalExchangeEntity findEntityById(final String id) {
-        return repository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
-    }
-
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
     public DigitalExchange create(final DigitalExchange digitalExchange) {
-        // TODO validate
         return repository.save(new DigitalExchangeEntity(digitalExchange)).convert();
     }
 
     public DigitalExchange update(final DigitalExchange digitalExchange) {
         final DigitalExchangeEntity digitalExchangeEntity = repository.findById(UUID.fromString(digitalExchange.getId()))
                 .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
-
-        // TODO validate
         digitalExchangeEntity.apply(digitalExchange);
         repository.save(digitalExchangeEntity);
         return digitalExchangeEntity.convert();
@@ -72,16 +64,21 @@ public class DigitalExchangesService {
         return test(findById(digitalExchangeId));
     }
 
+    public Map<String, List<RestError>> testAll() {
+        final Map<String, List<RestError>> result = new HashMap<>();
+        getDigitalExchanges().forEach(de -> result.put(de.getId(), test(de)));
+        return result;
+    }
+
+    DigitalExchangeEntity findEntityById(final String id) {
+        return repository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+    }
+
     private List<RestError> test(final DigitalExchange digitalExchange) {
         final SimpleDigitalExchangeCall<Map<String, List<RestError>>> call = new SimpleDigitalExchangeCall<>(
                 HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<Map<String, List<RestError>>>>() {
         }, "digitalExchange", "exchanges", "test");
         return client.getSingleResponse(digitalExchange, call).getErrors();
-    }
-
-    public Map<String, List<RestError>> testAll() {
-        final Map<String, List<RestError>> result = new HashMap<>();
-        getDigitalExchanges().forEach(de -> result.put(de.getId(), test(de)));
-        return result;
     }
 }

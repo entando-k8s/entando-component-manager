@@ -31,7 +31,7 @@ public class ZipReader {
 
     public ZipReader(final ZipFile zipFile) {
         this.zipFile = zipFile;
-        this.zipEntries = Collections.list(zipFile.entries()).stream()
+        this.zipEntries = zipFile.stream()
                 .collect(Collectors.toMap(ZipEntry::getName, self -> self));
     }
 
@@ -75,7 +75,9 @@ public class ZipReader {
             IOUtils.copy(zipFile.getInputStream(zipEntry), outputStream);
             final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
             final String filename = fileName.substring(fileName.lastIndexOf('/') + 1);
-            final String folder = fileName.substring("resources/".length(), fileName.lastIndexOf('/'));
+            final String folder = fileName.lastIndexOf('/') >= "resources/".length()
+                    ? fileName.substring("resources/".length(), fileName.lastIndexOf('/'))
+                    : "";
             return new FileDescriptor(folder, filename, base64);
         }
     }

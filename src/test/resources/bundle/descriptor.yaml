@@ -25,3 +25,9 @@ components:
   contentModels:
     - contentmodels/my_content_model_descriptor.yaml
     - contentmodels/another_content_model_descriptor.yaml
+
+  labels:
+    - key: HELLO
+      titles:
+        it: Mio Titolo
+        en: My Title
