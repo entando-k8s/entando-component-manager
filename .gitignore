@@ -10,5 +10,12 @@ buildNumber.properties
 *.iml
 .idea/
 
+# Removes VS-Code folders
+.classpath
+.factorypath
+.project
+.settings/
+
+
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar

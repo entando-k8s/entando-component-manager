@@ -1,9 +1,9 @@
 package org.entando.kubernetes.controller;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.entando.entando.kubernetes.controller.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.KubernetesPluginMocker;
-import org.entando.kubernetes.model.plugin.EntandoDeploymentPhase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

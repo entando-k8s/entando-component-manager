@@ -1,11 +1,18 @@
 package org.entando.kubernetes.controller;
 
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.Optional;
+import org.entando.entando.kubernetes.controller.model.DbmsImageVendor;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
+import org.entando.entando.kubernetes.controller.model.plugin.ExpectedRole;
+import org.entando.entando.kubernetes.controller.model.plugin.Permission;
 import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
-import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
-import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.junit.Before;
@@ -20,23 +27,20 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
-@TestExecutionListeners({ DependencyInjectionTestExecutionListener.class })
+@TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
 public class PluginInstallTest {
 
     private static final String DIGITAL_EXCHANGE_ID = "community";
     private static final String DIGITAL_EXCHANGE_URL = "https://community.de.entando.org";
 
-    @Autowired private KubernetesService kubernetesService;
-    @Autowired private KubernetesClient client;
+    @Autowired
+    private KubernetesService kubernetesService;
+    @Autowired
+    private KubernetesClient client;
 
     private KubernetesClientMocker mocker;
 
@@ -67,15 +71,15 @@ public class PluginInstallTest {
         final EntandoPlugin plugin = captor.getValue();
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/avatar");
-        assertThat(plugin.getSpec().getDbms()).isEqualTo("mysql");
+        assertThat(plugin.getSpec().getDbms()).isEqualTo(Optional.of(DbmsImageVendor.MYSQL));
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/entando-avatar-plugin");
         assertThat(plugin.getSpec().getHealthCheckPath()).isEqualTo("/actuator/health");
         assertThat(plugin.getSpec().getReplicas()).isEqualTo(1);
         assertThat(plugin.getMetadata().getName()).isEqualTo("avatar-plugin");
 
         assertThat(plugin.getSpec().getRoles()).hasSize(1);
-        assertThat(plugin.getSpec().getRoles().get(0).getCode()).isEqualTo("read");
-        assertThat(plugin.getSpec().getRoles().get(0).getName()).isEqualTo("Read");
+        assertThat(plugin.getSpec().getRoles().get(0).getCode()).isEqualTo("Read");
+        assertThat(plugin.getSpec().getRoles().get(0).getName()).isEqualTo("read");
 
         assertThat(plugin.getSpec().getPermissions()).hasSize(1);
         assertThat(plugin.getSpec().getPermissions().get(0).getClientId()).isEqualTo("another-client");

@@ -6,12 +6,12 @@ import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
-import org.entando.kubernetes.model.plugin.DbServerStatus;
-import org.entando.kubernetes.model.plugin.EntandoCustomResourceStatus;
-import org.entando.kubernetes.model.plugin.EntandoDeploymentPhase;
-import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
-import org.entando.kubernetes.model.plugin.JeeServerStatus;
+import org.entando.entando.kubernetes.controller.model.DbServerStatus;
+import org.entando.entando.kubernetes.controller.model.EntandoCustomResourceStatus;
+import org.entando.entando.kubernetes.controller.model.EntandoDeploymentPhase;
+import org.entando.entando.kubernetes.controller.model.JeeServerStatus;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginSpec;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -46,7 +46,7 @@ public class KubernetesPluginMocker {
 
         when(plugin.getSpec()).thenReturn(spec);
         when(plugin.getMetadata()).thenReturn(metadata);
-        when(spec.getEntandoStatus()).thenReturn(entandoStatus);
+        when(plugin.getStatus()).thenReturn(entandoStatus);
         when(entandoStatus.getDbServerStatus()).thenReturn(singletonList(dbServerStatus));
         when(entandoStatus.getJeeServerStatus()).thenReturn(singletonList(jeeServerStatus));
         when(dbServerStatus.getDeploymentStatus()).thenReturn(dbDeploymentStatus);

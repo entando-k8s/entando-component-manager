@@ -9,19 +9,21 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.entando.kubernetes.controller.model.AbstractServerStatus;
+import org.entando.entando.kubernetes.controller.model.DbmsImageVendor;
+import org.entando.entando.kubernetes.controller.model.EntandoCustomResourceStatus;
+import org.entando.entando.kubernetes.controller.model.EntandoDeploymentPhase;
+import org.entando.entando.kubernetes.controller.model.plugin.DoneableEntandoPlugin;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginList;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginSpec;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginSpec.EntandoPluginSpecBuilder;
 import org.entando.kubernetes.exception.PluginNotFoundException;
 import org.entando.kubernetes.model.DeploymentStatus;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.model.EntandoPluginDeploymentResponse;
 import org.entando.kubernetes.model.PluginServiceStatus;
 import org.entando.kubernetes.model.PodStatus;
-import org.entando.kubernetes.model.plugin.AbstractServerStatus;
-import org.entando.kubernetes.model.plugin.DoneableEntandoPlugin;
-import org.entando.kubernetes.model.plugin.EntandoCustomResourceStatus;
-import org.entando.kubernetes.model.plugin.EntandoDeploymentPhase;
-import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.EntandoPluginList;
-import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,13 +49,19 @@ public class KubernetesService {
     private final @NonNull KubernetesClient client;
     private final @NonNull String namespace;
     private final @NonNull String entandoAppName;
+    private final @NonNull String keycloakName;
+    private final @NonNull String keycloakNamespace;
 
     public KubernetesService(@Autowired final KubernetesClient client,
                              @Value("${org.entando.kubernetes.namespace}") final String namespace,
-                             @Value("${org.entando.kubernetes.app-name}") final String entandoAppName) {
+                             @Value("${org.entando.kubernetes.app-name}") final String entandoAppName,
+                             @Value("${org.entando.keycloak.name}") String keycloakName,
+                             @Value("${org.entando.keycloak.namespace}") String keycloakNamespace) {
         this.client = client;
         this.namespace = namespace;
         this.entandoAppName = entandoAppName;
+        this.keycloakName = keycloakName;
+        this.keycloakNamespace = keycloakNamespace;
     }
 
     public EntandoPluginDeploymentResponse getDeployment(final String pluginId) {
@@ -82,22 +90,24 @@ public class KubernetesService {
 
     public void deploy(final EntandoPluginDeploymentRequest request) {
         final EntandoPlugin plugin = new EntandoPlugin();
-        final EntandoPluginSpec spec = new EntandoPluginSpec();
         final ObjectMeta objectMeta = new ObjectMeta();
 
         objectMeta.setName(request.getPlugin());
 
-        spec.setDbms(request.getDbms());
-        spec.setImage(request.getImage());
-        spec.setRoles(request.getRoles());
-        spec.setPermissions(request.getPermissions());
-        spec.setIngressPath(request.getIngressPath());
-        spec.setHealthCheckPath(request.getHealthCheckPath());
-        spec.setEntandoAppName(entandoAppName);
-        spec.setReplicas(1);
+        final EntandoPluginSpecBuilder specBuilder = new EntandoPluginSpecBuilder()
+                .withDbms(DbmsImageVendor.forValue(request.getDbms()))
+                .withImage(request.getImage())
+                .withIngressPath(request.getIngressPath())
+                .withHealthCheckPath(request.getHealthCheckPath())
+                .withEntandoApp(namespace, entandoAppName)
+                .withKeycloakServer(keycloakNamespace, keycloakName)
+                .withReplicas(1);
+
+        request.getRoles().forEach(r -> specBuilder.withRole(r.getName(), r.getCode()));
+        request.getPermissions().forEach(p -> specBuilder.withPermission(p.getClientId(), p.getRole()));
 
         plugin.setMetadata(objectMeta);
-        plugin.setSpec(spec);
+        plugin.setSpec(specBuilder.build());
         plugin.setApiVersion("entando.org/v1alpha1");
 
         getOperation().create(plugin);
@@ -106,7 +116,7 @@ public class KubernetesService {
     private EntandoPluginDeploymentResponse map(final EntandoPlugin deployment) {
         final String pluginId = deployment.getMetadata().getName();
         final EntandoPluginDeploymentResponse response = new EntandoPluginDeploymentResponse();
-        final EntandoCustomResourceStatus entandoStatus = deployment.getSpec().getEntandoStatus();
+        final EntandoCustomResourceStatus entandoStatus = deployment.getStatus();
         final EntandoDeploymentPhase deploymentPhase = ofNullable(entandoStatus)
                 .map(EntandoCustomResourceStatus::getEntandoDeploymentPhase)
                 .orElse(EntandoDeploymentPhase.STARTED);
