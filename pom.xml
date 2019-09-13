@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.entando</groupId>
@@ -20,11 +20,26 @@
         <relativePath/>
     </parent>
 
+    <repositories>
+        <repository>
+            <id>oss.sonatype.org-snapshot</id>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <entando.commons.version>1.0.0-SNAPSHOT</entando.commons.version>
+        <jib-maven-plugin.version>1.2.0</jib-maven-plugin.version>
+        <jib.registry>docker.io</jib.registry>
     </properties>
 
     <dependencies>
@@ -32,6 +47,18 @@
             <groupId>org.entando</groupId>
             <artifactId>web-commons</artifactId>
             <version>${entando.commons.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.entando.entando</groupId>
+            <artifactId>entando-k8s-operator</artifactId>
+            <version>5.2.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -51,6 +78,7 @@
             <artifactId>kubernetes-client</artifactId>
             <version>4.2.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.security.oauth.boot</groupId>
             <artifactId>spring-security-oauth2-autoconfigure</artifactId>
@@ -61,6 +89,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
@@ -87,17 +116,20 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>br.com.six2six</groupId>
             <artifactId>fixture-factory</artifactId>
             <version>3.1.0</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
@@ -162,6 +194,41 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>${jib-maven-plugin.version}</version>
+                <configuration>
+                    <from>
+                        <image>openjdk:8-jdk-alpine</image>
+                    </from>
+                    <to>
+                        <image>entando/${project.artifactId}:${project.version}</image>
+                    </to>
+                    <extraDirectories>
+                        <paths>src/main/jib</paths>
+                        <permissions>
+                            <permission>
+                                <file>/entrypoint.sh</file>
+                                <mode>777</mode>
+                            </permission>
+                        </permissions>
+                    </extraDirectories>
+                    <container>
+                        <entrypoint>
+                            <shell>/bin/sh</shell>
+                            <option>-c</option>
+                            <arg>/entrypoint.sh "@"</arg>
+                        </entrypoint>
+                        <ports>
+                            <port>8084</port>
+                        </ports>
+                        <environment>
+                        </environment>
+                        <useCurrentTimestamp>true</useCurrentTimestamp>
+                    </container>
+                </configuration>
             </plugin>
         </plugins>
     </build>

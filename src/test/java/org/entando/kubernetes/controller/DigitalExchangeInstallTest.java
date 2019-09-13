@@ -4,11 +4,13 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.Optional;
 import org.apache.commons.io.IOUtils;
+import org.entando.entando.kubernetes.controller.model.DbmsImageVendor;
+import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.KubernetesPluginMocker;
-import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.junit.After;
@@ -154,7 +156,7 @@ public class DigitalExchangeInstallTest {
         final EntandoPlugin plugin = captor.getValue();
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/todomvc");
-        assertThat(plugin.getSpec().getDbms()).isEqualTo("mysql");
+        assertThat(plugin.getSpec().getDbms()).isEqualTo(Optional.of(DbmsImageVendor.MYSQL));
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/todomvc");
         assertThat(plugin.getSpec().getHealthCheckPath()).isEqualTo("/api/v1/todos");
         assertThat(plugin.getSpec().getReplicas()).isEqualTo(1);
