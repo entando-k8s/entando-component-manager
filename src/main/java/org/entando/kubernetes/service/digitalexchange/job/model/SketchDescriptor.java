@@ -5,9 +5,9 @@ import lombok.Data;
 @Data
 public class SketchDescriptor {
 
-    private int x1;
-    private int y1;
-    private int x2;
-    private int y2;
+    private String x1;
+    private String y1;
+    private String x2;
+    private String y2;
 
 }
