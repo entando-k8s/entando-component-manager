@@ -34,10 +34,10 @@ public class DigitalExchangeTestApi {
                 .andExpect(jsonPath("payload.timeout").value(digitalExchange.getTimeout()))
                 .andExpect(jsonPath("payload.active").value(digitalExchange.isActive()));
 
-        if (digitalExchange.getClientKey() != null) {
-            resultActions.andExpect(jsonPath("payload.clientKey").value(digitalExchange.getClientKey()));
+        if (digitalExchange.getClientId() != null) {
+            resultActions.andExpect(jsonPath("payload.clientId").value(digitalExchange.getClientId()));
         } else {
-            resultActions.andExpect(jsonPath("payload.clientKey").doesNotExist());
+            resultActions.andExpect(jsonPath("payload.clientId").doesNotExist());
         }
         if (digitalExchange.getClientSecret() != null) {
             resultActions.andExpect(jsonPath("payload.clientSecret").value(digitalExchange.getClientSecret()));

@@ -23,7 +23,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: client_key
+                  name: client_id
                   type: varchar(128)
                   constraints:
                     nullable: true

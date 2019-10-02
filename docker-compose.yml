@@ -11,3 +11,18 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
+
+  entando-component-manager:
+    image: kerruba/entando-component-manager:5.2.0-SNAPSHOT
+    ports:
+      - "9999:8084"
+    environment:
+      PORT: 8084
+      DB_HOST: database
+      KEYCLOAK_AUTH_URL: "http://test-keycloak.192.168.1.9.nip.io/auth"
+      KEYCLOAK_CLIENT_ID: "test-entando-de"
+      KEYCLOAK_CLIENT_SECRET: "e8b31c02-2021-43d4-9c44-e261ac61a8cf"
+      ENTANDO_URL: "http://test-entando.192.168.1.9.nip.io/entando-de-app"
+      KUBERNETES_ENTANDO_APP_NAME: "test-entando"
+    depends_on:
+        - database

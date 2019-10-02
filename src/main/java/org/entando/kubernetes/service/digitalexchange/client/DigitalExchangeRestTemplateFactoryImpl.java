@@ -16,6 +16,7 @@ package org.entando.kubernetes.service.digitalexchange.client;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
@@ -34,9 +35,12 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
 
     private static final int DEFAULT_TIMEOUT = 10000;
 
+    @Value("${entando.auth-url}")
+    private String ENTANDO_AUTH_URL;
+
     @Override
     public RestTemplate createRestTemplate(final DigitalExchange digitalExchange) {
-        if (digitalExchange.getClientKey() == null || digitalExchange.getClientSecret() == null) {
+        if (digitalExchange.getClientId() == null || digitalExchange.getClientSecret() == null) {
             final RestTemplate template = new RestTemplate();
             template.setRequestFactory(getRequestFactory(digitalExchange));
             return template;
@@ -55,8 +59,9 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
     private OAuth2ProtectedResourceDetails getResourceDetails(final DigitalExchange digitalExchange) {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(digitalExchange.getClientKey());
+        resourceDetails.setClientId(digitalExchange.getClientId());
         resourceDetails.setClientSecret(digitalExchange.getClientSecret());
+        resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
         try {
             resourceDetails.setAccessTokenUri(getTokenUri(digitalExchange));
         } catch (IllegalArgumentException ex) {
@@ -68,11 +73,7 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
     }
 
     private String getTokenUri(final DigitalExchange digitalExchange) {
-        // TODO we'll need to change that to a configurable endpoint
-        return UriComponentsBuilder
-                .fromHttpUrl(digitalExchange.getUrl())
-                .pathSegment("api", "oauth", "token")
-                .toUriString();
+        return UriComponentsBuilder.fromUriString(ENTANDO_AUTH_URL).toUriString();
     }
 
     private ClientHttpRequestFactory getRequestFactory(final DigitalExchange digitalExchange) {

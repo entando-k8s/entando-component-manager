@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.entando</groupId>
-    <artifactId>entando-k8s-service</artifactId>
+    <artifactId>entando-component-manager</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
-    <name>Entando Kubernetes Service</name>
-    <description>A REST layer to the Kubernetes Plugin Custom Resource</description>
+    <name>Entando Component Manager</name>
+    <description>A microservice to install components exposed via the Entando Digital-Exchange</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -38,6 +38,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <entando.commons.version>1.0.0-SNAPSHOT</entando.commons.version>
+        <entando.version>5.2.0-SNAPSHOT</entando.version>
         <jib-maven-plugin.version>1.2.0</jib-maven-plugin.version>
         <jib.registry>docker.io</jib.registry>
     </properties>
@@ -204,7 +205,7 @@
                         <image>openjdk:8-jdk-alpine</image>
                     </from>
                     <to>
-                        <image>entando/${project.artifactId}:${project.version}</image>
+                        <image>entando/${project.artifactId}:${entando.version}</image>
                     </to>
                     <extraDirectories>
                         <paths>src/main/jib</paths>

@@ -46,8 +46,8 @@ public class DigitalExchangeEntity {
     @Column(name = "active")
     private boolean active;
 
-    @Column(name = "client_key")
-    private String clientKey;
+    @Column(name = "client_id")
+    private String clientId;
 
     @Column(name = "client_secret")
     private String clientSecret;
@@ -71,7 +71,7 @@ public class DigitalExchangeEntity {
         digitalExchange.setUrl(url);
         digitalExchange.setTimeout(timeout);
         digitalExchange.setActive(active);
-        digitalExchange.setClientKey(clientKey);
+        digitalExchange.setClientId(clientId);
         digitalExchange.setClientSecret(clientSecret);
         digitalExchange.setPublicKey(publicKey);
         return digitalExchange;
@@ -82,7 +82,7 @@ public class DigitalExchangeEntity {
         setUrl(digitalExchange.getUrl());
         setTimeout(digitalExchange.getTimeout());
         setActive(digitalExchange.isActive());
-        setClientKey(digitalExchange.getClientKey());
+        setClientId(digitalExchange.getClientId());
         setClientSecret(digitalExchange.getClientSecret());
         setPublicKey(digitalExchange.getPublicKey());
     }
