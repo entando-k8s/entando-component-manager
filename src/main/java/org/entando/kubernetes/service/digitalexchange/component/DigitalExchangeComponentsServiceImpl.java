@@ -71,8 +71,9 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     }
 
     private void processInstalled(final DigitalExchangeComponent component) {
-        kubernetesService.getDeploymentOptional(component.getId())
-            .ifPresent(deployment -> component.setInstalled(true));
+        kubernetesService.getPluginOptional(component.getId()).ifPresent(entandoPlugin -> component.setInstalled(true));
+//        kubernetesService.getDeploymentOptional(component.getId())
+//            .ifPresent(deployment -> component.setInstalled(true));
     }
 
     private PagedListRequest buildForwardedRequest(final PagedListRequest originalRequest) {

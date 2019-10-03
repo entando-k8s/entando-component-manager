@@ -74,6 +74,10 @@ public class KubernetesService {
                 .map(this::map);
     }
 
+    public Optional<EntandoPlugin> getPluginOptional(final String pluginId) {
+        return ofNullable(getOperation().withName(pluginId).get());
+    }
+
     public void deleteDeployment(final String pluginId) {
         final NonNamespaceOperation<EntandoPlugin, EntandoPluginList, DoneableEntandoPlugin,
                 Resource<EntandoPlugin, DoneableEntandoPlugin>> operation = getOperation();
