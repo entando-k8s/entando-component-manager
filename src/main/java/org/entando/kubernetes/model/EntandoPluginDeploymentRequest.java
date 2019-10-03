@@ -1,8 +1,8 @@
 package org.entando.kubernetes.model;
 
 import lombok.Data;
-import org.entando.entando.kubernetes.controller.model.plugin.ExpectedRole;
-import org.entando.entando.kubernetes.controller.model.plugin.Permission;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
+import org.entando.kubernetes.model.plugin.Permission;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;

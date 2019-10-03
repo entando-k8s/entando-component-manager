@@ -7,10 +7,10 @@ import static org.mockito.Mockito.verify;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.Optional;
-import org.entando.entando.kubernetes.controller.model.DbmsImageVendor;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
-import org.entando.entando.kubernetes.controller.model.plugin.ExpectedRole;
-import org.entando.entando.kubernetes.controller.model.plugin.Permission;
+import org.entando.kubernetes.model.DbmsImageVendor;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
+import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.service.KubernetesService;

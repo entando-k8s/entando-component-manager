@@ -1,44 +1,44 @@
 package org.entando.kubernetes.service;
 
+import static java.util.Comparator.comparing;
+import static java.util.Optional.ofNullable;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimStatus;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.entando.entando.kubernetes.controller.model.AbstractServerStatus;
-import org.entando.entando.kubernetes.controller.model.DbmsImageVendor;
-import org.entando.entando.kubernetes.controller.model.EntandoCustomResourceStatus;
-import org.entando.entando.kubernetes.controller.model.EntandoDeploymentPhase;
-import org.entando.entando.kubernetes.controller.model.plugin.DoneableEntandoPlugin;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginList;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginSpec;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginSpec.EntandoPluginSpecBuilder;
-import org.entando.kubernetes.exception.PluginNotFoundException;
-import org.entando.kubernetes.model.DeploymentStatus;
-import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
-import org.entando.kubernetes.model.EntandoPluginDeploymentResponse;
-import org.entando.kubernetes.model.PluginServiceStatus;
-import org.entando.kubernetes.model.PodStatus;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static java.util.Comparator.comparing;
-import static java.util.Optional.ofNullable;
+import java.util.stream.Stream;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.exception.PluginNotFoundException;
+import org.entando.kubernetes.model.AbstractServerStatus;
+import org.entando.kubernetes.model.DbmsImageVendor;
+import org.entando.kubernetes.model.DeploymentStatus;
+import org.entando.kubernetes.model.EntandoCustomResourceStatus;
+import org.entando.kubernetes.model.EntandoDeploymentPhase;
+import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
+import org.entando.kubernetes.model.EntandoPluginDeploymentResponse;
+import org.entando.kubernetes.model.PluginServiceStatus;
+import org.entando.kubernetes.model.PodStatus;
+import org.entando.kubernetes.model.plugin.DoneableEntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginList;
+import org.entando.kubernetes.model.plugin.EntandoPluginSpecBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -46,17 +46,22 @@ public class KubernetesService {
 
     public static final String ENTANDOPLUGIN_CRD_NAME = "entandoplugins.entando.org";
 
-    private final @NonNull KubernetesClient client;
-    private final @NonNull String namespace;
-    private final @NonNull String entandoAppName;
-    private final @NonNull String keycloakName;
-    private final @NonNull String keycloakNamespace;
+    private final @NonNull
+    KubernetesClient client;
+    private final @NonNull
+    String namespace;
+    private final @NonNull
+    String entandoAppName;
+    private final @NonNull
+    String keycloakName;
+    private final @NonNull
+    String keycloakNamespace;
 
     public KubernetesService(@Autowired final KubernetesClient client,
-                             @Value("${org.entando.kubernetes.namespace}") final String namespace,
-                             @Value("${org.entando.kubernetes.app-name}") final String entandoAppName,
-                             @Value("${org.entando.keycloak.name}") String keycloakName,
-                             @Value("${org.entando.keycloak.namespace}") String keycloakNamespace) {
+            @Value("${org.entando.kubernetes.namespace}") final String namespace,
+            @Value("${org.entando.kubernetes.app-name}") final String entandoAppName,
+            @Value("${org.entando.keycloak.name}") String keycloakName,
+            @Value("${org.entando.keycloak.namespace}") String keycloakNamespace) {
         this.client = client;
         this.namespace = namespace;
         this.entandoAppName = entandoAppName;
@@ -130,16 +135,16 @@ public class KubernetesService {
         response.setReplicas(deployment.getSpec().getReplicas());
         response.setDeploymentPhase(deploymentPhase.toValue());
 
-        ofNullable(entandoStatus)
-                .map(EntandoCustomResourceStatus::getJeeServerStatus)
-                .filter(list -> !list.isEmpty())
-                .map(list -> convert(list.get(0), "jeeServer"))
-                .ifPresent(response::setServerStatus);
 
-        ofNullable(entandoStatus)
-                .map(EntandoCustomResourceStatus::getDbServerStatus)
-                .map(list -> list.stream().map(item -> convert(item, "dbServer")).collect(Collectors.toList()))
-                .ifPresent(response::setExternalServiceStatuses);
+        if(entandoStatus != null) {
+            entandoStatus.forServerQualifiedBy("jeeServer")
+                    .map(status -> convert(status, "jeeServer"))
+                    .ifPresent(response::setServerStatus);
+
+            entandoStatus.forDbQualifiedBy("dbServer")
+                    .map(status -> convert(status, "dbServer"))
+                    .ifPresent(status -> response.setExternalServiceStatuses(Collections.singletonList(status)));
+        }
 
         final Integer availableReplicas = ofNullable(response.getServerStatus())
                 .map(PluginServiceStatus::getDeploymentStatus)
@@ -157,7 +162,9 @@ public class KubernetesService {
 
         serviceStatus.setReplicas(status.getDeploymentStatus().getReplicas());
         serviceStatus.setType(type);
-        serviceStatus.setVolumePhase(status.getPersistentVolumeClaimStatus().getPhase());
+        serviceStatus.setVolumePhase(status.getPersistentVolumeClaimStatuses().stream().map(
+                PersistentVolumeClaimStatus::getPhase)
+                .collect(Collectors.joining(", ")));
         serviceStatus.setPodStatus(podStatus);
         serviceStatus.setDeploymentStatus(deploymentStatus);
 
@@ -169,7 +176,8 @@ public class KubernetesService {
         deploymentStatus.setReadyReplicas(status.getDeploymentStatus().getReadyReplicas());
         deploymentStatus.setUpdatedReplicas(status.getDeploymentStatus().getUpdatedReplicas());
         deploymentStatus.setReplicas(status.getDeploymentStatus().getReplicas());
-        deploymentStatus.setConditions(sort(status.getDeploymentStatus().getConditions(), comparing(this::localDateTime)));
+        deploymentStatus
+                .setConditions(sort(status.getDeploymentStatus().getConditions(), comparing(this::localDateTime)));
 
         return serviceStatus;
     }
@@ -192,7 +200,8 @@ public class KubernetesService {
         final CustomResourceDefinition entandoPluginCrd = client.customResourceDefinitions()
                 .withName(ENTANDOPLUGIN_CRD_NAME).get();
         return client
-                .customResources(entandoPluginCrd, EntandoPlugin.class, EntandoPluginList.class, DoneableEntandoPlugin.class)
+                .customResources(entandoPluginCrd, EntandoPlugin.class, EntandoPluginList.class,
+                        DoneableEntandoPlugin.class)
                 .inNamespace(namespace);
     }
 

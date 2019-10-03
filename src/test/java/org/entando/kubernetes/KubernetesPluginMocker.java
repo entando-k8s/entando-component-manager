@@ -6,19 +6,19 @@ import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
-import org.entando.entando.kubernetes.controller.model.DbServerStatus;
-import org.entando.entando.kubernetes.controller.model.EntandoCustomResourceStatus;
-import org.entando.entando.kubernetes.controller.model.EntandoDeploymentPhase;
-import org.entando.entando.kubernetes.controller.model.JeeServerStatus;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPlugin;
-import org.entando.entando.kubernetes.controller.model.plugin.EntandoPluginSpec;
+import java.util.Collections;
+import java.util.Optional;
+import org.entando.kubernetes.model.DbServerStatus;
+import org.entando.kubernetes.model.EntandoCustomResourceStatus;
+import org.entando.kubernetes.model.EntandoDeploymentPhase;
+import org.entando.kubernetes.model.WebServerStatus;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.*;
 
@@ -28,7 +28,7 @@ public class KubernetesPluginMocker {
     @Mock public ObjectMeta metadata;
     @Mock public EntandoPluginSpec spec;
     @Mock public EntandoCustomResourceStatus entandoStatus;
-    @Mock public JeeServerStatus jeeServerStatus;
+    @Mock public WebServerStatus webServerStatus;
     @Mock public DbServerStatus dbServerStatus;
     @Mock public DeploymentStatus jeeDeploymentStatus;
     @Mock public DeploymentStatus dbDeploymentStatus;
@@ -47,14 +47,14 @@ public class KubernetesPluginMocker {
         when(plugin.getSpec()).thenReturn(spec);
         when(plugin.getMetadata()).thenReturn(metadata);
         when(plugin.getStatus()).thenReturn(entandoStatus);
-        when(entandoStatus.getDbServerStatus()).thenReturn(singletonList(dbServerStatus));
-        when(entandoStatus.getJeeServerStatus()).thenReturn(singletonList(jeeServerStatus));
+        when(entandoStatus.forDbQualifiedBy(any(String.class))).thenReturn(Optional.of(dbServerStatus));
+        when(entandoStatus.forServerQualifiedBy(any(String.class))).thenReturn(Optional.of(webServerStatus));
         when(dbServerStatus.getDeploymentStatus()).thenReturn(dbDeploymentStatus);
         when(dbServerStatus.getPodStatus()).thenReturn(dbPodStatus);
-        when(dbServerStatus.getPersistentVolumeClaimStatus()).thenReturn(dbPvcStatus);
-        when(jeeServerStatus.getDeploymentStatus()).thenReturn(jeeDeploymentStatus);
-        when(jeeServerStatus.getPersistentVolumeClaimStatus()).thenReturn(jeePvcStatus);
-        when(jeeServerStatus.getPodStatus()).thenReturn(jeePodStatus);
+        when(dbServerStatus.getPersistentVolumeClaimStatuses()).thenReturn(singletonList(dbPvcStatus));
+        when(webServerStatus.getDeploymentStatus()).thenReturn(jeeDeploymentStatus);
+        when(webServerStatus.getPersistentVolumeClaimStatuses()).thenReturn(singletonList(jeePvcStatus));
+        when(webServerStatus.getPodStatus()).thenReturn(jeePodStatus);
     }
 
     public void setDeploymentPhase(final EntandoDeploymentPhase phase) {
