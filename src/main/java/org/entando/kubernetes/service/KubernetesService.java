@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.PluginNotFoundException;
@@ -49,24 +48,24 @@ public class KubernetesService {
     private final @NonNull
     KubernetesClient client;
     private final @NonNull
-    String namespace;
+    String entandoAppNamespace;
     private final @NonNull
     String entandoAppName;
     private final @NonNull
-    String keycloakName;
+    String keycloakServerName;
     private final @NonNull
-    String keycloakNamespace;
+    String keycloakServerNamespace;
 
     public KubernetesService(@Autowired final KubernetesClient client,
-            @Value("${org.entando.kubernetes.namespace}") final String namespace,
-            @Value("${org.entando.kubernetes.app-name}") final String entandoAppName,
-            @Value("${org.entando.keycloak.name}") String keycloakName,
-            @Value("${org.entando.keycloak.namespace}") String keycloakNamespace) {
+            @Value("${entando.app.namespace}") final String entandoAppNamespace,
+            @Value("${entando.app.name}") final String entandoAppName,
+            @Value("${entando.keycloak.server.name}") String keycloakServerName,
+            @Value("${entando.keycloak.server.namespace}") String keycloakServerNamespace) {
         this.client = client;
-        this.namespace = namespace;
+        this.entandoAppNamespace = entandoAppNamespace;
         this.entandoAppName = entandoAppName;
-        this.keycloakName = keycloakName;
-        this.keycloakNamespace = keycloakNamespace;
+        this.keycloakServerName = keycloakServerName;
+        this.keycloakServerNamespace = keycloakServerNamespace;
     }
 
     public EntandoPluginDeploymentResponse getDeployment(final String pluginId) {
@@ -108,8 +107,8 @@ public class KubernetesService {
                 .withImage(request.getImage())
                 .withIngressPath(request.getIngressPath())
                 .withHealthCheckPath(request.getHealthCheckPath())
-                .withEntandoApp(namespace, entandoAppName)
-                .withKeycloakServer(keycloakNamespace, keycloakName)
+                .withEntandoApp(entandoAppNamespace, entandoAppName)
+                .withKeycloakServer(keycloakServerNamespace, keycloakServerName)
                 .withReplicas(1);
 
         request.getRoles().forEach(r -> specBuilder.withRole(r.getName(), r.getCode()));
@@ -202,7 +201,7 @@ public class KubernetesService {
         return client
                 .customResources(entandoPluginCrd, EntandoPlugin.class, EntandoPluginList.class,
                         DoneableEntandoPlugin.class)
-                .inNamespace(namespace);
+                .inNamespace(entandoAppNamespace);
     }
 
 }

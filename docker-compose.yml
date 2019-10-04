@@ -23,6 +23,8 @@ services:
       KEYCLOAK_CLIENT_ID: "test-entando-de"
       KEYCLOAK_CLIENT_SECRET: "e8b31c02-2021-43d4-9c44-e261ac61a8cf"
       ENTANDO_URL: "http://test-entando.192.168.1.9.nip.io/entando-de-app"
-      KUBERNETES_ENTANDO_APP_NAME: "test-entando"
+      ENTANDO_APP_NAME: "test-entando"
+      ENTANDO_APP_NAMESPACE: "test-namespace"
+      ENTANDO_KEYCLOAK_NAME: "
     depends_on:
         - database
