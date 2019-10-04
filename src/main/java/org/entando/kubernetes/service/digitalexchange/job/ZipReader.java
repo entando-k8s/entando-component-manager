@@ -2,7 +2,12 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.stream.Stream;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.service.digitalexchange.job.model.Descriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
@@ -12,11 +17,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -36,16 +39,36 @@ public class ZipReader {
     }
 
     public boolean containsResourceFolder() {
-        return zipEntries.get("resources/") != null;
+        return zipEntries.keySet().stream().anyMatch(n -> n.startsWith("resources/"));
     }
 
     public List<String> getResourceFolders() {
         return zipEntries.keySet().stream().filter(path -> path.startsWith("resources"))
-                .filter(path -> zipEntries.get(path).isDirectory())
+                .map(FilenameUtils::getFullPath) // Not always directory entry is available as a single path in the zip
+                .distinct()
                 .filter(path -> !path.equals("resources") && !path.equals("resources/"))
                 .map(path -> path.substring("resources/".length(), path.length() - 1))
+                .flatMap(this::getIntermediateFolders)
+                .distinct()
                 .sorted(Comparator.comparing(String::length))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Given a directory, returns a stream of all the intermediate directories
+     * e.g. /static/img/svg/full-size -> {static, static/img, static/img/svg, static/img/svg/full-size}
+     * @param path The path to use to extract intermediate directories
+     * @return Stream of String
+     */
+    private Stream<String> getIntermediateFolders(String path) {
+        List<Path> newPaths = new ArrayList<>();
+        Paths.get(path).iterator().forEachRemaining(newPaths::add);
+        String[] _tmpPaths = new String[newPaths.size()];
+        _tmpPaths[0] = newPaths.get(0).toString();
+        for (int i=1; i<newPaths.size(); i++) {
+           _tmpPaths[i] = Paths.get(_tmpPaths[i-1],newPaths.get(i).toString()).toString();
+        }
+        return Stream.of(_tmpPaths);
     }
 
     public List<String> getResourceFiles() {

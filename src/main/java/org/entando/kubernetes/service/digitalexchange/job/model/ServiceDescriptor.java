@@ -1,10 +1,11 @@
 package org.entando.kubernetes.service.digitalexchange.job.model;
 
 import lombok.Data;
-import org.entando.entando.kubernetes.controller.model.plugin.ExpectedRole;
-import org.entando.entando.kubernetes.controller.model.plugin.Permission;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
+import org.entando.kubernetes.model.plugin.Permission;
 
 import java.util.List;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
 
 @Data
 public class ServiceDescriptor {

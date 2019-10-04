@@ -1,5 +1,9 @@
 package org.entando.kubernetes;
 
+import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
+import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.DigitalExchangeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -9,19 +13,19 @@ import java.sql.SQLException;
 @Component
 public class DatabaseCleaner {
 
-    @Value("${spring.datasource.url}")
-    private String datasourceUrl;
+    @Autowired
+    DigitalExchangeRepository exchangeRepository;
 
-    @Value("${spring.datasource.username}")
-    private String datasourceUsername;
+    @Autowired
+    DigitalExchangeJobRepository jobRepository;
 
-    @Value("${spring.datasource.password}")
-    private String datasourcePassword;
+    @Autowired
+    DigitalExchangeJobComponentRepository jobComponentRepository;
 
-    public void cleanup() throws SQLException {
-        DriverManager.getConnection(datasourceUrl, datasourceUsername, datasourcePassword)
-                .createStatement()
-                .execute("TRUNCATE TABLE digital_exchange CASCADE");
+    public void cleanup() {
+        jobComponentRepository.deleteAll();
+        jobRepository.deleteAll();
+        exchangeRepository.deleteAll();
     }
 
 }

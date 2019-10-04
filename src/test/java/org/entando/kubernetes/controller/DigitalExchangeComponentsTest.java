@@ -96,13 +96,13 @@ public class DigitalExchangeComponentsTest {
 
         final String response =
                 "{ \n" +
-                "    \"payload\": [" + pluginA + "," + pluginB + "], \n" +
+                "    \"payload\": [" + pluginB + "," + pluginA + "], \n" +
                 "    \"metadata\": { \n" +
                 "      \"page\": 1, \n" +
                 "      \"pageSize\": 100, \n" +
                 "      \"lastPage\": 1, \n" +
                 "      \"totalItems\": 0, \n" +
-                "      \"sort\": \"code\", \n" +
+                "      \"sort\": \"id\", \n" +
                 "      \"direction\": \"ASC\", \n" +
                 "      \"filters\": [] \n" +
                 "    }, \n" +

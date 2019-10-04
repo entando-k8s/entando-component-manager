@@ -96,9 +96,11 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getDigitalExchangeName(), b.getDigitalExchangeName());
                 case DIGITAL_EXCHANGE_ID:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getDigitalExchangeId(), b.getDigitalExchangeId());
-                case NAME: // name is the default sorting field
-                default:
+                case NAME:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getName(), b.getName());
+                case ID: // id is the default sorting field
+                default:
+                    return (a, b) -> StringUtils.compareIgnoreCase(a.getId(), b.getId());
             }
         };
     }

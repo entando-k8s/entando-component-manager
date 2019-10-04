@@ -46,7 +46,7 @@ public class DigitalExchange {
     private int timeout;
     private boolean active;
 
-    private String clientKey;
+    private String clientId;
     private String clientSecret;
     private String publicKey;
 

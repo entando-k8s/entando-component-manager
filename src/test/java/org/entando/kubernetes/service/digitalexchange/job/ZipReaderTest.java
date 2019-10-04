@@ -1,5 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import java.util.Arrays;
 import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +38,8 @@ public class ZipReaderTest {
         entries.add(createFile("resources/favicon.ico", "icon"));
         entries.add(createFile("resources/css/styles.css", "body { padding: 0 }"));
         entries.add(createFile("resources/js/script.js", "$(document).ready();"));
+        entries.add(createFile("resources/static/js/script.js", "console.log(1)"));
+        entries.add(createDirectory("resources/static/img/svg/"));
 
         final Stream stream = entries.stream();
         when(zipFile.stream()).thenReturn(stream);
@@ -67,6 +70,13 @@ public class ZipReaderTest {
     @Test(expected = FileNotFoundException.class)
     public void testFileNotFound() throws IOException {
         zipReader.readFileAsDescriptor("resources/notfound.ico");
+    }
+
+    @Test
+    public void testGetResourceFolders() {
+        List<String> resourceFolders = zipReader.getResourceFolders();
+        List<String> expectedFolders = Arrays.asList("js", "css", "static", "static/js", "static/img", "static/img/svg");
+        assertThat(resourceFolders).isEqualTo(expectedFolders);
     }
 
     private ZipEntry createFile(final String fileName, final String content) throws IOException {
