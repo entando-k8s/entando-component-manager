@@ -40,7 +40,8 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     private final @NonNull DigitalExchangesClient client;
     private final @NonNull DigitalExchangesService exchangesService;
-    private final @NonNull KubernetesService kubernetesService;
+    private final @NonNull
+    KubernetesService kubernetesService;
 
     @Override
     public ResilientPagedMetadata<DigitalExchangeComponent> getComponents(final PagedListRequest requestList) {
@@ -71,9 +72,9 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     }
 
     private void processInstalled(final DigitalExchangeComponent component) {
-        kubernetesService.getPluginOptional(component.getId()).ifPresent(entandoPlugin -> component.setInstalled(true));
-//        kubernetesService.getDeploymentOptional(component.getId())
-//            .ifPresent(deployment -> component.setInstalled(true));
+        if (kubernetesService.isLinkedPlugin(component.getId())) {
+            component.setInstalled(true);
+        }
     }
 
     private PagedListRequest buildForwardedRequest(final PagedListRequest originalRequest) {
