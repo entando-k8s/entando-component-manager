@@ -71,7 +71,7 @@ public class KubernetesPluginMocker {
     }
 
     public void setReplicas(final int replicas) {
-        when(spec.getReplicas()).thenReturn(replicas);
+        when(spec.getReplicas()).thenReturn(Optional.of(replicas));
         when(jeeDeploymentStatus.getReplicas()).thenReturn(replicas);
         when(jeeDeploymentStatus.getAvailableReplicas()).thenReturn(replicas);
         when(jeeDeploymentStatus.getReadyReplicas()).thenReturn(replicas);

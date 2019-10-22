@@ -71,12 +71,12 @@ public class KubernetesService {
         objectMeta.setName(request.getPlugin());
         objectMeta.setNamespace(entandoAppNamespace);
 
-        EntandoPluginSpecBuilder specBuilder = new EntandoPluginSpecBuilder()
-                .withDbms(DbmsImageVendor.forValue(request.getDbms()))
+        EntandoPluginSpecBuilder specBuilder = (EntandoPluginSpecBuilder) new EntandoPluginSpecBuilder()
                 .withImage(request.getImage())
                 .withIngressPath(request.getIngressPath())
                 .withHealthCheckPath(request.getHealthCheckPath())
-                .withReplicas(1);
+                .withReplicas(1)
+                .withDbms(DbmsImageVendor.forValue(request.getDbms()));
 
         request.getRoles().forEach(r -> specBuilder.addNewRole(r.getName(), r.getCode()));
         request.getPermissions().forEach(p -> specBuilder.addNewPermission(p.getClientId(), p.getRole()));

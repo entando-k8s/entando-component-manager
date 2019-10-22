@@ -1,16 +1,28 @@
 package org.entando.kubernetes.controller;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import java.sql.SQLException;
 import org.entando.kubernetes.DatabaseCleaner;
-import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.KubernetesPluginMocker;
+import org.entando.kubernetes.client.K8SServiceClient;
+import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
@@ -20,45 +32,36 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.sql.SQLException;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @AutoConfigureWireMock(port = 8099)
-@TestExecutionListeners({ DependencyInjectionTestExecutionListener.class })
+@TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DigitalExchangeComponentsTest {
 
     private static final String URL = "/components";
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private DatabaseCleaner databaseCleaner;
-    @Autowired private DigitalExchangeTestApi digitalExchangeTestApi;
-    @Autowired private KubernetesClient client;
+    @Value("${entando.app.name}")
+    private String entandoAppName;
 
-    private KubernetesClientMocker mocker;
+    @Value("${entando.app.namespace}")
+    private String entandoAppNamespace;
 
-    @Before
-    public void setUp() {
-        mocker = new KubernetesClientMocker(client);
-    }
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private DatabaseCleaner databaseCleaner;
+    @Autowired
+    private DigitalExchangeTestApi digitalExchangeTestApi;
+    @Autowired
+    private K8SServiceClient k8SServiceClient;
+
 
     @After
     public void cleanup() throws SQLException {
         databaseCleaner.cleanup();
+        ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabase();
     }
 
     @Test
@@ -73,49 +76,62 @@ public class DigitalExchangeComponentsTest {
 
         final String pluginA =
                 "{ \n" +
-                "    \"id\": \"todomvc\", \n" +
-                "    \"name\": \"Todo MVC\", \n" +
-                "    \"type\": \"PLUGIN\", \n" +
-                "    \"lastUpdate\": \"2019-07-17 16:50:05\", \n" +
-                "    \"version\": \"latest\", \n" +
-                "    \"image\": \"http://todomvc.com/site-assets/logo-icon.png\", \n" +
-                "    \"description\": \"A great example to show a widget working\", \n" +
-                "    \"rating\": 5 \n" +
-                "}";
+                        "    \"id\": \"todomvc\", \n" +
+                        "    \"name\": \"Todo MVC\", \n" +
+                        "    \"type\": \"PLUGIN\", \n" +
+                        "    \"lastUpdate\": \"2019-07-17 16:50:05\", \n" +
+                        "    \"version\": \"latest\", \n" +
+                        "    \"image\": \"http://todomvc.com/site-assets/logo-icon.png\", \n" +
+                        "    \"description\": \"A great example to show a widget working\", \n" +
+                        "    \"rating\": 5 \n" +
+                        "}";
         final String pluginB =
                 "{ \n" +
-                "    \"id\": \"avatar\", \n" +
-                "    \"name\": \"Avatar\", \n" +
-                "    \"type\": \"PLUGIN\", \n" +
-                "    \"lastUpdate\": \"2019-07-17 16:50:05\", \n" +
-                "    \"version\": \"latest\", \n" +
-                "    \"image\": \"http://img.com/avatar-plugin.png\", \n" +
-                "    \"description\": \"The avatar plugin\", \n" +
-                "    \"rating\": 4.5 \n" +
-                "}";
+                        "    \"id\": \"avatar\", \n" +
+                        "    \"name\": \"Avatar\", \n" +
+                        "    \"type\": \"PLUGIN\", \n" +
+                        "    \"lastUpdate\": \"2019-07-17 16:50:05\", \n" +
+                        "    \"version\": \"latest\", \n" +
+                        "    \"image\": \"http://img.com/avatar-plugin.png\", \n" +
+                        "    \"description\": \"The avatar plugin\", \n" +
+                        "    \"rating\": 4.5 \n" +
+                        "}";
 
         final String response =
                 "{ \n" +
-                "    \"payload\": [" + pluginB + "," + pluginA + "], \n" +
-                "    \"metadata\": { \n" +
-                "      \"page\": 1, \n" +
-                "      \"pageSize\": 100, \n" +
-                "      \"lastPage\": 1, \n" +
-                "      \"totalItems\": 0, \n" +
-                "      \"sort\": \"id\", \n" +
-                "      \"direction\": \"ASC\", \n" +
-                "      \"filters\": [] \n" +
-                "    }, \n" +
-                "    \"errors\": [] \n" +
-                "  }";
+                        "    \"payload\": [" + pluginB + "," + pluginA + "], \n" +
+                        "    \"metadata\": { \n" +
+                        "      \"page\": 1, \n" +
+                        "      \"pageSize\": 100, \n" +
+                        "      \"lastPage\": 1, \n" +
+                        "      \"totalItems\": 0, \n" +
+                        "      \"sort\": \"id\", \n" +
+                        "      \"direction\": \"ASC\", \n" +
+                        "      \"filters\": [] \n" +
+                        "    }, \n" +
+                        "    \"errors\": [] \n" +
+                        "  }";
 
-        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components?page=1&pageSize=2147483647&direction=ASC&sort=id"))
+        EntandoAppPluginLink linkBetweenAppAndTodoMvcPlugin = new EntandoAppPluginLinkBuilder()
+                .withNewSpec()
+                .withEntandoApp(entandoAppNamespace, entandoAppName)
+                .withEntandoPlugin(entandoAppNamespace, "todomvc")
+                .endSpec()
+                .withNewMetadata()
+                .withNamespace(entandoAppNamespace)
+                .withName("link-" + entandoAppName + "-to-todomvc-plugin")
+                .endMetadata()
+                .build();
+
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+        k8SServiceClientTestDouble.addInMemoryLink(linkBetweenAppAndTodoMvcPlugin);
+
+        stubFor(WireMock.get(urlEqualTo(
+                "/community/api/digitalExchange/components?page=1&pageSize=2147483647&direction=ASC&sort=id"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody(response)));
 
         final KubernetesPluginMocker pluginMocker = new KubernetesPluginMocker();
-        mocker.mockResult("todomvc", pluginMocker.plugin);
-        mocker.mockResult("avatar", null);
 
         mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isOk())
@@ -143,8 +159,6 @@ public class DigitalExchangeComponentsTest {
                 .andExpect(jsonPath("payload[1].digitalExchangeName").value("Community"))
                 .andExpect(jsonPath("payload[1].digitalExchangeId").value(digitalExchangeId));
 
-        verify(mocker.operation, times(1)).withName(eq("todomvc"));
-        verify(mocker.operation, times(1)).withName(eq("avatar"));
     }
 
 }

@@ -25,6 +25,5 @@ services:
       ENTANDO_URL: "http://test-entando.192.168.1.9.nip.io/entando-de-app"
       ENTANDO_APP_NAME: "test-entando"
       ENTANDO_APP_NAMESPACE: "test-namespace"
-      ENTANDO_KEYCLOAK_NAME: "
     depends_on:
         - database
