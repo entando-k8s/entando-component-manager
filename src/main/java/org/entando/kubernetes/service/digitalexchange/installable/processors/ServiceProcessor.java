@@ -53,7 +53,7 @@ public class ServiceProcessor implements ComponentProcessor {
     @Override
     public void uninstall(final DigitalExchangeJobComponent component) {
         log.info("Removing deployment {}", component.getName());
-        kubernetesService.deleteDeployment(component.getName());
+        kubernetesService.unlinkPlugin(component.getName());
     }
 
     public class ServiceInstallable extends Installable<ServiceDescriptor> {
@@ -79,7 +79,7 @@ public class ServiceProcessor implements ComponentProcessor {
                 deploymentRequest.setRoles(representation.getRoles());
 
                 log.info("Deploying a new service {}", deploymentRequest.getImage());
-                kubernetesService.deploy(deploymentRequest);
+                kubernetesService.linkPlugin(deploymentRequest);
             });
         }
 

@@ -1,0 +1,209 @@
+package org.entando.kubernetes.client;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.hal.Jackson2HalModule;
+import org.springframework.hateoas.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
+import org.springframework.hateoas.mvc.TypeReferences.ResourceType;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
+import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
+import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
+import org.springframework.security.oauth2.common.AuthenticationScheme;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@Component
+public class DefaultK8SServiceClient implements K8SServiceClient {
+
+    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
+
+    private final String k8sServiceUrl;
+    private final String clientId;
+    private final String clientSecret;
+    private final String tokenUri;
+    private RestTemplate restTemplate;
+
+    public DefaultK8SServiceClient(@Value("${entando.k8s.service.url}") String k8sServiceUrl,
+            @Value("${keycloak.resource}") String clientId,
+            @Value("${keycloak.credentials.secret}") String clientSecret,
+            @Value("${entando.auth-url}") String tokenUri)  {
+        this.k8sServiceUrl = k8sServiceUrl;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.tokenUri = tokenUri;
+        this.restTemplate = newRestTemplate();
+    }
+
+    public RestTemplate getRestTemplate() {
+        return restTemplate;
+    }
+
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @Override
+    public List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace) {
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment("apps", entandoAppNamespace, entandoAppName, "links").toUriString();
+        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+               null,
+                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+        if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
+            throw new RuntimeException(
+                    String.format("An error occurred (%d-%s) while retriving links for app %s in namespace %s",
+                            responseEntity.getStatusCode().value(),
+                            responseEntity.getStatusCode().getReasonPhrase(),
+                            entandoAppName,
+                            entandoAppNamespace)
+            );
+        }
+        return Objects.requireNonNull(responseEntity.getBody()).getContent().stream()
+                .map(Resource::getContent)
+                .collect(Collectors.toList());
+
+    }
+
+    @Override
+    public EntandoPlugin getPluginForLink(EntandoAppPluginLink el) {
+        String pluginName = el.getSpec().getEntandoPluginName();
+        String pluginNamespace = el.getSpec().getEntandoPluginNamespace();
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment("plugins", pluginNamespace, pluginName).toUriString();
+        ResponseEntity<Resource<EntandoPlugin>> responseEntity = restTemplate
+                .exchange (url, HttpMethod.GET, null, new ResourceType<>());
+        if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
+            throw new RuntimeException(
+                    String.format("An error occurred (%d-%s) while searching plugin %s in namespace %s",
+                            responseEntity.getStatusCode().value(),
+                            responseEntity.getStatusCode().getReasonPhrase(),
+                            pluginName,
+                            pluginNamespace
+                    ));
+        }
+        return Objects.requireNonNull(responseEntity.getBody()).getContent();
+    }
+
+    @Override
+    public void unlink(EntandoAppPluginLink el) {
+        String appNamespace = el.getSpec().getEntandoAppNamespace();
+        String appName = el.getSpec().getEntandoAppName();
+        String pluginName = el.getSpec().getEntandoPluginName();
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment("apps", appNamespace, appName, "links", pluginName).toUriString();
+        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.DELETE,
+                null,
+                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException(
+                    String.format("An error occurred (%d-%s) while remove link between app %s in namespace %s and plugin %s",
+                            responseEntity.getStatusCode().value(),
+                            responseEntity.getStatusCode().getReasonPhrase(),
+                            appName,
+                            appNamespace,
+                            pluginName
+                    ));
+        }
+
+    }
+
+    @Override
+    public void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment("apps", namespace, name, "links").toUriString();
+        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(plugin),
+                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException(
+                    String.format("An error occurred (%d-%s) while linking app %s in namespace %s to plugin %s",
+                            responseEntity.getStatusCode().value(),
+                            responseEntity.getStatusCode().getReasonPhrase(),
+                            name,
+                            namespace,
+                            plugin.getMetadata().getName()
+                    ));
+        }
+
+    }
+
+    private RestTemplate newRestTemplate() {
+        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
+        if (resourceDetails == null) {
+            return null;
+        }
+        final OAuth2RestTemplate template = new OAuth2RestTemplate(resourceDetails);
+        template.setRequestFactory(getRequestFactory());
+        template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
+
+        List<HttpMessageConverter<?>> converters = template.getMessageConverters();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jackson2HalModule());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MappingJackson2HttpMessageConverter halConverter = new TypeConstrainedMappingJackson2HttpMessageConverter(
+                ResourceSupport.class);
+        halConverter.setObjectMapper(mapper);
+        halConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON));
+        converters.add(0, halConverter);
+
+        template.setMessageConverters(converters);
+
+        return template;
+    }
+
+    private OAuth2ProtectedResourceDetails getResourceDetails() {
+        final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
+        resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
+        resourceDetails.setClientId(clientId);
+        resourceDetails.setClientSecret(clientSecret);
+        resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
+        try {
+            resourceDetails.setAccessTokenUri(UriComponentsBuilder.fromUriString(tokenUri).toUriString());
+        } catch (IllegalArgumentException ex) {
+            LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using " + tokenUri + " as token uri"));
+            return null;
+        }
+        return resourceDetails;
+    }
+
+    private ClientHttpRequestFactory getRequestFactory() {
+        final HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+        final int timeout = 10000;
+
+        requestFactory.setConnectionRequestTimeout(timeout);
+        requestFactory.setConnectTimeout(timeout);
+        requestFactory.setReadTimeout(timeout);
+        return requestFactory;
+    }
+    
+}
