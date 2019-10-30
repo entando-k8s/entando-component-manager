@@ -1,6 +1,10 @@
 package org.entando.kubernetes.service;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,6 +24,7 @@ import org.springframework.stereotype.Component;
 public class KubernetesService {
 
     public static final String ENTANDOPLUGIN_CRD_NAME = "entandoplugins.entando.org";
+    public static final String KUBERNETES_NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
 
     private final K8SServiceClient k8sServiceClient;
     private final String entandoAppName;
@@ -30,7 +35,7 @@ public class KubernetesService {
             @Value("${entando.app.namespace}") String entandoAppNamespace) {
         this.k8sServiceClient = k8SServiceClient;
         this.entandoAppName = entandoAppName;
-        this.entandoAppNamespace = entandoAppNamespace;
+        this.entandoAppNamespace = getCurrentKubernetesNamespace().orElse(entandoAppNamespace);
     }
 
     public List<EntandoPlugin> getLinkedPlugins() {
@@ -86,6 +91,19 @@ public class KubernetesService {
         plugin.setApiVersion("entando.org/v1alpha1");
 
         k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, plugin);
+    }
+
+    private Optional<String> getCurrentKubernetesNamespace() {
+        Path namespacePath = Paths.get(KUBERNETES_NAMESPACE_PATH);
+        String namespace = null;
+        if (namespacePath.toFile().exists()) {
+            try {
+                namespace = new String(Files.readAllBytes(namespacePath));
+            } catch (IOException e) {
+                log.error(String.format("An error occurred while reading the namespace from file %s", namespacePath.toString()), e);
+            }
+        }
+        return Optional.ofNullable(namespace);
     }
 
 }
