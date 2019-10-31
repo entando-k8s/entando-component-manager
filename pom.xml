@@ -66,7 +66,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <entando.commons.version>1.0.0-SNAPSHOT</entando.commons.version>
-        <entando.version>5.2.0-SNAPSHOT</entando.version>
+        <entando.version>6.0.0-SNAPSHOT</entando.version>
         <jib-maven-plugin.version>1.2.0</jib-maven-plugin.version>
         <jib.registry>docker.io</jib.registry>
         <postgresql.version>9.4.1212</postgresql.version>
