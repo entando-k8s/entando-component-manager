@@ -1,7 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
@@ -9,6 +8,7 @@ import org.entando.kubernetes.exception.JobNotFoundException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.InstallableInstallResult;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
@@ -45,23 +45,35 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipFile;
 
 import static java.util.Optional.ofNullable;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
-    private final @NonNull DigitalExchangesService exchangesService;
-    private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
-    private final @NonNull DigitalExchangesClient client;
-    private final @NonNull DigitalExchangeJobRepository jobRepository;
-    private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
+    private final DigitalExchangesService exchangesService;
+    private final DigitalExchangeComponentsService digitalExchangeComponentsService;
+    private final DigitalExchangesClient client;
+    private final DigitalExchangeJobRepository jobRepository;
+    private final DigitalExchangeJobComponentRepository componentRepository;
+
+
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
+
+    public DigitalExchangeInstallService(
+            DigitalExchangesService exchangesService,
+            DigitalExchangeComponentsService digitalExchangeComponentsService,
+            DigitalExchangesClient client, DigitalExchangeJobRepository jobRepository,
+            DigitalExchangeJobComponentRepository componentRepository) {
+        this.exchangesService = exchangesService;
+        this.digitalExchangeComponentsService = digitalExchangeComponentsService;
+        this.client = client;
+        this.jobRepository = jobRepository;
+        this.componentRepository = componentRepository;
+    }
 
     @Transactional(rollbackFor = Throwable.class)
     public DigitalExchangeJob install(final String digitalExchangeId, final String componentId) {
@@ -101,6 +113,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         Path tempZipPath = null;
 
         try {
+            jobRepository.updateJobStatus(job.getId(), JobStatus.IN_PROGRESS);
+
             tempZipPath = Files.createTempFile(component.getId(), "");
 
             final DigitalExchangeBaseCall<InputStream> call = new DigitalExchangeBaseCall<>(
@@ -116,9 +130,11 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
             extractZip(job, tempZipPath);
         } catch (SignatureMatchingException ex) {
+            jobRepository.updateJobStatus(job.getId(), JobStatus.ERROR);
             log.error("Component signature doesn't match public key", ex);
             throw new JobExecutionException("Unable to verify component signature", ex);
         } catch (IOException | UncheckedIOException ex) {
+            jobRepository.updateJobStatus(job.getId(), JobStatus.ERROR);
             log.error("Error while downloading component", ex);
             throw new JobExecutionException("Unable to save component", ex);
         } finally {
@@ -144,10 +160,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private void extractZip(final DigitalExchangeJob job, final Path tempZipPath) {
         log.info("Processing DEPKG File");
-        try (final ZipFile zip = new ZipFile(tempZipPath.toFile())) {
-            final ZipReader zipReader = new ZipReader(zip);
-            final ComponentDescriptor descriptor = zipReader.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
-            final List<Installable> installables = getInstallables(job, zipReader, descriptor);
+        try (ZipFile zip = new ZipFile(tempZipPath.toFile())) {
+            ZipReader zipReader = new ZipReader(zip);
+            ComponentDescriptor descriptor = zipReader.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
+            List<Installable> installables = getInstallables(job, zipReader, descriptor);
 
             installables.forEach(installable -> installable.setComponent(persistComponent(job, installable)));
 
@@ -155,6 +171,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) { e.printStackTrace(); }
+
+                jobRepository.updateJobStatus(job.getId(), JobStatus.IN_PROGRESS);
 
                 final CompletableFuture[] completableFutures = installables.stream().map(installable -> {
                     final DigitalExchangeJobComponent component = installable.getComponent();
@@ -195,11 +213,39 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             log.error("Error while extracting zip file", ex);
             throw new JobExecutionException("Unable to extract zip file", ex);
         }
+
+
+    }
+
+    private CompletableFuture<InstallableInstallResult> updateDigitalExchangeComponentJobEntry(InstallableInstallResult result) {
+        if (result.hasException()) {
+            log.error("Installable '{}' has errors", result.getInstallable().getName(),
+                    result.getException());
+            result.getInstallable().getComponent().setStatus(JobStatus.ERROR);
+
+            if (result.getException().getCause() != null) {
+                String message = result.getException().getCause().getMessage();
+                if (result.getException().getCause() instanceof HttpClientErrorException) {
+                    final HttpClientErrorException httpException = (HttpClientErrorException) result.getException()
+                            .getCause();
+                    message = httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
+                }
+                componentRepository.updateJobStatus(result.getInstallable().getComponent().getId(), JobStatus.ERROR, message);
+            } else {
+                componentRepository.updateJobStatus(result.getInstallable().getComponent().getId(), JobStatus.ERROR, result.getException()
+                        .getMessage());
+            }
+        } else {
+            log.info("Installable '{}' finished successfully", result.getInstallable().getName());
+            componentRepository.updateJobStatus(result.getInstallable().getComponent().getId(), JobStatus.COMPLETED);
+        }
+
+        return CompletableFuture.completedFuture(result);
     }
 
     private List<Installable> getInstallables(final DigitalExchangeJob job, final ZipReader zipReader,
                                               final ComponentDescriptor descriptor) throws IOException {
-        final List<Installable> installables = new LinkedList<>();
+        List<Installable> installables = new LinkedList<>();
         for (final ComponentProcessor processor : componentProcessors) {
             ofNullable(processor.process(job, zipReader, descriptor))
                 .ifPresent(installables::addAll);
