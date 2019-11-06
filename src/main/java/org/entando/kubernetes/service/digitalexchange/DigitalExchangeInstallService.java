@@ -1,6 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import java.util.concurrent.ExecutionException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
@@ -58,8 +59,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private final DigitalExchangesClient client;
     private final DigitalExchangeJobRepository jobRepository;
     private final DigitalExchangeJobComponentRepository componentRepository;
-
-
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
@@ -171,8 +170,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) { e.printStackTrace(); }
-
-                jobRepository.updateJobStatus(job.getId(), JobStatus.IN_PROGRESS);
 
                 final CompletableFuture[] completableFutures = installables.stream().map(installable -> {
                     final DigitalExchangeJobComponent component = installable.getComponent();
