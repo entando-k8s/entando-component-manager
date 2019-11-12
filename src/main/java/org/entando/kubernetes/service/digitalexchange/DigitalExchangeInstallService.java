@@ -77,7 +77,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         DigitalExchangeComponent component = digitalExchangeComponentsService
                 .getComponent(digitalExchange.convert(), componentId).getPayload();
         Optional<DigitalExchangeJob> existingJob = jobRepository
-                .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALLED);
+                .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED);
 
         if (existingJob.isPresent()) {
             return existingJob.get();
@@ -100,21 +100,21 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         job.setDigitalExchange(digitalExchange);
         job.setProgress(0);
         job.setStartedAt(LocalDateTime.now());
-        job.setStatus(JobStatus.CREATED);
+        job.setStatus(JobStatus.INSTALL_CREATED);
 
         jobRepository.save(job);
         return job;
     }
 
     public DigitalExchangeJob getJob(final String componentId) {
-        return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALLED)
+        return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
                 .orElseThrow(JobNotFoundException::new);
     }
 
     private void submitInstallationJob(final DigitalExchangeJob job, final DigitalExchange digitalExchange,
             final DigitalExchangeComponent component) {
 
-        jobRepository.updateJobStatus(job.getId(), JobStatus.IN_PROGRESS);
+        jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
 
         getComponentPackageStream(digitalExchange, component)
                 .thenApply(packageStream -> createComponentLocalFile(component, packageStream))
@@ -183,12 +183,12 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         installableList.forEach(installable -> installable.setComponent(persistComponent(job, installable)));
 
         List<CompletableFuture> cfl = installableList.stream()
-                .peek(i -> componentRepository.updateJobStatus(i.getComponent().getId(), JobStatus.IN_PROGRESS))
+                .peek(i -> componentRepository.updateJobStatus(i.getComponent().getId(), JobStatus.INSTALL_IN_PROGRESS))
                 .map(Installable::install)
                 .map(cf -> cf.thenAcceptAsync(o -> {
                     InstallableInstallResult iir = (InstallableInstallResult) o; // Required for type erasure
                     componentRepository
-                            .updateJobStatus(iir.getInstallable().getComponent().getId(), JobStatus.COMPLETED);
+                            .updateJobStatus(iir.getInstallable().getComponent().getId(), JobStatus.INSTALL_COMPLETED);
                 }))
                 .collect(Collectors.toList());
 
@@ -211,11 +211,11 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                         e.getJobAssociatedTempPath().toFile().getAbsolutePath());
             }
         }
-        return JobStatus.ERROR;
+        return JobStatus.INSTALL_ERROR;
     }
 
     private JobStatus handleInstallationSuccess(Void any) {
-        return JobStatus.COMPLETED;
+        return JobStatus.INSTALL_COMPLETED;
     }
 
     private List<Installable> getInstallables(final DigitalExchangeJob job, final ZipReader zipReader,
@@ -234,7 +234,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         component.setComponentType(installable.getComponentType());
         component.setName(installable.getName());
         component.setChecksum(installable.getChecksum());
-        component.setStatus(JobStatus.CREATED);
+        component.setStatus(JobStatus.INSTALL_CREATED);
         return componentRepository.save(component);
     }
 

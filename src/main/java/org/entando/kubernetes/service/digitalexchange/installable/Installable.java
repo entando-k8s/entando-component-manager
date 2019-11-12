@@ -64,9 +64,9 @@ public abstract class Installable<T> {
         InstallableInstallResult result;
         try {
             runnable.run();
-            result = new InstallableInstallResult(this, JobStatus.COMPLETED);
+            result = new InstallableInstallResult(this, JobStatus.INSTALL_COMPLETED);
         } catch (Exception e) {
-            result = new InstallableInstallResult(this, JobStatus.ERROR, e);
+            result = new InstallableInstallResult(this, JobStatus.INSTALL_ERROR, e);
         }
         return result;
     }
