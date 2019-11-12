@@ -8,6 +8,8 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 
 import java.util.concurrent.CompletableFuture;
+import org.entando.kubernetes.model.digitalexchange.InstallableInstallResult;
+import org.entando.kubernetes.model.digitalexchange.JobStatus;
 
 /**
  * This class will represent something that can be installed on Entando
@@ -33,7 +35,7 @@ public abstract class Installable<T> {
      * This method will be called when every component was validated on the Digital Exchange bundle file
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
-    public abstract CompletableFuture install();
+    public abstract CompletableFuture<InstallableInstallResult> install();
 
     /**
      * Should return the component type to understand what to do in case of a rollback
@@ -56,6 +58,17 @@ public abstract class Installable<T> {
             log.error("Problem while processing checksum", e);
         }
         return null;
+    }
+
+    protected InstallableInstallResult wrap(Runnable runnable) {
+        InstallableInstallResult result;
+        try {
+            runnable.run();
+            result = new InstallableInstallResult(this, JobStatus.INSTALL_COMPLETED);
+        } catch (Exception e) {
+            result = new InstallableInstallResult(this, JobStatus.INSTALL_ERROR, e);
+        }
+        return result;
     }
 
     public DigitalExchangeJobComponent getComponent() {

@@ -14,13 +14,14 @@
 package org.entando.kubernetes.model.digitalexchange;
 
 public enum JobStatus {
-    
-    CREATED,
-    IN_PROGRESS,
-    COMPLETED,
-    ERROR,
 
-    UNINSTALLING,
-    ERROR_UNINSTALLING,
-    UNINSTALLED
+    INSTALL_CREATED,
+    INSTALL_IN_PROGRESS,
+    INSTALL_COMPLETED,
+    INSTALL_ERROR,
+
+    UNINSTALL_CREATED,
+    UNINSTALL_IN_PROGRESS,
+    UNINSTALL_ERROR,
+    UNINSTALL_COMPLETED
 }

@@ -35,19 +35,55 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    @Transactional(noRollbackFor = Throwable.class)
-    public DigitalExchangeJob uninstall(final String componentId) {
-        final DigitalExchangeJob job = jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALLED)
+    public DigitalExchangeJob uninstall(String componentId) {
+        DigitalExchangeJob job = jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
                 .orElse(null);
-        if (job == null || (job.getStatus() != JobStatus.ERROR && job.getStatus() != JobStatus.COMPLETED)) {
+        if (job == null || (job.getStatus() != JobStatus.INSTALL_ERROR && job.getStatus() != JobStatus.INSTALL_COMPLETED)) {
             return null;
         }
-        final List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(job);
 
-        jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALLING);
-        job.setStatus(JobStatus.UNINSTALLING);
+        List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(job);
 
-        final Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
+        jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
+        job.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
+
+        submitUninstallJob(job, components);
+
+        return job;
+    }
+
+    private void submitUninstallJob(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+        cleanupResourceFolder(job, components);
+
+        CompletableFuture[] completableFutures = components.stream().map(component -> {
+            if (component.getStatus() == JobStatus.INSTALL_COMPLETED && component.getComponentType() != ComponentType.RESOURCE) {
+
+                return (CompletableFuture) deleteComponent(component)
+                        .thenApply(object -> {
+                            componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED);
+                            return object;
+                        })
+                        .exceptionally(ex -> {
+                            log.error("Error while trying to uninstall component {}", component.getId(), ex);
+                            componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_ERROR, ex.getMessage());
+                            return null;
+                        });
+            }
+
+            return null;
+        }).filter(Objects::nonNull).toArray(CompletableFuture[]::new);
+
+        CompletableFuture.allOf(completableFutures)
+                .thenApply(v -> JobStatus.UNINSTALL_COMPLETED)
+                .exceptionally( th -> {
+                    log.error("An error occurred while uninstalling components of job " + job.getId(), th);
+                    return JobStatus.UNINSTALL_ERROR;
+                })
+                .thenAccept(status -> jobRepository.updateJobStatus(job.getId(), status));
+    }
+
+    private void cleanupResourceFolder(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+        Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
                 component.getComponentType() == ComponentType.RESOURCE
                         && component.getName().equals("/" + job.getComponentId())
         ).findFirst();
@@ -55,37 +91,11 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         if (rootResourceFolder.isPresent()) {
             engineService.deleteFolder("/" + job.getComponentId());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                    .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALLED));
+                    .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED));
         }
-
-        final CompletableFuture[] completableFutures = components.stream().map(component -> {
-            if (component.getStatus() == JobStatus.COMPLETED && component.getComponentType() != ComponentType.RESOURCE) {
-                final CompletableFuture<?> future = deleteComponent(component);
-                future.exceptionally(ex -> {
-                    log.error("Error while trying to uninstall component {}", component.getId(), ex);
-                    componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR_UNINSTALLING, ex.getMessage());
-                    return null;
-                });
-                future.thenApply(object -> {
-                    componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALLED);
-                    return object;
-                });
-
-                return future;
-            }
-
-            return null;
-        }).filter(Objects::nonNull).toArray(CompletableFuture[]::new);
-
-        CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
-            final JobStatus status = ex == null ? JobStatus.UNINSTALLING : JobStatus.ERROR_UNINSTALLING;
-            jobRepository.updateJobStatus(job.getId(), status);
-        });
-
-        return job;
     }
 
-    private CompletableFuture<?> deleteComponent(final DigitalExchangeJobComponent component) {
+    private CompletableFuture<?> deleteComponent(DigitalExchangeJobComponent component) {
         return CompletableFuture.runAsync(() ->
             componentProcessors.stream()
                     .filter(processor -> processor.shouldProcess(component.getComponentType()))
@@ -94,7 +104,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     }
 
     @Override
-    public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
 
