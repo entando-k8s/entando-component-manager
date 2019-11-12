@@ -97,7 +97,7 @@ databaseChangeLog:
                     nullable: true
               - column:
                   name: status
-                  type: integer
+                  type: TEXT
                   constraints:
                     nullable: false
               - column:
@@ -139,11 +139,11 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: status
-                  type: integer
+                  type: TEXT
                   constraints:
                     nullable: false
               - column:
                   name: component_type
-                  type: integer
+                  type: TEXT
                   constraints:
                     nullable: false
