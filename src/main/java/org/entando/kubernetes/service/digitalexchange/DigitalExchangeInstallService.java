@@ -14,11 +14,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
@@ -49,6 +51,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final DigitalExchangesService exchangesService;
@@ -56,21 +59,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private final DigitalExchangesClient client;
     private final DigitalExchangeJobRepository jobRepository;
     private final DigitalExchangeJobComponentRepository componentRepository;
-    private final ExecutorService pool = Executors.newFixedThreadPool(10);
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
-
-    public DigitalExchangeInstallService(
-            DigitalExchangesService exchangesService,
-            DigitalExchangeComponentsService digitalExchangeComponentsService,
-            DigitalExchangesClient client, DigitalExchangeJobRepository jobRepository,
-            DigitalExchangeJobComponentRepository componentRepository) {
-        this.exchangesService = exchangesService;
-        this.digitalExchangeComponentsService = digitalExchangeComponentsService;
-        this.client = client;
-        this.jobRepository = jobRepository;
-        this.componentRepository = componentRepository;
-    }
 
     public DigitalExchangeJob install(final String digitalExchangeId, final String componentId) {
         DigitalExchangeEntity digitalExchange = exchangesService.findEntityById(digitalExchangeId);
@@ -187,8 +177,14 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 .map(Installable::install)
                 .map(cf -> cf.thenAcceptAsync(o -> {
                     InstallableInstallResult iir = (InstallableInstallResult) o; // Required for type erasure
-                    componentRepository
-                            .updateJobStatus(iir.getInstallable().getComponent().getId(), JobStatus.INSTALL_COMPLETED);
+                    DigitalExchangeJobComponent component = iir.getInstallable().getComponent();
+                    JobStatus installStatus = iir.getJobStatus();
+                    componentRepository.updateJobStatus(component.getId(),installStatus);
+                    if (installStatus.equals(JobStatus.INSTALL_ERROR)) {
+                        log.error("An error occurred while installing component of type {} with name {} and ID {}",
+                                component.getComponentType(), component.getName(), component.getId(), iir.getException());
+                        throw new JobExecutionException(iir.getException().getMessage(), iir.getException());
+                    }
                 }))
                 .collect(Collectors.toList());
 
