@@ -37,15 +37,15 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
     @Transactional(noRollbackFor = Throwable.class)
     public DigitalExchangeJob uninstall(final String componentId) {
-        final DigitalExchangeJob job = jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALLED)
+        final DigitalExchangeJob job = jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
                 .orElse(null);
-        if (job == null || (job.getStatus() != JobStatus.ERROR && job.getStatus() != JobStatus.COMPLETED)) {
+        if (job == null || (job.getStatus() != JobStatus.INSTALL_ERROR && job.getStatus() != JobStatus.INSTALL_COMPLETED)) {
             return null;
         }
         final List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(job);
 
-        jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALLING);
-        job.setStatus(JobStatus.UNINSTALLING);
+        jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
+        job.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
 
         final Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
                 component.getComponentType() == ComponentType.RESOURCE
@@ -55,19 +55,19 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         if (rootResourceFolder.isPresent()) {
             engineService.deleteFolder("/" + job.getComponentId());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                    .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALLED));
+                    .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED));
         }
 
         final CompletableFuture[] completableFutures = components.stream().map(component -> {
-            if (component.getStatus() == JobStatus.COMPLETED && component.getComponentType() != ComponentType.RESOURCE) {
+            if (component.getStatus() == JobStatus.INSTALL_COMPLETED && component.getComponentType() != ComponentType.RESOURCE) {
                 final CompletableFuture<?> future = deleteComponent(component);
                 future.exceptionally(ex -> {
                     log.error("Error while trying to uninstall component {}", component.getId(), ex);
-                    componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR_UNINSTALLING, ex.getMessage());
+                    componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_ERROR, ex.getMessage());
                     return null;
                 });
                 future.thenApply(object -> {
-                    componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALLED);
+                    componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED);
                     return object;
                 });
 
@@ -78,7 +78,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         }).filter(Objects::nonNull).toArray(CompletableFuture[]::new);
 
         CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
-            final JobStatus status = ex == null ? JobStatus.UNINSTALLING : JobStatus.ERROR_UNINSTALLING;
+            final JobStatus status = ex == null ? JobStatus.UNINSTALL_COMPLETED : JobStatus.UNINSTALL_ERROR;
             jobRepository.updateJobStatus(job.getId(), status);
         });
 

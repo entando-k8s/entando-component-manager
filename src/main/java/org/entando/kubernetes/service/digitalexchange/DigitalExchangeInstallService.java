@@ -28,7 +28,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
@@ -63,13 +62,12 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    @Transactional(rollbackFor = Throwable.class)
     public DigitalExchangeJob install(final String digitalExchangeId, final String componentId) {
         final DigitalExchangeEntity digitalExchange = exchangesService.findEntityById(digitalExchangeId);
         final DigitalExchangeComponent component = digitalExchangeComponentsService
                 .getComponent(digitalExchange.convert(), componentId).getPayload();
         final Optional<DigitalExchangeJob> existingJob = jobRepository
-                .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALLED);
+                .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED);
 
         if (existingJob.isPresent()) {
             return existingJob.get();
@@ -83,49 +81,51 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         job.setDigitalExchange(digitalExchange);
         job.setProgress(0);
         job.setStartedAt(LocalDateTime.now());
-        job.setStatus(JobStatus.CREATED);
+        job.setStatus(JobStatus.INSTALL_CREATED);
 
         jobRepository.save(job);
 
-        install(job, digitalExchange.convert(), component);
+        submitInstallAsync(job, digitalExchange.convert(), component);
 
         return job;
     }
 
     public DigitalExchangeJob getJob(final String componentId) {
-        return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALLED)
+        return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
                 .orElseThrow(JobNotFoundException::new);
     }
 
-    private void install(final DigitalExchangeJob job, final DigitalExchange digitalExchange, final DigitalExchangeComponent component) {
-        Path tempZipPath = null;
+    private void submitInstallAsync(final DigitalExchangeJob job, final DigitalExchange digitalExchange, final DigitalExchangeComponent component) {
+        CompletableFuture.runAsync(() -> {
+            Path tempZipPath = null;
 
-        try {
-            tempZipPath = Files.createTempFile(component.getId(), "");
+            try {
+                tempZipPath = Files.createTempFile(component.getId(), "");
 
-            final DigitalExchangeBaseCall<InputStream> call = new DigitalExchangeBaseCall<>(
-                    HttpMethod.GET, "digitalExchange", "components", component.getId(), "package");
+                final DigitalExchangeBaseCall<InputStream> call = new DigitalExchangeBaseCall<>(
+                        HttpMethod.GET, "digitalExchange", "components", component.getId(), "package");
 
-            try (final InputStream in = client.getStreamResponse(digitalExchange, call)) {
-                Files.copy(in, tempZipPath, StandardCopyOption.REPLACE_EXISTING);
+                try (final InputStream in = client.getStreamResponse(digitalExchange, call)) {
+                    Files.copy(in, tempZipPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
+                    verifyDownloadedContentSignature(tempZipPath, digitalExchange, component);
+                }
+
+                extractZip(job, tempZipPath);
+            } catch (SignatureMatchingException ex) {
+                log.error("Component signature doesn't match public key", ex);
+                throw new JobExecutionException("Unable to verify component signature", ex);
+            } catch (IOException | UncheckedIOException ex) {
+                log.error("Error while downloading component", ex);
+                throw new JobExecutionException("Unable to save component", ex);
+            } finally {
+                if (tempZipPath != null && !tempZipPath.toFile().delete()) {
+                    log.warn("Unable to delete temporary zip file {}", tempZipPath.toFile().getAbsolutePath());
+                }
             }
-
-            if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
-                verifyDownloadedContentSignature(tempZipPath, digitalExchange, component);
-            }
-
-            extractZip(job, tempZipPath);
-        } catch (SignatureMatchingException ex) {
-            log.error("Component signature doesn't match public key", ex);
-            throw new JobExecutionException("Unable to verify component signature", ex);
-        } catch (IOException | UncheckedIOException ex) {
-            log.error("Error while downloading component", ex);
-            throw new JobExecutionException("Unable to save component", ex);
-        } finally {
-            if (tempZipPath != null && !tempZipPath.toFile().delete()) {
-                log.warn("Unable to delete temporary zip file {}", tempZipPath.toFile().getAbsolutePath());
-            }
-        }
+        });
     }
 
     private void verifyDownloadedContentSignature(
@@ -158,16 +158,16 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
                 final CompletableFuture[] completableFutures = installables.stream().map(installable -> {
                     final DigitalExchangeJobComponent component = installable.getComponent();
-                    componentRepository.updateJobStatus(component.getId(), JobStatus.IN_PROGRESS);
+                    componentRepository.updateJobStatus(component.getId(), JobStatus.INSTALL_IN_PROGRESS);
 
                     final CompletableFuture<?> future = installable.install();
                     try {
                         future.get();
                         log.info("Installable '{}' finished successfully", installable.getName());
-                        componentRepository.updateJobStatus(component.getId(), JobStatus.COMPLETED);
+                        componentRepository.updateJobStatus(component.getId(), JobStatus.INSTALL_COMPLETED);
                     } catch (InterruptedException | ExecutionException ex) {
                         log.error("Installable '{}' has errors", installable.getName(), ex);
-                        component.setStatus(JobStatus.ERROR);
+                        component.setStatus(JobStatus.INSTALL_ERROR);
 
                         if (ex.getCause() != null) {
                             String message = ex.getCause().getMessage();
@@ -175,16 +175,16 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                                 final HttpClientErrorException httpException = (HttpClientErrorException) ex.getCause();
                                 message = httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
                             }
-                            componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR, message);
+                            componentRepository.updateJobStatus(component.getId(), JobStatus.INSTALL_ERROR, message);
                         } else {
-                            componentRepository.updateJobStatus(component.getId(), JobStatus.ERROR, ex.getMessage());
+                            componentRepository.updateJobStatus(component.getId(), JobStatus.INSTALL_ERROR, ex.getMessage());
                         }
                     }
 
                     return future;
                 }).toArray(CompletableFuture[]::new);
                 CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
-                    final JobStatus status = ex == null ? JobStatus.COMPLETED : JobStatus.ERROR;
+                    final JobStatus status = ex == null ? JobStatus.INSTALL_COMPLETED : JobStatus.INSTALL_ERROR;
                     jobRepository.updateJobStatus(job.getId(), status);
                 });
             }).start();
@@ -213,7 +213,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         component.setComponentType(installable.getComponentType());
         component.setName(installable.getName());
         component.setChecksum(installable.getChecksum());
-        component.setStatus(JobStatus.CREATED);
+        component.setStatus(JobStatus.INSTALL_CREATED);
         return componentRepository.save(component);
     }
 
