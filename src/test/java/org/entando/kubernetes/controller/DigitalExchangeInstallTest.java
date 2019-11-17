@@ -38,6 +38,7 @@ import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.client.K8SServiceClient;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
@@ -273,7 +274,7 @@ public class DigitalExchangeInstallTest {
         mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("payload.status").value("COMPLETED"));
+                .andExpect(jsonPath("payload.status").value(JobStatus.INSTALL_COMPLETED.toString()));
 
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk());
