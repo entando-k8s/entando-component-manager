@@ -279,7 +279,7 @@ public class DigitalExchangeInstallTest {
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk());
 
-        waitFor(2000);
+        waitFor(5000);
 
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/todomvc_widget")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")));

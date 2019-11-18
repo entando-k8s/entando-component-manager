@@ -54,17 +54,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
 
-            Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
-                    component.getComponentType() == ComponentType.RESOURCE
-                            && component.getName().equals("/" + job.getComponentId())
-            ).findFirst();
-
-            if (rootResourceFolder.isPresent()) {
-                engineService.deleteFolder("/" + job.getComponentId());
-                components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                        .forEach(component -> componentRepository
-                                .updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED));
-            }
+            cleanupResourceFolder(job, components);
 
             CompletableFuture[] completableFutures = components.stream().map(component -> {
                 if (component.getStatus() == JobStatus.INSTALL_COMPLETED
@@ -92,6 +82,19 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
                 jobRepository.updateJobStatus(job.getId(), status);
             });
         });
+    }
+
+    private void cleanupResourceFolder(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+        Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
+                component.getComponentType() == ComponentType.RESOURCE
+                        && component.getName().equals("/" + job.getComponentId())
+        ).findFirst();
+
+        if (rootResourceFolder.isPresent()) {
+            engineService.deleteFolder("/" + job.getComponentId());
+            components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
+                    .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED));
+        }
     }
 
     private CompletableFuture<?> deleteComponent(final DigitalExchangeJobComponent component) {

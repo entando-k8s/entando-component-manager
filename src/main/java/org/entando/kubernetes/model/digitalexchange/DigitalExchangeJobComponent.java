@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.digitalexchange;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +29,7 @@ public class DigitalExchangeJobComponent {
     private DigitalExchangeJob job;
 
     @Column(name = "component_type")
+    @Enumerated(EnumType.STRING)
     private ComponentType componentType;
 
     @Column(name = "name")
@@ -39,6 +42,7 @@ public class DigitalExchangeJobComponent {
     private String checksum;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private JobStatus status;
 
     // metadata?

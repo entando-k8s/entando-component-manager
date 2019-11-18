@@ -14,6 +14,8 @@
 package org.entando.kubernetes.model.digitalexchange;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
@@ -65,6 +67,7 @@ public class DigitalExchangeJob {
     private double progress;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private JobStatus status;
 
     @PrePersist

@@ -77,7 +77,16 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             return existingJob.get();
         }
 
-        DigitalExchangeJob job = new DigitalExchangeJob();
+        DigitalExchangeJob job = createInstallJob(componentId, digitalExchange, component);
+
+        submitInstallAsync(job, digitalExchange.convert(), component);
+
+        return job;
+    }
+
+    private DigitalExchangeJob createInstallJob(String componentId, DigitalExchangeEntity digitalExchange,
+            DigitalExchangeComponent component) {
+        final DigitalExchangeJob job = new DigitalExchangeJob();
 
         job.setComponentId(componentId);
         job.setComponentName(component.getName());
@@ -88,9 +97,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         job.setStatus(JobStatus.INSTALL_CREATED);
 
         jobRepository.save(job);
-
-        submitInstallAsync(job, digitalExchange.convert(), component);
-
         return job;
     }
 
