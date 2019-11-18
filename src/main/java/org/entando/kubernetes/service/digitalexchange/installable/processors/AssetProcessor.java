@@ -1,16 +1,11 @@
 package org.entando.kubernetes.service.digitalexchange.installable.processors;
 
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.model.digitalexchange.InstallableInstallResult;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangeUninstallService;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
@@ -20,9 +15,15 @@ import org.entando.kubernetes.service.digitalexchange.job.model.ComponentDescrip
 import org.entando.kubernetes.service.digitalexchange.job.model.FileDescriptor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 /**
- * Processor to handle Static files to be stored by Entando. Commonly used for js, images and css.
- * <p>
+ * Processor to handle Static files to be stored by Entando.
+ * Commonly used for js, images and css.
+ *
  * This processor will also create the folders.
  *
  * @author Sergio Marcelino
@@ -36,7 +37,7 @@ public class AssetProcessor implements ComponentProcessor {
 
     @Override
     public List<? extends Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
-            final ComponentDescriptor descriptor) throws IOException {
+                                               final ComponentDescriptor descriptor) throws IOException {
 
         final List<Installable> installables = new LinkedList<>();
 
@@ -65,7 +66,6 @@ public class AssetProcessor implements ComponentProcessor {
 
     /**
      * This process will be hard coded in the {@link DigitalExchangeUninstallService}
-     *
      * @param componentType The component type being processed
      * @return always false
      */
@@ -86,10 +86,10 @@ public class AssetProcessor implements ComponentProcessor {
         }
 
         @Override
-        public CompletableFuture<InstallableInstallResult> install() {
-            return CompletableFuture.supplyAsync(() -> {
+        public CompletableFuture install() {
+            return CompletableFuture.runAsync(() -> {
                 log.info("Uploading file {}", representation.getFilename());
-                return wrap(() -> engineService.uploadFile(representation));
+                engineService.uploadFile(representation);
             });
         }
 
@@ -112,10 +112,10 @@ public class AssetProcessor implements ComponentProcessor {
         }
 
         @Override
-        public CompletableFuture<InstallableInstallResult> install() {
-            return CompletableFuture.supplyAsync(() -> {
+        public CompletableFuture install() {
+            return CompletableFuture.runAsync(() -> {
                 log.info("Creating directory {}", representation);
-                return wrap(() -> engineService.createFolder(representation));
+                engineService.createFolder(representation);
             });
         }
 

@@ -6,7 +6,6 @@ import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.model.digitalexchange.InstallableInstallResult;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
@@ -68,8 +67,8 @@ public class ServiceProcessor implements ComponentProcessor {
         }
 
         @Override
-        public CompletableFuture<InstallableInstallResult> install() {
-            return CompletableFuture.supplyAsync(() -> {
+        public CompletableFuture install() {
+            return CompletableFuture.runAsync(() -> {
                 final EntandoPluginDeploymentRequest deploymentRequest = new EntandoPluginDeploymentRequest();
                 deploymentRequest.setPlugin(job.getComponentId());
                 deploymentRequest.setDbms(representation.getDbms());
@@ -80,7 +79,7 @@ public class ServiceProcessor implements ComponentProcessor {
                 deploymentRequest.setRoles(representation.getRoles());
 
                 log.info("Deploying a new service {}", deploymentRequest.getImage());
-                return wrap(() -> kubernetesService.linkPlugin(deploymentRequest));
+                kubernetesService.linkPlugin(deploymentRequest);
             });
         }
 

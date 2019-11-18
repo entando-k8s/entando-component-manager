@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.model.digitalexchange.InstallableInstallResult;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoEngineService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
@@ -74,10 +73,10 @@ public class WidgetProcessor implements ComponentProcessor {
         }
 
         @Override
-        public CompletableFuture<InstallableInstallResult> install() {
-            return CompletableFuture.supplyAsync(() -> {
+        public CompletableFuture install() {
+            return CompletableFuture.runAsync(() -> {
                 log.info("Registering Widget {}", representation.getCode());
-                return wrap(() -> engineService.registerWidget(representation));
+                engineService.registerWidget(representation);
             });
         }
 

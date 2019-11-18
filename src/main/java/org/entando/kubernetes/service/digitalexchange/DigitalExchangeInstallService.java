@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import static java.util.Optional.ofNullable;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -14,12 +15,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +29,6 @@ import org.entando.kubernetes.exception.JobNotFoundException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.model.digitalexchange.InstallableInstallResult;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
@@ -37,7 +37,7 @@ import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesCli
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.service.digitalexchange.installable.ComponentProcessor;
 import org.entando.kubernetes.service.digitalexchange.installable.Installable;
-import org.entando.kubernetes.service.digitalexchange.job.JobExecutionException;
+import org.entando.kubernetes.service.digitalexchange.job.JobPackageException;
 import org.entando.kubernetes.service.digitalexchange.job.ZipReader;
 import org.entando.kubernetes.service.digitalexchange.job.model.ComponentDescriptor;
 import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
@@ -48,21 +48,25 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
-    private final DigitalExchangesService exchangesService;
-    private final DigitalExchangeComponentsService digitalExchangeComponentsService;
-    private final DigitalExchangesClient client;
-    private final DigitalExchangeJobRepository jobRepository;
-    private final DigitalExchangeJobComponentRepository componentRepository;
+    private final @NonNull DigitalExchangesService exchangesService;
+    private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
+    private final @NonNull DigitalExchangesClient client;
+    private final @NonNull DigitalExchangeJobRepository jobRepository;
+    private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
+    private final ExecutorService POOL = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
+            .setDaemon(true).setNameFormat("InstallableOperation-%d").build());
+
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    public DigitalExchangeJob install(final String digitalExchangeId, final String componentId) {
+    public DigitalExchangeJob install(String digitalExchangeId, String componentId) {
         DigitalExchangeEntity digitalExchange = exchangesService.findEntityById(digitalExchangeId);
         DigitalExchangeComponent component = digitalExchangeComponentsService
                 .getComponent(digitalExchange.convert(), componentId).getPayload();
@@ -75,7 +79,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         DigitalExchangeJob job = createInstallJob(componentId, digitalExchange, component);
 
-        submitInstallationJob(job, digitalExchange.convert(), component);
+        submitInstallAsync(job, digitalExchange.convert(), component);
 
         return job;
     }
@@ -96,136 +100,160 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         return job;
     }
 
-    public DigitalExchangeJob getJob(final String componentId) {
+    public DigitalExchangeJob getJob(String componentId) {
         return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
                 .orElseThrow(JobNotFoundException::new);
     }
 
-    private void submitInstallationJob(final DigitalExchangeJob job, final DigitalExchange digitalExchange,
-            final DigitalExchangeComponent component) {
-
-        jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
-
-        getComponentPackageStream(digitalExchange, component)
-                .thenApply(packageStream -> createComponentLocalFile(component, packageStream))
-                .thenApply(packageLocalPath -> {
-                    if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
-                        verifyDownloadedContentSignature(packageLocalPath, digitalExchange, component);
-                    }
-                    return packageLocalPath;
-                })
-                .thenApply(packageLocalPath -> extractInstallableFromZip(job, packageLocalPath))
-                .thenAccept(installableList -> processAllInstallable(job, installableList))
-                .thenApply(this::handleInstallationSuccess)
-                .exceptionally(this::handleInstallationFailure)
-                .thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
-
-    }
-
-
-    private CompletableFuture<InputStream> getComponentPackageStream(DigitalExchange digitalExchange,
+    private void submitInstallAsync(DigitalExchangeJob job, DigitalExchange digitalExchange,
             DigitalExchangeComponent component) {
-        return CompletableFuture.supplyAsync(() -> {
-            DigitalExchangeBaseCall<InputStream> call = new DigitalExchangeBaseCall<>(
-                    HttpMethod.GET, "digitalExchange", "components", component.getId(), "package");
-            return client.getStreamResponse(digitalExchange, call);
+        CompletableFuture.runAsync(() -> {
+            jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
+            CompletableFuture<InputStream> downloadComponentPackageStep = CompletableFuture
+                    .supplyAsync(() -> downloadComponentPackage(digitalExchange, component));
+
+            CompletableFuture<Path> copyPackageLocallyStep = downloadComponentPackageStep
+                    .thenApply(is -> savePackageStreamLocally(component, is));
+
+            CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath -> {
+                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
+                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
+                }
+                return tempPath;
+            });
+
+            CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
+                    .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
+
+            CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
+                    .thenApply(installableList -> processInstallableList(job, installableList) );
+
+            CompletableFuture<JobStatus> handlePossibleErrorsStep = installComponentsStep
+                    .exceptionally(this::handlePipelineException);
+
+            handlePossibleErrorsStep.thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
+
         });
     }
 
-    private Path createComponentLocalFile(DigitalExchangeComponent component, InputStream packageStream) {
-        Path tempPath = null;
+    private JobStatus handlePipelineException(Throwable th) {
+        log.error("An error occurred during digital-exchange component installation", th.getCause());
+        if (th.getCause() instanceof JobPackageException) {
+            Path packagePath = ((JobPackageException) th.getCause()).getPackagePath();
+            try {
+                Files.deleteIfExists(packagePath);
+            } catch (IOException e) {
+                log.error("Impossible to clean local package file {} due to an exception", packagePath, e);
+            }
+        }
+        return JobStatus.INSTALL_ERROR;
+    }
+
+    private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {
+        installableList.forEach(installable -> installable.setComponent(persistComponent(job, installable)));
+
+        List<JobStatus> statuses = installableList.stream().map(installable -> {
+            DigitalExchangeJobComponent installableComponent = installable.getComponent();
+            componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
+
+            CompletableFuture<?> future = installable.install();
+            CompletableFuture<JobStatus> installResult = future.thenApply(vd -> {
+                log.info("Installable '{}' finished successfully", installable.getName());
+                componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
+                return JobStatus.INSTALL_COMPLETED;
+            }).exceptionally(th -> {
+                log.error("Installable '{}' has errors", installable.getName(), th.getCause());
+
+                installableComponent.setStatus(JobStatus.INSTALL_ERROR);
+                if (th.getCause() != null) {
+                    String message = th.getCause().getMessage();
+                    if (th.getCause() instanceof HttpClientErrorException) {
+                        HttpClientErrorException httpException = (HttpClientErrorException) th.getCause();
+                        message =
+                                httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
+                    }
+                    componentRepository
+                            .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, message);
+                } else {
+                    componentRepository
+                            .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, th.getMessage());
+                }
+                return JobStatus.INSTALL_ERROR;
+            });
+            return installResult.join();
+        }).collect(Collectors.toList());
+
+//                    return CompletableFuture.allOf(completableFutures)
+//                            .thenApply(vd -> JobStatus.INSTALL_COMPLETED)
+//                            .exceptionally(th -> {
+//                                log.error("Installation on package failed", th.getCause());
+//                                return JobStatus.INSTALL_ERROR;
+//                            }).join();
+        log.info("All have been processed");
+        Optional<JobStatus> anyError = statuses.stream().filter(js -> js.equals(JobStatus.INSTALL_ERROR)).findAny();
+        return anyError.orElse(JobStatus.INSTALL_COMPLETED);
+    }
+
+    private List<Installable> getInstallablesAndRemoveTempPackage(DigitalExchangeJob job, Path p) {
         try {
-            tempPath = Files.createTempFile(component.getId(), "");
-            Files.copy(packageStream, tempPath, StandardCopyOption.REPLACE_EXISTING);
-            return tempPath;
+            ZipFile zip = new ZipFile(p.toFile());
+            ZipReader zipReader = new ZipReader(zip);
+            ComponentDescriptor descriptor = zipReader
+                    .readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
+            List<Installable> installableList = getInstallables(job, zipReader, descriptor);
+            Files.delete(p);
+            return installableList;
         } catch (IOException e) {
-            throw new JobExecutionException("An error occurred while copying the package stream locally", e, tempPath);
+            throw new JobPackageException(p, "Unable to extract the list of installable from the zip file", e);
         }
     }
 
-    private void verifyDownloadedContentSignature(
-            final Path tempPath, final DigitalExchange digitalExchange,
-            final DigitalExchangeComponent component) {
+    private Path savePackageStreamLocally(DigitalExchangeComponent component, InputStream is) {
+        Path tempPath = null;
+        try {
+            tempPath = Files.createTempFile(component.getId(), "");
+            Files.copy(is, tempPath, StandardCopyOption.REPLACE_EXISTING);
+            return tempPath;
+        } catch (IOException e) {
+            throw new JobPackageException(tempPath,
+                    "An error occurred while copying the package stream locally", e);
+        }
+    }
 
-        try (final InputStream in = Files.newInputStream(tempPath, StandardOpenOption.READ)) {
-            final boolean signatureMatches = SignatureUtil.verifySignature(
+    private InputStream downloadComponentPackage(DigitalExchange digitalExchange, DigitalExchangeComponent component) {
+        DigitalExchangeBaseCall<InputStream> call = new DigitalExchangeBaseCall<>(
+                HttpMethod.GET, "digitalExchange", "components", component.getId(), "package");
+        return client.getStreamResponse(digitalExchange, call);
+    }
+
+    private void verifyDownloadedContentSignature(
+            Path tempZipPath, DigitalExchange digitalExchange,
+            DigitalExchangeComponent component) {
+
+        try (InputStream in = Files.newInputStream(tempZipPath, StandardOpenOption.READ)) {
+            boolean signatureMatches = SignatureUtil.verifySignature(
                     in, SignatureUtil.publicKeyFromPEM(digitalExchange.getPublicKey()),
                     component.getSignature());
             if (!signatureMatches) {
                 throw new SignatureMatchingException("Component signature not matching public key");
             }
         } catch (IOException e) {
-            throw new JobExecutionException("An error occurred while copying the package stream locally", e, tempPath);
+            throw new JobPackageException(tempZipPath, e);
         }
     }
 
-    private List<Installable> extractInstallableFromZip(DigitalExchangeJob job, Path tempPath) {
-        try (ZipFile zip = new ZipFile(tempPath.toFile())) {
-            ZipReader zipReader = new ZipReader(zip);
-            ComponentDescriptor descriptor = zipReader.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
-            return getInstallables(job, zipReader, descriptor);
-        } catch (IOException e) {
-            throw new JobExecutionException("Unable to extract the installables from the zip file", e, tempPath);
-        }
-    }
-
-    private void processAllInstallable(DigitalExchangeJob job, List<Installable> installableList) {
-        installableList.forEach(installable -> installable.setComponent(persistComponent(job, installable)));
-
-        List<CompletableFuture> cfl = installableList.stream()
-                .peek(i -> componentRepository.updateJobStatus(i.getComponent().getId(), JobStatus.INSTALL_IN_PROGRESS))
-                .map(Installable::install)
-                .map(cf -> cf.thenAcceptAsync(o -> {
-                    InstallableInstallResult iir = (InstallableInstallResult) o; // Required for type erasure
-                    DigitalExchangeJobComponent component = iir.getInstallable().getComponent();
-                    JobStatus installStatus = iir.getJobStatus();
-                    componentRepository.updateJobStatus(component.getId(),installStatus);
-                    if (installStatus.equals(JobStatus.INSTALL_ERROR)) {
-                        log.error("An error occurred while installing component of type {} with name {} and ID {}",
-                                component.getComponentType(), component.getName(), component.getId(), iir.getException());
-                        throw new JobExecutionException(iir.getException().getMessage(), iir.getException());
-                    }
-                }))
-                .collect(Collectors.toList());
-
-        CompletableFuture
-                .allOf(cfl.toArray(new CompletableFuture[]{}))
-                .thenRun(() -> log.info("Finished processing. Have a nice day!"))
-                .exceptionally(ex -> {
-                    log.error("Error while extracting zip file", ex);
-                    throw new JobExecutionException("An error occurred while installing components", ex);
-                });
-
-    }
-
-    private JobStatus handleInstallationFailure(Throwable ex) {
-        log.error("An error occurred while processing the digital-exchange package", ex);
-        if (ex instanceof JobExecutionException) {
-            JobExecutionException e = (JobExecutionException) ex;
-            if (e.getJobAssociatedTempPath() != null && !e.getJobAssociatedTempPath().toFile().delete()) {
-                log.warn("Unable to delete temporary zip file {}",
-                        e.getJobAssociatedTempPath().toFile().getAbsolutePath());
-            }
-        }
-        return JobStatus.INSTALL_ERROR;
-    }
-
-    private JobStatus handleInstallationSuccess(Void any) {
-        return JobStatus.INSTALL_COMPLETED;
-    }
-
-    private List<Installable> getInstallables(final DigitalExchangeJob job, final ZipReader zipReader,
-            final ComponentDescriptor descriptor) throws IOException {
+    private List<Installable> getInstallables(DigitalExchangeJob job, ZipReader zipReader,
+            ComponentDescriptor descriptor) throws IOException {
         List<Installable> installables = new LinkedList<>();
-        for (final ComponentProcessor processor : componentProcessors) {
+        for (ComponentProcessor processor : componentProcessors) {
             ofNullable(processor.process(job, zipReader, descriptor))
                     .ifPresent(installables::addAll);
         }
         return installables;
     }
 
-    private DigitalExchangeJobComponent persistComponent(final DigitalExchangeJob job, final Installable installable) {
-        final DigitalExchangeJobComponent component = new DigitalExchangeJobComponent();
+    private DigitalExchangeJobComponent persistComponent(DigitalExchangeJob job, Installable installable) {
+        DigitalExchangeJobComponent component = new DigitalExchangeJobComponent();
         component.setJob(job);
         component.setComponentType(installable.getComponentType());
         component.setName(installable.getName());
@@ -235,8 +263,9 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     }
 
     @Override
-    public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
 
 }
+
