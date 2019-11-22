@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter@Setter
-public class ContentTypeDescriptor extends Descriptor {
+public class ContentTypeDescriptor implements Descriptor {
 
     private String code;
     private String name;

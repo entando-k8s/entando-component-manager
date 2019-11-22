@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.util.Map;
 
 @Getter@Setter
-public class PageModelDescriptor extends Descriptor {
+public class PageModelDescriptor implements Descriptor {
 
     private String code;
     private String description;

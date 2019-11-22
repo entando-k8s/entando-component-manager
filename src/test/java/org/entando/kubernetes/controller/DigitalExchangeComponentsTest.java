@@ -112,7 +112,7 @@ public class DigitalExchangeComponentsTest {
                         "    \"errors\": [] \n" +
                         "  }";
 
-        EntandoAppPluginLink linkBetweenAppAndTodoMvcPlugin = new EntandoAppPluginLinkBuilder()
+        EntandoAppPluginLink linkBetweenAppAndTodoMvcPlugin =  new EntandoAppPluginLinkBuilder()
                 .withNewSpec()
                 .withEntandoApp(entandoAppNamespace, entandoAppName)
                 .withEntandoPlugin(entandoAppNamespace, "todomvc")

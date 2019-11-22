@@ -1,5 +1,12 @@
 package org.entando.kubernetes.service.digitalexchange.installable.processors;
 
+import static java.util.Optional.ofNullable;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
@@ -12,14 +19,8 @@ import org.entando.kubernetes.service.digitalexchange.installable.Installable;
 import org.entando.kubernetes.service.digitalexchange.job.ZipReader;
 import org.entando.kubernetes.service.digitalexchange.job.model.ComponentDescriptor;
 import org.entando.kubernetes.service.digitalexchange.job.model.ComponentSpecDescriptor;
-import org.entando.kubernetes.service.digitalexchange.job.model.ServiceDescriptor;
+import org.entando.kubernetes.service.digitalexchange.job.model.PluginDescriptor;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import static java.util.Optional.ofNullable;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -32,17 +33,23 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ServiceProcessor implements ComponentProcessor {
+public class PluginProcessor implements ComponentProcessor {
 
     private final KubernetesService kubernetesService;
 
     @Override
-    public List<? extends Installable> process(final DigitalExchangeJob job, final ZipReader zipReader, final ComponentDescriptor descriptor) {
-        return ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getService)
-                .map(serviceDescriptor -> new ServiceInstallable(serviceDescriptor, job))
-                .map(Collections::singletonList)
-                .orElseGet(Collections::emptyList);
+    public List<? extends Installable> process(DigitalExchangeJob job,
+            ZipReader zipReader,
+            ComponentDescriptor descriptor) throws IOException {
+        Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getPlugins);
+        List<Installable> installableList = new ArrayList<>();
+        if (optionalPlugins.isPresent()) {
+            for (String filename: optionalPlugins.get()) {
+                PluginDescriptor pluginDescriptor = zipReader.readDescriptorFile(filename, PluginDescriptor.class);
+                installableList.add(new PluginInstallable(pluginDescriptor, job));
+            }
+        }
+        return installableList;
     }
 
     @Override
@@ -56,13 +63,13 @@ public class ServiceProcessor implements ComponentProcessor {
         kubernetesService.unlinkPlugin(component.getName());
     }
 
-    public class ServiceInstallable extends Installable<ServiceDescriptor> {
+    public class PluginInstallable extends Installable<PluginDescriptor> {
 
         private final DigitalExchangeJob job;
 
-        public ServiceInstallable(final ServiceDescriptor serviceDescriptor,
+        public PluginInstallable(final PluginDescriptor plugin,
                                   final DigitalExchangeJob job) {
-            super(serviceDescriptor);
+            super(plugin);
             this.job = job;
         }
 
@@ -70,16 +77,8 @@ public class ServiceProcessor implements ComponentProcessor {
         public CompletableFuture install() {
             return CompletableFuture.runAsync(() -> {
                 final EntandoPluginDeploymentRequest deploymentRequest = new EntandoPluginDeploymentRequest();
-                deploymentRequest.setPlugin(job.getComponentId());
-                deploymentRequest.setDbms(representation.getDbms());
-                deploymentRequest.setHealthCheckPath(representation.getHealthCheckPath());
-                deploymentRequest.setIngressPath(representation.getIngressPath());
-                deploymentRequest.setImage(representation.getImage());
-                deploymentRequest.setPermissions(representation.getPermissions());
-                deploymentRequest.setRoles(representation.getRoles());
-
-                log.info("Deploying a new service {}", deploymentRequest.getImage());
-                kubernetesService.linkPlugin(deploymentRequest);
+                log.info("Deploying a new plugin {}", deploymentRequest.getImage());
+                kubernetesService.linkPlugin(representation);
             });
         }
 

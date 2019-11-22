@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class ComponentSpecDescriptor {
 
-    private ServiceDescriptor service;
+    private List<String> plugins;
     private List<String> widgets;
     private List<String> pageModels;
     private List<String> contentTypes;

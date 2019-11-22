@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ComponentDescriptor extends Descriptor {
+public class ComponentDescriptor implements Descriptor {
 
     private String code;
     private String description;

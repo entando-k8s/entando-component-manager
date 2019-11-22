@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.util.Map;
 
 @Getter@Setter
-public class ContentModelDescriptor extends Descriptor {
+public class ContentModelDescriptor implements Descriptor {
 
     private String id;
     private String contentType;

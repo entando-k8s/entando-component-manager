@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.util.Map;
 
 @Getter@Setter
-public class WidgetDescriptor extends Descriptor {
+public class WidgetDescriptor implements Descriptor {
 
     private String code;
     private Map<String, String> titles;

@@ -1,15 +1,9 @@
-version: entando.org/v1alpha1
 code: inail_bundle
 description: This is the inail bundle
 
 components:
-  service:
-    image: entando/todomvc
-    ingressPath: /todomvc
-    healthCheckPath: /api/v1/todos
-    dbms: mysql
-    roles: []
-    permissions: []
+  plugins:
+    - plugins/todomvc.yaml
 
   widgets:
     - widgets/my_widget_descriptor.yaml

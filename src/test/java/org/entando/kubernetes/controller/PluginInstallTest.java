@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.Optional;
 import org.entando.kubernetes.model.DbmsImageVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.KubernetesClientMocker;
@@ -53,20 +54,25 @@ public class PluginInstallTest {
 
     @Test
     public void testDeployment() {
-        final EntandoPluginDeploymentRequest request = new EntandoPluginDeploymentRequest();
-        request.setImage("entando/entando-avatar-plugin");
-        request.setPlugin("avatar-plugin");
-        request.setIngressPath("/avatar");
-        request.setHealthCheckPath("/actuator/health");
-        request.setDbms("mysql");
-        request.setRoles(singletonList(new ExpectedRole("read", "Read")));
-        request.setPermissions(singletonList(new Permission("another-client", "read")));
+        EntandoPlugin entandoPlugin = new EntandoPluginBuilder()
+                .withNewMetadata()
+                    .withName("avatar-plugin")
+                .endMetadata()
+                .withNewSpec()
+                    .withImage("entando/entando-avatar-plugin")
+                    .withIngressPath("/avatar")
+                    .withHealthCheckPath("/actuator/health")
+                    .withDbms(DbmsImageVendor.MYSQL)
+                    .addNewRole("read", "Read")
+                    .addNewPermission("another-client", "read")
+                .endSpec()
+                .build();
 
         final DigitalExchange digitalExchange = new DigitalExchange();
         digitalExchange.setId(DIGITAL_EXCHANGE_ID);
         digitalExchange.setUrl(DIGITAL_EXCHANGE_URL);
 
-        kubernetesService.linkPlugin(request);
+        kubernetesService.linkPlugin(entandoPlugin);
 
         final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
         verify(mocker.operation, times(1)).create(captor.capture());
