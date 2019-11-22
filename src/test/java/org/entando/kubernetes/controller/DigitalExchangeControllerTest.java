@@ -2,7 +2,7 @@ package org.entando.kubernetes.controller;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.entando.kubernetes.DatabaseCleaner;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -2,7 +2,7 @@ package org.entando.kubernetes.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;

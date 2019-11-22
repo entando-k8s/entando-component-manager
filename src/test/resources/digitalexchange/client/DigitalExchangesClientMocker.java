@@ -14,11 +14,10 @@
 package org.entando.kubernetes.digitalexchange.client;
 
 import org.entando.entando.aps.system.services.digitalexchange.DigitalExchangesManager;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangeRestTemplateFactory;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClientImpl;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactory;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl;
 import org.springframework.context.MessageSource;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;

@@ -4,9 +4,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
 import org.entando.kubernetes.repository.DigitalExchangeRepository;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
-import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchangeCall;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
+import org.entando.kubernetes.client.digitalexchange.SimpleDigitalExchangeCall;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.web.exception.NotFoundException;
 import org.entando.web.response.RestError;
 import org.entando.web.response.SimpleRestResponse;
@@ -70,7 +70,7 @@ public class DigitalExchangesService {
         return result;
     }
 
-    DigitalExchangeEntity findEntityById(final String id) {
+    public DigitalExchangeEntity findEntityById(final String id) {
         return repository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
     }

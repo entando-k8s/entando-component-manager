@@ -1,0 +1,118 @@
+package org.entando.kubernetes.model.bundle;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.stream.Stream;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+public class ZipReader {
+
+    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final Map<String, ZipEntry> zipEntries;
+    private final ZipFile zipFile;
+
+    public ZipReader(final ZipFile zipFile) {
+        this.zipFile = zipFile;
+        this.zipEntries = zipFile.stream()
+                .collect(Collectors.toMap(ZipEntry::getName, self -> self));
+    }
+
+    public boolean containsResourceFolder() {
+        return zipEntries.keySet().stream().anyMatch(n -> n.startsWith("resources/"));
+    }
+
+    public List<String> getResourceFolders() {
+        return zipEntries.keySet().stream().filter(path -> path.startsWith("resources"))
+                .map(FilenameUtils::getFullPath) // Not always directory entry is available as a single path in the zip
+                .distinct()
+                .filter(path -> !path.equals("resources") && !path.equals("resources/"))
+                .map(path -> path.substring("resources/".length(), path.length() - 1))
+                .flatMap(this::getIntermediateFolders)
+                .distinct()
+                .sorted(Comparator.comparing(String::length))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Given a directory, returns a stream of all the intermediate directories
+     * e.g. /static/img/svg/full-size -> {static, static/img, static/img/svg, static/img/svg/full-size}
+     * @param path The path to use to extract intermediate directories
+     * @return Stream of String
+     */
+    private Stream<String> getIntermediateFolders(String path) {
+        List<Path> newPaths = new ArrayList<>();
+        Paths.get(path).iterator().forEachRemaining(newPaths::add);
+        String[] _tmpPaths = new String[newPaths.size()];
+        _tmpPaths[0] = newPaths.get(0).toString();
+        for (int i=1; i<newPaths.size(); i++) {
+           _tmpPaths[i] = Paths.get(_tmpPaths[i-1],newPaths.get(i).toString()).toString();
+        }
+        return Stream.of(_tmpPaths);
+    }
+
+    public List<String> getResourceFiles() {
+        return zipEntries.keySet().stream().filter(path -> path.startsWith("resources"))
+                .filter(path -> !zipEntries.get(path).isDirectory())
+                .collect(Collectors.toList());
+    }
+
+    public <T extends Descriptor> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
+        final ZipEntry zipEntry = getFile(fileName);
+        return readDescriptorFile(zipFile.getInputStream(zipEntry), clazz);
+    }
+
+    public String readFileAsString(final String folder, final String fileName) throws IOException {
+        final ZipEntry zipEntry = getFile(isEmpty(folder) ? fileName : folder + "/" + fileName);
+
+        try (final StringWriter writer = new StringWriter()) {
+            IOUtils.copy(zipFile.getInputStream(zipEntry), writer);
+            return writer.toString();
+        }
+    }
+
+    public FileDescriptor readFileAsDescriptor(final String fileName) throws IOException {
+        final ZipEntry zipEntry = getFile(fileName);
+
+        try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            IOUtils.copy(zipFile.getInputStream(zipEntry), outputStream);
+            final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
+            final String filename = fileName.substring(fileName.lastIndexOf('/') + 1);
+            final String folder = fileName.lastIndexOf('/') >= "resources/".length()
+                    ? fileName.substring("resources/".length(), fileName.lastIndexOf('/'))
+                    : "";
+            return new FileDescriptor(folder, filename, base64);
+        }
+    }
+
+    private <T extends Descriptor> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+        return mapper.readValue(file, clazz);
+    }
+
+    private ZipEntry getFile(final String fileName) throws FileNotFoundException {
+        final ZipEntry zipEntry = zipEntries.get(fileName);
+        if (zipEntry == null) throw new FileNotFoundException("File " + fileName + " not found");
+        return zipEntry;
+    }
+
+}

@@ -13,10 +13,9 @@
  */
 package org.entando.kubernetes.digitalexchange.client;
 
-import org.assertj.core.api.Assertions;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangeRestTemplateFactory;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangeRestTemplateFactoryImpl;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactory;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactoryImpl;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.junit.Before;
 import org.junit.Test;
 

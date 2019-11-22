@@ -19,8 +19,8 @@ import org.entando.entando.aps.system.services.digitalexchange.client.SimpleDigi
 import org.entando.entando.web.common.model.SimpleRestResponse;
 import org.entando.entando.web.digitalexchange.rating.DEComponentRatingRequest;
 import org.entando.kubernetes.controller.digitalexchange.rating.DEComponentRatingRequest;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
-import org.entando.kubernetes.service.digitalexchange.client.SimpleDigitalExchangeCall;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
+import org.entando.kubernetes.client.digitalexchange.SimpleDigitalExchangeCall;
 import org.entando.kubernetes.service.digitalexchange.rating.DEComponentRatingResult;
 import org.entando.kubernetes.service.digitalexchange.rating.DERatingService;
 import org.entando.kubernetes.service.digitalexchange.rating.DERatingsSummary;

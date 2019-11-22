@@ -1,0 +1,16 @@
+apiVersion: entando.org/v1alpha
+metadata:
+  name: todomvc
+  label: {}
+  namespace: todomvc-namespace
+spec:
+  image: entando/todomvc
+  ingressPath: /todomvc
+  healthCheckPath: /api/v1/todos
+  dbms: mysql
+  roles: []
+  permissions: []
+  parameters: {}
+  securityLevel: LENIENT
+  connectionConfigNames: []
+

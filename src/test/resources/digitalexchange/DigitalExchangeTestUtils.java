@@ -14,7 +14,7 @@
 package org.entando.kubernetes.digitalexchange;
 
 import org.apache.logging.log4j.util.Strings;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

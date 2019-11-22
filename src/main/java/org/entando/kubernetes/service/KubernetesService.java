@@ -1,6 +1,5 @@
 package org.entando.kubernetes.service;
 
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,13 +9,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.client.K8SServiceClient;
-import org.entando.kubernetes.model.DbmsImageVendor;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
-import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
-import org.entando.kubernetes.model.plugin.EntandoPluginSpecBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

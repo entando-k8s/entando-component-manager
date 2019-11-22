@@ -1,14 +1,14 @@
 package org.entando.kubernetes.client;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
-public class K8SServiceClientTestDouble implements K8SServiceClient{
+public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     private List<EntandoAppPluginLink> inMemoryLinks = new ArrayList<>();
 

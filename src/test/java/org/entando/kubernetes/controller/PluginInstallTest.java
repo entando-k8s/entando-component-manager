@@ -1,21 +1,17 @@
 package org.entando.kubernetes.controller;
 
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.Optional;
+import org.entando.kubernetes.KubernetesClientMocker;
 import org.entando.kubernetes.model.DbmsImageVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
-import org.entando.kubernetes.model.plugin.Permission;
-import org.entando.kubernetes.KubernetesClientMocker;
-import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

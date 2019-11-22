@@ -21,7 +21,7 @@ import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.common.model.RestError;
 import org.entando.entando.web.common.model.SimpleRestResponse;
 import org.entando.entando.web.digitalexchange.DigitalExchangeValidator;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
