@@ -72,7 +72,7 @@ public class KubernetesService {
                 .withSpec(plugin.getSpec())
                 .build();
 
-        newPlugin.getMetadata().setNamespace("");
+        newPlugin.getMetadata().setNamespace(null);
 
         k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
     }
