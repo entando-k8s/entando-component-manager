@@ -70,6 +70,11 @@
         <jib-maven-plugin.version>1.2.0</jib-maven-plugin.version>
         <jib.registry>docker.io</jib.registry>
         <postgresql.version>9.4.1212</postgresql.version>
+        <sonar.projectKey>entando_entando-component-manager</sonar.projectKey>
+        <sonar.organization>entando</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.java.checkstyle.reportPaths>target/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
     </properties>
 
     <dependencies>
@@ -322,6 +327,12 @@
                         <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <goals>
+                            <goal>report</goal>
                         </goals>
                     </execution>
                 </executions>
