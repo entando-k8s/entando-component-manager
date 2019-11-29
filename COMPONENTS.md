@@ -8,30 +8,15 @@ In order to install components, Digital Exchange will require a bundle with a de
 The descriptor file will aggregate all components inside and has the following structure. The extension is YAML.
 
 ```yaml
-version: entando.org/v1alpha1 # This is the structure's version
 code: inail_bundle # The bundle ID
 description: This is the inail bundle # The description of the bundle
 
 components: # All components will be here
-  
+
   # Optional. Use if the component requires a deployment
-  service:
-    image: entando/todomvc # Docker image identifier
-    ingressPath: /todomvc # The ingress path for the API Gateway
-    healthCheckPath: /api/v1/todos # Every service will require a health check path
-    dbms: mysql # Optional, can be mysql, postgres, etc.
-
-    # Roles will require users to have a role in order to perform an arbitrary action on the service 
-    # Optional (but has to be defined as `roles: []`)
-    roles:
-      - code: read-anything # The role identifier
-        name: Read anything # The role name to be shown on the UI
-
-    # Permissions will add a permission to this service to access an external service on the cluster
-    # Optional (but has to be defined as `permissions: []`)
-    permissions:
-      - clientId: entando-app # The client id to add the permission
-        role: superuser # The specific role to add to this service
+  plugins:
+    - folder/you/want/my_plugin_descriptor.yaml
+    - folder/you/want/another_plugin_descriptor.yaml
 
   # To create widgets you will need to add references to the descriptor files
   widgets:
@@ -60,9 +45,44 @@ components: # All components will be here
         en: My Title # The title in English
 ```
 
+## Plugin Descriptor
+A plugin should be described using the EntandoPlugin CustomResource format.
+```yaml
+kind: "EntandoPlugin"
+apiVersion: "entando.org/v1alpha1"
+metadata:
+  name: "my-plugin"
+spec:
+  image: "my-image"
+  replicas: 1
+  dbms: "postgresql"
+  roles:
+    - name: "task-list"
+      code: "task-list"
+    - name: "task-get"
+      code: "task-get"
+    - name: "connection-list"
+      code: "connection-list"
+    - name: "connection-get"
+      code: "connection-get"
+    - name: "connection-create"
+      code: "connection-create"
+    - name: "connection-delete"
+      code: "connection-delete"
+    - name: "connection-edit"
+      code: "connection-edit"
+  permissions: []
+  parameters: {}
+  ingressPath: "/myPath"
+  healthCheckPath: "/actuator/health"
+  securityLevel: "strict"
+  connectionConfigNames: []
+```
+
+
+
 ## Widget Descriptor
 ```yaml
-version: entando.org/v1alpha1 # This is the structure's version
 code: another_todomvc_widget # The Widget identification
 
 titles: # Widget's Titles
@@ -81,7 +101,6 @@ customUi: >-
 
 ## Page Model Descriptor
 ```yaml
-version: entando.org/v1alpha1 # This is the structure's version
 code: todomvc_page_model # The Page Model identification
 description: TODO MVC basic page model # The Page Model description
 
@@ -133,7 +152,6 @@ template: >-
 For more details on the properties, refer to the Content Type documentation.
 
 ```yaml
-version: entando.org/v1alpha1
 code: CNG
 name: Demo
 status: 0
@@ -187,7 +205,6 @@ attributes:
 
 ### Content Model Descriptor
 ```yaml
-version: entando.org/v1alpha1
 id: 8880003
 contentType: CNG
 description: Demo Content Model
