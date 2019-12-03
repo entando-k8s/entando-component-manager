@@ -3,7 +3,6 @@ package org.entando.kubernetes.client.k8ssvc;
 import java.util.List;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.springframework.web.client.RestTemplate;
 
 public interface K8SServiceClient {
 

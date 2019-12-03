@@ -35,7 +35,7 @@ public class AssetProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<? extends Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
+    public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final List<Installable> installables = new LinkedList<>();

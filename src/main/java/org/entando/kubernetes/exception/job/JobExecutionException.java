@@ -1,6 +1,8 @@
-package org.entando.kubernetes.exception;
+package org.entando.kubernetes.exception.job;
 
-public class JobExecutionException extends RuntimeException {
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+
+public class JobExecutionException extends EntandoComponentManagerException {
 
     public JobExecutionException(final String message, final Throwable throwable) {
         super(message, throwable);

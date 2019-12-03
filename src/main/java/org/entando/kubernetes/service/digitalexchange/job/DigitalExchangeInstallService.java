@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
-import org.entando.kubernetes.exception.JobNotFoundException;
+import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
@@ -38,13 +38,12 @@ import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.exception.JobPackageException;
+import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureMatchingException;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpMethod;
@@ -61,7 +60,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private final @NonNull DigitalExchangesClient client;
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
-    private final ExecutorService POOL = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
             .setDaemon(true).setNameFormat("InstallableOperation-%d").build());
 
 
@@ -264,7 +263,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
 

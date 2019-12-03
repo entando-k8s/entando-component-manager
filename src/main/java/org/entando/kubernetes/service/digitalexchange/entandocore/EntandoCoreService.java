@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.entandocore;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
@@ -93,7 +95,7 @@ public class EntandoCoreService {
     }
 
     public void uploadFile(final FileDescriptor descriptor) {
-        final String path = descriptor.getFolder() + "/" + descriptor.getFilename();
+        final String path = Paths.get(descriptor.getFolder(), descriptor.getFilename()).toString();
         final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
         restTemplate.postForEntity(resolveUrl("/api/fileBrowser/file").build().toUri(), file, Void.class);
     }

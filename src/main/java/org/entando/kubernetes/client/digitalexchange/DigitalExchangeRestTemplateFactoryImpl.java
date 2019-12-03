@@ -36,7 +36,7 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
     private static final int DEFAULT_TIMEOUT = 10000;
 
     @Value("${entando.auth-url}")
-    private String ENTANDO_AUTH_URL;
+    private String entandoAuthUrl;
 
     @Override
     public RestTemplate createRestTemplate(final DigitalExchange digitalExchange) {
@@ -63,7 +63,7 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
         resourceDetails.setClientSecret(digitalExchange.getClientSecret());
         resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
         try {
-            resourceDetails.setAccessTokenUri(getTokenUri(digitalExchange));
+            resourceDetails.setAccessTokenUri(getTokenUri());
         } catch (IllegalArgumentException ex) {
             logger.error("DigitalExchange {} has been configured with a wrong URL: {}",
                     digitalExchange.getName(), digitalExchange.getUrl());
@@ -72,8 +72,8 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
         return resourceDetails;
     }
 
-    private String getTokenUri(final DigitalExchange digitalExchange) {
-        return UriComponentsBuilder.fromUriString(ENTANDO_AUTH_URL).toUriString();
+    private String getTokenUri() {
+        return UriComponentsBuilder.fromUriString(entandoAuthUrl).toUriString();
     }
 
     private ClientHttpRequestFactory getRequestFactory(final DigitalExchange digitalExchange) {

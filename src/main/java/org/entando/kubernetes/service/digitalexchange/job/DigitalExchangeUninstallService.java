@@ -106,7 +106,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     }
 
     @Override
-    public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(final ApplicationContext applicationContext) {
         componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
 

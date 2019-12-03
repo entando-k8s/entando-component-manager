@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
+    public static final String LINKS = "links";
 
     private final String k8sServiceUrl;
     private final String clientId;
@@ -69,14 +71,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace) {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
-                .pathSegment("apps", entandoAppNamespace, entandoAppName, "links").toUriString();
+                .pathSegment("apps", entandoAppNamespace, entandoAppName, LINKS).toUriString();
         ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                null,
                 new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
-            throw new RuntimeException(
+            throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while retriving links for app %s in namespace %s",
                             responseEntity.getStatusCode().value(),
                             responseEntity.getStatusCode().getReasonPhrase(),
@@ -99,7 +101,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         ResponseEntity<Resource<EntandoPlugin>> responseEntity = restTemplate
                 .exchange (url, HttpMethod.GET, null, new ResourceType<>());
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
-            throw new RuntimeException(
+            throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while searching plugin %s in namespace %s",
                             responseEntity.getStatusCode().value(),
                             responseEntity.getStatusCode().getReasonPhrase(),
@@ -116,14 +118,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String appName = el.getSpec().getEntandoAppName();
         String pluginName = el.getSpec().getEntandoPluginName();
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
-                .pathSegment("apps", appNamespace, appName, "links", pluginName).toUriString();
+                .pathSegment("apps", appNamespace, appName, LINKS, pluginName).toUriString();
         ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.DELETE,
                 null,
                 new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException(
+            throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while remove link between app %s in namespace %s and plugin %s",
                             responseEntity.getStatusCode().value(),
                             responseEntity.getStatusCode().getReasonPhrase(),
@@ -138,14 +140,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
-                .pathSegment("apps", namespace, name, "links").toUriString();
+                .pathSegment("apps", namespace, name, LINKS).toUriString();
         ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 new HttpEntity<>(plugin),
                 new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException(
+            throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while linking app %s in namespace %s to plugin %s",
                             responseEntity.getStatusCode().value(),
                             responseEntity.getStatusCode().getReasonPhrase(),
@@ -190,7 +192,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             resourceDetails.setAccessTokenUri(UriComponentsBuilder.fromUriString(tokenUri).toUriString());
         } catch (IllegalArgumentException ex) {
-            LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using " + tokenUri + " as token uri"));
+            LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using %s as token uri", tokenUri));
             return null;
         }
         return resourceDetails;

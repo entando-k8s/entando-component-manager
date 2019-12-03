@@ -81,7 +81,7 @@ public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeB
                 return getErrorResponse(ERRCODE_DE_AUTH, "digitalExchange.oauth2Error", digitalExchange.getName());
             }
 
-        } catch (Throwable t) {
+        } catch (Exception t) {
             log.error("Error calling {}", url);
             log.error("Unexpected exception", t);
             throw t;

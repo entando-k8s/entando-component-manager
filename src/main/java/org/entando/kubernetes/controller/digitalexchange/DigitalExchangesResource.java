@@ -17,8 +17,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.entando.kubernetes.security.Roles;
+import java.util.List;
+import java.util.Map;
+import javax.validation.Valid;
 import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.security.Roles;
 import org.entando.web.response.RestError;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
@@ -31,10 +34,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import javax.validation.Valid;
-import java.util.List;
-import java.util.Map;
 
 @Api(tags = {"digital-exchange"})
 @RequestMapping(value = "/exchanges")

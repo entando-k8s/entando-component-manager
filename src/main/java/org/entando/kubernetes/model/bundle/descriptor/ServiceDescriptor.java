@@ -1,11 +1,9 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import java.util.List;
 import lombok.Data;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
-
-import java.util.List;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
 
 @Data
 public class ServiceDescriptor {

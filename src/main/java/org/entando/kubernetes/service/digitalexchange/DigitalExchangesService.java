@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.exception.digitalexchange.DigitalExchangeNotFoundException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
 import org.entando.kubernetes.repository.DigitalExchangeRepository;
 import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DigitalExchangesService {
 
+
     private final @NonNull DigitalExchangeRepository repository;
     private final @NonNull DigitalExchangesClient client;
 
@@ -38,7 +40,7 @@ public class DigitalExchangesService {
     public DigitalExchange findById(final String id) {
         return repository.findById(UUID.fromString(id))
                 .map(DigitalExchangeEntity::convert)
-                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+                .orElseThrow(DigitalExchangeNotFoundException::new);
     }
 
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Throwable.class)
@@ -48,7 +50,7 @@ public class DigitalExchangesService {
 
     public DigitalExchange update(final DigitalExchange digitalExchange) {
         final DigitalExchangeEntity digitalExchangeEntity = repository.findById(UUID.fromString(digitalExchange.getId()))
-                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+                .orElseThrow(DigitalExchangeNotFoundException::new);
         digitalExchangeEntity.apply(digitalExchange);
         repository.save(digitalExchangeEntity);
         return digitalExchangeEntity.convert();
@@ -56,7 +58,7 @@ public class DigitalExchangesService {
 
     public void delete(final String digitalExchangeId) {
         final DigitalExchangeEntity digitalExchangeEntity = repository.findById(UUID.fromString(digitalExchangeId))
-                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+                .orElseThrow(DigitalExchangeNotFoundException::new);
         repository.delete(digitalExchangeEntity);
     }
 
@@ -72,7 +74,7 @@ public class DigitalExchangesService {
 
     public DigitalExchangeEntity findEntityById(final String id) {
         return repository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new NotFoundException("org.entando.digitalExchange.notFound"));
+                .orElseThrow(DigitalExchangeNotFoundException::new);
     }
 
     private List<RestError> test(final DigitalExchange digitalExchange) {

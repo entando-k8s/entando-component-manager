@@ -35,7 +35,7 @@ public class PluginProcessor implements ComponentProcessor {
     private final KubernetesService kubernetesService;
 
     @Override
-    public List<? extends Installable> process(DigitalExchangeJob job,
+    public List<Installable> process(DigitalExchangeJob job,
             ZipReader zipReader,
             ComponentDescriptor descriptor) throws IOException {
         Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())

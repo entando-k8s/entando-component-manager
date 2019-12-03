@@ -35,7 +35,7 @@ public class WidgetProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<? extends Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
+    public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getWidgets);

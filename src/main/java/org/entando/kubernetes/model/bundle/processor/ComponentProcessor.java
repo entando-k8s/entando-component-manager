@@ -28,7 +28,7 @@ public interface ComponentProcessor {
      * @return Should return a list of Installables
      * @throws IOException in case of any error while reading any the file from the Zip package
      */
-    List<? extends Installable> process(DigitalExchangeJob job, ZipReader zipReader,
+    List<Installable> process(DigitalExchangeJob job, ZipReader zipReader,
                                         ComponentDescriptor descriptor) throws IOException;
 
     /**
@@ -46,7 +46,7 @@ public interface ComponentProcessor {
     void uninstall(DigitalExchangeJobComponent component);
 
     default String getFolder(final String fileName) {
-        return fileName.contains("/") ? fileName.substring(0, fileName.lastIndexOf("/")) : "";
+        return fileName.contains("/") ? fileName.substring(0, fileName.lastIndexOf('/')) : "";
     }
 
 }

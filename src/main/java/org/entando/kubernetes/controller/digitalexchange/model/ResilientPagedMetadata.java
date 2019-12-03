@@ -1,15 +1,14 @@
 package org.entando.kubernetes.controller.digitalexchange.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.PagedMetadata;
 import org.entando.web.response.RestError;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter@Setter
 @NoArgsConstructor
