@@ -13,6 +13,7 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.springframework.context.MessageSource;
@@ -104,7 +105,7 @@ public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeB
     }
 
     protected R getErrorResponse(String errorCode, String msgCode, Object... msgParams) {
-        String errorMessage = messageSource.getMessage(msgCode, msgParams, null);
+        String errorMessage = messageSource.getMessage(msgCode, msgParams, Locale.getDefault());
         return buildErrorResponse(errorCode, errorMessage);
     }
 

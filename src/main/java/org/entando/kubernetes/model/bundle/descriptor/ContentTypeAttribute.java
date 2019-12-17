@@ -21,9 +21,6 @@ public class ContentTypeAttribute {
     private String enumeratorStaticItems;
     private String enumeratorStaticItemsSeparator;
 
-    // commented due to lack documentation
-    // private List<CompositeAttribute> compositeAttributes;
-
     private ContentTypeValidationRule validationRules;
 
 

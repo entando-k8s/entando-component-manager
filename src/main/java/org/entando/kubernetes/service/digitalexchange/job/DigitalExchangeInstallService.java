@@ -183,12 +183,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             return installResult.join();
         }).collect(Collectors.toList());
 
-//                    return CompletableFuture.allOf(completableFutures)
-//                            .thenApply(vd -> JobStatus.INSTALL_COMPLETED)
-//                            .exceptionally(th -> {
-//                                log.error("Installation on package failed", th.getCause());
-//                                return JobStatus.INSTALL_ERROR;
-//                            }).join();
         log.info("All have been processed");
         Optional<JobStatus> anyError = statuses.stream().filter(js -> js.equals(JobStatus.INSTALL_ERROR)).findAny();
         return anyError.orElse(JobStatus.INSTALL_COMPLETED);
