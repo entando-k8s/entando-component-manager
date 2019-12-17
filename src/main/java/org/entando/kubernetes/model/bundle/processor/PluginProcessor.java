@@ -52,7 +52,7 @@ public class PluginProcessor implements ComponentProcessor {
 
     @Override
     public boolean shouldProcess(final ComponentType componentType) {
-        return componentType == ComponentType.DEPLOYMENT;
+        return componentType == ComponentType.PLUGIN;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class PluginProcessor implements ComponentProcessor {
 
         @Override
         public ComponentType getComponentType() {
-            return ComponentType.DEPLOYMENT;
+            return ComponentType.PLUGIN;
         }
 
         @Override

@@ -9,6 +9,10 @@ components:
     - widgets/my_widget_descriptor.yaml
     - widgets/another_widget_descriptor.yaml
 
+  fragments:
+    - fragments/my_fragment_descriptor.yaml
+    - fragments/another_fragment_descriptor.yaml
+
   pageModels:
     - pagemodels/my_page_model_descriptor.yaml
     - pagemodels/another_page_model_descriptor.yaml

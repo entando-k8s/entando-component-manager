@@ -40,6 +40,10 @@ public enum ComponentType {
     /**
      * A Service Deployment on Kubernetes (or any similar platform).
      */
-    DEPLOYMENT
+    PLUGIN,
 
+    /**
+     * A Gui fragment
+     */
+    GUI_FRAGMENT;
 }
