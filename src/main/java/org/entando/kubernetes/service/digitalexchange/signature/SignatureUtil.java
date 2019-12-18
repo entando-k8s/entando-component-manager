@@ -27,6 +27,7 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import org.entando.kubernetes.exception.EntandoGeneralSignatureException;
 
 public class SignatureUtil {
 
@@ -52,7 +53,7 @@ public class SignatureUtil {
             keyGen.initialize(KEY_SIZE);
             return keyGen.generateKeyPair();
         } catch (GeneralSecurityException ex) {
-            throw new RuntimeException(ex);
+            throw new EntandoGeneralSignatureException(ex);
         }
     }
 
@@ -85,7 +86,7 @@ public class SignatureUtil {
             final KeyFactory kf = KeyFactory.getInstance(ALGORITHM);
             return kf.generatePublic(ks);
         } catch (GeneralSecurityException ex) {
-            throw new RuntimeException(ex);
+            throw new EntandoGeneralSignatureException(ex);
         }
     }
 
@@ -96,7 +97,7 @@ public class SignatureUtil {
             final PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
             return keyFactory.generatePrivate(privKeySpec);
         } catch (GeneralSecurityException ex) {
-            throw new RuntimeException(ex);
+            throw new EntandoGeneralSignatureException(ex);
         }
     }
 
@@ -119,7 +120,7 @@ public class SignatureUtil {
             final KeyFactory kf = KeyFactory.getInstance(ALGORITHM);
             return kf.generatePrivate(privateKeySpec);
         } catch (GeneralSecurityException ex) {
-            throw new RuntimeException(ex);
+            throw new EntandoGeneralSignatureException(ex);
         }
 
     }
@@ -148,7 +149,7 @@ public class SignatureUtil {
             updateSignature(signature, in);
             return Base64.getEncoder().encodeToString(signature.sign());
         } catch (GeneralSecurityException | IOException ex) {
-            throw new RuntimeException(ex);
+            throw new EntandoGeneralSignatureException(ex);
         }
     }
 
@@ -168,7 +169,7 @@ public class SignatureUtil {
             updateSignature(signature, in);
             return signature.verify(bytes);
         } catch (GeneralSecurityException | IOException ex) {
-            throw new RuntimeException(ex);
+            throw new EntandoGeneralSignatureException(ex);
         }
     }
 

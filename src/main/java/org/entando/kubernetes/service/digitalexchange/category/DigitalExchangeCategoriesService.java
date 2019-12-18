@@ -13,7 +13,7 @@
  */
 package org.entando.kubernetes.service.digitalexchange.category;
 
-import org.entando.kubernetes.service.digitalexchange.model.ResilientListWrapper;
+import org.entando.kubernetes.controller.digitalexchange.model.ResilientListWrapper;
 
 public interface DigitalExchangeCategoriesService {
 

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.junit.Before;
@@ -164,11 +165,11 @@ public class K8SServiceClientTest {
                         .withName("my-app-to-plugin-link")
                         .withNamespace("my-namespace")
                     .endMetadata()
-                    .withNewSpec()
-                        .withEntandoApp("my-namespace", "my-app")
-                        .withEntandoPlugin("plugin-namespace", "plugin")
-                    .endSpec()
-                    .build();
+                .withNewSpec()
+                    .withEntandoApp("my-namespace", "my-app")
+                    .withEntandoPlugin("plugin-namespace", "plugin")
+                .endSpec()
+                .build();
     }
 
     private static Optional<Integer> findFreePort() {

@@ -1,4 +1,3 @@
-version: entando.org/v1alpha1
 code: another_todomvc_widget
 titles:
   en: TODO MVC Widget

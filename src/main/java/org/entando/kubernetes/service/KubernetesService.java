@@ -1,6 +1,5 @@
 package org.entando.kubernetes.service;
 
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,12 +9,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.client.K8SServiceClient;
-import org.entando.kubernetes.model.DbmsImageVendor;
-import org.entando.kubernetes.model.EntandoPluginDeploymentRequest;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.EntandoPluginSpecBuilder;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -69,28 +66,15 @@ public class KubernetesService {
         getCurrentAppLinkedPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
     }
 
-    public void linkPlugin(EntandoPluginDeploymentRequest request) {
-        EntandoPlugin plugin = new EntandoPlugin();
-        ObjectMeta objectMeta = new ObjectMeta();
+    public void linkPlugin(EntandoPlugin plugin) {
+        EntandoPlugin newPlugin = new EntandoPluginBuilder()
+                .withMetadata(plugin.getMetadata())
+                .withSpec(plugin.getSpec())
+                .build();
 
-        objectMeta.setName(request.getPlugin());
-        objectMeta.setNamespace(entandoAppNamespace);
+        newPlugin.getMetadata().setNamespace(null);
 
-        EntandoPluginSpecBuilder specBuilder = (EntandoPluginSpecBuilder) new EntandoPluginSpecBuilder()
-                .withImage(request.getImage())
-                .withIngressPath(request.getIngressPath())
-                .withHealthCheckPath(request.getHealthCheckPath())
-                .withReplicas(1)
-                .withDbms(DbmsImageVendor.forValue(request.getDbms()));
-
-        request.getRoles().forEach(r -> specBuilder.addNewRole(r.getName(), r.getCode()));
-        request.getPermissions().forEach(p -> specBuilder.addNewPermission(p.getClientId(), p.getRole()));
-
-        plugin.setMetadata(objectMeta);
-        plugin.setSpec(specBuilder.build());
-        plugin.setApiVersion("entando.org/v1alpha1");
-
-        k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, plugin);
+        k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
     }
 
     private Optional<String> getCurrentKubernetesNamespace() {

@@ -14,8 +14,8 @@
 package org.entando.kubernetes.digitalexchange.client;
 
 import org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangeRestTemplateFactory;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactory;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.web.response.RestResponse;
 import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;

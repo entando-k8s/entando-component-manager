@@ -36,11 +36,11 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
-import org.entando.kubernetes.client.K8SServiceClient;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.junit.After;
 import org.junit.Assert;
@@ -140,6 +140,7 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
                 .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
 
 //        final KubernetesPluginMocker pluginMocker = new KubernetesPluginMocker();
 //        mocker.mockResult("todomvc", pluginMocker.plugin);
@@ -148,7 +149,7 @@ public class DigitalExchangeInstallTest {
         mockMvc.perform(post(String.format("%s/%s/install/todomvc", URL, digitalExchangeId)))
                 .andDo(print()).andExpect(status().isOk());
 
-        waitFor(2000);
+        waitFor(5000);
 
 //        final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
 //        verify(mocker.operation, times(1)).create(captor.capture());
@@ -166,6 +167,7 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/labels")));
+        WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
 
         final List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         final List<LoggedRequest> pageModelRequests = findAll(
@@ -179,14 +181,16 @@ public class DigitalExchangeInstallTest {
         final List<LoggedRequest> contentModelRequests = findAll(
                 postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         final List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
+        final List<LoggedRequest> fragmentRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
 
         checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests,
-                contentModelRequests, labelRequests);
+                contentModelRequests, labelRequests, fragmentRequests);
 
         widgetRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         pageModelRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         directoryRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestPath));
         fileRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestPath));
+        fragmentRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
 
         checkRequest(widgetRequests.get(0))
                 .expectEqual("code", "another_todomvc_widget")
@@ -197,6 +201,14 @@ public class DigitalExchangeInstallTest {
                 .expectEqual("code", "todomvc_widget")
                 .expectEqual("group", "free")
                 .expectEqual("customUi", "<h2>Bundle 1 Widget</h2>");
+
+        checkRequest(fragmentRequests.get(0))
+                .expectEqual("code", "another_fragment")
+                .expectEqual("guiCode", readFile("/bundle/fragments/fragment.ftl"));
+
+        checkRequest(fragmentRequests.get(1))
+                .expectEqual("code", "title_fragment")
+                .expectEqual("guiCode", "<h2>Bundle 1 Fragment</h2>");
 
         checkRequest(pageModelRequests.get(0))
                 .expectEqual("code", "todomvc_another_page_model")
@@ -256,6 +268,10 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget"))
                 .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fragments/title_fragment"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fragments/another_fragment"))
+                .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model"))
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model"))
@@ -287,6 +303,8 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")));
         WireMock.verify(1, deleteRequestedFor(
                 urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/title_fragment")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
 
 //        verify(mocker.operation, times(1)).delete(same(pluginMocker.plugin));
     }

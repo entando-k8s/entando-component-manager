@@ -17,7 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.entando.kubernetes.controller.Roles;
+import org.entando.kubernetes.security.Roles;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;

@@ -1,12 +1,12 @@
-# Entando K8s Service
-This service serves as an abstraction layer to the Kubernetes Plugin custom resource. It is meant to be used by `entando-core` to deploy and check status of the plugins on the cluster.
+# Entando Component Manager
+This service serves as an abstraction layer for interaction with Digital-Exchanges servers.
+Bundles served by Digital-exchanges can be installed in an EntandoApp using this service. This service relies on the Entando K8S service for interaction with the K8S cluster
 
 ## Install
 
 You'll need a Kubernetes cluster running, configure the environments described down below and execute the project.
 
 ## Environment Variables
->- `PORT`: TCP Port where the server will run. Default: `8083`
 >- `KEYCLOAK_AUTH_URL`: The keycloak authentication URL. Default: `http://localhost:8081/auth`
 >- `KEYCLOAK_REALM`: The keycloak realm. Default: `entando`
 >- `KEYCLOAK_CLIENT_ID`: The keycloak resource/clientId. Default: `entando-config`
@@ -22,8 +22,6 @@ You'll need a Kubernetes cluster running, configure the environments described d
 >- `ENTANDO_URL`: The URL to access the Entando App instance.
 >- `ENTANDO_APP_NAMESPACE`: The kubernetes namespace where the entando app is running. Default to `test-namespace`;
 >- `ENTANDO_APP_NAME`: The entando app name that this service is in. Defaults to `test-entando`.
->- `ENTANDO_KEYCLOAK_SERVER_NAME`: The entando keycloak server to use to authenticate against. Defaults to `test-keycloak`
->- `ENTANDO_KEYCLOAK_SERVER_NAMESPACE`: The entando keycloak server namespace to use to authenticate against. Defaults to `keycloak-namespace`;
 
 ## Testing
 Before running the tests, first run `docker-compose up` or make sure you have a PostgreSQL available and edit the environment variables to run on the DB. Then just run the test command line from an IDE of your choice or by command line.

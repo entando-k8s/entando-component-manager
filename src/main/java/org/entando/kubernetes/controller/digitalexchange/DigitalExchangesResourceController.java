@@ -15,7 +15,7 @@ package org.entando.kubernetes.controller.digitalexchange;
 
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.web.response.RestError;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.ResponseEntity;

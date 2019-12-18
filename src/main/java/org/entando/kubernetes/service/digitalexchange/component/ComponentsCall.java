@@ -15,7 +15,7 @@ package org.entando.kubernetes.service.digitalexchange.component;
 
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
-import org.entando.kubernetes.service.digitalexchange.client.PagedDigitalExchangeCall;
+import org.entando.kubernetes.client.digitalexchange.PagedDigitalExchangeCall;
 import org.entando.web.request.Filter;
 import org.entando.web.request.FilterOperator;
 import org.entando.web.request.PagedListRequest;

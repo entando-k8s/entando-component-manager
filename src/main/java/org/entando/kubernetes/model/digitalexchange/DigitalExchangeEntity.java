@@ -15,7 +15,7 @@ package org.entando.kubernetes.model.digitalexchange;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.service.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

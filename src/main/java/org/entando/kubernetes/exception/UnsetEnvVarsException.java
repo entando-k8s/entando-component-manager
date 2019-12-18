@@ -1,12 +1,18 @@
 package org.entando.kubernetes.exception;
 
-import org.entando.web.exception.HttpException;
-import org.springframework.http.HttpStatus;
+import org.entando.kubernetes.exception.http.HttpBadRequestException;
+import org.entando.kubernetes.exception.http.WithArgumentException;
 
-public class UnsetEnvVarsException extends HttpException {
+public class UnsetEnvVarsException extends EntandoComponentManagerException implements HttpBadRequestException, WithArgumentException {
 
+    private final Object[] envs;
     public UnsetEnvVarsException(final Object ... envs) {
-        super(HttpStatus.BAD_REQUEST, "org.entando.error.unsetVarsException", envs);
+        super("org.entando.error.unsetVarsException");
+        this.envs = envs;
     }
 
+    @Override
+    public Object[] getArgs() {
+        return envs;
+    }
 }

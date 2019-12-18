@@ -20,7 +20,7 @@ import org.entando.entando.web.common.model.SimpleRestResponse;
 import org.entando.kubernetes.digitalexchange.client.DigitalExchangesClientMocker;
 import org.entando.kubernetes.service.digitalexchange.category.DigitalExchangeCategoriesService;
 import org.entando.kubernetes.service.digitalexchange.category.DigitalExchangeCategoriesServiceImpl;
-import org.entando.kubernetes.service.digitalexchange.client.DigitalExchangesClient;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
 import org.junit.Before;
 import org.junit.Test;
 
