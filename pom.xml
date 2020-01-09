@@ -45,6 +45,16 @@
     </distributionManagement>
     <repositories>
         <repository>
+            <id>jx-releases</id>
+            <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>sonatype-snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
             <releases>
@@ -56,6 +66,7 @@
             </snapshots>
         </repository>
     </repositories>
+
 
     <properties>
         <maven.release.repository.id>sonatype-nexus-stage</maven.release.repository.id>
@@ -87,7 +98,7 @@
         <dependency>
             <groupId>org.entando.kubernetes</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
+            <version>6.0.36</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

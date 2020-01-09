@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.springframework.beans.factory.annotation.Value;
@@ -157,6 +158,31 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     ));
         }
 
+
+    }
+
+    @Override
+    public List<EntandoDeBundle> getAvailableBundles() {
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment("de-bundles").toUriString();
+        ResponseEntity<Resources<Resource<EntandoDeBundle>>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Resources<Resource<EntandoDeBundle>>>() {});
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new K8SServiceClientException(
+                    String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
+                            responseEntity.getStatusCode().value(),
+                            responseEntity.getStatusCode().getReasonPhrase()
+                    ));
+        }
+
+        return Objects.requireNonNull(responseEntity.getBody())
+                .getContent()
+                .stream()
+                .map(Resource::getContent)
+                .collect(Collectors.toList());
     }
 
     private RestTemplate newRestTemplate() {
