@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.web.response.RestResponse;
 import org.springframework.context.MessageSource;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 

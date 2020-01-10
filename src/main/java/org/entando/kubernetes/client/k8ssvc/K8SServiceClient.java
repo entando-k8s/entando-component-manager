@@ -15,6 +15,10 @@ public interface K8SServiceClient {
 
     void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);
 
-    List<EntandoDeBundle> getAvailableBundles();
+    List<EntandoDeBundle> getBundlesInAllNamespaces();
+
+    List<EntandoDeBundle> getBundlesInNamespace(String namespace);
+
+    EntandoDeBundle getBundleWithNameAndNamespace(String name, String namespace);
 
 }

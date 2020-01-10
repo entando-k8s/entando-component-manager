@@ -43,6 +43,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     public static final String LINKS = "links";
+    public static final String DE_BUNDLES_API_ROOT = "de-bundles";
 
     private final String k8sServiceUrl;
     private final String clientId;
@@ -162,9 +163,42 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getAvailableBundles() {
+    public List<EntandoDeBundle> getBundlesInAllNamespaces() {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
-                .pathSegment("de-bundles").toUriString();
+                .pathSegment(DE_BUNDLES_API_ROOT).toUriString();
+        return submitBundleRequestAndExtractBody(url);
+    }
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment(DE_BUNDLES_API_ROOT, "namespaces", namespace)
+                .toUriString();
+        return submitBundleRequestAndExtractBody(url);
+    }
+
+    @Override
+    public EntandoDeBundle getBundleWithNameAndNamespace(String name, String namespace) {
+        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .pathSegment(DE_BUNDLES_API_ROOT, "namespaces", namespace, name)
+                .toUriString();
+        ResponseEntity<Resource<EntandoDeBundle>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Resource<EntandoDeBundle>>() {});
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new K8SServiceClientException(
+                    String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
+                            responseEntity.getStatusCode().value(),
+                            responseEntity.getStatusCode().getReasonPhrase()
+                    ));
+        }
+
+        return Objects.requireNonNull(responseEntity.getBody()).getContent();
+    }
+
+    private List<EntandoDeBundle> submitBundleRequestAndExtractBody(String url) {
         ResponseEntity<Resources<Resource<EntandoDeBundle>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -184,6 +218,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .map(Resource::getContent)
                 .collect(Collectors.toList());
     }
+
+
 
     private RestTemplate newRestTemplate() {
         OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();

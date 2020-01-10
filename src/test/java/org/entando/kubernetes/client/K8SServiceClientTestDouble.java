@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -12,13 +13,19 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     private List<EntandoAppPluginLink> inMemoryLinks = new ArrayList<>();
 
+    private List<EntandoDeBundle> inMemoryBundles = new ArrayList<>();
 
     public void addInMemoryLink(EntandoAppPluginLink link) {
         this.inMemoryLinks.add(link);
     }
 
-    public void cleanInMemoryDatabase() {
+    public void addInMemoryBundle(EntandoDeBundle bundle) {
+        this.inMemoryBundles.add(bundle);
+    }
+
+    public void cleanInMemoryDatabases() {
         this.inMemoryLinks = new ArrayList<>();
+        this.inMemoryBundles = new ArrayList<>();
     }
 
     public List<EntandoAppPluginLink> getInMemoryDatabaseCopy() {
@@ -57,5 +64,17 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
                 .endSpec()
                 .build();
         this.addInMemoryLink(link);
+    }
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInAllNamespaces() {
+        return inMemoryBundles;
+    }
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+        return inMemoryBundles.stream()
+                .filter(b -> b.getMetadata().getNamespace().equals(namespace))
+                .collect(Collectors.toList());
     }
 }
