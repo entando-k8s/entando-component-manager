@@ -13,7 +13,9 @@
  */
 package org.entando.kubernetes.controller.digitalexchange.component;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
 import org.entando.web.request.PagedListRequest;
@@ -30,7 +32,7 @@ public class DigitalExchangeComponentsController implements DigitalExchangeCompo
     @Override
     public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(PagedListRequest requestList) {
 //        paginationValidator.validatePagedListRequest(requestList, DigitalExchangeComponent.class);
-        final ResilientPagedMetadata<DigitalExchangeComponent> resilientPagedMetadata = componentsService.getComponents(requestList);
+        List<EntandoDeBundle> bundles = componentsService.getComponents(requestList);
         final PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse<>(resilientPagedMetadata);
         response.setErrors(resilientPagedMetadata.getErrors());
         return ResponseEntity.ok(response);

@@ -20,4 +20,6 @@ public interface DigitalExchangeRestTemplateFactory {
 
     RestTemplate createRestTemplate(DigitalExchange digitalExchange);
 
+    RestTemplate createRestTemplate();
+
 }

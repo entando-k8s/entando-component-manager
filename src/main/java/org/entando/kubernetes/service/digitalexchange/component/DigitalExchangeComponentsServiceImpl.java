@@ -16,6 +16,7 @@ package org.entando.kubernetes.service.digitalexchange.component;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
@@ -70,6 +71,12 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         processInstalled(response.getPayload());
         return response;
     }
+
+    @Override
+    public List<EntandoDeBundle> getComponents() {
+        return kubernetesService.getAllBundles();
+    }
+
 
     private void processInstalled(final DigitalExchangeComponent component) {
         if (kubernetesService.isLinkedPlugin(component.getId())) {

@@ -5,6 +5,7 @@ import static java.util.Optional.ofNullable;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -24,37 +25,44 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangeBaseCall;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeEntity;
+import org.entando.kubernetes.exception.job.JobPackageException;
+import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangeBaseCall;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
+import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
-import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.exception.job.JobPackageException;
-import org.entando.kubernetes.model.bundle.ZipReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureMatchingException;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
+    private final @NonNull KubernetesService k8sService;
     private final @NonNull DigitalExchangesService exchangesService;
     private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
     private final @NonNull DigitalExchangesClient client;
@@ -66,10 +74,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    public DigitalExchangeJob install(String digitalExchangeId, String componentId) {
-        DigitalExchangeEntity digitalExchange = exchangesService.findEntityById(digitalExchangeId);
-        DigitalExchangeComponent component = digitalExchangeComponentsService
-                .getComponent(digitalExchange.convert(), componentId).getPayload();
+    public DigitalExchangeJob install(String digitalExchangeId, String componentId, String version) {
+        EntandoDeBundle bundle = k8sService.getBundleByNameAndDigitalExchange(componentId, digitalExchangeId);
         Optional<DigitalExchangeJob> existingJob = jobRepository
                 .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED);
 
@@ -77,21 +83,20 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             return existingJob.get();
         }
 
-        DigitalExchangeJob job = createInstallJob(componentId, digitalExchange, component);
+        DigitalExchangeJob job = createInstallJob(bundle, version);
 
-        submitInstallAsync(job, digitalExchange.convert(), component);
+        submitInstallAsync(job, bundle, version);
 
         return job;
     }
 
-    private DigitalExchangeJob createInstallJob(String componentId, DigitalExchangeEntity digitalExchange,
-            DigitalExchangeComponent component) {
+    private DigitalExchangeJob createInstallJob(EntandoDeBundle bundle, String version) {
         final DigitalExchangeJob job = new DigitalExchangeJob();
 
-        job.setComponentId(componentId);
-        job.setComponentName(component.getName());
-        job.setComponentVersion(component.getVersion());
-        job.setDigitalExchange(digitalExchange);
+        job.setComponentId(bundle.getSpec().getDetails().getName());
+        job.setComponentName(bundle.getSpec().getDetails().getName());
+        job.setComponentVersion(version);
+        job.setDigitalExchange(bundle.getMetadata().getNamespace());
         job.setProgress(0);
         job.setStartedAt(LocalDateTime.now());
         job.setStatus(JobStatus.INSTALL_CREATED);
@@ -105,20 +110,20 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 .orElseThrow(JobNotFoundException::new);
     }
 
-    private void submitInstallAsync(DigitalExchangeJob job, DigitalExchange digitalExchange,
-            DigitalExchangeComponent component) {
+    private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, String version) {
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
             CompletableFuture<InputStream> downloadComponentPackageStep = CompletableFuture
-                    .supplyAsync(() -> downloadComponentPackage(digitalExchange, component));
+                    .supplyAsync(() -> downloadComponentPackage(bundle, version));
 
             CompletableFuture<Path> copyPackageLocallyStep = downloadComponentPackageStep
-                    .thenApply(is -> savePackageStreamLocally(component, is));
+                    .thenApply(is -> savePackageStreamLocally(bundle.getSpec().getDetails().getName(), is));
 
             CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath -> {
-                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
-                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
-                }
+//                TODO: Implement the verification by using the npm-signature which must be present in the tag
+//                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
+//                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
+//                }
                 return tempPath;
             });
 
@@ -202,10 +207,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private Path savePackageStreamLocally(DigitalExchangeComponent component, InputStream is) {
+    private Path savePackageStreamLocally(String componentId, InputStream is) {
         Path tempPath = null;
         try {
-            tempPath = Files.createTempFile(component.getId(), "");
+            tempPath = Files.createTempFile(componentId, "");
             Files.copy(is, tempPath, StandardCopyOption.REPLACE_EXISTING);
             return tempPath;
         } catch (IOException e) {
@@ -214,10 +219,25 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private InputStream downloadComponentPackage(DigitalExchange digitalExchange, DigitalExchangeComponent component) {
-        DigitalExchangeBaseCall<InputStream> call = new DigitalExchangeBaseCall<>(
-                HttpMethod.GET, "digitalExchange", "components", component.getId(), "package");
-        return client.getStreamResponse(digitalExchange, call);
+    private InputStream downloadComponentPackage(EntandoDeBundle bundle, String version) {
+        Optional<EntandoDeBundleTag> tag = bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(version)).findFirst();
+        String tarballUrl = tag
+                .orElseThrow(() -> new RuntimeException("Version " + version + " not available for bundle " + bundle.getSpec().getDetails().getName() + " in digital-exchange " + bundle.getMetadata().getNamespace()))
+                .getTarball();
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Resource> responseEntity = restTemplate.exchange(
+                tarballUrl, HttpMethod.GET, null, Resource.class);
+
+        if (responseEntity.getBody() == null) {
+            throw new HttpMessageNotReadableException("Response body is null");
+        }
+
+        try {
+            return responseEntity.getBody().getInputStream();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
     }
 
     private void verifyDownloadedContentSignature(

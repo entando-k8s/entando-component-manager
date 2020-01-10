@@ -38,10 +38,8 @@ public class DigitalExchangeJob {
     @Column(name = "id")
     private UUID id;
 
-    @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "digital_exchange_id")
-    private DigitalExchangeEntity digitalExchange;
+    @Column(name = "digital-exchange-id")
+    private String digitalExchange;
 
     @Column(name = "component_id")
     private String componentId;

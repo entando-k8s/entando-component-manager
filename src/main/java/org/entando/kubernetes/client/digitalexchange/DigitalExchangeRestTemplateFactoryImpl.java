@@ -56,6 +56,13 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
         }
     }
 
+    @Override
+    public RestTemplate createRestTemplate() {
+        RestTemplate template = new RestTemplate();
+        template.setRequestFactory(getRequestFactory());
+        return template;
+    }
+
     private OAuth2ProtectedResourceDetails getResourceDetails(final DigitalExchange digitalExchange) {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
@@ -77,8 +84,17 @@ public class DigitalExchangeRestTemplateFactoryImpl implements DigitalExchangeRe
     }
 
     private ClientHttpRequestFactory getRequestFactory(final DigitalExchange digitalExchange) {
+        int timeout = digitalExchange.getTimeout() > 0 ? digitalExchange.getTimeout() : DEFAULT_TIMEOUT;
+
+        return getRequestFactory(timeout);
+    }
+
+    private ClientHttpRequestFactory getRequestFactory() {
+        return getRequestFactory(DEFAULT_TIMEOUT);
+    }
+
+    private ClientHttpRequestFactory getRequestFactory(int timeout) {
         final HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-        final int timeout = digitalExchange.getTimeout() > 0 ? digitalExchange.getTimeout() : DEFAULT_TIMEOUT;
 
         requestFactory.setConnectionRequestTimeout(timeout);
         requestFactory.setConnectTimeout(timeout);

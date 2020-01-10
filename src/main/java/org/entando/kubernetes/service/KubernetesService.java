@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
@@ -75,6 +76,14 @@ public class KubernetesService {
         newPlugin.getMetadata().setNamespace(null);
 
         k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
+    }
+
+    public List<EntandoDeBundle> getAllBundles() {
+        return k8sServiceClient.getBundlesInAllNamespaces();
+    }
+
+    public EntandoDeBundle getBundleByNameAndDigitalExchange(String name, String deId) {
+        return k8sServiceClient.getBundleWithNameAndNamespace(name, deId);
     }
 
     private Optional<String> getCurrentKubernetesNamespace() {
