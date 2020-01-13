@@ -1,60 +1,48 @@
 package org.entando.kubernetes.controller;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-import org.entando.kubernetes.model.EntandoDeploymentPhase;
-import org.entando.kubernetes.KubernetesClientMocker;
-import org.entando.kubernetes.KubernetesPluginMocker;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-
-import java.util.Collections;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Collections;
+import java.util.List;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.service.KubernetesService;
+import org.entando.web.exception.NotFoundException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.web.client.HttpClientErrorException;
+
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @RunWith(SpringRunner.class)
-@TestExecutionListeners({ DependencyInjectionTestExecutionListener.class })
-@Ignore("Not yet ported to new infrastructure")
 public class PluginControllerTest {
 
     private static final String URL = "/plugins";
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private KubernetesClient client;
 
-    private KubernetesClientMocker mocker;
+    @MockBean
+    private KubernetesService kubernetesService;
 
-    @Before
-    public void setUp() {
-        mocker = new KubernetesClientMocker(client);
-    }
 
     @Test
     public void testListEmpty() throws Exception {
-        when(mocker.pluginList.getItems()).thenReturn(Collections.emptyList());
+        when(kubernetesService.getLinkedPlugins()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isOk())
@@ -62,54 +50,45 @@ public class PluginControllerTest {
     }
 
     @Test
+    @Ignore("NotFound status has not be ported. Evaluate to use Zalando error handling framework")
     public void testNotFound() throws Exception {
-        final String pluginId = "arbitrary-plugin";
-        mocker.mockResult(pluginId, null);
+        String pluginId = "arbitrary-plugin";
 
         mockMvc.perform(get(String.format("%s/%s", URL, pluginId)))
                 .andDo(print()).andExpect(status().isNotFound());
 
-        verify(mocker.operation, times(1)).withName(eq(pluginId));
     }
 
     @Test
     public void testList() throws Exception {
-        final KubernetesPluginMocker pluginMocker = new KubernetesPluginMocker();
+        List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPlugin());
+        when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
 
-        pluginMocker.setDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL);
-        pluginMocker.setIngresPath("/pluginpath");
-        pluginMocker.setReplicas(1);
-
-        pluginMocker.setDbPodStatus("Running", asList(
-            mocker.mockPodCondition("2019-07-11T18:36:09Z", "Available"),
-            mocker.mockPodCondition("2019-07-11T18:36:06Z", "Initialized")
-        ));
-        pluginMocker.setDbDeploymentStatus(asList(
-                mocker.mockDeploymentCondition("2019-07-11T18:36:06Z", "Some message",
-                        "MinimumReplicasAvailable", "Available"),
-                mocker.mockDeploymentCondition("2019-07-11T18:36:03Z", "Some message",
-                        "NewReplicaSetAvailable", "Progressing")
-        ));
-        pluginMocker.setPvcPhase("Bound");
-
-        pluginMocker.setJeePodStatus("Running", singletonList(
-                mocker.mockPodCondition("2019-07-11T18:36:06Z", "Initialized")));
-        pluginMocker.setJeeDeploymentStatus(singletonList(
-                mocker.mockDeploymentCondition("2019-07-11T18:36:06Z", "Some message",
-                        "NewReplicaSetAvailable", "Progressing")));
-
-        pluginMocker.setMetadataName("plugin-name");
-        when(mocker.pluginList.getItems()).thenReturn(singletonList(pluginMocker.plugin));
-
-        ResultActions resultActions = mockMvc.perform(get(URL))
+        mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)));
-        validate(resultActions, "payload[0].");
 
-        mocker.mockResult("plugin-name", pluginMocker.plugin);
-        resultActions = mockMvc.perform(get(String.format("%s/plugin-name", URL)))
+    }
+
+    @Test
+    public void testSinglePlugin() throws Exception {
+        when(kubernetesService.getLinkedPlugin(anyString())).thenReturn(getTestEntandoPlugin());
+
+        mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isOk());
-        validate(resultActions, "payload.");
+
+    }
+
+    private EntandoPlugin getTestEntandoPlugin() {
+        return new EntandoPluginBuilder()
+                    .withNewSpec()
+                    .withReplicas(1)
+                    .withIngressPath("/pluginpath")
+                    .endSpec()
+                    .withNewMetadata()
+                    .withName("plugin-name")
+                    .endMetadata()
+                    .build();
     }
 
     private void validate(final ResultActions actions, final String prefix) throws Exception {

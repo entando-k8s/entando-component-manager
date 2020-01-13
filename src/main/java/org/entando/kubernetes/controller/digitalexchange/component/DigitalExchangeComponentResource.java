@@ -17,6 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.security.Roles;
 import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.PagedRestResponse;
@@ -36,5 +37,5 @@ public interface DigitalExchangeComponentResource {
     })
     @Secured(Roles.LIST_COMPONENTS)
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(PagedListRequest requestList);
+    ResponseEntity<PagedRestResponse<EntandoDeBundle>> getComponents(PagedListRequest requestList);
 }

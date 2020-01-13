@@ -7,6 +7,7 @@ import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeInstall
 import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeUninstallService;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,9 +21,9 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
 
     @Override
     public SimpleRestResponse<DigitalExchangeJob> install(
-            @PathVariable("exchange") String digitalExchangeId,
-            @PathVariable("component") String componentId) {
-        return new SimpleRestResponse<>(installService.install(digitalExchangeId, componentId));
+            @PathVariable("component") String componentId,
+            @RequestParam(name = "version", required = true, defaultValue = "latest") String version) {
+        return new SimpleRestResponse<>(installService.install(componentId, version));
     }
 
     @Override

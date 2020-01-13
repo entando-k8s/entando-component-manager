@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service;
 
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,15 +9,17 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.web.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @Component
@@ -45,7 +49,7 @@ public class KubernetesService {
     public EntandoPlugin getLinkedPlugin(String pluginId) {
         return getCurrentAppLinkedPlugin(pluginId)
                 .map(k8sServiceClient::getPluginForLink)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("org.entando.error.pluginNotFound"));
     }
 
     public boolean isLinkedPlugin(String pluginId) {
@@ -79,10 +83,14 @@ public class KubernetesService {
     }
 
     public List<EntandoDeBundle> getAllBundles() {
-        return k8sServiceClient.getBundlesInAllNamespaces();
+        return k8sServiceClient.getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
     }
 
-    public EntandoDeBundle getBundleByNameAndDigitalExchange(String name, String deId) {
+    public Optional<EntandoDeBundle> getBundleByName(String name) {
+        return k8sServiceClient.getBundleWithNameAndNamespace(name,  DEFAULT_BUNDLE_NAMESPACE);
+    }
+
+    public Optional<EntandoDeBundle> getBundleByNameAndDigitalExchange(String name, String deId) {
         return k8sServiceClient.getBundleWithNameAndNamespace(name, deId);
     }
 

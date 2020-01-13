@@ -24,13 +24,12 @@ import java.util.zip.ZipFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangeBaseCall;
 import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.job.JobPackageException;
+import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -43,7 +42,6 @@ import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureMatchingException;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
@@ -63,9 +61,7 @@ import org.springframework.web.client.RestTemplate;
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
-    private final @NonNull DigitalExchangesService exchangesService;
     private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
-    private final @NonNull DigitalExchangesClient client;
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
     private final ExecutorService threadPool = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
@@ -74,8 +70,9 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    public DigitalExchangeJob install(String digitalExchangeId, String componentId, String version) {
-        EntandoDeBundle bundle = k8sService.getBundleByNameAndDigitalExchange(componentId, digitalExchangeId);
+    public DigitalExchangeJob install(String componentId, String version) {
+        EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
+                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found in digital-exchange "));
         Optional<DigitalExchangeJob> existingJob = jobRepository
                 .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED);
 

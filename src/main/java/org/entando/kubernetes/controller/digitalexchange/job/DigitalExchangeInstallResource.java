@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URISyntaxException;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Api(tags = {"digital-exchange", "installation"})
 @RequestMapping(value = "/components")
@@ -40,9 +41,10 @@ public interface DigitalExchangeInstallResource {
         @ApiResponse(code = 201, message = "Created")
     })
     @Secured(Roles.INSTALL)
-    @PostMapping(value = "{exchange}/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<DigitalExchangeJob> install(@PathVariable("exchange") String digitalExchangeId,
-                                                   @PathVariable("component") String componentId);
+    @PostMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    SimpleRestResponse<DigitalExchangeJob> install(
+           @PathVariable("component") String componentId,
+           @RequestParam(name = "version", required = true, defaultValue = "latest") String version);
 
     @ApiOperation(value = "Starts component remove job ")
     @ApiResponses({

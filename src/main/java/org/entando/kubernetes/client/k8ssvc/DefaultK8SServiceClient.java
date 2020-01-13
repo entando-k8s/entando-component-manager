@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import org.springframework.hateoas.mvc.TypeConstrainedMappingJackson2HttpMessage
 import org.springframework.hateoas.mvc.TypeReferences.ResourceType;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -178,7 +180,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public EntandoDeBundle getBundleWithNameAndNamespace(String name, String namespace) {
+    public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT, "namespaces", namespace, name)
                 .toUriString();
@@ -187,6 +189,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<Resource<EntandoDeBundle>>() {});
+
+        if (responseEntity.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+            return Optional.empty();
+        }
+
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
@@ -195,7 +202,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     ));
         }
 
-        return Objects.requireNonNull(responseEntity.getBody()).getContent();
+        return Optional.of(Objects.requireNonNull(responseEntity.getBody()).getContent());
     }
 
     private List<EntandoDeBundle> submitBundleRequestAndExtractBody(String url) {

@@ -1,11 +1,14 @@
 package org.entando.kubernetes.client.k8ssvc;
 
 import java.util.List;
+import java.util.Optional;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public interface K8SServiceClient {
+
+    public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
 
     List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace);
 
@@ -19,6 +22,6 @@ public interface K8SServiceClient {
 
     List<EntandoDeBundle> getBundlesInNamespace(String namespace);
 
-    EntandoDeBundle getBundleWithNameAndNamespace(String name, String namespace);
+    Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace);
 
 }

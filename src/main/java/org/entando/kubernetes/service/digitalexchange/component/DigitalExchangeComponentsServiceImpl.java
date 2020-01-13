@@ -13,21 +13,12 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
-import org.entando.kubernetes.client.digitalexchange.SimpleDigitalExchangeCall;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
-import org.entando.web.request.Filter;
-import org.entando.web.request.PagedListRequest;
-import org.entando.web.response.SimpleRestResponse;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -39,65 +30,65 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     private static final List<String> LOCAL_FILTERS = Arrays.asList("digitalExchangeName", "digitalExchangeId", "installed");
 
-    private final @NonNull DigitalExchangesClient client;
-    private final @NonNull DigitalExchangesService exchangesService;
-    private final @NonNull
-    KubernetesService kubernetesService;
+//    private final @NonNull DigitalExchangesClient client;
+//    private final @NonNull DigitalExchangesService exchangesService;
+//    private final @NonNull
+//    KubernetesService kubernetesService;
+    private final @NonNull K8SServiceClient k8SServiceClient;
 
-    @Override
-    public ResilientPagedMetadata<DigitalExchangeComponent> getComponents(final PagedListRequest requestList) {
-        final ResilientPagedMetadata<DigitalExchangeComponent> combinedResult = client.getCombinedResult(
-                exchangesService.getDigitalExchanges(),
-                new ComponentsCall(exchangesService, buildForwardedRequest(requestList)));
-        final List<DigitalExchangeComponent> localFilteredList = new DigitalExchangeComponentListProcessor(
-                requestList, combinedResult.getBody()).filterAndSort().toList();
-        final List<DigitalExchangeComponent> sublist = requestList.getSublist(localFilteredList);
-        sublist.forEach(this::processInstalled);
+//    @Override public ResilientPagedMetadata<DigitalExchangeComponent> getComponents(final PagedListRequest requestList) {
+//        final ResilientPagedMetadata<DigitalExchangeComponent> combinedResult = client.getCombinedResult(
+//                exchangesService.getDigitalExchanges(),
+//                new ComponentsCall(exchangesService, buildForwardedRequest(requestList)));
+//        final List<DigitalExchangeComponent> localFilteredList = new DigitalExchangeComponentListProcessor(
+//                requestList, combinedResult.getBody()).filterAndSort().toList();
+//        final List<DigitalExchangeComponent> sublist = requestList.getSublist(localFilteredList);
+//        sublist.forEach(this::processInstalled);
+//
+//        combinedResult.setTotalItems(localFilteredList.size());
+//        combinedResult.setBody(sublist);
+//        combinedResult.setPage(requestList.getPage());
+//        combinedResult.setPageSize(requestList.getPageSize());
+//
+//        return combinedResult;
+//    }
 
-        combinedResult.setTotalItems(localFilteredList.size());
-        combinedResult.setBody(sublist);
-        combinedResult.setPage(requestList.getPage());
-        combinedResult.setPageSize(requestList.getPageSize());
-
-        return combinedResult;
-    }
-
-    @Override
-    public SimpleRestResponse<DigitalExchangeComponent> getComponent(final DigitalExchange digitalExchange, final String componentId) {
-        final SimpleDigitalExchangeCall<DigitalExchangeComponent> call = new SimpleDigitalExchangeCall<>(
-                HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<DigitalExchangeComponent>>() {
-        }, "digitalExchange", "components", componentId);
-        final SimpleRestResponse<DigitalExchangeComponent> response = client.getSingleResponse(digitalExchange, call);
-        processInstalled(response.getPayload());
-        return response;
-    }
+//    @Override
+//    public SimpleRestResponse<DigitalExchangeComponent> getComponent(final DigitalExchange digitalExchange, final String componentId) {
+//        final SimpleDigitalExchangeCall<DigitalExchangeComponent> call = new SimpleDigitalExchangeCall<>(
+//                HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<DigitalExchangeComponent>>() {
+//        }, "digitalExchange", "components", componentId);
+//        final SimpleRestResponse<DigitalExchangeComponent> response = client.getSingleResponse(digitalExchange, call);
+//        processInstalled(response.getPayload());
+//        return response;
+//    }
 
     @Override
     public List<EntandoDeBundle> getComponents() {
-        return kubernetesService.getAllBundles();
+        return k8SServiceClient.getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
     }
 
 
-    private void processInstalled(final DigitalExchangeComponent component) {
-        if (kubernetesService.isLinkedPlugin(component.getId())) {
-            component.setInstalled(true);
-        }
-    }
+//    private void processInstalled(final DigitalExchangeComponent component) {
+//        if (kubernetesService.isLinkedPlugin(component.getId())) {
+//            component.setInstalled(true);
+//        }
+//    }
 
-    private PagedListRequest buildForwardedRequest(final PagedListRequest originalRequest) {
-        final PagedListRequest forwaredRequest = new PagedListRequest();
-        forwaredRequest.setDirection(originalRequest.getDirection());
-        forwaredRequest.setSort(originalRequest.getSort());
-        forwaredRequest.setPageSize(Integer.MAX_VALUE);
-        forwaredRequest.setPage(1);
-
-        if (originalRequest.getFilters() != null) {
-            final Filter[] forwaredFilters = Arrays.stream(originalRequest.getFilters())
-                    .filter(f -> !LOCAL_FILTERS.contains(f.getAttribute()))
-                    .toArray(Filter[]::new);
-            forwaredRequest.setFilters(forwaredFilters);
-        }
-
-        return forwaredRequest;
-    }
+//    private PagedListRequest buildForwardedRequest(final PagedListRequest originalRequest) {
+//        final PagedListRequest forwaredRequest = new PagedListRequest();
+//        forwaredRequest.setDirection(originalRequest.getDirection());
+//        forwaredRequest.setSort(originalRequest.getSort());
+//        forwaredRequest.setPageSize(Integer.MAX_VALUE);
+//        forwaredRequest.setPage(1);
+//
+//        if (originalRequest.getFilters() != null) {
+//            final Filter[] forwaredFilters = Arrays.stream(originalRequest.getFilters())
+//                    .filter(f -> !LOCAL_FILTERS.contains(f.getAttribute()))
+//                    .toArray(Filter[]::new);
+//            forwaredRequest.setFilters(forwaredFilters);
+//        }
+//
+//        return forwaredRequest;
+//    }
 }

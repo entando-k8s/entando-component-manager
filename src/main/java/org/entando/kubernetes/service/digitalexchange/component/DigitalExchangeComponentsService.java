@@ -23,9 +23,11 @@ import org.entando.web.response.SimpleRestResponse;
 
 public interface DigitalExchangeComponentsService {
 
-    ResilientPagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest requestList);
-
-    SimpleRestResponse<DigitalExchangeComponent> getComponent(DigitalExchange digitalExchange, String componentId);
+//    ResilientPagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest requestList);
+//
+//    SimpleRestResponse<DigitalExchangeComponent> getComponent(DigitalExchange digitalExchange, String componentId);
+//
+//    List<EntandoDeBundle> getComponents();
 
     List<EntandoDeBundle> getComponents();
 }

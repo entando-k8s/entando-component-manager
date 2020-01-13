@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-@Component
 @RequiredArgsConstructor
 public class DigitalExchangesClientImpl implements DigitalExchangesClient {
 

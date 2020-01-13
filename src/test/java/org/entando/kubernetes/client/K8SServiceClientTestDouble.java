@@ -2,6 +2,7 @@ package org.entando.kubernetes.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -76,5 +77,12 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals(namespace))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
+        return inMemoryBundles.stream()
+                .filter(b -> b.getSpec().getDetails().getName().equals(name) && b.getMetadata().getNamespace().equals(namespace))
+                .findFirst();
     }
 }
