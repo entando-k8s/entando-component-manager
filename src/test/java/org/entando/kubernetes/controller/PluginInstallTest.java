@@ -1,22 +1,20 @@
 package org.entando.kubernetes.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.List;
 import java.util.Optional;
-import org.entando.kubernetes.KubernetesClientMocker;
+import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.DbmsImageVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +28,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
-@Ignore("Not yet ported to new infrastructure")
+@Ignore("Not yet ported to new infrastructure - Issues with EntandoPlugin")
 public class PluginInstallTest {
 
     private static final String DIGITAL_EXCHANGE_ID = "community";
@@ -38,15 +36,10 @@ public class PluginInstallTest {
 
     @Autowired
     private KubernetesService kubernetesService;
+
     @Autowired
-    private KubernetesClient client;
+    private K8SServiceClient k8SServiceClient;
 
-    private KubernetesClientMocker mocker;
-
-    @Before
-    public void setUp() {
-        mocker = new KubernetesClientMocker(client);
-    }
 
     @Test
     public void testDeployment() {
@@ -70,15 +63,19 @@ public class PluginInstallTest {
 
         kubernetesService.linkPlugin(entandoPlugin);
 
-        final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
-        verify(mocker.operation, times(1)).create(captor.capture());
-        final EntandoPlugin plugin = captor.getValue();
+//        ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
+//        verify(k8SServiceClient, times(1)).linkAppWithPlugin(anyString(), anyString(), captor.capture());
+//        final EntandoPlugin plugin = captor.getValue();
+        K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble)  k8SServiceClient;
+        List<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPluginsCopy();
+        assertThat(linkedPluginDatabase.size()).isEqualTo(1);
+        EntandoPlugin plugin = linkedPluginDatabase.get(0);
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/avatar");
         assertThat(plugin.getSpec().getDbms()).isEqualTo(Optional.of(DbmsImageVendor.MYSQL));
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/entando-avatar-plugin");
         assertThat(plugin.getSpec().getHealthCheckPath()).isEqualTo("/actuator/health");
-        assertThat(plugin.getSpec().getReplicas()).isEqualTo(1);
+        assertThat(plugin.getSpec().getReplicas()).isEqualTo(Optional.of(1));
         assertThat(plugin.getMetadata().getName()).isEqualTo("avatar-plugin");
 
         assertThat(plugin.getSpec().getRoles()).hasSize(1);

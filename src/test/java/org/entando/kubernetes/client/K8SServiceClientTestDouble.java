@@ -13,13 +13,15 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     private List<EntandoAppPluginLink> inMemoryLinks = new ArrayList<>();
-
+    private List<EntandoPlugin> inMemoryPlugins = new ArrayList<>();
     private List<EntandoDeBundle> inMemoryBundles = new ArrayList<>();
 
+    public void addInMemoryLinkedPlugins(EntandoPlugin plugin) {
+        this.inMemoryPlugins.add(plugin);
+    }
     public void addInMemoryLink(EntandoAppPluginLink link) {
         this.inMemoryLinks.add(link);
     }
-
     public void addInMemoryBundle(EntandoDeBundle bundle) {
         this.inMemoryBundles.add(bundle);
     }
@@ -29,8 +31,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         this.inMemoryBundles = new ArrayList<>();
     }
 
-    public List<EntandoAppPluginLink> getInMemoryDatabaseCopy() {
+    public List<EntandoAppPluginLink> getInMemoryLinkCopy() {
         return new ArrayList<>(inMemoryLinks);
+    }
+    public List<EntandoPlugin> getInMemoryPluginsCopy() {
+        return new ArrayList<>(inMemoryPlugins);
     }
 
     @Override
@@ -54,6 +59,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     @Override
     public void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
+        this.inMemoryPlugins.add(plugin);
         EntandoAppPluginLink link = new EntandoAppPluginLinkBuilder()
                 .withNewMetadata()
                     .withName(name + "-to-" + plugin.getMetadata().getName() + "-link")
