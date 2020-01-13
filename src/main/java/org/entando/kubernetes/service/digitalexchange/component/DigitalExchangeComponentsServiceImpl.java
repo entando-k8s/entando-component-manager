@@ -15,14 +15,17 @@ package org.entando.kubernetes.service.digitalexchange.component;
 
 import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -64,10 +67,27 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 //    }
 
     @Override
-    public List<EntandoDeBundle> getComponents() {
-        return k8SServiceClient.getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
+    public List<DigitalExchangeComponent> getComponents() {
+         List<EntandoDeBundle> bundles = k8SServiceClient.getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
+         return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
     }
 
+
+    public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
+        DigitalExchangeComponent dec = new DigitalExchangeComponent();
+        EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
+        dec.setDescription(bd.getDescription());
+        dec.setDigitalExchangeId(DEFAULT_BUNDLE_NAMESPACE);
+        dec.setDigitalExchangeName("Default-digital-exchange");
+        dec.setId(bd.getName());
+        dec.setRating(5);
+        dec.setInstalled(false);
+        dec.setType("Bundle");
+        dec.setLastUpdate(new Date());
+        dec.setSignature("");
+        dec.setVersion(bd.getDistTags().get("latest").toString());
+        return dec;
+    }
 
 //    private void processInstalled(final DigitalExchangeComponent component) {
 //        if (kubernetesService.isLinkedPlugin(component.getId())) {

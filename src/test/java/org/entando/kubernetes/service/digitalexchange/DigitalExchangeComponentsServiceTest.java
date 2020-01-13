@@ -1,12 +1,11 @@
 package org.entando.kubernetes.service.digitalexchange;
 
-import static groovy.xml.Entity.times;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
 
 import java.util.List;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -30,9 +29,9 @@ public class DigitalExchangeComponentsServiceTest {
     @Test
     public void shouldReturnAllComponentsAvailable() {
         k8SServiceClient.addInMemoryBundle(getTestBundle());
-        List<EntandoDeBundle> bundles = service.getComponents();
+        List<DigitalExchangeComponent> bundles = service.getComponents();
         assertThat(bundles.size()).isEqualTo(1);
-        assertThat(bundles.get(0).getMetadata().getNamespace()).isEqualToIgnoringCase(DEFAULT_BUNDLE_NAMESPACE);
+        assertThat(bundles.get(0).getDigitalExchangeName()).isEqualTo(DEFAULT_BUNDLE_NAMESPACE);
     }
 
     private EntandoDeBundle getTestBundle() {

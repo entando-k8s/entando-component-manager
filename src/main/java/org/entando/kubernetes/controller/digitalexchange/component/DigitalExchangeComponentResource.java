@@ -37,5 +37,5 @@ public interface DigitalExchangeComponentResource {
     })
     @Secured(Roles.LIST_COMPONENTS)
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PagedRestResponse<EntandoDeBundle>> getComponents(PagedListRequest requestList);
+    ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(PagedListRequest requestList);
 }

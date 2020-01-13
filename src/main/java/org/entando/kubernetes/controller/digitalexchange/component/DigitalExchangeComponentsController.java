@@ -41,11 +41,11 @@ public class DigitalExchangeComponentsController implements DigitalExchangeCompo
 
 
     @Override
-    public ResponseEntity<PagedRestResponse<EntandoDeBundle>> getComponents(PagedListRequest requestList) {
-        List<EntandoDeBundle>  bundles = componentsService.getComponents();
-        PagedMetadata<EntandoDeBundle> pagedMetadata = new PagedMetadata<>();
+    public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(PagedListRequest requestList) {
+        List<DigitalExchangeComponent>  bundles = componentsService.getComponents();
+        PagedMetadata<DigitalExchangeComponent> pagedMetadata = new PagedMetadata<>();
         pagedMetadata.setBody(bundles);
-        PagedRestResponse<EntandoDeBundle> response = new PagedRestResponse(pagedMetadata);
+        PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse(pagedMetadata);
         return ResponseEntity.ok(response);
     }
 }

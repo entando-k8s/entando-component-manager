@@ -29,5 +29,5 @@ public interface DigitalExchangeComponentsService {
 //
 //    List<EntandoDeBundle> getComponents();
 
-    List<EntandoDeBundle> getComponents();
+    List<DigitalExchangeComponent> getComponents();
 }
