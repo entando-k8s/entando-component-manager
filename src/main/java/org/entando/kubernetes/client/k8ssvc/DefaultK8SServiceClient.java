@@ -3,9 +3,11 @@ package org.entando.kubernetes.client.k8ssvc;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -165,7 +167,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInAllNamespaces() {
+    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT).toUriString();
         return submitBundleRequestAndExtractBody(url);
@@ -181,9 +183,23 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
-        return getBundlesInAllNamespaces().stream()
-                .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
-                .collect(Collectors.toList());
+        @SuppressWarnings("unchecked")
+        CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
+                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n)))
+                .toArray(CompletableFuture[]::new);
+
+        return CompletableFuture.allOf(futures).thenApply(v -> Arrays.stream(futures)
+                .map(CompletableFuture::join)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList())
+        ).join();
+    }
+
+    @Override
+    public Optional<EntandoDeBundle> getBundleWithName(String name) {
+        return getBundlesInDefaultNamespace().stream()
+                .filter(b -> b.getSpec().getDetails().getName().equals(name))
+                .findAny();
     }
 
     @Override

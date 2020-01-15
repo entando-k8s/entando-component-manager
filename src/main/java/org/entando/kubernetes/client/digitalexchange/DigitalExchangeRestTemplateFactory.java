@@ -13,7 +13,7 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.springframework.web.client.RestTemplate;
 
 public interface DigitalExchangeRestTemplateFactory {

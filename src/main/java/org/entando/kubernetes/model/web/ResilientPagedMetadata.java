@@ -1,4 +1,4 @@
-package org.entando.kubernetes.controller.digitalexchange.model;
+package org.entando.kubernetes.model.web;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;

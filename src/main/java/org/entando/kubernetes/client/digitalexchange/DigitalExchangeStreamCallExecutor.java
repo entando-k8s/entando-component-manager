@@ -13,7 +13,7 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;

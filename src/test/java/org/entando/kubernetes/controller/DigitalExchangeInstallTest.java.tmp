@@ -40,7 +40,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.junit.After;
 import org.junit.Assert;

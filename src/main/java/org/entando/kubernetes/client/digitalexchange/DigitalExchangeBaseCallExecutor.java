@@ -15,7 +15,7 @@ package org.entando.kubernetes.client.digitalexchange;
 
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.springframework.context.MessageSource;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.web.client.ResourceAccessException;

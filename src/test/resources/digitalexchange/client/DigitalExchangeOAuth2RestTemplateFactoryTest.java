@@ -15,7 +15,7 @@ package org.entando.kubernetes.digitalexchange.client;
 
 import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactory;
 import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactoryImpl;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.junit.Before;
 import org.junit.Test;
 

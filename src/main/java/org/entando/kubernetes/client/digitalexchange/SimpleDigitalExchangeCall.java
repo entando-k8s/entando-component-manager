@@ -13,7 +13,7 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientListWrapper;
+import org.entando.kubernetes.model.web.ResilientListWrapper;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;

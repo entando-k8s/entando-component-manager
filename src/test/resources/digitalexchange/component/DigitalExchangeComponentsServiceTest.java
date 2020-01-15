@@ -18,7 +18,7 @@ import org.entando.kubernetes.digitalexchange.client.DigitalExchangesClientMocke
 import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
 import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
+import org.entando.kubernetes.model.web.ResilientPagedMetadata;
 import org.entando.web.SystemConstants;
 import org.entando.web.request.Filter;
 import org.entando.web.request.FilterOperator;
