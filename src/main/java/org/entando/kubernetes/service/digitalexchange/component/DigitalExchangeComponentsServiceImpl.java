@@ -25,7 +25,6 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,6 +33,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     private static final List<String> LOCAL_FILTERS = Arrays.asList("digitalExchangeName", "digitalExchangeId", "installed");
 
+    private final List<DigitalExchange> accessibleDigitalExchanges;
 
     private final @NonNull K8SServiceClient k8SServiceClient;
 

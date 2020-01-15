@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
@@ -30,6 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,6 +47,9 @@ public class DigitalExchangeComponentsTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Value("${entando.digital-exchanges}")
+    private List<String> digitalExchangesNames;
 
     @SpyBean
     private K8SServiceClient k8sServiceClient;
@@ -82,6 +87,31 @@ public class DigitalExchangeComponentsTest {
                 .andExpect(jsonPath("payload[0].digitalExchangeId").value(DEFAULT_BUNDLE_NAMESPACE));
 
         verify(k8sServiceClient, times(1)).getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
+    }
+
+    @Test
+    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() {
+        K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
+        kc.addInMemoryBundle(getTestBundle());
+
+        mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+                .andExpect(jsonPath("payload[0]").isMap())
+                .andExpect(jsonPath("payload[0]", hasKey("id")))
+                .andExpect(jsonPath("payload[0]", hasKey("name")))
+                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
+                .andExpect(jsonPath("payload[0]", hasKey("version")))
+                .andExpect(jsonPath("payload[0]", hasKey("type")))
+                .andExpect(jsonPath("payload[0]", hasKey("description")))
+                .andExpect(jsonPath("payload[0]", hasKey("image")))
+                .andExpect(jsonPath("payload[0]", hasKey("rating")))
+                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeId")))
+                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
+                .andExpect(jsonPath("payload[0].digitalExchangeId").value(DEFAULT_BUNDLE_NAMESPACE));
+
+        verify(k8sServiceClient, times(1)).getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
+
     }
 
 

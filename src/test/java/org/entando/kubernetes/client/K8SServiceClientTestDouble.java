@@ -86,9 +86,18 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+        return inMemoryBundles.stream()
+                .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         return inMemoryBundles.stream()
                 .filter(b -> b.getSpec().getDetails().getName().equals(name) && b.getMetadata().getNamespace().equals(namespace))
                 .findFirst();
     }
+
+
 }

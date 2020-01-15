@@ -180,6 +180,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+        return getBundlesInAllNamespaces().stream()
+                .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT, "namespaces", namespace, name)

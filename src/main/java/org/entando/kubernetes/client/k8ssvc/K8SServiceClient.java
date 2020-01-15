@@ -22,6 +22,8 @@ public interface K8SServiceClient {
 
     List<EntandoDeBundle> getBundlesInNamespace(String namespace);
 
+    List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces);
+
     Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace);
 
 }
