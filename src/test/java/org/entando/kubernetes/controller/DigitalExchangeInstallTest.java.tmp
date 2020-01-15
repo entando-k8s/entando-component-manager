@@ -44,6 +44,7 @@ import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureWireMock(port = 8099)
 @TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Ignore("Need to be rewritten after building new version")
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";

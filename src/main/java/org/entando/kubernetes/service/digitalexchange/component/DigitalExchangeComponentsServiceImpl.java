@@ -25,6 +25,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,38 +34,9 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     private static final List<String> LOCAL_FILTERS = Arrays.asList("digitalExchangeName", "digitalExchangeId", "installed");
 
-//    private final @NonNull DigitalExchangesClient client;
-//    private final @NonNull DigitalExchangesService exchangesService;
-//    private final @NonNull
-//    KubernetesService kubernetesService;
+
     private final @NonNull K8SServiceClient k8SServiceClient;
 
-//    @Override public ResilientPagedMetadata<DigitalExchangeComponent> getComponents(final PagedListRequest requestList) {
-//        final ResilientPagedMetadata<DigitalExchangeComponent> combinedResult = client.getCombinedResult(
-//                exchangesService.getDigitalExchanges(),
-//                new ComponentsCall(exchangesService, buildForwardedRequest(requestList)));
-//        final List<DigitalExchangeComponent> localFilteredList = new DigitalExchangeComponentListProcessor(
-//                requestList, combinedResult.getBody()).filterAndSort().toList();
-//        final List<DigitalExchangeComponent> sublist = requestList.getSublist(localFilteredList);
-//        sublist.forEach(this::processInstalled);
-//
-//        combinedResult.setTotalItems(localFilteredList.size());
-//        combinedResult.setBody(sublist);
-//        combinedResult.setPage(requestList.getPage());
-//        combinedResult.setPageSize(requestList.getPageSize());
-//
-//        return combinedResult;
-//    }
-
-//    @Override
-//    public SimpleRestResponse<DigitalExchangeComponent> getComponent(final DigitalExchange digitalExchange, final String componentId) {
-//        final SimpleDigitalExchangeCall<DigitalExchangeComponent> call = new SimpleDigitalExchangeCall<>(
-//                HttpMethod.GET, new ParameterizedTypeReference<SimpleRestResponse<DigitalExchangeComponent>>() {
-//        }, "digitalExchange", "components", componentId);
-//        final SimpleRestResponse<DigitalExchangeComponent> response = client.getSingleResponse(digitalExchange, call);
-//        processInstalled(response.getPayload());
-//        return response;
-//    }
 
     @Override
     public List<DigitalExchangeComponent> getComponents() {
@@ -76,9 +48,10 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
         DigitalExchangeComponent dec = new DigitalExchangeComponent();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
+        dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
         dec.setDigitalExchangeId(DEFAULT_BUNDLE_NAMESPACE);
-        dec.setDigitalExchangeName("Default-digital-exchange");
+        dec.setDigitalExchangeName(DEFAULT_BUNDLE_NAMESPACE);
         dec.setId(bd.getName());
         dec.setRating(5);
         dec.setInstalled(false);
@@ -86,29 +59,8 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         dec.setLastUpdate(new Date());
         dec.setSignature("");
         dec.setVersion(bd.getDistTags().get("latest").toString());
+        dec.setImage("someimage");
         return dec;
     }
 
-//    private void processInstalled(final DigitalExchangeComponent component) {
-//        if (kubernetesService.isLinkedPlugin(component.getId())) {
-//            component.setInstalled(true);
-//        }
-//    }
-
-//    private PagedListRequest buildForwardedRequest(final PagedListRequest originalRequest) {
-//        final PagedListRequest forwaredRequest = new PagedListRequest();
-//        forwaredRequest.setDirection(originalRequest.getDirection());
-//        forwaredRequest.setSort(originalRequest.getSort());
-//        forwaredRequest.setPageSize(Integer.MAX_VALUE);
-//        forwaredRequest.setPage(1);
-//
-//        if (originalRequest.getFilters() != null) {
-//            final Filter[] forwaredFilters = Arrays.stream(originalRequest.getFilters())
-//                    .filter(f -> !LOCAL_FILTERS.contains(f.getAttribute()))
-//                    .toArray(Filter[]::new);
-//            forwaredRequest.setFilters(forwaredFilters);
-//        }
-//
-//        return forwaredRequest;
-//    }
 }

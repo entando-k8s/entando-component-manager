@@ -6,6 +6,8 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.hasValue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.Collections;
 import java.util.Date;
+import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -23,12 +26,14 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,9 +46,13 @@ public class DigitalExchangeComponentsTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private DigitalExchangeComponentsService componentsService;
+    @SpyBean
+    private K8SServiceClient k8sServiceClient;
 
+    @Before
+    public void setup() {
+        ((K8SServiceClientTestDouble) k8sServiceClient).cleanInMemoryDatabases();
+    }
 
     @Test
     public void shouldStart() {
@@ -53,7 +62,8 @@ public class DigitalExchangeComponentsTest {
     @Test
     public void apiShouldMaintainCompatibilityWithAppBuilder() throws Exception {
 
-        when(componentsService.getComponents()).thenReturn(Collections.singletonList(convertBundleToLegacyComponent(getTestBundle())));
+        K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
+        kc.addInMemoryBundle(getTestBundle());
 
         mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -71,8 +81,8 @@ public class DigitalExchangeComponentsTest {
                 .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
                 .andExpect(jsonPath("payload[0].digitalExchangeId").value(DEFAULT_BUNDLE_NAMESPACE));
 
+        verify(k8sServiceClient, times(1)).getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
     }
-
 
 
     private EntandoDeBundle getTestBundle() {

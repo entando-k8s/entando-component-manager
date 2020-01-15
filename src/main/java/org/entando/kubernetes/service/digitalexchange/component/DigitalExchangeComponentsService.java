@@ -20,14 +20,9 @@ import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMet
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.SimpleRestResponse;
+import org.springframework.beans.factory.annotation.Value;
 
 public interface DigitalExchangeComponentsService {
-
-//    ResilientPagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest requestList);
-//
-//    SimpleRestResponse<DigitalExchangeComponent> getComponent(DigitalExchange digitalExchange, String componentId);
-//
-//    List<EntandoDeBundle> getComponents();
 
     List<DigitalExchangeComponent> getComponents();
 }
