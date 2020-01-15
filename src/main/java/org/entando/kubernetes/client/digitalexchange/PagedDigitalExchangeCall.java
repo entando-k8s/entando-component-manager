@@ -13,8 +13,8 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.entando.kubernetes.model.web.ResilientPagedMetadata;
 import org.entando.web.request.PagedListRequest;
 import org.entando.web.request.RequestListProcessor;
 import org.entando.web.response.PagedMetadata;

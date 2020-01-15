@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.controller.digitalexchange.model;
+package org.entando.kubernetes.model.web;
 
 import lombok.Getter;
 import org.entando.web.response.RestError;

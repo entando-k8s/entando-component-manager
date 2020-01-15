@@ -15,10 +15,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
-import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.PagedMetadata;
 import org.entando.web.response.PagedRestResponse;
 import org.springframework.http.ResponseEntity;
