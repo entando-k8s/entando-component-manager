@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -33,16 +34,22 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     private final List<String> accessibleDigitalExchanges;
 
     public DigitalExchangeComponentsServiceImpl(K8SServiceClient k8SServiceClient,
-            @Value("${entando.digital-exchanges.name:''}")List<String> accessibleDigitalExchanges) {
+            @Value("${entando.digital-exchanges.name:}")List<String> accessibleDigitalExchanges) {
         this.k8SServiceClient = k8SServiceClient;
-        this.accessibleDigitalExchanges = accessibleDigitalExchanges;
+        this.accessibleDigitalExchanges = accessibleDigitalExchanges
+                .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
     }
 
 
     @Override
     public List<DigitalExchangeComponent> getComponents() {
-         List<EntandoDeBundle> bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
-         return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
+        List<EntandoDeBundle> bundles;
+        if(accessibleDigitalExchanges.isEmpty()) {
+            bundles = k8SServiceClient.getBundlesInDefaultNamespace();
+        } else {
+            bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
+        }
+        return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
     }
 
 

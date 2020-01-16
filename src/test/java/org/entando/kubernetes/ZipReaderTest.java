@@ -9,6 +9,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.junit.Test;
 
 public class ZipReaderTest {
@@ -25,6 +26,7 @@ public class ZipReaderTest {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class TempObject {
 
         String id;
