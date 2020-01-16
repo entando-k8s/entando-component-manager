@@ -82,23 +82,13 @@ public class DigitalExchangeComponentsTest {
     @Test
     public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception{
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
-        kc.addInMemoryBundle(getTestBundle());
+        EntandoDeBundle bundle = getTestBundle();
+        bundle.getMetadata().setNamespace("my-custom-namespace");
+        kc.addInMemoryBundle(bundle);
 
         mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("payload", hasSize(1)))
-                .andExpect(jsonPath("payload[0]").isMap())
-                .andExpect(jsonPath("payload[0]", hasKey("id")))
-                .andExpect(jsonPath("payload[0]", hasKey("name")))
-                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
-                .andExpect(jsonPath("payload[0]", hasKey("version")))
-                .andExpect(jsonPath("payload[0]", hasKey("type")))
-                .andExpect(jsonPath("payload[0]", hasKey("description")))
-                .andExpect(jsonPath("payload[0]", hasKey("image")))
-                .andExpect(jsonPath("payload[0]", hasKey("rating")))
-                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeId")))
-                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
-                .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"));
+                .andExpect(jsonPath("payload", hasSize(0)));
 
         verify(k8sServiceClient, times(1)).getBundlesInDefaultNamespace();
 
