@@ -43,7 +43,7 @@ public class PluginProcessor implements ComponentProcessor {
         List<Installable> installableList = new ArrayList<>();
         if (optionalPlugins.isPresent()) {
             for (String filename : optionalPlugins.get()) {
-                PluginDescriptor pluginDescriptor = zipReader.readDescriptorFile(filename, PluginDescriptor.class);
+                PluginDescriptor pluginDescriptor = zipReader.readPluginDescriptor(filename);
                 installableList.add(new PluginInstallable(pluginDescriptor, job));
             }
         }

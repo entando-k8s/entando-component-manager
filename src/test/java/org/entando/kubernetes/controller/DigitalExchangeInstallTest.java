@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.checkRequest;
@@ -38,6 +39,10 @@ import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
@@ -73,58 +78,25 @@ public class DigitalExchangeInstallTest {
     @Autowired
     private DatabaseCleaner databaseCleaner;
     @Autowired
-    private DigitalExchangeTestApi digitalExchangeTestApi;
-    @Autowired
     private K8SServiceClient k8SServiceClient;
 
     @After
     public void cleanup() throws SQLException {
         databaseCleaner.cleanup();
-        ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabase();
+        ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
     }
 
     @Test
 //    @Ignore("This requires to nuke the mocker and use the new k8sServiceClient")
     public void testInstallComponent() throws Exception {
-        DigitalExchange digitalExchange = new DigitalExchange();
-
-        digitalExchange.setName("Community");
-        digitalExchange.setUrl("http://localhost:8099/community");
-        digitalExchange.setTimeout(10000);
-        digitalExchange.setActive(true);
-        digitalExchange.setPublicKey(getTestPublicKey());
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
 
         final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
         final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
-        final String signature = SignatureUtil.signPackage(in, SignatureUtil.privateKeyFromPEM(getTestPrivateKey()));
-        final String digitalExchangeId = digitalExchangeTestApi.createDigitalExchange(digitalExchange);
-        final String pluginA =
-                "{ \n" +
-                        "    \"id\": \"todomvc\", \n" +
-                        "    \"name\": \"Todo MVC\", \n" +
-                        "    \"type\": \"PLUGIN\", \n" +
-                        "    \"lastUpdate\": \"2019-07-17 16:50:05\", \n" +
-                        "    \"version\": \"latest\", \n" +
-                        "    \"image\": \"http://todomvc.com/site-assets/logo-icon.png\", \n" +
-                        "    \"description\": \"A great example to show a widget working\", \n" +
-                        "    \"rating\": 5, \n" +
-                        "    \"signature\": \"" + signature + "\" \n" +
-                        "}";
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
 
-        final String response =
-                "{ \n" +
-                        "    \"payload\": " + pluginA + ", \n" +
-                        "    \"metadata\": {}, \n" +
-                        "    \"errors\": [] \n" +
-                        "}";
-
-        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components/todomvc"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody(response)));
-
-        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components/todomvc/package"))
+        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
                         .withBody(readFromDEPackage())));
 
@@ -144,19 +116,13 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
 
-//        final KubernetesPluginMocker pluginMocker = new KubernetesPluginMocker();
-//        mocker.mockResult("todomvc", pluginMocker.plugin);
-//        mocker.mockResult("avatar", null);
 
-        mockMvc.perform(post(String.format("%s/%s/install/todomvc", URL, digitalExchangeId)))
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk());
 
         waitFor(5000);
 
-//        final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
-//        verify(mocker.operation, times(1)).create(captor.capture());
-//        final EntandoPlugin plugin = captor.getValue();
-        List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryDatabaseCopy();
+        List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinkCopy();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
                 .filter(link -> link.getSpec().getEntandoPluginName().equals("todomvc")).findAny();
 
@@ -351,6 +317,35 @@ public class DigitalExchangeInstallTest {
 
     private static String requestPath(final LoggedRequest request) {
         return requestProperty(request, "path");
+    }
+
+    private EntandoDeBundle getTestBundle() {
+        return new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("todomvc")
+                .withNamespace("entando-de-bundles")
+                .endMetadata()
+                .withSpec(getTestEntandoDeBundleSpec()).build();
+
+    }
+
+    private EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
+        return new EntandoDeBundleSpecBuilder()
+                .withNewDetails()
+                .withDescription("A bundle containing some demo components for Entando6")
+                .withName("todomvc")
+                .addNewVersion("0.0.1")
+                .addNewKeyword("entando6")
+                .addNewKeyword("digital-exchange")
+                .addNewDistTag("latest", "0.0.1")
+                .and()
+                .addNewTag()
+                .withVersion("0.0.1")
+                .withIntegrity("sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
+                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
+                .withTarball("http://localhost:8099/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .endTag()
+                .build();
     }
 
 }

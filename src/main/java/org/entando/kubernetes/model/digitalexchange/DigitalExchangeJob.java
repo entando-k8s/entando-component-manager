@@ -38,7 +38,7 @@ public class DigitalExchangeJob {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "digital-exchange-id")
+    @Column(name = "digital_exchange_id")
     private String digitalExchange;
 
     @Column(name = "component_id")

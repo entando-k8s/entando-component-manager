@@ -98,7 +98,7 @@
         <dependency>
             <groupId>org.entando.kubernetes</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
-            <version>6.0.36</version>
+            <version>6.0.51</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
