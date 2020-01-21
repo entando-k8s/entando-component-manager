@@ -19,10 +19,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
-import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,12 +36,15 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     private final K8SServiceClient k8SServiceClient;
     private final List<String> accessibleDigitalExchanges;
+    private final DigitalExchangeJobRepository jobRepository;
 
     public DigitalExchangeComponentsServiceImpl(K8SServiceClient k8SServiceClient,
-            @Value("${entando.digital-exchanges.name:}")List<String> accessibleDigitalExchanges) {
+            @Value("${entando.digital-exchanges.name:}") List<String> accessibleDigitalExchanges,
+            DigitalExchangeJobRepository jobRepository) {
         this.k8SServiceClient = k8SServiceClient;
         this.accessibleDigitalExchanges = accessibleDigitalExchanges
                 .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
+        this.jobRepository = jobRepository;
     }
 
 
@@ -72,7 +79,11 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     }
 
     private boolean checkIfInstalled(EntandoDeBundle bundle) {
-        return false;
+        String deId = bundle.getMetadata().getNamespace();
+        String componentId = bundle.getSpec().getDetails().getName();
+        return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(deId, componentId)
+                .map(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
+                .orElse(false);
     }
 
 }

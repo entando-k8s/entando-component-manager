@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.controller.digitalexchange.component;
+package org.entando.kubernetes.model.digitalexchange;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
