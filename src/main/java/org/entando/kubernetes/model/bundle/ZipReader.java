@@ -21,10 +21,7 @@ import java.util.zip.ZipFile;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
-import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public class ZipReader {
 
@@ -80,14 +77,9 @@ public class ZipReader {
                 .collect(Collectors.toList());
     }
 
-    public <T extends Descriptor> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
+    public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
         final ZipEntry zipEntry = getFile(fileName);
         return readDescriptorFile(zipFile.getInputStream(zipEntry), clazz);
-    }
-
-    public PluginDescriptor readPluginDescriptor(String filename) throws IOException {
-        ZipEntry zipEntry = getFile(filename);
-        return readPluginDescriptorFile(zipFile.getInputStream(zipEntry));
     }
 
     public String readFileAsString(final String folder, final String fileName) throws IOException {
@@ -113,19 +105,8 @@ public class ZipReader {
         }
     }
 
-    private <T extends Descriptor> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
         return mapper.readValue(file, clazz);
-    }
-
-    private PluginDescriptor readPluginDescriptorFile(InputStream file) throws IOException {
-        EntandoPlugin pluginInfo = mapper.readValue(file, EntandoPlugin.class);
-        PluginDescriptor descriptor = new PluginDescriptor();
-        descriptor.setApiVersion(pluginInfo.getApiVersion());
-        descriptor.setKind(pluginInfo.getKind());
-        descriptor.setSpec(pluginInfo.getSpec());
-        descriptor.setMetadata(pluginInfo.getMetadata());
-        descriptor.setStatus(pluginInfo.getStatus());
-        return descriptor;
     }
 
     private ZipEntry getFile(final String fileName) throws FileNotFoundException {

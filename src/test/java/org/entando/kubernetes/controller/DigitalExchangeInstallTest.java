@@ -60,6 +60,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
@@ -68,7 +69,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureWireMock(port = 8099)
 @TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Ignore("Need to be rewritten after building new version")
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";
@@ -87,7 +87,12 @@ public class DigitalExchangeInstallTest {
     }
 
     @Test
-//    @Ignore("This requires to nuke the mocker and use the new k8sServiceClient")
+    public void shouldReturnNotFoundWhenBundleDoesntExists() throws Exception {
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isNotFound());
+    }
+
+    @Test
     public void testInstallComponent() throws Exception {
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
@@ -275,6 +280,7 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
 
 //        verify(mocker.operation, times(1)).delete(same(pluginMocker.plugin));
+        //TODO verify that the components are actually installed
     }
 
     private byte[] readFromDEPackage() throws IOException {
