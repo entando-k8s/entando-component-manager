@@ -62,13 +62,17 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
         dec.setId(bd.getName());
         dec.setRating(5);
-        dec.setInstalled(false);
+        dec.setInstalled(checkIfInstalled(bundle));
         dec.setType("Bundle");
         dec.setLastUpdate(new Date());
         dec.setSignature("");
         dec.setVersion(bd.getDistTags().get("latest").toString());
         dec.setImage("someimage");
         return dec;
+    }
+
+    private boolean checkIfInstalled(EntandoDeBundle bundle) {
+        return false;
     }
 
 }
