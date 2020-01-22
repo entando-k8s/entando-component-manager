@@ -6,17 +6,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static junit.framework.TestCase.assertTrue;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.checkRequest;
-import static org.entando.kubernetes.DigitalExchangeTestUtils.getTestPrivateKey;
-import static org.entando.kubernetes.DigitalExchangeTestUtils.getTestPublicKey;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.integration.util.MessagingAnnotationUtils.hasValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -51,12 +50,9 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.entando.web.response.SimpleRestResponse;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +64,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -367,8 +362,32 @@ public class DigitalExchangeInstallTest {
 
     @Test
     public void shouldReportAllInstallationAttempts() throws Exception {
-        simulateFailingInstallation();
+        SimpleRestResponse<DigitalExchangeJob> failingJob = simulateFailingInstall();
+        SimpleRestResponse<DigitalExchangeJob> successfulJob = simulateSuccessfulInstall();
+
+        assertThat(failingJob.getPayload().getId()).isNotEqualTo(successfulJob.getPayload().getId());
+
+        mockMvc.perform(get(URL + "/jobs/{component}", "todomvc"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload.*.id", hasSize(2)))
+                .andExpect(jsonPath("$.payload.*.id").value(contains(
+                        successfulJob.getPayload().getId().toString(),
+                        failingJob.getPayload().getId().toString()
+                )));
     }
+
+    @Test
+    public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
+
+        SimpleRestResponse<DigitalExchangeJob> firstSuccessfulJob = simulateSuccessfulInstall();
+        SimpleRestResponse<DigitalExchangeJob> secondSuccessfulJob = simulateSuccessfulInstall();
+
+        assertThat(firstSuccessfulJob.getPayload().getId()).isEqualTo(secondSuccessfulJob.getPayload().getId());
+    }
+
+
 
     private SimpleRestResponse<DigitalExchangeJob> simulateSuccessfulInstall() throws Exception {
         WireMock.reset();
@@ -411,7 +430,7 @@ public class DigitalExchangeInstallTest {
     }
 
 
-    private SimpleRestResponse<DigitalExchangeJob> simulateFailingInstallation() throws Exception {
+    private SimpleRestResponse<DigitalExchangeJob> simulateFailingInstall() throws Exception {
         WireMock.reset();
 
         // Setup

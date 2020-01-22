@@ -53,7 +53,8 @@ public class K8SServiceClientTest {
 
     private final String CLIENT_ID = "test-entando-de";
     private final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    private final String TOKEN_URI = "http://test-keycloak.192.168.1.9.nip.io/auth/realms/entando/protocol/openid-connect/token";
+//    private final String TOKEN_URI = "http://test-keycloak.192.168.1.9.nip.io/auth/realms/entando/protocol/openid-connect/token";
+    private final String TOKEN_URI = "http://someurl.com";
     private DefaultK8SServiceClient client;
     private static int port;
 
@@ -66,7 +67,6 @@ public class K8SServiceClientTest {
 
     @Before
     public void setup() {
-
        client = new DefaultK8SServiceClient(String.format("http://localhost:%d",port), CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
     }
 

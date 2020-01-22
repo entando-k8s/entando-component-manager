@@ -72,8 +72,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     public DigitalExchangeJob install(String componentId, String version) {
         EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
                 .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found in digital-exchange "));
-        Optional<DigitalExchangeJob> existingJob = jobRepository
-                .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED);
+        Optional<DigitalExchangeJob> existingJob = getExistingJob(bundle);
 
         if (existingJob.isPresent()) {
             return existingJob.get();
@@ -86,6 +85,24 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         submitInstallAsync(job, versionToInstall);
 
         return job;
+    }
+
+    private Optional<DigitalExchangeJob> getExistingJob(EntandoDeBundle bundle) {
+        String digitalExchangeId = bundle.getMetadata().getNamespace();
+        String componentId = bundle.getSpec().getDetails().getName();
+        Optional<DigitalExchangeJob> lastJobStarted = jobRepository
+                .findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchangeId, componentId);
+       if (lastJobStarted.isPresent())  {
+          // To be an existing job it should be Running or completed
+           switch (lastJobStarted.get().getStatus()) {
+               case UNINSTALL_COMPLETED:
+               case INSTALL_ERROR:
+                   return Optional.empty();
+               default:
+                   return lastJobStarted;
+           }
+       }
+       return Optional.empty();
     }
 
     private Optional<EntandoDeBundleTag> getBundleTag(EntandoDeBundle bundle, String version) {
@@ -111,6 +128,13 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     public DigitalExchangeJob getJob(String componentId) {
         return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
                 .orElseThrow(JobNotFoundException::new);
+    }
+
+    public List<DigitalExchangeJob> getAllJobs(String componentId) {
+        EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
+                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found in digital-exchange "));
+        String digitalExchange = bundle.getMetadata().getNamespace();
+        return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId);
     }
 
     private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundleTag tag) {
