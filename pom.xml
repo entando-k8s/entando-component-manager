@@ -115,7 +115,7 @@
         <dependency>
             <groupId>org.entando.kubernetes</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
-            <version>6.0.36</version>
+            <version>6.0.51</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -509,8 +509,6 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${maven-checkstyle-plugin.version}</version>
                     <configuration>
-                        <!--TODO don't skip -->
-                        <skip>true</skip>
                         <configLocation>config/checkstyle/checkstyle.xml</configLocation>
                         <encoding>UTF-8</encoding>
                         <consoleOutput>true</consoleOutput>

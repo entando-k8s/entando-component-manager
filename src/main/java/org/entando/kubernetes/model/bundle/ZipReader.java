@@ -23,14 +23,16 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public class ZipReader {
 
     private final YAMLMapper mapper = new YAMLMapper();
     private final Map<String, ZipEntry> zipEntries;
     private final ZipFile zipFile;
-    private final String RESOURCES_FOLDER_NAME = "resources";
-    private final String RESOURCES_FOLDER_PATH = "resources/";
+    private static final String RESOURCES_FOLDER_NAME = "resources";
+    private static final String RESOURCES_FOLDER_PATH = "resources/";
 
     public ZipReader(final ZipFile zipFile) {
         this.zipFile = zipFile;
@@ -55,8 +57,8 @@ public class ZipReader {
     }
 
     /**
-     * Given a directory, returns a stream of all the intermediate directories e.g. /static/img/svg/full-size ->
-     * {static, static/img, static/img/svg, static/img/svg/full-size}
+     * Given a directory, returns a stream of all the intermediate directories e.g. /static/img/svg/full-size -> {static, static/img,
+     * static/img/svg, static/img/svg/full-size}.
      *
      * @param path The path to use to extract intermediate directories
      * @return Stream of String
@@ -83,6 +85,15 @@ public class ZipReader {
         return readDescriptorFile(zipFile.getInputStream(zipEntry), clazz);
     }
 
+    private <T extends Descriptor> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+        return mapper.readValue(file, clazz);
+    }
+
+    public PluginDescriptor readPluginDescriptor(String filename) throws IOException {
+        ZipEntry zipEntry = getFile(filename);
+        return readPluginDescriptorFile(zipFile.getInputStream(zipEntry));
+    }
+
     public String readFileAsString(final String folder, final String fileName) throws IOException {
         final ZipEntry zipEntry = getFile(isEmpty(folder) ? fileName : folder + "/" + fileName);
 
@@ -106,13 +117,22 @@ public class ZipReader {
         }
     }
 
-    private <T extends Descriptor> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
-        return mapper.readValue(file, clazz);
+    private PluginDescriptor readPluginDescriptorFile(InputStream file) throws IOException {
+        EntandoPlugin pluginInfo = mapper.readValue(file, EntandoPlugin.class);
+        PluginDescriptor descriptor = new PluginDescriptor();
+        descriptor.setApiVersion(pluginInfo.getApiVersion());
+        descriptor.setKind(pluginInfo.getKind());
+        descriptor.setSpec(pluginInfo.getSpec());
+        descriptor.setMetadata(pluginInfo.getMetadata());
+        descriptor.setStatus(pluginInfo.getStatus());
+        return descriptor;
     }
 
     private ZipEntry getFile(final String fileName) throws FileNotFoundException {
         final ZipEntry zipEntry = zipEntries.get(fileName);
-        if (zipEntry == null) throw new FileNotFoundException("File " + fileName + " not found");
+        if (zipEntry == null) {
+            throw new FileNotFoundException("File " + fileName + " not found");
+        }
         return zipEntry;
     }
 

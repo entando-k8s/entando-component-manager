@@ -1,36 +1,18 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.digitalexchange.client;
-
-import org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactory;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.entando.web.response.RestResponse;
-import org.mockito.ArgumentMatchers;
-import org.mockito.stubbing.Answer;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils.DE_1_ID;
 import static org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils.DE_2_ID;
@@ -41,9 +23,26 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangeRestTemplateFactory;
+import org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.entando.web.response.RestResponse;
+import org.mockito.ArgumentMatchers;
+import org.mockito.stubbing.Answer;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+
 /**
- * Helper class that can be used to fake the behavior of a set of a DE instances
- * in a consistent way.
+ * Helper class that can be used to fake the behavior of a set of a DE instances in a consistent way.
  *
  * Example:
  * <pre>
@@ -115,7 +114,8 @@ public class DigitalExchangesMocker {
         return addDigitalExchange(id, function, null);
     }
 
-    public DigitalExchangesMocker addDigitalExchange(String id, Function<DigitalExchangeMockedRequest, ?> function, Consumer<DigitalExchange> deConsumer) {
+    public DigitalExchangesMocker addDigitalExchange(String id, Function<DigitalExchangeMockedRequest, ?> function,
+            Consumer<DigitalExchange> deConsumer) {
 
         DigitalExchange digitalExchange = getDigitalExchange(id);
         if (deConsumer != null) {

@@ -20,12 +20,12 @@ public class PluginController {
 
     private final KubernetesService kubernetesService;
 
-    public PluginController(KubernetesService kubernetesService){
+    public PluginController(KubernetesService kubernetesService) {
         this.kubernetesService = kubernetesService;
     }
 
     @GetMapping(path = "", produces = JSON)
-    public SimpleRestResponse<List<EntandoPlugin>> listLinkedPlugin()  {
+    public SimpleRestResponse<List<EntandoPlugin>> listLinkedPlugin() {
         log.info("Listing all deployed plugins");
         final List<EntandoPlugin> list = kubernetesService.getLinkedPlugins();
         final SimpleRestResponse<List<EntandoPlugin>> entity = new SimpleRestResponse<>();
@@ -34,10 +34,9 @@ public class PluginController {
     }
 
     @GetMapping(path = "/{pluginId}", produces = JSON)
-    public SimpleRestResponse<EntandoPlugin> get(@PathVariable final String pluginId)  {
+    public SimpleRestResponse<EntandoPlugin> get(@PathVariable final String pluginId) {
         log.info("Requesting plugin with identifier {}", pluginId);
         return new SimpleRestResponse<>(kubernetesService.getLinkedPlugin(pluginId));
     }
-
 
 }

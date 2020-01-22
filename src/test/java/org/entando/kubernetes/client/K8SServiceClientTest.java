@@ -46,27 +46,40 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-
 @RunWith(SpringRunner.class)
 public class K8SServiceClientTest {
 
-    private final String K8S_SVC_URL = "http://localhost:8888";
-    private final String CLIENT_ID = "test-entando-de";
-    private final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    private final String TOKEN_URI = "http://test-keycloak.192.168.1.9.nip.io/auth/realms/entando/protocol/openid-connect/token";
-    private DefaultK8SServiceClient client;
     private static int port;
 
     static {
-       port = findFreePort().orElse(8080);
+        port = findFreePort().orElse(8080);
     }
 
+    private static final String K8S_SVC_URL = "http://localhost:8888";
+    private static final String CLIENT_ID = "test-entando-de";
+    private static final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
+    private static final String TOKEN_URI = "http://test-keycloak.192.168.1.9.nip.io/auth/realms/entando/protocol/openid-connect/token";
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(port);
+    private DefaultK8SServiceClient client;
+
+    private static Optional<Integer> findFreePort() {
+        Integer port = null;
+        try {
+            // Get a free port
+            ServerSocket s = new ServerSocket(0);
+            port = s.getLocalPort();
+            s.close();
+
+        } catch (IOException e) {
+            // No OPS
+        }
+        return Optional.ofNullable(port);
+    }
 
     @Before
     public void setup() {
-       client = new DefaultK8SServiceClient(K8S_SVC_URL, CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
+        client = new DefaultK8SServiceClient(K8S_SVC_URL, CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
     }
 
     @Test
@@ -115,14 +128,15 @@ public class K8SServiceClientTest {
     @Ignore("Not able to setup wiremock correctly")
     public void shouldParseEntandoAppPluginCorrectly() throws JsonProcessingException {
 
-        Resources<Resource<EntandoAppPluginLink>> halResources = new Resources<>(Collections.singletonList(new Resource(getTestEntandoAppPluginLink())));
+        Resources<Resource<EntandoAppPluginLink>> halResources = new Resources<>(
+                Collections.singletonList(new Resource(getTestEntandoAppPluginLink())));
         client.setRestTemplate(noOAuthRestTemplate());
 
         stubFor(get(urlPathMatching(K8S_SVC_URL + "/k8s/my-namespace/my-app/links"))
                 .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(getHalReadyObjectMapper().writeValueAsString(halResources))));
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(getHalReadyObjectMapper().writeValueAsString(halResources))));
 
         List<EntandoAppPluginLink> links = client.getAppLinkedPlugins("my-app", "my-namespace");
         assertThat(links).hasSize(1);
@@ -158,33 +172,17 @@ public class K8SServiceClientTest {
         return mapper;
     }
 
-
     private EntandoAppPluginLink getTestEntandoAppPluginLink() {
         return new EntandoAppPluginLinkBuilder()
-                    .withNewMetadata()
-                        .withName("my-app-to-plugin-link")
-                        .withNamespace("my-namespace")
-                    .endMetadata()
+                .withNewMetadata()
+                .withName("my-app-to-plugin-link")
+                .withNamespace("my-namespace")
+                .endMetadata()
                 .withNewSpec()
-                    .withEntandoApp("my-namespace", "my-app")
-                    .withEntandoPlugin("plugin-namespace", "plugin")
+                .withEntandoApp("my-namespace", "my-app")
+                .withEntandoPlugin("plugin-namespace", "plugin")
                 .endSpec()
                 .build();
-    }
-
-    private static Optional<Integer> findFreePort() {
-        Integer port = null;
-        try {
-            // Get a free port
-            ServerSocket s = new ServerSocket(0);
-            port = s.getLocalPort();
-            s.close();
-
-
-        } catch (IOException e) {
-            // No OPS
-        }
-        return Optional.ofNullable(port);
     }
 
 }

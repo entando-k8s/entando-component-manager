@@ -11,30 +11,8 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.digitalexchange;
-
-import com.google.common.collect.ImmutableMap;
-import org.entando.entando.aps.system.exception.ResourceNotFoundException;
-import org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClient;
-import org.entando.entando.aps.system.services.digitalexchange.model.DigitalExchange;
-import org.entando.entando.web.common.exceptions.ValidationConflictException;
-import org.entando.entando.web.common.model.RestError;
-import org.entando.entando.web.common.model.SimpleRestResponse;
-import org.entando.entando.web.digitalexchange.DigitalExchangeValidator;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.*;
 import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.DE_1_ID;
@@ -51,6 +29,27 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.entando.entando.aps.system.exception.ResourceNotFoundException;
+import org.entando.entando.aps.system.services.digitalexchange.model.DigitalExchange;
+import org.entando.entando.web.common.exceptions.ValidationConflictException;
+import org.entando.entando.web.common.model.RestError;
+import org.entando.entando.web.common.model.SimpleRestResponse;
+import org.entando.entando.web.digitalexchange.DigitalExchangeValidator;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class DigitalExchangesServiceTest {
 
@@ -114,17 +113,17 @@ public class DigitalExchangesServiceTest {
         assertThat(storedDE.isActive()).isTrue();
         assertThat(storedDE.hasNoPublicKey()).isFalse();
         assertThat(storedDE.getPublicKey()).isEqualTo(publicKey);
-        
+
         verify(manager, times(1)).update(any());
     }
-    
+
     @Test
     public void shouldUpdateDigitalExchange() {
         when(manager.update(any(DigitalExchange.class))).thenReturn(getDE1());
         service.update(getDE1());
         verify(manager, times(1)).update(any());
     }
-    
+
     @Test
     public void shouldUpdateDigitalExchangeWithRename() {
         when(manager.update(any(DigitalExchange.class))).thenReturn(getDE1());

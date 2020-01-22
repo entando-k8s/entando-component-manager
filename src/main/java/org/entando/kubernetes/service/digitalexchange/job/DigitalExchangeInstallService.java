@@ -24,9 +24,7 @@ import java.util.zip.ZipFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -36,6 +34,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
@@ -67,7 +66,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private final ExecutorService threadPool = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
             .setDaemon(true).setNameFormat("InstallableOperation-%d").build());
 
-
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     public DigitalExchangeJob install(String componentId, String version) {
@@ -80,19 +78,27 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             return existingJob.get();
         }
 
-        DigitalExchangeJob job = createInstallJob(bundle, version);
+        EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version)
+                .orElseThrow(() -> new RuntimeException("Provided version is not available for package"));
+        DigitalExchangeJob job = createInstallJob(bundle, versionToInstall);
 
-        submitInstallAsync(job, bundle, version);
+        submitInstallAsync(job, versionToInstall);
 
         return job;
     }
 
-    private DigitalExchangeJob createInstallJob(EntandoDeBundle bundle, String version) {
+    private Optional<EntandoDeBundleTag> getBundleTag(EntandoDeBundle bundle, String version) {
+        String versionToFind =
+                "\\d+(\\.\\d+){1,2}".matches(version) ? version : (String) bundle.getSpec().getDetails().getDistTags().get(version);
+        return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny();
+    }
+
+    private DigitalExchangeJob createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         final DigitalExchangeJob job = new DigitalExchangeJob();
 
         job.setComponentId(bundle.getSpec().getDetails().getName());
         job.setComponentName(bundle.getSpec().getDetails().getName());
-        job.setComponentVersion(version);
+        job.setComponentVersion(tag.getVersion());
         job.setDigitalExchange(bundle.getMetadata().getNamespace());
         job.setProgress(0);
         job.setStartedAt(LocalDateTime.now());
@@ -107,20 +113,20 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 .orElseThrow(JobNotFoundException::new);
     }
 
-    private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, String version) {
+    private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundleTag tag) {
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
             CompletableFuture<InputStream> downloadComponentPackageStep = CompletableFuture
-                    .supplyAsync(() -> downloadComponentPackage(bundle, version));
+                    .supplyAsync(() -> downloadComponentPackage(tag));
 
             CompletableFuture<Path> copyPackageLocallyStep = downloadComponentPackageStep
-                    .thenApply(is -> savePackageStreamLocally(bundle.getSpec().getDetails().getName(), is));
+                    .thenApply(is -> savePackageStreamLocally(job.getComponentId(), is));
 
             CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath -> {
-//                TODO: Implement the verification by using the npm-signature which must be present in the tag
-//                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
-//                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
-//                }
+                //                TODO: Implement the verification by using the npm-signature which must be present in the tag
+                //                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
+                //                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
+                //                }
                 return tempPath;
             });
 
@@ -128,7 +134,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
 
             CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
-                    .thenApply(installableList -> processInstallableList(job, installableList) );
+                    .thenApply(installableList -> processInstallableList(job, installableList));
 
             CompletableFuture<JobStatus> handlePossibleErrorsStep = installComponentsStep
                     .exceptionally(this::handlePipelineException);
@@ -154,40 +160,42 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {
         installableList.forEach(installable -> installable.setComponent(persistComponent(job, installable)));
 
-        List<JobStatus> statuses = installableList.stream().map(installable -> {
-            DigitalExchangeJobComponent installableComponent = installable.getComponent();
-            componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
-
-            CompletableFuture<?> future = installable.install();
-            CompletableFuture<JobStatus> installResult = future.thenApply(vd -> {
-                log.info("Installable '{}' finished successfully", installable.getName());
-                componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
-                return JobStatus.INSTALL_COMPLETED;
-            }).exceptionally(th -> {
-                log.error("Installable '{}' has errors", installable.getName(), th.getCause());
-
-                installableComponent.setStatus(JobStatus.INSTALL_ERROR);
-                if (th.getCause() != null) {
-                    String message = th.getCause().getMessage();
-                    if (th.getCause() instanceof HttpClientErrorException) {
-                        HttpClientErrorException httpException = (HttpClientErrorException) th.getCause();
-                        message =
-                                httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
-                    }
-                    componentRepository
-                            .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, message);
-                } else {
-                    componentRepository
-                            .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, th.getMessage());
-                }
-                return JobStatus.INSTALL_ERROR;
-            });
-            return installResult.join();
-        }).collect(Collectors.toList());
+        List<JobStatus> statuses = installableList.stream().map(this::processInstallable).collect(Collectors.toList());
 
         log.info("All have been processed");
         Optional<JobStatus> anyError = statuses.stream().filter(js -> js.equals(JobStatus.INSTALL_ERROR)).findAny();
         return anyError.orElse(JobStatus.INSTALL_COMPLETED);
+    }
+
+    private JobStatus processInstallable(Installable installable) {
+        DigitalExchangeJobComponent installableComponent = installable.getComponent();
+        componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
+
+        CompletableFuture<?> future = installable.install();
+        CompletableFuture<JobStatus> installResult = future.thenApply(vd -> {
+            log.info("Installable '{}' finished successfully", installable.getName());
+            componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
+            return JobStatus.INSTALL_COMPLETED;
+        }).exceptionally(th -> {
+            log.error("Installable '{}' has errors", installable.getName(), th.getCause());
+
+            installableComponent.setStatus(JobStatus.INSTALL_ERROR);
+            if (th.getCause() != null) {
+                String message = th.getCause().getMessage();
+                if (th.getCause() instanceof HttpClientErrorException) {
+                    HttpClientErrorException httpException = (HttpClientErrorException) th.getCause();
+                    message =
+                            httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
+                }
+                componentRepository
+                        .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, message);
+            } else {
+                componentRepository
+                        .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, th.getMessage());
+            }
+            return JobStatus.INSTALL_ERROR;
+        });
+        return installResult.join();
     }
 
     private List<Installable> getInstallablesAndRemoveTempPackage(DigitalExchangeJob job, Path p) {
@@ -216,11 +224,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private InputStream downloadComponentPackage(EntandoDeBundle bundle, String version) {
-        Optional<EntandoDeBundleTag> tag = bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(version)).findFirst();
-        String tarballUrl = tag
-                .orElseThrow(() -> new RuntimeException("Version " + version + " not available for bundle " + bundle.getSpec().getDetails().getName() + " in digital-exchange " + bundle.getMetadata().getNamespace()))
-                .getTarball();
+    private InputStream downloadComponentPackage(EntandoDeBundleTag tag) {
+        String tarballUrl = tag.getTarball();
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<Resource> responseEntity = restTemplate.exchange(
                 tarballUrl, HttpMethod.GET, null, Resource.class);
@@ -243,7 +248,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         try (InputStream in = Files.newInputStream(tempZipPath, StandardOpenOption.READ)) {
             boolean signatureMatches = SignatureUtil.verifySignature(
-                    in, SignatureUtil.publicKeyFromPEM(digitalExchange.getPublicKey()),
+                    in, SignatureUtil.publicKeyFromPem(digitalExchange.getPublicKey()),
                     component.getSignature());
             if (!signatureMatches) {
                 throw new SignatureMatchingException("Component signature not matching public key");

@@ -1,33 +1,32 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientListWrapper;
+import java.util.Map;
+import org.entando.kubernetes.model.web.ResilientListWrapper;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 
-import java.util.Map;
-
 /**
- * Provides the logic for combining a set of SimpleRestResponse retrieved from
- * DE instances.
+ * Provides the logic for combining a set of SimpleRestResponse retrieved from DE instances.
  */
 public class SimpleDigitalExchangeCall<T> extends DigitalExchangeCall<SimpleRestResponse<T>, ResilientListWrapper<T>> {
 
     public SimpleDigitalExchangeCall(HttpMethod method,
-                                     ParameterizedTypeReference<SimpleRestResponse<T>> parameterizedTypeReference, String... urlSegments) {
+            ParameterizedTypeReference<SimpleRestResponse<T>> parameterizedTypeReference, String... urlSegments) {
         super(method, parameterizedTypeReference, urlSegments);
     }
 

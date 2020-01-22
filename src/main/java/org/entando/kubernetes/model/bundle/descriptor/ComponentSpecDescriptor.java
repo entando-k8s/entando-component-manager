@@ -1,8 +1,7 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class ComponentSpecDescriptor {
@@ -14,6 +13,5 @@ public class ComponentSpecDescriptor {
     private List<String> contentTypes;
     private List<String> contentModels;
     private List<LabelDescriptor> labels;
-
 
 }

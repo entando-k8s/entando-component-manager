@@ -10,8 +10,8 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 public class EntandoDefaultOAuth2RequestAuthenticator implements OAuth2RequestAuthenticator {
 
     public void authenticate(final OAuth2ProtectedResourceDetails resource,
-                             final OAuth2ClientContext clientContext,
-                             final ClientHttpRequest request) {
+            final OAuth2ClientContext clientContext,
+            final ClientHttpRequest request) {
         final OAuth2AccessToken accessToken = clientContext.getAccessToken();
         if (accessToken == null) {
             throw new AccessTokenRequiredException(resource);

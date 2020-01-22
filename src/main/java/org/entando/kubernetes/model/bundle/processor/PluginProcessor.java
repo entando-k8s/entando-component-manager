@@ -9,24 +9,22 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to perform a deployment on the Kubernetes Cluster.
- * <p>
- * Will read the service property on the component descriptor yaml and convert it into a EntandoPlugin custom resource
- *
- * @author Sergio Marcelino
+ * Processor to perform a deployment on the Kubernetes Cluster. Will read the service property on the component descriptor yaml and convert
+ * it into a EntandoPlugin custom resource.
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,7 +41,7 @@ public class PluginProcessor implements ComponentProcessor {
         List<Installable> installableList = new ArrayList<>();
         if (optionalPlugins.isPresent()) {
             for (String filename : optionalPlugins.get()) {
-                PluginDescriptor pluginDescriptor = zipReader.readDescriptorFile(filename, PluginDescriptor.class);
+                PluginDescriptor pluginDescriptor = zipReader.readPluginDescriptor(filename);
                 installableList.add(new PluginInstallable(pluginDescriptor, job));
             }
         }

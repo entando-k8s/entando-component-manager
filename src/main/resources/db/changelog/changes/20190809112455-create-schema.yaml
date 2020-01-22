@@ -60,11 +60,9 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: digital_exchange_id
-                  type: uuid
+                  type: varchar(128)
                   constraints:
                     nullable: false
-                    foreignKeyName: fk_de_job_de
-                    references: digital_exchange(id)
               - column:
                   name: component_id
                   type: varchar(128)

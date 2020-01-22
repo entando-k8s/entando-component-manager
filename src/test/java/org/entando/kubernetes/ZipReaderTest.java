@@ -2,13 +2,11 @@ package org.entando.kubernetes;
 
 import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.junit.Test;
 
 public class ZipReaderTest {
@@ -25,6 +23,7 @@ public class ZipReaderTest {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class TempObject {
 
         String id;

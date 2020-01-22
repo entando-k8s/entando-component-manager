@@ -1,30 +1,28 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.ZipReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
-import org.springframework.stereotype.Service;
+import static java.util.Optional.ofNullable;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import static java.util.Optional.ofNullable;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle CMS Plugin stuff to be stored by Entando.
- * Currently creating ContentTypes and ContentModels
+ * Processor to handle CMS Plugin stuff to be stored by Entando. Currently creating ContentTypes and ContentModels
  *
  * @author Sergio Marcelino
  */
@@ -37,7 +35,7 @@ public class CmsProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> contentTypesDescriptor = ofNullable(descriptor.getComponents())
                 .map(ComponentSpecDescriptor::getContentTypes);
@@ -56,7 +54,8 @@ public class CmsProcessor implements ComponentProcessor {
             for (final String fileName : contentModelsDescriptor.get()) {
                 final ContentModelDescriptor contentModelDescriptor = zipReader.readDescriptorFile(fileName, ContentModelDescriptor.class);
                 if (contentModelDescriptor.getContentShapePath() != null) {
-                    contentModelDescriptor.setContentShape(zipReader.readFileAsString(getFolder(fileName), contentModelDescriptor.getContentShapePath()));
+                    contentModelDescriptor
+                            .setContentShape(zipReader.readFileAsString(getFolder(fileName), contentModelDescriptor.getContentShapePath()));
                 }
                 installables.add(new ContentModelInstallable(contentModelDescriptor));
             }

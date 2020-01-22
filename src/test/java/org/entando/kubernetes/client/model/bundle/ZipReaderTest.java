@@ -1,6 +1,20 @@
 package org.entando.kubernetes.client.model.bundle;
 
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.same;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.junit.Before;
@@ -8,25 +22,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.same;
-import static org.mockito.Mockito.when;
-
 @SuppressWarnings("unchecked")
 public class ZipReaderTest {
 
-    private @Mock ZipFile zipFile;
+    @Mock
+    private ZipFile zipFile;
     private ZipReader zipReader;
 
     @Before

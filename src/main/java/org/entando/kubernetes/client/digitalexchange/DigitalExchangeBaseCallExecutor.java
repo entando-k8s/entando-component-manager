@@ -1,34 +1,34 @@
 /*
  * Copyright 2019-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.client.digitalexchange;
-
-import java.util.Locale;
-import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.springframework.context.MessageSource;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestTemplate;
-
-import java.net.SocketTimeoutException;
 
 import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_AUTH;
 import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_HTTP_ERROR;
 import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_INVALID_URL;
 import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_TIMEOUT;
 import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_UNREACHABLE;
+
+import java.net.SocketTimeoutException;
+import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.springframework.context.MessageSource;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeBaseCall<R>, R> {
@@ -39,8 +39,8 @@ public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeB
     private final C call;
 
     protected DigitalExchangeBaseCallExecutor(MessageSource messageSource,
-                                              DigitalExchange digitalExchange, RestTemplate restTemplate,
-                                              C call) {
+            DigitalExchange digitalExchange, RestTemplate restTemplate,
+            C call) {
 
         this.messageSource = messageSource;
         this.digitalExchange = digitalExchange;
@@ -53,10 +53,11 @@ public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeB
         String url;
 
         try {
-            url = call.getURL(digitalExchange);
+            url = call.getUrl(digitalExchange);
         } catch (IllegalArgumentException ex) {
             log.error("Error calling {}. Invalid URL", digitalExchange.getUrl());
-            return getErrorResponse(ERRCODE_DE_INVALID_URL, "digitalExchange.invalidUrl", digitalExchange.getName(), digitalExchange.getUrl());
+            return getErrorResponse(ERRCODE_DE_INVALID_URL, "digitalExchange.invalidUrl", digitalExchange.getName(),
+                    digitalExchange.getUrl());
         }
 
         try {
@@ -66,7 +67,8 @@ public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeB
 
             return call.handleErrorResponse(ex).orElseGet(() -> {
                 log.error("Error calling {}. Status code: {}", url, ex.getRawStatusCode());
-                return getErrorResponse(ERRCODE_DE_HTTP_ERROR, "digitalExchange.httpError", digitalExchange.getName(), ex.getRawStatusCode());
+                return getErrorResponse(ERRCODE_DE_HTTP_ERROR, "digitalExchange.httpError", digitalExchange.getName(),
+                        ex.getRawStatusCode());
             });
 
         } catch (ResourceAccessException ex) { // Other (e.g. unknown host)

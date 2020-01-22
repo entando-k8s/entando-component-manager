@@ -1,17 +1,16 @@
 package org.entando.kubernetes.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.DbmsImageVendor;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,20 +39,19 @@ public class PluginInstallTest {
     @Autowired
     private K8SServiceClient k8SServiceClient;
 
-
     @Test
     public void testDeployment() {
         EntandoPlugin entandoPlugin = new EntandoPluginBuilder()
                 .withNewMetadata()
-                    .withName("avatar-plugin")
+                .withName("avatar-plugin")
                 .endMetadata()
                 .withNewSpec()
-                    .withImage("entando/entando-avatar-plugin")
-                    .withIngressPath("/avatar")
-                    .withHealthCheckPath("/actuator/health")
-                    .withDbms(DbmsImageVendor.MYSQL)
-                    .addNewRole("read", "Read")
-                    .addNewPermission("another-client", "read")
+                .withImage("entando/entando-avatar-plugin")
+                .withIngressPath("/avatar")
+                .withHealthCheckPath("/actuator/health")
+                .withDbms(DbmsImageVendor.MYSQL)
+                .addNewRole("read", "Read")
+                .addNewPermission("another-client", "read")
                 .endSpec()
                 .build();
 
@@ -63,10 +61,10 @@ public class PluginInstallTest {
 
         kubernetesService.linkPlugin(entandoPlugin);
 
-//        ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
-//        verify(k8SServiceClient, times(1)).linkAppWithPlugin(anyString(), anyString(), captor.capture());
-//        final EntandoPlugin plugin = captor.getValue();
-        K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble)  k8SServiceClient;
+        //        ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
+        //        verify(k8SServiceClient, times(1)).linkAppWithPlugin(anyString(), anyString(), captor.capture());
+        //        final EntandoPlugin plugin = captor.getValue();
+        K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble) k8SServiceClient;
         List<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPluginsCopy();
         assertThat(linkedPluginDatabase.size()).isEqualTo(1);
         EntandoPlugin plugin = linkedPluginDatabase.get(0);

@@ -3,37 +3,36 @@ package org.entando.kubernetes.model.digitalexchange;
 /**
  * The type of the component to be (or already) registered.
  *
- * @author Sergio Marcelino
  */
 public enum ComponentType {
 
     /**
-     * A Widget
+     * A Widget.
      */
     WIDGET,
 
     /**
-     * A Page Model
+     * A Page Model.
      */
     PAGE_MODEL,
 
     /**
-     * A Content Model from CMS
+     * A Content Model from CMS.
      */
     CONTENT_MODEL,
 
     /**
-     * A Content Type from CMS
+     * A Content Type from CMS.
      */
     CONTENT_TYPE,
 
     /**
-     * A label
+     * A label.
      */
     LABEL,
 
     /**
-     * A static resource (AKA asset)
+     * A static resource (AKA asset).
      */
     RESOURCE,
 
@@ -43,7 +42,7 @@ public enum ComponentType {
     PLUGIN,
 
     /**
-     * A Gui fragment
+     * A Gui fragment.
      */
     GUI_FRAGMENT;
 }

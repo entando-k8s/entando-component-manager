@@ -35,7 +35,7 @@ public class ExceptionController {
         }
 
         if (exception instanceof WithArgumentException) {
-            args = ((WithArgumentException)exception).getArgs();
+            args = ((WithArgumentException) exception).getArgs();
         }
 
         return ResponseEntity.status(status)

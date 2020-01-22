@@ -1,20 +1,19 @@
 package org.entando.kubernetes.service.digitalexchange.entandocore;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
-import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
@@ -30,9 +29,9 @@ public class EntandoCoreService {
     private final String entandoUrl;
 
     public EntandoCoreService(@Value("${keycloak.resource}") final String clientId,
-                                @Value("${keycloak.credentials.secret}") final String clientSecret,
-                                @Value("${entando.auth-url}") final String tokenUri,
-                                @Value("${entando.url}") final String entandoUrl) {
+            @Value("${keycloak.credentials.secret}") final String clientSecret,
+            @Value("${entando.auth-url}") final String tokenUri,
+            @Value("${entando.url}") final String entandoUrl) {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
         resourceDetails.setClientId(clientId);
@@ -54,15 +53,16 @@ public class EntandoCoreService {
     }
 
     public void registerFragment(FragmentDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "fragments").build().toUri(), new EntandoCoreFragment(descriptor), Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "fragments").build().toUri(), new EntandoCoreFragment(descriptor), Void.class);
     }
 
     public void deleteFragment(String code) {
-        restTemplate.delete(resolvePathSegments("api","fragments", code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "fragments", code).build().toUri());
     }
 
     public void registerLabel(final LabelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api","labels").build().toUri(), descriptor, Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "labels").build().toUri(), descriptor, Void.class);
     }
 
     public void deleteLabel(final String code) {
@@ -70,7 +70,8 @@ public class EntandoCoreService {
     }
 
     public void registerPageModel(final PageModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
     }
 
     public void deletePageModel(final String code) {
@@ -78,11 +79,12 @@ public class EntandoCoreService {
     }
 
     public void deleteContentModel(final String code) {
-        restTemplate.delete(resolvePathSegments("api","plugins","cms","contentmodels",code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels", code).build().toUri());
     }
 
     public void registerContentModel(final ContentModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(), new EntandoCoreContentModel(descriptor), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(),
+                new EntandoCoreContentModel(descriptor), Void.class);
     }
 
     public void registerContentType(final ContentTypeDescriptor descriptor) {
@@ -94,7 +96,8 @@ public class EntandoCoreService {
     }
 
     public void createFolder(final String folder) {
-        restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "directory").build().toUri(), new EntandoCoreFolder(folder), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "directory").build().toUri(), new EntandoCoreFolder(folder),
+                Void.class);
     }
 
     public void deleteFolder(final String code) {

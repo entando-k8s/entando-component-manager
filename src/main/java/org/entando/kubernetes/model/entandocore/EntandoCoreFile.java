@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.entandocore;
 
-import java.nio.file.Path;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

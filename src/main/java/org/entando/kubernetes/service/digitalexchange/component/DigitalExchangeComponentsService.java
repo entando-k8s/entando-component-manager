@@ -11,16 +11,11 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.util.List;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.web.request.PagedListRequest;
-import org.entando.web.response.SimpleRestResponse;
-import org.springframework.beans.factory.annotation.Value;
 
 public interface DigitalExchangeComponentsService {
 

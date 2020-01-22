@@ -1,7 +1,5 @@
 package org.entando.kubernetes.service;
 
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,9 +15,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.web.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @Component
@@ -82,12 +78,12 @@ public class KubernetesService {
         k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
     }
 
-    public List<EntandoDeBundle> getAllBundles() {
-        return k8sServiceClient.getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
+    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
+        return k8sServiceClient.getBundlesInDefaultNamespace();
     }
 
     public Optional<EntandoDeBundle> getBundleByName(String name) {
-        return k8sServiceClient.getBundleWithNameAndNamespace(name,  DEFAULT_BUNDLE_NAMESPACE);
+        return k8sServiceClient.getBundleWithName(name);
     }
 
     public Optional<EntandoDeBundle> getBundleByNameAndDigitalExchange(String name, String deId) {

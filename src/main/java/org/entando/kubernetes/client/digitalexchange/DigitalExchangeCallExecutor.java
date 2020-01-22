@@ -1,19 +1,22 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
+
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.web.response.RestError;
 import org.entando.web.response.RestResponse;
 import org.slf4j.Logger;
@@ -22,15 +25,14 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
-
-public class DigitalExchangeCallExecutor<R extends RestResponse<?, ?>, C> extends DigitalExchangeBaseCallExecutor<DigitalExchangeCall<R, C>, R> {
+public class DigitalExchangeCallExecutor<R extends RestResponse<?, ?>, C> extends
+        DigitalExchangeBaseCallExecutor<DigitalExchangeCall<R, C>, R> {
 
     private static final Logger logger = LoggerFactory.getLogger(DigitalExchangeCallExecutor.class);
 
     protected DigitalExchangeCallExecutor(MessageSource messageSource,
-                                          DigitalExchange digitalExchange, RestTemplate restTemplate,
-                                          DigitalExchangeCall<R, C> call) {
+            DigitalExchange digitalExchange, RestTemplate restTemplate,
+            DigitalExchangeCall<R, C> call) {
 
         super(messageSource, digitalExchange, restTemplate, call);
     }

@@ -1,21 +1,47 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.digitalexchange.client;
 
+import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.*;
+import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.DE_1_ID;
+import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.DE_2_ID;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.*;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_AUTH;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_HTTP_ERROR;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_INVALID_URL;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_TIMEOUT;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_UNREACHABLE;
+import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import org.apache.commons.io.IOUtils;
 import org.entando.entando.aps.system.services.RequestListProcessor;
-import org.entando.entando.aps.system.services.digitalexchange.DigitalExchangesManager;
 import org.entando.entando.aps.system.services.digitalexchange.model.ResilientListWrapper;
 import org.entando.entando.aps.system.services.digitalexchange.model.ResilientPagedMetadata;
 import org.entando.entando.web.common.model.Filter;
@@ -42,33 +68,6 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.SocketTimeoutException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.*;
-import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.DE_1_ID;
-import static org.entando.entando.aps.system.services.digitalexchange.DigitalExchangeTestUtils.DE_2_ID;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.*;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_AUTH;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_HTTP_ERROR;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_INVALID_URL;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_TIMEOUT;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_UNREACHABLE;
-import static org.entando.entando.aps.system.services.digitalexchange.client.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DigitalExchangesClientTest {
 
@@ -216,9 +215,9 @@ public class DigitalExchangesClientTest {
 
         assertTrue(errors.stream().map(e -> e.getCode()).allMatch(code
                 -> Arrays.asList(ERRCODE_DE_HTTP_ERROR, ERRCODE_DE_UNREACHABLE,
-                        ERRCODE_DE_INVALID_URL, ERRCODE_DE_WRONG_PAYLOAD,
-                        ERRCODE_DE_TIMEOUT, ERRCODE_DE_AUTH).
-                        contains(code)));
+                ERRCODE_DE_INVALID_URL, ERRCODE_DE_WRONG_PAYLOAD,
+                ERRCODE_DE_TIMEOUT, ERRCODE_DE_AUTH).
+                contains(code)));
     }
 
     private static class TestPagedDigitalExchangeCall extends PagedDigitalExchangeCall<String> {

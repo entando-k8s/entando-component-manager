@@ -1,27 +1,18 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.client.digitalexchange;
 
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.entando.web.response.RestResponse;
-import org.springframework.context.MessageSource;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+package org.entando.kubernetes.client.digitalexchange;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -29,6 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.entando.web.response.RestResponse;
+import org.springframework.context.MessageSource;
+import org.springframework.web.client.RestTemplate;
 
 @RequiredArgsConstructor
 public class DigitalExchangesClientImpl implements DigitalExchangesClient {
@@ -45,15 +43,14 @@ public class DigitalExchangesClientImpl implements DigitalExchangesClient {
 
     @Override
     public <R extends RestResponse<?, ?>, C> C getCombinedResult(final List<DigitalExchange> digitalExchanges,
-                                                                 final DigitalExchangeCall<R, C> call) {
+            final DigitalExchangeCall<R, C> call) {
         final Map<String, R> allResults = queryAllDigitalExchanges(digitalExchanges, call);
         return call.combineResults(allResults);
     }
 
     private <R extends RestResponse<?, ?>, C> Map<String, R> queryAllDigitalExchanges(final List<DigitalExchange> digitalExchanges,
-                                                                                      final DigitalExchangeCall<R, C> call) {
-        @SuppressWarnings("unchecked")
-        final CompletableFuture<Pair<String, R>>[] futureResults = digitalExchanges
+            final DigitalExchangeCall<R, C> call) {
+        @SuppressWarnings("unchecked") final CompletableFuture<Pair<String, R>>[] futureResults = digitalExchanges
                 .stream()
                 .filter(DigitalExchange::isActive)
                 .map(de -> getSingleResponseAsync(de, call))

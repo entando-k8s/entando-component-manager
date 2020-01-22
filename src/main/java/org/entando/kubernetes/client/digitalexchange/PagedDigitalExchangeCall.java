@@ -1,20 +1,24 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.entando.kubernetes.model.web.ResilientPagedMetadata;
 import org.entando.web.request.PagedListRequest;
 import org.entando.web.request.RequestListProcessor;
 import org.entando.web.response.PagedMetadata;
@@ -23,29 +27,24 @@ import org.entando.web.response.RestError;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
- * Provides the logic for combining a set of PagedRestResponse retrieved from DE
- * instances.
+ * Provides the logic for combining a set of PagedRestResponse retrieved from DE instances.
  */
 public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<PagedRestResponse<T>, ResilientPagedMetadata<T>> {
 
     private final PagedListRequest request;
 
     public PagedDigitalExchangeCall(final HttpMethod method,
-                                    final PagedListRequest listRequest,
-                                    final ParameterizedTypeReference<PagedRestResponse<T>> parameterizedTypeReference,
-                                    final String ... urlSegments) {
+            final PagedListRequest listRequest,
+            final ParameterizedTypeReference<PagedRestResponse<T>> parameterizedTypeReference,
+            final String... urlSegments) {
         super(method, parameterizedTypeReference, urlSegments);
         this.request = listRequest;
     }
 
     public PagedDigitalExchangeCall(final PagedListRequest listRequest,
-                                    final ParameterizedTypeReference<PagedRestResponse<T>> parameterizedTypeReference,
-                                    final String ... urlSegments) {
+            final ParameterizedTypeReference<PagedRestResponse<T>> parameterizedTypeReference,
+            final String... urlSegments) {
         this(HttpMethod.GET, listRequest, parameterizedTypeReference, urlSegments);
     }
 
@@ -55,19 +54,16 @@ public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<Pa
     }
 
     @Override
-    protected String getURL(final DigitalExchange digitalExchange) {
-        String url = super.getURL(digitalExchange);
+    protected String getUrl(final DigitalExchange digitalExchange) {
+        String url = super.getUrl(digitalExchange);
         return new PagedListRequestUriBuilder(url, transformRequest(request)).toUriString();
     }
 
     /**
-     * When we forward a PagedListRequest to a DE instance we need to modify the
-     * pagination parameters, because filtering, sorting and pagination will be
-     * applied to the combined result and we need to retrieve all the
-     * potentially useful items.<br/>
-     * Example: if the user asks for page number 2 with a page size of 5 we need
-     * to retrieve the first 10 results from each DE instance in order to be
-     * sure to obtain the correct combined result.
+     * When we forward a PagedListRequest to a DE instance we need to modify the pagination parameters, because filtering, sorting and
+     * pagination will be applied to the combined result and we need to retrieve all the potentially useful items.<br/> Example: if the user
+     * asks for page number 2 with a page size of 5 we need to retrieve the first 10 results from each DE instance in order to be sure to
+     * obtain the correct combined result.
      */
     private PagedListRequest transformRequest(PagedListRequest userRequest) {
         PagedListRequest digitalExchangeRequest = new PagedListRequest();
@@ -90,8 +86,7 @@ public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<Pa
     }
 
     /**
-     * This method can be overridden in order to manipulate a single response
-     * before combining it.
+     * This method can be overridden in order to manipulate a single response before combining it.
      */
     protected void preprocessResponse(String exchangeName, PagedRestResponse<T> response) {
     }

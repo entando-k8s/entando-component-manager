@@ -8,8 +8,6 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public interface K8SServiceClient {
 
-    public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
-
     List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace);
 
     EntandoPlugin getPluginForLink(EntandoAppPluginLink el);
@@ -18,11 +16,13 @@ public interface K8SServiceClient {
 
     void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);
 
-    List<EntandoDeBundle> getBundlesInAllNamespaces();
+    List<EntandoDeBundle> getBundlesInDefaultNamespace();
 
     List<EntandoDeBundle> getBundlesInNamespace(String namespace);
 
     List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces);
+
+    Optional<EntandoDeBundle> getBundleWithName(String name);
 
     Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace);
 

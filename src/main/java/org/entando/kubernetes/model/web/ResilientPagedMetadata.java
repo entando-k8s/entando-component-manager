@@ -1,4 +1,4 @@
-package org.entando.kubernetes.controller.digitalexchange.model;
+package org.entando.kubernetes.model.web;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
@@ -10,7 +10,8 @@ import org.entando.web.request.PagedListRequest;
 import org.entando.web.response.PagedMetadata;
 import org.entando.web.response.RestError;
 
-@Getter@Setter
+@Getter
+@Setter
 @NoArgsConstructor
 public class ResilientPagedMetadata<T> extends PagedMetadata<T> {
 

@@ -1,24 +1,24 @@
 /*
  * Copyright 2019-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.digitalexchange;
 
-import org.apache.logging.log4j.util.Strings;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
+package org.entando.kubernetes.digitalexchange;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.apache.logging.log4j.util.Strings;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 
 public final class DigitalExchangeTestUtils {
 
@@ -58,9 +58,9 @@ public final class DigitalExchangeTestUtils {
     }
 
     public static DigitalExchange getDEWithoutPublicKey(String name) {
-         DigitalExchange deWithoutPublicKey = getDigitalExchange(null, name);
-         deWithoutPublicKey.setPublicKey(null);
-         return deWithoutPublicKey;
+        DigitalExchange deWithoutPublicKey = getDigitalExchange(null, name);
+        deWithoutPublicKey.setPublicKey(null);
+        return deWithoutPublicKey;
     }
 
     public static DigitalExchange getDEWithoutPublicKey(String id, String name) {
@@ -96,7 +96,7 @@ public final class DigitalExchangeTestUtils {
     public static DigitalExchange getDigitalExchange(String name) {
         return getDigitalExchange(null, name);
     }
-    
+
     public static DigitalExchange getDigitalExchange(String id, String name) {
         DigitalExchange digitalExchange = new DigitalExchange();
         digitalExchange.setId(id);

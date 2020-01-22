@@ -1,37 +1,18 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.digitalexchange.component;
-
-import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
-import org.entando.kubernetes.digitalexchange.client.DigitalExchangesClientMocker;
-import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
-import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
-import org.entando.kubernetes.controller.digitalexchange.model.ResilientPagedMetadata;
-import org.entando.web.SystemConstants;
-import org.entando.web.request.Filter;
-import org.entando.web.request.FilterOperator;
-import org.entando.web.request.RestListRequest;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils.DE_1_ID;
@@ -42,10 +23,28 @@ import static org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils.ge
 import static org.entando.kubernetes.digitalexchange.DigitalExchangeTestUtils.getDE2;
 import static org.mockito.Mockito.when;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import org.entando.kubernetes.client.digitalexchange.DigitalExchangesClient;
+import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.digitalexchange.client.DigitalExchangesClientMocker;
+import org.entando.kubernetes.model.web.ResilientPagedMetadata;
+import org.entando.kubernetes.service.digitalexchange.DigitalExchangesService;
+import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
+import org.entando.web.SystemConstants;
+import org.entando.web.request.Filter;
+import org.entando.web.request.FilterOperator;
+import org.entando.web.request.RestListRequest;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DigitalExchangeComponentsServiceTest {
 
-    private static final DigitalExchangeComponent[] COMPONENTS_1 = getMockedComponents1();
     private static final String[] COMPONENTS_2 = new String[]{"D", "E", "G", "H", "L", "O"};
     private static final String INSTALLED_COMPONENT = "A";
     private static final String LAST_UPDATE = "2018-01-01 00:00:00";
@@ -53,10 +52,33 @@ public class DigitalExchangeComponentsServiceTest {
     private static final String WIDGET_TYPE = "widget";
     private static final String CONTENT_MODEL_TYPE = "contentModel";
     private static final int RATING = 3;
-
+    private static final DigitalExchangeComponent[] COMPONENTS_1 = getMockedComponents1();
     @Mock
     private DigitalExchangesService exchangesService;
     private DigitalExchangeComponentsServiceImpl service;
+
+    private static DigitalExchangeComponent[] getMockedComponents1() {
+        List<DigitalExchangeComponent> components
+                = DigitalExchangeComponentsMocker.getMockedComponents("A", "B", "C", "F", "I", "M", "N", "P");
+
+        // Some values for testing filtering and sorting
+        setLastUpdate(components.get(1));
+        components.get(2).setVersion(VERSION);
+        components.get(3).setType(WIDGET_TYPE);
+        components.get(4).setType(CONTENT_MODEL_TYPE);
+        components.get(5).setRating(RATING);
+
+        return components.toArray(new DigitalExchangeComponent[components.size()]);
+    }
+
+    private static void setLastUpdate(DigitalExchangeComponent component) {
+        SimpleDateFormat sdf = new SimpleDateFormat(SystemConstants.API_DATE_FORMAT);
+        try {
+            component.setLastUpdate(sdf.parse(LAST_UPDATE));
+        } catch (ParseException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     @Before
     public void setUp() {
@@ -280,6 +302,22 @@ public class DigitalExchangeComponentsServiceTest {
         verifyFirst(listRequest, COMPONENTS_1[0]);
     }
 
+    private void verifyFilter(RestListRequest request, DigitalExchangeComponent... filteredComponents) {
+
+        ResilientPagedMetadata<DigitalExchangeComponent> pagedMetadata = service.getComponents(request);
+
+        assertThat(pagedMetadata.getTotalItems()).isEqualTo(filteredComponents.length);
+        assertThat(pagedMetadata.getBody())
+                .isNotNull().hasSize(filteredComponents.length)
+                .containsExactly(filteredComponents);
+    }
+
+    private void verifyFirst(RestListRequest request, DigitalExchangeComponent component) {
+        ResilientPagedMetadata<DigitalExchangeComponent> pagedMetadata = service.getComponents(request);
+        assertThat(pagedMetadata.getBody()).isNotNull().isNotEmpty();
+        assertThat(pagedMetadata.getBody().get(0)).isEqualTo(component);
+    }
+
     private static class PageVerifier {
 
         private final ResilientPagedMetadata<DigitalExchangeComponent> pagedMetadata;
@@ -302,45 +340,6 @@ public class DigitalExchangeComponentsServiceTest {
                     .extracting(DigitalExchangeComponent::getDigitalExchangeName, DigitalExchangeComponent::getName)
                     .contains(values);
             return this;
-        }
-    }
-
-    private void verifyFilter(RestListRequest request, DigitalExchangeComponent... filteredComponents) {
-
-        ResilientPagedMetadata<DigitalExchangeComponent> pagedMetadata = service.getComponents(request);
-
-        assertThat(pagedMetadata.getTotalItems()).isEqualTo(filteredComponents.length);
-        assertThat(pagedMetadata.getBody())
-                .isNotNull().hasSize(filteredComponents.length)
-                .containsExactly(filteredComponents);
-    }
-
-    private void verifyFirst(RestListRequest request, DigitalExchangeComponent component) {
-        ResilientPagedMetadata<DigitalExchangeComponent> pagedMetadata = service.getComponents(request);
-        assertThat(pagedMetadata.getBody()).isNotNull().isNotEmpty();
-        assertThat(pagedMetadata.getBody().get(0)).isEqualTo(component);
-    }
-
-    private static DigitalExchangeComponent[] getMockedComponents1() {
-        List<DigitalExchangeComponent> components
-                = DigitalExchangeComponentsMocker.getMockedComponents("A", "B", "C", "F", "I", "M", "N", "P");
-
-        // Some values for testing filtering and sorting
-        setLastUpdate(components.get(1));
-        components.get(2).setVersion(VERSION);
-        components.get(3).setType(WIDGET_TYPE);
-        components.get(4).setType(CONTENT_MODEL_TYPE);
-        components.get(5).setRating(RATING);
-
-        return components.toArray(new DigitalExchangeComponent[components.size()]);
-    }
-
-    private static void setLastUpdate(DigitalExchangeComponent component) {
-        SimpleDateFormat sdf = new SimpleDateFormat(SystemConstants.API_DATE_FORMAT);
-        try {
-            component.setLastUpdate(sdf.parse(LAST_UPDATE));
-        } catch (ParseException ex) {
-            throw new RuntimeException(ex);
         }
     }
 }

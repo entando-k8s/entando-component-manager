@@ -3,9 +3,11 @@ package org.entando.kubernetes.client.k8ssvc;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -43,10 +45,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     public static final String LINKS = "links";
     public static final String DE_BUNDLES_API_ROOT = "de-bundles";
-
+    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     private final String k8sServiceUrl;
     private final String clientId;
     private final String clientSecret;
@@ -56,7 +57,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public DefaultK8SServiceClient(@Value("${entando.k8s.service.url}") String k8sServiceUrl,
             @Value("${keycloak.resource}") String clientId,
             @Value("${keycloak.credentials.secret}") String clientSecret,
-            @Value("${entando.auth-url}") String tokenUri)  {
+            @Value("${entando.auth-url}") String tokenUri) {
         this.k8sServiceUrl = k8sServiceUrl;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
@@ -79,8 +80,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
-               null,
-                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+                null,
+                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {
+                });
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while retriving links for app %s in namespace %s",
@@ -103,7 +105,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment("plugins", pluginNamespace, pluginName).toUriString();
         ResponseEntity<Resource<EntandoPlugin>> responseEntity = restTemplate
-                .exchange (url, HttpMethod.GET, null, new ResourceType<>());
+                .exchange(url, HttpMethod.GET, null, new ResourceType<>());
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while searching plugin %s in namespace %s",
@@ -127,7 +129,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 url,
                 HttpMethod.DELETE,
                 null,
-                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {
+                });
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while remove link between app %s in namespace %s and plugin %s",
@@ -149,7 +152,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 url,
                 HttpMethod.POST,
                 new HttpEntity<>(plugin),
-                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {
+                });
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while linking app %s in namespace %s to plugin %s",
@@ -161,11 +165,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     ));
         }
 
-
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInAllNamespaces() {
+    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT).toUriString();
         return submitBundleRequestAndExtractBody(url);
@@ -181,9 +184,23 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
-        return getBundlesInAllNamespaces().stream()
-                .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
-                .collect(Collectors.toList());
+        @SuppressWarnings("unchecked")
+        CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
+                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n)))
+                .toArray(CompletableFuture[]::new);
+
+        return CompletableFuture.allOf(futures).thenApply(v -> Arrays.stream(futures)
+                .map(CompletableFuture::join)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList())
+        ).join();
+    }
+
+    @Override
+    public Optional<EntandoDeBundle> getBundleWithName(String name) {
+        return getBundlesInDefaultNamespace().stream()
+                .filter(b -> b.getSpec().getDetails().getName().equals(name))
+                .findAny();
     }
 
     @Override
@@ -195,7 +212,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 url,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Resource<EntandoDeBundle>>() {});
+                new ParameterizedTypeReference<Resource<EntandoDeBundle>>() {
+                });
 
         if (responseEntity.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
             return Optional.empty();
@@ -217,7 +235,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 url,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Resources<Resource<EntandoDeBundle>>>() {});
+                new ParameterizedTypeReference<Resources<Resource<EntandoDeBundle>>>() {
+                });
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
@@ -233,8 +252,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .collect(Collectors.toList());
     }
 
-
-
     private RestTemplate newRestTemplate() {
         OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
         if (resourceDetails == null) {
@@ -244,7 +261,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setRequestFactory(getRequestFactory());
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
-        List<HttpMessageConverter<?>> converters = template.getMessageConverters();
+        final List<HttpMessageConverter<?>> converters = template.getMessageConverters();
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -283,5 +300,5 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         requestFactory.setReadTimeout(timeout);
         return requestFactory;
     }
-    
+
 }

@@ -1,5 +1,6 @@
 package org.entando.kubernetes.controller.digitalexchange.job;
 
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
@@ -9,8 +10,6 @@ import org.entando.web.response.SimpleRestResponse;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequiredArgsConstructor

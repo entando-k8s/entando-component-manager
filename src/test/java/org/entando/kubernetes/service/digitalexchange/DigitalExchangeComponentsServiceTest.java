@@ -1,9 +1,8 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
@@ -18,14 +17,16 @@ import org.junit.Test;
 
 public class DigitalExchangeComponentsServiceTest {
 
+    private static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
     private K8SServiceClientTestDouble k8SServiceClient;
     private DigitalExchangeComponentsService service;
+    private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
+
     @Before
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        service = new DigitalExchangeComponentsServiceImpl(new ArrayList<>(), k8SServiceClient);
+        service = new DigitalExchangeComponentsServiceImpl(k8SServiceClient, availableDigitalExchanges);
     }
-
 
     @Test
     public void shouldReturnAllComponentsAvailable() {
@@ -38,8 +39,8 @@ public class DigitalExchangeComponentsServiceTest {
     private EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                    .withName("my-bundle")
-                    .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .withName("my-bundle")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
                 .endMetadata()
                 .withSpec(getTestEntandoDeBundleSpec()).build();
 

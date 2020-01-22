@@ -11,48 +11,54 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.service.digitalexchange.component;
 
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
+package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
-import org.entando.kubernetes.controller.digitalexchange.model.DigitalExchange;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComponentsService {
 
     private static final List<String> LOCAL_FILTERS = Arrays.asList("digitalExchangeName", "digitalExchangeId", "installed");
 
-    private final List<DigitalExchange> accessibleDigitalExchanges;
+    private final K8SServiceClient k8SServiceClient;
+    private final List<String> accessibleDigitalExchanges;
 
-    private final @NonNull K8SServiceClient k8SServiceClient;
-
+    public DigitalExchangeComponentsServiceImpl(K8SServiceClient k8SServiceClient,
+            @Value("${entando.digital-exchanges.name:}") List<String> accessibleDigitalExchanges) {
+        this.k8SServiceClient = k8SServiceClient;
+        this.accessibleDigitalExchanges = accessibleDigitalExchanges
+                .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
+    }
 
     @Override
     public List<DigitalExchangeComponent> getComponents() {
-         List<EntandoDeBundle> bundles = k8SServiceClient.getBundlesInNamespace(DEFAULT_BUNDLE_NAMESPACE);
-         return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
+        List<EntandoDeBundle> bundles;
+        if (accessibleDigitalExchanges.isEmpty()) {
+            bundles = k8SServiceClient.getBundlesInDefaultNamespace();
+        } else {
+            bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
+        }
+        return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
     }
-
 
     public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
         DigitalExchangeComponent dec = new DigitalExchangeComponent();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
         dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
-        dec.setDigitalExchangeId(DEFAULT_BUNDLE_NAMESPACE);
-        dec.setDigitalExchangeName(DEFAULT_BUNDLE_NAMESPACE);
+        dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
+        dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
         dec.setId(bd.getName());
         dec.setRating(5);
         dec.setInstalled(false);

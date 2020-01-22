@@ -19,9 +19,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     public void addInMemoryLinkedPlugins(EntandoPlugin plugin) {
         this.inMemoryPlugins.add(plugin);
     }
+
     public void addInMemoryLink(EntandoAppPluginLink link) {
         this.inMemoryLinks.add(link);
     }
+
     public void addInMemoryBundle(EntandoDeBundle bundle) {
         this.inMemoryBundles.add(bundle);
     }
@@ -34,6 +36,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     public List<EntandoAppPluginLink> getInMemoryLinkCopy() {
         return new ArrayList<>(inMemoryLinks);
     }
+
     public List<EntandoPlugin> getInMemoryPluginsCopy() {
         return new ArrayList<>(inMemoryPlugins);
     }
@@ -41,8 +44,8 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace) {
         return this.inMemoryLinks.stream().filter(link ->
-                link.getSpec().getEntandoAppName().equals(entandoAppName) &&
-                        link.getSpec().getEntandoAppNamespace().equals(entandoAppNamespace))
+                link.getSpec().getEntandoAppName().equals(entandoAppName)
+                        && link.getSpec().getEntandoAppNamespace().equals(entandoAppNamespace))
                 .collect(Collectors.toList());
 
     }
@@ -62,20 +65,22 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         this.inMemoryPlugins.add(plugin);
         EntandoAppPluginLink link = new EntandoAppPluginLinkBuilder()
                 .withNewMetadata()
-                    .withName(name + "-to-" + plugin.getMetadata().getName() + "-link")
-                    .withNamespace(namespace)
+                .withName(name + "-to-" + plugin.getMetadata().getName() + "-link")
+                .withNamespace(namespace)
                 .endMetadata()
                 .withNewSpec()
-                    .withEntandoApp(namespace,name)
-                    .withEntandoPlugin(plugin.getMetadata().getNamespace(), plugin.getMetadata().getName())
+                .withEntandoApp(namespace, name)
+                .withEntandoPlugin(plugin.getMetadata().getNamespace(), plugin.getMetadata().getName())
                 .endSpec()
                 .build();
         this.addInMemoryLink(link);
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInAllNamespaces() {
-        return inMemoryBundles;
+    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
+        return inMemoryBundles.stream()
+                .filter(b -> b.getMetadata().getNamespace().equals("entando-de-bundles"))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -93,11 +98,15 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
+    public Optional<EntandoDeBundle> getBundleWithName(String name) {
+        return inMemoryBundles.stream().filter(b -> b.getSpec().getDetails().getName().equals(name)).findAny();
+    }
+
+    @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         return inMemoryBundles.stream()
                 .filter(b -> b.getSpec().getDetails().getName().equals(name) && b.getMetadata().getNamespace().equals(namespace))
                 .findFirst();
     }
-
 
 }
