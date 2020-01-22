@@ -16,9 +16,9 @@ pipelineConfig:
             name: set-version
           - sh: fix-git-branches
             name: fix-git-for-sonar
-          - sh: mvn-verify-pr -P${EXECUTABLE_TYPE}
+          - sh: mvn-verify-pr
             name: mvn-verify-pr
-          - sh:  echo "This avoids unwanted kaniko command substitution" &&  skaffold build -p ${EXECUTABLE_TYPE} -f skaffold.yaml
+          - sh:  echo "This avoids unwanted kaniko command substitution" &&  skaffold build -f skaffold.yaml
             name: container-build
       promote:
         replace: true
