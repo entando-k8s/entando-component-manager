@@ -90,7 +90,7 @@ public class DigitalExchangeComponentsTest {
     }
 
     @Test
-    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() {
+    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 

@@ -3,6 +3,7 @@ package org.entando.kubernetes.service.digitalexchange;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.DEFAULT_BUNDLE_NAMESPACE;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
@@ -22,7 +23,7 @@ public class DigitalExchangeComponentsServiceTest {
     @Before
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        service = new DigitalExchangeComponentsServiceImpl(k8SServiceClient);
+        service = new DigitalExchangeComponentsServiceImpl(new ArrayList<>(), k8SServiceClient);
     }
 
 
