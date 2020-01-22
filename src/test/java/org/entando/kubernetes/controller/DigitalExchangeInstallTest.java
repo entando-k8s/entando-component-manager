@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
@@ -46,6 +47,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
@@ -66,6 +68,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -76,6 +79,9 @@ import org.springframework.test.web.servlet.MockMvc;
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Autowired
     private MockMvc mockMvc;
@@ -368,6 +374,59 @@ public class DigitalExchangeInstallTest {
                 .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
+    }
+
+    @Test
+    public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
+        WireMock.reset();
+
+        // Setup
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+
+        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
+        final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage())));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes"))
+                .willReturn(aResponse().withStatus(500)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
+                .willReturn(aResponse().withStatus(500)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
+
+        MvcResult mvcResult = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+
+        String jobId = JsonPath.read(mvcResult.getResponse().getContentAsString(), "$.payload.id");
+
+        waitFor(5000);
+
+        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].installed").value("false"));
+
+        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.id").value(jobId))
+                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ERROR.toString()));
     }
 
     private byte[] readFromDEPackage() throws IOException {
