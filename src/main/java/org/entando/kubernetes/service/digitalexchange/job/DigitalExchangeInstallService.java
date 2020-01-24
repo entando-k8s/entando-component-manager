@@ -25,6 +25,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.exception.job.JobCorruptedException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ZipReader;
@@ -85,6 +86,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
                         + " - JOB ID: " + j.getId());
             }
+            if (JobType.isOfType(js, JobType.ERROR)) {
+                throw new JobCorruptedException("A previous job for the component " + j.getComponentId()
+                        + " has failed - JOB ID: " + j.getId());
+            }
         }
 
         EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version)
@@ -105,7 +110,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
           // To be an existing job it should be Running or completed
            switch (lastJobStarted.get().getStatus()) {
                case UNINSTALL_COMPLETED:
-               case INSTALL_ERROR:
                    return Optional.empty();
                default:
                    return lastJobStarted;

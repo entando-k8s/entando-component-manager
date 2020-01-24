@@ -17,6 +17,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.exception.job.JobCorruptedException;
+import org.entando.kubernetes.exception.job.JobExecutionException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -66,9 +68,14 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
     }
 
-    private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob lastAvailableJob) {
-        if (JobType.isOfType(lastAvailableJob.getStatus(), JobType.UNFINISHED)) {
-            throw new JobConflictException("Install job for the component " + lastAvailableJob.getComponentId() + " is in progress - JOB ID: " + lastAvailableJob.getId());
+    private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob job) {
+        if (JobType.isOfType(job.getStatus(), JobType.UNFINISHED)) {
+            throw new JobConflictException("Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
+        }
+
+        if (JobType.isOfType(job.getStatus(), JobType.ERROR)) {
+            throw new JobCorruptedException("A previous job for the component " + job.getComponentId()
+                    + " has failed - JOB ID: " + job.getId());
         }
     }
 
@@ -112,7 +119,13 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
 
-            cleanupResourceFolder(job, components);
+            try {
+                cleanupResourceFolder(job, components);
+            } catch (Exception e) {
+                jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_ERROR);
+                throw new JobExecutionException("An error occurred while cleaning up component "
+                        + job.getComponentId() + " resources", e);
+            }
 
             CompletableFuture[] completableFutures = components.stream().map(component -> {
                 if (component.getStatus() == JobStatus.INSTALL_COMPLETED

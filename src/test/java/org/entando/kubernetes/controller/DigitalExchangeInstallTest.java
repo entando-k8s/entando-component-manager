@@ -289,6 +289,7 @@ public class DigitalExchangeInstallTest {
     public void shouldReportAllInstallationAttemptsOrderedByStartTimeDescending() throws Exception {
         String successfulInstallId = simulateSuccessfullyCompletedInstall();
         String successfulUninstallId = simulateSuccessfullyCompletedUninstall();
+        String failingInstallId = simulateFailingInstall();
 
         assertThat(successfulInstallId).isNotEqualTo(successfulUninstallId);
 
@@ -296,9 +297,9 @@ public class DigitalExchangeInstallTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
-                .andExpect(jsonPath("$.payload.*.id", hasSize(2)))
+                .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
                 .andExpect(jsonPath("$.payload.*.id").value(contains(
-                        successfulUninstallId, successfulInstallId
+                        failingInstallId, successfulUninstallId, successfulInstallId
                 )));
     }
 
@@ -338,6 +339,30 @@ public class DigitalExchangeInstallTest {
                 .andDo(print()).andExpect(status().isConflict());
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isConflict());
+    }
+
+    @Test
+    public void shouldThrowInternalServerErrorWhenActingOnPreviousInstallErrorState() throws Exception {
+        simulateFailingInstall();
+
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isInternalServerError());
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+                .andDo(print()).andExpect(status().isInternalServerError());
+
+    }
+
+    @Test
+    public void shouldThrowInternalServerErrorWhenActingOnPreviousUninstallErrorState() throws Exception {
+
+        simulateSuccessfullyCompletedInstall();
+        simulateFailingUninstall();
+
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isInternalServerError());
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+                .andDo(print()).andExpect(status().isInternalServerError());
+
     }
 
     private String simulateSuccessfullyCompletedInstall() throws Exception {
@@ -409,6 +434,25 @@ public class DigitalExchangeInstallTest {
         waitForInstallStatus(JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+    }
+
+    private String simulateFailingUninstall() throws Exception {
+
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
+
+        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+        waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
+
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+
     }
 
     private String simulateInProgressInstall() throws Exception {
