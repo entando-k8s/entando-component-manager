@@ -1,5 +1,7 @@
 package org.entando.kubernetes.repository;
 
+import java.util.List;
+import java.util.UUID;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
@@ -10,9 +12,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Repository
 public interface DigitalExchangeJobComponentRepository extends JpaRepository<DigitalExchangeJobComponent, UUID> {

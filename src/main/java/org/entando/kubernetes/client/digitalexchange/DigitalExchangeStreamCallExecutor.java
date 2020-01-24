@@ -13,16 +13,15 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
 
 public class DigitalExchangeStreamCallExecutor extends DigitalExchangeBaseCallExecutor<DigitalExchangeBaseCall<InputStream>, InputStream> {
 

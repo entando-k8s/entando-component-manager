@@ -18,11 +18,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.security.Roles;
+import java.net.URISyntaxException;
+import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.web.response.PagedMetadata;
+import org.entando.kubernetes.security.Roles;
 import org.entando.web.response.PagedRestResponse;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
@@ -32,9 +31,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import javax.servlet.http.HttpServletRequest;
-import java.net.URISyntaxException;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Api(tags = {"digital-exchange", "installation"})

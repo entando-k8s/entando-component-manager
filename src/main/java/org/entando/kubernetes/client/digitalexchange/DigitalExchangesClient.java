@@ -13,11 +13,10 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.entando.web.response.RestResponse;
-
 import java.io.InputStream;
 import java.util.List;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.entando.web.response.RestResponse;
 
 public interface DigitalExchangesClient {
 

@@ -24,9 +24,7 @@ import java.util.zip.ZipFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.entando.kubernetes.exception.job.JobNotFoundException;
+import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ZipReader;
@@ -35,9 +33,12 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
@@ -71,11 +72,19 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     public DigitalExchangeJob install(String componentId, String version) {
         EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
-                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found in digital-exchange "));
-        Optional<DigitalExchangeJob> existingJob = getExistingJob(bundle);
+                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found"));
+        Optional<DigitalExchangeJob> optionalExistingJob = getExistingJob(bundle);
 
-        if (existingJob.isPresent()) {
-            return existingJob.get();
+        if (optionalExistingJob.isPresent()) {
+            DigitalExchangeJob j = optionalExistingJob.get();
+            JobStatus js = j.getStatus();
+            if (js.equals(JobStatus.INSTALL_COMPLETED)) {
+                return j;
+            }
+            if ( JobType.isOfType(js, JobType.UNFINISHED) ) {
+                throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
+                        + " - JOB ID: " + j.getId());
+            }
         }
 
         EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version)
@@ -123,11 +132,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         jobRepository.save(job);
         return job;
-    }
-
-    public DigitalExchangeJob getJob(String componentId) {
-        return jobRepository.findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
-                .orElseThrow(JobNotFoundException::new);
     }
 
     public List<DigitalExchangeJob> getAllJobs(String componentId) {

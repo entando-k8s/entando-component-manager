@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.http.HttpException;
 import org.entando.kubernetes.exception.http.WithArgumentException;
+import org.entando.kubernetes.exception.http.WithPredefinedMessage;
 import org.entando.web.exception.ErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -38,8 +39,17 @@ public class ExceptionController {
             args = ((WithArgumentException)exception).getArgs();
         }
 
+
+        ErrorResponse errorResponse;
+        if (exception instanceof WithPredefinedMessage) {
+            String predefinedMessage = ((WithPredefinedMessage)exception).getPredefinedMessage();
+            errorResponse = new ErrorResponse(messageSource.getMessage(predefinedMessage, args, locale));
+        } else {
+            errorResponse = new ErrorResponse(exception.getMessage());
+        }
+
         return ResponseEntity.status(status)
-                .body(new ErrorResponse(messageSource.getMessage(exception.getMessage(), args, locale)));
+                .body(errorResponse);
 
     }
 

@@ -6,25 +6,30 @@ import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertTrue;
-import static net.bytebuddy.matcher.ElementMatchers.is;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.checkRequest;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.core.util.FixedDelay;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
@@ -35,14 +40,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
-import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -50,6 +57,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 import org.entando.web.response.SimpleRestResponse;
 import org.junit.After;
 import org.junit.Assert;
@@ -58,6 +66,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -89,6 +98,7 @@ public class DigitalExchangeInstallTest {
 
     @After
     public void cleanup() throws SQLException {
+        WireMock.reset();
         databaseCleaner.cleanup();
         ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
     }
@@ -101,7 +111,7 @@ public class DigitalExchangeInstallTest {
 
     @Test
     public void testInstallComponent() throws Exception {
-        simulateSuccessfulInstall();
+        simulateSuccessfullyCompletedInstall();
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble)  k8SServiceClient;
         // Verify interaction with mocks
@@ -218,6 +228,123 @@ public class DigitalExchangeInstallTest {
 
     @Test
     public void shouldUninstallAnInstalledComponent() throws Exception {
+        simulateSuccessfullyCompletedInstall();
+
+        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("payload.status").value(JobStatus.INSTALL_COMPLETED.toString()));
+
+        simulateSuccessfullyCompletedUninstall();
+
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/todomvc_widget")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")));
+        WireMock.verify(1, deleteRequestedFor(
+                urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/title_fragment")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
+
+        mockMvc.perform(get(URL + "/uninstall/todomvc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.UNINSTALL_COMPLETED.toString()));
+
+    }
+
+
+    @Test
+    public void installedComponentShouldReturnInstalledFieldTrue() throws Exception {
+
+        simulateSuccessfullyCompletedInstall();
+
+        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].installed").value("true"));
+
+    }
+
+    @Test
+    public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
+        String failingJobId = simulateFailingInstall();
+
+        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].installed").value("false"));
+
+        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.id").value(failingJobId))
+                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ERROR.toString()));
+    }
+
+    @Test
+    public void shouldReportAllInstallationAttemptsOrderedByStartTimeDescending() throws Exception {
+        String successfulInstallId = simulateSuccessfullyCompletedInstall();
+        String successfulUninstallId = simulateSuccessfullyCompletedUninstall();
+
+        assertThat(successfulInstallId).isNotEqualTo(successfulUninstallId);
+
+        mockMvc.perform(get(URL + "/jobs/{component}", "todomvc"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload.*.id", hasSize(2)))
+                .andExpect(jsonPath("$.payload.*.id").value(contains(
+                        successfulUninstallId, successfulInstallId
+                )));
+    }
+
+
+
+    @Test
+    public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
+
+        String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
+        String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();
+
+        assertThat(firstSuccessfulJobId).isEqualTo(secondSuccessfulJobId);
+    }
+
+    @Test
+    public void shouldThrowConflictWhenActingDuringInstallJobInProgress() throws Exception {
+        String jobId = simulateInProgressInstall();
+
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("JOB ID: " + jobId)));
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("JOB ID: " + jobId)));
+        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
+    }
+
+    @Test
+    public void shouldThrowConflictWhenActingDuringUninstallJobInProgress() throws Exception {
+
+        simulateSuccessfullyCompletedInstall();
+        simulateInProgressUninstall();
+
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isConflict());
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+                .andDo(print()).andExpect(status().isConflict());
+    }
+
+    private String simulateSuccessfullyCompletedInstall() throws Exception {
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        // Setup
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
 
         final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
@@ -231,7 +358,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
-
+//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
@@ -244,6 +371,23 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
 
+        // Install bundle
+        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+
+        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
+
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+    }
+
+    private String simulateSuccessfullyCompletedUninstall() throws Exception {
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/todomvc_widget"))
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget"))
@@ -256,9 +400,9 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model"))
                 .willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.delete(urlEqualTo("/api/plugins/cms/contentmodels/8880003"))
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentmodels/8880003"))
                 .willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.delete(urlEqualTo("/api/plugins/cms/contentmodels/8880002"))
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentmodels/8880002"))
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentTypes/CNG"))
                 .willReturn(aResponse().withStatus(200)));
@@ -267,49 +411,18 @@ public class DigitalExchangeInstallTest {
                 .delete(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc"))
                 .willReturn(aResponse().withStatus(200)));
 
-        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk());
-
-        waitFor(5000);
-
-        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk())
-                .andExpect(jsonPath("payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("payload.status").value(JobStatus.INSTALL_COMPLETED.toString()));
+                .andReturn();
 
-        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk());
+        waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
 
-        waitFor(5000);
-
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/todomvc_widget")));
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget")));
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model")));
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model")));
-        WireMock.verify(1, deleteRequestedFor(
-                urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc")));
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/title_fragment")));
-        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
-
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
 
-    @Test
-    public void installedComponentShouldReturnInstalledFieldTrue() throws Exception {
-
-        simulateSuccessfulInstall();
-
-        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload").isArray())
-                .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
-                .andExpect(jsonPath("$.payload[0].installed").value("true"));
-
-    }
-
-    @Test
-    public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
+    private String simulateFailingInstall() throws Exception {
         WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
 
         // Setup
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
@@ -326,71 +439,20 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
-                .willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes"))
-                .willReturn(aResponse().withStatus(500)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
-                .willReturn(aResponse().withStatus(500)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
-
-        MvcResult mvcResult = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+//        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(500)));
+        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
+        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk())
                 .andReturn();
 
-        String jobId = JsonPath.read(mvcResult.getResponse().getContentAsString(), "$.payload.id");
+        waitForInstallStatus(JobStatus.INSTALL_ERROR);
 
-        waitFor(5000);
-
-        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload").isArray())
-                .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
-                .andExpect(jsonPath("$.payload[0].installed").value("false"));
-
-        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.id").value(jobId))
-                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ERROR.toString()));
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
 
-    @Test
-    public void shouldReportAllInstallationAttempts() throws Exception {
-        SimpleRestResponse<DigitalExchangeJob> failingJob = simulateFailingInstall();
-        SimpleRestResponse<DigitalExchangeJob> successfulJob = simulateSuccessfulInstall();
-
-        assertThat(failingJob.getPayload().getId()).isNotEqualTo(successfulJob.getPayload().getId());
-
-        mockMvc.perform(get(URL + "/jobs/{component}", "todomvc"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload").isArray())
-                .andExpect(jsonPath("$.payload.*.id", hasSize(2)))
-                .andExpect(jsonPath("$.payload.*.id").value(contains(
-                        successfulJob.getPayload().getId().toString(),
-                        failingJob.getPayload().getId().toString()
-                )));
-    }
-
-    @Test
-    public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
-
-        SimpleRestResponse<DigitalExchangeJob> firstSuccessfulJob = simulateSuccessfulInstall();
-        SimpleRestResponse<DigitalExchangeJob> secondSuccessfulJob = simulateSuccessfulInstall();
-
-        assertThat(firstSuccessfulJob.getPayload().getId()).isEqualTo(secondSuccessfulJob.getPayload().getId());
-    }
-
-
-
-    private SimpleRestResponse<DigitalExchangeJob> simulateSuccessfulInstall() throws Exception {
+    private String simulateInProgressInstall() throws Exception {
         WireMock.reset();
+        WireMock.setGlobalFixedDelay(1000);
 
         // Setup
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
@@ -424,50 +486,73 @@ public class DigitalExchangeInstallTest {
                 .andDo(print()).andExpect(status().isOk())
                 .andReturn();
 
-        waitFor(5000);
+        waitForInstallStatus(JobStatus.INSTALL_IN_PROGRESS);
 
-        return mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>() {});
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
 
-
-    private SimpleRestResponse<DigitalExchangeJob> simulateFailingInstall() throws Exception {
+    private String simulateInProgressUninstall() throws Exception {
         WireMock.reset();
-
-        // Setup
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-
-        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
-        final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
-
-        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage())));
+        WireMock.setGlobalFixedDelay(1000);
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
-
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/todomvc_widget"))
                 .willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes"))
-                .willReturn(aResponse().withStatus(500)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
-                .willReturn(aResponse().withStatus(500)));
-        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/another_todomvc_widget"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fragments/title_fragment"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/fragments/another_fragment"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_page_model"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/pageModels/todomvc_another_page_model"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentmodels/8880003"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentmodels/8880002"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/plugins/cms/contentTypes/CNG"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlEqualTo("/entando-app/api/labels/HELLO")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock
+                .delete(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc"))
+                .willReturn(aResponse().withStatus(200)));
 
-        MvcResult mvcResult = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk())
                 .andReturn();
+        waitForUninstallStatus(JobStatus.UNINSTALL_IN_PROGRESS);
 
-        waitFor(5000);
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
-        return  mapper.readValue(mvcResult.getResponse().getContentAsString(),
-                        new TypeReference<SimpleRestResponse<DigitalExchangeJob>>() {});
+
+    }
+
+    private void waitForInstallStatus(JobStatus status) {
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofSeconds(1))
+                .until(() -> getInstallJob().getPayload().getStatus().equals(status));
+    }
+
+    private void waitForUninstallStatus(JobStatus status) {
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofSeconds(1))
+                .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
+    }
+
+    private SimpleRestResponse<DigitalExchangeJob> getInstallJob() throws Exception{
+        return mapper.readValue(mockMvc.perform(get(URL + "/install/todomvc"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
+    }
+
+    private SimpleRestResponse<DigitalExchangeJob> getUninstallJob() throws Exception{
+        return mapper.readValue(mockMvc.perform(get(URL + "/uninstall/todomvc"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
     }
 
     private byte[] readFromDEPackage() throws IOException {
