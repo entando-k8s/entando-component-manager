@@ -6,11 +6,10 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.hateoas.ResourceSupport;
 
 @Getter@Setter
 @NoArgsConstructor
-public class RestResponse<T, M> extends ResourceSupport {
+public class RestResponse<T, M> {
 
     private T payload;
     private M metadata;

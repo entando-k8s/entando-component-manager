@@ -1,0 +1,265 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m---------------< [0;36morg.entando:entando-component-manager[0;1m >----------------[m
+[[1;34mINFO[m] [1mBuilding Entando Component Manager 6.0.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+Downloading from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/json-smart/maven-metadata.xml
+Progress (1): 279 B                   Downloaded from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/json-smart/maven-metadata.xml (279 B at 142 B/s)
+Downloading from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/json-smart/2.3-SNAPSHOT/maven-metadata.xml
+Progress (1): 1.2 kB                    Downloaded from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/json-smart/2.3-SNAPSHOT/maven-metadata.xml (1.2 kB at 1.9 kB/s)
+Downloading from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/minidev-parent/2.3-SNAPSHOT/maven-metadata.xml
+Progress (1): 598 B                   Downloaded from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/minidev-parent/2.3-SNAPSHOT/maven-metadata.xml (598 B at 952 B/s)
+Downloading from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/accessors-smart/1.2-SNAPSHOT/maven-metadata.xml
+Progress (1): 1.1/1.2 kBProgress (1): 1.2 kB                        Downloaded from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/net/minidev/accessors-smart/1.2-SNAPSHOT/maven-metadata.xml (1.2 kB at 1.9 kB/s)
+Downloading from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/com/nimbusds/lang-tag/maven-metadata.xml
+Downloading from sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots/com/nimbusds/nimbus-jose-jwt/maven-metadata.xml
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-dependency-plugin:3.1.1:tree[m [1m(default-cli)[m @ [36mentando-component-manager[0;1m ---[m
+[[1;34mINFO[m] org.entando:entando-component-manager:jar:6.0.0-SNAPSHOT
+[[1;34mINFO[m] +- org.entando.kubernetes:entando-k8s-custom-model:jar:6.0.51:compile
+[[1;34mINFO[m] |  \- io.quarkus:quarkus-kubernetes-client:jar:1.0.1.Final:compile
+[[1;34mINFO[m] |     +- io.quarkus:quarkus-arc:jar:1.0.1.Final:compile
+[[1;34mINFO[m] |     |  +- io.quarkus.arc:arc:jar:1.0.1.Final:compile
+[[1;34mINFO[m] |     |  |  \- jakarta.enterprise:jakarta.enterprise.cdi-api:jar:2.0.2:compile
+[[1;34mINFO[m] |     |  |     +- jakarta.el:jakarta.el-api:jar:3.0.3:compile
+[[1;34mINFO[m] |     |  |     \- jakarta.interceptor:jakarta.interceptor-api:jar:1.2.5:compile
+[[1;34mINFO[m] |     |  |        \- jakarta.ejb:jakarta.ejb-api:jar:3.2.6:compile
+[[1;34mINFO[m] |     |  +- io.quarkus:quarkus-core:jar:1.0.1.Final:compile
+[[1;34mINFO[m] |     |  |  +- jakarta.inject:jakarta.inject-api:jar:1.0:compile
+[[1;34mINFO[m] |     |  |  +- io.smallrye:smallrye-config:jar:1.3.9:compile
+[[1;34mINFO[m] |     |  |  |  \- org.eclipse.microprofile.config:microprofile-config-api:jar:1.3:compile
+[[1;34mINFO[m] |     |  |  |     \- org.osgi:org.osgi.annotation.versioning:jar:1.0.0:compile
+[[1;34mINFO[m] |     |  |  +- org.jboss.logmanager:jboss-logmanager-embedded:jar:1.0.4:compile
+[[1;34mINFO[m] |     |  |  +- org.jboss.logging:jboss-logging-annotations:jar:2.1.0.Final:compile
+[[1;34mINFO[m] |     |  |  +- org.jboss.threads:jboss-threads:jar:3.0.0.Final:compile
+[[1;34mINFO[m] |     |  |  +- org.jboss.slf4j:slf4j-jboss-logging:jar:1.2.0.Final:compile
+[[1;34mINFO[m] |     |  |  +- org.graalvm.sdk:graal-sdk:jar:19.2.1:compile
+[[1;34mINFO[m] |     |  |  \- org.wildfly.common:wildfly-common:jar:1.5.0.Final-format-001:compile
+[[1;34mINFO[m] |     |  \- org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:jar:1.0.1:compile
+[[1;34mINFO[m] |     +- io.quarkus:quarkus-jackson:jar:1.0.1.Final:compile
+[[1;34mINFO[m] |     |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.10.2:compile
+[[1;34mINFO[m] |     |  \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.10.2:compile
+[[1;34mINFO[m] |     +- io.fabric8:kubernetes-client:jar:4.6.1:compile
+[[1;34mINFO[m] |     |  +- io.fabric8:kubernetes-model:jar:4.6.1:compile
+[[1;34mINFO[m] |     |  |  +- io.fabric8:kubernetes-model-common:jar:4.6.1:compile
+[[1;34mINFO[m] |     |  |  \- com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:2.10.2:compile
+[[1;34mINFO[m] |     |  +- com.squareup.okhttp3:okhttp:jar:3.14.6:compile
+[[1;34mINFO[m] |     |  |  \- com.squareup.okio:okio:jar:1.17.2:compile
+[[1;34mINFO[m] |     |  +- com.squareup.okhttp3:logging-interceptor:jar:3.14.6:compile
+[[1;34mINFO[m] |     |  +- org.slf4j:jul-to-slf4j:jar:1.7.30:compile
+[[1;34mINFO[m] |     |  +- io.fabric8:zjsonpatch:jar:0.3.0:compile
+[[1;34mINFO[m] |     |  \- com.github.mifmif:generex:jar:1.0.2:compile
+[[1;34mINFO[m] |     +- jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile
+[[1;34mINFO[m] |     \- org.jboss.spec.javax.xml.bind:jboss-jaxb-api_2.3_spec:jar:2.0.0.Final:compile
+[[1;34mINFO[m] +- org.projectlombok:lombok:jar:1.18.10:compile
+[[1;34mINFO[m] +- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.9.9:compile
+[[1;34mINFO[m] |  +- org.yaml:snakeyaml:jar:1.25:compile
+[[1;34mINFO[m] |  \- com.fasterxml.jackson.core:jackson-core:jar:2.10.2:compile
+[[1;34mINFO[m] +- org.apache.commons:commons-lang3:jar:3.9:compile
+[[1;34mINFO[m] +- org.zalando:problem-spring-web:jar:0.25.2:compile
+[[1;34mINFO[m] |  +- org.zalando:problem-violations:jar:0.25.2:compile
+[[1;34mINFO[m] |  +- org.zalando:problem-spring-common:jar:0.25.2:compile
+[[1;34mINFO[m] |  +- org.apiguardian:apiguardian-api:jar:1.1.0:compile
+[[1;34mINFO[m] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[[1;34mINFO[m] |  +- org.slf4j:slf4j-api:jar:1.7.30:compile
+[[1;34mINFO[m] |  +- org.zalando:problem:jar:0.23.0:compile
+[[1;34mINFO[m] |  +- org.zalando:jackson-datatype-problem:jar:0.23.0:compile
+[[1;34mINFO[m] |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.10.2:compile
+[[1;34mINFO[m] |  +- org.zalando:faux-pas:jar:0.8.0:compile
+[[1;34mINFO[m] |  \- javax.validation:validation-api:jar:2.0.1.Final:compile
+[[1;34mINFO[m] +- io.springfox:springfox-swagger2:jar:2.9.2:compile
+[[1;34mINFO[m] |  +- io.swagger:swagger-annotations:jar:1.5.20:compile
+[[1;34mINFO[m] |  +- io.swagger:swagger-models:jar:1.5.20:compile
+[[1;34mINFO[m] |  +- io.springfox:springfox-spi:jar:2.9.2:compile
+[[1;34mINFO[m] |  |  \- io.springfox:springfox-core:jar:2.9.2:compile
+[[1;34mINFO[m] |  +- io.springfox:springfox-schema:jar:2.9.2:compile
+[[1;34mINFO[m] |  +- io.springfox:springfox-swagger-common:jar:2.9.2:compile
+[[1;34mINFO[m] |  +- io.springfox:springfox-spring-web:jar:2.9.2:compile
+[[1;34mINFO[m] |  +- com.google.guava:guava:jar:20.0:compile
+[[1;34mINFO[m] |  +- com.fasterxml:classmate:jar:1.5.1:compile
+[[1;34mINFO[m] |  +- org.springframework.plugin:spring-plugin-core:jar:1.2.0.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework:spring-beans:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  |  \- org.springframework:spring-context:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.plugin:spring-plugin-metadata:jar:1.2.0.RELEASE:compile
+[[1;34mINFO[m] |  \- org.mapstruct:mapstruct:jar:1.2.0.Final:compile
+[[1;34mINFO[m] +- io.springfox:springfox-bean-validators:jar:2.9.2:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-security:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-starter:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  \- org.springframework.boot:spring-boot-starter-logging:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |     +- ch.qos.logback:logback-classic:jar:1.2.3:compile
+[[1;34mINFO[m] |  |     |  \- ch.qos.logback:logback-core:jar:1.2.3:compile
+[[1;34mINFO[m] |  |     \- org.apache.logging.log4j:log4j-to-slf4j:jar:2.12.1:compile
+[[1;34mINFO[m] |  |        \- org.apache.logging.log4j:log4j-api:jar:2.12.1:compile
+[[1;34mINFO[m] |  +- org.springframework:spring-aop:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.security:spring-security-config:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] |  \- org.springframework.security:spring-security-web:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] |     \- org.springframework:spring-expression:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] +- org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:jar:2.0.0.RELEASE:compile
+[[1;34mINFO[m] |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.10.2:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-autoconfigure:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.security.oauth:spring-security-oauth2:jar:2.2.1.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework:spring-webmvc:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  |  +- commons-codec:commons-codec:jar:1.13:compile
+[[1;34mINFO[m] |  |  \- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[[1;34mINFO[m] |  |     \- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[[1;34mINFO[m] |  +- org.springframework.security:spring-security-jwt:jar:1.0.9.RELEASE:compile
+[[1;34mINFO[m] |  |  \- org.bouncycastle:bcpkix-jdk15on:jar:1.56:compile
+[[1;34mINFO[m] |  |     \- org.bouncycastle:bcprov-jdk15on:jar:1.56:compile
+[[1;34mINFO[m] |  \- org.springframework:spring-web:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-oauth2-client:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- com.sun.mail:jakarta.mail:jar:1.6.4:compile
+[[1;34mINFO[m] |  |  \- com.sun.activation:jakarta.activation:jar:1.2.1:compile
+[[1;34mINFO[m] |  +- org.springframework.security:spring-security-core:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.security:spring-security-oauth2-client:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] |  |  +- com.nimbusds:oauth2-oidc-sdk:jar:6.14:compile
+[[1;34mINFO[m] |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[[1;34mINFO[m] |  |  |  \- com.nimbusds:lang-tag:jar:1.4.4:compile (version selected from constraint [1.4.3,))
+[[1;34mINFO[m] |  |  \- org.springframework.security:spring-security-oauth2-core:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] |  \- org.springframework.security:spring-security-oauth2-jose:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] |     \- com.nimbusds:nimbus-jose-jwt:jar:7.8:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-oauth2-resource-server:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  \- org.springframework.security:spring-security-oauth2-resource-server:jar:5.2.1.RELEASE:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-data-jpa:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-starter-aop:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  \- org.aspectj:aspectjweaver:jar:1.9.5:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-starter-jdbc:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  +- com.zaxxer:HikariCP:jar:3.4.2:compile
+[[1;34mINFO[m] |  |  \- org.springframework:spring-jdbc:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  +- jakarta.activation:jakarta.activation-api:jar:1.2.1:compile
+[[1;34mINFO[m] |  +- jakarta.persistence:jakarta.persistence-api:jar:2.2.3:compile
+[[1;34mINFO[m] |  +- jakarta.transaction:jakarta.transaction-api:jar:1.3.3:compile
+[[1;34mINFO[m] |  +- org.hibernate:hibernate-core:jar:5.4.10.Final:compile
+[[1;34mINFO[m] |  |  +- org.jboss.logging:jboss-logging:jar:3.4.1.Final:compile
+[[1;34mINFO[m] |  |  +- antlr:antlr:jar:2.7.7:compile
+[[1;34mINFO[m] |  |  +- org.jboss:jandex:jar:2.1.1.Final:compile
+[[1;34mINFO[m] |  |  +- org.dom4j:dom4j:jar:2.1.1:compile
+[[1;34mINFO[m] |  |  +- org.hibernate.common:hibernate-commons-annotations:jar:5.1.0.Final:compile
+[[1;34mINFO[m] |  |  \- org.glassfish.jaxb:jaxb-runtime:jar:2.3.2:compile
+[[1;34mINFO[m] |  |     +- org.glassfish.jaxb:txw2:jar:2.3.2:compile
+[[1;34mINFO[m] |  |     +- com.sun.istack:istack-commons-runtime:jar:3.0.8:compile
+[[1;34mINFO[m] |  |     +- org.jvnet.staxex:stax-ex:jar:1.8.1:compile
+[[1;34mINFO[m] |  |     \- com.sun.xml.fastinfoset:FastInfoset:jar:1.2.16:compile
+[[1;34mINFO[m] |  +- org.springframework.data:spring-data-jpa:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework.data:spring-data-commons:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework:spring-orm:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  |  \- org.springframework:spring-tx:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  \- org.springframework:spring-aspects:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] +- org.liquibase:liquibase-core:jar:3.8.5:compile
+[[1;34mINFO[m] +- mysql:mysql-connector-java:jar:8.0.19:compile
+[[1;34mINFO[m] +- org.postgresql:postgresql:jar:42.2.8:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-actuator:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-actuator-autoconfigure:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework.boot:spring-boot-actuator:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  \- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.10.2:compile
+[[1;34mINFO[m] |  \- io.micrometer:micrometer-core:jar:1.3.2:compile
+[[1;34mINFO[m] |     +- org.hdrhistogram:HdrHistogram:jar:2.1.11:compile
+[[1;34mINFO[m] |     \- org.latencyutils:LatencyUtils:jar:2.0.3:compile
+[[1;34mINFO[m] +- jakarta.servlet:jakarta.servlet-api:jar:4.0.3:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-hateoas:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-starter-web:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework.boot:spring-boot-starter-json:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  +- org.springframework.boot:spring-boot-starter-tomcat:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |  |  +- org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.30:compile
+[[1;34mINFO[m] |  |  |  +- org.apache.tomcat.embed:tomcat-embed-el:jar:9.0.30:compile
+[[1;34mINFO[m] |  |  |  \- org.apache.tomcat.embed:tomcat-embed-websocket:jar:9.0.30:compile
+[[1;34mINFO[m] |  |  \- org.springframework.boot:spring-boot-starter-validation:jar:2.2.4.RELEASE:compile
+[[1;34mINFO[m] |  |     +- jakarta.validation:jakarta.validation-api:jar:2.0.2:compile
+[[1;34mINFO[m] |  |     \- org.hibernate.validator:hibernate-validator:jar:6.0.18.Final:compile
+[[1;34mINFO[m] |  \- org.springframework.hateoas:spring-hateoas:jar:1.0.3.RELEASE:compile
+[[1;34mINFO[m] +- org.apache.commons:commons-collections4:jar:4.4:compile
+[[1;34mINFO[m] +- commons-io:commons-io:jar:2.6:compile
+[[1;34mINFO[m] +- org.springframework.boot:spring-boot-starter-test:jar:2.2.4.RELEASE:test
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-test:jar:2.2.4.RELEASE:test
+[[1;34mINFO[m] |  +- org.springframework.boot:spring-boot-test-autoconfigure:jar:2.2.4.RELEASE:test
+[[1;34mINFO[m] |  +- com.jayway.jsonpath:json-path:jar:2.4.0:compile
+[[1;34mINFO[m] |  |  \- net.minidev:json-smart:jar:2.3:compile
+[[1;34mINFO[m] |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[[1;34mINFO[m] |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[[1;34mINFO[m] |  +- jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.2:compile
+[[1;34mINFO[m] |  +- org.junit.jupiter:junit-jupiter:jar:5.5.2:test
+[[1;34mINFO[m] |  |  +- org.junit.jupiter:junit-jupiter-api:jar:5.5.2:test
+[[1;34mINFO[m] |  |  |  +- org.opentest4j:opentest4j:jar:1.2.0:test
+[[1;34mINFO[m] |  |  |  \- org.junit.platform:junit-platform-commons:jar:1.5.2:test
+[[1;34mINFO[m] |  |  +- org.junit.jupiter:junit-jupiter-params:jar:5.5.2:test
+[[1;34mINFO[m] |  |  \- org.junit.jupiter:junit-jupiter-engine:jar:5.5.2:test
+[[1;34mINFO[m] |  +- org.junit.vintage:junit-vintage-engine:jar:5.5.2:test
+[[1;34mINFO[m] |  |  +- org.junit.platform:junit-platform-engine:jar:1.5.2:test
+[[1;34mINFO[m] |  |  \- junit:junit:jar:4.12:test
+[[1;34mINFO[m] |  +- org.mockito:mockito-junit-jupiter:jar:3.1.0:test
+[[1;34mINFO[m] |  +- org.hamcrest:hamcrest:jar:2.1:test
+[[1;34mINFO[m] |  +- org.skyscreamer:jsonassert:jar:1.5.0:test
+[[1;34mINFO[m] |  |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test
+[[1;34mINFO[m] |  +- org.springframework:spring-core:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  |  \- org.springframework:spring-jcl:jar:5.2.3.RELEASE:compile
+[[1;34mINFO[m] |  +- org.springframework:spring-test:jar:5.2.3.RELEASE:test
+[[1;34mINFO[m] |  \- org.xmlunit:xmlunit-core:jar:2.6.3:test
+[[1;34mINFO[m] +- com.h2database:h2:jar:1.4.199:test
+[[1;34mINFO[m] +- org.mockito:mockito-core:jar:3.1.0:test
+[[1;34mINFO[m] |  +- net.bytebuddy:byte-buddy:jar:1.9.16:compile
+[[1;34mINFO[m] |  +- net.bytebuddy:byte-buddy-agent:jar:1.10.6:test
+[[1;34mINFO[m] |  \- org.objenesis:objenesis:jar:2.6:test
+[[1;34mINFO[m] +- org.javassist:javassist:jar:3.23.1-GA:compile
+[[1;34mINFO[m] +- br.com.six2six:fixture-factory:jar:3.1.0:test
+[[1;34mINFO[m] |  +- commons-beanutils:commons-beanutils:jar:1.8.3:test
+[[1;34mINFO[m] |  |  \- commons-logging:commons-logging:jar:1.1.1:test
+[[1;34mINFO[m] |  +- commons-lang:commons-lang:jar:2.6:test
+[[1;34mINFO[m] |  +- br.com.six2six:bfgex:jar:1.1.1:test
+[[1;34mINFO[m] |  |  +- log4j:log4j:jar:1.2.14:test
+[[1;34mINFO[m] |  |  \- org.apache.commons:commons-math:jar:2.2:test
+[[1;34mINFO[m] |  +- com.rubiconproject.oss:jchronic:jar:0.2.6:test
+[[1;34mINFO[m] |  +- com.thoughtworks.paranamer:paranamer:jar:2.5:test
+[[1;34mINFO[m] |  \- net.vidageek:mirror:jar:1.6.1:test
+[[1;34mINFO[m] +- org.assertj:assertj-core:jar:3.4.1:test
+[[1;34mINFO[m] +- org.springframework.cloud:spring-cloud-starter-contract-stub-runner:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  +- org.springframework.cloud:spring-cloud-contract-stub-runner:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |  +- org.springframework.cloud:spring-cloud-contract-verifier:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |  |  +- javax.inject:javax.inject:jar:1:test
+[[1;34mINFO[m] |  |  |  +- com.toomuchcoding.jsonassert:jsonassert:jar:0.4.13:test
+[[1;34mINFO[m] |  |  |  +- org.codehaus.groovy:groovy:jar:2.5.9:test
+[[1;34mINFO[m] |  |  |  +- org.codehaus.groovy:groovy-nio:jar:2.5.9:test
+[[1;34mINFO[m] |  |  |  +- org.codehaus.groovy:groovy-json:jar:2.5.9:test
+[[1;34mINFO[m] |  |  |  +- org.codehaus.groovy:groovy-xml:jar:2.5.9:test
+[[1;34mINFO[m] |  |  |  \- com.github.jknack:handlebars:jar:4.0.6:test
+[[1;34mINFO[m] |  |  |     +- org.antlr:antlr4-runtime:jar:4.5.1-1:test
+[[1;34mINFO[m] |  |  |     \- org.mozilla:rhino:jar:1.7R4:test
+[[1;34mINFO[m] |  |  +- org.springframework.cloud:spring-cloud-contract-shade:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |  +- org.springframework.cloud:spring-cloud-contract-spec:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |  |  +- dk.brics.automaton:automaton:jar:1.11-8:compile
+[[1;34mINFO[m] |  |  |  \- org.apache.commons:commons-text:jar:1.1:test
+[[1;34mINFO[m] |  |  +- org.eclipse.jgit:org.eclipse.jgit:jar:4.11.0.201803080745-r:test
+[[1;34mINFO[m] |  |  |  +- com.jcraft:jsch:jar:0.1.54:test
+[[1;34mINFO[m] |  |  |  +- com.jcraft:jzlib:jar:1.1.1:test
+[[1;34mINFO[m] |  |  |  \- com.googlecode.javaewah:JavaEWAH:jar:1.1.6:test
+[[1;34mINFO[m] |  |  +- com.jcraft:jsch.agentproxy.sshagent:jar:0.0.9:test
+[[1;34mINFO[m] |  |  |  \- com.jcraft:jsch.agentproxy.core:jar:0.0.9:test
+[[1;34mINFO[m] |  |  +- com.jcraft:jsch.agentproxy.jsch:jar:0.0.9:test
+[[1;34mINFO[m] |  |  \- com.jcraft:jsch.agentproxy.usocket-jna:jar:0.0.9:test
+[[1;34mINFO[m] |  |     +- net.java.dev.jna:jna:jar:4.5.2:test
+[[1;34mINFO[m] |  |     \- net.java.dev.jna:jna-platform:jar:4.5.2:test
+[[1;34mINFO[m] |  +- org.springframework.cloud:spring-cloud-stream-test-support:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |  \- org.springframework.cloud:spring-cloud-stream:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |     +- org.springframework:spring-messaging:jar:5.2.3.RELEASE:test
+[[1;34mINFO[m] |  |     +- org.springframework.integration:spring-integration-core:jar:5.2.3.RELEASE:test
+[[1;34mINFO[m] |  |     |  \- io.projectreactor:reactor-core:jar:3.3.2.RELEASE:test
+[[1;34mINFO[m] |  |     |     \- org.reactivestreams:reactive-streams:jar:1.0.3:test
+[[1;34mINFO[m] |  |     +- org.springframework.integration:spring-integration-jmx:jar:5.2.3.RELEASE:test
+[[1;34mINFO[m] |  |     +- org.springframework:spring-tuple:jar:1.0.0.RELEASE:test
+[[1;34mINFO[m] |  |     |  \- com.esotericsoftware:kryo-shaded:jar:3.0.3:test
+[[1;34mINFO[m] |  |     |     \- com.esotericsoftware:minlog:jar:1.3.0:test
+[[1;34mINFO[m] |  |     +- org.springframework.integration:spring-integration-tuple:jar:1.0.0.RELEASE:test
+[[1;34mINFO[m] |  |     \- org.springframework.retry:spring-retry:jar:1.2.5.RELEASE:test
+[[1;34mINFO[m] |  +- org.springframework.cloud:spring-cloud-contract-wiremock:jar:2.0.1.RELEASE:test
+[[1;34mINFO[m] |  |  +- com.github.tomakehurst:wiremock-standalone:jar:2.18.0:test
+[[1;34mINFO[m] |  |  \- org.apache.httpcomponents:httpclient:jar:4.5.10:test
+[[1;34mINFO[m] |  |     \- org.apache.httpcomponents:httpcore:jar:4.4.13:test
+[[1;34mINFO[m] |  \- org.eclipse.aether:aether-api:jar:1.0.2.v20150114:test
+[[1;34mINFO[m] +- javax.xml.bind:jaxb-api:jar:2.3.1:provided
+[[1;34mINFO[m] |  \- javax.activation:javax.activation-api:jar:1.2.0:provided
+[[1;34mINFO[m] \- org.awaitility:awaitility:jar:4.0.1:test
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;32mBUILD SUCCESS[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  9.705 s
+[[1;34mINFO[m] Finished at: 2020-01-27T17:12:45+02:00
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m

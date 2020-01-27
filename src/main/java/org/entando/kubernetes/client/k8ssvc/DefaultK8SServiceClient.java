@@ -15,15 +15,15 @@ import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.web.response.RestResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.hal.Jackson2HalModule;
-import org.springframework.hateoas.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
-import org.springframework.hateoas.mvc.TypeReferences.ResourceType;
+import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
+import org.springframework.hateoas.server.core.TypeReferences.EntityModelType;
+import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -78,11 +78,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace) {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment("apps", entandoAppNamespace, entandoAppName, LINKS).toUriString();
-        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
+        ResponseEntity<CollectionModel<EntityModel<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                null,
-                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+                new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {});
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while retriving links for app %s in namespace %s",
@@ -93,7 +93,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             );
         }
         return Objects.requireNonNull(responseEntity.getBody()).getContent().stream()
-                .map(Resource::getContent)
+                .map(EntityModel::getContent)
                 .collect(Collectors.toList());
 
     }
@@ -104,8 +104,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String pluginNamespace = el.getSpec().getEntandoPluginNamespace();
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment("plugins", pluginNamespace, pluginName).toUriString();
-        ResponseEntity<Resource<EntandoPlugin>> responseEntity = restTemplate
-                .exchange (url, HttpMethod.GET, null, new ResourceType<>());
+        ResponseEntity<EntityModel<EntandoPlugin>> responseEntity = restTemplate
+                .exchange (url, HttpMethod.GET, null, new EntityModelType<>());
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while searching plugin %s in namespace %s",
@@ -125,11 +125,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String pluginName = el.getSpec().getEntandoPluginName();
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment("apps", appNamespace, appName, LINKS, pluginName).toUriString();
-        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
+        ResponseEntity<CollectionModel<EntityModel<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.DELETE,
                 null,
-                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+                new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {});
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while remove link between app %s in namespace %s and plugin %s",
@@ -147,11 +147,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment("apps", namespace, name, LINKS).toUriString();
-        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
+        ResponseEntity<CollectionModel<EntityModel<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 new HttpEntity<>(plugin),
-                new ParameterizedTypeReference<Resources<Resource<EntandoAppPluginLink>>>() {});
+                new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {});
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while linking app %s in namespace %s to plugin %s",
@@ -207,11 +207,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT, "namespaces", namespace, name)
                 .toUriString();
-        ResponseEntity<Resource<EntandoDeBundle>> responseEntity = restTemplate.exchange(
+        ResponseEntity<EntityModel<EntandoDeBundle>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Resource<EntandoDeBundle>>() {});
+                new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {});
 
         if (responseEntity.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
             return Optional.empty();
@@ -229,11 +229,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     private List<EntandoDeBundle> submitBundleRequestAndExtractBody(String url) {
-        ResponseEntity<Resources<Resource<EntandoDeBundle>>> responseEntity = restTemplate.exchange(
+        ResponseEntity<CollectionModel<EntityModel<EntandoDeBundle>>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Resources<Resource<EntandoDeBundle>>>() {});
+                new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {});
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
@@ -245,7 +245,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return Objects.requireNonNull(responseEntity.getBody())
                 .getContent()
                 .stream()
-                .map(Resource::getContent)
+                .map(EntityModel::getContent)
                 .collect(Collectors.toList());
     }
 
@@ -265,7 +265,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         MappingJackson2HttpMessageConverter halConverter = new TypeConstrainedMappingJackson2HttpMessageConverter(
-                ResourceSupport.class);
+                RestResponse.class);
         halConverter.setObjectMapper(mapper);
         halConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON));
         converters.add(0, halConverter);

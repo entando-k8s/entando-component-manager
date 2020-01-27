@@ -23,6 +23,7 @@ import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
+import org.entando.kubernetes.model.web.response.RestResponse;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -30,14 +31,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.RelProvider;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.core.DefaultRelProvider;
-import org.springframework.hateoas.hal.Jackson2HalModule;
-import org.springframework.hateoas.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
+import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
+import org.springframework.hateoas.server.LinkRelationProvider;
+import org.springframework.hateoas.server.core.DefaultLinkRelationProvider;
+import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -73,8 +73,8 @@ public class K8SServiceClientTest {
     @Test
     public void shouldReturnLinkCorrectly() {
         EntandoAppPluginLink appPluginLink = getTestEntandoAppPluginLink();
-        ResponseEntity<Resources<Resource<EntandoAppPluginLink>>> expectedResponse =
-                ResponseEntity.ok(new Resources<>(Collections.singletonList(new Resource<>(appPluginLink))));
+        ResponseEntity<CollectionModel<EntityModel<EntandoAppPluginLink>>> expectedResponse =
+                ResponseEntity.ok(new CollectionModel<>(Collections.singletonList(new EntityModel<>(appPluginLink))));
 
         RestTemplate mockRt = mock(RestTemplate.class);
         when(mockRt.exchange(any(String.class), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
@@ -115,7 +115,7 @@ public class K8SServiceClientTest {
     @Test
     public void shouldParseEntandoAppPluginCorrectly() throws JsonProcessingException {
 
-        Resources<Resource<EntandoAppPluginLink>> halResources = new Resources<>(Collections.singletonList(new Resource(getTestEntandoAppPluginLink())));
+        CollectionModel<EntityModel<EntandoAppPluginLink>> halResources = new CollectionModel<>(Collections.singletonList(new EntityModel<>(getTestEntandoAppPluginLink())));
         client.setRestTemplate(noOAuthRestTemplate());
 
         stubFor(get(urlPathMatching("/apps/my-namespace/my-app/links"))
@@ -141,7 +141,7 @@ public class K8SServiceClientTest {
         List<HttpMessageConverter<?>> converters = template.getMessageConverters();
         ObjectMapper mapper = getHalReadyObjectMapper();
         MappingJackson2HttpMessageConverter halConverter = new TypeConstrainedMappingJackson2HttpMessageConverter(
-                ResourceSupport.class);
+                RestResponse.class);
         halConverter.setObjectMapper(mapper);
         halConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON));
         converters.add(0, halConverter);
@@ -150,7 +150,7 @@ public class K8SServiceClientTest {
     }
 
     private ObjectMapper getHalReadyObjectMapper() {
-        RelProvider provider = new DefaultRelProvider();
+        LinkRelationProvider provider = new DefaultLinkRelationProvider();
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.setHandlerInstantiator(new Jackson2HalModule.HalHandlerInstantiator(provider, null, null));
