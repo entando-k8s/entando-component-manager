@@ -1,9 +1,8 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Map;
 
 @Getter@Setter
 public class PageModelDescriptor implements Descriptor {

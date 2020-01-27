@@ -1,9 +1,9 @@
 package org.entando.kubernetes.model.entandocore;
 
+import static java.util.Optional.ofNullable;
+
 import lombok.Data;
 import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
-
-import static java.util.Optional.ofNullable;
 
 @Data
 public class EntandoCoreFrameDescriptor {

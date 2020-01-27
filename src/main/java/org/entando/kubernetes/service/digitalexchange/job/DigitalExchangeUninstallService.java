@@ -1,5 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -9,15 +10,21 @@ import java.util.concurrent.CompletableFuture;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.exception.job.JobCorruptedException;
+import org.entando.kubernetes.exception.job.JobExecutionException;
+import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
-import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -30,31 +37,84 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
     private final @NonNull EntandoCoreService engineService;
+    private final @NonNull KubernetesService k8sService;
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    public DigitalExchangeJob uninstall(final String componentId) {
-        DigitalExchangeJob job = jobRepository
-                .findByComponentIdAndStatusNotEqual(componentId, JobStatus.UNINSTALL_COMPLETED)
-                .orElse(null);
-        if (job == null || (job.getStatus() != JobStatus.INSTALL_ERROR
-                && job.getStatus() != JobStatus.INSTALL_COMPLETED)) {
-            return null;
+    public DigitalExchangeJob uninstall(String componentId) {
+        EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
+                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found"));
+        DigitalExchangeJob lastAvailableJob = getLastAvaialableJob(bundle)
+                .orElseThrow(() -> new RuntimeException("No job found for " + componentId));
+
+        verifyJobStatusCompatibleWithUninstall(lastAvailableJob);
+
+        DigitalExchangeJob uninstallJob;
+        if (JobType.isOfType(lastAvailableJob.getStatus(), JobType.INSTALL)) {
+            uninstallJob = submitNewUninstallJob(lastAvailableJob);
+        } else {
+            DigitalExchangeJob lastInstallAttemptJob = findLastInstallJob(bundle)
+                    .orElseThrow(() -> new RuntimeException("No install job associated with " + componentId + " has been found"));
+            uninstallJob = submitNewUninstallJob(lastInstallAttemptJob);
         }
-        List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(job);
 
-        job.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
+        return uninstallJob;
 
-        submitUninstallAsync(job, components);
-
-        return job;
     }
+
+    private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob job) {
+        if (JobType.isOfType(job.getStatus(), JobType.UNFINISHED)) {
+            throw new JobConflictException("Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
+        }
+    }
+
+
+    private Optional<DigitalExchangeJob> getLastAvaialableJob(EntandoDeBundle bundle) {
+        String digitalExchange = bundle.getMetadata().getNamespace();
+        String componentId = bundle.getSpec().getDetails().getName();
+
+        return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId);
+    }
+
+    private Optional<DigitalExchangeJob> findLastInstallJob(EntandoDeBundle bundle) {
+        String digitalExchange = bundle.getMetadata().getNamespace();
+        String componentId = bundle.getSpec().getDetails().getName();
+        return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId)
+                .stream()
+                .filter(j -> JobType.isOfType(j.getStatus(), JobType.INSTALL))
+                .findFirst();
+    }
+
+    private DigitalExchangeJob submitNewUninstallJob(DigitalExchangeJob lastAvailableJob) {
+        List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(lastAvailableJob);
+
+        DigitalExchangeJob uninstallJob = new DigitalExchangeJob();
+        uninstallJob.setComponentId(lastAvailableJob.getComponentId());
+        uninstallJob.setComponentName(lastAvailableJob.getComponentName());
+        uninstallJob.setDigitalExchange(lastAvailableJob.getDigitalExchange());
+        uninstallJob.setComponentVersion(lastAvailableJob.getComponentVersion());
+        uninstallJob.setStartedAt(LocalDateTime.now());
+        uninstallJob.setStatus(JobStatus.UNINSTALL_CREATED);
+        uninstallJob.setProgress(0.0);
+
+        DigitalExchangeJob savedJob = jobRepository.save(uninstallJob);
+        submitUninstallAsync(uninstallJob, components);
+
+        return savedJob;
+    }
+
 
     private void submitUninstallAsync(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
 
-            cleanupResourceFolder(job, components);
+            try {
+                cleanupResourceFolder(job, components);
+            } catch (Exception e) {
+                jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_ERROR);
+                throw new JobExecutionException("An error occurred while cleaning up component "
+                        + job.getComponentId() + " resources", e);
+            }
 
             CompletableFuture[] completableFutures = components.stream().map(component -> {
                 if (component.getStatus() == JobStatus.INSTALL_COMPLETED

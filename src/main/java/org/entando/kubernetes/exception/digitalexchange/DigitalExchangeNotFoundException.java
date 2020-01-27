@@ -2,12 +2,13 @@ package org.entando.kubernetes.exception.digitalexchange;
 
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.http.HttpNotFoundException;
-import org.entando.web.exception.NotFoundException;
+import org.entando.kubernetes.exception.http.WithPredefinedMessage;
 
-public class DigitalExchangeNotFoundException extends EntandoComponentManagerException implements
-        HttpNotFoundException {
+public class DigitalExchangeNotFoundException extends EntandoComponentManagerException
+        implements HttpNotFoundException, WithPredefinedMessage {
 
-    public DigitalExchangeNotFoundException() {
-        super("org.entando.digitalExchange.notFound");
+    @Override
+    public String getPredefinedMessage() {
+        return "org.entando.digitalExchange.notFound";
     }
 }

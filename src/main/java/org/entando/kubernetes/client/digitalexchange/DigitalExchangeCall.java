@@ -13,11 +13,10 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import java.util.Map;
 import org.entando.web.response.RestResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-
-import java.util.Map;
 
 /**
  * Base class containing the information necessary to query a specific Digital

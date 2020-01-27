@@ -18,18 +18,19 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.entando.kubernetes.security.Roles;
+import java.net.URISyntaxException;
+import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.security.Roles;
+import org.entando.web.response.PagedRestResponse;
 import org.entando.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import javax.servlet.http.HttpServletRequest;
-import java.net.URISyntaxException;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Api(tags = {"digital-exchange", "installation"})
@@ -70,5 +71,12 @@ public interface DigitalExchangeInstallResource {
     @Secured(Roles.INSTALL)
     @GetMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId);
+
+    @ApiOperation(value = "Get all jobs for a component")
+    @ApiResponses({
+           @ApiResponse(code = 200, message = "OK")
+    })
+    @GetMapping(value = "/jobs/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<PagedRestResponse<DigitalExchangeJob>> getComponentJobs(@PathVariable("component") String componentId);
 
 }

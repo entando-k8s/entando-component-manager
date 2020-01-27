@@ -13,6 +13,9 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.web.ResilientPagedMetadata;
 import org.entando.web.request.PagedListRequest;
@@ -22,10 +25,6 @@ import org.entando.web.response.PagedRestResponse;
 import org.entando.web.response.RestError;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Provides the logic for combining a set of PagedRestResponse retrieved from DE

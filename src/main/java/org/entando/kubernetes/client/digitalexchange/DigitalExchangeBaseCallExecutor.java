@@ -13,6 +13,13 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_AUTH;
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_HTTP_ERROR;
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_INVALID_URL;
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_TIMEOUT;
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_UNREACHABLE;
+
+import java.net.SocketTimeoutException;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
@@ -21,14 +28,6 @@ import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.SocketTimeoutException;
-
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_AUTH;
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_HTTP_ERROR;
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_INVALID_URL;
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_TIMEOUT;
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_UNREACHABLE;
 
 @Slf4j
 public abstract class DigitalExchangeBaseCallExecutor<C extends DigitalExchangeBaseCall<R>, R> {

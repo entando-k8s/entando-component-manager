@@ -1,14 +1,13 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import java.io.IOException;
+import java.util.List;
+import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.ZipReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the

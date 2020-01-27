@@ -13,6 +13,12 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,13 +26,6 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.web.response.RestResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class DigitalExchangesClientImpl implements DigitalExchangesClient {

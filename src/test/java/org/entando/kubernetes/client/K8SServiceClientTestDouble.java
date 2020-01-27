@@ -23,7 +23,9 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         this.inMemoryLinks.add(link);
     }
     public void addInMemoryBundle(EntandoDeBundle bundle) {
-        this.inMemoryBundles.add(bundle);
+        if (!this.inMemoryBundles.contains(bundle)) {
+            this.inMemoryBundles.add(bundle);
+        }
     }
 
     public void cleanInMemoryDatabases() {
@@ -96,7 +98,9 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithName(String name) {
-        return inMemoryBundles.stream().filter(b -> b.getSpec().getDetails().getName().equals(name)).findAny();
+        return inMemoryBundles.stream()
+                .filter(b -> b.getSpec().getDetails().getName().equals(name))
+                .findAny();
     }
 
     @Override

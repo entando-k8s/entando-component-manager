@@ -13,14 +13,13 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import java.util.Optional;
+import java.util.function.Function;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Contains all the information necessary for querying a specific Digital

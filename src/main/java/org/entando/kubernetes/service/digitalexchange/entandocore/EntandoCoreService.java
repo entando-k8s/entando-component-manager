@@ -1,20 +1,19 @@
 package org.entando.kubernetes.service.digitalexchange.entandocore;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
-import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;

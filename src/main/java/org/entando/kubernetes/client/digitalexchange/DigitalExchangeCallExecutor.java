@@ -13,6 +13,8 @@
  */
 package org.entando.kubernetes.client.digitalexchange;
 
+import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
+
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.web.response.RestError;
 import org.entando.web.response.RestResponse;
@@ -21,8 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-
-import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
 
 public class DigitalExchangeCallExecutor<R extends RestResponse<?, ?>, C> extends DigitalExchangeBaseCallExecutor<DigitalExchangeCall<R, C>, R> {
 
