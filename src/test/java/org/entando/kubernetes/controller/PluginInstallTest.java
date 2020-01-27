@@ -1,34 +1,28 @@
 package org.entando.kubernetes.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.DbmsImageVendor;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
-@TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
-@Ignore("Not yet ported to new infrastructure - Issues with EntandoPlugin")
 public class PluginInstallTest {
 
     private static final String DIGITAL_EXCHANGE_ID = "community";
@@ -63,9 +57,6 @@ public class PluginInstallTest {
 
         kubernetesService.linkPlugin(entandoPlugin);
 
-//        ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
-//        verify(k8SServiceClient, times(1)).linkAppWithPlugin(anyString(), anyString(), captor.capture());
-//        final EntandoPlugin plugin = captor.getValue();
         K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble)  k8SServiceClient;
         List<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPluginsCopy();
         assertThat(linkedPluginDatabase.size()).isEqualTo(1);
@@ -79,8 +70,8 @@ public class PluginInstallTest {
         assertThat(plugin.getMetadata().getName()).isEqualTo("avatar-plugin");
 
         assertThat(plugin.getSpec().getRoles()).hasSize(1);
-        assertThat(plugin.getSpec().getRoles().get(0).getCode()).isEqualTo("Read");
-        assertThat(plugin.getSpec().getRoles().get(0).getName()).isEqualTo("read");
+        assertThat(plugin.getSpec().getRoles().get(0).getCode()).isEqualTo("read");
+        assertThat(plugin.getSpec().getRoles().get(0).getName()).isEqualTo("Read");
 
         assertThat(plugin.getSpec().getPermissions()).hasSize(1);
         assertThat(plugin.getSpec().getPermissions().get(0).getClientId()).isEqualTo("another-client");

@@ -21,7 +21,6 @@ import java.util.zip.ZipFile;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
 public class ZipReader {
@@ -78,7 +77,7 @@ public class ZipReader {
                 .collect(Collectors.toList());
     }
 
-    public <T extends Descriptor> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
+    public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
         final ZipEntry zipEntry = getFile(fileName);
         return readDescriptorFile(zipFile.getInputStream(zipEntry), clazz);
     }
@@ -106,7 +105,7 @@ public class ZipReader {
         }
     }
 
-    private <T extends Descriptor> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
         return mapper.readValue(file, clazz);
     }
 

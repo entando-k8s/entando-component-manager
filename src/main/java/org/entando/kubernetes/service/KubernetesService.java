@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -45,7 +47,7 @@ public class KubernetesService {
     public EntandoPlugin getLinkedPlugin(String pluginId) {
         return getCurrentAppLinkedPlugin(pluginId)
                 .map(k8sServiceClient::getPluginForLink)
-                .orElseThrow(() -> new NotFoundException("org.entando.error.pluginNotFound"));
+                .orElseThrow(PluginNotFoundException::new);
     }
 
     public boolean isLinkedPlugin(String pluginId) {

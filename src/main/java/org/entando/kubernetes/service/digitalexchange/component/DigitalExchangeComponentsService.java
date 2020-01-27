@@ -14,7 +14,7 @@
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.util.List;
-import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 
 public interface DigitalExchangeComponentsService {
 

@@ -1,30 +1,36 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactor.core.publisher.Mono.when;
 
 import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class DigitalExchangeComponentsServiceTest {
 
     private static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles" ;
     private K8SServiceClientTestDouble k8SServiceClient;
     private DigitalExchangeComponentsService service;
+    private DigitalExchangeJobRepository jobRepository;
+
     private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
     @Before
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        service = new DigitalExchangeComponentsServiceImpl(k8SServiceClient, availableDigitalExchanges);
+        jobRepository = Mockito.mock(DigitalExchangeJobRepository.class);
+        service = new DigitalExchangeComponentsServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository);
     }
 
 

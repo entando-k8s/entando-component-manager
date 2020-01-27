@@ -6,19 +6,24 @@ import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static junit.framework.TestCase.assertTrue;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.checkRequest;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.getTestPrivateKey;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.getTestPublicKey;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.integration.util.MessagingAnnotationUtils.hasValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
@@ -38,6 +43,11 @@ import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
@@ -51,11 +61,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -63,68 +76,44 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureWireMock(port = 8099)
 @TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Ignore("Need to be rewritten after building new version")
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private DatabaseCleaner databaseCleaner;
     @Autowired
-    private DigitalExchangeTestApi digitalExchangeTestApi;
-    @Autowired
     private K8SServiceClient k8SServiceClient;
 
     @After
     public void cleanup() throws SQLException {
         databaseCleaner.cleanup();
-        ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabase();
+        ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
     }
 
     @Test
-//    @Ignore("This requires to nuke the mocker and use the new k8sServiceClient")
+    public void shouldReturnNotFoundWhenBundleDoesntExists() throws Exception {
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isNotFound());
+    }
+
+    @Test
     public void testInstallComponent() throws Exception {
-        DigitalExchange digitalExchange = new DigitalExchange();
+        WireMock.reset();
 
-        digitalExchange.setName("Community");
-        digitalExchange.setUrl("http://localhost:8099/community");
-        digitalExchange.setTimeout(10000);
-        digitalExchange.setActive(true);
-        digitalExchange.setPublicKey(getTestPublicKey());
-
+        // Setup
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
 
         final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
         final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
-        final String signature = SignatureUtil.signPackage(in, SignatureUtil.privateKeyFromPEM(getTestPrivateKey()));
-        final String digitalExchangeId = digitalExchangeTestApi.createDigitalExchange(digitalExchange);
-        final String pluginA =
-                "{ \n" +
-                        "    \"id\": \"todomvc\", \n" +
-                        "    \"name\": \"Todo MVC\", \n" +
-                        "    \"type\": \"PLUGIN\", \n" +
-                        "    \"lastUpdate\": \"2019-07-17 16:50:05\", \n" +
-                        "    \"version\": \"latest\", \n" +
-                        "    \"image\": \"http://todomvc.com/site-assets/logo-icon.png\", \n" +
-                        "    \"description\": \"A great example to show a widget working\", \n" +
-                        "    \"rating\": 5, \n" +
-                        "    \"signature\": \"" + signature + "\" \n" +
-                        "}";
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
 
-        final String response =
-                "{ \n" +
-                        "    \"payload\": " + pluginA + ", \n" +
-                        "    \"metadata\": {}, \n" +
-                        "    \"errors\": [] \n" +
-                        "}";
-
-        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components/todomvc"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody(response)));
-
-        stubFor(WireMock.get(urlEqualTo("/community/api/digitalExchange/components/todomvc/package"))
+        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
                         .withBody(readFromDEPackage())));
 
@@ -144,19 +133,15 @@ public class DigitalExchangeInstallTest {
                 .willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
 
-//        final KubernetesPluginMocker pluginMocker = new KubernetesPluginMocker();
-//        mocker.mockResult("todomvc", pluginMocker.plugin);
-//        mocker.mockResult("avatar", null);
 
-        mockMvc.perform(post(String.format("%s/%s/install/todomvc", URL, digitalExchangeId)))
+        // Install bundle
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk());
 
         waitFor(5000);
 
-//        final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
-//        verify(mocker.operation, times(1)).create(captor.capture());
-//        final EntandoPlugin plugin = captor.getValue();
-        List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryDatabaseCopy();
+        // Verify interaction with mocks
+        List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinkCopy();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
                 .filter(link -> link.getSpec().getEntandoPluginName().equals("todomvc")).findAny();
 
@@ -264,7 +249,36 @@ public class DigitalExchangeInstallTest {
                 .expectEqual("path", "/todomvc/js/script.js")
                 .expectEqual("base64", readFileAsBase64("/bundle/resources/js/script.js"));
 
-        WireMock.reset();
+        // Finish first test
+    }
+
+    @Test
+    public void shouldUninstallAnInstalledComponent() throws Exception {
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+
+        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
+        final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage())));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
 
         stubFor(WireMock.delete(urlEqualTo("/entando-app/api/widgets/todomvc_widget"))
                 .willReturn(aResponse().withStatus(200)));
@@ -289,6 +303,11 @@ public class DigitalExchangeInstallTest {
                 .delete(urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc"))
                 .willReturn(aResponse().withStatus(200)));
 
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk());
+
+        waitFor(5000);
+
         mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value("todomvc"))
@@ -308,7 +327,106 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/title_fragment")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
 
-//        verify(mocker.operation, times(1)).delete(same(pluginMocker.plugin));
+    }
+
+    @Test
+    public void installedComponentShouldReturnInstalledFieldTrue() throws Exception {
+        WireMock.reset();
+
+        // Setup
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+
+        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
+        final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage())));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
+
+
+        // Install bundle
+        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk());
+
+        waitFor(5000);
+
+        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].installed").value("true"));
+
+    }
+
+    @Test
+    public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
+        WireMock.reset();
+
+        // Setup
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+
+        final URI dePKGPath = DigitalExchangeInstallTest.class.getResource("/bundle.zip").toURI();
+        final InputStream in = Files.newInputStream(Paths.get(dePKGPath), StandardOpenOption.READ);
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage())));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/widgets")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/file")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fileBrowser/directory"))
+                .willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/pageModels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/labels")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentTypes"))
+                .willReturn(aResponse().withStatus(500)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/plugins/cms/contentmodels"))
+                .willReturn(aResponse().withStatus(500)));
+        stubFor(WireMock.post(urlEqualTo("/entando-app/api/fragments")).willReturn(aResponse().withStatus(200)));
+
+        MvcResult mvcResult = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+
+        String jobId = JsonPath.read(mvcResult.getResponse().getContentAsString(), "$.payload.id");
+
+        waitFor(5000);
+
+        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].installed").value("false"));
+
+        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.id").value(jobId))
+                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ERROR.toString()));
     }
 
     private byte[] readFromDEPackage() throws IOException {
@@ -351,6 +469,35 @@ public class DigitalExchangeInstallTest {
 
     private static String requestPath(final LoggedRequest request) {
         return requestProperty(request, "path");
+    }
+
+    private EntandoDeBundle getTestBundle() {
+        return new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("todomvc")
+                .withNamespace("entando-de-bundles")
+                .endMetadata()
+                .withSpec(getTestEntandoDeBundleSpec()).build();
+
+    }
+
+    private EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
+        return new EntandoDeBundleSpecBuilder()
+                .withNewDetails()
+                .withDescription("A bundle containing some demo components for Entando6")
+                .withName("todomvc")
+                .addNewVersion("0.0.1")
+                .addNewKeyword("entando6")
+                .addNewKeyword("digital-exchange")
+                .addNewDistTag("latest", "0.0.1")
+                .and()
+                .addNewTag()
+                .withVersion("0.0.1")
+                .withIntegrity("sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
+                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
+                .withTarball("http://localhost:8099/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .endTag()
+                .build();
     }
 
 }
