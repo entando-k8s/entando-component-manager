@@ -12,7 +12,7 @@
  * details.
  */
 
-package org.entando.kubernetes.controller.digitalexchange.component;
+package org.entando.kubernetes.model.digitalexchange;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;

@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * Processor to create Labels.
- *
  */
 @Slf4j
 @Service

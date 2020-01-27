@@ -1,5 +1,6 @@
 package org.entando.kubernetes.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
@@ -18,6 +19,18 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
     @Query("SELECT job FROM DigitalExchangeJob job WHERE job.status <> :status AND job.componentId = :componentId")
     Optional<DigitalExchangeJob> findByComponentIdAndStatusNotEqual(@Param("componentId") String componentId,
             @Param("status") JobStatus status);
+
+    Optional<DigitalExchangeJob> findDistinctFirstByComponentIdAndAndStatusNotOrderByStartedAtDesc(
+            String componentId,
+            JobStatus status);
+
+    Optional<DigitalExchangeJob> findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
+            String digitalExchangeId,
+            String componentId);
+
+    List<DigitalExchangeJob> findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
+            String digitalExchange,
+            String componentId);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)

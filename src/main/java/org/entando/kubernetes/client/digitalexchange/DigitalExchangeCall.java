@@ -31,12 +31,12 @@ public abstract class DigitalExchangeCall<R extends RestResponse<?, ?>, C> exten
     private final ParameterizedTypeReference<R> parameterizedTypeReference;
 
     /**
-     * Constructs a DigitalExchangeCall.
+     * Constructs a DigitalExchangeCall. The parameterizedTypeReference parameter is used to tell Spring how to convert the HTTP response
+     * into a Java object. It is important to specify all the nested generic types, otherwise unknown types will be converted into instances
+     * of Map causing ClassCastException at runtime.
      *
      * @param method e.g. GET, POST, ...
-     * @param parameterizedTypeReference The ParameterizedTypeReference class is used to tell Spring how to convert the HTTP response into a
-     *     Java object. It is important to specify all the nested generic types, otherwise unknown types will be converted into instances of
-     *     Map causing ClassCastException at runtime.
+     * @param parameterizedTypeReference The ParameterizedTypeReference class  to tell Spring how to convert the HTTP response to Java
      * @param urlSegments path segments necessary for building the last part of the endpoint URL
      */
     public DigitalExchangeCall(HttpMethod method,

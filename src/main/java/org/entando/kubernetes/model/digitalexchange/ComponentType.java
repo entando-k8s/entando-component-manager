@@ -2,7 +2,6 @@ package org.entando.kubernetes.model.digitalexchange;
 
 /**
  * The type of the component to be (or already) registered.
- *
  */
 public enum ComponentType {
 

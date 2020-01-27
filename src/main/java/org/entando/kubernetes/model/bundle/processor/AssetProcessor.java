@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
  * Processor to handle Static files to be stored by Entando. Commonly used for js, images and css.
  * <p></p>
  * This processor will also create the folders.
- *
  */
 @Slf4j
 @Service

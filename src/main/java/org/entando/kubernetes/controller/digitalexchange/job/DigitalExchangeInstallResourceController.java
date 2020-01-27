@@ -3,10 +3,13 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeUninstallService;
+import org.entando.web.exception.HttpException;
 import org.entando.web.response.SimpleRestResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +25,14 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
     public SimpleRestResponse<DigitalExchangeJob> install(
             @PathVariable("component") String componentId,
             @RequestParam(name = "version", required = true, defaultValue = "latest") String version) {
-        return new SimpleRestResponse<>(installService.install(componentId, version));
+
+        DigitalExchangeJob installJob;
+        try {
+            installJob = installService.install(componentId, version);
+        } catch (K8SServiceClientException ex) {
+            throw new HttpException(HttpStatus.NOT_FOUND, "org.entando.error.bundleNotFound", new Object[]{componentId});
+        }
+        return new SimpleRestResponse<>(installJob);
     }
 
     @Override
@@ -40,4 +50,5 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
     public SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId) {
         return new SimpleRestResponse<>(installService.getJob(componentId));
     }
+
 }

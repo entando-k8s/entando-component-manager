@@ -10,10 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Collections;
 import java.util.List;
+import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +25,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-@SpringBootTest()
+@SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 public class PluginControllerTest {
 
     private static final String URL = "/plugins";
@@ -49,9 +49,10 @@ public class PluginControllerTest {
     }
 
     @Test
-    @Ignore("NotFound status has not be ported. Evaluate to use Zalando error handling framework")
+    //    @Ignore("NotFound status has not be ported. Evaluate to use Zalando error handling framework")
     public void testNotFound() throws Exception {
         String pluginId = "arbitrary-plugin";
+        when(kubernetesService.getLinkedPlugin(anyString())).thenThrow(new PluginNotFoundException());
 
         mockMvc.perform(get(String.format("%s/%s", URL, pluginId)))
                 .andDo(print()).andExpect(status().isNotFound());

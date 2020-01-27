@@ -24,7 +24,6 @@ import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,10 +54,9 @@ public class K8SServiceClientTest {
         port = findFreePort().orElse(8080);
     }
 
-    private static final String K8S_SVC_URL = "http://localhost:8888";
     private static final String CLIENT_ID = "test-entando-de";
     private static final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    private static final String TOKEN_URI = "http://someurl.com/auth/realms/entando/protocol/openid-connect/token";
+    private static final String TOKEN_URI = "http://test-keycloak.192.168.1.9.nip.io/auth/realms/entando/protocol/openid-connect/token";
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(port);
     private DefaultK8SServiceClient client;
@@ -79,7 +77,8 @@ public class K8SServiceClientTest {
 
     @Before
     public void setup() {
-        client = new DefaultK8SServiceClient(K8S_SVC_URL, CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
+
+        client = new DefaultK8SServiceClient(String.format("http://localhost:%d", port), CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
     }
 
     @Test
@@ -125,14 +124,13 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    @Ignore("Not able to setup wiremock correctly")
     public void shouldParseEntandoAppPluginCorrectly() throws JsonProcessingException {
 
         Resources<Resource<EntandoAppPluginLink>> halResources = new Resources<>(
                 Collections.singletonList(new Resource(getTestEntandoAppPluginLink())));
         client.setRestTemplate(noOAuthRestTemplate());
 
-        stubFor(get(urlPathMatching(K8S_SVC_URL + "/k8s/my-namespace/my-app/links"))
+        stubFor(get(urlPathMatching("/apps/my-namespace/my-app/links"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -142,11 +140,11 @@ public class K8SServiceClientTest {
         assertThat(links).hasSize(1);
         EntandoAppPluginLink appPluginLink = links.get(0);
         assertThat(appPluginLink.getMetadata().getNamespace()).isEqualTo("my-namespace");
-        assertThat(appPluginLink.getMetadata().getName()).isEqualTo("my-app");
+        assertThat(appPluginLink.getMetadata().getName()).isEqualTo("my-app-to-plugin-link");
         assertThat(appPluginLink.getSpec().getEntandoAppNamespace()).isEqualTo("my-namespace");
         assertThat(appPluginLink.getSpec().getEntandoAppName()).isEqualTo("my-app");
         assertThat(appPluginLink.getSpec().getEntandoPluginName()).isEqualTo("plugin");
-        assertThat(appPluginLink.getSpec().getEntandoPluginNamespace()).isEqualTo("my-namespace");
+        assertThat(appPluginLink.getSpec().getEntandoPluginNamespace()).isEqualTo("plugin-namespace");
 
     }
 
