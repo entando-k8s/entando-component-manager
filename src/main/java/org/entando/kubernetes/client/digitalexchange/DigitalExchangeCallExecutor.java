@@ -16,8 +16,8 @@ package org.entando.kubernetes.client.digitalexchange;
 import static org.entando.kubernetes.client.digitalexchange.DigitalExchangesClientImpl.ERRCODE_DE_WRONG_PAYLOAD;
 
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.entando.web.response.RestError;
-import org.entando.web.response.RestResponse;
+import org.entando.kubernetes.model.web.response.RestError;
+import org.entando.kubernetes.model.web.response.RestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;

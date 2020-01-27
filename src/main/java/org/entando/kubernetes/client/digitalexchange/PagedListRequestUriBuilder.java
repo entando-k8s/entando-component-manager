@@ -16,8 +16,8 @@ package org.entando.kubernetes.client.digitalexchange;
 import static java.util.Optional.ofNullable;
 
 import java.util.function.Supplier;
-import org.entando.web.request.Filter;
-import org.entando.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.request.Filter;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**

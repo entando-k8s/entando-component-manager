@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.web.ResilientPagedMetadata;
-import org.entando.web.request.PagedListRequest;
-import org.entando.web.request.RequestListProcessor;
-import org.entando.web.response.PagedMetadata;
-import org.entando.web.response.PagedRestResponse;
-import org.entando.web.response.RestError;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.request.RequestListProcessor;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.model.web.response.PagedRestResponse;
+import org.entando.kubernetes.model.web.response.RestError;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 

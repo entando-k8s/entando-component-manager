@@ -19,7 +19,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
-import org.entando.web.SystemConstants;
+import org.entando.kubernetes.model.web.SystemConstants;
 import org.springframework.validation.annotation.Validated;
 
 @Data

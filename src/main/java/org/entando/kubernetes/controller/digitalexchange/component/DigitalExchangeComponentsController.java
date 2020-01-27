@@ -17,8 +17,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
-import org.entando.web.response.PagedMetadata;
-import org.entando.web.response.PagedRestResponse;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 

@@ -6,9 +6,9 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.entando.web.request.PagedListRequest;
-import org.entando.web.response.PagedMetadata;
-import org.entando.web.response.RestError;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.model.web.response.RestError;
 
 @Getter@Setter
 @NoArgsConstructor

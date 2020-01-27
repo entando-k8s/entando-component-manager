@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.entando.web.response.RestResponse;
+import org.entando.kubernetes.model.web.response.RestResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.web.client.RestTemplate;
 

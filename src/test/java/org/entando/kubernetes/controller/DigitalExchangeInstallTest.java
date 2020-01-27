@@ -58,7 +58,7 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
-import org.entando.web.response.SimpleRestResponse;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Ignore;

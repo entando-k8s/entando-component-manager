@@ -21,10 +21,10 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.web.request.Filter;
-import org.entando.web.request.FilterUtils;
-import org.entando.web.request.PagedListRequest;
-import org.entando.web.request.RequestListProcessor;
+import org.entando.kubernetes.model.web.request.Filter;
+import org.entando.kubernetes.model.web.request.FilterUtils;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.request.RequestListProcessor;
 
 public class DigitalExchangeComponentListProcessor extends RequestListProcessor<DigitalExchangeComponent> {
 
