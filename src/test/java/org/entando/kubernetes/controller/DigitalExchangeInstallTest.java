@@ -61,6 +61,7 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreSer
 import org.entando.web.response.SimpleRestResponse;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -342,6 +343,7 @@ public class DigitalExchangeInstallTest {
     }
 
     @Test
+    @Ignore("Ignore untill rollback is implemented and #fails is tracked")
     public void shouldThrowInternalServerErrorWhenActingOnPreviousInstallErrorState() throws Exception {
         simulateFailingInstall();
 
@@ -353,6 +355,7 @@ public class DigitalExchangeInstallTest {
     }
 
     @Test
+    @Ignore("Ignore untill rollback is implemented and #fails is tracked")
     public void shouldThrowInternalServerErrorWhenActingOnPreviousUninstallErrorState() throws Exception {
 
         simulateSuccessfullyCompletedInstall();
@@ -362,7 +365,6 @@ public class DigitalExchangeInstallTest {
                 .andDo(print()).andExpect(status().isInternalServerError());
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isInternalServerError());
-
     }
 
     private String simulateSuccessfullyCompletedInstall() throws Exception {

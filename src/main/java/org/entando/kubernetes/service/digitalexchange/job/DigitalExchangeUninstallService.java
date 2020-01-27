@@ -1,13 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_CREATED;
-import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_IN_PROGRESS;
-import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_CREATED;
-import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_IN_PROGRESS;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -71,11 +65,6 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob job) {
         if (JobType.isOfType(job.getStatus(), JobType.UNFINISHED)) {
             throw new JobConflictException("Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
-        }
-
-        if (JobType.isOfType(job.getStatus(), JobType.ERROR)) {
-            throw new JobCorruptedException("A previous job for the component " + job.getComponentId()
-                    + " has failed - JOB ID: " + job.getId());
         }
     }
 

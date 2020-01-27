@@ -86,10 +86,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
                         + " - JOB ID: " + j.getId());
             }
-            if (JobType.isOfType(js, JobType.ERROR)) {
-                throw new JobCorruptedException("A previous job for the component " + j.getComponentId()
-                        + " has failed - JOB ID: " + j.getId());
-            }
+//            if (JobType.isOfType(js, JobType.ERROR)) {
+//                throw new JobCorruptedException("A previous job for the component " + j.getComponentId()
+//                        + " has failed - JOB ID: " + j.getId());
+//            }
         }
 
         EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version)
