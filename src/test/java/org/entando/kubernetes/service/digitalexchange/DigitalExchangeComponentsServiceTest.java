@@ -1,7 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactor.core.publisher.Mono.when;
 
 import java.util.Collections;
 import java.util.List;

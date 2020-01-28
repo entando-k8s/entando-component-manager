@@ -2,7 +2,6 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static java.util.Optional.ofNullable;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -25,7 +24,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
-import org.entando.kubernetes.exception.job.JobCorruptedException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ZipReader;
@@ -62,13 +60,8 @@ import org.springframework.web.client.RestTemplate;
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
-    private final @NonNull DigitalExchangeComponentsService digitalExchangeComponentsService;
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
-    private final ExecutorService threadPool = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
-            .setDaemon(true).setNameFormat("InstallableOperation-%d").build());
-
-
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     public DigitalExchangeJob install(String componentId, String version) {
@@ -82,14 +75,14 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             if (js.equals(JobStatus.INSTALL_COMPLETED)) {
                 return j;
             }
-            if ( JobType.isOfType(js, JobType.UNFINISHED) ) {
+            if (JobType.isOfType(js, JobType.UNFINISHED)) {
                 throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
                         + " - JOB ID: " + j.getId());
             }
-//            if (JobType.isOfType(js, JobType.ERROR)) {
-//                throw new JobCorruptedException("A previous job for the component " + j.getComponentId()
-//                        + " has failed - JOB ID: " + j.getId());
-//            }
+            //            if (JobType.isOfType(js, JobType.ERROR)) {
+            //                throw new JobCorruptedException("A previous job for the component " + j.getComponentId()
+            //                        + " has failed - JOB ID: " + j.getId());
+            //            }
         }
 
         EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version)
@@ -106,20 +99,21 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         String componentId = bundle.getSpec().getDetails().getName();
         Optional<DigitalExchangeJob> lastJobStarted = jobRepository
                 .findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchangeId, componentId);
-       if (lastJobStarted.isPresent())  {
-          // To be an existing job it should be Running or completed
-           switch (lastJobStarted.get().getStatus()) {
-               case UNINSTALL_COMPLETED:
-                   return Optional.empty();
-               default:
-                   return lastJobStarted;
-           }
-       }
-       return Optional.empty();
+        if (lastJobStarted.isPresent()) {
+            // To be an existing job it should be Running or completed
+            switch (lastJobStarted.get().getStatus()) {
+                case UNINSTALL_COMPLETED:
+                    return Optional.empty();
+                default:
+                    return lastJobStarted;
+            }
+        }
+        return Optional.empty();
     }
 
     private Optional<EntandoDeBundleTag> getBundleTag(EntandoDeBundle bundle, String version) {
-        String versionToFind = "\\d+(\\.\\d+){1,2}".matches(version) ? version : (String) bundle.getSpec().getDetails().getDistTags().get(version);
+        String versionToFind =
+                "\\d+(\\.\\d+){1,2}".matches(version) ? version : (String) bundle.getSpec().getDetails().getDistTags().get(version);
         return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny();
     }
 
@@ -155,10 +149,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     .thenApply(is -> savePackageStreamLocally(job.getComponentId(), is));
 
             CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath -> {
-//                TODO: Implement the verification by using the npm-signature which must be present in the tag
-//                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
-//                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
-//                }
+                //                TODO: Implement the verification by using the npm-signature which must be present in the tag
+                //                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
+                //                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
+                //                }
                 return tempPath;
             });
 
@@ -166,7 +160,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
 
             CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
-                    .thenApply(installableList -> processInstallableList(job, installableList) );
+                    .thenApply(installableList -> processInstallableList(job, installableList));
 
             CompletableFuture<JobStatus> handlePossibleErrorsStep = installComponentsStep
                     .exceptionally(this::handlePipelineException);

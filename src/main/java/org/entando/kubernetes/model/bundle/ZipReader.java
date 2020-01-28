@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -86,7 +87,7 @@ public class ZipReader {
         final ZipEntry zipEntry = getFile(isEmpty(folder) ? fileName : folder + "/" + fileName);
 
         try (final StringWriter writer = new StringWriter()) {
-            IOUtils.copy(zipFile.getInputStream(zipEntry), writer);
+            IOUtils.copy(zipFile.getInputStream(zipEntry), writer,StandardCharsets.UTF_8);
             return writer.toString();
         }
     }
