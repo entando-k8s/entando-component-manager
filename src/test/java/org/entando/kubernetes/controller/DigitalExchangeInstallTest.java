@@ -16,8 +16,6 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -25,20 +23,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ch.qos.logback.core.util.FixedDelay;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -49,7 +41,6 @@ import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -57,7 +48,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.junit.After;
 import org.junit.Assert;
@@ -67,21 +57,17 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @AutoConfigureWireMock(port = 8099)
-@TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
+@AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DigitalExchangeInstallTest {
 
@@ -94,6 +80,7 @@ public class DigitalExchangeInstallTest {
     private MockMvc mockMvc;
     @Autowired
     private DatabaseCleaner databaseCleaner;
+
     @Autowired
     private K8SServiceClient k8SServiceClient;
 
@@ -327,7 +314,6 @@ public class DigitalExchangeInstallTest {
                 .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
-        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
     }
 
     @Test

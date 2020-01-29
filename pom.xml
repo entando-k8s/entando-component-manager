@@ -69,7 +69,6 @@
 
 
     <properties>
-        <entando.commons.version>1.0.0-SNAPSHOT</entando.commons.version>
         <verifyAllFailures>true</verifyAllFailures>
         <ignoreAllFailures>false</ignoreAllFailures>
         <skipInterProcessTests>true</skipInterProcessTests>
@@ -181,7 +180,6 @@
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -225,20 +223,19 @@
             <artifactId>commons-io</artifactId>
             <version>2.6</version>
         </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.199</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -251,14 +248,12 @@
             <artifactId>javassist</artifactId>
             <version>3.23.1-GA</version>
         </dependency>
-
         <dependency>
             <groupId>br.com.six2six</groupId>
             <artifactId>fixture-factory</artifactId>
             <version>3.1.0</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
