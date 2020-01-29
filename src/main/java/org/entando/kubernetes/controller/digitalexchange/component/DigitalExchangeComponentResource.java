@@ -35,7 +35,6 @@ public interface DigitalExchangeComponentResource {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK")
     })
-    @Secured(Roles.LIST_COMPONENTS)
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents();
 }

@@ -5,7 +5,9 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
+import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobType;
@@ -37,7 +39,7 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
         try {
             installJob = installService.install(componentId, version);
         } catch (K8SServiceClientException ex) {
-            throw new HttpException(HttpStatus.NOT_FOUND, "org.entando.error.bundleNotFound", new Object[] {componentId});
+            throw new BundleNotFoundException(componentId);
         }
         return new SimpleRestResponse<>(installJob);
     }

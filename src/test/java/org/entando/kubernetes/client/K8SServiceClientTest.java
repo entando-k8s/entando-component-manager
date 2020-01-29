@@ -36,6 +36,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
+import org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalHandlerInstantiator;
 import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.hateoas.server.core.DefaultLinkRelationProvider;
 import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
@@ -53,7 +54,6 @@ public class K8SServiceClientTest {
 
     private final String CLIENT_ID = "test-entando-de";
     private final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    //    private final String TOKEN_URI = "http://test-keycloak.192.168.1.9.nip.io/auth/realms/entando/protocol/openid-connect/token";
     private final String TOKEN_URI = "http://someurl.com";
     private DefaultK8SServiceClient client;
     private static int port;
@@ -122,7 +122,7 @@ public class K8SServiceClientTest {
         stubFor(get(urlPathMatching("/apps/my-namespace/my-app/links"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader("Content-Type", "application/hal+json")
                         .withBody(getHalReadyObjectMapper().writeValueAsString(halResources))));
 
         List<EntandoAppPluginLink> links = client.getAppLinkedPlugins("my-app", "my-namespace");
@@ -140,11 +140,15 @@ public class K8SServiceClientTest {
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();
         List<HttpMessageConverter<?>> converters = template.getMessageConverters();
-        ObjectMapper mapper = getHalReadyObjectMapper();
-        MappingJackson2HttpMessageConverter halConverter = new TypeConstrainedMappingJackson2HttpMessageConverter(
-                RestResponse.class);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jackson2HalModule());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        MappingJackson2HttpMessageConverter halConverter = new MappingJackson2HttpMessageConverter();
+
         halConverter.setObjectMapper(mapper);
         halConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON));
+
         converters.add(0, halConverter);
 
         return template;

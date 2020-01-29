@@ -42,7 +42,6 @@ public interface DigitalExchangeInstallResource {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Created")
     })
-    @Secured(Roles.INSTALL)
     @PostMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> install(
             @PathVariable("component") String componentId,
@@ -52,7 +51,6 @@ public interface DigitalExchangeInstallResource {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Created")
     })
-    @Secured(Roles.INSTALL)
     @PostMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> uninstall(@PathVariable("component") String componentId,
             HttpServletRequest request) throws URISyntaxException;
@@ -61,7 +59,6 @@ public interface DigitalExchangeInstallResource {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK")
     })
-    @Secured(Roles.INSTALL)
     @GetMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastInstallJob(@PathVariable("component") String componentId);
 
@@ -69,7 +66,6 @@ public interface DigitalExchangeInstallResource {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK")
     })
-    @Secured(Roles.INSTALL)
     @GetMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId);
 
