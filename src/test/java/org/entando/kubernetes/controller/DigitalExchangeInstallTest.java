@@ -144,7 +144,7 @@ public class DigitalExchangeInstallTest {
         checkRequest(widgetRequests.get(0))
                 .expectEqual("code", "another_todomvc_widget")
                 .expectEqual("group", "free")
-                .expectEqual("customUi", readFile("/bundle/widgets/widget.ftl"));
+                .expectEqual("customUi", readFile("/bundle/package/widgets/widget.ftl"));
 
         checkRequest(widgetRequests.get(1))
                 .expectEqual("code", "todomvc_widget")
@@ -153,7 +153,7 @@ public class DigitalExchangeInstallTest {
 
         checkRequest(fragmentRequests.get(0))
                 .expectEqual("code", "another_fragment")
-                .expectEqual("guiCode", readFile("/bundle/fragments/fragment.ftl"));
+                .expectEqual("guiCode", readFile("/bundle/package/fragments/fragment.ftl"));
 
         checkRequest(fragmentRequests.get(1))
                 .expectEqual("code", "title_fragment")
@@ -165,7 +165,7 @@ public class DigitalExchangeInstallTest {
                 .expectEqual("group", "free")
                 .expectEqual("configuration.frames[0].pos", "0")
                 .expectEqual("configuration.frames[0].descr", "Simple Frame")
-                .expectEqual("template", readFile("/bundle/pagemodels/page.ftl"));
+                .expectEqual("template", readFile("/bundle/package/pagemodels/page.ftl"));
 
         checkRequest(pageModelRequests.get(1))
                 .expectEqual("code", "todomvc_page_model")
@@ -199,17 +199,17 @@ public class DigitalExchangeInstallTest {
         checkRequest(fileRequests.get(0))
                 .expectEqual("filename", "custom.css")
                 .expectEqual("path", "/todomvc/css/custom.css")
-                .expectEqual("base64", readFileAsBase64("/bundle/resources/css/custom.css"));
+                .expectEqual("base64", readFileAsBase64("/bundle/package/resources/css/custom.css"));
 
         checkRequest(fileRequests.get(1))
                 .expectEqual("filename", "style.css")
                 .expectEqual("path", "/todomvc/css/style.css")
-                .expectEqual("base64", readFileAsBase64("/bundle/resources/css/style.css"));
+                .expectEqual("base64", readFileAsBase64("/bundle/package/resources/css/style.css"));
 
         checkRequest(fileRequests.get(2))
                 .expectEqual("filename", "script.js")
                 .expectEqual("path", "/todomvc/js/script.js")
-                .expectEqual("base64", readFileAsBase64("/bundle/resources/js/script.js"));
+                .expectEqual("base64", readFileAsBase64("/bundle/package/resources/js/script.js"));
 
         // Finish first test
     }

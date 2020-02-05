@@ -1,0 +1,34 @@
+code: home_text
+titles:
+  en: Home
+  it: Home
+group: free
+customUi: >-
+  <h2>Sovraccarico biomeccanico per gli arti superiori</h2>
+  <p>
+    Questo applicativo fornisce uno strumento semplice per riconoscere
+    l’eventuale presenza del pericolo derivante dai movimenti ripetitivi
+    (rischio da sovraccarico biomeccanico per gli arti superiori).
+  </p>
+  <p>
+    L’esposizione a questo rischio, nel tempo, può causare diverse malattie
+    a carico di spalla, gomito, polso e mano, quali ad esempio la sindrome
+    del tunnel carpale, l’epicondilite, le tendiniti, ecc.
+  </p>
+  <p>
+    Questo strumento non può in alcun modo sostituire la vera e propria
+    valutazione del rischio secondo la normativa vigente e le norme tecniche
+    di riferimento (artt. 17 e 28, 167-170 e allegato XXXIII d.lgs. 81/2008, UNI ISO 11228-3, ISO TR 12295).
+  </p>
+  <p>
+    L’applicativo ha la funzione
+    di fornire preziosi elementi conoscitivi utili per datori di lavoro, per
+    RSPP/consulenti, per RLS/RLST, per i medici competenti, per i preposti, i lavoratori
+    e chiunque si voglia approcciare a questa tematica.
+  </p>
+  <p>
+    La funzione "Chiudi libretto" consente di raggruppare in un unico file di stampa
+    tutti i questionari compilati per tutte le mansioni inserite in successione nella
+    tabella dei questionari compilati.
+  </p>
+  <p>Sarà possibile visualizzare soltanto gli ultimi tre libretti chiusi.</p>

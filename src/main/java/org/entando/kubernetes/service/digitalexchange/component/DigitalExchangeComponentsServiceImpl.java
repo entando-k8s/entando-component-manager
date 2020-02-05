@@ -72,7 +72,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         dec.setLastUpdate(new Date());
         dec.setSignature("");
         dec.setVersion(bd.getDistTags().get("latest").toString());
-        dec.setImage("someimage");
+        dec.setImage(bd.getThumbnail());
         return dec;
     }
 

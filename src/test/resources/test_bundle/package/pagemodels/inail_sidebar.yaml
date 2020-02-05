@@ -1,0 +1,37 @@
+code: inail-sidebar
+description: Inail Sidebar
+
+group: free
+
+templatePath: inail_sidebar.ftl
+
+configuration:
+  frames:
+    - pos: 0
+      description: Header
+      sketch: { x1: "0", y1: "0", x2: "11", y2: "0" }
+    - pos: 1
+      description: Breadcrumb
+      sketch: { x1: "0", y1: "1", x2: "11", y2: "1" }
+    - pos: 2
+      description: Navigazione laterale
+      sketch: { x1: "0", y1: "2", x2: "11", y2: "2" }
+    - pos: 3
+      description: Contenuti
+      sketch: { x1: "0", y1: "3", x2: "11", y2: "3" }
+    - pos: 4
+      description: Contenuti
+      mainFrame: true
+      sketch: { x1: "0", y1: "4", x2: "11", y2: "4" }
+    - pos: 5
+      description: Contenuti
+      sketch: { x1: "0", y1: "5", x2: "11", y2: "5" }
+    - pos: 6
+      description: Contenuti
+      sketch: { x1: "0", y1: "6", x2: "11", y2: "6" }
+    - pos: 7
+      description: Contenuti
+      sketch: { x1: "0", y1: "7", x2: "11", y2: "7" }
+    - pos: 8
+      description: Footer
+      sketch: { x1: "0", y1: "8", x2: "11", y2: "8" }

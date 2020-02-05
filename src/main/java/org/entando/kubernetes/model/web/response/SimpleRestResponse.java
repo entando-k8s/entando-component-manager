@@ -19,13 +19,13 @@ public class SimpleRestResponse<T> extends RestResponse<T, Map<String, Object>> 
     }
 
     public void addMetadata(final String key, final Object value) {
-        ofNullable(getMetadata()).orElseGet(this::init)
+        ofNullable(getMetaData()).orElseGet(this::init)
                 .put(key, value);
     }
 
     private Map<String, Object> init() {
         setMetaData(new HashMap<>());
-        return getMetadata();
+        return getMetaData();
     }
 
 }

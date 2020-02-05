@@ -12,30 +12,30 @@ import lombok.Setter;
 public class RestResponse<T, M> {
 
     private T payload;
-    private M metadata;
+    private M metaData;
     private List<RestError> errors = new ArrayList<>();
 
     @JsonSetter("metaData")
     public void setMetaData(M metadata) {
-        this.metadata = metadata;
+        this.metaData = metadata;
     }
 
     @JsonSetter("metadata")
-    public void setMetadata(M metadata) {
-        this.metadata = metadata;
+    public void setMetadata(M metaData) {
+        this.metaData = metaData;
     }
 
     public RestResponse(final T payload) {
         setPayload(payload);
     }
 
-    public RestResponse(final T payload, final M metadata) {
+    public RestResponse(final T payload, final M metaData) {
         setPayload(payload);
-        setMetaData(metadata);
+        setMetaData(metaData);
     }
 
-    public RestResponse(final T payload, final M metadata, final List<RestError> errors) {
-        this(payload, metadata);
+    public RestResponse(final T payload, final M metaData, final List<RestError> errors) {
+        this(payload, metaData);
         setErrors(errors);
     }
 

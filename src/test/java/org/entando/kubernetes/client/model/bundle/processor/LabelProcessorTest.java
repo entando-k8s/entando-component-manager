@@ -1,12 +1,12 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor.LabelInstallable;
-import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 public class LabelProcessorTest {
 
     @Mock private EntandoCoreService engineService;
-    @Mock private ZipReader zipReader;
+    @Mock private NpmPackageReader npmPackageReader;
 
     private LabelProcessor processor;
 
@@ -47,7 +47,7 @@ public class LabelProcessorTest {
         final ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
         spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
 
-        final List<? extends Installable> installables = processor.process(job, zipReader, descriptor);
+        final List<? extends Installable> installables = processor.process(job, npmPackageReader, descriptor);
 
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0)).isInstanceOf(LabelInstallable.class);

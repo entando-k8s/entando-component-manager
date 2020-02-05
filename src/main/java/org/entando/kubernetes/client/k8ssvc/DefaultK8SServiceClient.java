@@ -2,6 +2,7 @@ package org.entando.kubernetes.client.k8ssvc;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.client.Traverson;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.hateoas.server.core.TypeReferences.EntityModelType;
 import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
@@ -32,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
@@ -56,8 +59,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate restTemplate;
 
     public DefaultK8SServiceClient(@Value("${entando.k8s.service.url}") String k8sServiceUrl,
-            @Value("${keycloak.resource}") String clientId,
-            @Value("${keycloak.credentials.secret}") String clientSecret,
+            @Value("${spring.security.oauth2.client.registration.oidc.client-id}") String clientId,
+            @Value("${spring.security.oauth2.client.registration.oidc.client-secret}") String clientSecret,
             @Value("${entando.auth-url}") String tokenUri)  {
         this.k8sServiceUrl = k8sServiceUrl;
         this.clientId = clientId;
@@ -250,7 +253,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
 
-
     private RestTemplate newRestTemplate() {
         OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
         if (resourceDetails == null) {
@@ -261,18 +263,25 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
         List<HttpMessageConverter<?>> converters = template.getMessageConverters();
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new Jackson2HalModule());
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        MappingJackson2HttpMessageConverter halConverter = new TypeConstrainedMappingJackson2HttpMessageConverter(
-                RestResponse.class);
-        halConverter.setObjectMapper(mapper);
-        halConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON));
-        converters.add(0, halConverter);
+        converters.add(0, getHalConverter());
 
         template.setMessageConverters(converters);
 
         return template;
+    }
+
+    private HttpMessageConverter<?> getHalConverter() {
+        List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jackson2HalModule());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+
+        converter.setObjectMapper(mapper);
+        converter.setSupportedMediaTypes(supportedMediatypes);
+
+        return converter;
     }
 
     private OAuth2ProtectedResourceDetails getResourceDetails() {

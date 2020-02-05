@@ -140,18 +140,23 @@ public class K8SServiceClientTest {
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();
         List<HttpMessageConverter<?>> converters = template.getMessageConverters();
+        converters.add(0, getHalConverter());
+        template.setMessageConverters(converters);
+        return template;
+    }
+
+    private HttpMessageConverter<?> getHalConverter() {
+        List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        MappingJackson2HttpMessageConverter halConverter = new MappingJackson2HttpMessageConverter();
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
 
-        halConverter.setObjectMapper(mapper);
-        halConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON));
+        converter.setObjectMapper(mapper);
+        converter.setSupportedMediaTypes(supportedMediatypes);
 
-        converters.add(0, halConverter);
-
-        return template;
+        return converter;
     }
 
     private ObjectMapper getHalReadyObjectMapper() {

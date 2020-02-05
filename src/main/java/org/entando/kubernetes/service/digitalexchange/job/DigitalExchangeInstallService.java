@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -226,11 +227,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private List<Installable> getInstallablesAndRemoveTempPackage(DigitalExchangeJob job, Path p) {
         try {
-            ZipFile zip = new ZipFile(p.toFile());
-            ZipReader zipReader = new ZipReader(zip);
-            ComponentDescriptor descriptor = zipReader
-                    .readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
-            List<Installable> installableList = getInstallables(job, zipReader, descriptor);
+            NpmPackageReader r = new NpmPackageReader(p);
+            ComponentDescriptor descriptor = r.readComponentDescriptor();
+            List<Installable> installableList = getInstallables(job, r, descriptor);
+            r.destroy();
             Files.delete(p);
             return installableList;
         } catch (IOException e) {
@@ -284,11 +284,11 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private List<Installable> getInstallables(DigitalExchangeJob job, ZipReader zipReader,
+    private List<Installable> getInstallables(DigitalExchangeJob job, NpmPackageReader r,
             ComponentDescriptor descriptor) throws IOException {
         List<Installable> installables = new LinkedList<>();
         for (ComponentProcessor processor : componentProcessors) {
-            ofNullable(processor.process(job, zipReader, descriptor))
+            ofNullable(processor.process(job, r, descriptor))
                     .ifPresent(installables::addAll);
         }
         return installables;

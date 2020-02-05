@@ -2,17 +2,21 @@ package org.entando.kubernetes;
 
 import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.junit.Test;
 
-public class ZipReaderTest {
+public class YamlParsingTest {
 
     @Test
     public void test_yaml_parsing_without_quotes() throws IOException {

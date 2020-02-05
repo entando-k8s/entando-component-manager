@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -33,7 +34,7 @@ public class LabelProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
+    public List<Installable> process(final DigitalExchangeJob job, final NpmPackageReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getLabels);

@@ -1,0 +1,6 @@
+code: inail_survey
+titles:
+  en: Inail Survey
+  it: Inail Survey
+group: free
+customUiPath: survey-display.ftl

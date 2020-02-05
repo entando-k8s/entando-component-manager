@@ -41,7 +41,8 @@ public class DigitalExchangeComponentsController implements DigitalExchangeCompo
     @Override
     public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents() {
         List<DigitalExchangeComponent>  bundles = componentsService.getComponents();
-        PagedMetadata<DigitalExchangeComponent> pagedMetadata = new PagedMetadata<>();
+        PagedMetadata<DigitalExchangeComponent> pagedMetadata =
+                new PagedMetadata<>(1, 100, 1, bundles.size());
         pagedMetadata.setBody(bundles);
         PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse(pagedMetadata);
         return ResponseEntity.ok(response);

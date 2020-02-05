@@ -73,7 +73,8 @@ public class DigitalExchangeComponentsTest {
                 .andExpect(jsonPath("payload[0]", hasKey("rating")))
                 .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeId")))
                 .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
-                .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"));
+                .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"))
+                .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInDefaultNamespace();
     }

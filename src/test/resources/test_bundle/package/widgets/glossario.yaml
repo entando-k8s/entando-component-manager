@@ -1,0 +1,34 @@
+code: glossario
+titles:
+  en: Glossario
+  it: Glossario
+group: free
+customUi: >-
+  <h2>Glossario</h2>
+  <p>Lavoro organizzato o mansione: insieme organizzato di attività lavorative, svolte in un turno o periodo di lavoro; può essere composto da uno o più compiti lavorativi.</p>
+  <p>Compito: attività lavorativa finalizzata all’ottenimento di uno specifico risultato.</p>
+  <p>Compito ripetitivo: compito caratterizzato da cicli di lavoro ripetuti (indipendentemente dalla durata).</p>
+  <p>Ciclo: sequenza di azioni tecniche degli arti superiori che viene ripetuta più volte sempre uguale a se stessa.</p>
+  <p>Tempo di ciclo: tempo necessario allo svolgimento delle azioni tecniche che caratterizzano il ciclo.</p>
+  <p>Azione tecnica: complesso di movimenti di uno o più segmenti corporei, necessari all’effettuazione di una singola operazione lavorativa.</p>
+  <p>Frequenza di azione: numero di azioni tecniche per unità di tempo (generalmente un minuto).</p>
+  <p>Forza: sforzo muscolare percepito dall’operatore durante lo svolgimento di un compito.</p>
+  <p>Postura: posizione del corpo nello spazio e relativa relazione tra i suoi segmenti corporei.</p>
+  <p>Postura incongrua: sollecitazione estrema degli angoli delle articolazioni: le articolazioni operano in aree superiori al 50% della loro massima escursione angolare.</p>
+  <p>Stereotipia: caratteristica di un compito che prevede la ripetizione dello stesso ciclo di lavoro e/o delle stesse azioni tecniche o movimenti.</p>
+  <p>Tempo di recupero: periodo durante il quale gli arti superiori si trovano fondamentalmente a riposo; segue un periodo di attività e consente il ripristino della funzione muscoloscheletrica.</p>
+  <p>Presa in Grip: presa di un oggetto cilindrico con diametro compreso tra 2 e 5 cm.</p>
+  <p>Presa in Pinch: presa di precisione di un oggetto piccolo, per lo più tra pollice e indice.</p>
+  <p>Presa palmare: presa di un oggetto che richiede l’apertura del palmo della mano.</p>
+  <p>Fattori complementari: quando presenti, determinano un incremento del livello di esposizione complessivo. Si considerano fattori complementari:</p>
+  <p>l’uso di guanti inadeguati alla presa richiesta dal lavoro da svolgere;</p>
+  <p>la presenza di movimenti bruschi o a strappo o contraccolpi con frequenze di 2 al minuto o più;</p>
+  <p>gli impatti ripetuti con frequenze di almeno 10 volte/ora;</p>
+  <p>il contatto con superfici fredde (inf. A 0 gradi) o lo svolgimento di lavori in celle frigorifere per più di metà del tempo;</p>
+  <p>l’uso di strumenti vibranti o avvitatori con contraccolpo per almeno 1/3 del tempo;</p>
+  <p>l’uso di attrezzi che provocano compressioni sulle strutture muscolo-tendinee;</p>
+  <p>lo svolgimento di lavori di precisione per più della metà del tempo (lavori in aree inferiori ai 2-3 mm) che richiedono distanza visiva ravvicinata;</p>
+  <p>presenza di più fattori complementari che considerati complessivamente occupano più di metà del tempo;</p>
+  <p>presenza di uno o più fattori complementari che occupano quasi tutto il tempo;</p>
+  <p>ritmi di lavoro determinati dalla macchina, ma con presenza di zone polmone per cui si può accelerare o decelerare il ritmo di lavoro;</p>
+  <p>ritmi di lavoro completamente determinati dalla macchina.</p>

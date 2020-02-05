@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
@@ -25,16 +26,17 @@ public class FragmentProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(DigitalExchangeJob job, ZipReader zipReader, ComponentDescriptor descriptor)
+    public List<Installable> process(DigitalExchangeJob job, NpmPackageReader npr, ComponentDescriptor descriptor)
             throws IOException {
         Optional<List<String>> optionalFragments = Optional.ofNullable(descriptor.getComponents().getFragments());
         List<Installable> installableList = new ArrayList<>();
 
         if (optionalFragments.isPresent()) {
             for (String fileName: optionalFragments.get() ) {
-                FragmentDescriptor frDesc = zipReader.readDescriptorFile(fileName, FragmentDescriptor.class);
+                FragmentDescriptor frDesc = npr.readDescriptorFile(fileName, FragmentDescriptor.class);
                 if (frDesc.getGuiCodePath() != null) {
-                    frDesc.setGuiCode(zipReader.readFileAsString(getFolder(fileName), frDesc.getGuiCodePath()));
+                    String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
+                    frDesc.setGuiCode(npr.readFileAsString(gcp));
                 }
                 installableList.add(new FragmentInstallable(frDesc));
             }

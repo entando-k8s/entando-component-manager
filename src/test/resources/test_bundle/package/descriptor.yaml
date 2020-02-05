@@ -1,0 +1,25 @@
+code: inail_bundle
+description: This is the inail bundle
+
+components:
+  plugins:
+    - plugins/entando-survey-plugin.yaml
+
+  widgets:
+    - widgets/approfondire.yaml
+    - widgets/footer.yaml
+    - widgets/header.yaml
+    - widgets/glossario.yaml
+    - widgets/home_text.yaml
+    - widgets/survey-display.yaml
+    - widgets/survey-admin.yaml
+
+  pageModels:
+    - pagemodels/inail_sidebar.yaml
+
+  contentTypes:
+    - contenttypes/my_content_type_descriptor.yaml
+
+  contentModels:
+    - contentmodels/my_content_model_descriptor.yaml
+    - contentmodels/another_content_model_descriptor.yaml

@@ -1,0 +1,14 @@
+{
+  "name": "inail_bundle",
+  "version": "0.0.1",
+  "description": "A bundle containing some demo components for Entando6",
+  "main": "descriptor.yml",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "entando6"
+  ],
+  "author": "Luca Cherubin",
+  "license": "ISC"
+}

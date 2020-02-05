@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -34,7 +35,7 @@ public class WidgetProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
+    public List<Installable> process(final DigitalExchangeJob job, final NpmPackageReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getWidgets);
@@ -42,9 +43,10 @@ public class WidgetProcessor implements ComponentProcessor {
 
         if (widgetsDescriptor.isPresent()) {
             for (final String fileName : widgetsDescriptor.get()) {
-                final WidgetDescriptor widgetDescriptor = zipReader.readDescriptorFile(fileName, WidgetDescriptor.class);
+                final WidgetDescriptor widgetDescriptor = npr.readDescriptorFile(fileName, WidgetDescriptor.class);
                 if (widgetDescriptor.getCustomUiPath() != null) {
-                    widgetDescriptor.setCustomUi(zipReader.readFileAsString(getFolder(fileName), widgetDescriptor.getCustomUiPath()));
+                    String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
+                    widgetDescriptor.setCustomUi(npr.readFileAsString(widgetUiPath));
                 }
                 installables.add(new WidgetInstallable(widgetDescriptor));
             }

@@ -108,7 +108,7 @@ public abstract class PagedDigitalExchangeCall<T> extends DigitalExchangeCall<Pa
 
             if (response.getErrors().isEmpty()) {
                 joinedList.addAll(response.getPayload());
-                total += response.getMetadata().getTotalItems();
+                total += response.getMetaData().getTotalItems();
             } else {
                 errors.addAll(response.getErrors());
             }

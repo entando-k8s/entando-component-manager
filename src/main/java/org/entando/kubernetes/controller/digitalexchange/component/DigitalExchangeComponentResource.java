@@ -20,10 +20,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
-import org.entando.kubernetes.security.Roles;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 

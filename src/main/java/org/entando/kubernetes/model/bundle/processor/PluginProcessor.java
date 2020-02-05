@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -36,14 +37,14 @@ public class PluginProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(DigitalExchangeJob job,
-            ZipReader zipReader,
+            NpmPackageReader npr,
             ComponentDescriptor descriptor) throws IOException {
         Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
                 .map(ComponentSpecDescriptor::getPlugins);
         List<Installable> installableList = new ArrayList<>();
         if (optionalPlugins.isPresent()) {
             for (String filename : optionalPlugins.get()) {
-                EntandoPlugin plugin = zipReader.readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
+                EntandoPlugin plugin = npr.readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
                 installableList.add(new PluginInstallable(plugin, job));
             }
         }

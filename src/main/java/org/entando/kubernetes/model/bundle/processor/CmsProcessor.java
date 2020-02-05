@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
@@ -35,7 +35,7 @@ public class CmsProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
+    public List<Installable> process(final DigitalExchangeJob job, final NpmPackageReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> contentTypesDescriptor = ofNullable(descriptor.getComponents())
@@ -46,16 +46,17 @@ public class CmsProcessor implements ComponentProcessor {
 
         if (contentTypesDescriptor.isPresent()) {
             for (final String fileName : contentTypesDescriptor.get()) {
-                final ContentTypeDescriptor contentTypeDescriptor = zipReader.readDescriptorFile(fileName, ContentTypeDescriptor.class);
+                final ContentTypeDescriptor contentTypeDescriptor = npr.readDescriptorFile(fileName, ContentTypeDescriptor.class);
                 installables.add(new ContentTypeInstallable(contentTypeDescriptor));
             }
         }
 
         if (contentModelsDescriptor.isPresent()) {
             for (final String fileName : contentModelsDescriptor.get()) {
-                final ContentModelDescriptor contentModelDescriptor = zipReader.readDescriptorFile(fileName, ContentModelDescriptor.class);
+                final ContentModelDescriptor contentModelDescriptor = npr.readDescriptorFile(fileName, ContentModelDescriptor.class);
                 if (contentModelDescriptor.getContentShapePath() != null) {
-                    contentModelDescriptor.setContentShape(zipReader.readFileAsString(getFolder(fileName), contentModelDescriptor.getContentShapePath()));
+                  String csPath = getRelativePath(fileName, contentModelDescriptor.getContentShapePath());
+                  contentModelDescriptor.setContentShape(npr.readFileAsString(csPath));
                 }
                 installables.add(new ContentModelInstallable(contentModelDescriptor));
             }

@@ -1,0 +1,6 @@
+code: inail_footer
+titles:
+  en: Inail Footer
+  it: Inail Footer
+group: free
+customUiPath: footer.ftl

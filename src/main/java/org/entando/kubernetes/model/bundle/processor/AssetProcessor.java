@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.model.bundle.NpmPackageReader;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -34,23 +35,23 @@ public class AssetProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final ZipReader zipReader,
+    public List<Installable> process(final DigitalExchangeJob job, final NpmPackageReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final List<Installable> installables = new LinkedList<>();
 
-        if (zipReader.containsResourceFolder()) {
+        if (npr.containsResourceFolder()) {
             final String componentFolder = "/" + job.getComponentId();
             installables.add(new DirectoryInstallable(componentFolder));
 
-            final List<String> resourceFolders = zipReader.getResourceFolders();
+            final List<String> resourceFolders = npr.getResourceFolders();
             for (final String resourceFolder : resourceFolders) {
                 installables.add(new DirectoryInstallable(componentFolder + "/" + resourceFolder));
             }
 
-            final List<String> resourceFiles = zipReader.getResourceFiles();
+            final List<String> resourceFiles = npr.getResourceFiles();
             for (final String resourceFile : resourceFiles) {
-                final FileDescriptor fileDescriptor = zipReader.readFileAsDescriptor(resourceFile);
+                final FileDescriptor fileDescriptor = npr.readFileAsDescriptor(resourceFile);
                 final String folder = StringUtils.isEmpty(fileDescriptor.getFolder())
                         ? componentFolder
                         : componentFolder + "/" + fileDescriptor.getFolder();

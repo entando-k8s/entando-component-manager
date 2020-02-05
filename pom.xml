@@ -111,7 +111,7 @@
         <dependency>
             <groupId>org.entando.kubernetes</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
-            <version>6.0.51</version>
+            <version>6.0.53</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -223,6 +223,11 @@
             <artifactId>commons-io</artifactId>
             <version>2.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.19</version>
+        </dependency>
 
         <!-- Testing -->
         <dependency>
@@ -270,7 +275,11 @@
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
-            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>

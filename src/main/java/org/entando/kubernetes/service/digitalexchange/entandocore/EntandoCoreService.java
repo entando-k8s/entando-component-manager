@@ -28,10 +28,11 @@ public class EntandoCoreService {
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
 
-    public EntandoCoreService(@Value("${keycloak.resource}") final String clientId,
-                                @Value("${keycloak.credentials.secret}") final String clientSecret,
-                                @Value("${entando.auth-url}") final String tokenUri,
-                                @Value("${entando.url}") final String entandoUrl) {
+    public EntandoCoreService(
+            @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
+            @Value("${spring.security.oauth2.client.registration.oidc.client-secret}") final String clientSecret,
+            @Value("${entando.auth-url}") final String tokenUri,
+            @Value("${entando.url}") final String entandoUrl) {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
         resourceDetails.setClientId(clientId);
