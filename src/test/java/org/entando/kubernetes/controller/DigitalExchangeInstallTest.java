@@ -39,8 +39,11 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
+import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.config.TestKubernetesConfig;
+import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -57,6 +60,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -64,20 +68,24 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-@ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @AutoConfigureWireMock(port = 8099)
 @AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = WebEnvironment.RANDOM_PORT,
+        classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";
+
+    private static final String MOCK_BUNDLE_NAME = "bundle-tmp.tgz";
 
     @Autowired
     private ObjectMapper mapper;
 
     @Autowired
     private MockMvc mockMvc;
+
     @Autowired
     private DatabaseCleaner databaseCleaner;
 
@@ -513,7 +521,7 @@ public class DigitalExchangeInstallTest {
     }
 
     private byte[] readFromDEPackage() throws IOException {
-        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("bundle.zip")) {
+        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream(MOCK_BUNDLE_NAME)) {
             try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 Assert.assertNotNull(inputStream);
                 IOUtils.copy(inputStream, outputStream);

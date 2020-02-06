@@ -9,6 +9,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.springframework.boot.test.context.TestComponent;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
 

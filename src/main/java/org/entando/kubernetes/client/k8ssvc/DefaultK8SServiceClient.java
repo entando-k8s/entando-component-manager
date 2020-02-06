@@ -45,7 +45,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Component
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());

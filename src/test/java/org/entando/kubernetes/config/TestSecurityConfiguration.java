@@ -1,7 +1,12 @@
 package org.entando.kubernetes.config;
 
+import static org.mockito.Mockito.mock;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -13,20 +18,12 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.mockito.Mockito.mock;
-
-/**
- * This class allows you to run unit and integration tests without an IdP.
- */
 @TestConfiguration
-public class SecurityConfig {
+public class TestSecurityConfiguration {
 
     private final ClientRegistration clientRegistration;
 
-    public SecurityConfig() {
+    public TestSecurityConfiguration() {
         this.clientRegistration = clientRegistration().build();
     }
 
@@ -61,7 +58,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository clientRegistrationRepository) {
+    public OAuth2AuthorizedClientService authorizedClientService(
+            ClientRegistrationRepository clientRegistrationRepository) {
         return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
     }
 
