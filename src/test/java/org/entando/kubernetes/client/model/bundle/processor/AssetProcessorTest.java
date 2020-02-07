@@ -1,6 +1,6 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
-import org.entando.kubernetes.model.bundle.NpmPackageReader;
+import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 public class AssetProcessorTest {
 
     @Mock private EntandoCoreService engineService;
-    @Mock private NpmPackageReader npmPackageReader;
+    @Mock private NpmBundleReader npmBundleReader;
 
     private AssetProcessor assetProcessor;
 
@@ -44,19 +44,19 @@ public class AssetProcessorTest {
         final List<String> folders = Arrays.asList("css", "js", "images");
         final List<String> files = Arrays.asList("favicon.ico", "css/styles.css", "js/script.js", "images/logo.png");
 
-        when(npmPackageReader.containsResourceFolder()).thenReturn(true);
-        when(npmPackageReader.getResourceFolders()).thenReturn(folders);
-        when(npmPackageReader.getResourceFiles()).thenReturn(files);
-        when(npmPackageReader.readFileAsDescriptor(eq("favicon.ico")))
+        when(npmBundleReader.containsResourceFolder()).thenReturn(true);
+        when(npmBundleReader.getResourceFolders()).thenReturn(folders);
+        when(npmBundleReader.getResourceFiles()).thenReturn(files);
+        when(npmBundleReader.readFileAsDescriptor(eq("favicon.ico")))
                 .thenReturn(file("", "favicon.ico", "base64icon"));
-        when(npmPackageReader.readFileAsDescriptor(eq("css/styles.css")))
+        when(npmBundleReader.readFileAsDescriptor(eq("css/styles.css")))
                 .thenReturn(file("css", "styles.css", "base64css"));
-        when(npmPackageReader.readFileAsDescriptor(eq("js/script.js")))
+        when(npmBundleReader.readFileAsDescriptor(eq("js/script.js")))
                 .thenReturn(file("js", "script.js", "base64js"));
-        when(npmPackageReader.readFileAsDescriptor(eq("images/logo.png")))
+        when(npmBundleReader.readFileAsDescriptor(eq("images/logo.png")))
                 .thenReturn(file("images", "logo.png", "base64img"));
 
-        final List<? extends Installable> installables = assetProcessor.process(job, npmPackageReader, new ComponentDescriptor());
+        final List<? extends Installable> installables = assetProcessor.process(job, npmBundleReader, new ComponentDescriptor());
 
         assertThat(installables).hasSize(8);
 

@@ -1,21 +1,14 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import io.swagger.v3.core.util.PathUtils;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.entando.kubernetes.model.bundle.NpmPackageReader;
-import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.springframework.http.server.PathContainer.PathSegment;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the
@@ -30,12 +23,12 @@ public interface ComponentProcessor {
      * a list of all components that should be installed
      *
      * @param job the job being executed in this processing
-     * @param npmPackageReader npm package reader zip file being processed
+     * @param npmBundleReader npm package reader zip file being processed
      * @param descriptor The component descriptor being processed
      * @return Should return a list of Installables
      * @throws IOException in case of any error while reading any the file from the Zip package
      */
-    List<Installable> process(DigitalExchangeJob job, NpmPackageReader npmPackageReader,
+    List<Installable> process(DigitalExchangeJob job, NpmBundleReader npmBundleReader,
                                         ComponentDescriptor descriptor) throws IOException;
 
     /**

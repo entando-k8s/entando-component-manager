@@ -16,12 +16,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.codec.binary.Base64;
@@ -30,38 +32,36 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
-public class NpmPackageReader {
-
-    public static final String PACKAGE_ROOT = "package/";
+public class NpmBundleReader implements BundleReader{
 
     private final YAMLMapper mapper = new YAMLMapper();
     private final Map<String, File> tarEntries;
     private final TarArchiveInputStream tarInputStream;
-    private final String RESOURCES_FOLDER_NAME = "resources";
-    private final String RESOURCES_FOLDER_PATH = "resources/";
 
-    public NpmPackageReader(Path filePath) throws IOException {
+    public NpmBundleReader(Path filePath) throws IOException {
         this.tarInputStream = getGzipTarInputStream(filePath);
         this.tarEntries = buildTarEntries(this.tarInputStream, filePath);
     }
 
-    public ComponentDescriptor readComponentDescriptor() throws IOException {
-        return readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
+    public ComponentDescriptor readBundleDescriptor() throws IOException {
+        return readDescriptorFile(BUNDLE_DESCRIPTOR_FILENAME, ComponentDescriptor.class);
     }
 
     private Map<String, File> buildTarEntries(TarArchiveInputStream i, Path tarPath) throws IOException {
         TarArchiveEntry tae;
         Map<String, File> tarEntries = new HashMap<>();
         String packageName = FilenameUtils.getBaseName(tarPath.getFileName().toString());
+        Path packageTempDir = Files.createTempDirectory(packageName);
         while ( (tae = i.getNextTarEntry()) != null ) {
             if (!i.canReadEntryData(tae)) {
                 // log something?
                 continue;
             }
-            File tmpf = File.createTempFile(tae.getName(), "." + packageName);
+            File tmpf = File.createTempFile(tae.getName(), "." + packageName, packageTempDir.toFile());
             tmpf.deleteOnExit();
             if (tae.isDirectory()) {
                 if (!tmpf.isDirectory() && !tmpf.mkdirs()) {
@@ -76,9 +76,24 @@ public class NpmPackageReader {
                     IOUtils.copy(i, o);
                 }
             }
-            tarEntries.put(tae.getName().replaceFirst(PACKAGE_ROOT, ""), tmpf);
+            tarEntries.put(tae.getName(), tmpf);
         }
-        return tarEntries;
+        return rebaseEntriesNamesOnComponentDescriptorFile(tarEntries);
+    }
+
+    private Map<String, File> rebaseEntriesNamesOnComponentDescriptorFile(Map<String, File> tarEntries) {
+        Optional<String> descriptorPath = tarEntries.keySet().stream().filter(s -> s.endsWith(BUNDLE_DESCRIPTOR_FILENAME))
+                .min(Comparator.comparing(String::length));
+        String descriptorFolder = FilenameUtils.getPath(
+                descriptorPath.orElseThrow(() -> new InvalidBundleException("No descriptor file found in the")));
+
+        Map<String, File> rebasedEntries = new HashMap<>();
+        Iterator<Entry<String, File>> iterator = tarEntries.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, File> entry = iterator.next();
+            rebasedEntries.put(entry.getKey().replace(descriptorFolder, ""), entry.getValue());
+        }
+        return rebasedEntries;
     }
 
     private TarArchiveInputStream getGzipTarInputStream(Path p) {
@@ -99,16 +114,16 @@ public class NpmPackageReader {
 
     public boolean containsResourceFolder() {
         return tarEntries.keySet().stream()
-                .anyMatch(n -> n.startsWith(RESOURCES_FOLDER_PATH));
+                .anyMatch(n -> n.startsWith(BUNDLE_RESOURCES_PATH));
     }
 
     public List<String> getResourceFolders() {
         return tarEntries.keySet().stream()
-                .filter(path -> path.startsWith(RESOURCES_FOLDER_NAME))
+                .filter(path -> path.startsWith(BUNDLE_RESOURCES_FOLDER_NAME))
                 .map(FilenameUtils::getFullPath) // Not always directory entry is available as a single path in the zip
                 .distinct()
-                .filter(path -> !path.equals(RESOURCES_FOLDER_NAME) && !path.equals(RESOURCES_FOLDER_PATH))
-                .map(path -> path.substring(RESOURCES_FOLDER_PATH.length(), path.length() - 1))
+                .filter(path -> !path.equals(BUNDLE_RESOURCES_FOLDER_NAME) && !path.equals(BUNDLE_RESOURCES_PATH))
+                .map(path -> path.substring(BUNDLE_RESOURCES_PATH.length(), path.length() - 1))
                 .flatMap(this::getIntermediateFolders)
                 .distinct()
                 .sorted(Comparator.comparing(String::length))
@@ -135,7 +150,7 @@ public class NpmPackageReader {
 
     public List<String> getResourceFiles() {
         return tarEntries.keySet().stream()
-                .filter(path -> path.startsWith(RESOURCES_FOLDER_NAME))
+                .filter(path -> path.startsWith(BUNDLE_RESOURCES_FOLDER_NAME))
                 .filter(path -> !tarEntries.get(path).isDirectory())
                 .collect(Collectors.toList());
     }
@@ -159,7 +174,7 @@ public class NpmPackageReader {
             IOUtils.copy(new FileInputStream(f), outputStream);
             final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
             final String filename = fileName.substring(fileName.lastIndexOf('/') + 1);
-            final String folder = fileName.lastIndexOf('/') >= RESOURCES_FOLDER_PATH.length()
+            final String folder = fileName.lastIndexOf('/') >= BUNDLE_RESOURCES_PATH.length()
                     ? fileName.substring("resources/".length(), fileName.lastIndexOf('/'))
                     : "";
             return new FileDescriptor(folder, filename, base64);

@@ -16,18 +16,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
-import org.entando.kubernetes.model.bundle.NpmPackageReader;
-import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -42,7 +38,6 @@ import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureMatchingException;
 import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.springframework.context.ApplicationContext;
@@ -227,8 +222,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private List<Installable> getInstallablesAndRemoveTempPackage(DigitalExchangeJob job, Path p) {
         try {
-            NpmPackageReader r = new NpmPackageReader(p);
-            ComponentDescriptor descriptor = r.readComponentDescriptor();
+            NpmBundleReader r = new NpmBundleReader(p);
+            ComponentDescriptor descriptor = r.readBundleDescriptor();
             List<Installable> installableList = getInstallables(job, r, descriptor);
             r.destroy();
             Files.delete(p);
@@ -284,7 +279,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private List<Installable> getInstallables(DigitalExchangeJob job, NpmPackageReader r,
+    private List<Installable> getInstallables(DigitalExchangeJob job, NpmBundleReader r,
             ComponentDescriptor descriptor) throws IOException {
         List<Installable> installables = new LinkedList<>();
         for (ComponentProcessor processor : componentProcessors) {

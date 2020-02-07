@@ -7,8 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.model.bundle.NpmPackageReader;
-import org.entando.kubernetes.model.bundle.ZipReader;
+import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -35,7 +34,7 @@ public class AssetProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final NpmPackageReader npr,
+    public List<Installable> process(final DigitalExchangeJob job, final NpmBundleReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final List<Installable> installables = new LinkedList<>();

@@ -6,19 +6,16 @@ import static org.assertj.core.api.Assertions.entry;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.model.bundle.NpmPackageReader;
+import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -31,13 +28,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 
-public class NpmPackageReaderTest {
+public class NpmBundleReaderTest {
 
-    NpmPackageReader r;
+    NpmBundleReader r;
+    public static final String DEFAULT_TEST_BUNDLE_NAME = "npm_downloaded_bundle.tgz";
+    public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
 
     @Before
     public void readNpmPackage() throws IOException {
-       r = new NpmPackageReader(getBundlePath()) ;
+       r = new NpmBundleReader(getTestDefaultBundlePath()) ;
     }
 
     @After
@@ -49,12 +48,25 @@ public class NpmPackageReaderTest {
 
     @Test
     public void shouldReadNpmPackageCorrectly() {
-        assertThat(r.getTarEntries().isEmpty()).isFalse();
+        assertThat(r.getTarEntries()).isNotEmpty();
     }
 
     @Test
-    public void shouldNotReportPackageInEntryName() {
-        assertThat(r.getTarEntries().keySet().stream().filter(p -> p.startsWith(NpmPackageReader.PACKAGE_ROOT))).isEmpty();
+    public void shouldReadBundleEvenWithDifferentRoot() throws IOException {
+        NpmBundleReader altReader = new NpmBundleReader(getBundlePath(ALTERNATIVE_STRUCTURE_BUNDLE_NAME));
+        assertThat(altReader.getTarEntries()).isNotEmpty();
+    }
+
+    @Test
+    public void shouldRebaseBundleEntriesToDescriptorRoot() {
+        assertThat(r.getTarEntries().containsKey("descriptor.yaml")).isTrue();
+    }
+
+    @Test
+    public void shouldContainADescriptorFileInTheRoot() {
+        List<String> descriptorFiles = r.getTarEntries().keySet().stream()
+                .filter(s -> s.equals("descriptor.yaml")).collect(Collectors.toList());
+        assertThat(descriptorFiles).hasSize(1);
     }
 
     @Test
@@ -98,8 +110,12 @@ public class NpmPackageReaderTest {
         assertThat(newPath).isEqualTo(expected);
     }
 
-    private Path getBundlePath() throws IOException {
-        return new ClassPathResource("inail_bundle-0.0.1.tgz").getFile().toPath();
+    private Path getTestDefaultBundlePath() throws IOException {
+        return getBundlePath(DEFAULT_TEST_BUNDLE_NAME);
+    }
+
+    private Path getBundlePath(String bundleName) throws IOException {
+        return new ClassPathResource(bundleName).getFile().toPath();
     }
 
     private TarArchiveInputStream getGzipTarInputStream() throws IOException {
@@ -119,7 +135,7 @@ public class NpmPackageReaderTest {
     private static class DumbComponentProcessor implements ComponentProcessor {
 
         @Override
-        public List<Installable> process(DigitalExchangeJob job, NpmPackageReader npmPackageReader,
+        public List<Installable> process(DigitalExchangeJob job, NpmBundleReader npmBundleReader,
                 ComponentDescriptor descriptor) throws IOException {
             return null;
         }

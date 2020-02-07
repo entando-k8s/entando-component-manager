@@ -63,7 +63,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -77,8 +76,9 @@ import org.springframework.test.web.servlet.MvcResult;
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";
-
-    private static final String MOCK_BUNDLE_NAME = "bundle-tmp.tgz";
+    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
+    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(45);
+    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
     @Autowired
     private ObjectMapper mapper;
@@ -152,7 +152,7 @@ public class DigitalExchangeInstallTest {
         checkRequest(widgetRequests.get(0))
                 .expectEqual("code", "another_todomvc_widget")
                 .expectEqual("group", "free")
-                .expectEqual("customUi", readFile("/bundle/package/widgets/widget.ftl"));
+                .expectEqual("customUi", readFile("/bundle/widgets/widget.ftl"));
 
         checkRequest(widgetRequests.get(1))
                 .expectEqual("code", "todomvc_widget")
@@ -161,7 +161,7 @@ public class DigitalExchangeInstallTest {
 
         checkRequest(fragmentRequests.get(0))
                 .expectEqual("code", "another_fragment")
-                .expectEqual("guiCode", readFile("/bundle/package/fragments/fragment.ftl"));
+                .expectEqual("guiCode", readFile("/bundle/fragments/fragment.ftl"));
 
         checkRequest(fragmentRequests.get(1))
                 .expectEqual("code", "title_fragment")
@@ -173,7 +173,7 @@ public class DigitalExchangeInstallTest {
                 .expectEqual("group", "free")
                 .expectEqual("configuration.frames[0].pos", "0")
                 .expectEqual("configuration.frames[0].descr", "Simple Frame")
-                .expectEqual("template", readFile("/bundle/package/pagemodels/page.ftl"));
+                .expectEqual("template", readFile("/bundle/pagemodels/page.ftl"));
 
         checkRequest(pageModelRequests.get(1))
                 .expectEqual("code", "todomvc_page_model")
@@ -207,17 +207,17 @@ public class DigitalExchangeInstallTest {
         checkRequest(fileRequests.get(0))
                 .expectEqual("filename", "custom.css")
                 .expectEqual("path", "/todomvc/css/custom.css")
-                .expectEqual("base64", readFileAsBase64("/bundle/package/resources/css/custom.css"));
+                .expectEqual("base64", readFileAsBase64("/bundle/resources/css/custom.css"));
 
         checkRequest(fileRequests.get(1))
                 .expectEqual("filename", "style.css")
                 .expectEqual("path", "/todomvc/css/style.css")
-                .expectEqual("base64", readFileAsBase64("/bundle/package/resources/css/style.css"));
+                .expectEqual("base64", readFileAsBase64("/bundle/resources/css/style.css"));
 
         checkRequest(fileRequests.get(2))
                 .expectEqual("filename", "script.js")
                 .expectEqual("path", "/todomvc/js/script.js")
-                .expectEqual("base64", readFileAsBase64("/bundle/package/resources/js/script.js"));
+                .expectEqual("base64", readFileAsBase64("/bundle/resources/js/script.js"));
 
         // Finish first test
     }
@@ -322,6 +322,7 @@ public class DigitalExchangeInstallTest {
                 .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
+        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
     }
 
     @Test
@@ -334,6 +335,7 @@ public class DigitalExchangeInstallTest {
                 .andDo(print()).andExpect(status().isConflict());
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
                 .andDo(print()).andExpect(status().isConflict());
+        waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
     }
 
     @Test
@@ -497,14 +499,14 @@ public class DigitalExchangeInstallTest {
     }
 
     private void waitForInstallStatus(JobStatus status) {
-        await().atMost(Duration.ofSeconds(30))
-                .pollInterval(Duration.ofSeconds(1))
+        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
+                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
                 .until(() -> getInstallJob().getPayload().getStatus().equals(status));
     }
 
     private void waitForUninstallStatus(JobStatus status) {
-        await().atMost(Duration.ofSeconds(30))
-                .pollInterval(Duration.ofSeconds(1))
+        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
+                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
                 .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
     }
 
