@@ -18,7 +18,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
-@Configuration
+@TestConfiguration
+@Profile("test")
 public class TestKubernetesConfig {
 
     @Bean

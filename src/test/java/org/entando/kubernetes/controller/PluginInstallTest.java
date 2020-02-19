@@ -28,6 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
+@ActiveProfiles({"test"})
 public class PluginInstallTest {
 
     private static final String DIGITAL_EXCHANGE_ID = "community";
