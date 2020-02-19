@@ -6,7 +6,7 @@
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>6.0.3</version>
+    <version>6.0.4</version>
 
     <packaging>jar</packaging>
 
@@ -227,6 +227,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.19</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.ojdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>19.3.0.0</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Testing -->
