@@ -8,7 +8,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,8 +28,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
@@ -38,8 +35,6 @@ import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.service.digitalexchange.signature.SignatureMatchingException;
-import org.entando.kubernetes.service.digitalexchange.signature.SignatureUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
@@ -75,10 +70,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
                         + " - JOB ID: " + j.getId());
             }
-            //            if (JobType.isOfType(js, JobType.ERROR)) {
-            //                throw new JobCorruptedException("A previous job for the component " + j.getComponentId()
-            //                        + " has failed - JOB ID: " + j.getId());
-            //            }
         }
 
         EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version)
@@ -97,12 +88,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 .findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchangeId, componentId);
         if (lastJobStarted.isPresent()) {
             // To be an existing job it should be Running or completed
-            switch (lastJobStarted.get().getStatus()) {
-                case UNINSTALL_COMPLETED:
-                    return Optional.empty();
-                default:
-                    return lastJobStarted;
+            if (lastJobStarted.get().getStatus() == JobStatus.UNINSTALL_COMPLETED) {
+                return Optional.empty();
             }
+            return lastJobStarted;
         }
         return Optional.empty();
     }
@@ -144,13 +133,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             CompletableFuture<Path> copyPackageLocallyStep = downloadComponentPackageStep
                     .thenApply(is -> savePackageStreamLocally(job.getComponentId(), is));
 
-            CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath -> {
-                //                TODO: Implement the verification by using the npm-signature which must be present in the tag
-                //                if (StringUtils.isNotEmpty(job.getDigitalExchange().getPublicKey())) {
-                //                    verifyDownloadedContentSignature(tempPath, digitalExchange, component);
-                //                }
-                return tempPath;
-            });
+            CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath ->  tempPath);
 
             CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
                     .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
@@ -261,22 +244,6 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             throw new UncheckedIOException(ex);
         }
 
-    }
-
-    private void verifyDownloadedContentSignature(
-            Path tempZipPath, DigitalExchange digitalExchange,
-            DigitalExchangeComponent component) {
-
-        try (InputStream in = Files.newInputStream(tempZipPath, StandardOpenOption.READ)) {
-            boolean signatureMatches = SignatureUtil.verifySignature(
-                    in, SignatureUtil.publicKeyFromPEM(digitalExchange.getPublicKey()),
-                    component.getSignature());
-            if (!signatureMatches) {
-                throw new SignatureMatchingException("Component signature not matching public key");
-            }
-        } catch (IOException e) {
-            throw new JobPackageException(tempZipPath, e);
-        }
     }
 
     private List<Installable> getInstallables(DigitalExchangeJob job, NpmBundleReader r,

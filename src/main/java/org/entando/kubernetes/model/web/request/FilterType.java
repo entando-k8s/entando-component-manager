@@ -21,7 +21,7 @@ public enum FilterType {
     },
     NUMBER("number") {
         public BigDecimal parseFilterValue(String value) {
-            return new BigDecimal(Double.parseDouble(value));
+            return BigDecimal.valueOf(Double.parseDouble(value));
         }
     };
 

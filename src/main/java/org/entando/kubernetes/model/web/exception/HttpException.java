@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 public class HttpException extends RuntimeException {
 
     private final HttpStatus status;
-    private final Object[] args;
+    private transient final Object[] args;
 
     public HttpException(final HttpStatus status, final String message) {
         super(message);

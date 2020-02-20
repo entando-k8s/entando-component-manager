@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.web.request;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
@@ -37,7 +38,7 @@ public class PagedListRequest {
 
     public <E> List<E> getSublist(final List<E> master) {
         if (null == master) {
-            return null;
+            return new ArrayList<>();
         } else if (0 == this.getPage() || master.isEmpty()) {
             return master;
         } else {
@@ -53,8 +54,8 @@ public class PagedListRequest {
     }
 
     private Integer getOffset() {
-        final int page = this.getPage() - 1;
-        return null != this.getPage() && this.getPage() != 0 ? this.getPageSize() * page : 0;
+        final int p = this.getPage() - 1;
+        return null != this.getPage() && this.getPage() != 0 ? this.getPageSize() * p : 0;
     }
 
 }

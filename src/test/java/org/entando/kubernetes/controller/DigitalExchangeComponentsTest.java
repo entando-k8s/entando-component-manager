@@ -1,5 +1,6 @@
 package org.entando.kubernetes.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,7 +70,7 @@ public class DigitalExchangeComponentsTest {
 
     @Test
     public void shouldStart() {
-
+        assertThat(mockMvc).isNotNull();
     }
 
     @WithMockUser

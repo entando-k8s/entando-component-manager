@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.web.response;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -15,14 +14,8 @@ public class RestResponse<T, M> {
     private M metaData;
     private List<RestError> errors = new ArrayList<>();
 
-    @JsonSetter("metaData")
     public void setMetaData(M metadata) {
         this.metaData = metadata;
-    }
-
-    @JsonSetter("metadata")
-    public void setMetadata(M metaData) {
-        this.metaData = metaData;
     }
 
     public RestResponse(final T payload) {

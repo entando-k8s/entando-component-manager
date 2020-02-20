@@ -24,10 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.security.Roles;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,40 +37,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface DigitalExchangeInstallResource {
 
     @Operation(description = "Starts component installation job")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Created")
-    })
+    @ApiResponse(responseCode = "201", description = "Created")
     @PostMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> install(
             @PathVariable("component") String componentId,
             @RequestParam(name = "version", required = true, defaultValue = "latest") String version);
 
     @Operation(description = "Starts component remove job ")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Created")
-    })
+    @ApiResponse(responseCode = "201", description = "Created")
     @PostMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> uninstall(@PathVariable("component") String componentId,
             HttpServletRequest request) throws URISyntaxException;
 
     @Operation(description = "Checks installation job status")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK")
-    })
+    @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastInstallJob(@PathVariable("component") String componentId);
 
     @Operation(description = "Checks removal job status")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK")
-    })
+    @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId);
 
     @Operation(description = "Get all jobs for a component")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK")
-    })
+    @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/jobs/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PagedRestResponse<DigitalExchangeJob>> getComponentJobs(@PathVariable("component") String componentId);
 
