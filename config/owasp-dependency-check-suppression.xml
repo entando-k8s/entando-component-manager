@@ -51,6 +51,7 @@
         spring-boot will include the new fix
       ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-(client|core|jose|resource\-server)@5.2.1.RELEASE$</packageUrl>
+        <cpe>cpe:/a:pivotal_software:spring_security_oauth</cpe>
     </suppress>
     <suppress>
         <notes><![CDATA[
@@ -59,6 +60,7 @@
         spring-boot will include the new fix
       ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-jwt@1.0.11.RELEASE$</packageUrl>
+        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
     </suppress>
     <suppress>
         <notes><![CDATA[
@@ -67,6 +69,7 @@
         spring-boot will include the new fix
       ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@1.9.3$</packageUrl>
+        <cpe>cpe:/a:fasterxml:jackson-mapper-asl</cpe>
     </suppress>
     <suppress>
         <notes><![CDATA[
@@ -75,5 +78,7 @@
         spring-boot will include the new fix
       ]]></notes>
         <packageUrl regex="true">^pkg:maven/com\.nimbusds/nimbus\-jose\-jwt@7.8$</packageUrl>
+        <cpe>cpe:/a:connect2id:nimbus_jose%2bjwt</cpe>
+
     </suppress>
 </suppressions>
