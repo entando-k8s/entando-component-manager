@@ -120,6 +120,15 @@ file name: spring-security-oauth2-jose-5.2.1.RELEASE.jar
    file name: jackson-mapper-asl-1.9.13.jar
    ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@.*$</packageUrl>
-        <cpe>cpe:/a:fasterxml:jackson</cpe>
+        <cve>CVE-2017-15095</cve>
+        <cve>CVE-2017-17485</cve>
+        <cve>CVE-2017-7525</cve>
+        <cve>CVE-2018-1000873 </cve>
+        <cve>CVE-2018-14718</cve>
+        <cve>CVE-2018-5968</cve>
+        <cve>CVE-2018-7489</cve>
+        <cve>CVE-2018-14540</cve>
+        <cve>CVE-2018-16335</cve>
+        <cve>CVE-2018-17267</cve>
     </suppress>
 </suppressions>
