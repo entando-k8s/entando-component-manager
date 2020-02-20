@@ -51,7 +51,7 @@
         spring-boot will include the new fix
       ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-(client|core|jose|resource\-server)@5.2.1.RELEASE$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security_oauth</cpe>
+        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
     </suppress>
     <suppress>
         <notes><![CDATA[
@@ -68,7 +68,7 @@
         recently but right now no spring-boot package include it. Suppressing these issues until the next version of
         spring-boot will include the new fix
       ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@1.9.3$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@1.9.13$</packageUrl>
         <cpe>cpe:/a:fasterxml:jackson-mapper-asl</cpe>
     </suppress>
     <suppress>
