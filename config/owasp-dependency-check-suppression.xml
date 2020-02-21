@@ -37,89 +37,23 @@
     </suppress>
     <suppress>
         <notes><![CDATA[
-        These vulnerabilities are related to spring-security-*:5.2.1. A new version of the package has been released
-        recently but right now no spring-boot package include it. Suppressing these issues until the next version of
-        spring-boot will include the new fix
-      ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-(web|config|core)@5.2.1.RELEASE$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
-    </suppress>
-<!--    <suppress>-->
-<!--        <notes><![CDATA[-->
-<!--        These vulnerabilities are related to spring-security-oauth2-*:5.2.1. A new version of the package has been released-->
-<!--        recently but right now no spring-boot package include it. Suppressing these issues until the next version of-->
-<!--        spring-boot will include the new fix-->
-<!--      ]]></notes>-->
-<!--        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-(client|core|jose|resource\-server)@5.2.1.RELEASE$</packageUrl>-->
-<!--        <cpe>cpe:/a:pivotal_software:spring_security</cpe>-->
-<!--    </suppress>-->
-    <suppress>
-        <notes><![CDATA[
-        These vulnerabilities are related to spring-security-oauth2-*:5.2.1. A new version of the package has been released
-        recently but right now no spring-boot package include it. Suppressing these issues until the next version of
-        spring-boot will include the new fix
-      ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-jwt@1.0.11.RELEASE$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        These vulnerabilities are related to spring-security-*:5.2.1. A new version of the package has been released
-        recently but right now no spring-boot package include it. Suppressing these issues until the next version of
-        spring-boot will include the new fix
-      ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@1.9.13$</packageUrl>
-        <cpe>cpe:/a:fasterxml:jackson-mapper-asl</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        These vulnerabilities are related to spring-security-*:5.2.1. A new version of the package has been released
-        recently but right now no spring-boot package include it. Suppressing these issues until the next version of
-        spring-boot will include the new fix
-      ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.nimbusds/nimbus\-jose\-jwt@7.8$</packageUrl>
-        <cpe>cpe:/a:connect2id:nimbus_jose%2bjwt</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-file name: spring-security-oauth2-resource-server-5.2.1.RELEASE.jar
-]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-resource\-server@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-file name: spring-security-oauth2-jose-5.2.1.RELEASE.jar
-]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-jose@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-security-oauth2-core-5.2.1.RELEASE.jar
+   file name: nimbus-jose-jwt-7.8.1.jar
    ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-core@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
+        <packageUrl regex="true">^pkg:maven/com\.nimbusds/nimbus\-jose\-jwt@.*$</packageUrl>
+        <cve>CVE-2019-17195</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: spring-security-oauth2-client-5.2.1.RELEASE.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-client@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_security</cpe>
+        <notes><![CDATA[-->
+            spring-security-*@5.2.2.RELEASE
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-(web|jwt|core|config)@.*$</packageUrl>
+        <cve>CVE-2018-1258</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: jackson-mapper-asl-1.9.13.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@.*$</packageUrl>
-        <cpe>cpe:/a:fasterxml:jackson-mapper-asl</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: jackson-mapper-asl-1.9.13.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.codehaus\.jackson/jackson\-mapper\-asl@.*$</packageUrl>
-        <cpe>cpe:/a:fasterxml:jackson</cpe>
+        <notes><![CDATA[-->
+            spring-security-oauth*@5.2.2.RELEASE
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-(jose|client|resource\-server|core)@.*$</packageUrl>
+        <cve>CVE-2018-1258</cve>
     </suppress>
 </suppressions>
