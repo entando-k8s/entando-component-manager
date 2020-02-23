@@ -1,7 +1,11 @@
 package org.entando.kubernetes.controller;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNotNull;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -38,6 +42,7 @@ import org.springframework.test.web.servlet.ResultActions;
 public class PluginControllerTest {
 
     private static final String URL = "/plugins";
+    private static final String URL_INFO = "/plugins/info";
 
     @Autowired private MockMvc mockMvc;
 
@@ -84,6 +89,68 @@ public class PluginControllerTest {
 
     }
 
+    @Test
+    public void testListPluginInfoEmpty() throws Exception {
+        when(kubernetesService.getLinkedPlugins()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get(URL_INFO))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(0)));
+    }
+
+    @Test
+    public void testListPluginInfoAllData() throws Exception {
+        List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoAllData());
+        when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
+
+        mockMvc.perform(get(URL_INFO))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+                .andExpect(jsonPath("payload[0].id", is("plugin-info-uid")))
+                .andExpect(jsonPath("payload[0].name", is("plugin-info-name")))
+                .andExpect(jsonPath("payload[0].description", is("plugin-info-description")));
+    }
+
+    @Test
+    public void testListPluginInfoOnlyId() throws Exception {
+        List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoOnlyId());
+        when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
+
+        mockMvc.perform(get(URL_INFO))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+
+                .andExpect(jsonPath("payload[0].id", is("plugin-info-uid")))
+                .andExpect(jsonPath("payload[0].name", nullValue()))
+                .andExpect(jsonPath("payload[0].description", nullValue()));
+    }
+
+    @Test
+    public void testListPluginInfoOnlyName() throws Exception {
+        List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoOnlyName());
+        when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
+
+        mockMvc.perform(get(URL_INFO))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+                .andExpect(jsonPath("payload[0].id", nullValue()))
+                .andExpect(jsonPath("payload[0].name", is("plugin-info-name")))
+                .andExpect(jsonPath("payload[0].description", nullValue()));
+    }
+
+    @Test
+    public void testListPluginInfoOnlyDescription() throws Exception {
+        List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoOnlyDescription());
+        when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
+
+        mockMvc.perform(get(URL_INFO))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+                .andExpect(jsonPath("payload[0].id", nullValue()))
+                .andExpect(jsonPath("payload[0].name", nullValue()))
+                .andExpect(jsonPath("payload[0].description", is("plugin-info-description")));
+    }
+
     private EntandoPlugin getTestEntandoPlugin() {
         return new EntandoPluginBuilder()
                     .withNewSpec()
@@ -94,6 +161,56 @@ public class PluginControllerTest {
                     .withName("plugin-name")
                     .endMetadata()
                     .build();
+    }
+
+    private EntandoPlugin getTestEntandoPluginInfoAllData() {
+        return new EntandoPluginBuilder()
+                .withNewSpec()
+                .withReplicas(1)
+                .withIngressPath("/pluginpath")
+                .endSpec()
+                .withNewMetadata()
+                .withUid("plugin-info-uid")
+                .withName("plugin-info-name")
+                .withAnnotations(Collections.singletonMap("description", "plugin-info-description"))
+                .endMetadata()
+                .build();
+    }
+
+    private EntandoPlugin getTestEntandoPluginInfoOnlyId() {
+        return new EntandoPluginBuilder()
+                .withNewSpec()
+                .withReplicas(1)
+                .withIngressPath("/pluginpath")
+                .endSpec()
+                .withNewMetadata()
+                .withUid("plugin-info-uid")
+                .endMetadata()
+                .build();
+    }
+
+    private EntandoPlugin getTestEntandoPluginInfoOnlyName() {
+        return new EntandoPluginBuilder()
+                .withNewSpec()
+                .withReplicas(1)
+                .withIngressPath("/pluginpath")
+                .endSpec()
+                .withNewMetadata()
+                .withName("plugin-info-name")
+                .endMetadata()
+                .build();
+    }
+
+    private EntandoPlugin getTestEntandoPluginInfoOnlyDescription() {
+        return new EntandoPluginBuilder()
+                .withNewSpec()
+                .withReplicas(1)
+                .withIngressPath("/pluginpath")
+                .endSpec()
+                .withNewMetadata()
+                .withAnnotations(Collections.singletonMap("description", "plugin-info-description"))
+                .endMetadata()
+                .build();
     }
 
     private void validate(final ResultActions actions, final String prefix) throws Exception {
