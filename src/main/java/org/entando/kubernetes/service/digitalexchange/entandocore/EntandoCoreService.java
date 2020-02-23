@@ -78,7 +78,7 @@ public class EntandoCoreService {
     }
 
     public void deleteContentModel(final String code) {
-        restTemplate.delete(resolvePathSegments("api","plugins","cms","contentmodels",code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels",code).build().toUri());
     }
 
     public void registerContentModel(final ContentModelDescriptor descriptor) {

@@ -62,7 +62,7 @@ public class DigitalExchangeBaseCall<R> {
         return method;
     }
 
-    public HttpEntity<?> getEntity() {
+    public HttpEntity getEntity() {
         return entity;
     }
 

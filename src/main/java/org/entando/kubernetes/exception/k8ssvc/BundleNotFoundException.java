@@ -7,7 +7,7 @@ import org.entando.kubernetes.exception.http.WithPredefinedMessage;
 
 public class BundleNotFoundException extends EntandoComponentManagerException implements
         HttpNotFoundException, WithPredefinedMessage, WithArgumentException {
-    private final Object[] args;
+    private final transient Object[] args;
 
     public BundleNotFoundException(String bundleId) {
        super();

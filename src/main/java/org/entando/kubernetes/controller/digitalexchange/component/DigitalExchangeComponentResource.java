@@ -16,7 +16,6 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
@@ -30,9 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface DigitalExchangeComponentResource {
 
     @Operation(description = "Returns available Digital Exchange components")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK")
-    })
+    @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents();
 }

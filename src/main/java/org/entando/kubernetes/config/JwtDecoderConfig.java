@@ -1,14 +1,9 @@
 package org.entando.kubernetes.config;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.security.oauth2.AudienceValidator;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
@@ -18,24 +13,24 @@ import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
-@TestConfiguration
-@Profile("test")
-public class TestKubernetesConfig {
+@Profile("!test")
+@Configuration
+public class JwtDecoderConfig {
 
-    @Bean
-    public KubernetesClient client() {
-        return Mockito.mock(KubernetesClient.class);
-    }
-
-    @Bean
-    @Primary
-    public K8SServiceClient k8SServiceClient() {
-        return new K8SServiceClientTestDouble();
-    }
+    @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}")
+    private String issuerUri;
 
     @Bean
     JwtDecoder jwtDecoder() {
-        return Mockito.mock(JwtDecoder.class);
-    }
+        NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder)
+                JwtDecoders.fromOidcIssuerLocation(issuerUri);
 
+        OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator();
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
+        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
+
+        jwtDecoder.setJwtValidator(withAudience);
+
+        return jwtDecoder;
+    }
 }

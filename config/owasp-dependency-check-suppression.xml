@@ -35,4 +35,25 @@
         <cve>CVE-2019-14910</cve>
         <cve>CVE-2019-14909</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: nimbus-jose-jwt-7.8.1.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.nimbusds/nimbus\-jose\-jwt@.*$</packageUrl>
+        <cve>CVE-2019-17195</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[-->
+            spring-security-*@5.2.2.RELEASE
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-(web|jwt|core|config)@.*$</packageUrl>
+        <cve>CVE-2018-1258</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[-->
+            spring-security-oauth*@5.2.2.RELEASE
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-oauth2\-(jose|client|resource\-server|core)@.*$</packageUrl>
+        <cve>CVE-2018-1258</cve>
+    </suppress>
 </suppressions>

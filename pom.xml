@@ -6,7 +6,7 @@
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>6.0.3</version>
+    <version>6.0.4</version>
 
     <packaging>jar</packaging>
 
@@ -108,6 +108,56 @@
 
     <dependencies>
 
+        <!-- OWASP Fixes -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-resource-server</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-core</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-client</artifactId>
+            <version>5.2.2.RELEASE</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.springframework.security.oauth/spring-security-oauth2 -->
+        <dependency>
+            <groupId>org.springframework.security.oauth</groupId>
+            <artifactId>spring-security-oauth2</artifactId>
+            <version>2.4.0.RELEASE</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.10.2</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.entando.kubernetes</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
@@ -166,6 +216,7 @@
         <dependency>
             <groupId>org.springframework.security.oauth.boot</groupId>
             <artifactId>spring-security-oauth2-autoconfigure</artifactId>
+            <version>2.2.4.RELEASE</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-client -->
@@ -227,6 +278,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.19</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.ojdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>19.3.0.0</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Testing -->
@@ -293,6 +350,7 @@
             <version>5.2.1.RELEASE</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <dependencyManagement>
@@ -491,6 +549,7 @@
                     <configuration>
                         <suppressionFile>${project.basedir}/config/owasp-dependency-check-suppression.xml
                         </suppressionFile>
+                        <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>    
                         <failOnError>true</failOnError>
                         <failBuildOnAnyVulnerability>${verifyAllFailures}</failBuildOnAnyVulnerability>
                         <name>National Vulnerability Database Report</name>
@@ -665,4 +724,27 @@
             </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>dependency-info</report>
+                            <report>distribution-management</report>
+                            <report>index</report>
+                            <report>ci-management</report>
+                            <report>issue-management</report>
+                            <report>licenses</report>
+                            <report>plugins</report>
+                            <report>scm</report>
+                            <report>summary</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

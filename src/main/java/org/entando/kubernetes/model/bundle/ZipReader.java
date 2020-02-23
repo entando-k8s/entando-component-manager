@@ -29,8 +29,6 @@ public class ZipReader {
     private final YAMLMapper mapper = new YAMLMapper();
     private final Map<String, ZipEntry> zipEntries;
     private final ZipFile zipFile;
-    private final String RESOURCES_FOLDER_NAME = "resources";
-    private final String RESOURCES_FOLDER_PATH = "resources/";
 
     public ZipReader(final ZipFile zipFile) {
         this.zipFile = zipFile;
@@ -39,15 +37,17 @@ public class ZipReader {
     }
 
     public boolean containsResourceFolder() {
-        return zipEntries.keySet().stream().anyMatch(n -> n.startsWith(RESOURCES_FOLDER_PATH));
+        return zipEntries.keySet().stream().anyMatch(n -> n.startsWith(BundleProperty.RESOURCES_FOLDER_PATH.getValue()));
     }
 
     public List<String> getResourceFolders() {
-        return zipEntries.keySet().stream().filter(path -> path.startsWith(RESOURCES_FOLDER_NAME))
+        return zipEntries.keySet().stream().filter(path -> path.startsWith(BundleProperty.RESOURCES_FOLDER_NAME.getValue()))
                 .map(FilenameUtils::getFullPath) // Not always directory entry is available as a single path in the zip
                 .distinct()
-                .filter(path -> !path.equals(RESOURCES_FOLDER_NAME) && !path.equals(RESOURCES_FOLDER_PATH))
-                .map(path -> path.substring(RESOURCES_FOLDER_PATH.length(), path.length() - 1))
+                .filter(path ->
+                        !path.equals(BundleProperty.RESOURCES_FOLDER_NAME.getValue()) &&
+                        !path.equals(BundleProperty.RESOURCES_FOLDER_PATH.getValue()))
+                .map(path -> path.substring(BundleProperty.RESOURCES_FOLDER_PATH.getValue().length(), path.length() - 1))
                 .flatMap(this::getIntermediateFolders)
                 .distinct()
                 .sorted(Comparator.comparing(String::length))
@@ -73,7 +73,8 @@ public class ZipReader {
     }
 
     public List<String> getResourceFiles() {
-        return zipEntries.keySet().stream().filter(path -> path.startsWith(RESOURCES_FOLDER_NAME))
+        return zipEntries.keySet().stream()
+                .filter(path -> path.startsWith(BundleProperty.RESOURCES_FOLDER_NAME.getValue()))
                 .filter(path -> !zipEntries.get(path).isDirectory())
                 .collect(Collectors.toList());
     }
@@ -99,7 +100,7 @@ public class ZipReader {
             IOUtils.copy(zipFile.getInputStream(zipEntry), outputStream);
             final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
             final String filename = fileName.substring(fileName.lastIndexOf('/') + 1);
-            final String folder = fileName.lastIndexOf('/') >= RESOURCES_FOLDER_PATH.length()
+            final String folder = fileName.lastIndexOf('/') >= BundleProperty.RESOURCES_FOLDER_PATH.getValue().length()
                     ? fileName.substring("resources/".length(), fileName.lastIndexOf('/'))
                     : "";
             return new FileDescriptor(folder, filename, base64);

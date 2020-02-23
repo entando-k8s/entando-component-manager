@@ -30,8 +30,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComponentsService {
 
-    private static final List<String> LOCAL_FILTERS = Arrays.asList("digitalExchangeName", "digitalExchangeId", "installed");
-
     private final K8SServiceClient k8SServiceClient;
     private final List<String> accessibleDigitalExchanges;
     private final DigitalExchangeJobRepository jobRepository;

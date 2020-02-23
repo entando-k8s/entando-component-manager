@@ -19,7 +19,7 @@ public class FilterUtils {
     }
 
     public static TransformingComparator createCaseInsensitiveComparator() {
-        final Transformer caseInsensitiveTransformer = (input) -> input instanceof String ? ((String) input).toLowerCase() : input;
+        final Transformer caseInsensitiveTransformer = input -> input instanceof String ? ((String) input).toLowerCase() : input;
         return new TransformingComparator(caseInsensitiveTransformer);
     }
 
@@ -57,7 +57,7 @@ public class FilterUtils {
 
     public static boolean filterBoolean(Filter filter, boolean value) {
         final FilterOperator operator = getFilterOperator(filter);
-        final Iterator iterator = getTypedAllowedValues(filter, (v) -> Boolean.parseBoolean(v.toLowerCase())).iterator();
+        final Iterator iterator = getTypedAllowedValues(filter, v -> Boolean.parseBoolean(v.toLowerCase())).iterator();
         boolean result = false;
 
         while (iterator.hasNext()) {
@@ -87,7 +87,7 @@ public class FilterUtils {
     }
 
     public static boolean filterDate(Filter filter, LocalDateTime value) {
-        final List<Double> filterValues = getTypedAllowedValues(filter, (v) -> {
+        final List<Double> filterValues = getTypedAllowedValues(filter, v -> {
             try {
                 return (double) LocalDateTime.parse(v).toEpochSecond(ZoneOffset.UTC);
             } catch (Exception var3) {

@@ -34,6 +34,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
+@ActiveProfiles({"test"})
 public class PluginControllerTest {
 
     private static final String URL = "/plugins";
