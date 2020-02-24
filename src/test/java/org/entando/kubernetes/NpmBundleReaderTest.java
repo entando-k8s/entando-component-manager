@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.assertj.core.data.Index;
 import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
@@ -31,7 +33,7 @@ import org.springframework.core.io.ClassPathResource;
 public class NpmBundleReaderTest {
 
     NpmBundleReader r;
-    public static final String DEFAULT_TEST_BUNDLE_NAME = "npm_downloaded_bundle.tgz";
+    public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
 
     @Before
@@ -108,6 +110,17 @@ public class NpmBundleReaderTest {
         String newPath = cp.getRelativePath("widgets/survey-admin.yaml", "survey-admin.ftl");
         String expected = "widgets/survey-admin.ftl";
         assertThat(newPath).isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldReadConfigUIForWidget() throws IOException {
+        WidgetDescriptor wd = r.readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
+        assertThat(wd).isNotNull();
+        assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
+        assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");
+        assertThat(wd.getConfigUi().getResources()).hasSize(1);
+        assertThat(wd.getConfigUi().getResources()).contains("js/configUiScript.js", Index.atIndex(0));
+
     }
 
     private Path getTestDefaultBundlePath() throws IOException {

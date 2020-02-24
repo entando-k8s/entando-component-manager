@@ -47,6 +47,7 @@ public class WidgetProcessor implements ComponentProcessor {
                     String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
                     widgetDescriptor.setCustomUi(npr.readFileAsString(widgetUiPath));
                 }
+                widgetDescriptor.setBundleId(descriptor.getCode());
                 installables.add(new WidgetInstallable(widgetDescriptor));
             }
         }
