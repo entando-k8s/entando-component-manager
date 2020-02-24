@@ -549,6 +549,7 @@
                     <configuration>
                         <suppressionFile>${project.basedir}/config/owasp-dependency-check-suppression.xml
                         </suppressionFile>
+                        <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>    
                         <failOnError>true</failOnError>
                         <failBuildOnAnyVulnerability>${verifyAllFailures}</failBuildOnAnyVulnerability>
                         <name>National Vulnerability Database Report</name>
@@ -723,4 +724,27 @@
             </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>dependency-info</report>
+                            <report>distribution-management</report>
+                            <report>index</report>
+                            <report>ci-management</report>
+                            <report>issue-management</report>
+                            <report>licenses</report>
+                            <report>plugins</report>
+                            <report>scm</report>
+                            <report>summary</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>
