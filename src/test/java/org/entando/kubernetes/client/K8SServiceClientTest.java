@@ -27,6 +27,7 @@ import org.entando.kubernetes.model.web.response.RestResponse;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.ParameterizedTypeReference;
@@ -50,6 +51,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 @RunWith(SpringRunner.class)
+@Tag("unit")
 public class K8SServiceClientTest {
 
     private final String CLIENT_ID = "test-entando-de";

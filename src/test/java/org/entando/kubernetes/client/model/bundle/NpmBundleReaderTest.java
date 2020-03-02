@@ -1,4 +1,4 @@
-package org.entando.kubernetes;
+package org.entando.kubernetes.client.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
@@ -26,8 +27,10 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.core.io.ClassPathResource;
 
+@Tag("unit")
 public class NpmBundleReaderTest {
 
     NpmBundleReader r;
@@ -100,6 +103,15 @@ public class NpmBundleReaderTest {
         assertThat(content).endsWith("<#else>    You have to be logged in to fill the survey</#if>");
     }
 
+    @Test(expected = InvalidBundleException.class)
+    public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
+        r.readFileAsDescriptor("widgets/pinco-pallo.yaml");
+    }
+
+    @Test(expected = InvalidBundleException.class)
+    public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
+        r.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+    }
 
 
     @Test

@@ -38,6 +38,8 @@ import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -230,9 +232,15 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private InputStream downloadComponentPackage(EntandoDeBundleTag tag) {
         String tarballUrl = tag.getTarball();
+
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Resource> responseEntity = restTemplate.exchange(
-                tarballUrl, HttpMethod.GET, null, Resource.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+        headers.add("Accept", "*/*");
+        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
+
+        ResponseEntity<Resource> responseEntity =  restTemplate.exchange(
+                tarballUrl, HttpMethod.GET, entity, Resource.class);
 
         if (responseEntity.getBody() == null) {
             throw new HttpMessageNotReadableException("Response body is null");

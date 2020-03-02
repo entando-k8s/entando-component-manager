@@ -56,6 +56,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -75,6 +76,7 @@ import org.springframework.test.web.servlet.MvcResult;
         webEnvironment = WebEnvironment.RANDOM_PORT,
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
 @ActiveProfiles({"test"})
+@Tag("component")
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";

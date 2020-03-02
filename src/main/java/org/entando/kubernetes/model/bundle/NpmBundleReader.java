@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -36,6 +37,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
+@Slf4j
 public class NpmBundleReader{
 
     private final YAMLMapper mapper = new YAMLMapper();
@@ -159,11 +161,14 @@ public class NpmBundleReader{
     }
 
     public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
-        InputStream fis = new FileInputStream(tarEntries.get(fileName));
-        return readDescriptorFile(fis, clazz);
+        verifyFileExistance(fileName);
+        try (InputStream fis = new FileInputStream(tarEntries.get(fileName))) {
+            return readDescriptorFile(fis, clazz);
+        }
     }
 
     public String readFileAsString(String fileName) throws IOException {
+        verifyFileExistance(fileName);
         try (InputStream fis = new FileInputStream(tarEntries.get(fileName));
              StringWriter writer = new StringWriter()) {
             IOUtils.copy(fis, writer, StandardCharsets.UTF_8);
@@ -172,6 +177,7 @@ public class NpmBundleReader{
     }
 
     public FileDescriptor readFileAsDescriptor(final String fileName) throws IOException {
+        verifyFileExistance(fileName);
         File f = tarEntries.get(fileName);
         try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             IOUtils.copy(new FileInputStream(f), outputStream);
@@ -186,6 +192,13 @@ public class NpmBundleReader{
 
     private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
         return mapper.readValue(file, clazz);
+    }
+
+    private void verifyFileExistance(String fileName) {
+        log.info("Reading file {}", fileName);
+        if (!tarEntries.containsKey(fileName)) {
+            throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
+        }
     }
 
 }

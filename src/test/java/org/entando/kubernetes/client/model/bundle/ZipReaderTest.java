@@ -5,6 +5,7 @@ import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.same;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
+@Tag("unit")
 public class ZipReaderTest {
 
     private @Mock ZipFile zipFile;

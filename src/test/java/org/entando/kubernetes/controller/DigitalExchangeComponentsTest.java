@@ -24,6 +24,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,7 @@ import org.springframework.web.context.WebApplicationContext;
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
+@Tag("component")
 public class DigitalExchangeComponentsTest {
 
     @Autowired

@@ -7,12 +7,13 @@ import java.security.PublicKey;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(JUnit4.class)
+@Tag("unit")
 public class SignatureUtilTest {
 
     @Test

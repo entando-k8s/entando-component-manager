@@ -259,6 +259,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return template;
     }
 
+
     private HttpMessageConverter<?> getHalConverter() {
         List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
         ObjectMapper mapper = new ObjectMapper();
