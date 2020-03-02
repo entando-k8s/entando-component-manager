@@ -15,8 +15,10 @@ import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeC
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mockito;
 
+@Tag("unit")
 public class DigitalExchangeComponentsServiceTest {
 
     private static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles" ;

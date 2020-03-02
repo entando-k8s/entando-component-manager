@@ -1,4 +1,4 @@
-package org.entando.kubernetes;
+package org.entando.kubernetes.client.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -27,8 +27,10 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.core.io.ClassPathResource;
 
+@Tag("unit")
 public class NpmBundleReaderTest {
 
     NpmBundleReader r;

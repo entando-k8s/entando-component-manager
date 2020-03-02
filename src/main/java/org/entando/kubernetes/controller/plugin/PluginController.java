@@ -2,19 +2,12 @@ package org.entando.kubernetes.controller.plugin;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginInfo;
-import org.entando.kubernetes.model.web.response.PagedRestResponse;
-import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
