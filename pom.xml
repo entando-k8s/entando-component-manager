@@ -605,9 +605,7 @@
                         <skip>${skipInProcessTests}</skip>
                         <forkCount>1</forkCount>
                         <testFailureIgnore>${ignoreAllFailures}</testFailureIgnore>
-                        <properties>
-                            <includeTags>unit,component</includeTags>
-                        </properties>
+                        <groups>unit,component</groups>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -617,9 +615,7 @@
                     <configuration>
                         <testFailureIgnore>${ignoreAllFailures}</testFailureIgnore>
                         <skip>${skipInterProcessTests}</skip>
-                        <properties>
-                            <includeTags>integration,smoke</includeTags>
-                        </properties>
+                        <groups>integration,smoke</groups>
                     </configuration>
                     <executions>
                         <execution>
