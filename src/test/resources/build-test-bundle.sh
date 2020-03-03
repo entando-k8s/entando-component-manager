@@ -1,5 +1,11 @@
 #!/bin/bash
+DIR=${1:-test_bundle}
+F_OUT=${2:-bundle.tgz}
+WD=$(pwd)
+OUTPUT="$WD/$F_OUT"
 
-cd test_bundle
-find package -type f -print0 | xargs -0 tar czf ../bundle.tgz
+echo "Compressing folder $DIR into $F_OUT"
+
+cd "$DIR" || exit
+find . -type f -print0 | xargs -0 tar czf "$OUTPUT"
 cd ..

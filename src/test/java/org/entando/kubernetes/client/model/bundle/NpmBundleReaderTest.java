@@ -36,7 +36,7 @@ import org.springframework.core.io.ClassPathResource;
 public class NpmBundleReaderTest {
 
     NpmBundleReader r;
-    public static final String DEFAULT_TEST_BUNDLE_NAME = "npm_downloaded_bundle.tgz";
+    public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
 
     @BeforeEach
@@ -77,9 +77,7 @@ public class NpmBundleReaderTest {
     @Test
     public void shouldReadResourcesFromPackage() {
         List<String> expectedResourceFolders = Arrays.asList(
-                "js", "img", "css", "less", "fonts", "static",
-                "static/js", "fonts/Lora", "static/css", "fonts/Roboto_Mono",
-                "fonts/Titillium_Web"
+                "js", "css"
         );
         assertThat(r.containsResourceFolder()).isTrue();
         assertThat(r.getResourceFolders()).hasSize(expectedResourceFolders.size());
@@ -88,21 +86,20 @@ public class NpmBundleReaderTest {
 
     @Test
     public void shouldReadDescriptorFile() throws IOException {
-        WidgetDescriptor wd = r.readDescriptorFile("widgets/survey-admin.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = r.readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
-        assertThat(wd.getCode()).isEqualTo("inail_survey_admin");
+        assertThat(wd.getCode()).isEqualTo("another_todomvc_widget");
         assertThat(wd.getGroup()).isEqualTo("free");
-        assertThat(wd.getCustomUiPath()).isEqualTo("survey-admin.ftl");
+        assertThat(wd.getCustomUiPath()).isEqualTo("widget.ftl");
         assertThat(wd.getTitles()).contains(
-                entry("en", "Inail Survey Administration"),
-                entry("it", "Inail Survey Administration"));
+                entry("en", "TODO MVC Widget"),
+                entry("it", "TODO MVC Widget"));
     }
 
     @Test
     public void shouldReadRelatedFileAsString() throws IOException {
-        String content = r.readFileAsString("widgets/survey-admin.ftl");
-        assertThat(content) .startsWith("<#assign wp=JspTaglibs[\"/aps-core\"]>");
-        assertThat(content).endsWith("<#else>    You have to be logged in to fill the survey</#if>");
+        String content = r.readFileAsString("widgets/widget.ftl");
+        assertThat(content).isEqualTo("<h2>Hello World Widget</h2>");
     }
 
     @Test

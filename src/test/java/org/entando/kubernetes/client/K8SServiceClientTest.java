@@ -120,7 +120,6 @@ public class K8SServiceClientTest {
     }
 
     @Test
-//    @Disabled("Until I fix it for JUnit5")
     public void shouldParseEntandoAppPluginCorrectly() throws JsonProcessingException {
 
         CollectionModel<EntityModel<EntandoAppPluginLink>> halResources = new CollectionModel<>(
