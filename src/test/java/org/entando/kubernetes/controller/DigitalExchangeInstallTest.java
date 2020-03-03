@@ -123,7 +123,7 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
-        WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        WireMock.verify(4, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/labels")));
@@ -218,6 +218,11 @@ public class DigitalExchangeInstallTest {
                 .expectEqual("base64", readFileAsBase64("/bundle/resources/css/style.css"));
 
         checkRequest(fileRequests.get(2))
+                .expectEqual("filename", "configUiScript.js")
+                .expectEqual("path", "/todomvc/js/configUiScript.js")
+                .expectEqual("base64", readFileAsBase64("/bundle/resources/js/configUiScript.js"));
+
+        checkRequest(fileRequests.get(3))
                 .expectEqual("filename", "script.js")
                 .expectEqual("path", "/todomvc/js/script.js")
                 .expectEqual("base64", readFileAsBase64("/bundle/resources/js/script.js"));
