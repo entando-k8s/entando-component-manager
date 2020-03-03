@@ -7,8 +7,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
-import org.junit.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
+@Tag("unit")
 public class YamlParsingTest {
 
     @Test

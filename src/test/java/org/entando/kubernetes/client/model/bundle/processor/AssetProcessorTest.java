@@ -10,9 +10,9 @@ import org.entando.kubernetes.model.bundle.processor.AssetProcessor.AssetInstall
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -32,7 +32,7 @@ public class AssetProcessorTest {
 
     private AssetProcessor assetProcessor;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         assetProcessor = new AssetProcessor(engineService);

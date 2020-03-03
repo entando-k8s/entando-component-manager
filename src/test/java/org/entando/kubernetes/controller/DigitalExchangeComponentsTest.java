@@ -3,10 +3,8 @@ package org.entando.kubernetes.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -22,9 +20,9 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,10 +31,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -61,7 +57,7 @@ public class DigitalExchangeComponentsTest {
     @SpyBean
     private K8SServiceClient k8sServiceClient;
 
-    @Before
+    @BeforeEach
     public void setup() {
         ((K8SServiceClientTestDouble) k8sServiceClient).cleanInMemoryDatabases();
         mockMvc = MockMvcBuilders

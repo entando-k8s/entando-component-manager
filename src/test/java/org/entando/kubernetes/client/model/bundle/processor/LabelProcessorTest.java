@@ -10,9 +10,9 @@ import org.entando.kubernetes.model.bundle.processor.LabelProcessor.LabelInstall
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -34,7 +34,7 @@ public class LabelProcessorTest {
 
     private LabelProcessor processor;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         processor = new LabelProcessor(engineService);
