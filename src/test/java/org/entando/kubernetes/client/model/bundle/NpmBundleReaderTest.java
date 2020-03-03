@@ -24,10 +24,11 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
@@ -37,12 +38,12 @@ public class NpmBundleReaderTest {
     public static final String DEFAULT_TEST_BUNDLE_NAME = "npm_downloaded_bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
 
-    @Before
+    @BeforeEach
     public void readNpmPackage() throws IOException {
        r = new NpmBundleReader(getTestDefaultBundlePath()) ;
     }
 
-    @After
+    @AfterEach
     public void cleanUp() {
         r.getTarEntries().values()
                 .forEach(File::delete);
@@ -103,14 +104,18 @@ public class NpmBundleReaderTest {
         assertThat(content).endsWith("<#else>    You have to be logged in to fill the survey</#if>");
     }
 
-    @Test(expected = InvalidBundleException.class)
+    @Test
     public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
-        r.readFileAsDescriptor("widgets/pinco-pallo.yaml");
+        Assertions.assertThrows(InvalidBundleException.class, () -> {
+            r.readFileAsDescriptor("widgets/pinco-pallo.yaml");
+        });
     }
 
-    @Test(expected = InvalidBundleException.class)
+    @Test
     public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
-        r.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+        Assertions.assertThrows(InvalidBundleException.class, () -> {
+            r.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+        });
     }
 
 

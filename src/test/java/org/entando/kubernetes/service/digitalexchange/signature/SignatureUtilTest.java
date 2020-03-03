@@ -6,10 +6,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

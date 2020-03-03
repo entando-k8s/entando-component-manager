@@ -2,8 +2,8 @@ package org.entando.kubernetes.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Arrays;
@@ -23,12 +23,11 @@ import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
-import org.entando.kubernetes.model.web.response.RestResponse;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
@@ -37,20 +36,16 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
-import org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalHandlerInstantiator;
 import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.hateoas.server.core.DefaultLinkRelationProvider;
-import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-@RunWith(SpringRunner.class)
 @Tag("unit")
 public class K8SServiceClientTest {
 
@@ -61,15 +56,22 @@ public class K8SServiceClientTest {
     private static int port;
 
     static {
-        port = findFreePort().orElse(8080);
+        port = findFreePort().orElse(9080);
     }
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(port);
+    WireMockServer wireMockServer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         client = new DefaultK8SServiceClient(String.format("http://localhost:%d", port), CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
+        wireMockServer = new WireMockServer(options().port(port));
+        wireMockServer.start();
+    }
+
+    @AfterEach
+    public void teardown() {
+        wireMockServer.resetAll();
+        wireMockServer.stop();
     }
 
     @Test
@@ -90,7 +92,7 @@ public class K8SServiceClientTest {
         assertThat(returnedLink.get(0).getSpec().getEntandoAppNamespace()).isEqualTo("my-namespace");
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void shouldThrowExceptionIfResponseHasNoBody() {
         ResponseEntity expectedResponse =
                 ResponseEntity.ok(null);
@@ -99,10 +101,12 @@ public class K8SServiceClientTest {
         when(mockRt.exchange(any(String.class), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
                 .thenReturn(expectedResponse);
 
-        client.getAppLinkedPlugins("my-app", "my-namespace");
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            client.getAppLinkedPlugins("my-app", "my-namespace");
+        });
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void shouldThrowExceptionWhenResponseStatusIsError() {
         ResponseEntity expectedResponse = ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
@@ -110,22 +114,24 @@ public class K8SServiceClientTest {
         when(mockRt.exchange(any(String.class), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
                 .thenReturn(expectedResponse);
 
-        client.getAppLinkedPlugins("my-app", "my-namespace");
-
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            client.getAppLinkedPlugins("my-app", "my-namespace");
+        });
     }
 
     @Test
+//    @Disabled("Until I fix it for JUnit5")
     public void shouldParseEntandoAppPluginCorrectly() throws JsonProcessingException {
 
         CollectionModel<EntityModel<EntandoAppPluginLink>> halResources = new CollectionModel<>(
                 Collections.singletonList(new EntityModel<>(getTestEntandoAppPluginLink())));
         client.setRestTemplate(noOAuthRestTemplate());
 
-        stubFor(get(urlPathMatching("/apps/my-namespace/my-app/links"))
+        wireMockServer.stubFor(get(urlEqualTo("/apps/my-namespace/my-app/links"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/hal+json")
-                        .withBody(getHalReadyObjectMapper().writeValueAsString(halResources))));
+                        .withBody(getHalReadyObjectMapper(wireMockServer).writeValueAsString(halResources))));
 
         List<EntandoAppPluginLink> links = client.getAppLinkedPlugins("my-app", "my-namespace");
         assertThat(links).hasSize(1);
@@ -161,12 +167,12 @@ public class K8SServiceClientTest {
         return converter;
     }
 
-    private ObjectMapper getHalReadyObjectMapper() {
+    private ObjectMapper getHalReadyObjectMapper(WireMockServer wireMockServer) {
         LinkRelationProvider provider = new DefaultLinkRelationProvider();
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.setHandlerInstantiator(new Jackson2HalModule.HalHandlerInstantiator(provider,
-                new DefaultCurieProvider("default", UriTemplate.of(wireMockRule.url("/apps/my-namespace/{app}"))),
+                new DefaultCurieProvider("default", UriTemplate.of(wireMockServer.url("/apps/my-namespace/{app}"))),
                 MessageSourceResolvable::getDefaultMessage));
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return mapper;

@@ -3,9 +3,10 @@ package org.entando.kubernetes.client.model.bundle;
 import java.util.Arrays;
 import org.entando.kubernetes.model.bundle.ZipReader;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -31,7 +32,7 @@ public class ZipReaderTest {
     private @Mock ZipFile zipFile;
     private ZipReader zipReader;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
 
@@ -70,9 +71,11 @@ public class ZipReaderTest {
         assertThat(favicon.getBase64()).isEqualTo(encodeBase64String("icon".getBytes()));
     }
 
-    @Test(expected = FileNotFoundException.class)
+    @Test
     public void testFileNotFound() throws IOException {
-        zipReader.readFileAsDescriptor("resources/notfound.ico");
+        Assertions.assertThrows(FileNotFoundException.class, () -> {
+            zipReader.readFileAsDescriptor("resources/notfound.ico");
+        });
     }
 
     @Test

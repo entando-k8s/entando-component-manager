@@ -84,13 +84,14 @@
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.java.checkstyle.reportPaths>target/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
         <awaitility.version>4.0.1</awaitility.version>
+        <wiremock.version>2.25.1</wiremock.version>
 
         <!--dependencies -->
         <postgresql.driver.version>42.2.8</postgresql.driver.version>
 
         <!-- plugin  versions -->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M1</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
         <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
         <maven-failsafe-plugin.version>3.0.0-M4</maven-failsafe-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
@@ -165,13 +166,13 @@
             <artifactId>spring-security-oauth2</artifactId>
             <version>2.4.0.RELEASE</version>
         </dependency>
-
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.10.2</version>
         </dependency>
 
+        <!-- Finish OWASP -->
         <dependency>
             <groupId>org.entando.kubernetes</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
@@ -304,6 +305,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.junit.vintage</groupId>
+                    <artifactId>junit-vintage-engine</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock-jre8</artifactId>
+            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -563,7 +576,7 @@
                     <configuration>
                         <suppressionFile>${project.basedir}/config/owasp-dependency-check-suppression.xml
                         </suppressionFile>
-                        <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>    
+                        <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
                         <failOnError>true</failOnError>
                         <failBuildOnAnyVulnerability>${verifyAllFailures}</failBuildOnAnyVulnerability>
                         <name>National Vulnerability Database Report</name>
@@ -605,7 +618,7 @@
                         <skip>${skipInProcessTests}</skip>
                         <forkCount>1</forkCount>
                         <testFailureIgnore>${ignoreAllFailures}</testFailureIgnore>
-                        <groups>unit,component</groups>
+                        <groups>unit | component</groups>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -615,7 +628,7 @@
                     <configuration>
                         <testFailureIgnore>${ignoreAllFailures}</testFailureIgnore>
                         <skip>${skipInterProcessTests}</skip>
-                        <groups>integration,smoke</groups>
+                        <groups>integration | smoke</groups>
                     </configuration>
                     <executions>
                         <execution>
