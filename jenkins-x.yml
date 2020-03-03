@@ -18,6 +18,9 @@ pipelineConfig:
             name: fix-git-for-sonar
           - sh: mvn-verify-pr -P${EXECUTABLE_TYPE}
             name: mvn-verify-pr
+          - sh: >-
+              publish-status "Integration tests" "success" "failsafe-report.html"
+            name: fake-integration-tests
           - sh:  echo "This avoids unwanted kaniko command substitution" &&  skaffold build -p ${EXECUTABLE_TYPE} -f skaffold.yaml
             name: container-build
       promote:

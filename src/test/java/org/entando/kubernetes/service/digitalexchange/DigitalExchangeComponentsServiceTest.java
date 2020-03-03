@@ -13,10 +13,12 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+@Tag("unit")
 public class DigitalExchangeComponentsServiceTest {
 
     private static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles" ;
@@ -25,7 +27,7 @@ public class DigitalExchangeComponentsServiceTest {
     private DigitalExchangeJobRepository jobRepository;
 
     private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
-    @Before
+    @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
         jobRepository = Mockito.mock(DigitalExchangeJobRepository.class);

@@ -52,10 +52,11 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -75,6 +76,7 @@ import org.springframework.test.web.servlet.MvcResult;
         webEnvironment = WebEnvironment.RANDOM_PORT,
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
 @ActiveProfiles({"test"})
+@Tag("component")
 public class DigitalExchangeInstallTest {
 
     private static final String URL = "/components";
@@ -94,7 +96,7 @@ public class DigitalExchangeInstallTest {
     @Autowired
     private K8SServiceClient k8SServiceClient;
 
-    @After
+    @AfterEach
     public void cleanup() throws SQLException {
         WireMock.reset();
         databaseCleaner.cleanup();
@@ -341,7 +343,7 @@ public class DigitalExchangeInstallTest {
     }
 
     @Test
-    @Ignore("Ignore untill rollback is implemented and #fails is tracked")
+    @Disabled("Ignore untill rollback is implemented and #fails is tracked")
     public void shouldThrowInternalServerErrorWhenActingOnPreviousInstallErrorState() throws Exception {
         simulateFailingInstall();
 
@@ -353,7 +355,7 @@ public class DigitalExchangeInstallTest {
     }
 
     @Test
-    @Ignore("Ignore untill rollback is implemented and #fails is tracked")
+    @Disabled("Ignore untill rollback is implemented and #fails is tracked")
     public void shouldThrowInternalServerErrorWhenActingOnPreviousUninstallErrorState() throws Exception {
 
         simulateSuccessfullyCompletedInstall();
@@ -527,7 +529,7 @@ public class DigitalExchangeInstallTest {
     private byte[] readFromDEPackage() throws IOException {
         try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream(MOCK_BUNDLE_NAME)) {
             try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                Assert.assertNotNull(inputStream);
+                Assertions.assertNotNull(inputStream);
                 IOUtils.copy(inputStream, outputStream);
                 return outputStream.toByteArray();
             }
