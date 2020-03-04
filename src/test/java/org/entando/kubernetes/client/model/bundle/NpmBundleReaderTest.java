@@ -68,6 +68,11 @@ public class NpmBundleReaderTest {
     }
 
     @Test
+    public void shouldReadBundleIdCorrectly() throws IOException {
+       assertThat(r.getBundleId()).isEqualTo("todomvc");
+    }
+
+    @Test
     public void shouldContainADescriptorFileInTheRoot() {
         List<String> descriptorFiles = r.getTarEntries().keySet().stream()
                 .filter(s -> s.equals("descriptor.yaml")).collect(Collectors.toList());

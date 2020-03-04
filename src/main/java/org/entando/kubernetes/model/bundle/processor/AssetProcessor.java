@@ -40,7 +40,7 @@ public class AssetProcessor implements ComponentProcessor {
         final List<Installable> installables = new LinkedList<>();
 
         if (npr.containsResourceFolder()) {
-            final String componentFolder = "/" + job.getComponentId();
+            final String componentFolder = "/" + npr.getBundleId();
             installables.add(new DirectoryInstallable(componentFolder));
 
             final List<String> resourceFolders = npr.getResourceFolders();

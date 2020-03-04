@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class AssetProcessorTest {
         final List<String> folders = Arrays.asList("css", "js", "images");
         final List<String> files = Arrays.asList("favicon.ico", "css/styles.css", "js/script.js", "images/logo.png");
 
+        when(npmBundleReader.getBundleId()).thenReturn("my-bundle");
         when(npmBundleReader.containsResourceFolder()).thenReturn(true);
         when(npmBundleReader.getResourceFolders()).thenReturn(folders);
         when(npmBundleReader.getResourceFiles()).thenReturn(files);
@@ -64,35 +66,35 @@ public class AssetProcessorTest {
 
         assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(0).getName()).isEqualTo("/my-component-id");
+        assertThat(installables.get(0).getName()).isEqualTo("/my-bundle");
 
         assertThat(installables.get(1)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(1).getName()).isEqualTo("/my-component-id/css");
+        assertThat(installables.get(1).getName()).isEqualTo("/my-bundle/css");
 
         assertThat(installables.get(2)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(2).getName()).isEqualTo("/my-component-id/js");
+        assertThat(installables.get(2).getName()).isEqualTo("/my-bundle/js");
 
         assertThat(installables.get(3)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(3).getName()).isEqualTo("/my-component-id/images");
+        assertThat(installables.get(3).getName()).isEqualTo("/my-bundle/images");
 
         assertThat(installables.get(4)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(4).getName()).isEqualTo("/my-component-id/favicon.ico");
+        assertThat(installables.get(4).getName()).isEqualTo("/my-bundle/favicon.ico");
 
         assertThat(installables.get(5)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(5).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(5).getName()).isEqualTo("/my-component-id/css/styles.css");
+        assertThat(installables.get(5).getName()).isEqualTo("/my-bundle/css/styles.css");
 
         assertThat(installables.get(6)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(6).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(6).getName()).isEqualTo("/my-component-id/js/script.js");
+        assertThat(installables.get(6).getName()).isEqualTo("/my-bundle/js/script.js");
 
         assertThat(installables.get(7)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(7).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(7).getName()).isEqualTo("/my-component-id/images/logo.png");
+        assertThat(installables.get(7).getName()).isEqualTo("/my-bundle/images/logo.png");
     }
 
     private FileDescriptor file(final String folder, final String name, final String base64) {

@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR=${1:-test_bundle}
+DIR=${1:-bundle}
 F_OUT=${2:-bundle.tgz}
 WD=$(pwd)
 OUTPUT="$WD/$F_OUT"
