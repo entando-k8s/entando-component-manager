@@ -1,5 +1,5 @@
-code: inail_bundle
-description: This is the inail bundle
+code: todomvc
+description: This is the todomvc bundle
 
 components:
   plugins:

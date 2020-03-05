@@ -49,6 +49,11 @@ public class NpmBundleReader{
         this.tarEntries = buildTarEntries(this.tarInputStream, filePath);
     }
 
+    public String getBundleId() throws IOException {
+        ComponentDescriptor bundleDescriptor = readBundleDescriptor();
+        return bundleDescriptor.getCode();
+    }
+
     public ComponentDescriptor readBundleDescriptor() throws IOException {
         return readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), ComponentDescriptor.class);
     }
