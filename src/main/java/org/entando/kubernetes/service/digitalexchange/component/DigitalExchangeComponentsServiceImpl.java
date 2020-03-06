@@ -13,7 +13,6 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;

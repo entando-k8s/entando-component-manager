@@ -1,0 +1,29 @@
+{
+  "_embedded": {
+    "entandoAppPluginLinkList": [
+      {
+        "kind": "EntandoAppPluginLink",
+        "apiVersion": "entando.org/v1",
+        "metadata": {
+          "name": "my-app-to-plugin-link",
+          "namespace": "my-namespace"
+        },
+        "spec": {
+          "entandoAppNamespace": "my-namespace",
+          "entandoAppName": "my-app",
+          "entandoPluginNamespace": "plugin-namespace",
+          "entandoPluginName": "plugin"
+        },
+        "entandoStatus": { },
+        "_links": {
+          "app": {
+            "href": "http://qst-eci-my-namespace.lab.entando.org/k8s/apps/my-namespace/my-app"
+          },
+          "plugin": {
+            "href": "http://qst-eci-my-namespace.lab.entando.org/k8s/plugins/plugin-namespace/plugin"
+          }
+        }
+      }
+    ]
+  }
+}

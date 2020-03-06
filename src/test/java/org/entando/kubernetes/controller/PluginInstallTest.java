@@ -9,20 +9,18 @@ import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.model.DbmsImageVendor;
+import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 @AutoConfigureMockMvc
 @SpringBootTest(
@@ -52,7 +50,7 @@ public class PluginInstallTest {
                     .withImage("entando/entando-avatar-plugin")
                     .withIngressPath("/avatar")
                     .withHealthCheckPath("/actuator/health")
-                    .withDbms(DbmsImageVendor.MYSQL)
+                    .withDbms(DbmsVendor.MYSQL)
                     .addNewRole("read", "Read")
                     .addNewPermission("another-client", "read")
                 .endSpec()
@@ -70,7 +68,7 @@ public class PluginInstallTest {
         EntandoPlugin plugin = linkedPluginDatabase.get(0);
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/avatar");
-        assertThat(plugin.getSpec().getDbms()).isEqualTo(Optional.of(DbmsImageVendor.MYSQL));
+        assertThat(plugin.getSpec().getDbms()).isEqualTo(Optional.of(DbmsVendor.MYSQL));
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/entando-avatar-plugin");
         assertThat(plugin.getSpec().getHealthCheckPath()).isEqualTo("/actuator/health");
         assertThat(plugin.getSpec().getReplicas()).isEqualTo(Optional.of(1));

@@ -1,6 +1,13 @@
 package org.entando.kubernetes.model.digitalexchange;
 
-import static org.entando.kubernetes.model.digitalexchange.JobStatus.*;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_COMPLETED;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_CREATED;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_ERROR;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_IN_PROGRESS;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_COMPLETED;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_CREATED;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_ERROR;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_IN_PROGRESS;
 
 import java.util.Arrays;
 import java.util.List;

@@ -20,7 +20,6 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
-import org.springframework.hateoas.server.core.TypeReferences.EntityModelType;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -97,7 +96,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment("plugins", pluginNamespace, pluginName).toUriString();
         ResponseEntity<EntityModel<EntandoPlugin>> responseEntity = restTemplate
-                .exchange (url, HttpMethod.GET, null, new EntityModelType<>());
+                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() { });
         if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
             throw new K8SServiceClientException(
                     String.format("An error occurred (%d-%s) while searching plugin %s in namespace %s",

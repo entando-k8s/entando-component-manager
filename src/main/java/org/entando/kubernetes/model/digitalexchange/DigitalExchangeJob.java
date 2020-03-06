@@ -22,7 +22,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

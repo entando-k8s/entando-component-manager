@@ -1,29 +1,27 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.processor.AssetProcessor.AssetInstallable;
-import org.entando.kubernetes.model.bundle.processor.AssetProcessor.DirectoryInstallable;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
+import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
+import org.entando.kubernetes.model.bundle.processor.AssetProcessor.AssetInstallable;
+import org.entando.kubernetes.model.bundle.processor.AssetProcessor.DirectoryInstallable;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
 public class AssetProcessorTest {
