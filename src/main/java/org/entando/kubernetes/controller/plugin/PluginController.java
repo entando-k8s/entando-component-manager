@@ -52,7 +52,9 @@ public class PluginController implements PluginResource {
 
         result.setName(entandoPlugin.getMetadata().getName());
         result.setId(entandoPlugin.getMetadata().getUid());
-        result.setDescription(entandoPlugin.getMetadata().getAnnotations().get("description"));
+        if (entandoPlugin.getMetadata().getAnnotations() != null) {
+            result.setDescription(entandoPlugin.getMetadata().getAnnotations().get("description"));
+        }
 
         return result;
     }

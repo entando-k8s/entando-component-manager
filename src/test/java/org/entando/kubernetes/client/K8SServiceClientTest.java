@@ -10,12 +10,15 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -120,17 +124,17 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldParseEntandoAppPluginCorrectly() throws JsonProcessingException {
+    public void shouldParseEntandoAppPluginCorrectly() {
 
-        CollectionModel<EntityModel<EntandoAppPluginLink>> halResources = new CollectionModel<>(
-                Collections.singletonList(new EntityModel<>(getTestEntandoAppPluginLink())));
         client.setRestTemplate(noOAuthRestTemplate());
+
+        String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/app-links-to-plugin.json");
 
         wireMockServer.stubFor(get(urlEqualTo("/apps/my-namespace/my-app/links"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/hal+json")
-                        .withBody(getHalReadyObjectMapper(wireMockServer).writeValueAsString(halResources))));
+                        .withBody(wiremockResponse)));
 
         List<EntandoAppPluginLink> links = client.getAppLinkedPlugins("my-app", "my-namespace");
         assertThat(links).hasSize(1);
@@ -141,6 +145,31 @@ public class K8SServiceClientTest {
         assertThat(appPluginLink.getSpec().getEntandoAppName()).isEqualTo("my-app");
         assertThat(appPluginLink.getSpec().getEntandoPluginName()).isEqualTo("plugin");
         assertThat(appPluginLink.getSpec().getEntandoPluginNamespace()).isEqualTo("plugin-namespace");
+
+    }
+
+    @Test
+    public void shouldReadPluginFromLink() {
+        EntandoAppPluginLink eapl = new EntandoAppPluginLinkBuilder()
+                .withNewSpec()
+                .withEntandoPlugin("plugin-namespace", "plugin")
+                .withEntandoApp("dummy", "dummy")
+                .endSpec()
+                .build();
+
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/plugin-linked-to-an-app.json");
+
+        client.setRestTemplate(noOAuthRestTemplate());
+        wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin-namespace/plugin"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+
+        EntandoPlugin plugin = client.getPluginForLink(eapl);
+        assertThat(plugin.getMetadata().getName()).isEqualTo("plugin");
+        assertThat(plugin.getMetadata().getNamespace()).isEqualTo("plugin-namespace");
+        assertThat(plugin.getSpec().getImage()).isEqualTo("entando/some-image:6.0.0");
 
     }
 
@@ -180,7 +209,7 @@ public class K8SServiceClientTest {
     private EntandoAppPluginLink getTestEntandoAppPluginLink() {
         return new EntandoAppPluginLinkBuilder()
                 .withNewMetadata()
-                .withName("my-app-to-plugin-link")
+                .withName("my-app-to-pluin-link")
                 .withNamespace("my-namespace")
                 .endMetadata()
                 .withNewSpec()
@@ -202,6 +231,20 @@ public class K8SServiceClientTest {
             // No OPS
         }
         return Optional.ofNullable(port);
+    }
+
+    private String readResourceAsString(String resourcePath) {
+
+        try
+        {
+            Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
+            return new String ( Files.readAllBytes(rp) );
+        }
+        catch (IOException | URISyntaxException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
 }

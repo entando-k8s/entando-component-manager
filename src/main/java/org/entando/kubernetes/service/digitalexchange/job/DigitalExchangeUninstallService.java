@@ -11,7 +11,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
-import org.entando.kubernetes.exception.job.JobCorruptedException;
 import org.entando.kubernetes.exception.job.JobExecutionException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;

@@ -17,7 +17,6 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;

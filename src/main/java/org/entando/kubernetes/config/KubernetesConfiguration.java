@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("!test")
-public class KubernetesConfig {
+public class KubernetesConfiguration {
 
     @Value("${entando.k8s.service.url}")
     private String k8sServiceUrl;
