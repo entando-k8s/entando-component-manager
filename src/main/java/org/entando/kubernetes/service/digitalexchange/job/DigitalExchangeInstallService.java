@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static java.util.Optional.ofNullable;
 
+import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.NpmBundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -35,6 +37,7 @@ import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
@@ -99,8 +102,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     }
 
     private Optional<EntandoDeBundleTag> getBundleTag(EntandoDeBundle bundle, String version) {
-        String versionToFind =
-                "\\d+(\\.\\d+){1,2}".matches(version) ? version : (String) bundle.getSpec().getDetails().getDistTags().get(version);
+        String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
         return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny();
     }
 
