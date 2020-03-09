@@ -8,7 +8,7 @@ public class BundleUtilities {
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String version) {
        
         String versionToFind = version;
-        if ( ! (versionToFind.matches("\\d+\\.\\d+") || versionToFind.matches("\\d+\\.\\d+\\.\\d+"))) {
+        if ( !isFormattedAsVersion(versionToFind)) {
             versionToFind = (String) bundle.getSpec().getDetails().getDistTags().get(version);
         }
         if (Strings.isNullOrEmpty(versionToFind)) {
@@ -16,5 +16,9 @@ public class BundleUtilities {
         }
         return versionToFind;
         
+    }
+
+    private static boolean isFormattedAsVersion(String versionToFind) {
+        return versionToFind.matches("\\d+\\.\\d+") || versionToFind.matches("\\d+\\.\\d+\\.\\d+");
     }
 }
