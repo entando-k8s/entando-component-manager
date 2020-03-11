@@ -3,6 +3,7 @@ package org.entando.kubernetes.client;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -68,6 +70,7 @@ public class K8SServiceClientTest {
     @BeforeEach
     public void setup() {
         client = new DefaultK8SServiceClient(String.format("http://localhost:%d", port), CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
+        client.setRestTemplate(noOAuthRestTemplate());
         wireMockServer = new WireMockServer(options().port(port));
         wireMockServer.start();
     }
@@ -126,7 +129,6 @@ public class K8SServiceClientTest {
     @Test
     public void shouldParseEntandoAppPluginCorrectly() {
 
-        client.setRestTemplate(noOAuthRestTemplate());
 
         String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/app-links-to-plugin.json");
 
@@ -159,7 +161,6 @@ public class K8SServiceClientTest {
 
         String stubResponse = readResourceAsString("/payloads/k8s-svc/plugin-linked-to-an-app.json");
 
-        client.setRestTemplate(noOAuthRestTemplate());
         wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin-namespace/plugin"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -171,6 +172,35 @@ public class K8SServiceClientTest {
         assertThat(plugin.getMetadata().getNamespace()).isEqualTo("plugin-namespace");
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/some-image:6.0.0");
 
+    }
+
+
+    @Test
+    public void shouldGetBundlesFromAllObservedNamespaces() {
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/list.json");
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
+        assertThat(bundles).hasSize(1);
+        assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
+        assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("my-bundle");
+    }
+
+    @Test
+    public void shouldGetBundlesFromObservedNamespaces() {
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/list.json");
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
+        assertThat(bundles).hasSize(1);
+        assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
+        assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("my-bundle");
     }
 
     private RestTemplate noOAuthRestTemplate() {

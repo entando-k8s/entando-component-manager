@@ -76,7 +76,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals("entando-de-bundles"))
                 .collect(Collectors.toList());

@@ -158,7 +158,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT).toUriString();
         return submitBundleRequestAndExtractBody(url);
@@ -188,7 +188,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithName(String name) {
-        return getBundlesInDefaultNamespace().stream()
+        return getBundlesInObservedNamespaces().stream()
                 .filter(b -> b.getSpec().getDetails().getName().equals(name))
                 .findAny();
     }

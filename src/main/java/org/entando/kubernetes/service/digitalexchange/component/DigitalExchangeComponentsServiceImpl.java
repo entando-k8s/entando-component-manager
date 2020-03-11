@@ -47,7 +47,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     public List<DigitalExchangeComponent> getComponents() {
         List<EntandoDeBundle> bundles;
         if(accessibleDigitalExchanges.isEmpty()) {
-            bundles = k8SServiceClient.getBundlesInDefaultNamespace();
+            bundles = k8SServiceClient.getBundlesInObservedNamespaces();
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
         }
