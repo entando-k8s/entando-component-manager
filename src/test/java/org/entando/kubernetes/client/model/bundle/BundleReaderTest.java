@@ -16,7 +16,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
@@ -33,15 +33,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
-public class NpmBundleReaderTest {
+public class BundleReaderTest {
 
-    NpmBundleReader r;
+    BundleReader r;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
-       r = new NpmBundleReader(getTestDefaultBundlePath()) ;
+       r = new BundleReader(getTestDefaultBundlePath()) ;
     }
 
     @AfterEach
@@ -58,7 +58,7 @@ public class NpmBundleReaderTest {
 
     @Test
     public void shouldReadBundleEvenWithDifferentRoot() throws IOException {
-        NpmBundleReader altReader = new NpmBundleReader(getBundlePath(ALTERNATIVE_STRUCTURE_BUNDLE_NAME));
+        BundleReader altReader = new BundleReader(getBundlePath(ALTERNATIVE_STRUCTURE_BUNDLE_NAME));
         assertThat(altReader.getTarEntries()).isNotEmpty();
     }
 
@@ -166,7 +166,7 @@ public class NpmBundleReaderTest {
     private static class DumbComponentProcessor implements ComponentProcessor {
 
         @Override
-        public List<Installable> process(DigitalExchangeJob job, NpmBundleReader npmBundleReader,
+        public List<Installable> process(DigitalExchangeJob job, BundleReader bundleReader,
                 ComponentDescriptor descriptor) throws IOException {
             return null;
         }

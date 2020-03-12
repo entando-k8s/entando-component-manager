@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
@@ -35,7 +35,7 @@ public class CmsProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final NpmBundleReader npr,
+    public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> contentTypesDescriptor = ofNullable(descriptor.getComponents())

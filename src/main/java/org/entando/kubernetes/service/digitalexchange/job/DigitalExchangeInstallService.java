@@ -2,7 +2,6 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static java.util.Optional.ofNullable;
 
-import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -23,8 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
-import org.entando.kubernetes.model.bundle.BundleProperty;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -209,7 +207,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private List<Installable> getInstallablesAndRemoveTempPackage(DigitalExchangeJob job, Path p) {
         try {
-            NpmBundleReader r = new NpmBundleReader(p);
+            BundleReader r = new BundleReader(p);
             ComponentDescriptor descriptor = r.readBundleDescriptor();
             List<Installable> installableList = getInstallables(job, r, descriptor);
             r.destroy();
@@ -256,7 +254,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     }
 
-    private List<Installable> getInstallables(DigitalExchangeJob job, NpmBundleReader r,
+    private List<Installable> getInstallables(DigitalExchangeJob job, BundleReader r,
             ComponentDescriptor descriptor) throws IOException {
         List<Installable> installables = new LinkedList<>();
         for (ComponentProcessor processor : componentProcessors) {

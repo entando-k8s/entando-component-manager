@@ -3,15 +3,16 @@ package org.entando.kubernetes.model.bundle.processor;
 import static java.util.Optional.ofNullable;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
@@ -29,26 +30,34 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageModelProcessor implements ComponentProcessor {
+public class PageProcessor implements ComponentProcessor {
 
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final NpmBundleReader npr,
+    public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
-        final Optional<List<String>> pageModelsDescriptor = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getPageModels);
-        final List<Installable> installables = new LinkedList<>();
+        List<String> pageModelsDescriptor = ofNullable(descriptor.getComponents())
+                .map(ComponentSpecDescriptor::getPageModels)
+                .orElse(Collections.emptyList());
+        List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
+                .map(ComponentSpecDescriptor::getPages)
+                .orElse(Collections.emptyList());
+        List<Installable> installables = new LinkedList<>();
 
-        if (pageModelsDescriptor.isPresent()) {
-            for (final String fileName : pageModelsDescriptor.get()) {
-                final PageModelDescriptor pageModelDescriptor = npr.readDescriptorFile(fileName, PageModelDescriptor.class);
-                if (pageModelDescriptor.getTemplatePath() != null) {
-                    String tp = getRelativePath(fileName, pageModelDescriptor.getTemplatePath());
-                    pageModelDescriptor.setTemplate(npr.readFileAsString(tp));
-                }
-                installables.add(new PageModelInstallable(pageModelDescriptor));
+        for (final String fileName : pageModelsDescriptor) {
+            final PageModelDescriptor pageModelDescriptor = npr.readDescriptorFile(fileName, PageModelDescriptor.class);
+            if (pageModelDescriptor.getTemplatePath() != null) {
+                String tp = getRelativePath(fileName, pageModelDescriptor.getTemplatePath());
+                pageModelDescriptor.setTemplate(npr.readFileAsString(tp));
             }
+            installables.add(new PageModelInstallable(pageModelDescriptor));
+        }
+
+        for (String fileName : pageDescriptorList)  {
+            PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
+            installables.add(new PageInstallable(pageDescriptor));
         }
 
         return installables;
@@ -56,7 +65,7 @@ public class PageModelProcessor implements ComponentProcessor {
 
     @Override
     public boolean shouldProcess(final ComponentType componentType) {
-        return componentType == ComponentType.PAGE_MODEL;
+        return componentType == ComponentType.PAGE_MODEL || componentType == ComponentType.PAGE;
     }
 
     @Override
@@ -76,6 +85,32 @@ public class PageModelProcessor implements ComponentProcessor {
             return CompletableFuture.runAsync(() -> {
                 log.info("Registering Page Model {}", representation.getCode());
                 engineService.registerPageModel(representation);
+            });
+        }
+
+        @Override
+        public ComponentType getComponentType() {
+            return ComponentType.PAGE_MODEL;
+        }
+
+        @Override
+        public String getName() {
+            return representation.getCode();
+        }
+
+    }
+
+    public class PageInstallable extends Installable<PageDescriptor> {
+
+        private PageInstallable(PageDescriptor pd) {
+            super(pd);
+        }
+
+        @Override
+        public CompletableFuture install() {
+            return CompletableFuture.runAsync(() -> {
+                log.info("Registering Page {}", representation.getCode());
+                engineService.registerPage(representation);
             });
         }
 

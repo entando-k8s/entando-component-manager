@@ -6,12 +6,14 @@ import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
+import org.entando.kubernetes.model.entandocore.EntandoCorePage;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,6 +69,14 @@ public class EntandoCoreService {
 
     public void deleteLabel(final String code) {
         restTemplate.delete(resolvePathSegments("api", "labels", code).build().toUri());
+    }
+
+    public void registerPage(PageDescriptor pageDescriptor) {
+        restTemplate.postForEntity(resolvePathSegments("api", "pages").build().toUri(), new EntandoCorePage(pageDescriptor), Void.class);
+    }
+
+    public void deletePage(final String code) {
+        restTemplate.delete(resolvePathSegments("api", "pages", code).build().toUri());
     }
 
     public void registerPageModel(final PageModelDescriptor descriptor) {
