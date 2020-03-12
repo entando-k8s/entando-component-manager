@@ -1,0 +1,12 @@
+code: my-page
+titles:
+  it: La mia pagina
+  en: My page
+pageModel: service
+ownerGroup: administrators
+joinGroups:
+  - free
+  - customers
+  - developers
+displayedInMenu: true
+status: published

@@ -70,8 +70,14 @@ public class PageProcessor implements ComponentProcessor {
 
     @Override
     public void uninstall(final DigitalExchangeJobComponent component) {
-        log.info("Removing PageModel {}", component.getName());
-        engineService.deletePageModel(component.getName());
+        if (component.getComponentType().equals(ComponentType.PAGE_MODEL)) {
+            log.info("Removing PageModel {}", component.getName());
+            engineService.deletePageModel(component.getName());
+        }
+        if (component.getComponentType().equals(ComponentType.PAGE)) {
+            log.info("Removing Page {}", component.getName());
+            engineService.deletePage(component.getName());
+        }
     }
 
     public class PageModelInstallable extends Installable<PageModelDescriptor> {
@@ -116,7 +122,7 @@ public class PageProcessor implements ComponentProcessor {
 
         @Override
         public ComponentType getComponentType() {
-            return ComponentType.PAGE_MODEL;
+            return ComponentType.PAGE;
         }
 
         @Override

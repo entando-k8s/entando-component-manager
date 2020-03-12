@@ -2,6 +2,7 @@ package org.entando.kubernetes.client.model.entandocore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
@@ -21,6 +22,7 @@ public class EntandoCorePageTest {
        assertThat(ecp.isDisplayedInMenu()).isEqualTo(true);
        assertThat(ecp.isSeo()).isEqualTo(false);
        assertThat(ecp.getOwnerGroup()).isEqualTo("administrators");
+       assertThat(ecp.getJoinGroups()).containsExactly("free");
        assertThat(ecp.getStatus()).isEqualTo("published");
        assertThat(ecp.getPageModel()).isEqualTo("service");
        assertThat(ecp.getTitles().keySet()).containsExactlyInAnyOrder("it", "en");
@@ -56,9 +58,9 @@ public class EntandoCorePageTest {
         pageDescriptor.setDisplayedInMenu(true);
         pageDescriptor.setPageModel("service");
         pageDescriptor.setOwnerGroup("administrators");
-        pageDescriptor.setSeo(false);
         pageDescriptor.setTitles(pageTitles);
         pageDescriptor.setStatus("published");
+        pageDescriptor.setJoinGroups(Collections.singletonList("free"));
 
         return pageDescriptor;
     }

@@ -5,8 +5,6 @@ titles:
   en: TODO MVC PageModel
   it: TODO MVC PageModel
 
-group: free
-
 configuration:
   frames:
     - pos: 0
