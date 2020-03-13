@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -25,7 +25,7 @@ public class FragmentProcessor implements ComponentProcessor {
     private final EntandoCoreService engineService;
 
     @Override
-    public List<Installable> process(DigitalExchangeJob job, NpmBundleReader npr, ComponentDescriptor descriptor)
+    public List<Installable> process(DigitalExchangeJob job, BundleReader npr, ComponentDescriptor descriptor)
             throws IOException {
         Optional<List<String>> optionalFragments = Optional.ofNullable(descriptor.getComponents().getFragments());
         List<Installable> installableList = new ArrayList<>();

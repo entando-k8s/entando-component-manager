@@ -3,7 +3,7 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
@@ -23,12 +23,12 @@ public interface ComponentProcessor {
      * a list of all components that should be installed
      *
      * @param job the job being executed in this processing
-     * @param npmBundleReader npm package reader zip file being processed
+     * @param bundleReader npm package reader zip file being processed
      * @param descriptor The component descriptor being processed
      * @return Should return a list of Installables
      * @throws IOException in case of any error while reading any the file from the Zip package
      */
-    List<Installable> process(DigitalExchangeJob job, NpmBundleReader npmBundleReader,
+    List<Installable> process(DigitalExchangeJob job, BundleReader bundleReader,
                                         ComponentDescriptor descriptor) throws IOException;
 
     /**

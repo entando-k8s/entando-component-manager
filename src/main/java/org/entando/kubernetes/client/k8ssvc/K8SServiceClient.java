@@ -16,7 +16,7 @@ public interface K8SServiceClient {
 
     void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);
 
-    List<EntandoDeBundle> getBundlesInDefaultNamespace();
+    List<EntandoDeBundle> getBundlesInObservedNamespaces();
 
     List<EntandoDeBundle> getBundlesInNamespace(String namespace);
 

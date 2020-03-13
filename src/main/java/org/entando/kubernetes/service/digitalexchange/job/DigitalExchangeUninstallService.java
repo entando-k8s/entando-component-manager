@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -115,26 +117,29 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
                         + job.getComponentId() + " resources", e);
             }
 
-            CompletableFuture[] completableFutures = components.stream().map(component -> {
-                if (component.getStatus() == JobStatus.INSTALL_COMPLETED
-                        && component.getComponentType() != ComponentType.RESOURCE) {
-                    CompletableFuture<?> future = deleteComponent(component);
-                    future.exceptionally(ex -> {
-                        log.error("Error while trying to uninstall component {}", component.getId(), ex);
-                        componentRepository
-                                .updateJobStatus(component.getId(), JobStatus.UNINSTALL_ERROR, ex.getMessage());
-                        return null;
-                    });
-                    future.thenApply(object -> {
-                        componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED);
-                        return object;
-                    });
-
-                    return future;
-                }
-
-                return null;
-            }).filter(Objects::nonNull).toArray(CompletableFuture[]::new);
+            CompletableFuture[] completableFutures = components.stream()
+                    .map(component -> {
+                        if (component.getStatus() == JobStatus.INSTALL_COMPLETED
+                                && component.getComponentType() != ComponentType.RESOURCE) {
+                            DigitalExchangeJobComponent ujc = component.duplicate();
+                            ujc.setJob(job);
+                            ujc.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
+                            return componentRepository.save(ujc);
+                        }
+                        return null; })
+                    .filter(Objects::nonNull)
+                    .map(ujc -> {
+                        CompletableFuture<Void> future = deleteComponent(ujc);
+                        future.thenAccept(justVoid -> componentRepository.updateJobStatus(ujc.getId(), JobStatus.UNINSTALL_COMPLETED));
+                        future.exceptionally(ex -> {
+                            log.error("Error while trying to uninstall component {}", ujc.getId(), ex);
+                            componentRepository
+                                    .updateJobStatus(ujc.getId(), JobStatus.UNINSTALL_ERROR, ex.getMessage());
+                            return null;
+                        });
+                        return future;
+                    })
+                    .toArray(CompletableFuture[]::new);
 
             CompletableFuture.allOf(completableFutures).whenComplete((object, ex) -> {
                 JobStatus status = ex == null ? JobStatus.UNINSTALL_COMPLETED : JobStatus.UNINSTALL_ERROR;
@@ -152,15 +157,21 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         if (rootResourceFolder.isPresent()) {
             engineService.deleteFolder("/" + job.getComponentId());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                    .forEach(component -> componentRepository.updateJobStatus(component.getId(), JobStatus.UNINSTALL_COMPLETED));
+                    .forEach(component -> {
+                        DigitalExchangeJobComponent uninstalledJobComponent = component.duplicate();
+                        uninstalledJobComponent.setJob(job);
+                        uninstalledJobComponent.setStatus(JobStatus.UNINSTALL_COMPLETED);
+                        componentRepository.save(uninstalledJobComponent);
+                    });
         }
     }
 
-    private CompletableFuture<?> deleteComponent(final DigitalExchangeJobComponent component) {
-        return CompletableFuture.runAsync(() ->
-                componentProcessors.stream()
-                        .filter(processor -> processor.shouldProcess(component.getComponentType()))
-                        .forEach(processor -> processor.uninstall(component))
+    private CompletableFuture<Void> deleteComponent(final DigitalExchangeJobComponent component) {
+        return CompletableFuture.runAsync(() -> {
+                    componentProcessors.stream()
+                            .filter(processor -> processor.shouldProcess(component.getComponentType()))
+                            .forEach(processor -> processor.uninstall(component));
+                }
         );
     }
 

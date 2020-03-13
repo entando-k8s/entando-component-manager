@@ -22,7 +22,7 @@ public class TestEntitiesGenerator {
     public static EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
         return new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
-                .withDescription("A bundle containing some demo components for Entando6")
+                .withDescription("A bundle containing some demo components for Entano6")
                 .withName("my-bundle")
                 .addNewVersion("0.0.1")
                 .addNewKeyword("entando6")

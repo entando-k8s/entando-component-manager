@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
@@ -31,7 +31,7 @@ import org.mockito.MockitoAnnotations;
 public class LabelProcessorTest {
 
     @Mock private EntandoCoreService engineService;
-    @Mock private NpmBundleReader npmBundleReader;
+    @Mock private BundleReader bundleReader;
 
     private LabelProcessor processor;
 
@@ -50,7 +50,7 @@ public class LabelProcessorTest {
         final ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
         spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
 
-        final List<? extends Installable> installables = processor.process(job, npmBundleReader, descriptor);
+        final List<? extends Installable> installables = processor.process(job, bundleReader, descriptor);
 
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0)).isInstanceOf(LabelInstallable.class);

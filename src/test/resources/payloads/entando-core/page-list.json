@@ -1,0 +1,90 @@
+{
+  "payload": [
+    {
+      "code": "service",
+      "status": "published",
+      "displayedInMenu": false,
+      "pageModel": "service",
+      "charset": "utf8",
+      "contentType": "text/html",
+      "parentCode": "homepage",
+      "seo": false,
+      "titles": {
+        "en": "Service",
+        "it": "Pagine di Servizio"
+      },
+      "fullTitles": {
+        "en": "Home / Service",
+        "it": "Home / Pagine di Servizio"
+      },
+      "ownerGroup": "free",
+      "joinGroups": [],
+      "children": [
+        "notfound",
+        "errorpage",
+        "login"
+      ],
+      "position": 1,
+      "numWidget": 0,
+      "lastModified": "2017-02-17 13:06:24",
+      "fullPath": "homepage/service",
+      "token": null
+    },
+    {
+      "code": "demo",
+      "status": "draft",
+      "displayedInMenu": true,
+      "pageModel": "service",
+      "charset": "utf-8",
+      "contentType": "text/html",
+      "parentCode": "homepage",
+      "seo": false,
+      "titles": {
+        "en": "Demo",
+        "it": "Demo"
+      },
+      "fullTitles": {
+        "en": "Home / Demo",
+        "it": "Home / Demo"
+      },
+      "ownerGroup": "free",
+      "joinGroups": [
+        "free"
+      ],
+      "children": [],
+      "position": 2,
+      "numWidget": 0,
+      "lastModified": "2020-03-10 16:12:18",
+      "fullPath": "homepage/demo",
+      "token": null
+    },
+    {
+      "code": "tempo",
+      "status": "published",
+      "displayedInMenu": true,
+      "pageModel": "service",
+      "charset": "utf-8",
+      "contentType": "text/html",
+      "parentCode": "homepage",
+      "seo": false,
+      "titles": {
+        "en": "Tempo",
+        "it": "Tempo"
+      },
+      "fullTitles": {
+        "en": "Home / Tempo",
+        "it": "Home / Tempo"
+      },
+      "ownerGroup": "free",
+      "joinGroups": [
+        "free"
+      ],
+      "children": [],
+      "position": 3,
+      "numWidget": 1,
+      "lastModified": "2020-03-10 16:15:22",
+      "fullPath": "homepage/tempo",
+      "token": null
+    }
+  ]
+}

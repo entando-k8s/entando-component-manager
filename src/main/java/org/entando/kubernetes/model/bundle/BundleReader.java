@@ -38,13 +38,13 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
 @Slf4j
-public class NpmBundleReader{
+public class BundleReader {
 
     private final YAMLMapper mapper = new YAMLMapper();
     private final Map<String, File> tarEntries;
     private final TarArchiveInputStream tarInputStream;
 
-    public NpmBundleReader(Path filePath) throws IOException {
+    public BundleReader(Path filePath) throws IOException {
         this.tarInputStream = getGzipTarInputStream(filePath);
         this.tarEntries = buildTarEntries(this.tarInputStream, filePath);
     }

@@ -93,7 +93,7 @@ public class DigitalExchangeComponentsTest {
                 .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"))
                 .andExpect(jsonPath("metaData.page").value(1));
 
-        verify(k8sServiceClient, times(1)).getBundlesInDefaultNamespace();
+        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
     }
 
     @Test
@@ -107,7 +107,7 @@ public class DigitalExchangeComponentsTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
 
-        verify(k8sServiceClient, times(1)).getBundlesInDefaultNamespace();
+        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
 
     }
 

@@ -51,4 +51,14 @@ public class DigitalExchangeJobComponent {
         this.id = UUID.randomUUID();
     }
 
+    public DigitalExchangeJobComponent duplicate() {
+        DigitalExchangeJobComponent newComponent = new DigitalExchangeJobComponent();
+        newComponent.setName(getName());
+        newComponent.setJob(getJob());
+        newComponent.setStatus(getStatus());
+        newComponent.setComponentType(getComponentType());
+        newComponent.setChecksum(getChecksum());
+        newComponent.setErrorMessage(getErrorMessage());
+        return newComponent;
+    }
 }

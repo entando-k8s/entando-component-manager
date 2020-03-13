@@ -35,8 +35,12 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
@@ -48,10 +52,14 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
+import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -93,6 +101,12 @@ public class DigitalExchangeInstallTest {
     @Autowired
     private K8SServiceClient k8SServiceClient;
 
+    @Autowired
+    private DigitalExchangeJobComponentRepository jobComponentRepository;
+
+    @Autowired
+    private DigitalExchangeJobRepository jobRepository;
+
     @AfterEach
     public void cleanup() throws SQLException {
         WireMock.reset();
@@ -107,8 +121,9 @@ public class DigitalExchangeInstallTest {
     }
 
     @Test
-    public void testInstallComponent() throws Exception {
+    public void shouldCallCoreToInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
+
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble)  k8SServiceClient;
         // Verify interaction with mocks
@@ -126,29 +141,32 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/labels")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
+        WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/pages")));
 
-        final List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
-        final List<LoggedRequest> pageModelRequests = findAll(
-                postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
-        final List<LoggedRequest> directoryRequests = findAll(
-                postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
-        final List<LoggedRequest> fileRequests = findAll(
-                postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
-        final List<LoggedRequest> contentTypeRequests = findAll(
-                postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
-        final List<LoggedRequest> contentModelRequests = findAll(
-                postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
-        final List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
-        final List<LoggedRequest> fragmentRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
+        List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
+        List<LoggedRequest> pageModelRequests = findAll(
+          postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
+        List<LoggedRequest> directoryRequests = findAll(
+          postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
+        List<LoggedRequest> fileRequests = findAll(
+          postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        List<LoggedRequest> contentTypeRequests = findAll(
+          postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+        List<LoggedRequest> contentModelRequests = findAll(
+          postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+        List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
+        List<LoggedRequest> fragmentRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
+        List<LoggedRequest> pageRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/pages")));
 
-        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests,
-                contentModelRequests, labelRequests, fragmentRequests);
+//        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests,
+//                contentModelRequests, labelRequests, fragmentRequests, pageRequests);
 
         widgetRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         pageModelRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         directoryRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestPath));
         fileRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestPath));
         fragmentRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
+        pageRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
 
         checkRequest(widgetRequests.get(0))
                 .expectEqual("code", "another_todomvc_widget")
@@ -171,7 +189,6 @@ public class DigitalExchangeInstallTest {
         checkRequest(pageModelRequests.get(0))
                 .expectEqual("code", "todomvc_another_page_model")
                 .expectEqual("descr", "TODO MVC another page model")
-                .expectEqual("group", "free")
                 .expectEqual("configuration.frames[0].pos", "0")
                 .expectEqual("configuration.frames[0].descr", "Simple Frame")
                 .expectEqual("template", readFile("/bundle/pagemodels/page.ftl"));
@@ -179,7 +196,6 @@ public class DigitalExchangeInstallTest {
         checkRequest(pageModelRequests.get(1))
                 .expectEqual("code", "todomvc_page_model")
                 .expectEqual("descr", "TODO MVC basic page model")
-                .expectEqual("group", "free")
                 .expectEqual("configuration.frames[0].pos", "0")
                 .expectEqual("configuration.frames[0].descr", "Header")
                 .expectEqual("configuration.frames[0].sketch.x1", "0")
@@ -225,11 +241,78 @@ public class DigitalExchangeInstallTest {
                 .expectEqual("path", "/todomvc/js/script.js")
                 .expectEqual("base64", readFileAsBase64("/bundle/resources/js/script.js"));
 
+        checkRequest(pageRequests.get(0))
+                .expectEqual("code", "my-page")
+                .expectEqual("titles.it", "La mia pagina")
+                .expectEqual("titles.en", "My page")
+                .expectEqual("parentCode", "homepage")
+                .expectEqual("pageModel", "service")
+                .expectEqual("ownerGroup", "administrators")
+                .expectEqual("joinGroups[0]", "free")
+                .expectEqual("joinGroups[1]", "customers")
+                .expectEqual("joinGroups[2]", "developers")
+                .expectEqual("displayedInMenu", "true")
+                .expectEqual("seo", "false")
+                .expectEqual("status", "published");
+
         // Finish first test
     }
 
     @Test
-    public void shouldUninstallAnInstalledComponent() throws Exception {
+    public void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() throws Exception {
+        simulateSuccessfullyCompletedInstall();
+
+        List<DigitalExchangeJob> jobs = jobRepository.findAll();
+        assertThat(jobs).hasSize(1);
+        assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
+
+        List<DigitalExchangeJobComponent> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
+        assertThat(jobComponentList).hasSize(19);
+        List<String> jobComponentNames = jobComponentList.stream().map(DigitalExchangeJobComponent::getName).collect(Collectors.toList());
+        assertThat(jobComponentNames).containsExactlyInAnyOrder(
+                "/todomvc",
+                "/todomvc/js",
+                "/todomvc/css",
+                "/todomvc/css/style.css",
+                "/todomvc/js/script.js",
+                "/todomvc/css/custom.css",
+                "/todomvc/js/configUiScript.js",
+                "todomvc",
+                "my-page",
+                "todomvc_another_page_model",
+                "todomvc_page_model",
+                "another_fragment",
+                "title_fragment",
+                "CNG",
+                "8880002",
+                "8880003",
+                "todomvc_widget",
+                "another_todomvc_widget",
+                "HELLO"
+        );
+
+        Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
+        for(DigitalExchangeJobComponent jcomp: jobComponentList) {
+            Integer n = jobComponentTypes.getOrDefault(jcomp.getComponentType(), 0);
+            jobComponentTypes.put(jcomp.getComponentType(), n + 1);
+        }
+
+        Map<ComponentType, Integer> expectedComponents = new HashMap<>();
+        expectedComponents.put(ComponentType.WIDGET, 2);
+        expectedComponents.put(ComponentType.RESOURCE, 7);
+        expectedComponents.put(ComponentType.PAGE_MODEL, 2);
+        expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
+        expectedComponents.put(ComponentType.CONTENT_MODEL, 2);
+        expectedComponents.put(ComponentType.LABEL, 1);
+        expectedComponents.put(ComponentType.GUI_FRAGMENT, 2);
+        expectedComponents.put(ComponentType.PAGE, 1);
+        expectedComponents.put(ComponentType.PLUGIN, 1);
+
+        assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);
+    }
+
+    @Test
+    public void shouldCallCoreToUninstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
         mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
@@ -247,6 +330,7 @@ public class DigitalExchangeInstallTest {
                 urlEqualTo("/entando-app/api/fileBrowser/directory?protectedFolder=false&currentPath=/todomvc")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/title_fragment")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
+        WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pages/my-page")));
 
         mockMvc.perform(get(URL + "/uninstall/todomvc"))
                 .andExpect(status().isOk())
@@ -254,6 +338,41 @@ public class DigitalExchangeInstallTest {
 
     }
 
+    @Test
+    public void shouldRecordJobStatusAndComponentsForAuditingWhenUninstallComponents() throws Exception {
+        simulateSuccessfullyCompletedInstall();
+
+        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("payload.status").value(JobStatus.INSTALL_COMPLETED.toString()));
+
+        simulateSuccessfullyCompletedUninstall();
+        List<DigitalExchangeJob> jobs = jobRepository.findAll();
+        assertThat(jobs).hasSize(2);
+        assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
+        assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
+
+        List<DigitalExchangeJobComponent> installedComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
+        List<DigitalExchangeJobComponent> uninstalledComponentList = jobComponentRepository.findAllByJob(jobs.get(1));
+        assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
+        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(DigitalExchangeJobComponent::getStatus).collect(Collectors.toList());
+        assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
+
+        boolean matchFound = false;
+        for(DigitalExchangeJobComponent ic: installedComponentList) {
+            matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
+                return uc.getJob().getId().equals(jobs.get(1).getId()) &&
+                        uc.getName().equals(ic.getName()) &&
+                        uc.getComponentType().equals(ic.getComponentType()) &&
+                        uc.getChecksum().equals(ic.getChecksum());
+            });
+            if (!matchFound) {
+                break;
+            }
+        }
+        assertThat(matchFound).isTrue();
+    }
 
     @Test
     public void installedComponentShouldReturnInstalledFieldTrue() throws Exception {
@@ -296,7 +415,6 @@ public class DigitalExchangeInstallTest {
         assertThat(successfulInstallId).isNotEqualTo(successfulUninstallId);
 
         mockMvc.perform(get(URL + "/jobs/{component}", "todomvc"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -321,11 +439,9 @@ public class DigitalExchangeInstallTest {
         String jobId = simulateInProgressInstall();
 
         mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
         waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
@@ -338,9 +454,9 @@ public class DigitalExchangeInstallTest {
         simulateInProgressUninstall();
 
         mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isConflict());
+                .andExpect(status().isConflict());
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isConflict());
+                .andExpect(status().isConflict());
         waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
     }
 
@@ -350,9 +466,9 @@ public class DigitalExchangeInstallTest {
         simulateFailingInstall();
 
         mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError());
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError());
 
     }
 
@@ -364,9 +480,9 @@ public class DigitalExchangeInstallTest {
         simulateFailingUninstall();
 
         mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError());
         mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError());
     }
 
     private String simulateSuccessfullyCompletedInstall() throws Exception {
@@ -386,7 +502,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
 
         waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
@@ -405,7 +521,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
 
         waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
@@ -432,7 +548,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
 
         MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
 
         waitForInstallStatus(JobStatus.INSTALL_ERROR);
@@ -451,7 +567,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
 
         MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
         waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
 
@@ -477,7 +593,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
 
         waitForInstallStatus(JobStatus.INSTALL_IN_PROGRESS);
@@ -495,7 +611,7 @@ public class DigitalExchangeInstallTest {
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
-                .andDo(print()).andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
         waitForUninstallStatus(JobStatus.UNINSTALL_IN_PROGRESS);
 

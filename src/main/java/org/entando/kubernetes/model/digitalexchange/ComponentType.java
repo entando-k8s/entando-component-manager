@@ -18,6 +18,11 @@ public enum ComponentType {
     PAGE_MODEL,
 
     /**
+     * A Page
+     */
+    PAGE,
+
+    /**
      * A Content Model from CMS
      */
     CONTENT_MODEL,

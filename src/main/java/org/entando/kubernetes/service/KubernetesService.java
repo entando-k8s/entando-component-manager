@@ -79,7 +79,7 @@ public class KubernetesService {
     }
 
     public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
-        return k8sServiceClient.getBundlesInDefaultNamespace();
+        return k8sServiceClient.getBundlesInObservedNamespaces();
     }
 
     public Optional<EntandoDeBundle> getBundleByName(String name) {

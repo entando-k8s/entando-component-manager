@@ -13,6 +13,9 @@ components:
     - fragments/my_fragment_descriptor.yaml
     - fragments/another_fragment_descriptor.yaml
 
+  pages:
+    - pages/my_page_descriptor.yaml
+
   pageModels:
     - pagemodels/my_page_model_descriptor.yaml
     - pagemodels/another_page_model_descriptor.yaml

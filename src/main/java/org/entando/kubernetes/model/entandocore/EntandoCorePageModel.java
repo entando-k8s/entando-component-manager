@@ -10,7 +10,6 @@ public class EntandoCorePageModel {
     private String code;
     private String descr;
     private Map<String, String> titles;
-    private String group;
     private String template;
     private EntandoCorePageModelConfiguration configuration;
 
@@ -18,7 +17,6 @@ public class EntandoCorePageModel {
         this.code = descriptor.getCode();
         this.descr = descriptor.getDescription();
         this.titles = descriptor.getTitles();
-        this.group = descriptor.getGroup();
         this.template = descriptor.getTemplate();
         this.configuration = new EntandoCorePageModelConfiguration(descriptor.getConfiguration());
     }

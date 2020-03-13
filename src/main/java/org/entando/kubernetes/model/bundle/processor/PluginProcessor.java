@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.NpmBundleReader;
+import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -36,7 +36,7 @@ public class PluginProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(DigitalExchangeJob job,
-            NpmBundleReader npr,
+            BundleReader npr,
             ComponentDescriptor descriptor) throws IOException {
         Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
                 .map(ComponentSpecDescriptor::getPlugins);
