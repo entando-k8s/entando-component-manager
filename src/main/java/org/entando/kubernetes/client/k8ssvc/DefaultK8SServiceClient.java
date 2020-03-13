@@ -34,6 +34,7 @@ import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResour
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -198,25 +199,26 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
                 .pathSegment(DE_BUNDLES_API_ROOT, "namespaces", namespace, name)
                 .toUriString();
-        ResponseEntity<EntityModel<EntandoDeBundle>> responseEntity = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {});
-
-        if (responseEntity.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-            return Optional.empty();
+        Optional<EntandoDeBundle> optionalBundle = Optional.empty();
+        ResponseEntity<EntityModel<EntandoDeBundle>> responseEntity;
+        try {
+            responseEntity = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {});
+            optionalBundle = Optional.ofNullable(Objects.requireNonNull(responseEntity.getBody()).getContent());
+        } catch (HttpClientErrorException e) {
+            if (!e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                throw new K8SServiceClientException(
+                        String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
+                                e.getStatusCode().value(),
+                                e.getStatusCode().getReasonPhrase()
+                        ));
+            }
         }
 
-        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            throw new K8SServiceClientException(
-                    String.format("An error occurred (%d-%s) while retrieving all available digital-exchange bundles",
-                            responseEntity.getStatusCode().value(),
-                            responseEntity.getStatusCode().getReasonPhrase()
-                    ));
-        }
-
-        return Optional.of(Objects.requireNonNull(responseEntity.getBody()).getContent());
+        return optionalBundle;
     }
 
     private List<EntandoDeBundle> submitBundleRequestAndExtractBody(String url) {

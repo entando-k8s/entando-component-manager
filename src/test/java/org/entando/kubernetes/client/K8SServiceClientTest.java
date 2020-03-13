@@ -1,7 +1,12 @@
 package org.entando.kubernetes.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
@@ -14,6 +19,8 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.matching.AnythingPattern;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;
@@ -29,11 +36,13 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
@@ -59,6 +68,7 @@ public class K8SServiceClientTest {
     private final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
     private final String TOKEN_URI = "http://someurl.com";
     private DefaultK8SServiceClient client;
+    private String k8sServiceUrlBaseUrl;
     private static int port;
 
     static {
@@ -69,7 +79,8 @@ public class K8SServiceClientTest {
 
     @BeforeEach
     public void setup() {
-        client = new DefaultK8SServiceClient(String.format("http://localhost:%d", port), CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
+        k8sServiceUrlBaseUrl = String.format("http://localhost:%d", port);
+        client = new DefaultK8SServiceClient(k8sServiceUrlBaseUrl, CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
         client.setRestTemplate(noOAuthRestTemplate());
         wireMockServer = new WireMockServer(options().port(port));
         wireMockServer.start();
@@ -88,7 +99,8 @@ public class K8SServiceClientTest {
                 ResponseEntity.ok(new CollectionModel<>(Collections.singletonList(new EntityModel<>(appPluginLink))));
 
         RestTemplate mockRt = mock(RestTemplate.class);
-        when(mockRt.exchange(any(String.class), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
+        ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
+        when(mockRt.exchange(url.capture(), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
                 .thenReturn(expectedResponse);
 
         client.setRestTemplate(mockRt);
@@ -97,6 +109,42 @@ public class K8SServiceClientTest {
         assertThat(returnedLink.size()).isEqualTo(1);
         assertThat(returnedLink.get(0).getSpec().getEntandoAppName()).isEqualTo("my-app");
         assertThat(returnedLink.get(0).getSpec().getEntandoAppNamespace()).isEqualTo("my-namespace");
+        assertThat(url.getValue()).isEqualTo(k8sServiceUrlBaseUrl + "/apps/my-namespace/my-app/links");
+    }
+
+    @Test
+    public void shouldLinkAnAppWithAPlugin() {
+
+        String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/links/app-plugin-link.json");
+        EntandoPlugin testPlugin = getTestEntandoPlugin();
+
+        wireMockServer.stubFor(post(urlEqualTo("/apps/my-namespace/my-app/links"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(wiremockResponse)));
+
+        client.linkAppWithPlugin("my-app", "my-namespace", testPlugin);
+        wireMockServer.verify(1, postRequestedFor(urlEqualTo("/apps/my-namespace/my-app/links")));
+        List<LoggedRequest> loggedRequests = wireMockServer.findAll(postRequestedFor(urlEqualTo("/apps/my-namespace/my-app/links")));
+        loggedRequests.get(0).getBodyAsString().contains("name: " + testPlugin.getMetadata().getName());
+        loggedRequests.get(0).getBodyAsString().contains("namespace: " + testPlugin.getMetadata().getNamespace());
+
+    }
+
+    @Test
+    public void shouldUnlinkThePlugin() {
+
+        wireMockServer.stubFor(delete(urlEqualTo("/apps/my-namespace/my-app/links/plugin"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")));
+
+        client.unlink(getTestEntandoAppPluginLink());
+        wireMockServer.verify(1, deleteRequestedFor(urlEqualTo("/apps/my-namespace/my-app/links/plugin")));
+
     }
 
     @Test
@@ -130,7 +178,7 @@ public class K8SServiceClientTest {
     public void shouldParseEntandoAppPluginCorrectly() {
 
 
-        String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/app-links-to-plugin.json");
+        String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/links/app-plugin-link-list.json");
 
         wireMockServer.stubFor(get(urlEqualTo("/apps/my-namespace/my-app/links"))
                 .willReturn(aResponse()
@@ -159,7 +207,7 @@ public class K8SServiceClientTest {
                 .endSpec()
                 .build();
 
-        String stubResponse = readResourceAsString("/payloads/k8s-svc/plugin-linked-to-an-app.json");
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
 
         wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin-namespace/plugin"))
                 .willReturn(aResponse()
@@ -190,17 +238,90 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldGetBundlesFromObservedNamespaces() {
+    public void shouldGetBundlesFromSingleNamespace() {
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/list.json");
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/entando-de-bundles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/de-bundles/namespaces/entando-de-bundles")));
+        assertThat(bundles).hasSize(1);
+    }
+
+    @Test
+    public void shouldGetBundlesFromMultipleNamespaces() {
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/empty-list.json");
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/first"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/second"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/third"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/de-bundles/namespaces/first")));
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/de-bundles/namespaces/second")));
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/de-bundles/namespaces/third")));
+        assertThat(bundles).isEmpty();
+    }
+
+    @Test
+    public void shouldGetBundleWithName() {
         String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/list.json");
         wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/hal+json")
                         .withBody(stubResponse)));
-        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
-        assertThat(bundles).hasSize(1);
-        assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
-        assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("my-bundle");
+        Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
+        assertThat(bundle.isPresent()).isTrue();
+        assertThat(bundle.get().getSpec().getDetails().getName()).isEqualTo("my-bundle");
+    }
+
+    @Test
+    public void shouldNotFindBundleWithName() {
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/empty-list.json");
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
+        assertThat(bundle.isPresent()).isFalse();
+    }
+
+    @Test
+    public void shouldNotFindBundleWithNameInNamespace() {
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/my-namespace/my-bundle"))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withBody("{}")
+                        .withHeader("Content-Type", "application/json")));
+        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "my-namespace");
+        assertThat(bundle.isPresent()).isFalse();
+    }
+
+    @Test
+    public void shouldGetBundleWithNameAndNamespace() {
+        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/my-bundle.json");
+        wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/entando-de-bundle/my-bundle"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/hal+json")
+                        .withBody(stubResponse)));
+        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundle");
+        assertThat(bundle.isPresent()).isTrue();
+        assertThat(bundle.get().getSpec().getDetails().getName()).isEqualTo("my-bundle");
     }
 
     private RestTemplate noOAuthRestTemplate() {
@@ -247,6 +368,15 @@ public class K8SServiceClientTest {
                 .withEntandoPlugin("plugin-namespace", "plugin")
                 .endSpec()
                 .build();
+    }
+
+    private EntandoPlugin getTestEntandoPlugin() {
+       return new EntandoPluginBuilder()
+               .withNewMetadata()
+               .withName("plugin")
+               .withNamespace("plugin-namespace")
+               .endMetadata()
+               .build();
     }
 
     private static Optional<Integer> findFreePort() {
