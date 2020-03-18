@@ -273,9 +273,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     ex);
         } catch (RestClientException ex) {
             throw new KubernetesClientException( "A generic error occurred while talking with k8s-service", ex);
-
         } catch (Exception ex) {
-            throw new RuntimeException("Something totally unexpected happened ", ex);
+            throw new RuntimeException("Something unexpected happened ", ex);
         }
     }
 
