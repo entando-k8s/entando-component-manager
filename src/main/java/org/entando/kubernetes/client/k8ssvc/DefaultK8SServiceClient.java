@@ -83,7 +83,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace) {
-        try {
+        return tryOrThrow(() -> {
             CollectionModel<EntityModel<EntandoAppPluginLink>> links = traverson
                     .follow("apps")
                     .follow(Hop.rel("app-links").withParameter("name", entandoAppName))
@@ -92,48 +92,28 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             return links.getContent().stream()
                     .map(EntityModel::getContent)
                     .collect(Collectors.toList());
-        } catch (RestClientException ex) {
-            throw new K8SServiceClientException(
-                    String.format("An error occurred while retrieving links for app %s in namespace %s",
-                            entandoAppName,
-                            entandoAppNamespace),
-                    ex);
-        }
 
+        });
     }
 
     @Override
     public EntandoPlugin getPluginForLink(EntandoAppPluginLink el) {
-        String pluginName = el.getSpec().getEntandoPluginName();
-        String pluginNamespace = el.getSpec().getEntandoPluginNamespace();
-        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
-                .pathSegment("plugins", pluginNamespace, pluginName).toUriString();
-        ResponseEntity<EntityModel<EntandoPlugin>> responseEntity = restTemplate
-                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() { });
-        if (!responseEntity.hasBody() || responseEntity.getStatusCode().isError()) {
-            throw new K8SServiceClientException(
-                    String.format("An error occurred (%d-%s) while searching plugin %s in namespace %s",
-                            responseEntity.getStatusCode().value(),
-                            responseEntity.getStatusCode().getReasonPhrase(),
-                            pluginName,
-                            pluginNamespace
-                    ));
-        }
-        return Objects.requireNonNull(responseEntity.getBody()).getContent();
+        return tryOrThrow(() -> traverson.follow("app-plugin-links")
+                .follow(Hop.rel("link").withParameter("name", el.getMetadata().getName()))
+                .follow("plugin")
+                .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {})
+                .getContent());
     }
 
     @Override
     public void unlink(EntandoAppPluginLink el) {
-        String appNamespace = el.getSpec().getEntandoAppNamespace();
-        String appName = el.getSpec().getEntandoAppName();
-        String pluginName = el.getSpec().getEntandoPluginName();
-        traverson.follow("apps")
-                .follow(Hop.rel("app-links").withParameter("name", appName))
-
-        String url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
-                .pathSegment("apps", appNamespace, appName, LINKS, pluginName).toUriString();
+        String linkName = el.getMetadata().getName();
+        String unlinkHref = traverson.follow("app-plugin-links")
+                .follow(Hop.rel("link").withParameter("name", linkName))
+                .follow(Hop.rel("unlink"))
+                .asLink().getHref();
         ResponseEntity<CollectionModel<EntityModel<EntandoAppPluginLink>>> responseEntity = restTemplate.exchange(
-                url,
+                unlinkHref,
                 HttpMethod.DELETE,
                 null,
                 new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {});
@@ -142,9 +122,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     String.format("An error occurred (%d-%s) while remove link between app %s in namespace %s and plugin %s",
                             responseEntity.getStatusCode().value(),
                             responseEntity.getStatusCode().getReasonPhrase(),
-                            appName,
-                            appNamespace,
-                            pluginName
+                            el.getSpec().getEntandoAppName(),
+                            el.getSpec().getEntandoAppNamespace(),
+                            el.getSpec().getEntandoPluginName()
                     ));
         }
 
@@ -291,19 +271,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getRawStatusCode(),
                             ex.getResponseBodyAsString()),
                     ex);
-        } catch (Exception ex) {
-            throw new RuntimeException("Something wrong happened", ex);
-        }
-    }
+        } catch (RestClientException ex) {
+            throw new KubernetesClientException( "A generic error occurred while talking with k8s-service", ex);
 
-    public <T> T tryOrThrow(Supplier<T> supplier, KubernetesClientException throwable) {
-       try {
-           return supplier.get();
-       } catch (RestClientException ex) {
-           throw throwable;
-       } catch (Exception ex) {
-           throw new RuntimeException("Something wrong happened", ex);
-       }
+        } catch (Exception ex) {
+            throw new RuntimeException("Something totally unexpected happened ", ex);
+        }
     }
 
 }
