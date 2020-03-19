@@ -15,6 +15,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.hateoas.MediaTypes.HAL_JSON;
+import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,8 +49,10 @@ import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.UriTemplate;
+import org.springframework.hateoas.client.Traverson;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.hateoas.server.LinkRelationProvider;
@@ -69,17 +73,18 @@ public class K8SServiceClientTest {
     private final String TOKEN_URI = "http://someurl.com";
     private DefaultK8SServiceClient client;
     private String k8sServiceUrlBaseUrl;
-    private static int port;
+    private static int port = 9080;
 
     static {
-        port = findFreePort().orElse(9080);
+//        port = findFreePort().orElse(9080);
+//        port = findFreePort().orElse(9080);
     }
 
     WireMockServer wireMockServer;
 
     @BeforeEach
     public void setup() {
-        k8sServiceUrlBaseUrl = String.format("http://localhost:%d", port);
+        k8sServiceUrlBaseUrl = String.format("http://localhost:%d/", port);
         client = new DefaultK8SServiceClient(k8sServiceUrlBaseUrl, CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
         client.setRestTemplate(noOAuthRestTemplate());
         wireMockServer = new WireMockServer(options().port(port));
@@ -93,41 +98,95 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldReturnLinkCorrectly() {
-        EntandoAppPluginLink appPluginLink = getTestEntandoAppPluginLink();
-        ResponseEntity<CollectionModel<EntityModel<EntandoAppPluginLink>>> expectedResponse =
-                ResponseEntity.ok(new CollectionModel<>(Collections.singletonList(new EntityModel<>(appPluginLink))));
+    public void testTraversonWithWiremock() {
+        String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
+        wireMockServer.stubFor(
+                get(urlMatching("/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(rootResponse)));
 
-        RestTemplate mockRt = mock(RestTemplate.class);
-        ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
-        when(mockRt.exchange(url.capture(), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
-                .thenReturn(expectedResponse);
+        Traverson t = client.newTraverson();
+        Link l = t.follow("app-plugin-links").asLink();
+        assertThat(l).isNotNull();
+        assertThat(l.getRel().value()).isEqualTo("app-plugin-links");
+        assertThat(l.getHref()).isEqualTo("http://localhost:9080/app-plugin-links");
 
-        client.setRestTemplate(mockRt);
+    }
 
-        List<EntandoAppPluginLink> returnedLink = client.getAppLinkedPlugins("my-app", "my-namespace");
+    @Test
+    public void shouldReturnLinksToApp() {
+        String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
+        String linksResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-links.json");
+        String singlePluginResponse = this.readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
+
+        wireMockServer.stubFor(get(urlMatching("/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(rootResponse)));
+        wireMockServer.stubFor(get(urlMatching("/app-plugin-links/?"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linksResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/app-plugin-links?app=my-app"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linksResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singlePluginResponse)));
+
+        List<EntandoAppPluginLink> returnedLink = client.getAppLinks("my-app");
+        wireMockServer.verify(1, getRequestedFor(urlMatching("/app-plugin-links/?")));
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/app-plugin-links?app=my-app")));
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/plugin/plugin")));
         assertThat(returnedLink.size()).isEqualTo(1);
         assertThat(returnedLink.get(0).getSpec().getEntandoAppName()).isEqualTo("my-app");
         assertThat(returnedLink.get(0).getSpec().getEntandoAppNamespace()).isEqualTo("my-namespace");
-        assertThat(url.getValue()).isEqualTo(k8sServiceUrlBaseUrl + "/apps/my-namespace/my-app/links");
     }
 
     @Test
     public void shouldLinkAnAppWithAPlugin() {
 
-        String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/links/app-plugin-link.json");
+        String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
+        String appsListResponse = this.readResourceAsString("/payloads/k8s-svc/apps/apps.json");
+        String singleAppResponse = this.readResourceAsString("/payloads/k8s-svc/apps/app.json");
+        String createdLinkResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
         EntandoPlugin testPlugin = getTestEntandoPlugin();
 
-        wireMockServer.stubFor(post(urlEqualTo("/apps/my-namespace/my-app/links"))
+        wireMockServer.stubFor(get(urlMatching("/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(rootResponse)));
+        wireMockServer.stubFor(get(urlMatching("/apps/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(appsListResponse)));
+        wireMockServer.stubFor(get(urlMatching("/apps/my-app/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singleAppResponse)));
+        wireMockServer.stubFor(post(urlEqualTo("/apps/my-app/links"))
                 .withRequestBody(new AnythingPattern())
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
-                        .withBody(wiremockResponse)));
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(createdLinkResponse)));
 
         client.linkAppWithPlugin("my-app", "my-namespace", testPlugin);
-        wireMockServer.verify(1, postRequestedFor(urlEqualTo("/apps/my-namespace/my-app/links")));
-        List<LoggedRequest> loggedRequests = wireMockServer.findAll(postRequestedFor(urlEqualTo("/apps/my-namespace/my-app/links")));
+        wireMockServer.verify(1, postRequestedFor(urlEqualTo("/apps/my-app/links")));
+        List<LoggedRequest> loggedRequests = wireMockServer.findAll(postRequestedFor(urlEqualTo("/apps/my-app/links")));
         loggedRequests.get(0).getBodyAsString().contains("name: " + testPlugin.getMetadata().getName());
         loggedRequests.get(0).getBodyAsString().contains("namespace: " + testPlugin.getMetadata().getNamespace());
 
@@ -135,15 +194,28 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldUnlinkThePlugin() {
+        String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
+        String linksResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-links.json");
+        String singleLinkResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
+        EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
 
-        wireMockServer.stubFor(delete(urlEqualTo("/apps/my-namespace/my-app/links/plugin"))
-                .withRequestBody(new AnythingPattern())
+        wireMockServer.stubFor(get(urlMatching("/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")));
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(rootResponse)));
+        wireMockServer.stubFor(get(urlMatching("/app-plugin-links/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linksResponse)));
+        wireMockServer.stubFor(delete(urlMatching("/app-plugin-links/[a-z\\-]+"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse().withStatus(204)));
 
         client.unlink(getTestEntandoAppPluginLink());
-        wireMockServer.verify(1, deleteRequestedFor(urlEqualTo("/apps/my-namespace/my-app/links/plugin")));
+        String name = testLink.getMetadata().getName();
+        wireMockServer.verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/"+ name)));
 
     }
 
@@ -157,7 +229,7 @@ public class K8SServiceClientTest {
                 .thenReturn(expectedResponse);
 
         Assertions.assertThrows(RuntimeException.class, () -> {
-            client.getAppLinkedPlugins("my-app", "my-namespace");
+            client.getAppLinks("my-app");
         });
     }
 
@@ -170,23 +242,41 @@ public class K8SServiceClientTest {
                 .thenReturn(expectedResponse);
 
         Assertions.assertThrows(RuntimeException.class, () -> {
-            client.getAppLinkedPlugins("my-app", "my-namespace");
+            client.getAppLinks("my-app");
         });
     }
 
     @Test
     public void shouldParseEntandoAppPluginCorrectly() {
 
+        String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
+        String linksResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-links.json");
+        String singlePluginResponse = this.readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
 
-        String wiremockResponse = this.readResourceAsString("/payloads/k8s-svc/links/app-plugin-link-list.json");
-
-        wireMockServer.stubFor(get(urlEqualTo("/apps/my-namespace/my-app/links"))
+        wireMockServer.stubFor(get(urlMatching("/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
-                        .withBody(wiremockResponse)));
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(rootResponse)));
+        wireMockServer.stubFor(get(urlMatching("/app-plugin-links/?"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linksResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/app-plugin-links?app=my-app"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linksResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singlePluginResponse)));
 
-        List<EntandoAppPluginLink> links = client.getAppLinkedPlugins("my-app", "my-namespace");
+        List<EntandoAppPluginLink> links = client.getAppLinks("my-app");
         assertThat(links).hasSize(1);
         EntandoAppPluginLink appPluginLink = links.get(0);
         assertThat(appPluginLink.getMetadata().getNamespace()).isEqualTo("my-namespace");
@@ -201,19 +291,40 @@ public class K8SServiceClientTest {
     @Test
     public void shouldReadPluginFromLink() {
         EntandoAppPluginLink eapl = new EntandoAppPluginLinkBuilder()
+                .withNewMetadata()
+                .withName("my-link")
+                .endMetadata()
                 .withNewSpec()
                 .withEntandoPlugin("plugin-namespace", "plugin")
                 .withEntandoApp("dummy", "dummy")
                 .endSpec()
                 .build();
 
-        String stubResponse = readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
+        String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
+        String linkListResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-links.json");
+        String linkResponse = readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
+        String pluginResponse = readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
 
-        wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin-namespace/plugin"))
+        wireMockServer.stubFor(get(urlMatching("/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
-                        .withBody(stubResponse)));
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(rootResponse)));
+        wireMockServer.stubFor(get(urlMatching("/app-plugin-links/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linkListResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/app-plugin-links/my-link"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(linkResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/plugins/plugin"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(pluginResponse)));
 
         EntandoPlugin plugin = client.getPluginForLink(eapl);
         assertThat(plugin.getMetadata().getName()).isEqualTo("plugin");
@@ -229,7 +340,7 @@ public class K8SServiceClientTest {
         wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
         assertThat(bundles).hasSize(1);
@@ -243,7 +354,7 @@ public class K8SServiceClientTest {
         wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/entando-de-bundles"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
         wireMockServer.verify(1, getRequestedFor(urlEqualTo("/de-bundles/namespaces/entando-de-bundles")));
@@ -256,17 +367,17 @@ public class K8SServiceClientTest {
         wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/first"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/second"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/third"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
         wireMockServer.verify(1, getRequestedFor(urlEqualTo("/de-bundles/namespaces/first")));
@@ -281,7 +392,7 @@ public class K8SServiceClientTest {
         wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
         assertThat(bundle.isPresent()).isTrue();
@@ -294,7 +405,7 @@ public class K8SServiceClientTest {
         wireMockServer.stubFor(get(urlMatching("/de-bundles/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
         assertThat(bundle.isPresent()).isFalse();
@@ -317,7 +428,7 @@ public class K8SServiceClientTest {
         wireMockServer.stubFor(get(urlMatching("/de-bundles/namespaces/entando-de-bundle/my-bundle"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/hal+json")
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundle");
         assertThat(bundle.isPresent()).isTrue();
@@ -327,8 +438,7 @@ public class K8SServiceClientTest {
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();
         List<HttpMessageConverter<?>> converters = template.getMessageConverters();
-        converters.add(0, getHalConverter());
-        template.setMessageConverters(converters);
+        template.setMessageConverters(Traverson.getDefaultMessageConverters(HAL_JSON));
         return template;
     }
 
@@ -360,7 +470,7 @@ public class K8SServiceClientTest {
     private EntandoAppPluginLink getTestEntandoAppPluginLink() {
         return new EntandoAppPluginLinkBuilder()
                 .withNewMetadata()
-                .withName("my-app-to-pluin-link")
+                .withName("my-app-to-plugin-link")
                 .withNamespace("my-namespace")
                 .endMetadata()
                 .withNewSpec()

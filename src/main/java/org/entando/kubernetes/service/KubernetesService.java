@@ -53,7 +53,7 @@ public class KubernetesService {
     }
 
     private List<EntandoAppPluginLink> getCurrentAppLinkedPlugins() {
-        return k8sServiceClient.getAppLinkedPlugins(entandoAppName, entandoAppNamespace);
+        return k8sServiceClient.getAppLinks(entandoAppName);
     }
 
     private Optional<EntandoAppPluginLink> getCurrentAppLinkedPlugin(String pluginId) {

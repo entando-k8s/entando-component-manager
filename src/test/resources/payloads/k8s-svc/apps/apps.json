@@ -1,0 +1,55 @@
+{
+  "_embedded": {
+    "entandoApps": [
+      {
+        "kind": "EntandoApp",
+        "apiVersion": "entando.org/v1",
+        "metadata": {
+          "name": "my-app",
+          "namespace": "my-namespace"
+        },
+        "spec": {
+          "standardServerImage": "wildfly",
+          "dbms": "postgresql",
+          "ingressPath": "/entando-de-app",
+          "replicas": 1,
+          "backupGitSpec": {},
+          "parameters": {}
+        },
+        "entandoStatus": {},
+        "_links": {
+          "self": {
+            "href": "http://localhost:9080/apps/my-app"
+          },
+          "apps": {
+            "href": "http://localhost:9080/apps"
+          },
+          "apps-in-namespace": {
+            "href": "http://localhost:9080/apps?namespace=my-namespace",
+            "templated": true
+          },
+          "app-links": {
+            "href": "http://localhost:9080/app-plugin-links?app=my-app"
+          },
+          "namespace": {
+            "href": "http://localhost:9080/namespaces/my-namespace"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "app": {
+      "href": "http://localhost:9080/apps/{name}",
+      "templated": true
+    },
+    "app-links": {
+      "href": "http://localhost:9080/app-plugin-links?app={app}",
+      "templated": true
+    },
+    "apps-in-namespace": {
+      "href": "http://localhost:9080/apps?namespace={namespace}",
+      "templated": true
+    }
+  }
+}
