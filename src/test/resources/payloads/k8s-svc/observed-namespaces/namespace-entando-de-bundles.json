@@ -1,0 +1,21 @@
+{
+  "name": "entando-de-bundles",
+  "_links": {
+    "self": {
+      "href": "http://localhost:9080/namespaces/entando-de-bundles"
+    },
+    "plugins-in-namespace": {
+      "href": "http://localhost:9080/plugins?namespace=entando-de-bundles"
+    },
+    "apps-in-namespace": {
+      "href": "http://localhost:9080/apps?namespace=entando-de-bundles"
+    },
+    "bundles-in-namespace": {
+      "href": "http://localhost:9080/bundles?namespace=entando-de-bundles"
+    },
+    "app-plugin-links-in-namespace": {
+      "href": "http://localhost:9080/app-plugin-links?namespace=entando-de-bundles",
+      "templated": true
+    }
+  }
+}

@@ -29,16 +29,16 @@
         "entandoStatus": { },
         "_links": {
           "self": {
-            "href": "http://localhost:9080/plugins/tecnici-plugin"
+            "href": "http://localhost:9080/plugins/plugin"
           },
           "plugins": {
             "href": "http://localhost:9080/plugins"
           },
           "plugins-in-namespace": {
-            "href": "http://localhost:9080/plugins?namespace=cm-cui"
+            "href": "http://localhost:9080/plugins?namespace=plugin-namespace"
           },
           "namespace": {
-            "href": "http://localhost:9080/namespaces/cm-cui"
+            "href": "http://localhost:9080/namespaces/plugin-namespace"
           }
         }
       }

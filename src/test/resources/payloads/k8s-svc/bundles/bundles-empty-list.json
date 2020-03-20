@@ -1,0 +1,15 @@
+{
+  "_embedded": {
+    "entandoDeBundles": []
+  },
+  "_links": {
+    "bundle": {
+      "href": "http://qst-eci-cm-cui.lab.entando.org/k8s/bundles/{name}",
+      "templated": true
+    },
+    "bundles-in-namespace": {
+      "href": "http://qst-eci-cm-cui.lab.entando.org/k8s/bundles?{namespace}",
+      "templated": true
+    }
+  }
+}

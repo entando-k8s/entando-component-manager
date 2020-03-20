@@ -134,9 +134,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("namespace", namespace);
-        return tryOrThrow(() -> traverson.follow("/bundles?{namespace}").withTemplateParameters(params)
+        return tryOrThrow(() -> traverson.follow("bundles")
+                .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
                 .getContent()
                 .stream().map(EntityModel::getContent)
