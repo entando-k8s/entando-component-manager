@@ -4,11 +4,11 @@
   },
   "_links": {
     "bundle": {
-      "href": "http://qst-eci-cm-cui.lab.entando.org/k8s/bundles/{name}",
+      "href": "http://localhost:9080/bundles/{name}",
       "templated": true
     },
     "bundles-in-namespace": {
-      "href": "http://qst-eci-cm-cui.lab.entando.org/k8s/bundles?{namespace}",
+      "href": "http://localhost:9080/bundles?namespace={namespace}",
       "templated": true
     }
   }

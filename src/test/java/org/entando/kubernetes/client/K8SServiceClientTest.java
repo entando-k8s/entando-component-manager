@@ -169,25 +169,25 @@ public class K8SServiceClientTest {
     @Test
     public void shouldGetBundlesFromMultipleNamespaces() {
         String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlMatching("/bundles/namespaces/first"))
+        mockServer.addStub(get(urlMatching("/bundles?namespaces=first"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        mockServer.addStub(get(urlMatching("/bundles/namespaces/second"))
+        mockServer.addStub(get(urlMatching("/bundles?namespaces=second"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        mockServer.addStub(get(urlMatching("/bundles/namespaces/third"))
+        mockServer.addStub(get(urlMatching("/bundles?namespaces=third"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespaces=first")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespaces=second")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespaces=third")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third")));
         assertThat(bundles).isEmpty();
     }
 
@@ -200,8 +200,8 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldNotFindBundleWithName() {
-        String stubResponse = readResourceAsString("/payloads/k8s-svc/de-bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlMatching("/de-bundles/?"))
+        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
+        mockServer.addStub(get(urlMatching("/bundles/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
@@ -212,20 +212,21 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldNotFindBundleWithNameInNamespace() {
-        mockServer.addStub(get(urlMatching("/de-bundles/namespaces/my-namespace/my-bundle"))
+        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
+        mockServer.addStub(get(urlEqualTo("/bundles?namespace=my-namespace"))
                 .willReturn(aResponse()
-                        .withStatus(404)
-                        .withBody("{}")
-                        .withHeader("Content-Type", "application/json")));
+                        .withStatus(200)
+                        .withBody(stubResponse)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)));
         Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "my-namespace");
         assertThat(bundle.isPresent()).isFalse();
     }
 
     @Test
     public void shouldGetBundleWithNameAndNamespace() {
-        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundle");
+        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundles");
         assertThat(bundle.isPresent()).isTrue();
-        assertThat(bundle.get().getSpec().getDetails().getName()).isEqualTo("my-bundle");
+        assertThat(bundle.get().getMetadata().getName()).isEqualTo("my-bundle");
     }
 
     private RestTemplate noOAuthRestTemplate() {

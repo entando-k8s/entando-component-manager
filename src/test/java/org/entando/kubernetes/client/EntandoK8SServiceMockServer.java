@@ -53,14 +53,14 @@ public class EntandoK8SServiceMockServer {
 
     private void addBundlesResource(WireMockServer wireMockServer) {
         String bundleListResponse = readResourceAsString("/payloads/k8s-svc/bundles/bundles.json");
-        String singleBundleResponse = readResourceAsString("/payloads/k8s-svc/bundles/bundles.json");
+        String singleBundleResponse = readResourceAsString("/payloads/k8s-svc/bundles/bundle.json");
 
         wireMockServer.stubFor(get(urlMatching("/bundles/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(bundleListResponse)));
-        wireMockServer.stubFor(get(urlMatching("/bundles\\?namespace=entando-de-bundles"))
+        wireMockServer.stubFor(get(urlEqualTo("/bundles?namespace=entando-de-bundles"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
@@ -162,6 +162,12 @@ public class EntandoK8SServiceMockServer {
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(linkListResponse)));
         wireMockServer.stubFor(get(urlMatching("/app-plugin-links/my-app-to-plugin-link/?"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singleLinkResponse)));
+        wireMockServer.stubFor(get(urlMatching("/app-plugin-links/[a-zA-Z\\-]+/?"))
                 .withRequestBody(new AnythingPattern())
                 .willReturn(aResponse()
                         .withStatus(200)
