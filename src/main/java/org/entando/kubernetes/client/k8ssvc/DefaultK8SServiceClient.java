@@ -234,10 +234,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return requestFactory;
     }
 
-    public void tryOrThrow(Runnable runnable) {
-        tryOrThrow(runnable, "talking with k8s-service");
-    }
-
     public void tryOrThrow(Runnable runnable, String actionDescription) {
         try {
             runnable.run();
@@ -248,10 +244,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getRawStatusCode(),
                             ex.getResponseBodyAsString()),
                     ex);
-        } catch (RestClientException ex) {
-            throw new KubernetesClientException( "A generic error occurred while " + actionDescription, ex);
         } catch (Exception ex) {
-            throw new RuntimeException("Something unexpected happened while " + actionDescription, ex);
+            throw new KubernetesClientException( "A generic error occurred while " + actionDescription, ex);
         }
     }
 
@@ -270,10 +264,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getRawStatusCode(),
                             ex.getResponseBodyAsString()),
                     ex);
-        } catch (RestClientException ex) {
-            throw new KubernetesClientException( "A generic error occurred while " + action, ex);
         } catch (Exception ex) {
-            throw new RuntimeException("Something unexpected happened while " + action, ex);
+            throw new KubernetesClientException( "A generic error occurred while " + action, ex);
         }
     }
 

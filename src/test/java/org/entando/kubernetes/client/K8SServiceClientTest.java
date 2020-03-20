@@ -1,6 +1,8 @@
 package org.entando.kubernetes.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
@@ -16,6 +18,7 @@ import static org.springframework.hateoas.MediaTypes.HAL_JSON;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;
@@ -111,8 +114,17 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldThrowExceptionWhenResponseStatusIsError() {
-        Assertions.assertThrows(RuntimeException.class, () -> {
+        Assertions.assertThrows(KubernetesClientException.class, () -> {
             client.getAppLinks("not-existing-app");
+        });
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenUnlinkError() {
+        EntandoAppPluginLink link = getTestEntandoAppPluginLink();
+        mockServer.addStub(delete(anyUrl()).willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
+        Assertions.assertThrows(KubernetesClientException.class, () -> {
+            client.unlink(link);
         });
     }
 
