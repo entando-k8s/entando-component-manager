@@ -7,8 +7,8 @@
   },
   "spec": {
     "details": {
-      "name": "my-bundle",
-      "description": "A bundle containing some demo components for Entano6",
+      "name": "@entando/my-bundle",
+      "description": "A bundle containing some demo components for Entando6",
       "versions": [
         "1.0.0"
       ],

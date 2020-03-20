@@ -162,15 +162,25 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithName(String name) {
-        return getBundlesInObservedNamespaces().stream()
-                .filter(b -> b.getSpec().getDetails().getName().equals(name))
-                .findAny();
+        EntandoDeBundle bundle = null;
+        try {
+            bundle = traverson.follow("bundles")
+                    .follow(Hop.rel("bundle").withParameter("name", name))
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {})
+                    .getContent();
+            
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
+            }
+        }
+        return Optional.ofNullable(bundle);
     }
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         return getBundlesInNamespace(namespace).stream()
-                .filter(b -> b.getSpec().getDetails().getName().equals(name))
+                .filter(b -> b.getMetadata().getName().equals(name))
                 .findFirst();
     }
 

@@ -72,14 +72,14 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
     private Optional<DigitalExchangeJob> getLastAvaialableJob(EntandoDeBundle bundle) {
         String digitalExchange = bundle.getMetadata().getNamespace();
-        String componentId = bundle.getSpec().getDetails().getName();
+        String componentId = bundle.getMetadata().getName();
 
         return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId);
     }
 
     private Optional<DigitalExchangeJob> findLastInstallJob(EntandoDeBundle bundle) {
         String digitalExchange = bundle.getMetadata().getNamespace();
-        String componentId = bundle.getSpec().getDetails().getName();
+        String componentId = bundle.getMetadata().getName();
         return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId)
                 .stream()
                 .filter(j -> JobType.isOfType(j.getStatus(), JobType.INSTALL))

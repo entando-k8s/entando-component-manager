@@ -10,8 +10,8 @@
         },
         "spec": {
           "details": {
-            "name": "my-bundle",
-            "description": "A bundle containing some demo components for Entano6",
+            "name": "@entando/my-bundle",
+            "description": "A bundle containing some demo components for Entando6",
             "versions": [
               "1.0.0"
             ],
@@ -35,16 +35,16 @@
         },
         "_links": {
           "self": {
-            "href": "http://localhost:9080/bundles/tecnici-bundle"
+            "href": "http://localhost:9080/bundles/my-bundle"
           },
           "bundles": {
             "href": "http://localhost:9080/bundles/"
           },
           "bundles-in-namespace": {
-            "href": "http://localhost:9080/bundles?namespace=cm-cui"
+            "href": "http://localhost:9080/bundles?namespace=entando-de-bundles"
           },
           "namespace": {
-            "href": "http://localhost:9080/namespaces/cm-cui"
+            "href": "http://localhost:9080/namespaces/entando-de-bundles"
           }
         }
       }
