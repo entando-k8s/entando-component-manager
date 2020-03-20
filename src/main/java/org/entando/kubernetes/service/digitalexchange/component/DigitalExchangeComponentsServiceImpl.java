@@ -57,12 +57,13 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
         DigitalExchangeComponent dec = new DigitalExchangeComponent();
+        String bundleId = bundle.getMetadata().getName();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
+        dec.setId(bundleId);
         dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
         dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
         dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
-        dec.setId(bd.getName());
         dec.setRating(5);
         dec.setInstalled(checkIfInstalled(bundle));
         dec.setType("Bundle");
@@ -75,7 +76,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     private boolean checkIfInstalled(EntandoDeBundle bundle) {
         String deId = bundle.getMetadata().getNamespace();
-        String componentId = bundle.getSpec().getDetails().getName();
+        String componentId = bundle.getMetadata().getName();
         return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(deId, componentId)
                 .map(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .orElse(false);

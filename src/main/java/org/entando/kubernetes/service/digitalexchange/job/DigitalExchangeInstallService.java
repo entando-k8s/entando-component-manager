@@ -107,7 +107,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private DigitalExchangeJob createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         final DigitalExchangeJob job = new DigitalExchangeJob();
 
-        job.setComponentId(bundle.getSpec().getDetails().getName());
+        job.setComponentId(bundle.getMetadata().getName());
         job.setComponentName(bundle.getSpec().getDetails().getName());
         job.setComponentVersion(tag.getVersion());
         job.setDigitalExchange(bundle.getMetadata().getNamespace());

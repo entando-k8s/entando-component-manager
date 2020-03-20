@@ -10,10 +10,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
@@ -34,19 +30,14 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.client.Traverson;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 @Tag("unit")
@@ -168,7 +159,7 @@ public class K8SServiceClientTest {
         List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
         assertThat(bundles).hasSize(1);
         assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
-        assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("my-bundle");
+        assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("@entando/my-bundle");
     }
 
     @Test
@@ -207,18 +198,12 @@ public class K8SServiceClientTest {
     public void shouldGetBundleWithName() {
         Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
         assertThat(bundle.isPresent()).isTrue();
-        assertThat(bundle.get().getSpec().getDetails().getName()).isEqualTo("my-bundle");
+        assertThat(bundle.get().getSpec().getDetails().getName()).isEqualTo("@entando/my-bundle");
     }
 
     @Test
     public void shouldNotFindBundleWithName() {
-        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlMatching("/bundles/?"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", HAL_JSON_VALUE)
-                        .withBody(stubResponse)));
-        Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
+        Optional<EntandoDeBundle> bundle = client.getBundleWithName("not-existent-bundle");
         assertThat(bundle.isPresent()).isFalse();
     }
 
