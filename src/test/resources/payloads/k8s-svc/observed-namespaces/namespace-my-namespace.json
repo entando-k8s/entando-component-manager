@@ -1,0 +1,21 @@
+{
+  "name": "my-namespace",
+  "_links": {
+    "self": {
+      "href": "http://localhost:9080/namespaces/my-namespace"
+    },
+    "plugins-in-namespace": {
+      "href": "http://localhost:9080/plugins?namespace=my-namespace"
+    },
+    "apps-in-namespace": {
+      "href": "http://localhost:9080/apps?namespace=my-namespace"
+    },
+    "bundles-in-namespace": {
+      "href": "http://localhost:9080/bundles?namespace=my-namespace"
+    },
+    "app-plugin-links-in-namespace": {
+      "href": "http://localhost:9080/app-plugin-links?namespace=my-namespace",
+      "templated": true
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "_embedded": {
+    "entandoAppPluginLinks": [
+      {
+        "kind": "EntandoAppPluginLink",
+        "apiVersion": "entando.org/v1",
+        "metadata": {
+          "name": "my-app-to-plugin-link",
+          "namespace": "my-namespace"
+        },
+        "spec": {
+          "entandoAppNamespace": "my-namespace",
+          "entandoAppName": "my-app",
+          "entandoPluginNamespace": "plugin-namespace",
+          "entandoPluginName": "plugin"
+        },
+        "entandoStatus": { },
+        "_links": {
+          "self": {
+            "href": "http://localhost:9080/app-plugin-links/my-app-to-plugin-link"
+          },
+          "app": {
+            "href": "http://localhost:9080/apps/my-app"
+          },
+          "plugin": {
+            "href": "http://localhost:9080/plugins/plugin"
+          },
+          "delete": {
+            "href": "http://localhost:9080/app-plugin-links/my-app-to-plugin-link"
+          },
+          "namespace": {
+            "href": "http://localhost:9080/namespaces/my-namespace"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "app-plugin-link": {
+      "href": "http://localhost:9080/app-plugin-links/{name}",
+      "templated": true
+    },
+    "delete": {
+      "href": "http://localhost:9080/app-plugin-links/{name}",
+      "templated": true
+    },
+    "app-links": {
+      "href": "http://localhost:9080/app-plugin-links?app={app}",
+      "templated": true
+    },
+    "plugin-links": {
+      "href": "http://localhost:9080/app-plugin-links?plugin={plugin}",
+      "templated": true
+    },
+    "app-plugin-links-in-namespace": {
+      "href": "http://localhost:9080/app-plugin-links?namespace={namespace}",
+      "templated": true
+    }
+  }
+}

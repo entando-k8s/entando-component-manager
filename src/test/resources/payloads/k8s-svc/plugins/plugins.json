@@ -1,0 +1,61 @@
+{
+  "_embedded": {
+    "entandoPlugins": [
+      {
+        "kind": "EntandoPlugin",
+        "apiVersion": "entando.org/v1",
+        "metadata": {
+          "name": "plugin",
+          "namespace": "plugin-namespace"
+        },
+        "spec": {
+          "image": "entando/some-image:6.0.0",
+          "dbms": "mysql",
+          "replicas": 1,
+          "ingressPath": "/my-plugin",
+          "healthCheckPath": "/management/health",
+          "securityLevel": "strict",
+          "roles": [
+            {
+              "code": "my-plugin-admin",
+              "name": "my-plugin-admin"
+            }
+          ],
+          "permissions": [],
+          "parameters": {},
+          "connectionConfigNames": [],
+          "companionContainers": []
+        },
+        "entandoStatus": { },
+        "_links": {
+          "self": {
+            "href": "http://localhost:9080/plugins/plugin"
+          },
+          "plugins": {
+            "href": "http://localhost:9080/plugins"
+          },
+          "plugins-in-namespace": {
+            "href": "http://localhost:9080/plugins?namespace=plugin-namespace"
+          },
+          "namespace": {
+            "href": "http://localhost:9080/namespaces/plugin-namespace"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "plugin": {
+      "href": "http://localhost:9080/plugins/{name}",
+      "templated": true
+    },
+    "plugins-in-namespace": {
+      "href": "http://localhost:9080/plugins?namespace={namespace}",
+      "templated": true
+    },
+    "plugin-links": {
+      "href": "http://localhost:9080/app-plugin-links?plugin={plugin}",
+      "templated": true
+    }
+  }
+}

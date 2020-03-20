@@ -1,0 +1,19 @@
+{
+  "_links": {
+    "apps": {
+      "href": "http://localhost:9080/apps"
+    },
+    "plugins": {
+      "href": "http://localhost:9080/plugins"
+    },
+    "bundles": {
+      "href": "http://localhost:9080/bundles/"
+    },
+    "app-plugin-links": {
+      "href": "http://localhost:9080/app-plugin-links"
+    },
+    "observed-namespaces": {
+      "href": "http://localhost:9080/namespaces"
+    }
+  }
+}

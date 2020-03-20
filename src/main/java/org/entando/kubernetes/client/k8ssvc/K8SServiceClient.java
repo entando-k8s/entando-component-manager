@@ -8,7 +8,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public interface K8SServiceClient {
 
-    List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace);
+    List<EntandoAppPluginLink> getAppLinks(String entandoAppName);
 
     EntandoPlugin getPluginForLink(EntandoAppPluginLink el);
 

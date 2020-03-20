@@ -26,13 +26,16 @@
   "entandoStatus": { },
   "_links": {
     "self": {
-      "href": "http://some-url.org/k8s/plugins/plugin-namespace/plugin"
-    },
-    "namespace_plugin": {
-      "href": "http://some-url.org/k8s/plugins/plugin-namespace"
+      "href": "http://localhost:9080/plugins/plugin"
     },
     "plugins": {
-      "href": "http://some-url.org/k8s/plugins/"
+      "href": "http://localhost:9080/plugins"
+    },
+    "plugins-in-namespace": {
+      "href": "http://localhost:9080/plugins?namespace=plugin-namespace"
+    },
+    "namespace": {
+      "href": "http://localhost:9080/namespaces/plugin-namespace"
     }
   }
 }

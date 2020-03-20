@@ -41,10 +41,9 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoAppPluginLink> getAppLinkedPlugins(String entandoAppName, String entandoAppNamespace) {
+    public List<EntandoAppPluginLink> getAppLinks(String entandoAppName) {
         return this.inMemoryLinks.stream().filter(link ->
-                link.getSpec().getEntandoAppName().equals(entandoAppName) &&
-                        link.getSpec().getEntandoAppNamespace().equals(entandoAppNamespace))
+                link.getSpec().getEntandoAppName().equals(entandoAppName))
                 .collect(Collectors.toList());
 
     }
