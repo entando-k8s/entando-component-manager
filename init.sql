@@ -1,2 +1,1 @@
 CREATE DATABASE digital_exchange;
-CREATE DATABASE digital_exchange_test;

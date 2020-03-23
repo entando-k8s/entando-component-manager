@@ -145,3 +145,82 @@ databaseChangeLog:
                   type: TEXT
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 1584975542724-3
+      author: kerruba (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: digital_exchange_installed_bundles_pkey
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: bundle_id
+                  type: VARCHAR(30)
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: digital_exchange_id
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: digital_exchange_name
+                  type: VARCHAR(255)
+              - column:
+                  name: image
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: installed
+                  type: BOOLEAN
+              - column:
+                  name: last_update
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: metadata
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(30)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: rating
+                  type: FLOAT8
+              - column:
+                  name: signature
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: type
+                  type: VARCHAR(30)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: version
+                  type: VARCHAR(255)
+            tableName: digital_exchange_installed_bundles
+  - changeSet:
+      id: 1584975542724-5
+      author: kerruba (generated)
+      changes:
+        - addUniqueConstraint:
+            columnNames: bundle_id
+            constraintName: uk_n385agwefm1rpoa2dmsj661n3
+            tableName: digital_exchange_installed_bundles
+

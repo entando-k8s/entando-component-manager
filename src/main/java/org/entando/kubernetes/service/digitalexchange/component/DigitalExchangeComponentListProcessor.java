@@ -52,7 +52,7 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
         return filter -> {
             switch (filter.getAttribute()) {
                 case ID:
-                    return c -> FilterUtils.filterString(filter, c.getId());
+                    return c -> FilterUtils.filterString(filter, c.getBundleId());
                 case NAME:
                     return c -> FilterUtils.filterString(filter, c.getName());
                 case TYPE:
@@ -99,7 +99,7 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getName(), b.getName());
                 case ID: // id is the default sorting field
                 default:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getId(), b.getId());
+                    return (a, b) -> StringUtils.compareIgnoreCase(a.getBundleId(), b.getBundleId());
             }
         };
     }
