@@ -83,7 +83,8 @@ import org.springframework.test.web.servlet.MvcResult;
 @Tag("component")
 public class DigitalExchangeInstallTest {
 
-    private static final String URL = "/components";
+    private static final String COMPONENTS_ENDPOINT = "/components";
+    private static final String JOBS_ENDPOINT = "/jobs";
     private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(45);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
@@ -115,7 +116,7 @@ public class DigitalExchangeInstallTest {
 
     @Test
     public void shouldReturnNotFoundWhenBundleDoesntExists() throws Exception {
-        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andDo(print()).andExpect(status().isNotFound());
     }
 
@@ -314,7 +315,7 @@ public class DigitalExchangeInstallTest {
     public void shouldCallCoreToUninstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(get(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value("todomvc"))
                 .andExpect(jsonPath("payload.status").value(JobStatus.INSTALL_COMPLETED.toString()));
@@ -331,7 +332,7 @@ public class DigitalExchangeInstallTest {
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/fragments/another_fragment")));
         WireMock.verify(1, deleteRequestedFor(urlEqualTo("/entando-app/api/pages/my-page")));
 
-        mockMvc.perform(get(URL + "/uninstall/todomvc"))
+        mockMvc.perform(get(COMPONENTS_ENDPOINT + "/uninstall/todomvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.UNINSTALL_COMPLETED.toString()));
 
@@ -341,7 +342,7 @@ public class DigitalExchangeInstallTest {
     public void shouldRecordJobStatusAndComponentsForAuditingWhenUninstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(get(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value("todomvc"))
                 .andExpect(jsonPath("payload.status").value(JobStatus.INSTALL_COMPLETED.toString()));
@@ -378,11 +379,11 @@ public class DigitalExchangeInstallTest {
 
         simulateSuccessfullyCompletedInstall();
 
-        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(COMPONENTS_ENDPOINT).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].bundleId").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
     }
@@ -391,14 +392,14 @@ public class DigitalExchangeInstallTest {
     public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
         String failingJobId = simulateFailingInstall();
 
-        mockMvc.perform(get(URL).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(COMPONENTS_ENDPOINT).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].bundleId").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
-        mockMvc.perform(get(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(get(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
@@ -413,7 +414,7 @@ public class DigitalExchangeInstallTest {
 
         assertThat(successfulInstallId).isNotEqualTo(successfulUninstallId);
 
-        mockMvc.perform(get(URL + "/jobs/{component}", "todomvc"))
+        mockMvc.perform(get( JOBS_ENDPOINT + "?component={component}", "todomvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -437,10 +438,10 @@ public class DigitalExchangeInstallTest {
     public void shouldThrowConflictWhenActingDuringInstallJobInProgress() throws Exception {
         String jobId = simulateInProgressInstall();
 
-        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
-        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
         waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
@@ -452,9 +453,9 @@ public class DigitalExchangeInstallTest {
         simulateSuccessfullyCompletedInstall();
         simulateInProgressUninstall();
 
-        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isConflict());
-        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isConflict());
         waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
     }
@@ -464,9 +465,9 @@ public class DigitalExchangeInstallTest {
     public void shouldThrowInternalServerErrorWhenActingOnPreviousInstallErrorState() throws Exception {
         simulateFailingInstall();
 
-        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isInternalServerError());
-        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isInternalServerError());
 
     }
@@ -478,9 +479,9 @@ public class DigitalExchangeInstallTest {
         simulateSuccessfullyCompletedInstall();
         simulateFailingUninstall();
 
-        mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isInternalServerError());
-        mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isInternalServerError());
     }
 
@@ -500,7 +501,7 @@ public class DigitalExchangeInstallTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -519,7 +520,7 @@ public class DigitalExchangeInstallTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -546,7 +547,7 @@ public class DigitalExchangeInstallTest {
 
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
 
-        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -565,7 +566,7 @@ public class DigitalExchangeInstallTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
 
-        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andReturn();
         waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
@@ -591,7 +592,7 @@ public class DigitalExchangeInstallTest {
 
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/install/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -609,7 +610,7 @@ public class DigitalExchangeInstallTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", URL)))
+        MvcResult result = mockMvc.perform(post(String.format("%s/uninstall/todomvc", COMPONENTS_ENDPOINT)))
                 .andExpect(status().isOk())
                 .andReturn();
         waitForUninstallStatus(JobStatus.UNINSTALL_IN_PROGRESS);
@@ -632,13 +633,13 @@ public class DigitalExchangeInstallTest {
     }
 
     private SimpleRestResponse<DigitalExchangeJob> getInstallJob() throws Exception{
-        return mapper.readValue(mockMvc.perform(get(URL + "/install/todomvc"))
+        return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
     }
 
     private SimpleRestResponse<DigitalExchangeJob> getUninstallJob() throws Exception{
-        return mapper.readValue(mockMvc.perform(get(URL + "/uninstall/todomvc"))
+        return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=UNINSTALL"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
     }
