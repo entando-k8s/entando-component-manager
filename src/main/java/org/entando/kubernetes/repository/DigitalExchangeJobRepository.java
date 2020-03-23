@@ -3,6 +3,7 @@ package org.entando.kubernetes.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,7 +21,6 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
     Optional<DigitalExchangeJob> findByComponentIdAndStatusNotEqual(@Param("componentId") String componentId,
                                                                     @Param("status") JobStatus status);
 
-
     Optional<DigitalExchangeJob> findFirstByComponentIdAndAndStatusNotOrderByStartedAtDesc(
             String componentId,
             JobStatus status);
@@ -29,11 +29,17 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
             String digitalExchangeId,
             String componentId);
 
+    List<DigitalExchangeJob> findAllByOrderByFinishedAtDesc();
+
     List<DigitalExchangeJob> findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
             String digitalExchange,
             String componentId);
 
     List<DigitalExchangeJob> findAllByComponentIdOrderByStartedAtDesc(String componentId);
+
+    Optional<DigitalExchangeJob> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId, List<JobStatus> status);
+
+    Optional<DigitalExchangeJob> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId, JobStatus status);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)

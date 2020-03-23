@@ -58,9 +58,5 @@ public interface DigitalExchangeInstallResource {
     @GetMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId);
 
-    @Operation(description = "Get all jobs for a component")
-    @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(value = "/jobs/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PagedRestResponse<DigitalExchangeJob>> getComponentJobs(@PathVariable("component") String componentId);
 
 }
