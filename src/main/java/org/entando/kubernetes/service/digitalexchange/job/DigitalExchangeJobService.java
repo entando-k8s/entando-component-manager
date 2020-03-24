@@ -10,7 +10,6 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 @Slf4j

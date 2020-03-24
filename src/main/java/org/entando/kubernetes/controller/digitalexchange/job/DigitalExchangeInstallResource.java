@@ -37,25 +37,25 @@ public interface DigitalExchangeInstallResource {
 
     @Operation(description = "Starts component installation job")
     @ApiResponse(responseCode = "201", description = "Created")
-    @PostMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> install(
             @PathVariable("component") String componentId,
             @RequestParam(name = "version", required = true, defaultValue = "latest") String version);
 
     @Operation(description = "Starts component remove job ")
     @ApiResponse(responseCode = "201", description = "Created")
-    @PostMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{component}/uninstall", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> uninstall(@PathVariable("component") String componentId,
             HttpServletRequest request) throws URISyntaxException;
 
     @Operation(description = "Checks installation job status")
     @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(value = "/install/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastInstallJob(@PathVariable("component") String componentId);
 
     @Operation(description = "Checks removal job status")
     @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(value = "/uninstall/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{component}/uninstall", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId);
 
 
