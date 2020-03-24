@@ -52,11 +52,13 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -112,6 +114,9 @@ public class DigitalExchangeInstallTest {
 
     @Autowired
     private DigitalExchangeJobRepository jobRepository;
+
+    @Autowired
+    private DigitalExchangeInstalledComponentRepository installedCompRepo;
 
     @AfterEach
     public void cleanup() throws SQLException {
@@ -372,9 +377,8 @@ public class DigitalExchangeInstallTest {
         assertThat(matchFound).isTrue();
     }
 
-
     @Test
-    public void installedComponentShouldReturnInstalledFieldTrue() throws Exception {
+    public void installedComponentShouldReturnInstalledFieldTrueAndEntryInTheInstalledComponentDatabase() throws Exception {
 
         simulateSuccessfullyCompletedInstall();
 
@@ -384,6 +388,13 @@ public class DigitalExchangeInstallTest {
                 .andExpect(jsonPath("$.payload", hasSize(1)))
                 .andExpect(jsonPath("$.payload[0].componentId").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
+
+        List<DigitalExchangeComponent> installedComponents = installedCompRepo.findAll();
+        assertThat(installedComponents).hasSize(1);
+        assertThat(installedComponents.get(0).getComponentId()).isEqualTo("todomvc");
+        assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
+        assertThat(installedComponents.get(0).getDigitalExchangeId()).isEqualTo("entando-de-bundles");
+        assertThat(installedComponents.get(0).getDigitalExchangeName()).isEqualTo("entando-de-bundles");
 
     }
 
@@ -403,6 +414,8 @@ public class DigitalExchangeInstallTest {
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ERROR.toString()));
+
+        assertThat(installedCompRepo.findAll()).isEmpty();
     }
 
     @Test
@@ -421,8 +434,6 @@ public class DigitalExchangeInstallTest {
                         failingInstallId, successfulUninstallId, successfulInstallId
                 )));
     }
-
-
 
     @Test
     public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
@@ -444,6 +455,36 @@ public class DigitalExchangeInstallTest {
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
         waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
+    }
+
+    @Test
+    public void shouldUpdateDatabaseOnlyWhenOperationIsCompleted() throws Exception {
+        simulateInProgressInstall();
+        assertThat(installedCompRepo.findAll()).isEmpty();
+
+        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
+        assertThat(installedCompRepo.findAll()).isNotEmpty();
+
+        simulateInProgressUninstall();
+        assertThat(installedCompRepo.findAll()).isNotEmpty();
+
+        waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
+        assertThat(installedCompRepo.findAll()).isEmpty();
+    }
+
+    @Test
+    public void shouldNotUpdateDatabaseWhenOperationError() throws Exception {
+        simulateFailingInstall();
+        assertThat(installedCompRepo.findAll()).isEmpty();
+
+        databaseCleaner.cleanup();
+
+        simulateSuccessfullyCompletedInstall();
+        assertThat(installedCompRepo.findAll()).isNotEmpty();
+
+        simulateFailingUninstall();
+        assertThat(installedCompRepo.findAll()).isNotEmpty();
+
     }
 
     @Test

@@ -27,11 +27,14 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
+import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
@@ -54,6 +57,8 @@ import org.springframework.web.client.RestTemplate;
 public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
+    private final @NonNull DigitalExchangeJobService jobService;
+    private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepository;
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
@@ -79,7 +84,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 .orElseThrow(() -> new RuntimeException("Provided version is not available for package"));
         DigitalExchangeJob job = createInstallJob(bundle, versionToInstall);
 
-        submitInstallAsync(job, versionToInstall);
+        submitInstallAsync(job, bundle, versionToInstall);
 
         return job;
     }
@@ -120,13 +125,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     }
 
     public List<DigitalExchangeJob> getAllJobs(String componentId) {
-        EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
-                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found in digital-exchange "));
-        String digitalExchange = bundle.getMetadata().getNamespace();
-        return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId);
+        return jobService.getAllJobs(componentId);
     }
 
-    private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundleTag tag) {
+    private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
             CompletableFuture<InputStream> downloadComponentPackageStep = CompletableFuture
@@ -143,10 +145,24 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
                     .thenApply(installableList -> processInstallableList(job, installableList));
 
-            CompletableFuture<JobStatus> handlePossibleErrorsStep = installComponentsStep
+            CompletableFuture<JobStatus> saveInstalledComponentDatabaseEntry = installComponentsStep
+                    .thenApply(js -> {
+                        if (js.equals(JobStatus.INSTALL_COMPLETED)) {
+                            DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundle);
+                            installedComponent.setInstalled(true);
+                            installedComponentRepository.save(installedComponent);
+                        }
+                        return js;
+                    });
+
+            CompletableFuture<JobStatus> handlePossibleErrorsStep = saveInstalledComponentDatabaseEntry
                     .exceptionally(this::handlePipelineException);
 
-            handlePossibleErrorsStep.thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
+
+            handlePossibleErrorsStep.thenAccept(jobStatus -> {
+                jobRepository.updateJobStatus(job.getId(), jobStatus);
+            });
+
 
         });
     }

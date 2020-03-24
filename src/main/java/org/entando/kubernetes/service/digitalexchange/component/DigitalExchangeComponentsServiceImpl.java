@@ -56,21 +56,8 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
 
     public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
-        DigitalExchangeComponent dec = new DigitalExchangeComponent();
-        String bundleId = bundle.getMetadata().getName();
-        EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
-        dec.setComponentId(bundleId);
-        dec.setName(bundle.getSpec().getDetails().getName());
-        dec.setDescription(bd.getDescription());
-        dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
-        dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
-        dec.setRating(5);
+        DigitalExchangeComponent dec = DigitalExchangeComponent.newFrom(bundle);
         dec.setInstalled(checkIfInstalled(bundle));
-        dec.setType("Bundle");
-        dec.setLastUpdate(new Date());
-        dec.setSignature("");
-        dec.setVersion(bd.getDistTags().get("latest").toString());
-        dec.setImage(bd.getThumbnail());
         return dec;
     }
 
