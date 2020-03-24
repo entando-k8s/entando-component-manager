@@ -4,7 +4,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
-import org.entando.kubernetes.service.digitalexchange.DigitalExchangeComponentsServiceTest;
 
 public class TestEntitiesGenerator {
     public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles" ;

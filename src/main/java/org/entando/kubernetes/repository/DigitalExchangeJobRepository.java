@@ -3,7 +3,6 @@ package org.entando.kubernetes.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

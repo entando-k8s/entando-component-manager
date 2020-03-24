@@ -42,7 +42,7 @@ public class DigitalExchangeComponent {
     @NotNull
     @Size(min = 1, max = 30)
     @Column(unique = true, nullable = false)
-    private String bundleId;
+    private String componentId;
 
     @NotNull
     @Size(min = 1, max = 30)

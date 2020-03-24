@@ -12,8 +12,6 @@ import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
-import com.github.tomakehurst.wiremock.matching.RequestPattern;
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;

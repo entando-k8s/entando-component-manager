@@ -6,7 +6,6 @@ import java.net.URI;
 import java.util.List;
 import org.entando.kubernetes.model.app.EntandoApp;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;

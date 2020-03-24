@@ -1,7 +1,6 @@
 package org.entando.kubernetes.controller.digitalexchange.job;
 
 import java.util.List;
-import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 import org.zalando.problem.ThrowableProblem;
-import sun.java2d.pipe.SpanShapeRenderer.Simple;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,12 +33,11 @@ public class DigitalExchangeJobsResourceController implements DigitalExchangeJob
     }
 
     @Override
-    public ResponseEntity<DigitalExchangeJob> getJob(String jobId) {
+    public SimpleRestResponse<DigitalExchangeJob> getJob(String jobId) {
         DigitalExchangeJob job = jobService.getById(jobId).orElseThrow(() ->
                 getNotFoundJobProblem(jobId));
-        return ResponseEntity.ok(job);
+        return new SimpleRestResponse(job);
     }
-
 
     @Override
     public ResponseEntity<PagedRestResponse<DigitalExchangeJob>> getComponentJobs(@PathVariable("component") String componentId) {

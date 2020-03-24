@@ -25,7 +25,7 @@ public interface DigitalExchangeJobsResource {
     @Operation(description = "Get job by id")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<DigitalExchangeJob> getJob(@PathVariable("id") String jobId);
+    SimpleRestResponse<DigitalExchangeJob> getJob(@PathVariable("id") String jobId);
 
     @Operation(description = "Get all jobs for a component")
     @ApiResponse(responseCode = "200", description = "OK")

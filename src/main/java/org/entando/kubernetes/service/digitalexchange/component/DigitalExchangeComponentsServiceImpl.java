@@ -59,7 +59,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         DigitalExchangeComponent dec = new DigitalExchangeComponent();
         String bundleId = bundle.getMetadata().getName();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
-        dec.setBundleId(bundleId);
+        dec.setComponentId(bundleId);
         dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
         dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
