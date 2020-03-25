@@ -28,7 +28,7 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
             String digitalExchangeId,
             String componentId);
 
-    List<DigitalExchangeJob> findAllByOrderByFinishedAtDesc();
+    List<DigitalExchangeJob> findAllByOrderByStartedAtDesc();
 
     List<DigitalExchangeJob> findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
             String digitalExchange,

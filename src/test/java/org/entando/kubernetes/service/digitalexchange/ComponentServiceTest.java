@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 @Tag("unit")
-public class DigitalExchangeComponentsServiceTest {
+public class ComponentServiceTest {
 
     private K8SServiceClientTestDouble k8SServiceClient;
     private DigitalExchangeComponentsService service;

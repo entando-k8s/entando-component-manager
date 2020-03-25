@@ -85,7 +85,7 @@ import org.springframework.web.util.UriComponentsBuilder;
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
 @ActiveProfiles({"test"})
 @Tag("component")
-public class DigitalExchangeInstallTest {
+public class InstallFlowTest {
 
     private final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components");
     private final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components","todomvc");
@@ -172,12 +172,12 @@ public class DigitalExchangeInstallTest {
 //        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests,
 //                contentModelRequests, labelRequests, fragmentRequests, pageRequests);
 
-        widgetRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
-        pageModelRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
-        directoryRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestPath));
-        fileRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestPath));
-        fragmentRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
-        pageRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
+        widgetRequests.sort(Comparator.comparing(InstallFlowTest::requestCode));
+        pageModelRequests.sort(Comparator.comparing(InstallFlowTest::requestCode));
+        directoryRequests.sort(Comparator.comparing(InstallFlowTest::requestPath));
+        fileRequests.sort(Comparator.comparing(InstallFlowTest::requestPath));
+        fragmentRequests.sort(Comparator.comparing(InstallFlowTest::requestCode));
+        pageRequests.sort(Comparator.comparing(InstallFlowTest::requestCode));
 
         checkRequest(widgetRequests.get(0))
                 .expectEqual("code", "another_todomvc_widget")

@@ -24,6 +24,7 @@ public interface DigitalExchangeJobsResource {
 
     @Operation(description = "Get job by id")
     @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "404", description = "Not Found")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<DigitalExchangeJob> getJob(@PathVariable("id") String jobId);
 
@@ -39,7 +40,7 @@ public interface DigitalExchangeJobsResource {
     SimpleRestResponse<DigitalExchangeJob> getLastComponentJobOfType(@RequestParam("component") String componentId,
             @RequestParam(value = "type", required = false) JobType type);
 
-    @Operation(description = "Get last job of type for component")
+    @Operation(description = "Get last job with status for component")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, params = {"component", "status"})
     SimpleRestResponse<DigitalExchangeJob> getLastComponentJobWithStatus(@RequestParam("component") String componentId,

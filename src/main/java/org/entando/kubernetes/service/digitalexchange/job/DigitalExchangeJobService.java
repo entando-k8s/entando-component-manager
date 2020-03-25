@@ -20,7 +20,7 @@ public class DigitalExchangeJobService {
     private final @NonNull DigitalExchangeJobRepository jobRepository;
 
     public List<DigitalExchangeJob> getAllJobs() {
-        return jobRepository.findAllByOrderByFinishedAtDesc();
+        return jobRepository.findAllByOrderByStartedAtDesc();
     }
 
     public List<DigitalExchangeJob> getAllJobs(String componentId) {
