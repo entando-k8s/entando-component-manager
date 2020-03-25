@@ -13,15 +13,18 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.util.Date;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,19 +35,34 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     private final K8SServiceClient k8SServiceClient;
     private final List<String> accessibleDigitalExchanges;
     private final DigitalExchangeJobRepository jobRepository;
+    private final DigitalExchangeInstalledComponentRepository installedComponentRepo;
 
     public DigitalExchangeComponentsServiceImpl(K8SServiceClient k8SServiceClient,
             @Value("${entando.digital-exchanges.name:}") List<String> accessibleDigitalExchanges,
-            DigitalExchangeJobRepository jobRepository) {
+            DigitalExchangeJobRepository jobRepository,
+            DigitalExchangeInstalledComponentRepository installedComponentRepo) {
         this.k8SServiceClient = k8SServiceClient;
         this.accessibleDigitalExchanges = accessibleDigitalExchanges
                 .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
         this.jobRepository = jobRepository;
+        this.installedComponentRepo = installedComponentRepo;
     }
 
 
     @Override
     public List<DigitalExchangeComponent> getComponents() {
+        List<DigitalExchangeComponent> allComponents = new ArrayList<>();
+        List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
+        Map<String, String> installedVersions = installedComponents.stream()
+                .collect(Collectors.toMap(DigitalExchangeComponent::getComponentId, DigitalExchangeComponent::getVersion));
+        List<DigitalExchangeComponent> notAlreadyInstalled = getAvailableComponentsFromDigitalExchanges().stream()
+                .filter(c -> installedVersions.containsKey(c.getComponentId()) && installedVersions.get(c.getComponentId()).equals(c.getVersion())).collect(Collectors.toList());
+        allComponents.addAll(installedComponents);
+        allComponents.addAll(notAlreadyInstalled);
+        return installedComponents;
+    }
+
+    private List<DigitalExchangeComponent> getAvailableComponentsFromDigitalExchanges() {
         List<EntandoDeBundle> bundles;
         if(accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
