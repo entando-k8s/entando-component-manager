@@ -525,6 +525,28 @@ public class DigitalExchangeInstallTest {
                 .andExpect(status().isInternalServerError());
     }
 
+    @Test
+    @Disabled("Just to test install/uninstall and debug")
+    public void testErroneousUninstall() throws Exception {
+
+        simulateSuccessfullyCompletedInstall();
+
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.delete(urlMatching("/entando-app/api/widgets/.*")).willReturn(aResponse().withStatus(500)));
+
+        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andReturn();
+        waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
+        assertThat(true).isTrue();
+    }
+
     private void verifyJobHasComponentAndStatus(String jobId, JobStatus expectedStatus)
             throws Exception {
         mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
