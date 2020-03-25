@@ -13,9 +13,7 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,13 +51,32 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     public List<DigitalExchangeComponent> getComponents() {
         List<DigitalExchangeComponent> allComponents = new ArrayList<>();
         List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
-        Map<String, String> installedVersions = installedComponents.stream()
-                .collect(Collectors.toMap(DigitalExchangeComponent::getComponentId, DigitalExchangeComponent::getVersion));
-        List<DigitalExchangeComponent> notAlreadyInstalled = getAvailableComponentsFromDigitalExchanges().stream()
-                .filter(c -> installedVersions.containsKey(c.getComponentId()) && installedVersions.get(c.getComponentId()).equals(c.getVersion())).collect(Collectors.toList());
+        List<DigitalExchangeComponent> externalComponents = getAvailableComponentsFromDigitalExchanges();
+        List<DigitalExchangeComponent> notAlreadyInstalled = installedComponents.isEmpty() ?
+                externalComponents :
+                filterNotInstalledComponents(externalComponents, installedComponents);
+
         allComponents.addAll(installedComponents);
         allComponents.addAll(notAlreadyInstalled);
-        return installedComponents;
+        return allComponents;
+    }
+
+    private List<DigitalExchangeComponent> filterNotInstalledComponents(
+            List<DigitalExchangeComponent> externalComponents, List<DigitalExchangeComponent> installedComponents) {
+        Map<String, String> installedVersions = installedComponents.stream()
+                .collect(Collectors.toMap(DigitalExchangeComponent::getComponentId, DigitalExchangeComponent::getVersion));
+
+        List<DigitalExchangeComponent> notInstalledComponents = new ArrayList<>();
+        for (DigitalExchangeComponent dec: externalComponents) {
+            String k = dec.getComponentId();
+            String v = dec.getVersion();
+            if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
+                continue;
+            }
+            notInstalledComponents.add(dec);
+        }
+
+        return notInstalledComponents;
     }
 
     private List<DigitalExchangeComponent> getAvailableComponentsFromDigitalExchanges() {

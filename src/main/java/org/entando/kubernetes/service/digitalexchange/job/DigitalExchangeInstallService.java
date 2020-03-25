@@ -27,7 +27,6 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
@@ -159,9 +158,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     .exceptionally(this::handlePipelineException);
 
 
-            handlePossibleErrorsStep.thenAccept(jobStatus -> {
-                jobRepository.updateJobStatus(job.getId(), jobStatus);
-            });
+            handlePossibleErrorsStep.thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
 
 
         });

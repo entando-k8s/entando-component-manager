@@ -10,13 +10,9 @@ import org.slf4j.LoggerFactory;
 
 public class HashMapConverter implements AttributeConverter<Map<String, String>, String> {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(HashMapConverter.class);
+    private static Logger log = LoggerFactory.getLogger(HashMapConverter.class);
 
     private ObjectMapper objectMapper;
-
-    public HashMapConverter() {
-
-    }
 
     @Override
     public String convertToDatabaseColumn(Map<String, String> bundleMetadata) {
@@ -26,7 +22,7 @@ public class HashMapConverter implements AttributeConverter<Map<String, String>,
             try {
                 customerInfoJson = objectMapper.writeValueAsString(bundleMetadata);
             } catch (final JsonProcessingException e) {
-                LOGGER.error("JSON writing error", e);
+                log.error("JSON writing error", e);
             }
         }
 
@@ -41,7 +37,7 @@ public class HashMapConverter implements AttributeConverter<Map<String, String>,
             try {
                 customerInfo = objectMapper.readValue(bundleMetadataJson, Map.class);
             } catch (final IOException e) {
-                LOGGER.error("JSON reading error", e);
+                log.error("JSON reading error", e);
             }
         }
         return customerInfo;

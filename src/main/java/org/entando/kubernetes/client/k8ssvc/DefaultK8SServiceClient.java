@@ -42,6 +42,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
+    public static final String BUNDLES_ENDPOINT = "bundles";
+    public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
 
     private final String k8sServiceUrl;
     private final String clientId;
@@ -77,7 +79,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public List<EntandoAppPluginLink> getAppLinks(String entandoAppName) {
         return tryOrThrow(() -> {
             CollectionModel<EntityModel<EntandoAppPluginLink>> links = traverson
-                    .follow("app-plugin-links")
+                    .follow(APP_PLUGIN_LINKS_ENDPOINT)
                     .follow(Hop.rel("app-links").withParameter("app", entandoAppName))
                     .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>(){});
             assert links != null;
@@ -90,7 +92,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public EntandoPlugin getPluginForLink(EntandoAppPluginLink el) {
-        return tryOrThrow(() -> traverson.follow("app-plugin-links")
+        return tryOrThrow(() -> traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", el.getMetadata().getName()))
                 .follow("plugin")
                 .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {})
@@ -102,7 +104,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String linkName = el.getMetadata().getName();
         String appName = el.getSpec().getEntandoAppName();
         String pluginName = el.getSpec().getEntandoAppNamespace();
-        Link unlinkHref = traverson.follow("app-plugin-links")
+        Link unlinkHref = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
                 .asLink();
         tryOrThrow(() -> restTemplate.delete(unlinkHref.toUri()), String.format("unlink app %s and plugin %s", appName, pluginName));
@@ -121,7 +123,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
-        return tryOrThrow(() -> traverson.follow("bundles")
+        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
                 .getContent()
                 .stream().map(EntityModel::getContent)
@@ -130,7 +132,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
-        return tryOrThrow(() -> traverson.follow("bundles")
+        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
                 .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
                 .getContent()
@@ -160,7 +162,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public Optional<EntandoDeBundle> getBundleWithName(String name) {
         EntandoDeBundle bundle = null;
         try {
-            bundle = traverson.follow("bundles")
+            bundle = traverson.follow(BUNDLES_ENDPOINT)
                     .follow(Hop.rel("bundle").withParameter("name", name))
                     .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {})
                     .getContent();
@@ -190,30 +192,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setRequestFactory(getRequestFactory());
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
-//        List<HttpMessageConverter<?>> converters = template.getMessageConverters();
-//        converters.add( getHalConverter());
-//        converters.add(new StringHttpMessageConverter());
-//        converters.add(new MappingJacksonHttpMessageConverter());
-
         template.setMessageConverters(Traverson.getDefaultMessageConverters(MediaTypes.HAL_JSON));
 
         return template;
     }
 
-
-    private HttpMessageConverter<?> getHalConverter() {
-        List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new Jackson2HalModule());
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-
-        converter.setObjectMapper(mapper);
-        converter.setSupportedMediaTypes(supportedMediatypes);
-
-        return converter;
-    }
 
     private OAuth2ProtectedResourceDetails getResourceDetails() {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();

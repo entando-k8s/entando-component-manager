@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import org.springframework.validation.FieldError;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class ValidationErrorResponse extends ErrorResponse {
 
     private ErrorData data;

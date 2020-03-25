@@ -91,7 +91,7 @@ public class FilterUtils {
             try {
                 return (double) LocalDateTime.parse(v).toEpochSecond(ZoneOffset.UTC);
             } catch (Exception var3) {
-                throw new RuntimeException(var3);
+                throw new EntandoFilterException(var3);
             }
         });
         return filterDouble(filter, filterValues, (double) value.toEpochSecond(ZoneOffset.UTC));
@@ -103,7 +103,7 @@ public class FilterUtils {
             try {
                 return (double) sdf.parse(v).getTime();
             } catch (ParseException var3) {
-                throw new RuntimeException(var3);
+                throw new EntandoFilterException(var3);
             }
         });
         return filterDouble(filter, filterValues, (double) value.getTime());
@@ -164,5 +164,25 @@ public class FilterUtils {
             }
             return values;
         }
+    }
+
+    public static class EntandoFilterException extends RuntimeException {
+
+        public EntandoFilterException() {
+            super();
+        }
+
+        public EntandoFilterException(String message) {
+            super(message);
+        }
+
+        public EntandoFilterException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public EntandoFilterException(Throwable cause) {
+            super(cause);
+        }
+
     }
 }
