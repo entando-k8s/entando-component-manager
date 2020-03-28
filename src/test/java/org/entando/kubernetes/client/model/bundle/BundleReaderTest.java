@@ -41,30 +41,20 @@ public class BundleReaderTest {
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
-       r = new BundleReader(getTestDefaultBundlePath()) ;
+       Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+       r = new BundleReader(bundleFolder) ;
     }
 
     @AfterEach
     public void cleanUp() {
-        r.getTarEntries().values()
-                .forEach(File::delete);
+        r.destroy();
     }
 
 
     @Test
-    public void shouldReadNpmPackageCorrectly() {
-        assertThat(r.getTarEntries()).isNotEmpty();
-    }
-
-    @Test
-    public void shouldReadBundleEvenWithDifferentRoot() throws IOException {
-        BundleReader altReader = new BundleReader(getBundlePath(ALTERNATIVE_STRUCTURE_BUNDLE_NAME));
-        assertThat(altReader.getTarEntries()).isNotEmpty();
-    }
-
-    @Test
-    public void shouldRebaseBundleEntriesToDescriptorRoot() {
-        assertThat(r.getTarEntries().containsKey("descriptor.yaml")).isTrue();
+    public void shouldRebaseBundleEntriesToDescriptorRoot() throws IOException {
+        ComponentDescriptor cd = r.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
+        assertThat(cd).isNotNull();
     }
 
     @Test
@@ -73,20 +63,22 @@ public class BundleReaderTest {
     }
 
     @Test
-    public void shouldContainADescriptorFileInTheRoot() {
-        List<String> descriptorFiles = r.getTarEntries().keySet().stream()
-                .filter(s -> s.equals("descriptor.yaml")).collect(Collectors.toList());
-        assertThat(descriptorFiles).hasSize(1);
-    }
-
-    @Test
-    public void shouldReadResourcesFromPackage() {
+    public void shouldReadResourceFoldersFromPackage() {
         List<String> expectedResourceFolders = Arrays.asList(
-                "js", "css"
+                "js", "css", "vendor", "vendor/jquery"
         );
         assertThat(r.containsResourceFolder()).isTrue();
         assertThat(r.getResourceFolders()).hasSize(expectedResourceFolders.size());
         assertThat(r.getResourceFolders()).containsAll(expectedResourceFolders);
+    }
+
+    @Test
+    public void shouldReadResourceFilesFromPackage() {
+        List<String> expectedResourceFiles = Arrays.asList(
+                "css/custom.css", "css/style.css", "js/configUiScript.js", "js/script.js", "vendor/jquery/jquery.js"
+        );
+        assertThat(r.getResourceFiles()).hasSize(expectedResourceFiles.size());
+        assertThat(r.getResourceFiles()).containsAll(expectedResourceFiles);
     }
 
     @Test

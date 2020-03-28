@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -41,12 +43,10 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 public class BundleReader {
 
     private final YAMLMapper mapper = new YAMLMapper();
-    private final Map<String, File> tarEntries;
-    private final TarArchiveInputStream tarInputStream;
+    private final Path bundleBasePath;
 
     public BundleReader(Path filePath) throws IOException {
-        this.tarInputStream = getGzipTarInputStream(filePath);
-        this.tarEntries = buildTarEntries(this.tarInputStream, filePath);
+        bundleBasePath = filePath;
     }
 
     public String getBundleId() throws IOException {
@@ -58,35 +58,6 @@ public class BundleReader {
         return readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), ComponentDescriptor.class);
     }
 
-    private Map<String, File> buildTarEntries(TarArchiveInputStream i, Path tarPath) throws IOException {
-        TarArchiveEntry tae;
-        Map<String, File> tes = new HashMap<>();
-        String packageName = FilenameUtils.getBaseName(tarPath.getFileName().toString());
-        Path packageTempDir = Files.createTempDirectory(packageName);
-        while ( (tae = i.getNextTarEntry()) != null ) {
-            if (!i.canReadEntryData(tae)) {
-                // log something?
-                continue;
-            }
-            File tmpf = File.createTempFile(tae.getName(), "." + packageName, packageTempDir.toFile());
-            tmpf.deleteOnExit();
-            if (tae.isDirectory()) {
-                if (!tmpf.isDirectory() && !tmpf.mkdirs()) {
-                    throw new IOException("failed to create directory " + tmpf);
-                }
-            } else {
-                File parent = tmpf.getParentFile();
-                if (!parent.isDirectory() && !parent.mkdirs()) {
-                    throw new IOException("failed to create directory " + parent);
-                }
-                try (OutputStream o = Files.newOutputStream(tmpf.toPath())) {
-                    IOUtils.copy(i, o);
-                }
-            }
-            tes.put(tae.getName(), tmpf);
-        }
-        return rebaseEntriesNamesOnComponentDescriptorFile(tes);
-    }
 
     private Map<String, File> rebaseEntriesNamesOnComponentDescriptorFile(Map<String, File> tarEntries) {
         Optional<String> descriptorPath = tarEntries.keySet().stream()
@@ -104,77 +75,47 @@ public class BundleReader {
         return rebasedEntries;
     }
 
-    private TarArchiveInputStream getGzipTarInputStream(Path p) {
-        try {
-            return new TarArchiveInputStream(new GzipCompressorInputStream(newInputStream(p, READ)));
-        } catch (IOException e) {
-            throw new UncheckedIOException("An error occurred while reading file " + p.getFileName().toString(), e);
-        }
-    }
-
-    public Map<String, File> getTarEntries() {
-        return this.tarEntries;
-    }
-
     public void destroy() {
-        this.tarEntries.values().forEach(File::delete);
+        this.bundleBasePath.toFile().delete();
     }
 
     public boolean containsResourceFolder() {
-        return tarEntries.keySet().stream()
-                .anyMatch(n -> n.startsWith(BundleProperty.RESOURCES_FOLDER_PATH.getValue()));
+        return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
 
     public List<String> getResourceFolders() {
-        return tarEntries.keySet().stream()
-                .filter(path -> path.startsWith(BundleProperty.RESOURCES_FOLDER_NAME.getValue()))
-                .map(FilenameUtils::getFullPath) // Not always directory entry is available as a single path in the zip
-                .distinct()
-                .filter(path ->
-                        !path.equals(BundleProperty.RESOURCES_FOLDER_NAME.getValue()) &&
-                        !path.equals(BundleProperty.RESOURCES_FOLDER_PATH.getValue()))
-                .map(path -> path.substring(BundleProperty.RESOURCES_FOLDER_PATH.getValue().length(), path.length() - 1))
-                .flatMap(this::getIntermediateFolders)
-                .distinct()
-                .sorted(Comparator.comparing(String::length))
-                .collect(Collectors.toList());
+        return getResourceOfType(Files::isDirectory);
     }
 
-    /**
-     * Given a directory, returns a stream of all the intermediate directories e.g. /static/img/svg/full-size ->
-     * {static, static/img, static/img/svg, static/img/svg/full-size}
-     *
-     * @param path The path to use to extract intermediate directories
-     * @return Stream of String
-     */
-    private Stream<String> getIntermediateFolders(String path) {
-        List<Path> newPaths = new ArrayList<>();
-        Paths.get(path).iterator().forEachRemaining(newPaths::add);
-        String[] tmpPaths = new String[newPaths.size()];
-        tmpPaths[0] = newPaths.get(0).toString();
-        for (int i = 1; i < newPaths.size(); i++) {
-            tmpPaths[i] = Paths.get(tmpPaths[i - 1], newPaths.get(i).toString()).toString();
-        }
-        return Stream.of(tmpPaths);
-    }
 
     public List<String> getResourceFiles() {
-        return tarEntries.keySet().stream()
-                .filter(path -> path.startsWith(BundleProperty.RESOURCES_FOLDER_NAME.getValue()))
-                .filter(path -> !tarEntries.get(path).isDirectory())
-                .collect(Collectors.toList());
+        return getResourceOfType(Files::isRegularFile);
+    }
+
+    private List<String> getResourceOfType(Function<Path, Boolean> checkFunction) {
+        List<Path> resources;
+        Path resourcePath = bundleBasePath.resolve("resources/");
+        try (Stream<Path> paths = Files.walk(resourcePath)) {
+            resources = paths
+                    .filter(checkFunction::apply)
+                    .filter(p -> p != resourcePath)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            resources = Collections.emptyList();
+        }
+        return resources.stream().map(resourcePath::relativize).map(Path::toString).collect(Collectors.toList());
+
     }
 
     public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
-        verifyFileExistance(fileName);
-        try (InputStream fis = new FileInputStream(tarEntries.get(fileName))) {
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile())) {
             return readDescriptorFile(fis, clazz);
         }
     }
 
     public String readFileAsString(String fileName) throws IOException {
         verifyFileExistance(fileName);
-        try (InputStream fis = new FileInputStream(tarEntries.get(fileName));
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile());
              StringWriter writer = new StringWriter()) {
             IOUtils.copy(fis, writer, StandardCharsets.UTF_8);
             return writer.toString();
@@ -183,7 +124,7 @@ public class BundleReader {
 
     public FileDescriptor readFileAsDescriptor(final String fileName) throws IOException {
         verifyFileExistance(fileName);
-        File f = tarEntries.get(fileName);
+        File f = bundleBasePath.resolve(fileName).toFile();
         try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             IOUtils.copy(new FileInputStream(f), outputStream);
             final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
@@ -201,9 +142,12 @@ public class BundleReader {
 
     private void verifyFileExistance(String fileName) {
         log.info("Reading file {}", fileName);
-        if (!tarEntries.containsKey(fileName)) {
+        if (!bundleBasePath.resolve(fileName).toFile().exists()) {
             throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
         }
+//        if (!tarEntries.containsKey(fileName)) {
+//            throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
+//        }
     }
 
 }

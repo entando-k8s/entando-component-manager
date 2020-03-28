@@ -20,9 +20,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.exception.job.JobExecutionException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.NpmBundleDownloader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -130,13 +132,17 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
-            CompletableFuture<InputStream> downloadComponentPackageStep = CompletableFuture
-                    .supplyAsync(() -> downloadComponentPackage(tag));
+            CompletableFuture<Path> createDestinationStep = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return Files.createTempDirectory(job.getComponentId());
+                } catch (IOException e) {
+                    throw new JobExecutionException("An error occurred while creating the temp folder for the bundle");
+                }
+            });
 
-            CompletableFuture<Path> copyPackageLocallyStep = downloadComponentPackageStep
-                    .thenApply(is -> savePackageStreamLocally(job.getComponentId(), is));
+            CompletableFuture<Path> downloadBundleStep = createDestinationStep.thenApply(path -> new NpmBundleDownloader().saveBundleLocally(tag, path));
 
-            CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath ->  tempPath);
+            CompletableFuture<Path> verifySignatureStep = downloadBundleStep.thenApply(tempPath ->  tempPath);
 
             CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
                     .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
