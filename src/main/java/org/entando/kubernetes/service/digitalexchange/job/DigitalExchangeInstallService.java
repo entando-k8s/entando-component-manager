@@ -26,6 +26,7 @@ import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobExecutionException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.bundle.BundleDownloader;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.NpmBundleDownloader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
@@ -65,6 +66,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepository;
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
+    private final @NonNull BundleDownloader bundleDownloader;
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     public DigitalExchangeJob install(String componentId, String version) {
@@ -143,13 +145,13 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 throw new JobExecutionException("An error occurred while preparing environment", e);
             }
 
-            CompletableFuture<Path> downloadBundleStep = CompletableFuture.supplyAsync(() ->
-                    new NpmBundleDownloader().saveBundleLocally(tag, localBundleDestinationFolder));
+            CompletableFuture<Void> downloadBundleStep = CompletableFuture.runAsync(() ->
+                    bundleDownloader.saveBundleLocally(tag, localBundleDestinationFolder));
 
-            CompletableFuture<Path> verifySignatureStep = downloadBundleStep.thenApply(tempPath ->  tempPath);
+            CompletableFuture<Void> verifySignatureStep = downloadBundleStep.thenRun(() -> {});
 
             CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
-                    .thenApply(p -> getInstallables(job, p));
+                    .thenApply(onlyVoid -> getInstallables(job, localBundleDestinationFolder));
 
             CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
                     .thenApply(installableList -> processInstallableList(job, installableList));

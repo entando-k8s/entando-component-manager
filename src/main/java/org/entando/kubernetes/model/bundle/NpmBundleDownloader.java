@@ -31,7 +31,7 @@ import org.springframework.web.client.RestTemplate;
 public class NpmBundleDownloader implements BundleDownloader {
 
     @Override
-    public Path saveBundleLocally(EntandoDeBundleTag tag, Path destination) throws BundleDownloaderException {
+    public void saveBundleLocally(EntandoDeBundleTag tag, Path destination) throws BundleDownloaderException {
         InputStream is = downloadComponentPackage(tag);
         Path tarPath = savePackageStreamLocally(is);
 
@@ -41,7 +41,6 @@ public class NpmBundleDownloader implements BundleDownloader {
             throw new BundleDownloaderException(e);
         }
 
-        return destination;
     }
 
     private TarArchiveInputStream getGzipTarInputStream(Path p) {

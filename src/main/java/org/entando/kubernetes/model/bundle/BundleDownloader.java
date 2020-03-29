@@ -5,7 +5,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 public interface BundleDownloader {
 
-    Path saveBundleLocally(EntandoDeBundleTag tag, Path destination);
+    void saveBundleLocally(EntandoDeBundleTag tag, Path destination);
 
     public static class BundleDownloaderException extends RuntimeException {
 
