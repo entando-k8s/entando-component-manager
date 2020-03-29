@@ -103,7 +103,7 @@ public class BundleReader {
         } catch (IOException e) {
             resources = Collections.emptyList();
         }
-        return resources.stream().map(resourcePath::relativize).map(Path::toString).collect(Collectors.toList());
+        return resources.stream().map(bundleBasePath::relativize).map(Path::toString).collect(Collectors.toList());
 
     }
 
@@ -122,16 +122,14 @@ public class BundleReader {
         }
     }
 
-    public FileDescriptor readFileAsDescriptor(final String fileName) throws IOException {
+    public FileDescriptor getResourceFileAsDescriptor(final String fileName) throws IOException {
         verifyFileExistance(fileName);
         File f = bundleBasePath.resolve(fileName).toFile();
         try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             IOUtils.copy(new FileInputStream(f), outputStream);
             final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
-            final String filename = fileName.substring(fileName.lastIndexOf('/') + 1);
-            final String folder = fileName.lastIndexOf('/') >= BundleProperty.RESOURCES_FOLDER_PATH.getValue().length()
-                    ? fileName.substring("resources/".length(), fileName.lastIndexOf('/'))
-                    : "";
+            final String filename = FilenameUtils.getName(fileName);
+            final String folder = FilenameUtils.getPath(fileName);
             return new FileDescriptor(folder, filename, base64);
         }
     }

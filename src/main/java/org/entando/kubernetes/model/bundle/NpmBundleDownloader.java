@@ -64,7 +64,9 @@ public class NpmBundleDownloader implements BundleDownloader {
                 // log something?
                 continue;
             }
-            File tmpf = File.createTempFile(tae.getName(), "." + packageName, destination.toFile());
+            Path filePath = destination.resolve(tae.getName());
+            // File tmpf = File.createTempFile(tae.getName(), "." + packageName, destination.toFile());
+            File tmpf = filePath.toFile();
             tmpf.deleteOnExit();
             if (tae.isDirectory()) {
                 if (!tmpf.isDirectory() && !tmpf.mkdirs()) {

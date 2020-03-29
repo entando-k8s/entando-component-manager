@@ -3,14 +3,13 @@ package org.entando.kubernetes.client.model.bundle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import lombok.ToString;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -18,6 +17,7 @@ import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -65,7 +65,7 @@ public class BundleReaderTest {
     @Test
     public void shouldReadResourceFoldersFromPackage() {
         List<String> expectedResourceFolders = Arrays.asList(
-                "js", "css", "vendor", "vendor/jquery"
+                "resources/js", "resources/css", "resources/vendor", "resources/vendor/jquery"
         );
         assertThat(r.containsResourceFolder()).isTrue();
         assertThat(r.getResourceFolders()).hasSize(expectedResourceFolders.size());
@@ -75,7 +75,8 @@ public class BundleReaderTest {
     @Test
     public void shouldReadResourceFilesFromPackage() {
         List<String> expectedResourceFiles = Arrays.asList(
-                "css/custom.css", "css/style.css", "js/configUiScript.js", "js/script.js", "vendor/jquery/jquery.js"
+                "resources/css/custom.css", "resources/css/style.css", "resources/js/configUiScript.js",
+                "resources/js/script.js", "resources/vendor/jquery/jquery.js"
         );
         assertThat(r.getResourceFiles()).hasSize(expectedResourceFiles.size());
         assertThat(r.getResourceFiles()).containsAll(expectedResourceFiles);
@@ -102,14 +103,14 @@ public class BundleReaderTest {
     @Test
     public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.readFileAsDescriptor("widgets/pinco-pallo.yaml");
+            r.getResourceFileAsDescriptor("widgets/pinco-pallo.yaml");
         });
     }
 
     @Test
     public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+            r.getResourceFileAsDescriptor("widgets/pinco-pallo-template.ftl");
         });
     }
 
@@ -131,6 +132,13 @@ public class BundleReaderTest {
         assertThat(wd.getConfigUi().getResources()).hasSize(1);
         assertThat(wd.getConfigUi().getResources()).contains("js/configUiScript.js", Index.atIndex(0));
 
+    }
+
+    @Test
+    public void readResourceFileDescriptor() throws IOException {
+        FileDescriptor fd = r.getResourceFileAsDescriptor("resources/css/custom.css");
+        assertThat(fd.getFilename()).isEqualTo("custom.css");
+        assertThat(fd.getFolder()).isEqualTo("resources/css/");
     }
 
     private Path getTestDefaultBundlePath() throws IOException {

@@ -94,7 +94,7 @@ public class InstallFlowTest {
 
     private static final String JOBS_ENDPOINT = "/jobs";
     private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
-    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(45);
+    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofMinutes(45);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
     @Autowired

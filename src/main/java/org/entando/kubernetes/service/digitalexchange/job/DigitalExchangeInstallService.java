@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static java.util.Optional.ofNullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -11,11 +12,13 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -132,20 +135,21 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         CompletableFuture.runAsync(() -> {
             jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
-            CompletableFuture<Path> createDestinationStep = CompletableFuture.supplyAsync(() -> {
-                try {
-                    return Files.createTempDirectory(job.getComponentId());
-                } catch (IOException e) {
-                    throw new JobExecutionException("An error occurred while creating the temp folder for the bundle");
-                }
-            });
+            Path localBundleDestinationFolder;
+            try {
+                localBundleDestinationFolder = Files.createTempDirectory(job.getComponentId());
+            } catch (IOException e) {
+                jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_ERROR);
+                throw new JobExecutionException("An error occurred while preparing environment", e);
+            }
 
-            CompletableFuture<Path> downloadBundleStep = createDestinationStep.thenApply(path -> new NpmBundleDownloader().saveBundleLocally(tag, path));
+            CompletableFuture<Path> downloadBundleStep = CompletableFuture.supplyAsync(() ->
+                    new NpmBundleDownloader().saveBundleLocally(tag, localBundleDestinationFolder));
 
             CompletableFuture<Path> verifySignatureStep = downloadBundleStep.thenApply(tempPath ->  tempPath);
 
             CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
-                    .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
+                    .thenApply(p -> getInstallables(job, p));
 
             CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
                     .thenApply(installableList -> processInstallableList(job, installableList));
@@ -164,10 +168,22 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     .exceptionally(this::handlePipelineException);
 
 
-            handlePossibleErrorsStep.thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
+            CompletableFuture<Void> updateLastJobStatusStep = handlePossibleErrorsStep
+                    .thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
 
-
+            updateLastJobStatusStep.thenRun(() -> cleanBundleLocalFolder(localBundleDestinationFolder));
         });
+    }
+
+    private void cleanBundleLocalFolder(Path localBundleDestinationFolder) {
+        try {
+            Files.walk(localBundleDestinationFolder)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            throw new JobExecutionException("An error occurred while cleaning up environment post bundle install", e);
+        }
     }
 
     private JobStatus handlePipelineException(Throwable th) {
@@ -224,16 +240,13 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         return installResult.join();
     }
 
-    private List<Installable> getInstallablesAndRemoveTempPackage(DigitalExchangeJob job, Path p) {
+    private List<Installable> getInstallables(DigitalExchangeJob job, Path p) {
         try {
             BundleReader r = new BundleReader(p);
             ComponentDescriptor descriptor = r.readBundleDescriptor();
-            List<Installable> installableList = getInstallables(job, r, descriptor);
-            r.destroy();
-            Files.delete(p);
-            return installableList;
+            return getInstallables(job, r, descriptor);
         } catch (IOException e) {
-            throw new JobPackageException(p, "Unable to extract the list of installable from the zip file", e);
+            throw new UncheckedIOException(e);
         }
     }
 
