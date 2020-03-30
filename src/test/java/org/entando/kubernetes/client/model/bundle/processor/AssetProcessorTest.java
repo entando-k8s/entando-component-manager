@@ -67,43 +67,43 @@ public class AssetProcessorTest {
 
         assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(0).getName()).isEqualTo("/todomvc");
+        assertThat(installables.get(0).getName()).isEqualTo("/my-component-id");
 
         assertThat(installables.get(1)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(1).getName()).isEqualTo("/todomvc/css");
+        assertThat(installables.get(1).getName()).isEqualTo("/my-component-id/css");
 
         assertThat(installables.get(2)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(2).getName()).isEqualTo("/todomvc/js");
+        assertThat(installables.get(2).getName()).isEqualTo("/my-component-id/js");
 
         assertThat(installables.get(3)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(3).getName()).isEqualTo("/todomvc/vendor");
+        assertThat(installables.get(3).getName()).isEqualTo("/my-component-id/vendor");
 
         assertThat(installables.get(4)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(4).getName()).isEqualTo("/todomvc/vendor/jquery");
+        assertThat(installables.get(4).getName()).isEqualTo("/my-component-id/vendor/jquery");
 
         assertThat(installables.get(5)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(5).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(5).getName()).isEqualTo("/todomvc/css/custom.css");
+        assertThat(installables.get(5).getName()).isEqualTo("/my-component-id/css/custom.css");
 
         assertThat(installables.get(6)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(6).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(6).getName()).isEqualTo("/todomvc/css/style.css");
+        assertThat(installables.get(6).getName()).isEqualTo("/my-component-id/css/style.css");
 
         assertThat(installables.get(7)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(7).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(7).getName()).isEqualTo("/todomvc/js/configUiScript.js");
+        assertThat(installables.get(7).getName()).isEqualTo("/my-component-id/js/configUiScript.js");
 
         assertThat(installables.get(8)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(8).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(8).getName()).isEqualTo("/todomvc/js/script.js");
+        assertThat(installables.get(8).getName()).isEqualTo("/my-component-id/js/script.js");
 
         assertThat(installables.get(9)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(9).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(9).getName()).isEqualTo("/todomvc/vendor/jquery/jquery.js");
+        assertThat(installables.get(9).getName()).isEqualTo("/my-component-id/vendor/jquery/jquery.js");
     }
 
     private FileDescriptor file(final String folder, final String name, final String base64) {

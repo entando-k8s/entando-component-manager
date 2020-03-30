@@ -45,13 +45,8 @@ public class BundleReader {
     private final YAMLMapper mapper = new YAMLMapper();
     private final Path bundleBasePath;
 
-    public BundleReader(Path filePath) throws IOException {
+    public BundleReader(Path filePath) {
         bundleBasePath = filePath;
-    }
-
-    public String getBundleId() throws IOException {
-        ComponentDescriptor bundleDescriptor = readBundleDescriptor();
-        return bundleDescriptor.getCode();
     }
 
     public ComponentDescriptor readBundleDescriptor() throws IOException {

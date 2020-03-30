@@ -58,11 +58,6 @@ public class BundleReaderTest {
     }
 
     @Test
-    public void shouldReadBundleIdCorrectly() throws IOException {
-       assertThat(r.getBundleId()).isEqualTo("todomvc");
-    }
-
-    @Test
     public void shouldReadResourceFoldersFromPackage() {
         List<String> expectedResourceFolders = Arrays.asList(
                 "resources/js", "resources/css", "resources/vendor", "resources/vendor/jquery"
