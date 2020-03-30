@@ -136,69 +136,28 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         CompletableFuture.runAsync(() -> {
-            jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_IN_PROGRESS);
-            Path localBundleDestinationFolder;
+            JobStatus pipelineStatus = JobStatus.INSTALL_IN_PROGRESS;
+            jobRepository.updateJobStatus(job.getId(), pipelineStatus);
+
             try {
-                localBundleDestinationFolder = Files.createTempDirectory(job.getComponentId());
-            } catch (IOException e) {
-                jobRepository.updateJobStatus(job.getId(), JobStatus.INSTALL_ERROR);
-                throw new JobExecutionException("An error occurred while preparing environment", e);
+                bundleDownloader.createTargetDirectory();
+                Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(tag);
+                List<Installable> installables = getInstallables(job, pathToDownloadedBundle);
+                pipelineStatus = processInstallableList(job, installables);
+                if (pipelineStatus.equals(JobStatus.INSTALL_COMPLETED)) {
+                    DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundle);
+                    installedComponent.setInstalled(true);
+                    installedComponentRepository.save(installedComponent);
+                }
+
+            } catch (Exception e) {
+                log.error("An error occurred during digital-exchange component installation", e.getCause());
+                pipelineStatus = JobStatus.INSTALL_ERROR;
             }
 
-            CompletableFuture<Void> downloadBundleStep = CompletableFuture.runAsync(() ->
-                    bundleDownloader.saveBundleLocally(tag, localBundleDestinationFolder));
-
-            CompletableFuture<Void> verifySignatureStep = downloadBundleStep.thenRun(() -> {});
-
-            CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
-                    .thenApply(onlyVoid -> getInstallables(job, localBundleDestinationFolder));
-
-            CompletableFuture<JobStatus> installComponentsStep = extractInstallableFromPackageStep
-                    .thenApply(installableList -> processInstallableList(job, installableList));
-
-            CompletableFuture<JobStatus> saveInstalledComponentDatabaseEntry = installComponentsStep
-                    .thenApply(js -> {
-                        if (js.equals(JobStatus.INSTALL_COMPLETED)) {
-                            DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundle);
-                            installedComponent.setInstalled(true);
-                            installedComponentRepository.save(installedComponent);
-                        }
-                        return js;
-                    });
-
-            CompletableFuture<JobStatus> handlePossibleErrorsStep = saveInstalledComponentDatabaseEntry
-                    .exceptionally(this::handlePipelineException);
-
-
-            CompletableFuture<Void> updateLastJobStatusStep = handlePossibleErrorsStep
-                    .thenAccept(jobStatus -> jobRepository.updateJobStatus(job.getId(), jobStatus));
-
-            updateLastJobStatusStep.thenRun(() -> cleanBundleLocalFolder(localBundleDestinationFolder));
+            jobRepository.updateJobStatus(job.getId(), pipelineStatus);
+            bundleDownloader.cleanTargetDirectory();
         });
-    }
-
-    private void cleanBundleLocalFolder(Path localBundleDestinationFolder) {
-        try {
-            Files.walk(localBundleDestinationFolder)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-        } catch (IOException e) {
-            throw new JobExecutionException("An error occurred while cleaning up environment post bundle install", e);
-        }
-    }
-
-    private JobStatus handlePipelineException(Throwable th) {
-        log.error("An error occurred during digital-exchange component installation", th.getCause());
-        if (th.getCause() instanceof JobPackageException) {
-            Path packagePath = ((JobPackageException) th.getCause()).getPackagePath();
-            try {
-                Files.deleteIfExists(packagePath);
-            } catch (IOException e) {
-                log.error("Impossible to clean local package file {} due to an exception", packagePath, e);
-            }
-        }
-        return JobStatus.INSTALL_ERROR;
     }
 
     private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {

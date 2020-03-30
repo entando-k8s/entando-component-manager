@@ -28,19 +28,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.client.RestTemplate;
 
-public class NpmBundleDownloader implements BundleDownloader {
+public class NpmBundleDownloader extends BundleDownloader {
 
     @Override
-    public void saveBundleLocally(EntandoDeBundleTag tag, Path destination) throws BundleDownloaderException {
-        InputStream is = downloadComponentPackage(tag);
-        Path tarPath = savePackageStreamLocally(is);
-
+    public Path saveBundleLocally(EntandoDeBundleTag tag) {
         try {
-            unpackTar(tarPath, destination);
+            if (targetPath == null) {
+                this.createTargetDirectory();
+            }
+            InputStream is = downloadComponentPackage(tag);
+            Path tarPath = savePackageStreamLocally(is);
+            unpackTar(tarPath, targetPath);
+            return targetPath;
         } catch (IOException e) {
             throw new BundleDownloaderException(e);
         }
-
     }
 
     private TarArchiveInputStream getGzipTarInputStream(Path p) {

@@ -45,8 +45,10 @@ import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.model.bundle.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -70,6 +72,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -82,7 +85,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 @AutoConfigureMockMvc
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
-        classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
+        classes = {
+                EntandoKubernetesJavaApplication.class,
+                TestSecurityConfiguration.class,
+                TestKubernetesConfig.class,
+                TestAppConfiguration.class
+        })
 @ActiveProfiles({"test"})
 @Tag("component")
 public class InstallFlowTest {
@@ -118,6 +126,9 @@ public class InstallFlowTest {
     @Autowired
     private DigitalExchangeInstalledComponentRepository installedCompRepo;
 
+    @MockBean
+    private GitBundleDownloader gitBundleDownloader;
+
     @AfterEach
     public void cleanup() throws SQLException {
         WireMock.reset();
@@ -146,8 +157,8 @@ public class InstallFlowTest {
 
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
-        WireMock.verify(3, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
-        WireMock.verify(4, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+        WireMock.verify(5, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
+        WireMock.verify(5, postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
         WireMock.verify(2, postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         WireMock.verify(1, postRequestedFor(urlEqualTo("/entando-app/api/labels")));
@@ -278,16 +289,19 @@ public class InstallFlowTest {
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
 
         List<DigitalExchangeJobComponent> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
-        assertThat(jobComponentList).hasSize(19);
+        assertThat(jobComponentList).hasSize(22);
         List<String> jobComponentNames = jobComponentList.stream().map(DigitalExchangeJobComponent::getName).collect(Collectors.toList());
         assertThat(jobComponentNames).containsExactlyInAnyOrder(
                 "/todomvc",
                 "/todomvc/js",
                 "/todomvc/css",
+                "/todomvc/vendor",
+                "/todomvc/vendor/jquery",
                 "/todomvc/css/style.css",
                 "/todomvc/js/script.js",
                 "/todomvc/css/custom.css",
                 "/todomvc/js/configUiScript.js",
+                "/todomvc/vendor/jquery/jquery.js",
                 "todomvc",
                 "my-page",
                 "todomvc_another_page_model",
@@ -310,7 +324,7 @@ public class InstallFlowTest {
 
         Map<ComponentType, Integer> expectedComponents = new HashMap<>();
         expectedComponents.put(ComponentType.WIDGET, 2);
-        expectedComponents.put(ComponentType.RESOURCE, 7);
+        expectedComponents.put(ComponentType.RESOURCE, 10);
         expectedComponents.put(ComponentType.PAGE_MODEL, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
         expectedComponents.put(ComponentType.CONTENT_MODEL, 2);
