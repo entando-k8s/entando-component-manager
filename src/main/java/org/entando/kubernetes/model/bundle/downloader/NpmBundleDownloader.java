@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.bundle;
+package org.entando.kubernetes.model.bundle.downloader;
 
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.StandardOpenOption.READ;

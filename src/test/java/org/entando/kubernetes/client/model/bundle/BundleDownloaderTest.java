@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import org.entando.kubernetes.model.bundle.GitBundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 @Tag("unit")
 public class BundleDownloaderTest {
 
+    public static final String BUNDLE_REMOTE_REPOSITORY = "https://github.com/Kerruba/entando-sample-bundle";
     Path target;
 
     @AfterEach
@@ -31,7 +32,7 @@ public class BundleDownloaderTest {
     public void shouldCloneGitBundle() {
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion("v0.0.1")
-                .withTarball("https://github.com/Kerruba/entando-sample-bundle")
+                .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
         target = new GitBundleDownloader().saveBundleLocally(tag);
         Path expectedFile = target.resolve("descriptor.yaml");
@@ -42,7 +43,7 @@ public class BundleDownloaderTest {
     public void shouldCloneGitBundleWithAnotherVersion() {
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion("v0.0.2")
-                .withTarball("https://github.com/Kerruba/entando-sample-bundle")
+                .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
 
         target = new GitBundleDownloader().saveBundleLocally(tag);

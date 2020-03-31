@@ -1,16 +1,20 @@
-package org.entando.kubernetes.model.bundle;
+package org.entando.kubernetes.model.bundle.downloader;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import org.entando.kubernetes.exception.job.JobExecutionException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 public abstract class BundleDownloader {
 
     protected Path targetPath;
+
+    public static enum Type {
+        NPM,
+        GIT
+    }
 
     public BundleDownloader() {
 
@@ -57,6 +61,20 @@ public abstract class BundleDownloader {
         protected BundleDownloaderException(String message, Throwable cause, boolean enableSuppression,
                 boolean writableStackTrace) {
             super(message, cause, enableSuppression, writableStackTrace);
+        }
+    }
+
+    public static BundleDownloader getForType(String type) {
+        if (type == null) {
+            return new GitBundleDownloader();
+        }
+
+        switch (type.toLowerCase()) {
+            case "npm":
+                return new NpmBundleDownloader();
+            case "git":
+            default:
+                return new GitBundleDownloader();
         }
     }
 }

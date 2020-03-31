@@ -5,9 +5,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import org.entando.kubernetes.model.bundle.BundleDownloader;
-import org.entando.kubernetes.model.bundle.GitBundleDownloader;
-import org.entando.kubernetes.model.bundle.NpmBundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;

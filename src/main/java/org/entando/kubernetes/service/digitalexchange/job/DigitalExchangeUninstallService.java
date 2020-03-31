@@ -106,22 +106,21 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
 
     private void submitUninstallAsync(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
-        CompletableFuture<JobStatus> uninstallComponentStep = CompletableFuture.supplyAsync(() -> uninstallComponent(job, components));
-        CompletableFuture<JobStatus> handlePossibleErrorsStep = uninstallComponentStep.exceptionally(ex -> {
-            log.error("An error occurred while uninstalling component " + job.getComponentId(), ex);
-            return JobStatus.UNINSTALL_ERROR;
-        });
-        CompletableFuture<JobStatus> removeInstalledComponentIfSuccessStep = handlePossibleErrorsStep.thenApply(js -> {
-            if (js.equals(JobStatus.UNINSTALL_COMPLETED)) {
+        CompletableFuture.runAsync(() -> {
+            JobStatus uninstallStatus = JobStatus.UNINSTALL_IN_PROGRESS;
+            jobRepository.updateJobStatus(job.getId(), uninstallStatus);
+            try {
+                uninstallStatus = uninstallComponent(job, components);
                 installedComponentRepository.deleteByComponentId(job.getComponentId());
+            } catch (Exception ex) {
+                log.error("An error occurred while uninstalling component " + job.getComponentId(), ex);
+                uninstallStatus = JobStatus.UNINSTALL_ERROR;
             }
-            return js;
+            jobRepository.updateJobStatus(job.getId(), uninstallStatus);
         });
-        removeInstalledComponentIfSuccessStep.thenAccept(js -> jobRepository.updateJobStatus(job.getId(), js));
     }
 
     private JobStatus uninstallComponent(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
-        jobRepository.updateJobStatus(job.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
 
         try {
             cleanupResourceFolder(job, components);

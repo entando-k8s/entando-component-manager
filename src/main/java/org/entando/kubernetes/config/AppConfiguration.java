@@ -1,7 +1,7 @@
 package org.entando.kubernetes.config;
 
-import org.entando.kubernetes.model.bundle.BundleDownloader;
-import org.entando.kubernetes.model.bundle.NpmBundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -10,9 +10,12 @@ import org.springframework.context.annotation.Profile;
 @Profile("!test")
 public class AppConfiguration {
 
+    @Value("${entando.bundle.type:git}")
+    public String type;
+
     @Bean
     public BundleDownloader bundleDownloader() {
-        return new NpmBundleDownloader();
+        return BundleDownloader.getForType(type);
     }
 
 }
