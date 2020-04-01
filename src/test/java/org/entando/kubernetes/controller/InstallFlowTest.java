@@ -400,12 +400,12 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
         List<DigitalExchangeComponent> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
-        assertThat(installedComponents.get(0).getComponentId()).isEqualTo("todomvc");
+        assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
         assertThat(installedComponents.get(0).getDigitalExchangeId()).isEqualTo("entando-de-bundles");
         assertThat(installedComponents.get(0).getDigitalExchangeName()).isEqualTo("entando-de-bundles");
@@ -420,7 +420,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
         mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))

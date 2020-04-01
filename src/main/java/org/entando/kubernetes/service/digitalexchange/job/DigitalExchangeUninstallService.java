@@ -111,7 +111,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
             jobRepository.updateJobStatus(job.getId(), uninstallStatus);
             try {
                 uninstallStatus = uninstallComponent(job, components);
-                installedComponentRepository.deleteByComponentId(job.getComponentId());
+                installedComponentRepository.deleteById(job.getComponentId());
             } catch (Exception ex) {
                 log.error("An error occurred while uninstalling component " + job.getComponentId(), ex);
                 uninstallStatus = JobStatus.UNINSTALL_ERROR;

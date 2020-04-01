@@ -37,15 +37,12 @@ import org.springframework.validation.annotation.Validated;
 @Table(name = "digital_exchange_installed_components")
 public class DigitalExchangeComponent {
 
-    @NotNull
-    @Id
-    @Column(name = "id")
-    private UUID id;
 
+    @Id
     @NotNull
-    @Size(min = 1, max = 30)
-    @Column(name="component_id", unique = true, nullable = false)
-    private String componentId;
+    @Size(min = 1, max = 255)
+    @Column(name="id", unique = true, nullable = false)
+    private String id;
 
     @NotNull
     @Size(min = 1, max = 30)
@@ -92,16 +89,11 @@ public class DigitalExchangeComponent {
     @Column(name="metadata")
     private Map<String, String> metadata;
 
-    @PrePersist
-    public void generateId() {
-        this.id = UUID.randomUUID();
-    }
-
     public static DigitalExchangeComponent newFrom(EntandoDeBundle bundle) {
         DigitalExchangeComponent dec = new DigitalExchangeComponent();
         String bundleId = bundle.getMetadata().getName();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
-        dec.setComponentId(bundleId);
+        dec.setId(bundleId);
         dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
         dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());

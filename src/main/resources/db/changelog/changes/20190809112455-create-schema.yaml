@@ -158,12 +158,7 @@ databaseChangeLog:
                     primaryKey: true
                     primaryKeyName: digital_exchange_installed_components_pkey
                   name: id
-                  type: UUID
-              - column:
-                  constraints:
-                    nullable: false
-                  name: component_id
-                  type: VARCHAR(30)
+                  type: VARCHAR(255)
               - column:
                   name: description
                   type: VARCHAR(255)
@@ -220,7 +215,7 @@ databaseChangeLog:
       author: kerruba (generated)
       changes:
         - addUniqueConstraint:
-            columnNames: component_id
+            columnNames: id
             constraintName: uk_n385agwefm1rpoa2dmsj661n3
             tableName: digital_exchange_installed_components
 

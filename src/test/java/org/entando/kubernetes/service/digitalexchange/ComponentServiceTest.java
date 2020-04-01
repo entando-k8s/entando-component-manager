@@ -63,7 +63,7 @@ public class ComponentServiceTest {
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
         List<DigitalExchangeComponent> components = service.getComponents();
         assertThat(components.size()).isEqualTo(1);
-        assertThat(components.get(0).getComponentId()).isEqualTo(bundle.getMetadata().getName());
+        assertThat(components.get(0).getId()).isEqualTo(bundle.getMetadata().getName());
 
         verify(installedComponentRepository).findAll();
     }

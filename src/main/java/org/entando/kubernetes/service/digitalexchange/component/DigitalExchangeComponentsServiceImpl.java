@@ -64,11 +64,11 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     private List<DigitalExchangeComponent> filterNotInstalledComponents(
             List<DigitalExchangeComponent> externalComponents, List<DigitalExchangeComponent> installedComponents) {
         Map<String, String> installedVersions = installedComponents.stream()
-                .collect(Collectors.toMap(DigitalExchangeComponent::getComponentId, DigitalExchangeComponent::getVersion));
+                .collect(Collectors.toMap(DigitalExchangeComponent::getId, DigitalExchangeComponent::getVersion));
 
         List<DigitalExchangeComponent> notInstalledComponents = new ArrayList<>();
         for (DigitalExchangeComponent dec: externalComponents) {
-            String k = dec.getComponentId();
+            String k = dec.getId();
             String v = dec.getVersion();
             if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
                 continue;
