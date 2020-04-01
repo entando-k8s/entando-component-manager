@@ -24,7 +24,7 @@ public abstract class BundleDownloader {
     }
 
     public Path saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        log.info("Downloading bundle " + bundle.getMetadata().getName() + "@" + tag.getVersion() + "locally");
+        log.info("Downloading bundle " + bundle.getMetadata().getName() + "@" + tag.getVersion() + " locally");
         try {
             createTargetDirectory();
             saveBundleStrategy(tag, targetPath);

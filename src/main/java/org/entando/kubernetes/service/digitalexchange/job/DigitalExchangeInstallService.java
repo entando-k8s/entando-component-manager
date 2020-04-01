@@ -138,7 +138,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         job.setStatus(JobStatus.INSTALL_CREATED);
 
         DigitalExchangeJob createdJob = jobRepository.save(job);
-        log.info("New installation job created " + job.toString());
+        log.debug("New installation job created " + job.toString());
         return createdJob;
     }
 
@@ -196,7 +196,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         CompletableFuture<?> future = installable.install();
         CompletableFuture<JobStatus> installResult = future.thenApply(vd -> {
-            log.info("Installable '{}' finished successfully", installable.getName());
+            log.debug("Installable '{}' finished successfully", installable.getName());
             componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
             return JobStatus.INSTALL_COMPLETED;
         }).exceptionally(th -> {
@@ -253,7 +253,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         component = componentRepository.save(component);
 
-        log.info("New component job created "
+        log.debug("New component job created "
                 + "for component of type " + installable.getComponentType() + " with name " + installable.getName());
         return component;
     }

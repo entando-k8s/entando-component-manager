@@ -53,23 +53,6 @@ public class BundleReader {
         return readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), ComponentDescriptor.class);
     }
 
-
-    private Map<String, File> rebaseEntriesNamesOnComponentDescriptorFile(Map<String, File> tarEntries) {
-        Optional<String> descriptorPath = tarEntries.keySet().stream()
-                .filter(s -> s.endsWith(BundleProperty.DESCRIPTOR_FILENAME.getValue()))
-                .min(Comparator.comparing(String::length));
-        String descriptorFolder = FilenameUtils.getPath(
-                descriptorPath.orElseThrow(() -> new InvalidBundleException("No descriptor file found in the")));
-
-        Map<String, File> rebasedEntries = new HashMap<>();
-        Iterator<Entry<String, File>> iterator = tarEntries.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, File> entry = iterator.next();
-            rebasedEntries.put(entry.getKey().replace(descriptorFolder, ""), entry.getValue());
-        }
-        return rebasedEntries;
-    }
-
     public void destroy() {
         this.bundleBasePath.toFile().delete();
     }
@@ -134,13 +117,10 @@ public class BundleReader {
     }
 
     private void verifyFileExistance(String fileName) {
-        log.info("Reading file {}", fileName);
+        log.debug("Reading file {}", fileName);
         if (!bundleBasePath.resolve(fileName).toFile().exists()) {
             throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
         }
-//        if (!tarEntries.containsKey(fileName)) {
-//            throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
-//        }
     }
 
 }
