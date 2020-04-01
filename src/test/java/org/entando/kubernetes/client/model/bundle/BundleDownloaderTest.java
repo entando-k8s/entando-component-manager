@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -30,11 +32,16 @@ public class BundleDownloaderTest {
 
     @Test
     public void shouldCloneGitBundle() {
+        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-name")
+                .endMetadata()
+                .build();
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion("v0.0.1")
                 .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
-        target = new GitBundleDownloader().saveBundleLocally(tag);
+        target = new GitBundleDownloader().saveBundleLocally(bundle, tag);
         Path expectedFile = target.resolve("descriptor.yaml");
         assertThat(expectedFile.toFile().exists()).isTrue();
     }
@@ -46,7 +53,12 @@ public class BundleDownloaderTest {
                 .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
 
-        target = new GitBundleDownloader().saveBundleLocally(tag);
+        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-name")
+                .endMetadata()
+                .build();
+        target = new GitBundleDownloader().saveBundleLocally(bundle, tag);
         Path unexpectedFile = target.resolve("package.json");
         assertThat(unexpectedFile.toFile().exists()).isFalse();
     }

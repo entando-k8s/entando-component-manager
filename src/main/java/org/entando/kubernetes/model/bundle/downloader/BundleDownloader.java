@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
+@Slf4j
 public abstract class BundleDownloader {
 
     protected Path targetPath;
@@ -20,7 +23,24 @@ public abstract class BundleDownloader {
 
     }
 
-    abstract public Path saveBundleLocally(EntandoDeBundleTag tag);
+    public Path saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+        log.info("Downloading bundle " + bundle.getMetadata().getName() + "@" + tag.getVersion() + "locally");
+        try {
+            createTargetDirectory();
+            saveBundleStrategy(tag, targetPath);
+            log.info("Bundle downloaded locally at path " + targetPath.toAbsolutePath());
+        } catch (BundleDownloaderException | IOException e) {
+            log.error("An error occurred while during download operation", e);
+            throw new BundleDownloaderException(e);
+        }
+        return this.targetPath;
+    }
+
+    abstract protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
+
+    public Path getTargetPath() {
+        return this.targetPath;
+    }
 
     public Path createTargetDirectory() throws IOException {
         targetPath = Files.createTempDirectory(null);

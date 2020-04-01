@@ -31,11 +31,8 @@ import org.springframework.web.client.RestTemplate;
 public class NpmBundleDownloader extends BundleDownloader {
 
     @Override
-    public Path saveBundleLocally(EntandoDeBundleTag tag) {
+    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         try {
-            if (targetPath == null) {
-                this.createTargetDirectory();
-            }
             InputStream is = downloadComponentPackage(tag);
             Path tarPath = savePackageStreamLocally(is);
             unpackTar(tarPath, targetPath);
@@ -59,14 +56,12 @@ public class NpmBundleDownloader extends BundleDownloader {
 
         TarArchiveEntry tae;
         Map<String, File> tes = new HashMap<>();
-        String packageName = FilenameUtils.getBaseName(tarPath.getFileName().toString());
         while ( (tae = tarInputStream.getNextTarEntry()) != null ) {
             if (!tarInputStream.canReadEntryData(tae)) {
                 // log something?
                 continue;
             }
             Path filePath = destination.resolve(tae.getName());
-            // File tmpf = File.createTempFile(tae.getName(), "." + packageName, destination.toFile());
             File tmpf = filePath.toFile();
             tmpf.deleteOnExit();
             if (tae.isDirectory()) {

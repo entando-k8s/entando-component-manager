@@ -11,11 +11,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 public class GitBundleDownloader extends BundleDownloader{
 
     @Override
-    public Path saveBundleLocally(EntandoDeBundleTag tag) {
+    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         try {
-            if (targetPath == null) {
-                this.createTargetDirectory();
-            }
             Git.cloneRepository()
                     .setURI(tag.getTarball())
                     .setBranch(tag.getVersion())
@@ -24,7 +21,7 @@ public class GitBundleDownloader extends BundleDownloader{
                     .setDirectory(targetPath.toFile())
                     .call();
             return targetPath;
-        } catch (GitAPIException | IOException e) {
+        } catch (GitAPIException e) {
             throw new BundleDownloaderException("An error occurred while cloning git repo", e);
         }
     }
