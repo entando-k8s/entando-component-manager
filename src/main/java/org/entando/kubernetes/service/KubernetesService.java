@@ -52,6 +52,10 @@ public class KubernetesService {
         return getCurrentAppLinkedPlugin(pluginId).isPresent();
     }
 
+    public boolean isPluginReady(EntandoPlugin plugin) {
+        return k8sServiceClient.isPluginReadyToServeApp(plugin, entandoAppName);
+    }
+
     private List<EntandoAppPluginLink> getCurrentAppLinkedPlugins() {
         return k8sServiceClient.getAppLinks(entandoAppName);
     }

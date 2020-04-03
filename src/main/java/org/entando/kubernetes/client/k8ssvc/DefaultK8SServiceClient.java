@@ -2,8 +2,13 @@ package org.entando.kubernetes.client.k8ssvc;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +19,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.http.client.utils.URIBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -25,23 +31,32 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.Hop;
 import org.springframework.hateoas.client.Traverson;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
+    public static final String APPS_ENDPOINT = "apps";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
 
@@ -112,11 +127,21 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
-        Link linkToApp = traverson.follow("apps")
-                .follow(Hop.rel("app").withParameter("name", name))
-                .asLink();
-        URI linkToCall = UriComponentsBuilder.fromUri(linkToApp.toUri()).pathSegment("links").build(Collections.emptyMap());
-        tryOrThrow(() -> restTemplate.postForEntity(linkToCall, plugin, Void.class),
+        URI linkToCall = tryOrThrow(() -> {
+            Link linkToApp = traverson.follow("apps")
+                    .follow(Hop.rel("app").withParameter("name", name))
+                    .asLink();
+            return UriComponentsBuilder.fromUri(linkToApp.toUri()).pathSegment("links").build(Collections.emptyMap());
+        });
+
+
+        tryOrThrow(() -> {
+                    RequestEntity<EntandoPlugin> request = RequestEntity
+                            .post(linkToCall)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(plugin);
+                    restTemplate.exchange(request, Void.class);
+                },
                 String.format("linking app %s to plugin %s", name, plugin.getMetadata().getName())
         );
     }
@@ -182,6 +207,47 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .findFirst();
     }
 
+    @Override
+    public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
+        Ingress appIngress = getAppIngress(appName);
+        IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().<RuntimeException>orElseThrow(() -> {
+            throw new RuntimeException("EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
+        });
+
+        String appHost = ingressRule.getHost();
+        UriComponents pluginHealthCheck =  UriComponentsBuilder.newInstance()
+                .scheme(appIngress.getSpec().getTls().isEmpty() ? "http" : "https")
+                .host(appHost)
+                .path(plugin.getSpec().getIngressPath())
+                .path(plugin.getSpec().getHealthCheckPath())
+                .build();
+        RequestEntity request = RequestEntity
+                .get(pluginHealthCheck.toUri())
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
+        try {
+            ResponseEntity<Object> response = this.restTemplate.exchange(request, Object.class);
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (RestClientException e) {
+            if (e instanceof RestClientResponseException) {
+                HttpStatus status = HttpStatus.valueOf(((RestClientResponseException) e ).getRawStatusCode());
+                if (status.equals(HttpStatus.NOT_FOUND) || status.equals(HttpStatus.SERVICE_UNAVAILABLE)) {
+                    return false;
+                }
+            }
+            throw e;
+        }
+
+    }
+
+    private Ingress getAppIngress(String appName) {
+        return tryOrThrow(() -> traverson.follow(APPS_ENDPOINT)
+                .follow(Hop.rel("app").withParameter("name", appName))
+                .follow("app-ingress")
+                .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {})
+                .getContent());
+    }
+
 
     private RestTemplate newRestTemplate() {
         OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
@@ -192,9 +258,27 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setRequestFactory(getRequestFactory());
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
-        template.setMessageConverters(Traverson.getDefaultMessageConverters(MediaTypes.HAL_JSON));
+        List<HttpMessageConverter<?>> messageConverters = Traverson.getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
+        if (messageConverters.stream().noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
+            messageConverters.add(0, getJsonConverter());
+        }
+        template.setMessageConverters(messageConverters);
 
         return template;
+    }
+
+    private HttpMessageConverter<?> getJsonConverter() {
+        List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jackson2HalModule());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+
+        converter.setObjectMapper(mapper);
+        converter.setSupportedMediaTypes(supportedMediatypes);
+
+        return converter;
     }
 
 

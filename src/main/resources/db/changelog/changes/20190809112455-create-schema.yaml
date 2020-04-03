@@ -174,7 +174,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
               - column:
                   name: image
-                  type: VARCHAR(255)
+                  type: BLOB
               - column:
                   constraints:
                     nullable: false

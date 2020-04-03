@@ -17,10 +17,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import javafx.scene.image.Image;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -29,6 +31,7 @@ import lombok.Data;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.web.SystemConstants;
+import org.hibernate.annotations.Type;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -64,7 +67,9 @@ public class DigitalExchangeComponent {
     @Column(name="description")
     private String description;
 
-    @Column(name="image")
+    @Lob
+    @Column(name="image" )
+    @Convert(converter = ImageConverter.class)
     private String image;
 
     @Column(name="rating")

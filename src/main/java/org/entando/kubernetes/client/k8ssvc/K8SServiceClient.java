@@ -26,5 +26,6 @@ public interface K8SServiceClient {
 
     Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace);
 
+    boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName);
 
 }
