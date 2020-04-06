@@ -4,7 +4,8 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter@Setter
+@Getter
+@Setter
 public class ContentTypeAttribute {
 
     private String code;
@@ -21,6 +22,5 @@ public class ContentTypeAttribute {
     private String enumeratorStaticItemsSeparator;
 
     private ContentTypeValidationRule validationRules;
-
 
 }

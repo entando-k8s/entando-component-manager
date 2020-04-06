@@ -15,18 +15,18 @@ public class EntandoCorePageTest {
 
     @Test
     public void shouldReadDescriptorFile() {
-       EntandoCorePage ecp = new EntandoCorePage(getTestPageDescriptor());
-       assertThat(ecp.getCharset()).isEqualTo("iso1923-12");
-       assertThat(ecp.getCode()).isEqualTo("my-page");
-       assertThat(ecp.getParentCode()).isEqualTo("plugins");
-       assertThat(ecp.isDisplayedInMenu()).isEqualTo(true);
-       assertThat(ecp.isSeo()).isEqualTo(false);
-       assertThat(ecp.getOwnerGroup()).isEqualTo("administrators");
-       assertThat(ecp.getJoinGroups()).containsExactly("free");
-       assertThat(ecp.getStatus()).isEqualTo("published");
-       assertThat(ecp.getPageModel()).isEqualTo("service");
-       assertThat(ecp.getTitles().keySet()).containsExactlyInAnyOrder("it", "en");
-       assertThat(ecp.getTitles().values()).containsExactlyInAnyOrder("La mia pagina", "My page");
+        EntandoCorePage ecp = new EntandoCorePage(getTestPageDescriptor());
+        assertThat(ecp.getCharset()).isEqualTo("iso1923-12");
+        assertThat(ecp.getCode()).isEqualTo("my-page");
+        assertThat(ecp.getParentCode()).isEqualTo("plugins");
+        assertThat(ecp.isDisplayedInMenu()).isEqualTo(true);
+        assertThat(ecp.isSeo()).isEqualTo(false);
+        assertThat(ecp.getOwnerGroup()).isEqualTo("administrators");
+        assertThat(ecp.getJoinGroups()).containsExactly("free");
+        assertThat(ecp.getStatus()).isEqualTo("published");
+        assertThat(ecp.getPageModel()).isEqualTo("service");
+        assertThat(ecp.getTitles().keySet()).containsExactlyInAnyOrder("it", "en");
+        assertThat(ecp.getTitles().values()).containsExactlyInAnyOrder("La mia pagina", "My page");
     }
 
     @Test

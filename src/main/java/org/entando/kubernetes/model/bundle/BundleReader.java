@@ -63,7 +63,7 @@ public class BundleReader {
         Map<String, File> tes = new HashMap<>();
         String packageName = FilenameUtils.getBaseName(tarPath.getFileName().toString());
         Path packageTempDir = Files.createTempDirectory(packageName);
-        while ( (tae = i.getNextTarEntry()) != null ) {
+        while ((tae = i.getNextTarEntry()) != null) {
             if (!i.canReadEntryData(tae)) {
                 // log something?
                 continue;
@@ -131,8 +131,8 @@ public class BundleReader {
                 .map(FilenameUtils::getFullPath) // Not always directory entry is available as a single path in the zip
                 .distinct()
                 .filter(path ->
-                        !path.equals(BundleProperty.RESOURCES_FOLDER_NAME.getValue()) &&
-                        !path.equals(BundleProperty.RESOURCES_FOLDER_PATH.getValue()))
+                        !path.equals(BundleProperty.RESOURCES_FOLDER_NAME.getValue())
+                                && !path.equals(BundleProperty.RESOURCES_FOLDER_PATH.getValue()))
                 .map(path -> path.substring(BundleProperty.RESOURCES_FOLDER_PATH.getValue().length(), path.length() - 1))
                 .flatMap(this::getIntermediateFolders)
                 .distinct()
@@ -141,8 +141,8 @@ public class BundleReader {
     }
 
     /**
-     * Given a directory, returns a stream of all the intermediate directories e.g. /static/img/svg/full-size ->
-     * {static, static/img, static/img/svg, static/img/svg/full-size}
+     * Given a directory, returns a stream of all the intermediate directories e.g. /static/img/svg/full-size -> {static, static/img,
+     * static/img/svg, static/img/svg/full-size}
      *
      * @param path The path to use to extract intermediate directories
      * @return Stream of String
@@ -172,10 +172,14 @@ public class BundleReader {
         }
     }
 
+    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+        return mapper.readValue(file, clazz);
+    }
+
     public String readFileAsString(String fileName) throws IOException {
         verifyFileExistance(fileName);
         try (InputStream fis = new FileInputStream(tarEntries.get(fileName));
-             StringWriter writer = new StringWriter()) {
+                StringWriter writer = new StringWriter()) {
             IOUtils.copy(fis, writer, StandardCharsets.UTF_8);
             return writer.toString();
         }
@@ -193,10 +197,6 @@ public class BundleReader {
                     : "";
             return new FileDescriptor(folder, filename, base64);
         }
-    }
-
-    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
-        return mapper.readValue(file, clazz);
     }
 
     private void verifyFileExistance(String fileName) {

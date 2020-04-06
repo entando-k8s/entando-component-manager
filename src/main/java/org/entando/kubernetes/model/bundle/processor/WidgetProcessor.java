@@ -21,8 +21,7 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreSer
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Widgets, can handle descriptors
- * with custom UI embedded or a separate custom UI file.
+ * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
  *
  * @author Sergio Marcelino
  */
@@ -35,7 +34,7 @@ public class WidgetProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getWidgets);
         final List<Installable> installables = new LinkedList<>();

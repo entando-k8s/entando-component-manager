@@ -20,13 +20,12 @@ public class EntandoCoreWidget {
         this.titles = descriptor.getTitles();
         this.group = descriptor.getGroup();
         this.customUi = descriptor.getCustomUi();
-        if (descriptor.getConfigUi() != null ) {
+        if (descriptor.getConfigUi() != null) {
             this.configUi = new HashMap<>();
             this.configUi.put("customElement", descriptor.getConfigUi().getCustomElement());
             this.configUi.put("resources", descriptor.getConfigUi().getResources());
         }
         this.bundleId = descriptor.getBundleId();
     }
-
 
 }

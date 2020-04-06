@@ -5,7 +5,7 @@ import org.entando.kubernetes.exception.http.HttpException;
 import org.springframework.http.HttpStatus;
 
 public class InvalidBundleException extends EntandoComponentManagerException
-implements HttpException {
+        implements HttpException {
 
     public InvalidBundleException() {
         super();

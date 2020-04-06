@@ -18,8 +18,7 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
 
     @Query("SELECT job FROM DigitalExchangeJob job WHERE job.status <> :status AND job.componentId = :componentId")
     Optional<DigitalExchangeJob> findByComponentIdAndStatusNotEqual(@Param("componentId") String componentId,
-                                                                    @Param("status") JobStatus status);
-
+            @Param("status") JobStatus status);
 
     Optional<DigitalExchangeJob> findFirstByComponentIdAndAndStatusNotOrderByStartedAtDesc(
             String componentId,
@@ -39,6 +38,5 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Query("UPDATE DigitalExchangeJob job SET job.status = :status WHERE job.id = :id")
     void updateJobStatus(@Param("id") UUID id, @Param("status") JobStatus status);
-
 
 }

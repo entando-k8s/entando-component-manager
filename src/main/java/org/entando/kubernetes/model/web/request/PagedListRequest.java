@@ -42,7 +42,7 @@ public class PagedListRequest {
         } else if (0 == this.getPage() || master.isEmpty()) {
             return master;
         } else {
-            if (null  == pageSize) {
+            if (null == pageSize) {
                 this.setPageSize(PAGE_SIZE_DEFAULT);
             }
             final int offset = this.getOffset();

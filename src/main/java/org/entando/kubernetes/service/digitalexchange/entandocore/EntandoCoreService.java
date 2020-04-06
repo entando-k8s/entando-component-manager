@@ -56,15 +56,16 @@ public class EntandoCoreService {
     }
 
     public void registerFragment(FragmentDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "fragments").build().toUri(), new EntandoCoreFragment(descriptor), Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "fragments").build().toUri(), new EntandoCoreFragment(descriptor), Void.class);
     }
 
     public void deleteFragment(String code) {
-        restTemplate.delete(resolvePathSegments("api","fragments", code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "fragments", code).build().toUri());
     }
 
     public void registerLabel(final LabelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api","labels").build().toUri(), descriptor, Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "labels").build().toUri(), descriptor, Void.class);
     }
 
     public void deleteLabel(final String code) {
@@ -80,7 +81,8 @@ public class EntandoCoreService {
     }
 
     public void registerPageModel(final PageModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
     }
 
     public void deletePageModel(final String code) {
@@ -88,11 +90,12 @@ public class EntandoCoreService {
     }
 
     public void deleteContentModel(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels",code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels", code).build().toUri());
     }
 
     public void registerContentModel(final ContentModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(), new EntandoCoreContentModel(descriptor), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(),
+                new EntandoCoreContentModel(descriptor), Void.class);
     }
 
     public void registerContentType(final ContentTypeDescriptor descriptor) {
@@ -104,7 +107,8 @@ public class EntandoCoreService {
     }
 
     public void createFolder(final String folder) {
-        restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "directory").build().toUri(), new EntandoCoreFolder(folder), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "directory").build().toUri(), new EntandoCoreFolder(folder),
+                Void.class);
     }
 
     public void deleteFolder(final String code) {

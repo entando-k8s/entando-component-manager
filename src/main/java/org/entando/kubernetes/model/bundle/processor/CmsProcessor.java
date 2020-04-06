@@ -22,8 +22,7 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreSer
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle CMS Plugin stuff to be stored by Entando.
- * Currently creating ContentTypes and ContentModels
+ * Processor to handle CMS Plugin stuff to be stored by Entando. Currently creating ContentTypes and ContentModels
  *
  * @author Sergio Marcelino
  */
@@ -36,7 +35,7 @@ public class CmsProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> contentTypesDescriptor = ofNullable(descriptor.getComponents())
                 .map(ComponentSpecDescriptor::getContentTypes);
@@ -55,8 +54,8 @@ public class CmsProcessor implements ComponentProcessor {
             for (final String fileName : contentModelsDescriptor.get()) {
                 final ContentModelDescriptor contentModelDescriptor = npr.readDescriptorFile(fileName, ContentModelDescriptor.class);
                 if (contentModelDescriptor.getContentShapePath() != null) {
-                  String csPath = getRelativePath(fileName, contentModelDescriptor.getContentShapePath());
-                  contentModelDescriptor.setContentShape(npr.readFileAsString(csPath));
+                    String csPath = getRelativePath(fileName, contentModelDescriptor.getContentShapePath());
+                    contentModelDescriptor.setContentShape(npr.readFileAsString(csPath));
                 }
                 installables.add(new ContentModelInstallable(contentModelDescriptor));
             }

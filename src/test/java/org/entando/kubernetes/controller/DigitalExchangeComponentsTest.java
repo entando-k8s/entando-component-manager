@@ -75,7 +75,6 @@ public class DigitalExchangeComponentsTest {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 
-
         mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
@@ -97,7 +96,7 @@ public class DigitalExchangeComponentsTest {
     }
 
     @Test
-    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception{
+    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         EntandoDeBundle bundle = getTestBundle();
         bundle.getMetadata().setNamespace("my-custom-namespace");
@@ -110,7 +109,6 @@ public class DigitalExchangeComponentsTest {
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
 
     }
-
 
     private EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
@@ -140,6 +138,5 @@ public class DigitalExchangeComponentsTest {
                 .endTag()
                 .build();
     }
-
 
 }

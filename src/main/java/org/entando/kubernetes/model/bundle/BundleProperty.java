@@ -6,7 +6,6 @@ public enum BundleProperty {
     RESOURCES_FOLDER_NAME("resources"),
     RESOURCES_FOLDER_PATH("resources/");
 
-
     private final String value;
 
     BundleProperty(String value) {

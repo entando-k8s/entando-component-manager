@@ -22,8 +22,7 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreSer
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Page Models, can handle descriptors
- * with template embedded or a separate template file.
+ * Processor to create Page Models, can handle descriptors with template embedded or a separate template file.
  *
  * @author Sergio Marcelino
  */
@@ -36,7 +35,7 @@ public class PageProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
         List<String> pageModelsDescriptor = ofNullable(descriptor.getComponents())
                 .map(ComponentSpecDescriptor::getPageModels)
@@ -55,7 +54,7 @@ public class PageProcessor implements ComponentProcessor {
             installables.add(new PageModelInstallable(pageModelDescriptor));
         }
 
-        for (String fileName : pageDescriptorList)  {
+        for (String fileName : pageDescriptorList) {
             PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
             installables.add(new PageInstallable(pageDescriptor));
         }

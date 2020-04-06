@@ -5,7 +5,8 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter@Setter
+@Getter
+@Setter
 public class WidgetDescriptor implements Descriptor {
 
     private String code;
@@ -16,8 +17,10 @@ public class WidgetDescriptor implements Descriptor {
     private ConfigUIDescriptor configUi;
     private String bundleId;
 
-    @Getter@Setter
+    @Getter
+    @Setter
     public static class ConfigUIDescriptor {
+
         private String customElement;
         private List<String> resources;
     }

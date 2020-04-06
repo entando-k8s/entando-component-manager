@@ -21,9 +21,7 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreSer
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Labels
- *
- * @author Sergio Marcelino
+ * Processor to create Labels.
  */
 @Slf4j
 @Service
@@ -34,9 +32,10 @@ public class LabelProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
-        final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getLabels);
+        final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents())
+                .map(ComponentSpecDescriptor::getLabels);
         final List<Installable> installables = new LinkedList<>();
 
         if (labelDescriptors.isPresent()) {

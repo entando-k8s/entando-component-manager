@@ -3,8 +3,6 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 
-import org.entando.kubernetes.TestEntitiesGenerator;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -33,8 +31,5 @@ public class BundleUtilitiesTest {
         String version = BundleUtilities.getBundleVersionOrFail(getTestBundle(), "latest");
         assertThat(version).isEqualTo("0.0.1");
     }
-
-
-
 
 }

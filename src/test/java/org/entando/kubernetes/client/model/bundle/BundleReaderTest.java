@@ -35,25 +35,24 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class BundleReaderTest {
 
-    BundleReader r;
+    BundleReader bundleReader;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
-       r = new BundleReader(getTestDefaultBundlePath()) ;
+        bundleReader = new BundleReader(getTestDefaultBundlePath());
     }
 
     @AfterEach
     public void cleanUp() {
-        r.getTarEntries().values()
+        bundleReader.getTarEntries().values()
                 .forEach(File::delete);
     }
 
-
     @Test
     public void shouldReadNpmPackageCorrectly() {
-        assertThat(r.getTarEntries()).isNotEmpty();
+        assertThat(bundleReader.getTarEntries()).isNotEmpty();
     }
 
     @Test
@@ -64,17 +63,17 @@ public class BundleReaderTest {
 
     @Test
     public void shouldRebaseBundleEntriesToDescriptorRoot() {
-        assertThat(r.getTarEntries().containsKey("descriptor.yaml")).isTrue();
+        assertThat(bundleReader.getTarEntries().containsKey("descriptor.yaml")).isTrue();
     }
 
     @Test
     public void shouldReadBundleIdCorrectly() throws IOException {
-       assertThat(r.getBundleId()).isEqualTo("todomvc");
+        assertThat(bundleReader.getBundleId()).isEqualTo("todomvc");
     }
 
     @Test
     public void shouldContainADescriptorFileInTheRoot() {
-        List<String> descriptorFiles = r.getTarEntries().keySet().stream()
+        List<String> descriptorFiles = bundleReader.getTarEntries().keySet().stream()
                 .filter(s -> s.equals("descriptor.yaml")).collect(Collectors.toList());
         assertThat(descriptorFiles).hasSize(1);
     }
@@ -84,14 +83,14 @@ public class BundleReaderTest {
         List<String> expectedResourceFolders = Arrays.asList(
                 "js", "css"
         );
-        assertThat(r.containsResourceFolder()).isTrue();
-        assertThat(r.getResourceFolders()).hasSize(expectedResourceFolders.size());
-        assertThat(r.getResourceFolders()).containsAll(expectedResourceFolders);
+        assertThat(bundleReader.containsResourceFolder()).isTrue();
+        assertThat(bundleReader.getResourceFolders()).hasSize(expectedResourceFolders.size());
+        assertThat(bundleReader.getResourceFolders()).containsAll(expectedResourceFolders);
     }
 
     @Test
     public void shouldReadDescriptorFile() throws IOException {
-        WidgetDescriptor wd = r.readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = bundleReader.readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
         assertThat(wd.getCode()).isEqualTo("another_todomvc_widget");
         assertThat(wd.getGroup()).isEqualTo("free");
@@ -103,24 +102,23 @@ public class BundleReaderTest {
 
     @Test
     public void shouldReadRelatedFileAsString() throws IOException {
-        String content = r.readFileAsString("widgets/widget.ftl");
+        String content = bundleReader.readFileAsString("widgets/widget.ftl");
         assertThat(content).isEqualTo("<h2>Hello World Widget</h2>");
     }
 
     @Test
     public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.readFileAsDescriptor("widgets/pinco-pallo.yaml");
+            bundleReader.readFileAsDescriptor("widgets/pinco-pallo.yaml");
         });
     }
 
     @Test
     public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+            bundleReader.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
         });
     }
-
 
     @Test
     public void componentProcessorShouldReturnRelativeFolder() {
@@ -132,7 +130,7 @@ public class BundleReaderTest {
 
     @Test
     public void shouldReadConfigUIForWidget() throws IOException {
-        WidgetDescriptor wd = r.readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = bundleReader.readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
         assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
         assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");

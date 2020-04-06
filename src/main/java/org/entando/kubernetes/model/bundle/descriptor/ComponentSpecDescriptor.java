@@ -15,5 +15,4 @@ public class ComponentSpecDescriptor {
     private List<String> contentModels;
     private List<LabelDescriptor> labels;
 
-
 }

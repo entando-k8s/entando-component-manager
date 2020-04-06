@@ -31,7 +31,7 @@ public enum JobType {
         return this.statusList.contains(status);
     }
 
-    public static boolean isOfType(JobStatus status, JobType type){
+    public static boolean isOfType(JobStatus status, JobType type) {
         return type.isOfType(status);
     }
 

@@ -26,8 +26,10 @@ import org.mockito.MockitoAnnotations;
 @Tag("unit")
 public class AssetProcessorTest {
 
-    @Mock private EntandoCoreService engineService;
-    @Mock private BundleReader bundleReader;
+    @Mock
+    private EntandoCoreService engineService;
+    @Mock
+    private BundleReader bundleReader;
 
     private AssetProcessor assetProcessor;
 

@@ -26,5 +26,4 @@ public interface K8SServiceClient {
 
     Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace);
 
-
 }

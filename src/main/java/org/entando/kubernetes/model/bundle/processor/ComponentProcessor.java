@@ -11,16 +11,14 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 
 /**
- * Any classes that is called a Component Processor will be found automatically on the
- * context to process the Zip File with the Component Descriptor
- *
- * @author Sergio Marcelino
+ * Any classes that is called a Component Processor will be found automatically on the context to process the Zip File with the Component
+ * Descriptor.
  */
 public interface ComponentProcessor {
 
     /**
-     * This method will process the component descriptor and should return an empty list or
-     * a list of all components that should be installed
+     * This method will process the component descriptor and should return an empty list or a list of all components that should be
+     * installed.
      *
      * @param job the job being executed in this processing
      * @param bundleReader npm package reader zip file being processed
@@ -29,7 +27,7 @@ public interface ComponentProcessor {
      * @throws IOException in case of any error while reading any the file from the Zip package
      */
     List<Installable> process(DigitalExchangeJob job, BundleReader bundleReader,
-                                        ComponentDescriptor descriptor) throws IOException;
+            ComponentDescriptor descriptor) throws IOException;
 
     /**
      * This method will be executed on the uninstallation or modification of a component.
@@ -40,7 +38,8 @@ public interface ComponentProcessor {
     boolean shouldProcess(ComponentType componentType);
 
     /**
-     * Performs the uninstallation of this component
+     * Performs the uninstallation of this component.
+     *
      * @param component the component to be uninstalled
      */
     void uninstall(DigitalExchangeJobComponent component);

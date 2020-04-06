@@ -56,6 +56,7 @@ public class DigitalExchangeTestUtils {
     }
 
     public static class RequestChecker {
+
         private final DocumentContext context;
 
         private RequestChecker(final DocumentContext context) {

@@ -36,13 +36,12 @@ public class ExceptionController {
         }
 
         if (exception instanceof WithArgumentException) {
-            args = ((WithArgumentException)exception).getArgs();
+            args = ((WithArgumentException) exception).getArgs();
         }
-
 
         ErrorResponse errorResponse;
         if (exception instanceof WithPredefinedMessage) {
-            String predefinedMessage = ((WithPredefinedMessage)exception).getPredefinedMessage();
+            String predefinedMessage = ((WithPredefinedMessage) exception).getPredefinedMessage();
             errorResponse = new ErrorResponse(messageSource.getMessage(predefinedMessage, args, locale));
         } else {
             errorResponse = new ErrorResponse(exception.getMessage());

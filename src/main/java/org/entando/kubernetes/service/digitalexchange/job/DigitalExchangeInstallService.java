@@ -135,7 +135,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             CompletableFuture<Path> copyPackageLocallyStep = downloadComponentPackageStep
                     .thenApply(is -> savePackageStreamLocally(job.getComponentId(), is));
 
-            CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath ->  tempPath);
+            CompletableFuture<Path> verifySignatureStep = copyPackageLocallyStep.thenApply(tempPath -> tempPath);
 
             CompletableFuture<List<Installable>> extractInstallableFromPackageStep = verifySignatureStep
                     .thenApply(p -> getInstallablesAndRemoveTempPackage(job, p));
@@ -235,11 +235,12 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+        headers.add("user-agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
         headers.add("Accept", "*/*");
         HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
 
-        ResponseEntity<Resource> responseEntity =  restTemplate.exchange(
+        ResponseEntity<Resource> responseEntity = restTemplate.exchange(
                 tarballUrl, HttpMethod.GET, entity, Resource.class);
 
         if (responseEntity.getBody() == null) {

@@ -25,13 +25,13 @@ public class DigitalExchangeComponentsServiceTest {
     private DigitalExchangeJobRepository jobRepository;
 
     private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
+
     @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
         jobRepository = Mockito.mock(DigitalExchangeJobRepository.class);
         service = new DigitalExchangeComponentsServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository);
     }
-
 
     @Test
     public void shouldReturnAllComponentsAvailable() {

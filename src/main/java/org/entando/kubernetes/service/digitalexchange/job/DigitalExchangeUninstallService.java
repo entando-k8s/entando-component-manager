@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,10 +63,10 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
     private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob job) {
         if (JobType.isOfType(job.getStatus(), JobType.UNFINISHED)) {
-            throw new JobConflictException("Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
+            throw new JobConflictException(
+                    "Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
         }
     }
-
 
     private Optional<DigitalExchangeJob> getLastAvaialableJob(EntandoDeBundle bundle) {
         String digitalExchange = bundle.getMetadata().getNamespace();
@@ -87,7 +85,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     }
 
     private DigitalExchangeJob submitNewUninstallJob(DigitalExchangeJob lastAvailableJob) {
-        List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(lastAvailableJob);
+        final List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(lastAvailableJob);
 
         DigitalExchangeJob uninstallJob = new DigitalExchangeJob();
         uninstallJob.setComponentId(lastAvailableJob.getComponentId());
@@ -103,7 +101,6 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
         return savedJob;
     }
-
 
     private void submitUninstallAsync(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
         CompletableFuture.runAsync(() -> {
@@ -126,7 +123,8 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
                             ujc.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
                             return componentRepository.save(ujc);
                         }
-                        return null; })
+                        return null;
+                    })
                     .filter(Objects::nonNull)
                     .map(ujc -> {
                         CompletableFuture<Void> future = deleteComponent(ujc);

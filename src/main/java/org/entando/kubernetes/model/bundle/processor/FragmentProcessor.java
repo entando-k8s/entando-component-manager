@@ -31,7 +31,7 @@ public class FragmentProcessor implements ComponentProcessor {
         List<Installable> installableList = new ArrayList<>();
 
         if (optionalFragments.isPresent()) {
-            for (String fileName: optionalFragments.get() ) {
+            for (String fileName : optionalFragments.get()) {
                 FragmentDescriptor frDesc = npr.readDescriptorFile(fileName, FragmentDescriptor.class);
                 if (frDesc.getGuiCodePath() != null) {
                     String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());

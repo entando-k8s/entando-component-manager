@@ -12,8 +12,6 @@ import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
-import com.github.tomakehurst.wiremock.matching.RequestPattern;
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;
@@ -28,7 +26,6 @@ public class EntandoK8SServiceMockServer {
 
     private WireMockServer wireMockServer;
     private static int port;
-
 
     static {
         port = findFreePort().orElse(9080);
@@ -75,7 +72,8 @@ public class EntandoK8SServiceMockServer {
     private void addNamespacesResource(WireMockServer wireMockServer) {
         String namespaceListResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespaces.json");
         String myNamespaceResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespace-my-namespace.json");
-        String entandoDeBundlesNamespaceResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespace-entando-de-bundles.json");
+        String entandoDeBundlesNamespaceResponse = readResourceAsString(
+                "/payloads/k8s-svc/observed-namespaces/namespace-entando-de-bundles.json");
         String pluginNamespaceResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespace-plugin-namespace.json");
         wireMockServer.stubFor(get(urlMatching("/namespace/?"))
                 .willReturn(aResponse()
@@ -212,7 +210,7 @@ public class EntandoK8SServiceMockServer {
     }
 
     public WireMockServer getInnerServer() {
-       return wireMockServer;
+        return wireMockServer;
     }
 
     public void addStub(MappingBuilder stub) {
@@ -239,15 +237,12 @@ public class EntandoK8SServiceMockServer {
 
     public String readResourceAsString(String resourcePath) {
 
-        try
-        {
+        try {
             Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            String content = new String ( Files.readAllBytes(rp) );
-            content = content.replaceAll("localhost:9080", "localhost:"+port);
+            String content = new String(Files.readAllBytes(rp));
+            content = content.replaceAll("localhost:9080", "localhost:" + port);
             return content;
-        }
-        catch (IOException | URISyntaxException e)
-        {
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }

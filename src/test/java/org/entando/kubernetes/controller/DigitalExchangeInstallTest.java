@@ -31,8 +31,6 @@ import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -41,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
@@ -126,8 +123,7 @@ public class DigitalExchangeInstallTest {
     public void shouldCallCoreToInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble)  k8SServiceClient;
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
         // Verify interaction with mocks
         List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinkCopy();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
@@ -147,21 +143,21 @@ public class DigitalExchangeInstallTest {
 
         List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         List<LoggedRequest> pageModelRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
+                postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         List<LoggedRequest> directoryRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
-        List<LoggedRequest> fileRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+                postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
+        final List<LoggedRequest> fileRequests = findAll(
+                postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
         List<LoggedRequest> contentTypeRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+                postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
         List<LoggedRequest> contentModelRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+                postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
-        List<LoggedRequest> fragmentRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
-        List<LoggedRequest> pageRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/pages")));
+        final List<LoggedRequest> fragmentRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
+        final List<LoggedRequest> pageRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/pages")));
 
-//        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests,
-//                contentModelRequests, labelRequests, fragmentRequests, pageRequests);
+        //        checkRequests(widgetRequests, pageModelRequests, directoryRequests, fileRequests, contentTypeRequests,
+        //                contentModelRequests, labelRequests, fragmentRequests, pageRequests);
 
         widgetRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
         pageModelRequests.sort(Comparator.comparing(DigitalExchangeInstallTest::requestCode));
@@ -294,7 +290,7 @@ public class DigitalExchangeInstallTest {
         );
 
         Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
-        for(DigitalExchangeJobComponent jcomp: jobComponentList) {
+        for (DigitalExchangeJobComponent jcomp : jobComponentList) {
             Integer n = jobComponentTypes.getOrDefault(jcomp.getComponentType(), 0);
             jobComponentTypes.put(jcomp.getComponentType(), n + 1);
         }
@@ -358,16 +354,17 @@ public class DigitalExchangeInstallTest {
         List<DigitalExchangeJobComponent> installedComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
         List<DigitalExchangeJobComponent> uninstalledComponentList = jobComponentRepository.findAllByJob(jobs.get(1));
         assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
-        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(DigitalExchangeJobComponent::getStatus).collect(Collectors.toList());
+        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(DigitalExchangeJobComponent::getStatus)
+                .collect(Collectors.toList());
         assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
 
         boolean matchFound = false;
-        for(DigitalExchangeJobComponent ic: installedComponentList) {
+        for (DigitalExchangeJobComponent ic : installedComponentList) {
             matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
-                return uc.getJob().getId().equals(jobs.get(1).getId()) &&
-                        uc.getName().equals(ic.getName()) &&
-                        uc.getComponentType().equals(ic.getComponentType()) &&
-                        uc.getChecksum().equals(ic.getChecksum());
+                return uc.getJob().getId().equals(jobs.get(1).getId())
+                        && uc.getName().equals(ic.getName())
+                        && uc.getComponentType().equals(ic.getComponentType())
+                        && uc.getChecksum().equals(ic.getChecksum());
             });
             if (!matchFound) {
                 break;
@@ -424,8 +421,6 @@ public class DigitalExchangeInstallTest {
                         failingInstallId, successfulUninstallId, successfulInstallId
                 )));
     }
-
-
 
     @Test
     public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
@@ -511,7 +506,6 @@ public class DigitalExchangeInstallTest {
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
-
 
     private String simulateSuccessfullyCompletedUninstall() throws Exception {
         WireMock.reset();
@@ -619,7 +613,6 @@ public class DigitalExchangeInstallTest {
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
-
     }
 
     private void waitForInstallStatus(JobStatus status) {
@@ -634,16 +627,22 @@ public class DigitalExchangeInstallTest {
                 .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
     }
 
-    private SimpleRestResponse<DigitalExchangeJob> getInstallJob() throws Exception{
+    private SimpleRestResponse<DigitalExchangeJob> getInstallJob() throws Exception {
+        TypeReference<SimpleRestResponse<DigitalExchangeJob>> valueTypeRef = new TypeReference<SimpleRestResponse<DigitalExchangeJob>>() {
+        };
         return mapper.readValue(mockMvc.perform(get(URL + "/install/todomvc"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
+                .andReturn().getResponse().getContentAsString(), valueTypeRef
+        );
     }
 
-    private SimpleRestResponse<DigitalExchangeJob> getUninstallJob() throws Exception{
+    private SimpleRestResponse<DigitalExchangeJob> getUninstallJob() throws Exception {
+        TypeReference<SimpleRestResponse<DigitalExchangeJob>> valueTypeRef = new TypeReference<SimpleRestResponse<DigitalExchangeJob>>() {
+        };
         return mapper.readValue(mockMvc.perform(get(URL + "/uninstall/todomvc"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
+                .andReturn().getResponse().getContentAsString(), valueTypeRef
+        );
     }
 
     private byte[] readFromDEPackage() throws IOException {
@@ -663,9 +662,9 @@ public class DigitalExchangeInstallTest {
             allRequests.addAll(request);
         }
 
-//        for (final LoggedRequest req : allRequests) {
-//            assertThat(req.getHeader("Authorization")).isEqualTo("Bearer iddqd");
-//        }
+        //        for (final LoggedRequest req : allRequests) {
+        //            assertThat(req.getHeader("Authorization")).isEqualTo("Bearer iddqd");
+        //        }
     }
 
     private static String requestProperty(final LoggedRequest request, final String property) {

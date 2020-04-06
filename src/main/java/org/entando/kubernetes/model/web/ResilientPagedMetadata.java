@@ -10,7 +10,8 @@ import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.RestError;
 
-@Getter@Setter
+@Getter
+@Setter
 @NoArgsConstructor
 public class ResilientPagedMetadata<T> extends PagedMetadata<T> {
 

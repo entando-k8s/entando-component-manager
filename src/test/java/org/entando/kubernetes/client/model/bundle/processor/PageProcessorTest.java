@@ -86,5 +86,4 @@ public class PageProcessorTest {
         assertThat(pginst.getName()).isEqualTo("my-page");
     }
 
-
 }

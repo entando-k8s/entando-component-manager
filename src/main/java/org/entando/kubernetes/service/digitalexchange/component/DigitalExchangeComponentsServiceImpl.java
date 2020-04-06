@@ -11,6 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.util.Date;
@@ -42,18 +43,16 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         this.jobRepository = jobRepository;
     }
 
-
     @Override
     public List<DigitalExchangeComponent> getComponents() {
         List<EntandoDeBundle> bundles;
-        if(accessibleDigitalExchanges.isEmpty()) {
+        if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
         }
         return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
     }
-
 
     public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
         DigitalExchangeComponent dec = new DigitalExchangeComponent();

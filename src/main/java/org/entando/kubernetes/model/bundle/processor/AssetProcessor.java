@@ -19,10 +19,9 @@ import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeUninsta
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle Static files to be stored by Entando.
- * Commonly used for js, images and css.
+ * Processor to handle Static files to be stored by Entando. Commonly used for js, images and css.
  *
- * This processor will also create the folders.
+ * <p>This processor will also create the folders.</p>
  *
  * @author Sergio Marcelino
  */
@@ -35,7 +34,7 @@ public class AssetProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
         final List<Installable> installables = new LinkedList<>();
 
@@ -63,7 +62,8 @@ public class AssetProcessor implements ComponentProcessor {
     }
 
     /**
-     * This process will be hard coded in the {@link DigitalExchangeUninstallService}
+     * This process will be hard coded in the {@link DigitalExchangeUninstallService}.
+     *
      * @param componentType The component type being processed
      * @return always false
      */

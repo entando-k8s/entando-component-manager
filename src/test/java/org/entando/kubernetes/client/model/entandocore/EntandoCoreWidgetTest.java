@@ -54,6 +54,7 @@ public class EntandoCoreWidgetTest {
 
         return configUIDescriptor;
     }
+
     private WidgetDescriptor testWidgetDescriptor() {
 
         Map<String, String> titles = new HashMap<>();

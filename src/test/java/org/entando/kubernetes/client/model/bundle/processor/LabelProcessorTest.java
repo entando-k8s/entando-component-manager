@@ -30,8 +30,10 @@ import org.mockito.MockitoAnnotations;
 @Tag("unit")
 public class LabelProcessorTest {
 
-    @Mock private EntandoCoreService engineService;
-    @Mock private BundleReader bundleReader;
+    @Mock
+    private EntandoCoreService engineService;
+    @Mock
+    private BundleReader bundleReader;
 
     private LabelProcessor processor;
 

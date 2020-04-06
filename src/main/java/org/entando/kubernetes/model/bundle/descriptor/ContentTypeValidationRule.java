@@ -3,7 +3,8 @@ package org.entando.kubernetes.model.bundle.descriptor;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter@Setter
+@Getter
+@Setter
 public class ContentTypeValidationRule {
 
     private String minLength;

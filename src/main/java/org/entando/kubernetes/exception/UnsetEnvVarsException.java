@@ -9,9 +9,9 @@ public class UnsetEnvVarsException extends EntandoComponentManagerException impl
         WithPredefinedMessage,
         WithArgumentException {
 
-    private transient final Object[] envs;
+    private final transient Object[] envs;
 
-    public UnsetEnvVarsException(final Object ... envs) {
+    public UnsetEnvVarsException(final Object... envs) {
         super();
         this.envs = envs;
     }

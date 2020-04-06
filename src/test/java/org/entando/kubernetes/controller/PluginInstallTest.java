@@ -39,20 +39,19 @@ public class PluginInstallTest {
     @Autowired
     private K8SServiceClient k8SServiceClient;
 
-
     @Test
     public void testDeployment() {
         EntandoPlugin entandoPlugin = new EntandoPluginBuilder()
                 .withNewMetadata()
-                    .withName("avatar-plugin")
+                .withName("avatar-plugin")
                 .endMetadata()
                 .withNewSpec()
-                    .withImage("entando/entando-avatar-plugin")
-                    .withIngressPath("/avatar")
-                    .withHealthCheckPath("/actuator/health")
-                    .withDbms(DbmsVendor.MYSQL)
-                    .addNewRole("read", "Read")
-                    .addNewPermission("another-client", "read")
+                .withImage("entando/entando-avatar-plugin")
+                .withIngressPath("/avatar")
+                .withHealthCheckPath("/actuator/health")
+                .withDbms(DbmsVendor.MYSQL)
+                .addNewRole("read", "Read")
+                .addNewPermission("another-client", "read")
                 .endSpec()
                 .build();
 
@@ -62,7 +61,7 @@ public class PluginInstallTest {
 
         kubernetesService.linkPlugin(entandoPlugin);
 
-        K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble)  k8SServiceClient;
+        K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble) k8SServiceClient;
         List<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPluginsCopy();
         assertThat(linkedPluginDatabase.size()).isEqualTo(1);
         EntandoPlugin plugin = linkedPluginDatabase.get(0);

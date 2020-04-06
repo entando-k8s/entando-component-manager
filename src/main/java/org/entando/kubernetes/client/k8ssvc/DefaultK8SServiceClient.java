@@ -7,9 +7,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -31,14 +29,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -54,7 +50,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate restTemplate;
     private Traverson traverson;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri)  {
+    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tokenUri = tokenUri;
@@ -83,7 +79,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             CollectionModel<EntityModel<EntandoAppPluginLink>> links = traverson
                     .follow("app-plugin-links")
                     .follow(Hop.rel("app-links").withParameter("app", entandoAppName))
-                    .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>(){});
+                    .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {
+                    });
             assert links != null;
             return links.getContent().stream()
                     .map(EntityModel::getContent)
@@ -97,7 +94,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return tryOrThrow(() -> traverson.follow("app-plugin-links")
                 .follow(Hop.rel("app-plugin-link").withParameter("name", el.getMetadata().getName()))
                 .follow("plugin")
-                .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {})
+                .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                })
                 .getContent(), "get plugin associated with link " + el.getMetadata().getName());
     }
 
@@ -126,7 +124,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
         return tryOrThrow(() -> traverson.follow("bundles")
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                })
                 .getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
@@ -136,7 +135,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
         return tryOrThrow(() -> traverson.follow("bundles")
                 .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                })
                 .getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
@@ -166,9 +166,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             bundle = traverson.follow("bundles")
                     .follow(Hop.rel("bundle").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {})
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    })
                     .getContent();
-            
+
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
@@ -184,7 +185,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .findFirst();
     }
 
-
     private RestTemplate newRestTemplate() {
         OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
         if (resourceDetails == null) {
@@ -194,19 +194,18 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setRequestFactory(getRequestFactory());
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
-//        List<HttpMessageConverter<?>> converters = template.getMessageConverters();
-//        converters.add( getHalConverter());
-//        converters.add(new StringHttpMessageConverter());
-//        converters.add(new MappingJacksonHttpMessageConverter());
+        //        List<HttpMessageConverter<?>> converters = template.getMessageConverters();
+        //        converters.add( getHalConverter());
+        //        converters.add(new StringHttpMessageConverter());
+        //        converters.add(new MappingJacksonHttpMessageConverter());
 
         template.setMessageConverters(Traverson.getDefaultMessageConverters(MediaTypes.HAL_JSON));
 
         return template;
     }
 
-
     private HttpMessageConverter<?> getHalConverter() {
-        List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
+        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -255,14 +254,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getResponseBodyAsString()),
                     ex);
         } catch (Exception ex) {
-            throw new KubernetesClientException( "A generic error occurred while " + actionDescription, ex);
+            throw new KubernetesClientException("A generic error occurred while " + actionDescription, ex);
         }
     }
 
     public <T> T tryOrThrow(Supplier<T> supplier) {
         return tryOrThrow(supplier, "talking with k8s-service");
     }
-
 
     public <T> T tryOrThrow(Supplier<T> supplier, String action) {
         try {
@@ -275,7 +273,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getResponseBodyAsString()),
                     ex);
         } catch (Exception ex) {
-            throw new KubernetesClientException( "A generic error occurred while " + action, ex);
+            throw new KubernetesClientException("A generic error occurred while " + action, ex);
         }
     }
 

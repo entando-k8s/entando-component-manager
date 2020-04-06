@@ -44,9 +44,9 @@ import org.springframework.web.client.RestTemplate;
 public class K8SServiceClientTest {
 
     private static EntandoK8SServiceMockServer mockServer;
-    private final String CLIENT_ID = "test-entando-de";
-    private final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    private final String TOKEN_URI = "http://someurl.com";
+    private static final String CLIENT_ID = "test-entando-de";
+    private static final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
+    private static final String TOKEN_URI = "http://someurl.com";
     private DefaultK8SServiceClient client;
 
     @BeforeEach
@@ -99,7 +99,7 @@ public class K8SServiceClientTest {
         EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
         client.unlink(getTestEntandoAppPluginLink());
         String name = testLink.getMetadata().getName();
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/"+ name)));
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/" + name)));
 
     }
 
@@ -152,7 +152,6 @@ public class K8SServiceClientTest {
         assertThat(plugin.getSpec().getImage()).isEqualTo("entando/some-image:6.0.0");
 
     }
-
 
     @Test
     public void shouldGetBundlesFromAllObservedNamespaces() {
@@ -246,12 +245,12 @@ public class K8SServiceClientTest {
     }
 
     private EntandoPlugin getTestEntandoPlugin() {
-       return new EntandoPluginBuilder()
-               .withNewMetadata()
-               .withName("plugin")
-               .withNamespace("plugin-namespace")
-               .endMetadata()
-               .build();
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName("plugin")
+                .withNamespace("plugin-namespace")
+                .endMetadata()
+                .build();
     }
 
     private static Optional<Integer> findFreePort() {
@@ -270,13 +269,10 @@ public class K8SServiceClientTest {
 
     private String readResourceAsString(String resourcePath) {
 
-        try
-        {
+        try {
             Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            return new String ( Files.readAllBytes(rp) );
-        }
-        catch (IOException | URISyntaxException e)
-        {
+            return new String(Files.readAllBytes(rp));
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }

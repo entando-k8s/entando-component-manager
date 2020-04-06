@@ -15,6 +15,7 @@ import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.comparators.TransformingComparator;
 
 public class FilterUtils {
+
     private FilterUtils() {
     }
 
@@ -61,17 +62,17 @@ public class FilterUtils {
         boolean result = false;
 
         while (iterator.hasNext()) {
-            boolean filterValue = (Boolean)iterator.next();
-            switch(operator) {
-            case EQUAL:
-            case LIKE:
-                result |= value == filterValue;
-                break;
-            case NOT_EQUAL:
-                result |= value != filterValue;
-                break;
-            default:
-                throw new UnsupportedOperationException(getUnsupportedOperatorMessage(filter));
+            boolean filterValue = (Boolean) iterator.next();
+            switch (operator) {
+                case EQUAL:
+                case LIKE:
+                    result |= value == filterValue;
+                    break;
+                case NOT_EQUAL:
+                    result |= value != filterValue;
+                    break;
+                default:
+                    throw new UnsupportedOperationException(getUnsupportedOperatorMessage(filter));
             }
         }
 
