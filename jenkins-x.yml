@@ -20,7 +20,7 @@ pipelineConfig:
             name: fix-git-for-sonar
           - sh: mvn-verify-pr
             name: mvn-verify-pr
-          - sh:  skaffold-build
+          - sh:  echo $PREVIEW_VERSION>VERSION && skaffold-build
             name: container-build
       promote:
         replace: true
