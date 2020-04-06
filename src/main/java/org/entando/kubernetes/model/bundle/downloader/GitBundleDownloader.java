@@ -3,10 +3,7 @@ package org.entando.kubernetes.model.bundle.downloader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 public class GitBundleDownloader extends BundleDownloader{
@@ -16,7 +13,6 @@ public class GitBundleDownloader extends BundleDownloader{
         try {
             cloneUsingCliImplementation(tag, targetPath);
 
-//            cloneUsingJGitImplementation(tag, targetPath);
             return targetPath;
         } catch (IOException | InterruptedException e) {
             throw new BundleDownloaderException("An error occurred while cloning git repo", e);
@@ -44,13 +40,4 @@ public class GitBundleDownloader extends BundleDownloader{
             throw new BundleDownloaderException("An error occurred while shallow cloning the git repo");
     }
 
-    private void cloneUsingJGitImplementation(EntandoDeBundleTag tag, Path targetPath) throws GitAPIException {
-        Git.cloneRepository()
-                .setURI(tag.getTarball())
-                .setBranch(tag.getVersion())
-                .setCloneAllBranches(false)
-                .setBranchesToClone(Collections.singletonList("refs/tags/" + tag.getVersion()))
-                .setDirectory(targetPath.toFile())
-                .call();
-    }
 }

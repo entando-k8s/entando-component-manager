@@ -1,0 +1,66 @@
+{
+  "apiVersion": "extensions/v1beta1",
+  "kind": "Ingress",
+  "metadata": {
+    "annotations": {
+      "my-app-plugin-link-path": "/my-plugin"
+    },
+    "labels": {
+      "EntandoApp": "my-app"
+    },
+    "name": "my-app-ingress",
+    "namespace": "my-namespace"
+  },
+  "spec": {
+    "rules": [
+      {
+        "host": "localhost:9080",
+        "http": {
+          "paths": [
+            {
+              "backend": {
+                "serviceName": "my-app-server-service",
+                "servicePort": 8080
+              },
+              "path": "/entando-de-app",
+              "pathType": "ImplementationSpecific"
+            },
+            {
+              "backend": {
+                "serviceName": "my-app-server-service",
+                "servicePort": 8083
+              },
+              "path": "/digital-exchange",
+              "pathType": "ImplementationSpecific"
+            },
+            {
+              "backend": {
+                "serviceName": "my-app-server-service",
+                "servicePort": 8081
+              },
+              "path": "/app-builder/",
+              "pathType": "ImplementationSpecific"
+            },
+            {
+              "backend": {
+                "serviceName": "plugin-server-service",
+                "servicePort": 8081
+              },
+              "path": "/my-plugin",
+              "pathType": "ImplementationSpecific"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "status": {
+    "loadBalancer": {
+      "ingress": [
+        {
+          "ip": "127.0.0.1"
+        }
+      ]
+    }
+  }
+}

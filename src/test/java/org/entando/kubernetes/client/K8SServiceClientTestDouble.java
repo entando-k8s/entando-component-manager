@@ -111,7 +111,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     @Override
     public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
-        return false;
+        return true;
     }
 
 

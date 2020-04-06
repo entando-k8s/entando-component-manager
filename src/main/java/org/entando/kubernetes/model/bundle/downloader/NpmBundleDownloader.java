@@ -16,7 +16,6 @@ import java.util.Map;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;

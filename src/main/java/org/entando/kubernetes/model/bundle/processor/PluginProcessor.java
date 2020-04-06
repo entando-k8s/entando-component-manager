@@ -1,19 +1,14 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static java.util.Optional.ofNullable;
-import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.awaitility.core.ConditionTimeoutException;
-import org.awaitility.pollinterval.FixedPollInterval;
-import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -80,20 +75,8 @@ public class PluginProcessor implements ComponentProcessor {
         public CompletableFuture install() {
             return CompletableFuture.runAsync(() -> {
                 log.info("Deploying a new plugin {}", representation.getSpec().getImage());
-                kubernetesService.linkPlugin(representation);
-                waitUntilPluginIsReadyToServeRequestsOrFail(representation);
+                kubernetesService.linkAndWaitForPlugin(representation);
             });
-        }
-
-        private void waitUntilPluginIsReadyToServeRequestsOrFail(EntandoPlugin plugin) {
-            try {
-                await().atMost(Duration.ofMinutes(5))
-                        .pollDelay(Duration.ZERO)
-                        .pollInterval(FixedPollInterval.fixed(Duration.ofSeconds(10)))
-                        .until(() -> kubernetesService.isPluginReady(plugin));
-            } catch (ConditionTimeoutException e) {
-                throw new PluginNotReadyException(plugin.getMetadata().getName());
-            }
         }
 
         @Override

@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.core.ConditionFactory;
+import org.awaitility.core.ConditionTimeoutException;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
+import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -24,13 +27,16 @@ public class KubernetesService {
     public static final String ENTANDOPLUGIN_CRD_NAME = "entandoplugins.entando.org";
     public static final String KUBERNETES_NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
 
+    private final ConditionFactory waitingConditionFactory;
     private final K8SServiceClient k8sServiceClient;
     private final String entandoAppName;
     private final String entandoAppNamespace;
 
-    public KubernetesService(K8SServiceClient k8SServiceClient,
-            @Value("${entando.app.name}") String entandoAppName,
-            @Value("${entando.app.namespace}") String entandoAppNamespace) {
+    public KubernetesService(@Value("${entando.app.name}") String entandoAppName,
+            @Value("${entando.app.namespace}") String entandoAppNamespace,
+            K8SServiceClient k8SServiceClient,
+            ConditionFactory waitingConditionFactory) {
+        this.waitingConditionFactory = waitingConditionFactory;
         this.k8sServiceClient = k8SServiceClient;
         this.entandoAppName = entandoAppName;
         this.entandoAppNamespace = getCurrentKubernetesNamespace().orElse(entandoAppNamespace);
@@ -80,6 +86,16 @@ public class KubernetesService {
         newPlugin.getMetadata().setNamespace(null);
 
         k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
+    }
+
+    public void linkAndWaitForPlugin(EntandoPlugin plugin) {
+        this.linkPlugin(plugin);
+        try {
+            this.waitingConditionFactory.until(() -> this.isPluginReady(plugin));
+        } catch (ConditionTimeoutException e) {
+            throw new PluginNotReadyException(plugin.getMetadata().getName());
+        }
+
     }
 
     public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
