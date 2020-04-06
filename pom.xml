@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-spring-boot-parent</artifactId>
-        <version>6.1.3</version>
+        <version>6.1.4</version>
     </parent>
     <url>http://www.entando.com/</url>
     <licenses>
@@ -53,6 +53,10 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.entando.kubernetes</groupId>
+            <artifactId>entando-k8s-custom-model</artifactId>
+        </dependency>
         <!-- OWASP Fixes TODO should remove these-->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
@@ -107,11 +111,6 @@
         <!-- Finish OWASP -->
 
 
-        <dependency>
-            <groupId>org.entando.kubernetes</groupId>
-            <artifactId>entando-k8s-custom-model</artifactId>
-            <version>${entando.k8s.custom.model.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
