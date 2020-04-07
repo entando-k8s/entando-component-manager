@@ -3,9 +3,11 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleProperty;
@@ -19,6 +21,7 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeUninstallService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.comparator.Comparators;
 
 /**
  * Processor to handle Static files to be stored by Entando.
@@ -45,14 +48,14 @@ public class AssetProcessor implements ComponentProcessor {
             final String componentFolder = "/" + job.getComponentId();
             installables.add(new DirectoryInstallable(componentFolder));
 
-            final List<String> resourceFolders = npr.getResourceFolders();
+            List<String> resourceFolders = npr.getResourceFolders().stream().sorted().collect(Collectors.toList());
             for (final String resourceFolder : resourceFolders) {
                 Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).relativize(Paths.get(resourceFolder));
                 String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
                 installables.add(new DirectoryInstallable(folder));
             }
 
-            final List<String> resourceFiles = npr.getResourceFiles();
+            List<String> resourceFiles = npr.getResourceFiles().stream().sorted().collect(Collectors.toList());
             for (final String resourceFile : resourceFiles) {
                 final FileDescriptor fileDescriptor = npr.getResourceFileAsDescriptor(resourceFile);
 
