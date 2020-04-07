@@ -24,7 +24,6 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -37,16 +36,12 @@ public class BundleReaderTest {
     BundleReader r;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
+    Path bundleFolder;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
-       Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+       bundleFolder = new ClassPathResource("bundle").getFile().toPath();
        r = new BundleReader(bundleFolder) ;
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        r.destroy();
     }
 
 

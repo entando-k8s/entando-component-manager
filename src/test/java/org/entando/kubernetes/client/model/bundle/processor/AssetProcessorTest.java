@@ -42,22 +42,6 @@ public class AssetProcessorTest {
         final DigitalExchangeJob job = new DigitalExchangeJob();
         job.setComponentId("my-component-id");
 
-//        final List<String> folders = Arrays.asList("css", "js", "images");
-//        final List<String> files = Arrays.asList("favicon.ico", "css/styles.css", "js/script.js", "images/logo.png");
-
-//        when(bundleReader.getBundleId()).thenReturn("my-bundle");
-//        when(bundleReader.containsResourceFolder()).thenReturn(true);
-//        when(bundleReader.getResourceFolders()).thenReturn(folders);
-//        when(bundleReader.getResourceFiles()).thenReturn(files);
-//        when(bundleReader.getResourceFileAsDescriptor(eq("favicon.ico")))
-//                .thenReturn(file("", "favicon.ico", "base64icon"));
-//        when(bundleReader.getResourceFileAsDescriptor(eq("css/styles.css")))
-//                .thenReturn(file("css", "styles.css", "base64css"));
-//        when(bundleReader.getResourceFileAsDescriptor(eq("js/script.js")))
-//                .thenReturn(file("js", "script.js", "base64js"));
-//        when(bundleReader.getResourceFileAsDescriptor(eq("images/logo.png")))
-//                .thenReturn(file("images", "logo.png", "base64img"));
-
         final List<? extends Installable> installables = assetProcessor.process(job, bundleReader, new ComponentDescriptor());
 
         assertThat(installables).hasSize(10);

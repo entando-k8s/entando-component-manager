@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -36,15 +35,6 @@ public class BundleReader {
 
     public ComponentDescriptor readBundleDescriptor() throws IOException {
         return readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), ComponentDescriptor.class);
-    }
-
-    public void destroy() {
-        try {
-            Files.deleteIfExists(this.bundleBasePath);
-        } catch (IOException e) {
-            log.error("Local bundle folder " + this.bundleBasePath.toAbsolutePath() + " was not deleted correctly");
-            throw new EntandoComponentManagerException(e);
-        }
     }
 
     public boolean containsResourceFolder() {
