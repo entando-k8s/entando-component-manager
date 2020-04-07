@@ -1,6 +1,10 @@
 FROM openjdk:8-jdk-slim
 ENV PORT 8080
 ENV CLASSPATH /opt/lib
+
+# add git
+RUN apt-get update && apt-get upgrade -y && apt-get install -y git curl gpg tar && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && apt-get install -y git-lfs && git lfs install && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 
 # copy pom.xml and wildcards to avoid this command failing if there's no target/lib directory

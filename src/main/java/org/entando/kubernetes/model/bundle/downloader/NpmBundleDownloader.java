@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -96,7 +97,7 @@ public class NpmBundleDownloader extends BundleDownloader {
                 tarballUrl, HttpMethod.GET, entity, Resource.class);
 
         if (responseEntity.getBody() == null) {
-            throw new HttpMessageNotReadableException("Response body is null");
+            throw new BundleDownloaderException("Requested package returned an empty body");
         }
 
         try {

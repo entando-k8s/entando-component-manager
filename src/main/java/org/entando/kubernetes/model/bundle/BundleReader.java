@@ -12,13 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -38,7 +39,12 @@ public class BundleReader {
     }
 
     public void destroy() {
-        this.bundleBasePath.toFile().delete();
+        try {
+            Files.deleteIfExists(this.bundleBasePath);
+        } catch (IOException e) {
+            log.error("Local bundle folder " + this.bundleBasePath.toAbsolutePath() + " was not deleted correctly");
+            throw new EntandoComponentManagerException(e);
+        }
     }
 
     public boolean containsResourceFolder() {
@@ -54,12 +60,12 @@ public class BundleReader {
         return getResourceOfType(Files::isRegularFile);
     }
 
-    private List<String> getResourceOfType(Function<Path, Boolean> checkFunction) {
+    private List<String> getResourceOfType(Predicate<Path> checkFunction) {
         List<Path> resources;
         Path resourcePath = bundleBasePath.resolve("resources/");
         try (Stream<Path> paths = Files.walk(resourcePath)) {
             resources = paths
-                    .filter(checkFunction::apply)
+                    .filter(checkFunction)
                     .filter(p -> p != resourcePath)
                     .collect(Collectors.toList());
         } catch (IOException e) {

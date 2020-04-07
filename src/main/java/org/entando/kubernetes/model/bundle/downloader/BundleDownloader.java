@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
@@ -14,7 +15,7 @@ public abstract class BundleDownloader {
 
     protected Path targetPath;
 
-    public static enum Type {
+    public enum Type {
         NPM,
         GIT
     }
@@ -36,7 +37,7 @@ public abstract class BundleDownloader {
         return this.targetPath;
     }
 
-    abstract protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
+    protected abstract Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
 
     public Path getTargetPath() {
         return this.targetPath;
@@ -48,15 +49,16 @@ public abstract class BundleDownloader {
     }
 
     public void cleanTargetDirectory() {
-        try {
-            if (targetPath != null && targetPath.toFile().exists()) {
-                Files.walk(targetPath)
+        if (targetPath != null && targetPath.toFile().exists()) {
+            try (Stream<Path> localFiles = Files.walk(targetPath)) {
+                localFiles
                         .sorted(Comparator.reverseOrder())
                         .map(Path::toFile)
                         .forEach(File::delete);
+            } catch (IOException e) {
+                throw new BundleDownloaderException(
+                        "An error occurred while cleaning up environment post bundle install", e);
             }
-        } catch (IOException e) {
-            throw new BundleDownloaderException("An error occurred while cleaning up environment post bundle install", e);
         }
     }
 

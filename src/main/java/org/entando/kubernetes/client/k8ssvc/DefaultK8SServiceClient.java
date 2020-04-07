@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -207,7 +208,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         }
         Ingress appIngress = getAppIngress(appName);
         IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().<RuntimeException>orElseThrow(() -> {
-            throw new RuntimeException("EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
+            throw new K8SServiceClientException("EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
         });
 
         String appHost = ingressRule.getHost();
@@ -224,13 +225,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             ResponseEntity<Object> response = this.restTemplate.exchange(request, Object.class);
             return response.getStatusCode().is2xxSuccessful();
-        } catch (RestClientException e) {
-            if (e instanceof RestClientResponseException) {
-                HttpStatus status = HttpStatus.valueOf(((RestClientResponseException) e ).getRawStatusCode());
-                if (status.equals(HttpStatus.NOT_FOUND) || status.equals(HttpStatus.SERVICE_UNAVAILABLE)) {
-                    return false;
-                }
+        } catch (RestClientResponseException e) {
+            HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
+            if (status.equals(HttpStatus.NOT_FOUND) || status.equals(HttpStatus.SERVICE_UNAVAILABLE)) {
+                return false;
             }
+            throw e;
+        } catch (RestClientException e) {
             throw e;
         }
 
