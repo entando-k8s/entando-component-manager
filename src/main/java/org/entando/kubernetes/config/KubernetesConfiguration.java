@@ -1,9 +1,13 @@
 package org.entando.kubernetes.config;
 
+import static org.awaitility.Awaitility.await;
+
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.time.Duration;
+import org.awaitility.core.ConditionFactory;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +37,13 @@ public class KubernetesConfiguration {
     @Bean
     public K8SServiceClient k8SServiceClient() {
         return new DefaultK8SServiceClient(k8sServiceUrl, clientId, clientSecret, tokenUri);
+    }
+
+    @Bean
+    public ConditionFactory k8SServiceWaitingConditionFactory() {
+        return await().atMost(Duration.ofMinutes(5))
+                .pollDelay(Duration.ZERO)
+                .pollInterval(Duration.ofSeconds(10));
     }
 
 }

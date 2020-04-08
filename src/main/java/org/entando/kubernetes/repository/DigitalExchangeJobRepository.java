@@ -20,7 +20,6 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
     Optional<DigitalExchangeJob> findByComponentIdAndStatusNotEqual(@Param("componentId") String componentId,
                                                                     @Param("status") JobStatus status);
 
-
     Optional<DigitalExchangeJob> findFirstByComponentIdAndAndStatusNotOrderByStartedAtDesc(
             String componentId,
             JobStatus status);
@@ -29,11 +28,17 @@ public interface DigitalExchangeJobRepository extends JpaRepository<DigitalExcha
             String digitalExchangeId,
             String componentId);
 
+    List<DigitalExchangeJob> findAllByOrderByStartedAtDesc();
+
     List<DigitalExchangeJob> findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
             String digitalExchange,
             String componentId);
 
     List<DigitalExchangeJob> findAllByComponentIdOrderByStartedAtDesc(String componentId);
+
+    Optional<DigitalExchangeJob> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId, List<JobStatus> status);
+
+    Optional<DigitalExchangeJob> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId, JobStatus status);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)

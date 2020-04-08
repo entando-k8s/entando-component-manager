@@ -13,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.io.IOException;
@@ -21,7 +23,9 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
@@ -37,7 +41,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.client.Traverson;
+import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 @Tag("unit")
@@ -84,14 +92,33 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldLinkAnAppWithAPlugin() {
-
         EntandoPlugin testPlugin = getTestEntandoPlugin();
         client.linkAppWithPlugin("my-app", "my-namespace", testPlugin);
         mockServer.getInnerServer().verify(1, postRequestedFor(urlEqualTo("/apps/my-app/links")));
         List<LoggedRequest> loggedRequests = mockServer.getInnerServer().findAll(postRequestedFor(urlEqualTo("/apps/my-app/links")));
         loggedRequests.get(0).getBodyAsString().contains("name: " + testPlugin.getMetadata().getName());
         loggedRequests.get(0).getBodyAsString().contains("namespace: " + testPlugin.getMetadata().getNamespace());
+    }
 
+    @Test
+    public void shouldNotGetAppIngressIfPluginHasNoIngressPath() {
+        EntandoPlugin testPlugin = getTestEntandoPlugin();
+        boolean pluginReady = client.isPluginReadyToServeApp(testPlugin, "my-app");
+        assertThat(pluginReady).isFalse();
+        mockServer.getInnerServer().verify(0, getRequestedFor(urlEqualTo("/apps/my-app/ingress")));
+    }
+
+    @Test
+    public void shouldReturnTrueIfPluginIsReadyToServeApp() {
+        EntandoPlugin testPlugin = getTestEntandoPluginWithIngressPath();
+        mockServer.addStub(get(urlMatching("/my-plugin"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)));
+        boolean pluginReady = client.isPluginReadyToServeApp(testPlugin, "my-app");
+        assertThat(pluginReady).isTrue();
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/apps/my-app/ingress")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/my-plugin")));
     }
 
     @Test
@@ -228,8 +255,26 @@ public class K8SServiceClientTest {
 
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();
-        template.setMessageConverters(Traverson.getDefaultMessageConverters(HAL_JSON));
+        List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        messageConverters.add(0, getJsonConverter());
+        messageConverters.addAll(Traverson.getDefaultMessageConverters(HAL_JSON));
+        template.setMessageConverters(messageConverters);
         return template;
+    }
+
+
+    private HttpMessageConverter<?> getJsonConverter() {
+        List<MediaType> supportedMediaTypes = Collections.singletonList(MediaType.APPLICATION_JSON);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jackson2HalModule());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+
+        converter.setObjectMapper(mapper);
+        converter.setSupportedMediaTypes(supportedMediaTypes);
+
+        return converter;
     }
 
     private EntandoAppPluginLink getTestEntandoAppPluginLink() {
@@ -252,6 +297,19 @@ public class K8SServiceClientTest {
                .withNamespace("plugin-namespace")
                .endMetadata()
                .build();
+    }
+
+    private EntandoPlugin getTestEntandoPluginWithIngressPath() {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName("plugin")
+                .withNamespace("plugin-namespace")
+                .endMetadata()
+                .withNewSpec()
+                .withIngressPath("/my-plugin")
+                .endSpec()
+                .build();
+
     }
 
     private static Optional<Integer> findFreePort() {

@@ -1,6 +1,3 @@
-code: todomvc
-description: This is the todomvc bundle
-
 components:
   plugins:
     - plugins/todomvc.yaml

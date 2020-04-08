@@ -67,7 +67,6 @@
         </repository>
     </repositories>
 
-
     <properties>
         <verifyAllFailures>true</verifyAllFailures>
         <ignoreAllFailures>false</ignoreAllFailures>
@@ -83,6 +82,7 @@
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.java.checkstyle.reportPaths>target/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
+        <sonar.coverage.exclusions>src/main/java/org/entando/kubernetes/config/*.java</sonar.coverage.exclusions>
         <awaitility.version>4.0.1</awaitility.version>
 
         <!--dependencies -->
@@ -300,6 +300,12 @@
             <version>19.3.0.0</version>
             <scope>compile</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.eclipse.jgit</groupId>-->
+<!--            <artifactId>org.eclipse.jgit</artifactId>-->
+<!--            <version>5.7.0.202003110725-r</version>-->
+<!--        </dependency>-->
+
 
         <!-- Testing -->
         <dependency>
@@ -363,7 +369,6 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>

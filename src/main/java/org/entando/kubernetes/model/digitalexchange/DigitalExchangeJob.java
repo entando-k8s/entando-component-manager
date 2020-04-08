@@ -32,34 +32,34 @@ import lombok.NoArgsConstructor;
 public class DigitalExchangeJob {
 
     @Id
-    @Column(name = "id")
+    @Column
     private UUID id;
 
     @Column(name = "digital_exchange_id")
     private String digitalExchange;
 
-    @Column(name = "component_id")
+    @Column
     private String componentId;
 
-    @Column(name = "component_name")
+    @Column
     private String componentName;
 
-    @Column(name = "component_version")
+    @Column
     private String componentVersion;
 
-    @Column(name = "started_at")
+    @Column
     private LocalDateTime startedAt;
 
-    @Column(name = "finished_at")
+    @Column
     private LocalDateTime finishedAt;
 
-    @Column(name = "user_id")
+    @Column
     private String userId;
 
-    @Column(name = "progress")
+    @Column
     private double progress;
 
-    @Column(name = "status")
+    @Column
     @Enumerated(EnumType.STRING)
     private JobStatus status;
 

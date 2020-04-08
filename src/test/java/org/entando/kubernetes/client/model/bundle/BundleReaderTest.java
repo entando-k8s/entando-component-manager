@@ -3,14 +3,12 @@ package org.entando.kubernetes.client.model.bundle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -18,6 +16,7 @@ import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -25,7 +24,6 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -38,55 +36,39 @@ public class BundleReaderTest {
     BundleReader r;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
+    Path bundleFolder;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
-       r = new BundleReader(getTestDefaultBundlePath()) ;
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        r.getTarEntries().values()
-                .forEach(File::delete);
+       bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+       r = new BundleReader(bundleFolder) ;
     }
 
 
     @Test
-    public void shouldReadNpmPackageCorrectly() {
-        assertThat(r.getTarEntries()).isNotEmpty();
+    public void shouldRebaseBundleEntriesToDescriptorRoot() throws IOException {
+        ComponentDescriptor cd = r.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
+        assertThat(cd).isNotNull();
     }
 
     @Test
-    public void shouldReadBundleEvenWithDifferentRoot() throws IOException {
-        BundleReader altReader = new BundleReader(getBundlePath(ALTERNATIVE_STRUCTURE_BUNDLE_NAME));
-        assertThat(altReader.getTarEntries()).isNotEmpty();
-    }
-
-    @Test
-    public void shouldRebaseBundleEntriesToDescriptorRoot() {
-        assertThat(r.getTarEntries().containsKey("descriptor.yaml")).isTrue();
-    }
-
-    @Test
-    public void shouldReadBundleIdCorrectly() throws IOException {
-       assertThat(r.getBundleId()).isEqualTo("todomvc");
-    }
-
-    @Test
-    public void shouldContainADescriptorFileInTheRoot() {
-        List<String> descriptorFiles = r.getTarEntries().keySet().stream()
-                .filter(s -> s.equals("descriptor.yaml")).collect(Collectors.toList());
-        assertThat(descriptorFiles).hasSize(1);
-    }
-
-    @Test
-    public void shouldReadResourcesFromPackage() {
+    public void shouldReadResourceFoldersFromPackage() {
         List<String> expectedResourceFolders = Arrays.asList(
-                "js", "css"
+                "resources/js", "resources/css", "resources/vendor", "resources/vendor/jquery"
         );
         assertThat(r.containsResourceFolder()).isTrue();
         assertThat(r.getResourceFolders()).hasSize(expectedResourceFolders.size());
         assertThat(r.getResourceFolders()).containsAll(expectedResourceFolders);
+    }
+
+    @Test
+    public void shouldReadResourceFilesFromPackage() {
+        List<String> expectedResourceFiles = Arrays.asList(
+                "resources/css/custom.css", "resources/css/style.css", "resources/js/configUiScript.js",
+                "resources/js/script.js", "resources/vendor/jquery/jquery.js"
+        );
+        assertThat(r.getResourceFiles()).hasSize(expectedResourceFiles.size());
+        assertThat(r.getResourceFiles()).containsAll(expectedResourceFiles);
     }
 
     @Test
@@ -110,14 +92,14 @@ public class BundleReaderTest {
     @Test
     public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.readFileAsDescriptor("widgets/pinco-pallo.yaml");
+            r.getResourceFileAsDescriptor("widgets/pinco-pallo.yaml");
         });
     }
 
     @Test
     public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.readFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+            r.getResourceFileAsDescriptor("widgets/pinco-pallo-template.ftl");
         });
     }
 
@@ -139,6 +121,13 @@ public class BundleReaderTest {
         assertThat(wd.getConfigUi().getResources()).hasSize(1);
         assertThat(wd.getConfigUi().getResources()).contains("js/configUiScript.js", Index.atIndex(0));
 
+    }
+
+    @Test
+    public void readResourceFileDescriptor() throws IOException {
+        FileDescriptor fd = r.getResourceFileAsDescriptor("resources/css/custom.css");
+        assertThat(fd.getFilename()).isEqualTo("custom.css");
+        assertThat(fd.getFolder()).isEqualTo("resources/css/");
     }
 
     private Path getTestDefaultBundlePath() throws IOException {

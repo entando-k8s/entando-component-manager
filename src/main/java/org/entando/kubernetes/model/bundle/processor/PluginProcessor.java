@@ -75,7 +75,7 @@ public class PluginProcessor implements ComponentProcessor {
         public CompletableFuture install() {
             return CompletableFuture.runAsync(() -> {
                 log.info("Deploying a new plugin {}", representation.getSpec().getImage());
-                kubernetesService.linkPlugin(representation);
+                kubernetesService.linkAndWaitForPlugin(representation);
             });
         }
 

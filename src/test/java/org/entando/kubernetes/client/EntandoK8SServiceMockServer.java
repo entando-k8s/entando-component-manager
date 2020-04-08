@@ -12,8 +12,6 @@ import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
-import com.github.tomakehurst.wiremock.matching.RequestPattern;
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;
@@ -103,6 +101,7 @@ public class EntandoK8SServiceMockServer {
         String appsListResponse = this.readResourceAsString("/payloads/k8s-svc/apps/apps.json");
         String singleAppResponse = this.readResourceAsString("/payloads/k8s-svc/apps/app.json");
         String createdLinkResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
+        String appIngressResponse = this.readResourceAsString("/payloads/k8s-svc/apps/app-ingress.json");
 
         wireMockServer.stubFor(get(urlMatching("/apps/?"))
                 .willReturn(aResponse()
@@ -114,6 +113,11 @@ public class EntandoK8SServiceMockServer {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(singleAppResponse)));
+        wireMockServer.stubFor(get(urlMatching("/apps/my-app/ingress/?"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(appIngressResponse)));
         wireMockServer.stubFor(post(urlEqualTo("/apps/my-app/links"))
                 .withRequestBody(new AnythingPattern())
                 .willReturn(aResponse()

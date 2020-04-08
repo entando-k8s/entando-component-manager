@@ -9,6 +9,7 @@ import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_C
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_ERROR;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_IN_PROGRESS;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,6 +34,10 @@ public enum JobType {
 
     public static boolean isOfType(JobStatus status, JobType type){
         return type.isOfType(status);
+    }
+
+    public List<JobStatus> getStatusList() {
+        return new ArrayList<>(this.statusList);
     }
 
 }

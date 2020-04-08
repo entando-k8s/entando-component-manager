@@ -13,10 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.zalando.problem.spring.web.advice.ProblemHandling;
 
 @Slf4j
 @RestControllerAdvice
-public class ExceptionController {
+public class ExceptionController implements ProblemHandling {
 
     private final MessageSource messageSource;
 

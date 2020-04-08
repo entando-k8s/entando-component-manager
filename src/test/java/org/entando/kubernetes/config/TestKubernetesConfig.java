@@ -1,6 +1,10 @@
 package org.entando.kubernetes.config;
 
+import static org.awaitility.Awaitility.await;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.time.Duration;
+import org.awaitility.core.ConditionFactory;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.mockito.Mockito;
@@ -28,6 +32,15 @@ public class TestKubernetesConfig {
     @Bean
     JwtDecoder jwtDecoder() {
         return Mockito.mock(JwtDecoder.class);
+    }
+
+    @Bean
+    @Primary
+    public ConditionFactory waitingConditionFactory() {
+        return await()
+                .atMost(Duration.ofSeconds(5))
+                .pollDelay(Duration.ZERO)
+                .pollInterval(Duration.ofSeconds(1));
     }
 
 }

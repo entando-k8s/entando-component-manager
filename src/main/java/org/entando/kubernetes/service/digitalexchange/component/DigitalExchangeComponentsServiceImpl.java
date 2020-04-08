@@ -13,15 +13,16 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,19 +33,53 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     private final K8SServiceClient k8SServiceClient;
     private final List<String> accessibleDigitalExchanges;
     private final DigitalExchangeJobRepository jobRepository;
+    private final DigitalExchangeInstalledComponentRepository installedComponentRepo;
 
     public DigitalExchangeComponentsServiceImpl(K8SServiceClient k8SServiceClient,
             @Value("${entando.digital-exchanges.name:}") List<String> accessibleDigitalExchanges,
-            DigitalExchangeJobRepository jobRepository) {
+            DigitalExchangeJobRepository jobRepository,
+            DigitalExchangeInstalledComponentRepository installedComponentRepo) {
         this.k8SServiceClient = k8SServiceClient;
         this.accessibleDigitalExchanges = accessibleDigitalExchanges
                 .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
         this.jobRepository = jobRepository;
+        this.installedComponentRepo = installedComponentRepo;
     }
 
 
     @Override
     public List<DigitalExchangeComponent> getComponents() {
+        List<DigitalExchangeComponent> allComponents = new ArrayList<>();
+        List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
+        List<DigitalExchangeComponent> externalComponents = getAvailableComponentsFromDigitalExchanges();
+        List<DigitalExchangeComponent> notAlreadyInstalled = installedComponents.isEmpty() ?
+                externalComponents :
+                filterNotInstalledComponents(externalComponents, installedComponents);
+
+        allComponents.addAll(installedComponents);
+        allComponents.addAll(notAlreadyInstalled);
+        return allComponents;
+    }
+
+    private List<DigitalExchangeComponent> filterNotInstalledComponents(
+            List<DigitalExchangeComponent> externalComponents, List<DigitalExchangeComponent> installedComponents) {
+        Map<String, String> installedVersions = installedComponents.stream()
+                .collect(Collectors.toMap(DigitalExchangeComponent::getId, DigitalExchangeComponent::getVersion));
+
+        List<DigitalExchangeComponent> notInstalledComponents = new ArrayList<>();
+        for (DigitalExchangeComponent dec: externalComponents) {
+            String k = dec.getId();
+            String v = dec.getVersion();
+            if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
+                continue;
+            }
+            notInstalledComponents.add(dec);
+        }
+
+        return notInstalledComponents;
+    }
+
+    private List<DigitalExchangeComponent> getAvailableComponentsFromDigitalExchanges() {
         List<EntandoDeBundle> bundles;
         if(accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
@@ -56,21 +91,8 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
 
     public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
-        DigitalExchangeComponent dec = new DigitalExchangeComponent();
-        String bundleId = bundle.getMetadata().getName();
-        EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
-        dec.setId(bundleId);
-        dec.setName(bundle.getSpec().getDetails().getName());
-        dec.setDescription(bd.getDescription());
-        dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
-        dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
-        dec.setRating(5);
+        DigitalExchangeComponent dec = DigitalExchangeComponent.newFrom(bundle);
         dec.setInstalled(checkIfInstalled(bundle));
-        dec.setType("Bundle");
-        dec.setLastUpdate(new Date());
-        dec.setSignature("");
-        dec.setVersion(bd.getDistTags().get("latest").toString());
-        dec.setImage(bd.getThumbnail());
         return dec;
     }
 

@@ -109,5 +109,10 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
                 .findFirst();
     }
 
+    @Override
+    public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
+        return true;
+    }
+
 
 }
