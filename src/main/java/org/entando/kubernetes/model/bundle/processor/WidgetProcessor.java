@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleReader;
@@ -14,6 +13,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
@@ -48,7 +48,7 @@ public class WidgetProcessor implements ComponentProcessor {
                     widgetDescriptor.setCustomUi(npr.readFileAsString(widgetUiPath));
                 }
                 widgetDescriptor.setBundleId(descriptor.getCode());
-                installables.add(new WidgetInstallable(widgetDescriptor));
+                installables.add(new WidgetInstallable(engineService, widgetDescriptor));
             }
         }
 
@@ -66,29 +66,4 @@ public class WidgetProcessor implements ComponentProcessor {
         engineService.deleteWidget(component.getName());
     }
 
-    public class WidgetInstallable extends Installable<WidgetDescriptor> {
-
-        private WidgetInstallable(final WidgetDescriptor widgetDescriptor) {
-            super(widgetDescriptor);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Widget {}", representation.getCode());
-                engineService.registerWidget(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.WIDGET;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getCode();
-        }
-
-    }
 }

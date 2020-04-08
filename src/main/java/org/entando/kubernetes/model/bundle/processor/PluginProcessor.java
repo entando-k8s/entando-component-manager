@@ -6,13 +6,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
@@ -44,7 +44,7 @@ public class PluginProcessor implements ComponentProcessor {
         if (optionalPlugins.isPresent()) {
             for (String filename : optionalPlugins.get()) {
                 EntandoPlugin plugin = npr.readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
-                installableList.add(new PluginInstallable(plugin, job));
+                installableList.add(new PluginInstallable(kubernetesService, plugin, job));
             }
         }
         return installableList;
@@ -61,33 +61,4 @@ public class PluginProcessor implements ComponentProcessor {
         kubernetesService.unlinkPlugin(component.getName());
     }
 
-    public class PluginInstallable extends Installable<EntandoPlugin> {
-
-        private final DigitalExchangeJob job;
-
-        public PluginInstallable(final EntandoPlugin plugin,
-                final DigitalExchangeJob job) {
-            super(plugin);
-            this.job = job;
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Deploying a new plugin {}", representation.getSpec().getImage());
-                kubernetesService.linkAndWaitForPlugin(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.PLUGIN;
-        }
-
-        @Override
-        public String getName() {
-            return job.getComponentId();
-        }
-
-    }
 }

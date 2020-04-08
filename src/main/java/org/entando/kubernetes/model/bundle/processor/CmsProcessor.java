@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleReader;
@@ -14,6 +13,8 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.installable.ContentModelInstallable;
+import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
@@ -47,7 +48,7 @@ public class CmsProcessor implements ComponentProcessor {
         if (contentTypesDescriptor.isPresent()) {
             for (final String fileName : contentTypesDescriptor.get()) {
                 final ContentTypeDescriptor contentTypeDescriptor = npr.readDescriptorFile(fileName, ContentTypeDescriptor.class);
-                installables.add(new ContentTypeInstallable(contentTypeDescriptor));
+                installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor));
             }
         }
 
@@ -58,7 +59,7 @@ public class CmsProcessor implements ComponentProcessor {
                   String csPath = getRelativePath(fileName, contentModelDescriptor.getContentShapePath());
                   contentModelDescriptor.setContentShape(npr.readFileAsString(csPath));
                 }
-                installables.add(new ContentModelInstallable(contentModelDescriptor));
+                installables.add(new ContentModelInstallable(engineService, contentModelDescriptor));
             }
         }
 
@@ -81,55 +82,4 @@ public class CmsProcessor implements ComponentProcessor {
         }
     }
 
-    public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
-
-        private ContentTypeInstallable(final ContentTypeDescriptor contentTypeDescriptor) {
-            super(contentTypeDescriptor);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Content Type {}", representation.getCode());
-                engineService.registerContentType(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.CONTENT_TYPE;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getCode();
-        }
-
-    }
-
-    public class ContentModelInstallable extends Installable<ContentModelDescriptor> {
-
-        private ContentModelInstallable(final ContentModelDescriptor contentModelDescriptor) {
-            super(contentModelDescriptor);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Content Model {}", representation.getId());
-                engineService.registerContentModel(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.CONTENT_MODEL;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getId();
-        }
-
-    }
 }

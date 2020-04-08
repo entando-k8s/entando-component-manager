@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleReader;
@@ -15,6 +14,8 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.installable.PageInstallable;
+import org.entando.kubernetes.model.bundle.installable.PageModelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
@@ -52,12 +53,12 @@ public class PageProcessor implements ComponentProcessor {
                 String tp = getRelativePath(fileName, pageModelDescriptor.getTemplatePath());
                 pageModelDescriptor.setTemplate(npr.readFileAsString(tp));
             }
-            installables.add(new PageModelInstallable(pageModelDescriptor));
+            installables.add(new PageModelInstallable(engineService, pageModelDescriptor));
         }
 
         for (String fileName : pageDescriptorList)  {
             PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
-            installables.add(new PageInstallable(pageDescriptor));
+            installables.add(new PageInstallable(engineService, pageDescriptor));
         }
 
         return installables;
@@ -80,55 +81,4 @@ public class PageProcessor implements ComponentProcessor {
         }
     }
 
-    public class PageModelInstallable extends Installable<PageModelDescriptor> {
-
-        private PageModelInstallable(final PageModelDescriptor pageModelDescriptor) {
-            super(pageModelDescriptor);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Page Model {}", representation.getCode());
-                engineService.registerPageModel(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.PAGE_MODEL;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getCode();
-        }
-
-    }
-
-    public class PageInstallable extends Installable<PageDescriptor> {
-
-        private PageInstallable(PageDescriptor pd) {
-            super(pd);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Page {}", representation.getCode());
-                engineService.registerPage(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.PAGE;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getCode();
-        }
-
-    }
 }

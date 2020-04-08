@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +48,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
     private final @NonNull DigitalExchangeJobService jobService;
-    private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepository;
-    private final @NonNull DigitalExchangeJobRepository jobRepository;
-    private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
     private final @NonNull BundleDownloader bundleDownloader;
+    private final @NonNull DigitalExchangeJobRepository jobRepo;
+    private final @NonNull DigitalExchangeJobComponentRepository jobComponentRepo;
+    private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepo;
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     public DigitalExchangeJob install(String componentId, String version) {
@@ -84,7 +85,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             if (js.equals(JobStatus.INSTALL_COMPLETED)) {
                 installCompletedJob = j;
             }
-            if (JobType.isOfType(js, JobType.UNFINISHED)) {
+            if (JobType.matches(js, JobType.UNFINISHED)) {
                 throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
                         + " - JOB ID: " + j.getId());
             }
@@ -95,7 +96,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     private Optional<DigitalExchangeJob> getExistingJob(EntandoDeBundle bundle) {
         String digitalExchangeId = bundle.getMetadata().getNamespace();
         String componentId = bundle.getSpec().getDetails().getName();
-        Optional<DigitalExchangeJob> lastJobStarted = jobRepository
+        Optional<DigitalExchangeJob> lastJobStarted = jobRepo
                 .findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchangeId, componentId);
         if (lastJobStarted.isPresent()) {
             // To be an existing job it should be Running or completed
@@ -125,7 +126,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         job.setStartedAt(LocalDateTime.now());
         job.setStatus(JobStatus.INSTALL_CREATED);
 
-        DigitalExchangeJob createdJob = jobRepository.save(job);
+        DigitalExchangeJob createdJob = jobRepo.save(job);
         log.debug("New installation job created " + job.toString());
         return createdJob;
     }
@@ -139,7 +140,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             log.info("Started new install job for component " + job.getComponentId() + "@" + tag.getVersion());
 
             JobStatus pipelineStatus = JobStatus.INSTALL_IN_PROGRESS;
-            jobRepository.updateJobStatus(job.getId(), pipelineStatus);
+            jobRepo.updateJobStatus(job.getId(), pipelineStatus);
 
             try {
                 bundleDownloader.createTargetDirectory();
@@ -150,19 +151,36 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     log.info("All installables have been processed correctly");
                     DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundle);
                     installedComponent.setInstalled(true);
-                    installedComponentRepository.save(installedComponent);
+                    installedComponentRepo.save(installedComponent);
                     log.info("Component " + job.getComponentId() + " registered as installed in the system");
                 }
 
             } catch (Exception e) {
                 log.error("An error occurred during digital-exchange component installation", e.getCause());
+//                rollback(job);
                 pipelineStatus = JobStatus.INSTALL_ERROR;
             }
 
-            jobRepository.updateJobStatus(job.getId(), pipelineStatus);
+            jobRepo.updateJobStatus(job.getId(), pipelineStatus);
             bundleDownloader.cleanTargetDirectory();
         });
     }
+
+    /**
+    private void rollback(DigitalExchangeJob job) {
+        // Get all the installed components for the job
+        List<DigitalExchangeJobComponent> jobRelatedComponents = jobComponentRepo.findAllByJob(job);
+        // For each installed component
+        for(DigitalExchangeJobComponent jc: jobRelatedComponents) {
+            if (JobType.INSTALL_ROLLBACK.matches(jc.getStatus())) {
+                jc.getComponentType();
+            }
+        }
+        // Revert the operation
+        // In case of the plugin, that would mean delete the link
+        // Set the status to INSTALL_ROLLEDBACK
+    }
+     */
 
     private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {
         log.info("Processing installable list for component " + job.getComponentId());
@@ -180,12 +198,12 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private JobStatus processInstallable(Installable installable) {
         DigitalExchangeJobComponent installableComponent = installable.getComponent();
-        componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
+        jobComponentRepo.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
 
         CompletableFuture<?> future = installable.install();
         CompletableFuture<JobStatus> installResult = future.thenApply(vd -> {
             log.debug("Installable '{}' finished successfully", installable.getName());
-            componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
+            jobComponentRepo.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
             return JobStatus.INSTALL_COMPLETED;
         }).exceptionally(th -> {
             log.error("Installable '{}' has errors", installable.getName(), th.getCause());
@@ -198,10 +216,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     message =
                             httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
                 }
-                componentRepository
+                jobComponentRepo
                         .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, message);
             } else {
-                componentRepository
+                jobComponentRepo
                         .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, th.getMessage());
             }
             return JobStatus.INSTALL_ERROR;
@@ -239,7 +257,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         component.setChecksum(installable.getChecksum());
         component.setStatus(JobStatus.INSTALL_CREATED);
 
-        component = componentRepository.save(component);
+        component = jobComponentRepo.save(component);
 
         log.debug("New component job created "
                 + "for component of type " + installable.getComponentType() + " with name " + installable.getName());

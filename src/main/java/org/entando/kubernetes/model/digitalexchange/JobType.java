@@ -20,24 +20,24 @@ public enum JobType {
     UNFINISHED(INSTALL_CREATED, INSTALL_IN_PROGRESS, UNINSTALL_CREATED, UNINSTALL_IN_PROGRESS),
     FINISHED(INSTALL_ERROR, INSTALL_COMPLETED, UNINSTALL_ERROR, UNINSTALL_COMPLETED),
     SUCCESSFUL(INSTALL_COMPLETED, UNINSTALL_COMPLETED),
-    ERROR(INSTALL_ERROR, UNINSTALL_ERROR);
+    ERROR(INSTALL_ERROR, UNINSTALL_ERROR),
+    INSTALL_ROLLBACK(INSTALL_COMPLETED, INSTALL_IN_PROGRESS);
 
     private List<JobStatus> statusList;
 
-    private JobType(JobStatus... statuses) {
+    JobType(JobStatus... statuses) {
         this.statusList = Arrays.asList(statuses);
     }
 
-    private boolean isOfType(JobStatus status) {
+    public boolean matches(JobStatus status) {
         return this.statusList.contains(status);
-    }
-
-    public static boolean isOfType(JobStatus status, JobType type){
-        return type.isOfType(status);
     }
 
     public List<JobStatus> getStatusList() {
         return new ArrayList<>(this.statusList);
     }
 
+    public static boolean matches(JobStatus status, JobType type){
+        return type.matches(status);
+    }
 }

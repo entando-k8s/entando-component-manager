@@ -39,7 +39,7 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
     @Override
     public SimpleRestResponse<DigitalExchangeJob> getLastInstallJob(@PathVariable("component") String componentId) {
         DigitalExchangeJob lastInstallJob = installService.getAllJobs(componentId)
-                .stream().filter(j -> JobType.isOfType(j.getStatus(), JobType.INSTALL))
+                .stream().filter(j -> JobType.matches(j.getStatus(), JobType.INSTALL))
                 .findFirst()
                 .orElseThrow(JobNotFoundException::new);
 
@@ -56,7 +56,7 @@ public class DigitalExchangeInstallResourceController implements DigitalExchange
     public SimpleRestResponse<DigitalExchangeJob> getLastUninstallJob(@PathVariable("component") String componentId) {
         DigitalExchangeJob lastUninstallJob = installService.getAllJobs(componentId)
                 .stream()
-                .filter(j -> JobType.isOfType(j.getStatus(), JobType.UNINSTALL))
+                .filter(j -> JobType.matches(j.getStatus(), JobType.UNINSTALL))
                 .findFirst()
                 .orElseThrow(JobNotFoundException::new);
         return new SimpleRestResponse<>(lastUninstallJob);

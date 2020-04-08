@@ -14,7 +14,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.PageProcessor;
-import org.entando.kubernetes.model.bundle.processor.PageProcessor.PageInstallable;
+import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;

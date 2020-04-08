@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
@@ -37,7 +37,7 @@ public class FragmentProcessor implements ComponentProcessor {
                     String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
                     frDesc.setGuiCode(npr.readFileAsString(gcp));
                 }
-                installableList.add(new FragmentInstallable(frDesc));
+                installableList.add(new FragmentInstallable(engineService, frDesc));
             }
         }
         return installableList;
@@ -54,29 +54,4 @@ public class FragmentProcessor implements ComponentProcessor {
         engineService.deleteFragment(component.getName());
     }
 
-    public class FragmentInstallable extends Installable<FragmentDescriptor> {
-
-        private FragmentInstallable(FragmentDescriptor fragmentDescriptor) {
-            super(fragmentDescriptor);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Fragment {}", representation.getCode());
-                engineService.registerFragment(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.GUI_FRAGMENT;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getCode();
-        }
-
-    }
 }
