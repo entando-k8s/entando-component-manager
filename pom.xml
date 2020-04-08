@@ -82,6 +82,7 @@
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.java.checkstyle.reportPaths>target/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
+        <sonar.coverage.exclusions>src/main/java/org/entando/kubernetes/config/*.java</sonar.coverage.exclusions>
         <awaitility.version>4.0.1</awaitility.version>
 
         <!--dependencies -->
