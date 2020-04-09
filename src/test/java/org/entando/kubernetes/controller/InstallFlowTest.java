@@ -34,11 +34,13 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
@@ -58,6 +60,7 @@ import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
@@ -413,6 +416,35 @@ public class InstallFlowTest {
     }
 
     @Test
+    public void erroneousInstallationShouldRollback() throws Exception {
+        // TODO Fix this as now we need to take into account the case where only one component fails, otherwise the rollback cant take place
+        String failingJobId = simulateFailingInstall();
+
+        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.id").value(failingJobId))
+                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
+
+        Optional<DigitalExchangeJob> job = jobRepository.findById(UUID.fromString(failingJobId));
+
+        assertThat(job.isPresent()).isTrue();
+        List<DigitalExchangeJobComponent> jobRelatedComponents = jobComponentRepository.findAllByJob(job.get());
+        List<DigitalExchangeJobComponent> installedComponents = jobRelatedComponents.stream().filter(j -> JobType.INSTALL_ROLLBACK.matches(j.getStatus())).collect(
+                Collectors.toList());
+        for(DigitalExchangeJobComponent c : installedComponents) {
+            List<DigitalExchangeJobComponent> jobs = jobRelatedComponents.stream().filter(j ->
+                    j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
+                    .collect(Collectors.toList());
+            assertThat(jobs.size()).isEqualTo(2);
+            assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
+        }
+
+
+        assertThat(installedCompRepo.findAll()).isEmpty();
+    }
+
+    @Test
     public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
         String failingJobId = simulateFailingInstall();
 
@@ -638,7 +670,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        waitForInstallStatus(JobStatus.INSTALL_ERROR);
+        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
@@ -707,6 +739,12 @@ public class InstallFlowTest {
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
 
+    }
+
+    private void waitForPossibleStatus(JobStatus... statuses) {
+        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
+                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
+                .until(() -> Arrays.asList(statuses).contains(getInstallJob().getPayload().getStatus()));
     }
 
     private void waitForInstallStatus(JobStatus status) {

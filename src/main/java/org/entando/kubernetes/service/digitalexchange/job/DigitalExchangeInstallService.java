@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
@@ -36,6 +37,7 @@ import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
     private final @NonNull DigitalExchangeJobService jobService;
+    private final @NonNull EntandoCoreService engineService;
     private final @NonNull BundleDownloader bundleDownloader;
     private final @NonNull DigitalExchangeJobRepository jobRepo;
     private final @NonNull DigitalExchangeJobComponentRepository jobComponentRepo;
@@ -157,8 +160,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
             } catch (Exception e) {
                 log.error("An error occurred during digital-exchange component installation", e.getCause());
-//                rollback(job);
-                pipelineStatus = JobStatus.INSTALL_ERROR;
+                pipelineStatus = rollback(job);
             }
 
             jobRepo.updateJobStatus(job.getId(), pipelineStatus);
@@ -166,21 +168,55 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         });
     }
 
-    /**
-    private void rollback(DigitalExchangeJob job) {
+    private JobStatus rollback(DigitalExchangeJob job) {
+        JobStatus rollbackResult;
         // Get all the installed components for the job
         List<DigitalExchangeJobComponent> jobRelatedComponents = jobComponentRepo.findAllByJob(job);
-        // For each installed component
-        for(DigitalExchangeJobComponent jc: jobRelatedComponents) {
-            if (JobType.INSTALL_ROLLBACK.matches(jc.getStatus())) {
-                jc.getComponentType();
+
+        // Filter jobs that are "uninstallable"
+        List<DigitalExchangeJobComponent> installedOrInProgress = jobRelatedComponents.stream()
+                .filter(j -> JobType.INSTALL_ROLLBACK.matches(j.getStatus()))
+                .collect(Collectors.toList());
+
+        try {
+            // Cleanup resource folder
+            cleanupResourceFolder(job, installedOrInProgress);
+            // For each installed component
+            for(DigitalExchangeJobComponent jc: installedOrInProgress) {
+                // Revert the operation
+                DigitalExchangeJobComponent revertJob = jc.duplicate();
+                componentProcessors.stream()
+                        .filter(processor -> processor.shouldProcess(revertJob.getComponentType()))
+                        .forEach(processor -> processor.uninstall(revertJob));
+                revertJob.setStatus(JobStatus.UNINSTALL_COMPLETED);
+                jobComponentRepo.save(revertJob);
             }
+            rollbackResult = JobStatus.INSTALL_ROLLBACK;
+        } catch (Exception e) {
+           rollbackResult = JobStatus.INSTALL_ERROR;
         }
-        // Revert the operation
         // In case of the plugin, that would mean delete the link
-        // Set the status to INSTALL_ROLLEDBACK
+        return rollbackResult;
     }
-     */
+
+    private void cleanupResourceFolder(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+        String componentRootFolder = "/" + job.getComponentId();
+        Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
+                component.getComponentType() == ComponentType.RESOURCE
+                        && component.getName().equals(componentRootFolder)
+        ).findFirst();
+
+        if (rootResourceFolder.isPresent()) {
+            engineService.deleteFolder(componentRootFolder);
+            components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
+                    .forEach(component -> {
+                        DigitalExchangeJobComponent uninstalledJobComponent = component.duplicate();
+                        uninstalledJobComponent.setJob(job);
+                        uninstalledJobComponent.setStatus(JobStatus.UNINSTALL_COMPLETED);
+                        jobComponentRepo.save(uninstalledJobComponent);
+                    });
+        }
+    }
 
     private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {
         log.info("Processing installable list for component " + job.getComponentId());
