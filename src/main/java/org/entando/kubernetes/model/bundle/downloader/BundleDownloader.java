@@ -88,15 +88,15 @@ public abstract class BundleDownloader {
 
     public static BundleDownloader getForType(String type) {
         if (type == null) {
-            return new GitBundleDownloader();
+            return new NpmBundleDownloader();
         }
 
         switch (type.toLowerCase()) {
-            case "npm":
-                return new NpmBundleDownloader();
             case "git":
-            default:
                 return new GitBundleDownloader();
+            case "npm":
+            default:
+                return new NpmBundleDownloader();
         }
     }
 }

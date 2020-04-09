@@ -111,7 +111,10 @@ public class BundleDownloaderTest {
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
         downloader = BundleDownloader.getForType("ANYTHING");
-        assertThat(downloader instanceof GitBundleDownloader).isTrue();
+        assertThat(downloader instanceof NpmBundleDownloader).isTrue();
+
+        downloader = BundleDownloader.getForType(null);
+        assertThat(downloader instanceof NpmBundleDownloader).isTrue();
     }
 
     @Test

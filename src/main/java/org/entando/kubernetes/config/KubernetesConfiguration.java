@@ -27,6 +27,8 @@ public class KubernetesConfiguration {
     private String clientSecret;
     @Value("${entando.auth-url}")
     private String tokenUri;
+    @Value("${entando.k8s.plugin-readiness-timeout-in-minutes:5}")
+    private long pluginReadinessTimeoutInMinutes;
 
     @Bean
     public KubernetesClient client() {
@@ -41,7 +43,7 @@ public class KubernetesConfiguration {
 
     @Bean
     public ConditionFactory k8SServiceWaitingConditionFactory() {
-        return await().atMost(Duration.ofMinutes(5))
+        return await().atMost(Duration.ofMinutes(pluginReadinessTimeoutInMinutes))
                 .pollDelay(Duration.ZERO)
                 .pollInterval(Duration.ofSeconds(10));
     }
