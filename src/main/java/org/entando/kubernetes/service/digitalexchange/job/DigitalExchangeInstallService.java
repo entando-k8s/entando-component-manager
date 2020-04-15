@@ -175,20 +175,23 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         // Filter jobs that are "uninstallable"
         List<DigitalExchangeJobComponent> installedOrInProgress = jobRelatedComponents.stream()
-                .filter(j -> JobType.INSTALL_ROLLBACK.matches(j.getStatus()))
+                .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .collect(Collectors.toList());
 
         try {
             // Cleanup resource folder
             cleanupResourceFolder(job, installedOrInProgress);
             // For each installed component
-            for(DigitalExchangeJobComponent jc: installedOrInProgress) {
+            List<DigitalExchangeJobComponent> nonResourceComponents =
+                    installedOrInProgress.stream().filter(c -> c.getComponentType() != ComponentType.RESOURCE)
+                    .collect(Collectors.toList());
+            for(DigitalExchangeJobComponent jc: nonResourceComponents) {
                 // Revert the operation
                 DigitalExchangeJobComponent revertJob = jc.duplicate();
                 componentProcessors.stream()
                         .filter(processor -> processor.shouldProcess(revertJob.getComponentType()))
                         .forEach(processor -> processor.uninstall(revertJob));
-                revertJob.setStatus(JobStatus.UNINSTALL_COMPLETED);
+                revertJob.setStatus(JobStatus.INSTALL_ROLLBACK);
                 jobComponentRepo.save(revertJob);
             }
             rollbackResult = JobStatus.INSTALL_ROLLBACK;
@@ -212,7 +215,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                     .forEach(component -> {
                         DigitalExchangeJobComponent uninstalledJobComponent = component.duplicate();
                         uninstalledJobComponent.setJob(job);
-                        uninstalledJobComponent.setStatus(JobStatus.UNINSTALL_COMPLETED);
+                        uninstalledJobComponent.setStatus(JobStatus.INSTALL_ROLLBACK);
                         jobComponentRepo.save(uninstalledJobComponent);
                     });
         }
@@ -220,10 +223,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {
         log.info("Processing installable list for component " + job.getComponentId());
-        installableList.forEach(installable -> installable.setComponent(persistComponent(job, installable)));
 
         JobStatus installSucceded = JobStatus.INSTALL_COMPLETED;
         for (Installable installable: installableList) {
+            installable.setComponent(persistComponent(job, installable));
             installSucceded = processInstallable(installable);
             if (installSucceded.equals(JobStatus.INSTALL_ERROR)) {
                 throw new RuntimeException(job.getComponentId() + " installation can't proceed due to an error with one of the installed components");
