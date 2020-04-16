@@ -4,6 +4,7 @@ import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_COM
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_CREATED;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_ERROR;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_IN_PROGRESS;
+import static org.entando.kubernetes.model.digitalexchange.JobStatus.INSTALL_ROLLBACK;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_COMPLETED;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_CREATED;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_ERROR;
@@ -15,25 +16,21 @@ import java.util.List;
 
 public enum JobType {
 
-    INSTALL(INSTALL_CREATED, INSTALL_IN_PROGRESS, INSTALL_ERROR, INSTALL_COMPLETED),
+    INSTALL(INSTALL_CREATED, INSTALL_IN_PROGRESS, INSTALL_ERROR, INSTALL_COMPLETED, INSTALL_ROLLBACK),
     UNINSTALL(UNINSTALL_IN_PROGRESS, UNINSTALL_ERROR, UNINSTALL_COMPLETED),
     UNFINISHED(INSTALL_CREATED, INSTALL_IN_PROGRESS, UNINSTALL_CREATED, UNINSTALL_IN_PROGRESS),
-    FINISHED(INSTALL_ERROR, INSTALL_COMPLETED, UNINSTALL_ERROR, UNINSTALL_COMPLETED),
+    FINISHED(INSTALL_ERROR, INSTALL_COMPLETED, UNINSTALL_ERROR, UNINSTALL_COMPLETED, INSTALL_ROLLBACK),
     SUCCESSFUL(INSTALL_COMPLETED, UNINSTALL_COMPLETED),
     ERROR(INSTALL_ERROR, UNINSTALL_ERROR);
 
     private List<JobStatus> statusList;
 
-    private JobType(JobStatus... statuses) {
+    JobType(JobStatus... statuses) {
         this.statusList = Arrays.asList(statuses);
     }
 
-    private boolean isOfType(JobStatus status) {
+    public boolean matches(JobStatus status) {
         return this.statusList.contains(status);
-    }
-
-    public static boolean isOfType(JobStatus status, JobType type){
-        return type.isOfType(status);
     }
 
     public List<JobStatus> getStatusList() {

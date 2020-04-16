@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleReader;
@@ -14,6 +13,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
@@ -41,7 +41,7 @@ public class LabelProcessor implements ComponentProcessor {
 
         if (labelDescriptors.isPresent()) {
             for (final LabelDescriptor labelDescriptor : labelDescriptors.get()) {
-                installables.add(new LabelInstallable(labelDescriptor));
+                installables.add(new LabelInstallable(engineService, labelDescriptor));
             }
         }
 
@@ -59,29 +59,4 @@ public class LabelProcessor implements ComponentProcessor {
         engineService.deleteLabel(component.getName());
     }
 
-    public class LabelInstallable extends Installable<LabelDescriptor> {
-
-        private LabelInstallable(final LabelDescriptor labelDescriptor) {
-            super(labelDescriptor);
-        }
-
-        @Override
-        public CompletableFuture install() {
-            return CompletableFuture.runAsync(() -> {
-                log.info("Registering Label {}", representation.getKey());
-                engineService.registerLabel(representation);
-            });
-        }
-
-        @Override
-        public ComponentType getComponentType() {
-            return ComponentType.LABEL;
-        }
-
-        @Override
-        public String getName() {
-            return representation.getKey();
-        }
-
-    }
 }

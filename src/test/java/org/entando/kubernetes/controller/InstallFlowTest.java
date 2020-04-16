@@ -16,6 +16,8 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -31,14 +33,15 @@ import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
@@ -65,15 +68,22 @@ import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -129,8 +139,20 @@ public class InstallFlowTest {
     @MockBean
     private GitBundleDownloader gitBundleDownloader;
 
+//    @TestConfiguration
+//    static class TestConfig {
+//
+//        @Bean
+//        @Primary
+//        public DigitalExchangeJobRepository jobRepository() {
+//            return Mockito.spy(DigitalExchangeJobRepository.class);
+//        }
+//
+//    }
+
+
     @AfterEach
-    public void cleanup() throws SQLException {
+    public void cleanup() {
         WireMock.reset();
         databaseCleaner.cleanup();
         ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
@@ -413,9 +435,43 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
+    public void erroneousInstallationShouldRollback() throws Exception {
+        // Given a failed install happened
         String failingJobId = simulateFailingInstall();
 
+        // Install Job should have been rollback
+        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.id").value(failingJobId))
+                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
+
+        Optional<DigitalExchangeJob> job = jobRepository.findById(UUID.fromString(failingJobId));
+        assertThat(job.isPresent()).isTrue();
+
+        // And for each installed component job there should be a component job that rollbacked the install
+        List<DigitalExchangeJobComponent> jobRelatedComponents = jobComponentRepository.findAllByJob(job.get());
+        List<DigitalExchangeJobComponent> installedComponents = jobRelatedComponents.stream().filter(j ->
+                j.getStatus().equals(JobStatus.INSTALL_COMPLETED)).collect(
+                Collectors.toList());
+        for(DigitalExchangeJobComponent c : installedComponents) {
+            List<DigitalExchangeJobComponent> jobs = jobRelatedComponents.stream().filter(j ->
+                    j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
+                    .collect(Collectors.toList());
+            assertThat(jobs.size()).isEqualTo(2);
+            assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
+        }
+
+        // And component should not be part of the installed components
+        assertThat(installedCompRepo.findAll()).isEmpty();
+    }
+
+    @Test
+    public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
+        // Given a failed install happened
+        String failingJobId = simulateFailingInstall();
+
+        // Components endpoints should still return the component is not installed
         mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
@@ -423,23 +479,30 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
+        // Component install status should be rollback
         mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ERROR.toString()));
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
+        // And component should not be installed
         assertThat(installedCompRepo.findAll()).isEmpty();
     }
 
     @Test
     public void shouldReportAllInstallationAttemptsOrderedByStartTimeDescending() throws Exception {
+        // Given I installed, uninstalled and failed to reinstall a component
         String successfulInstallId = simulateSuccessfullyCompletedInstall();
         String successfulUninstallId = simulateSuccessfullyCompletedUninstall();
         String failingInstallId = simulateFailingInstall();
 
+        // Jobs should have different ids
         assertThat(successfulInstallId).isNotEqualTo(successfulUninstallId);
+        assertThat(successfulInstallId).isNotEqualTo(failingInstallId);
+        assertThat(successfulUninstallId).isNotEqualTo(failingInstallId);
 
+        // All jobs should be available via the API
         mockMvc.perform(get( JOBS_ENDPOINT + "?component={component}", "todomvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
@@ -452,16 +515,21 @@ public class InstallFlowTest {
     @Test
     public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
 
+        // Given I try to reinstall a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();
 
+        // Only one job is created
         assertThat(firstSuccessfulJobId).isEqualTo(secondSuccessfulJobId);
+        assertThat(jobRepository.findAll().size()).isEqualTo(1);
     }
 
     @Test
     public void shouldThrowConflictWhenActingDuringInstallJobInProgress() throws Exception {
+        // Given I have an in progress installatioon
         String jobId = simulateInProgressInstall();
 
+        // I should get a conflict when trying to install or uninstall the same component
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
@@ -503,10 +571,11 @@ public class InstallFlowTest {
 
     @Test
     public void shouldThrowConflictWhenActingDuringUninstallJobInProgress() throws Exception {
-
+        // Given I'm uninstalling an installed component and the job is in progress
         simulateSuccessfullyCompletedInstall();
         simulateInProgressUninstall();
 
+        // I should get a conflict error when trying to install/uninstall the same component
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
@@ -632,13 +701,16 @@ public class InstallFlowTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(500)));
+        stubFor(WireMock.delete(urlMatching("/entando-app/api.*")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+        stubFor(WireMock.post(urlMatching("/entando-app/api/pages/?")).willReturn(aResponse().withStatus(500)));
+
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        waitForInstallStatus(JobStatus.INSTALL_ERROR);
+        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
@@ -707,6 +779,12 @@ public class InstallFlowTest {
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
 
+    }
+
+    private void waitForPossibleStatus(JobStatus... statuses) {
+        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
+                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
+                .until(() -> Arrays.asList(statuses).contains(getInstallJob().getPayload().getStatus()));
     }
 
     private void waitForInstallStatus(JobStatus status) {
