@@ -13,9 +13,9 @@
  */
 package org.entando.kubernetes.controller.digitalexchange.component;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
@@ -29,12 +29,9 @@ public class DigitalExchangeComponentsController implements DigitalExchangeCompo
     private final DigitalExchangeComponentsService componentsService;
 
     @Override
-    public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents() {
-        List<DigitalExchangeComponent>  bundles = componentsService.getComponents();
-        PagedMetadata<DigitalExchangeComponent> pagedMetadata =
-                new PagedMetadata<>(1, 100, 1, bundles.size());
-        pagedMetadata.setBody(bundles);
-        PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse(pagedMetadata);
+    public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents(PagedListRequest requestList) {
+        PagedMetadata<DigitalExchangeComponent> pagedBundles = componentsService.getComponents(requestList);
+        PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse<>(pagedBundles);
         return ResponseEntity.ok(response);
     }
 }

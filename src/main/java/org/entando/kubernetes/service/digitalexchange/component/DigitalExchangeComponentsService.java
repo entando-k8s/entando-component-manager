@@ -13,10 +13,13 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.util.List;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface DigitalExchangeComponentsService {
 
-    List<DigitalExchangeComponent> getComponents();
+    PagedMetadata<DigitalExchangeComponent> getComponents();
+
+    PagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest request);
 }

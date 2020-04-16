@@ -22,6 +22,8 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +50,12 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
 
     @Override
-    public List<DigitalExchangeComponent> getComponents() {
+    public PagedMetadata<DigitalExchangeComponent> getComponents() {
+        return getComponents(new PagedListRequest());
+    }
+
+    @Override
+    public PagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest request) {
         List<DigitalExchangeComponent> allComponents = new ArrayList<>();
         List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
         List<DigitalExchangeComponent> externalComponents = getAvailableComponentsFromDigitalExchanges();
@@ -58,7 +65,16 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
         allComponents.addAll(installedComponents);
         allComponents.addAll(notAlreadyInstalled);
-        return allComponents;
+        List<DigitalExchangeComponent>  localFilteredList = new DigitalExchangeComponentListProcessor(request, allComponents)
+                .filterAndSort().toList();
+        List<DigitalExchangeComponent> sublist = request.getSublist(localFilteredList);
+
+        PagedMetadata<DigitalExchangeComponent> result = new PagedMetadata<>();
+        result.setBody(sublist);
+        result.setTotalItems(localFilteredList.size());
+        result.setPage(request.getPage());
+        result.setPageSize(request.getPageSize());
+        return result;
     }
 
     private List<DigitalExchangeComponent> filterNotInstalledComponents(
