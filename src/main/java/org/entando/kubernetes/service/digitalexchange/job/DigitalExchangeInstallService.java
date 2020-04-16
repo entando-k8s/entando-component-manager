@@ -88,7 +88,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             if (js.equals(JobStatus.INSTALL_COMPLETED)) {
                 installCompletedJob = j;
             }
-            if (JobType.matches(js, JobType.UNFINISHED)) {
+            if (js.isOfType(JobType.UNFINISHED)) {
                 throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
                         + " - JOB ID: " + j.getId());
             }

@@ -37,7 +37,4 @@ public enum JobType {
         return new ArrayList<>(this.statusList);
     }
 
-    public static boolean matches(JobStatus status, JobType type){
-        return type.matches(status);
-    }
 }

@@ -24,5 +24,9 @@ public enum JobStatus {
     UNINSTALL_CREATED,
     UNINSTALL_IN_PROGRESS,
     UNINSTALL_ERROR,
-    UNINSTALL_COMPLETED
+    UNINSTALL_COMPLETED;
+
+    public boolean isOfType(JobType type) {
+        return type.matches(this);
+    }
 }

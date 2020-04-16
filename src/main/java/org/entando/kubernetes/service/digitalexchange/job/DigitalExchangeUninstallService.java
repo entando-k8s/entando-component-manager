@@ -51,7 +51,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         verifyJobStatusCompatibleWithUninstall(lastAvailableJob);
 
         DigitalExchangeJob uninstallJob;
-        if (JobType.matches(lastAvailableJob.getStatus(), JobType.INSTALL)) {
+        if (lastAvailableJob.getStatus().isOfType(JobType.INSTALL)) {
             uninstallJob = submitNewUninstallJob(lastAvailableJob);
         } else {
             DigitalExchangeJob lastInstallAttemptJob = findLastInstallJob(bundle)
@@ -64,7 +64,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     }
 
     private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob job) {
-        if (JobType.matches(job.getStatus(), JobType.UNFINISHED)) {
+        if (job.getStatus().isOfType(JobType.UNFINISHED)) {
             throw new JobConflictException("Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
         }
     }
@@ -82,7 +82,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         String componentId = bundle.getMetadata().getName();
         return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId)
                 .stream()
-                .filter(j -> JobType.matches(j.getStatus(), JobType.INSTALL))
+                .filter(j -> j.getStatus().isOfType(JobType.INSTALL))
                 .findFirst();
     }
 
