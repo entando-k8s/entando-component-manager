@@ -1,8 +1,10 @@
 package org.entando.kubernetes.client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -12,9 +14,9 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
 
-    private List<EntandoAppPluginLink> inMemoryLinks = new ArrayList<>();
-    private List<EntandoPlugin> inMemoryPlugins = new ArrayList<>();
-    private List<EntandoDeBundle> inMemoryBundles = new ArrayList<>();
+    private Set<EntandoAppPluginLink> inMemoryLinks = new HashSet<>();
+    private Set<EntandoPlugin> inMemoryPlugins = new HashSet<>();
+    private Set<EntandoDeBundle> inMemoryBundles = new HashSet<>();
 
     public void addInMemoryLinkedPlugins(EntandoPlugin plugin) {
         this.inMemoryPlugins.add(plugin);
@@ -23,14 +25,12 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         this.inMemoryLinks.add(link);
     }
     public void addInMemoryBundle(EntandoDeBundle bundle) {
-        if (!this.inMemoryBundles.contains(bundle)) {
-            this.inMemoryBundles.add(bundle);
-        }
+        this.inMemoryBundles.add(bundle);
     }
 
     public void cleanInMemoryDatabases() {
-        this.inMemoryLinks = new ArrayList<>();
-        this.inMemoryBundles = new ArrayList<>();
+        this.inMemoryLinks = new HashSet<>();
+        this.inMemoryBundles = new HashSet<>();
     }
 
     public List<EntandoAppPluginLink> getInMemoryLinkCopy() {

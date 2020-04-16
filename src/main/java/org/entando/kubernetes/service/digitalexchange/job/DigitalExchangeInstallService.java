@@ -63,7 +63,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
         Optional<DigitalExchangeJob> j = searchForCompletedOrConflictingJob(bundle);
 
-        return j.orElse(createAndSubmitNewInstallJob(bundle, version));
+        return j.orElseGet(() -> createAndSubmitNewInstallJob(bundle, version));
 
     }
 

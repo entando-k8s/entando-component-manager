@@ -519,9 +519,9 @@ public class InstallFlowTest {
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();
 
-        // No new job is created
+        // Only one job is created
         assertThat(firstSuccessfulJobId).isEqualTo(secondSuccessfulJobId);
-        assertThat(jobRepository.findAll().size()).isEqualTo(2);
+        assertThat(jobRepository.findAll().size()).isEqualTo(1);
     }
 
     @Test
