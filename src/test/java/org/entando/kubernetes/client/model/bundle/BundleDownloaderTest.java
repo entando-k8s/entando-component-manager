@@ -138,7 +138,7 @@ public class BundleDownloaderTest {
     }
 
     private WireMockServer getMockedNpmRegistry() throws IOException {
-        InputStream zippedBundle = this.getClass().getResourceAsStream("/bundle.tgz");
+        InputStream zippedBundle = this.getClass().getResourceAsStream("/npm-downloaded-bundle.tgz");
         byte[] zbBytes = new byte[zippedBundle.available()];
         zippedBundle.read(zbBytes);
         wireMockServer = new WireMockServer(port);

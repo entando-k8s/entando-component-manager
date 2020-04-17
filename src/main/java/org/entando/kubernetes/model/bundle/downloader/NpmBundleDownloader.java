@@ -61,7 +61,10 @@ public class NpmBundleDownloader extends BundleDownloader {
                 // log something?
                 continue;
             }
-            Path filePath = destination.resolve(tae.getName());
+
+            String rebasedName = tae.getName().replaceFirst("package/", "");
+
+            Path filePath = destination.resolve(rebasedName);
             File tmpf = filePath.toFile();
             tmpf.deleteOnExit();
             if (tae.isDirectory()) {
