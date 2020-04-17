@@ -16,6 +16,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.request.RequestListProcessor;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
@@ -77,7 +78,7 @@ public class ComponentServiceTest {
     }
 
     @Test
-    public void shouldSortComponentsByName() {
+    public void shouldSortAndFilter() {
 
         EntandoDeBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoDeBundleSpec();
         EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
@@ -121,9 +122,81 @@ public class ComponentServiceTest {
         when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
 
         PagedListRequest request = new PagedListRequest();
-        PagedMetadata<DigitalExchangeComponent> components = service.getComponents();
+        request.setSort("name");
+        request.setDirection(Filter.DESC_ORDER);
+        PagedMetadata<DigitalExchangeComponent> components = service.getComponents(request);
 
+        assertThat(components.getTotalItems()).isEqualTo(2);
+        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleB.getSpec().getDetails().getName());
+        assertThat(components.getBody().get(1).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
 
+        request = new PagedListRequest();
+        request.addFilter(new Filter("name", "bundleA"));
+        request.setDirection(Filter.DESC_ORDER);
+        components = service.getComponents(request);
+
+        assertThat(components.getTotalItems()).isEqualTo(1);
+        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
     }
+    @Test
+    public void shouldFilterInstalledComponents() {
 
+        EntandoDeBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoDeBundleSpec();
+        EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
+                .withTags(baseSpec.getTags())
+                .withNewDetails()
+                .withName("bundleA")
+                .withDistTags(baseSpec.getDetails().getDistTags())
+                .withVersions(baseSpec.getDetails().getVersions())
+                .withKeywords(baseSpec.getDetails().getKeywords())
+                .withDescription(baseSpec.getDetails().getDescription())
+                .endDetails()
+                .build();
+        EntandoDeBundleSpec specBundleB = new EntandoDeBundleSpecBuilder()
+                .withTags(baseSpec.getTags())
+                .withNewDetails()
+                .withName("bundleB")
+                .withDistTags(baseSpec.getDetails().getDistTags())
+                .withVersions(baseSpec.getDetails().getVersions())
+                .withKeywords(baseSpec.getDetails().getKeywords())
+                .withDescription(baseSpec.getDetails().getDescription())
+                .endDetails()
+                .build();
+        EntandoDeBundle bundleA = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-bundleA")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .endMetadata()
+                .withSpec(specBundleA)
+                .build();
+
+
+        EntandoDeBundle bundleB = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-bundleB")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .endMetadata()
+                .withSpec(specBundleB)
+                .build();
+
+        DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundleB);
+        installedComponent.setInstalled(true);
+
+        k8SServiceClient.addInMemoryBundle(bundleA);
+        when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(installedComponent));
+
+        PagedListRequest request = new PagedListRequest();
+        request.addFilter(new Filter("installed", "true"));
+        PagedMetadata<DigitalExchangeComponent> components = service.getComponents(request);
+
+        assertThat(components.getTotalItems()).isEqualTo(1);
+        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
+
+        request = new PagedListRequest();
+        request.addFilter(new Filter("installed", "false"));
+
+        components = service.getComponents(request);
+        assertThat(components.getTotalItems()).isEqualTo(1);
+        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
+    }
 }

@@ -56,15 +56,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
 
     @Override
     public PagedMetadata<DigitalExchangeComponent> getComponents(PagedListRequest request) {
-        List<DigitalExchangeComponent> allComponents = new ArrayList<>();
-        List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
-        List<DigitalExchangeComponent> externalComponents = getAvailableComponentsFromDigitalExchanges();
-        List<DigitalExchangeComponent> notAlreadyInstalled = installedComponents.isEmpty() ?
-                externalComponents :
-                filterNotInstalledComponents(externalComponents, installedComponents);
-
-        allComponents.addAll(installedComponents);
-        allComponents.addAll(notAlreadyInstalled);
+        List<DigitalExchangeComponent> allComponents = getAllComponents();
         List<DigitalExchangeComponent>  localFilteredList = new DigitalExchangeComponentListProcessor(request, allComponents)
                 .filterAndSort().toList();
         List<DigitalExchangeComponent> sublist = request.getSublist(localFilteredList);
@@ -75,6 +67,19 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         result.setPage(request.getPage());
         result.setPageSize(request.getPageSize());
         return result;
+    }
+
+    private List<DigitalExchangeComponent> getAllComponents() {
+        List<DigitalExchangeComponent> allComponents = new ArrayList<>();
+        List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
+        List<DigitalExchangeComponent> externalComponents = getAvailableComponentsFromDigitalExchanges();
+        List<DigitalExchangeComponent> notAlreadyInstalled = installedComponents.isEmpty() ?
+                externalComponents :
+                filterNotInstalledComponents(externalComponents, installedComponents);
+
+        allComponents.addAll(installedComponents);
+        allComponents.addAll(notAlreadyInstalled);
+        return allComponents;
     }
 
     private List<DigitalExchangeComponent> filterNotInstalledComponents(
