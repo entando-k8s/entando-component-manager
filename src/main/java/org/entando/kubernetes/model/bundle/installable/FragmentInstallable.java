@@ -26,7 +26,7 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.GUI_FRAGMENT;
+        return ComponentType.FRAGMENT;
     }
 
     @Override

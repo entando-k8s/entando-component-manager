@@ -15,6 +15,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
 import org.entando.kubernetes.model.web.request.Filter;
+import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.request.RequestListProcessor;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
@@ -138,6 +139,7 @@ public class ComponentServiceTest {
         assertThat(components.getTotalItems()).isEqualTo(1);
         assertThat(components.getBody().get(0).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
     }
+
     @Test
     public void shouldFilterInstalledComponents() {
 
@@ -198,5 +200,127 @@ public class ComponentServiceTest {
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
         assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
+    }
+
+    @Test
+    public void shouldFilterByBundleContent() {
+
+        EntandoDeBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoDeBundleSpec();
+        EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
+                .withTags(baseSpec.getTags())
+                .withNewDetails()
+                .withName("bundleA")
+                .withDistTags(baseSpec.getDetails().getDistTags())
+                .withVersions(baseSpec.getDetails().getVersions())
+                .withKeywords(baseSpec.getDetails().getKeywords())
+                .withDescription(baseSpec.getDetails().getDescription())
+                .endDetails()
+                .build();
+        EntandoDeBundleSpec specBundleB = new EntandoDeBundleSpecBuilder()
+                .withTags(baseSpec.getTags())
+                .withNewDetails()
+                .withName("bundleB")
+                .withDistTags(baseSpec.getDetails().getDistTags())
+                .withVersions(baseSpec.getDetails().getVersions())
+                .withKeywords(baseSpec.getDetails().getKeywords())
+                .withDescription(baseSpec.getDetails().getDescription())
+                .endDetails()
+                .build();
+        EntandoDeBundleSpec specBundleC = new EntandoDeBundleSpecBuilder()
+                .withTags(baseSpec.getTags())
+                .withNewDetails()
+                .withName("bundleC")
+                .withDistTags(baseSpec.getDetails().getDistTags())
+                .withVersions(baseSpec.getDetails().getVersions())
+                .withKeywords(baseSpec.getDetails().getKeywords())
+                .withDescription(baseSpec.getDetails().getDescription())
+                .endDetails()
+                .build();
+
+        EntandoDeBundle bundleA = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-bundleA")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .addToLabels("widget", "true")
+                .addToLabels("page", "true")
+                .addToLabels("page_model", "true")
+                .endMetadata()
+                .withSpec(specBundleA)
+                .build();
+
+        EntandoDeBundle bundleB = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-bundleB")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .addToLabels("widget", "true")
+                .addToLabels("content_type", "true")
+                .addToLabels("content_model", "true")
+                .endMetadata()
+                .withSpec(specBundleB)
+                .build();
+
+        EntandoDeBundle bundleC = new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName("my-bundleC")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .addToLabels("plugin", "true")
+                .addToLabels("content_type", "true")
+                .endMetadata()
+                .withSpec(specBundleC)
+                .build();
+
+        k8SServiceClient.addInMemoryBundle(bundleA);
+        k8SServiceClient.addInMemoryBundle(bundleB);
+        k8SServiceClient.addInMemoryBundle(bundleC);
+        when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
+
+        PagedListRequest request = new PagedListRequest();
+        request.addFilter(new Filter("type", "widget"));
+        PagedMetadata<DigitalExchangeComponent> components = service.getComponents(request);
+
+        assertThat(components.getTotalItems()).isEqualTo(2);
+        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
+        assertThat(components.getBody().get(1).getName()).isEqualTo("bundleB");
+        assertThat(components.getBody().get(0).getType().contains("widget")).isTrue();
+        assertThat(components.getBody().get(1).getType().contains("widget")).isTrue();
+
+        request = new PagedListRequest();
+        request.addFilter(new Filter("type", "content_type"));
+
+        components = service.getComponents(request);
+        assertThat(components.getTotalItems()).isEqualTo(2);
+        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
+        assertThat(components.getBody().get(1).getName()).isEqualTo("bundleC");
+        assertThat(components.getBody().get(0).getType().contains("content_type")).isTrue();
+        assertThat(components.getBody().get(1).getType().contains("content_type")).isTrue();
+
+        request = new PagedListRequest();
+        request.addFilter(new Filter("type", "page"));
+
+        components = service.getComponents(request);
+        assertThat(components.getTotalItems()).isEqualTo(1);
+        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
+        assertThat(components.getBody().get(0).getType().contains("page")).isTrue();
+
+
+        request = new PagedListRequest();
+        Filter multiValueFilter = new Filter();
+        multiValueFilter.setAttribute("type");
+        multiValueFilter.setOperator(FilterOperator.EQUAL.getValue());
+        multiValueFilter.setAllowedValues(new String[]{"page", "content_type", "plugin"});
+        request.addFilter(multiValueFilter);
+        components = service.getComponents(request);
+        assertThat(components.getTotalItems()).isEqualTo(3);
+
+        request = new PagedListRequest();
+        request.addFilter(new Filter("type", "plugin"));
+        components = service.getComponents(request);
+        assertThat(components.getTotalItems()).isEqualTo(1);
+        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleC");
+
+        request = new PagedListRequest();
+        request.addFilter(new Filter("type", "resource"));
+        components = service.getComponents(request);
+        assertThat(components.getTotalItems()).isEqualTo(0);
     }
 }

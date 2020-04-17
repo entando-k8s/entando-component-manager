@@ -45,7 +45,7 @@ public class FragmentProcessor implements ComponentProcessor {
 
     @Override
     public boolean shouldProcess(ComponentType componentType) {
-        return componentType.equals(ComponentType.GUI_FRAGMENT);
+        return componentType.equals(ComponentType.FRAGMENT);
     }
 
     @Override

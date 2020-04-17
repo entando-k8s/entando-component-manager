@@ -51,7 +51,7 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
                 case NAME:
                     return c -> FilterUtils.filterString(filter, c.getName());
                 case TYPE:
-                    return c -> FilterUtils.filterString(filter, c.getType());
+                    return c -> c.getType().stream().anyMatch(t -> FilterUtils.filterString(filter, t));
                 case VERSION:
                     return c -> FilterUtils.filterString(filter, c.getVersion());
                 case DESCRIPTION:
@@ -70,8 +70,6 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
             switch (sort) {
                 case VERSION:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getVersion(), b.getVersion());
-                case TYPE:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getType(), b.getType());
                 case INSTALLED:
                     return (a, b) -> Boolean.compare(a.isInstalled(), b.isInstalled());
                 case NAME:
