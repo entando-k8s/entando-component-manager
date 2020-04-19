@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Table(name = "digital_exchange_job_component")
-public class DigitalExchangeJobComponent {
+public class EntandoBundleComponentJob {
 
     @Id
     @Column(name = "id")
@@ -25,7 +25,7 @@ public class DigitalExchangeJobComponent {
 
     @ManyToOne
     @JoinColumn(name = "digital_exchange_job_id")
-    private DigitalExchangeJob job;
+    private EntandoBundleJob job;
 
     @Column(name = "component_type")
     @Enumerated(EnumType.STRING)
@@ -51,8 +51,8 @@ public class DigitalExchangeJobComponent {
         this.id = UUID.randomUUID();
     }
 
-    public DigitalExchangeJobComponent duplicate() {
-        DigitalExchangeJobComponent newComponent = new DigitalExchangeJobComponent();
+    public EntandoBundleComponentJob duplicate() {
+        EntandoBundleComponentJob newComponent = new EntandoBundleComponentJob();
         newComponent.setName(getName());
         newComponent.setJob(getJob());
         newComponent.setStatus(getStatus());

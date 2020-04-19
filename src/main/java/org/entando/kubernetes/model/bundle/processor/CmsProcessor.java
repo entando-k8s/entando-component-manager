@@ -17,8 +17,8 @@ import org.entando.kubernetes.model.bundle.installable.ContentModelInstallable;
 import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +36,7 @@ public class CmsProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
+    public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final Optional<List<String>> contentTypesDescriptor = ofNullable(descriptor.getComponents())
@@ -72,7 +72,7 @@ public class CmsProcessor implements ComponentProcessor {
     }
 
     @Override
-    public void uninstall(final DigitalExchangeJobComponent component) {
+    public void uninstall(final EntandoBundleComponentJob component) {
         if (component.getComponentType() == ComponentType.CONTENT_MODEL) {
             log.info("Removing Content Model {}", component.getName());
             engineService.deleteContentModel(component.getName());

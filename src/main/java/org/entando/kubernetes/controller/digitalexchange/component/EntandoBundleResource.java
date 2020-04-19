@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +28,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @OpenAPIDefinition(tags = {@Tag(name = "digital-exchange"), @Tag(name = "components")})
 @RequestMapping(value = "/components")
-public interface DigitalExchangeComponentResource {
+public interface EntandoBundleResource {
 
     @Operation(description = "Returns available Digital Exchange components")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents();
+    ResponseEntity<PagedRestResponse<EntandoBundle>> getComponents();
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")

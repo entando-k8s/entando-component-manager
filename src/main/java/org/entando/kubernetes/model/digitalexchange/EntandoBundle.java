@@ -34,7 +34,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Entity
 @Table(name = "digital_exchange_installed_components")
-public class DigitalExchangeComponent {
+public class EntandoBundle {
 
 
     @Id
@@ -90,8 +90,8 @@ public class DigitalExchangeComponent {
     @Column(name="metadata")
     private Map<String, String> metadata;
 
-    public static DigitalExchangeComponent newFrom(EntandoDeBundle bundle) {
-        DigitalExchangeComponent dec = new DigitalExchangeComponent();
+    public static EntandoBundle newFrom(EntandoDeBundle bundle) {
+        EntandoBundle dec = new EntandoBundle();
         String bundleId = bundle.getMetadata().getName();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
         dec.setId(bundleId);

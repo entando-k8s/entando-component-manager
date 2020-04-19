@@ -10,7 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
@@ -53,12 +53,6 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
         this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
     }
-
-    public DefaultEntandoCoreClient(@Value("${entando.url}") String entandoUrl, OAuth2RestTemplate restTemplate) {
-        this.entandoUrl = entandoUrl;
-        this.restTemplate = restTemplate;
-    }
-
 
     @Override
     public void registerWidget(final WidgetDescriptor descriptor) {

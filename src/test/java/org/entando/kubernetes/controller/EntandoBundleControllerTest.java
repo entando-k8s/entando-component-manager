@@ -6,10 +6,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import org.entando.kubernetes.controller.digitalexchange.component.DigitalExchangeComponentsController;
+import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
+import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.web.BadRequestException;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,36 +18,36 @@ import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 
 @Tag("in-process")
-public class DigitalExchangeComponentControllerTest {
+public class EntandoBundleControllerTest {
 
-    private DigitalExchangeComponentsController controller;
-    private DigitalExchangeComponentsService componentsService;
+    private EntandoBundleResourceController controller;
+    private EntandoBundleService componentsService;
 
     @BeforeEach
     public void setup() {
-        componentsService = Mockito.mock(DigitalExchangeComponentsService.class);
-        controller = new DigitalExchangeComponentsController(componentsService);
+        componentsService = Mockito.mock(EntandoBundleService.class);
+        controller = new EntandoBundleResourceController(componentsService);
     }
 
     @Test
     public void shouldThrowBadRequestExceptionWhenGettingSummaryOfNotInstalledComponent() {
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.empty());
-        assertThrows(BadRequestException.class, () -> {
+        assertThrows(BundleNotInstalledException.class, () -> {
             controller.getUsageSummary("any");
         });
     }
 
     @Test
     public void shouldReturnSummaryForInstalledComponent() {
-        DigitalExchangeComponent component = getTestComponent();
+        EntandoBundle component = getTestComponent();
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
 
         ResponseEntity response = controller.getUsageSummary("any");
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
     }
 
-    private DigitalExchangeComponent getTestComponent() {
-        DigitalExchangeComponent component = new DigitalExchangeComponent();
+    private EntandoBundle getTestComponent() {
+        EntandoBundle component = new EntandoBundle();
         component.setId("my-component");
         component.setName("my-component-name");
         component.setInstalled(true);

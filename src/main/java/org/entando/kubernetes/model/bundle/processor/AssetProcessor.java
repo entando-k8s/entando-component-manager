@@ -16,10 +16,10 @@ import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeUninstallService;
+import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -38,7 +38,7 @@ public class AssetProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
+    public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
                                                final ComponentDescriptor descriptor) throws IOException {
 
         final List<Installable> installables = new LinkedList<>();
@@ -69,7 +69,7 @@ public class AssetProcessor implements ComponentProcessor {
     }
 
     /**
-     * This process will be hard coded in the {@link DigitalExchangeUninstallService}
+     * This process will be hard coded in the {@link EntandoBundleUninstallService}
      * @param componentType The component type being processed
      * @return always false
      */
@@ -79,7 +79,7 @@ public class AssetProcessor implements ComponentProcessor {
     }
 
     @Override
-    public void uninstall(final DigitalExchangeJobComponent component) {
+    public void uninstall(final EntandoBundleComponentJob component) {
         // Not necessary
     }
 

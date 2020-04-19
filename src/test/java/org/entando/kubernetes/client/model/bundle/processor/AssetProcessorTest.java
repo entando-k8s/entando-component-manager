@@ -14,7 +14,7 @@ import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ public class AssetProcessorTest {
 
     @Test
     public void testCreateFoldersAndFiles() throws IOException {
-        final DigitalExchangeJob job = new DigitalExchangeJob();
+        final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
         final List<? extends Installable> installables = assetProcessor.process(job, bundleReader, new ComponentDescriptor());

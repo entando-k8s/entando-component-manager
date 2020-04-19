@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 
 /**
  * This class will represent something that can be installed on Entando
@@ -22,7 +22,7 @@ public abstract class Installable<T> {
 
     protected final T representation;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private DigitalExchangeJobComponent component;
+    private EntandoBundleComponentJob component;
 
     public Installable(T representation) {
         this.representation = representation;
@@ -57,11 +57,11 @@ public abstract class Installable<T> {
         return null;
     }
 
-    public DigitalExchangeJobComponent getComponent() {
+    public EntandoBundleComponentJob getComponent() {
         return component;
     }
 
-    public void setComponent(final DigitalExchangeJobComponent component) {
+    public void setComponent(final EntandoBundleComponentJob component) {
         this.component = component;
     }
 }

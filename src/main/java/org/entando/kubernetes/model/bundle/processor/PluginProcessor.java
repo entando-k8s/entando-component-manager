@@ -14,8 +14,8 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class PluginProcessor implements ComponentProcessor {
     private final KubernetesService kubernetesService;
 
     @Override
-    public List<Installable> process(DigitalExchangeJob job,
+    public List<Installable> process(EntandoBundleJob job,
             BundleReader npr,
             ComponentDescriptor descriptor) throws IOException {
         Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
@@ -56,7 +56,7 @@ public class PluginProcessor implements ComponentProcessor {
     }
 
     @Override
-    public void uninstall(final DigitalExchangeJobComponent component) {
+    public void uninstall(final EntandoBundleComponentJob component) {
         log.info("Removing deployment {}", component.getName());
         kubernetesService.unlinkPlugin(component.getName());
     }

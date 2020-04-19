@@ -2,16 +2,16 @@ package org.entando.kubernetes.service.digitalexchange.component;
 
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
-import org.entando.kubernetes.model.entandocore.usage.IrrelevantEntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantEntandoCoreComponentUsage;
 import org.springframework.stereotype.Service;
 
 @Service
-public class DigitalExchangeComponentsUsageService {
+public class EntandoBundleComponentUsageService {
 
     private final EntandoCoreClient client;
 
-    public DigitalExchangeComponentsUsageService(EntandoCoreClient client) {
+    public EntandoBundleComponentUsageService(EntandoCoreClient client) {
         this.client = client;
     }
 

@@ -41,7 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")
-public class DigitalExchangeComponentsApiTest {
+public class EntandoBundleApiTest {
 
     @Autowired
     private WebApplicationContext context;
@@ -114,7 +114,7 @@ public class DigitalExchangeComponentsApiTest {
     @Test
     public void shouldReturnBadRequestForNotInstalledBundles() throws Exception {
         mockMvc.perform(get("/components/temp/usage").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
 

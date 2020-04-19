@@ -15,37 +15,40 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.web.BadRequestException;
+import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class DigitalExchangeComponentsController implements DigitalExchangeComponentResource {
+public class EntandoBundleResourceController implements EntandoBundleResource {
 
-    private final DigitalExchangeComponentsService componentsService;
+    private final EntandoBundleService componentsService;
 
     @Override
-    public ResponseEntity<PagedRestResponse<DigitalExchangeComponent>> getComponents() {
-        List<DigitalExchangeComponent> bundles = componentsService.getComponents();
-        PagedMetadata<DigitalExchangeComponent> pagedMetadata =
-                new PagedMetadata<>(1, 100, 1, bundles.size());
-        pagedMetadata.setBody(bundles);
-        PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse(pagedMetadata);
+    public ResponseEntity<PagedRestResponse<EntandoBundle>> getComponents() {
+        List<EntandoBundle> entandoBundles = componentsService.getComponents();
+        PagedMetadata<EntandoBundle> pagedMetadata =
+                new PagedMetadata<>(1, 100, 1, entandoBundles.size());
+        pagedMetadata.setBody(entandoBundles);
+        PagedRestResponse<EntandoBundle> response = new PagedRestResponse(pagedMetadata);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<EntandoBundleUsageSummary> getUsageSummary(String component) {
         //Given an installed component id
-        DigitalExchangeComponent installedComponent = componentsService.getInstalledComponent(component)
-                .orElseThrow(() -> new BadRequestException("Component " + component + " is not installed"));
+        EntandoBundle installedComponent = componentsService.getInstalledComponent(component)
+                .orElseThrow(() -> new BundleNotInstalledException("Component " + component + " is not installed"));
         //I should be able to retrieve the related installed components
 //        List<DigitalExchangeJobComponent> bundleInstalledComponents = componentsService.getBundleInstalledComponents(component);
         //For each installed components, I should check the summary

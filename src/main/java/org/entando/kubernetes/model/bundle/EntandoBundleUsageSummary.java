@@ -2,7 +2,7 @@ package org.entando.kubernetes.model.bundle;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
 public class EntandoBundleUsageSummary {
 

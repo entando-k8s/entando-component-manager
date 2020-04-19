@@ -22,8 +22,8 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUID
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
-public class BundleReaderTest {
+public class EntandoBundleReaderTest {
 
     BundleReader r;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
@@ -155,7 +155,7 @@ public class BundleReaderTest {
     private static class DumbComponentProcessor implements ComponentProcessor {
 
         @Override
-        public List<Installable> process(DigitalExchangeJob job, BundleReader bundleReader,
+        public List<Installable> process(EntandoBundleJob job, BundleReader bundleReader,
                 ComponentDescriptor descriptor) throws IOException {
             return null;
         }
@@ -166,7 +166,7 @@ public class BundleReaderTest {
         }
 
         @Override
-        public void uninstall(DigitalExchangeJobComponent component) {
+        public void uninstall(EntandoBundleComponentJob component) {
 
         }
     }

@@ -16,13 +16,13 @@ import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
-import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.springframework.context.ApplicationContext;
@@ -32,29 +32,29 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DigitalExchangeUninstallService implements ApplicationContextAware {
+public class EntandoBundleUninstallService implements ApplicationContextAware {
 
-    private final @NonNull DigitalExchangeJobRepository jobRepository;
-    private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
-    private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepository;
+    private final @NonNull EntandoBundleJobRepository jobRepository;
+    private final @NonNull EntandoBundleComponentJobRepository componentRepository;
+    private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
     private final @NonNull EntandoCoreClient engineService;
     private final @NonNull KubernetesService k8sService;
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    public DigitalExchangeJob uninstall(String componentId) {
+    public EntandoBundleJob uninstall(String componentId) {
         EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
                 .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found"));
-        DigitalExchangeJob lastAvailableJob = getLastAvailableJob(bundle)
+        EntandoBundleJob lastAvailableJob = getLastAvailableJob(bundle)
                 .orElseThrow(() -> new RuntimeException("No job found for " + componentId));
 
         verifyJobStatusCompatibleWithUninstall(lastAvailableJob);
 
-        DigitalExchangeJob uninstallJob;
+        EntandoBundleJob uninstallJob;
         if (lastAvailableJob.getStatus().isOfType(JobType.INSTALL)) {
             uninstallJob = submitNewUninstallJob(lastAvailableJob);
         } else {
-            DigitalExchangeJob lastInstallAttemptJob = findLastInstallJob(bundle)
+            EntandoBundleJob lastInstallAttemptJob = findLastInstallJob(bundle)
                     .orElseThrow(() -> new RuntimeException("No install job associated with " + componentId + " has been found"));
             uninstallJob = submitNewUninstallJob(lastInstallAttemptJob);
         }
@@ -63,21 +63,21 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
 
     }
 
-    private void verifyJobStatusCompatibleWithUninstall(DigitalExchangeJob job) {
+    private void verifyJobStatusCompatibleWithUninstall(EntandoBundleJob job) {
         if (job.getStatus().isOfType(JobType.UNFINISHED)) {
             throw new JobConflictException("Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job.getId());
         }
     }
 
 
-    private Optional<DigitalExchangeJob> getLastAvailableJob(EntandoDeBundle bundle) {
+    private Optional<EntandoBundleJob> getLastAvailableJob(EntandoDeBundle bundle) {
         String digitalExchange = bundle.getMetadata().getNamespace();
         String componentId = bundle.getMetadata().getName();
 
         return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId);
     }
 
-    private Optional<DigitalExchangeJob> findLastInstallJob(EntandoDeBundle bundle) {
+    private Optional<EntandoBundleJob> findLastInstallJob(EntandoDeBundle bundle) {
         String digitalExchange = bundle.getMetadata().getNamespace();
         String componentId = bundle.getMetadata().getName();
         return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId)
@@ -86,10 +86,10 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
                 .findFirst();
     }
 
-    private DigitalExchangeJob submitNewUninstallJob(DigitalExchangeJob lastAvailableJob) {
-        List<DigitalExchangeJobComponent> components = componentRepository.findAllByJob(lastAvailableJob);
+    private EntandoBundleJob submitNewUninstallJob(EntandoBundleJob lastAvailableJob) {
+        List<EntandoBundleComponentJob> components = componentRepository.findAllByJob(lastAvailableJob);
 
-        DigitalExchangeJob uninstallJob = new DigitalExchangeJob();
+        EntandoBundleJob uninstallJob = new EntandoBundleJob();
         uninstallJob.setComponentId(lastAvailableJob.getComponentId());
         uninstallJob.setComponentName(lastAvailableJob.getComponentName());
         uninstallJob.setDigitalExchange(lastAvailableJob.getDigitalExchange());
@@ -98,14 +98,14 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         uninstallJob.setStatus(JobStatus.UNINSTALL_CREATED);
         uninstallJob.setProgress(0.0);
 
-        DigitalExchangeJob savedJob = jobRepository.save(uninstallJob);
+        EntandoBundleJob savedJob = jobRepository.save(uninstallJob);
         submitUninstallAsync(uninstallJob, components);
 
         return savedJob;
     }
 
 
-    private void submitUninstallAsync(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+    private void submitUninstallAsync(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
         CompletableFuture.runAsync(() -> {
             JobStatus uninstallStatus = JobStatus.UNINSTALL_IN_PROGRESS;
             jobRepository.updateJobStatus(job.getId(), uninstallStatus);
@@ -120,7 +120,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         });
     }
 
-    private JobStatus uninstallComponent(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+    private JobStatus uninstallComponent(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
 
         try {
             cleanupResourceFolder(job, components);
@@ -133,7 +133,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
                 .map(component -> {
                     if (component.getStatus() == JobStatus.INSTALL_COMPLETED
                             && component.getComponentType() != ComponentType.RESOURCE) {
-                        DigitalExchangeJobComponent ujc = component.duplicate();
+                        EntandoBundleComponentJob ujc = component.duplicate();
                         ujc.setJob(job);
                         ujc.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
                         return componentRepository.save(ujc);
@@ -157,8 +157,8 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         return JobStatus.UNINSTALL_COMPLETED;
     }
 
-    private void cleanupResourceFolder(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
-        Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
+    private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
+        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream().filter(component ->
                 component.getComponentType() == ComponentType.RESOURCE
                         && component.getName().equals("/" + job.getComponentId())
         ).findFirst();
@@ -167,7 +167,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
             engineService.deleteFolder("/" + job.getComponentId());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
-                        DigitalExchangeJobComponent uninstalledJobComponent = component.duplicate();
+                        EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();
                         uninstalledJobComponent.setJob(job);
                         uninstalledJobComponent.setStatus(JobStatus.UNINSTALL_COMPLETED);
                         componentRepository.save(uninstalledJobComponent);
@@ -175,7 +175,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
         }
     }
 
-    private CompletableFuture<Void> deleteComponent(final DigitalExchangeJobComponent component) {
+    private CompletableFuture<Void> deleteComponent(final EntandoBundleComponentJob component) {
         return CompletableFuture.runAsync(() -> componentProcessors.stream()
                 .filter(processor -> processor.shouldProcess(component.getComponentType()))
                 .forEach(processor -> processor.uninstall(component))

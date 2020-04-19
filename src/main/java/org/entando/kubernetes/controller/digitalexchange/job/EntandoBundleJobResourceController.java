@@ -3,13 +3,13 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.service.digitalexchange.job.DigitalExchangeJobService;
+import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,45 +19,45 @@ import org.zalando.problem.ThrowableProblem;
 
 @RestController
 @RequiredArgsConstructor
-public class DigitalExchangeJobsResourceController implements DigitalExchangeJobsResource {
+public class EntandoBundleJobResourceController implements EntandoBundleJobResource {
 
-    private final @NonNull DigitalExchangeJobService jobService;
+    private final @NonNull EntandoBundleJobService jobService;
 
     @Override
-    public ResponseEntity<PagedRestResponse<DigitalExchangeJob>> getAllJobs() {
-        List<DigitalExchangeJob> allJobs = jobService.getAllJobs();
-        PagedMetadata<DigitalExchangeJob> pagedMetadata = new PagedMetadata<>();
+    public ResponseEntity<PagedRestResponse<EntandoBundleJob>> getAllJobs() {
+        List<EntandoBundleJob> allJobs = jobService.getAllJobs();
+        PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
         pagedMetadata.setBody(allJobs);
-        PagedRestResponse<DigitalExchangeJob> response = new PagedRestResponse(pagedMetadata);
+        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse(pagedMetadata);
         return ResponseEntity.ok(response);
     }
 
     @Override
-    public SimpleRestResponse<DigitalExchangeJob> getJob(String jobId) {
-        DigitalExchangeJob job = jobService.getById(jobId).orElseThrow(() ->
+    public SimpleRestResponse<EntandoBundleJob> getJob(String jobId) {
+        EntandoBundleJob job = jobService.getById(jobId).orElseThrow(() ->
                 getNotFoundJobProblem(jobId));
         return new SimpleRestResponse(job);
     }
 
     @Override
-    public ResponseEntity<PagedRestResponse<DigitalExchangeJob>> getComponentJobs(@PathVariable("component") String componentId) {
-            List<DigitalExchangeJob> componentJobs = jobService.getAllJobs(componentId);
-            PagedMetadata<DigitalExchangeJob> pagedMetadata = new PagedMetadata<>();
+    public ResponseEntity<PagedRestResponse<EntandoBundleJob>> getComponentJobs(@PathVariable("component") String componentId) {
+            List<EntandoBundleJob> componentJobs = jobService.getAllJobs(componentId);
+            PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
             pagedMetadata.setBody(componentJobs);
-            PagedRestResponse<DigitalExchangeJob> response = new PagedRestResponse(pagedMetadata);
+            PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse(pagedMetadata);
             return ResponseEntity.ok(response);
     }
 
     @Override
-    public SimpleRestResponse<DigitalExchangeJob> getLastComponentJobOfType(String componentId, JobType type) {
-        DigitalExchangeJob lastJobOfType = jobService.getComponentLastJobOfType(componentId, type)
+    public SimpleRestResponse<EntandoBundleJob> getLastComponentJobOfType(String componentId, JobType type) {
+        EntandoBundleJob lastJobOfType = jobService.getComponentLastJobOfType(componentId, type)
                 .orElseThrow(this::getGenericNotFoundJobProblem);
         return new SimpleRestResponse<>(lastJobOfType);
     }
 
     @Override
-    public SimpleRestResponse<DigitalExchangeJob> getLastComponentJobWithStatus(String componentId, JobStatus type) {
-        DigitalExchangeJob lastJobOfType = jobService.getComponentLastJobWithStatus(componentId, type)
+    public SimpleRestResponse<EntandoBundleJob> getLastComponentJobWithStatus(String componentId, JobStatus type) {
+        EntandoBundleJob lastJobOfType = jobService.getComponentLastJobWithStatus(componentId, type)
                 .orElseThrow(this::getGenericNotFoundJobProblem);
         return new SimpleRestResponse<>(lastJobOfType);
     }

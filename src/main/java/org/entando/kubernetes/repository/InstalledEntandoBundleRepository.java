@@ -1,12 +1,12 @@
 package org.entando.kubernetes.repository;
 
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface DigitalExchangeInstalledComponentRepository extends JpaRepository<DigitalExchangeComponent, String> {
+public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoBundle, String> {
 
     @Transactional
     void deleteById(String id);

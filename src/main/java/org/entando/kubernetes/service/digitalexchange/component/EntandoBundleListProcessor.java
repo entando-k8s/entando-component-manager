@@ -20,13 +20,13 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterUtils;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.request.RequestListProcessor;
 
-public class DigitalExchangeComponentListProcessor extends RequestListProcessor<DigitalExchangeComponent> {
+public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundle> {
 
     private static final String ID = "id";
     private static final String NAME = "name";
@@ -39,16 +39,16 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
     private static final String DIGITAL_EXCHANGE_NAME = "digitalExchangeName";
     private static final String DIGITAL_EXCHANGE_ID = "digitalExchangeId";
 
-    public DigitalExchangeComponentListProcessor(PagedListRequest listRequest, List<DigitalExchangeComponent> components) {
+    public EntandoBundleListProcessor(PagedListRequest listRequest, List<EntandoBundle> components) {
         super(listRequest, components);
     }
 
-    public DigitalExchangeComponentListProcessor(PagedListRequest listRequest, Stream<DigitalExchangeComponent> components) {
+    public EntandoBundleListProcessor(PagedListRequest listRequest, Stream<EntandoBundle> components) {
         super(listRequest, components);
     }
 
     @Override
-    protected Function<Filter, Predicate<DigitalExchangeComponent>> getPredicates() {
+    protected Function<Filter, Predicate<EntandoBundle>> getPredicates() {
         return filter -> {
             switch (filter.getAttribute()) {
                 case ID:
@@ -78,7 +78,7 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
     }
 
     @Override
-    protected Function<String, Comparator<DigitalExchangeComponent>> getComparators() {
+    protected Function<String, Comparator<EntandoBundle>> getComparators() {
         return sort -> {
             switch (sort) {
                 case LAST_UPDATE:
@@ -88,7 +88,7 @@ public class DigitalExchangeComponentListProcessor extends RequestListProcessor<
                 case TYPE:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getType(), b.getType());
                 case RATING:
-                    return Comparator.comparingDouble(DigitalExchangeComponent::getRating);
+                    return Comparator.comparingDouble(EntandoBundle::getRating);
                 case INSTALLED:
                     return (a, b) -> Boolean.compare(a.isInstalled(), b.isInstalled());
                 case DIGITAL_EXCHANGE_NAME:

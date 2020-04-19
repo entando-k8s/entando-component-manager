@@ -19,7 +19,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ public class LabelProcessorTest {
 
     @Test
     public void testCreateLabels() throws IOException, ExecutionException, InterruptedException {
-        final DigitalExchangeJob job = new DigitalExchangeJob();
+        final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();

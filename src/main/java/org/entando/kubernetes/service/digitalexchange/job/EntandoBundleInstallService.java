@@ -27,14 +27,14 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
-import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -46,44 +46,44 @@ import org.springframework.web.client.HttpClientErrorException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DigitalExchangeInstallService implements ApplicationContextAware {
+public class EntandoBundleInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
-    private final @NonNull DigitalExchangeJobService jobService;
+    private final @NonNull EntandoBundleJobService jobService;
     private final @NonNull EntandoCoreClient engineService;
     private final @NonNull BundleDownloader bundleDownloader;
-    private final @NonNull DigitalExchangeJobRepository jobRepo;
-    private final @NonNull DigitalExchangeJobComponentRepository jobComponentRepo;
-    private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepo;
+    private final @NonNull EntandoBundleJobRepository jobRepo;
+    private final @NonNull EntandoBundleComponentJobRepository jobComponentRepo;
+    private final @NonNull InstalledEntandoBundleRepository installedComponentRepo;
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
-    public DigitalExchangeJob install(String componentId, String version) {
+    public EntandoBundleJob install(String componentId, String version) {
         EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
                 .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found"));
 
-        Optional<DigitalExchangeJob> j = searchForCompletedOrConflictingJob(bundle);
+        Optional<EntandoBundleJob> j = searchForCompletedOrConflictingJob(bundle);
 
         return j.orElseGet(() -> createAndSubmitNewInstallJob(bundle, version));
 
     }
 
-    private DigitalExchangeJob createAndSubmitNewInstallJob(EntandoDeBundle bundle, String version) {
+    private EntandoBundleJob createAndSubmitNewInstallJob(EntandoDeBundle bundle, String version) {
         EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version);
-        DigitalExchangeJob job = createInstallJob(bundle, versionToInstall);
+        EntandoBundleJob job = createInstallJob(bundle, versionToInstall);
 
         submitInstallAsync(job, bundle, versionToInstall);
         return job;
     }
 
-    private Optional<DigitalExchangeJob> searchForCompletedOrConflictingJob(EntandoDeBundle bundle ) {
+    private Optional<EntandoBundleJob> searchForCompletedOrConflictingJob(EntandoDeBundle bundle ) {
 
         log.info("Verify validity of a new install job for component " + bundle.getMetadata().getName());
 
-        DigitalExchangeJob installCompletedJob = null;
+        EntandoBundleJob installCompletedJob = null;
 
-        Optional<DigitalExchangeJob> optionalExistingJob = getExistingJob(bundle);
+        Optional<EntandoBundleJob> optionalExistingJob = getExistingJob(bundle);
         if (optionalExistingJob.isPresent()) {
-            DigitalExchangeJob j = optionalExistingJob.get();
+            EntandoBundleJob j = optionalExistingJob.get();
             JobStatus js = j.getStatus();
             if (js.equals(JobStatus.INSTALL_COMPLETED)) {
                 installCompletedJob = j;
@@ -96,10 +96,10 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         return Optional.ofNullable(installCompletedJob);
     }
 
-    private Optional<DigitalExchangeJob> getExistingJob(EntandoDeBundle bundle) {
+    private Optional<EntandoBundleJob> getExistingJob(EntandoDeBundle bundle) {
         String digitalExchangeId = bundle.getMetadata().getNamespace();
         String componentId = bundle.getSpec().getDetails().getName();
-        Optional<DigitalExchangeJob> lastJobStarted = jobRepo
+        Optional<EntandoBundleJob> lastJobStarted = jobRepo
                 .findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchangeId, componentId);
         if (lastJobStarted.isPresent()) {
             // To be an existing job it should be Running or completed
@@ -118,8 +118,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 .orElseThrow(() -> new InvalidBundleException("Version " + version + " not defined in bundle versions"));
     }
 
-    private DigitalExchangeJob createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        final DigitalExchangeJob job = new DigitalExchangeJob();
+    private EntandoBundleJob createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+        final EntandoBundleJob job = new EntandoBundleJob();
 
         job.setComponentId(bundle.getMetadata().getName());
         job.setComponentName(bundle.getSpec().getDetails().getName());
@@ -129,16 +129,16 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         job.setStartedAt(LocalDateTime.now());
         job.setStatus(JobStatus.INSTALL_CREATED);
 
-        DigitalExchangeJob createdJob = jobRepo.save(job);
+        EntandoBundleJob createdJob = jobRepo.save(job);
         log.debug("New installation job created " + job.toString());
         return createdJob;
     }
 
-    public List<DigitalExchangeJob> getAllJobs(String componentId) {
+    public List<EntandoBundleJob> getAllJobs(String componentId) {
         return jobService.getAllJobs(componentId);
     }
 
-    private void submitInstallAsync(DigitalExchangeJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    private void submitInstallAsync(EntandoBundleJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + job.getComponentId() + "@" + tag.getVersion());
 
@@ -152,7 +152,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
                 pipelineStatus = processInstallableList(job, installables);
                 if (pipelineStatus.equals(JobStatus.INSTALL_COMPLETED)) {
                     log.info("All installables have been processed correctly");
-                    DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundle);
+                    EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
                     installedComponent.setInstalled(true);
                     installedComponentRepo.save(installedComponent);
                     log.info("Component " + job.getComponentId() + " registered as installed in the system");
@@ -168,13 +168,13 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         });
     }
 
-    private JobStatus rollback(DigitalExchangeJob job) {
+    private JobStatus rollback(EntandoBundleJob job) {
         JobStatus rollbackResult;
         // Get all the installed components for the job
-        List<DigitalExchangeJobComponent> jobRelatedComponents = jobComponentRepo.findAllByJob(job);
+        List<EntandoBundleComponentJob> jobRelatedComponents = jobComponentRepo.findAllByJob(job);
 
         // Filter jobs that are "uninstallable"
-        List<DigitalExchangeJobComponent> installedOrInProgress = jobRelatedComponents.stream()
+        List<EntandoBundleComponentJob> installedOrInProgress = jobRelatedComponents.stream()
                 .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .collect(Collectors.toList());
 
@@ -182,12 +182,12 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             // Cleanup resource folder
             cleanupResourceFolder(job, installedOrInProgress);
             // For each installed component
-            List<DigitalExchangeJobComponent> nonResourceComponents =
+            List<EntandoBundleComponentJob> nonResourceComponents =
                     installedOrInProgress.stream().filter(c -> c.getComponentType() != ComponentType.RESOURCE)
                     .collect(Collectors.toList());
-            for(DigitalExchangeJobComponent jc: nonResourceComponents) {
+            for(EntandoBundleComponentJob jc: nonResourceComponents) {
                 // Revert the operation
-                DigitalExchangeJobComponent revertJob = jc.duplicate();
+                EntandoBundleComponentJob revertJob = jc.duplicate();
                 componentProcessors.stream()
                         .filter(processor -> processor.shouldProcess(revertJob.getComponentType()))
                         .forEach(processor -> processor.uninstall(revertJob));
@@ -202,9 +202,9 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         return rollbackResult;
     }
 
-    private void cleanupResourceFolder(DigitalExchangeJob job, List<DigitalExchangeJobComponent> components) {
+    private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
         String componentRootFolder = "/" + job.getComponentId();
-        Optional<DigitalExchangeJobComponent> rootResourceFolder = components.stream().filter(component ->
+        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream().filter(component ->
                 component.getComponentType() == ComponentType.RESOURCE
                         && component.getName().equals(componentRootFolder)
         ).findFirst();
@@ -213,7 +213,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
             engineService.deleteFolder(componentRootFolder);
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
-                        DigitalExchangeJobComponent uninstalledJobComponent = component.duplicate();
+                        EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();
                         uninstalledJobComponent.setJob(job);
                         uninstalledJobComponent.setStatus(JobStatus.INSTALL_ROLLBACK);
                         jobComponentRepo.save(uninstalledJobComponent);
@@ -221,7 +221,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private JobStatus processInstallableList(DigitalExchangeJob job, List<Installable> installableList) {
+    private JobStatus processInstallableList(EntandoBundleJob job, List<Installable> installableList) {
         log.info("Processing installable list for component " + job.getComponentId());
 
         JobStatus installSucceded = JobStatus.INSTALL_COMPLETED;
@@ -236,7 +236,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
     }
 
     private JobStatus processInstallable(Installable installable) {
-        DigitalExchangeJobComponent installableComponent = installable.getComponent();
+        EntandoBundleComponentJob installableComponent = installable.getComponent();
         jobComponentRepo.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
 
         CompletableFuture<?> future = installable.install();
@@ -266,7 +266,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         return installResult.join();
     }
 
-    private List<Installable> getInstallables(DigitalExchangeJob job, Path p) {
+    private List<Installable> getInstallables(EntandoBundleJob job, Path p) {
         log.info("Extracting installable components from downloaded bundle");
         try {
             BundleReader r = new BundleReader(p);
@@ -278,7 +278,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         }
     }
 
-    private List<Installable> getInstallables(DigitalExchangeJob job, BundleReader r,
+    private List<Installable> getInstallables(EntandoBundleJob job, BundleReader r,
             ComponentDescriptor descriptor) throws IOException {
         List<Installable> installables = new LinkedList<>();
         for (ComponentProcessor processor : componentProcessors) {
@@ -288,8 +288,8 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
         return installables;
     }
 
-    private DigitalExchangeJobComponent persistComponent(DigitalExchangeJob job, Installable installable) {
-        DigitalExchangeJobComponent component = new DigitalExchangeJobComponent();
+    private EntandoBundleComponentJob persistComponent(EntandoBundleJob job, Installable installable) {
+        EntandoBundleComponentJob component = new EntandoBundleComponentJob();
         component.setJob(job);
         component.setComponentType(installable.getComponentType());
         component.setName(installable.getName());

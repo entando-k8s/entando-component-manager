@@ -15,10 +15,10 @@ import java.util.UUID;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -37,15 +37,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")
-public class DigitalExchangeJobControllerTest {
+public class EntandoEntandoBundleJobControllerTest {
 
     @Autowired
     MockMvc mvc;
 
     @Autowired
-    private DigitalExchangeJobRepository jobRepository;
+    private EntandoBundleJobRepository jobRepository;
 
-    Map<UUID, DigitalExchangeJob> jobs;
+    Map<UUID, EntandoBundleJob> jobs;
 
     @BeforeEach
     public void setup() {
@@ -80,7 +80,7 @@ public class DigitalExchangeJobControllerTest {
     @Test
     public void shouldReturnJobById() throws Exception {
 
-        DigitalExchangeJob job = jobs.entrySet().stream().findFirst().map(Entry::getValue).get();
+        EntandoBundleJob job = jobs.entrySet().stream().findFirst().map(Entry::getValue).get();
 
         mvc.perform(get("/jobs/{id}", job.getId()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -127,7 +127,7 @@ public class DigitalExchangeJobControllerTest {
     private void populateTestDatabase() {
         jobs = new HashMap<>();
 
-        DigitalExchangeJob job1 = new DigitalExchangeJob();
+        EntandoBundleJob job1 = new EntandoBundleJob();
         job1.setComponentId("id1");
         job1.setComponentName("my-bundle");
         job1.setDigitalExchange("local");
@@ -137,10 +137,10 @@ public class DigitalExchangeJobControllerTest {
         job1.setFinishedAt(job1.getStartedAt().plusMinutes(1L));
         job1.setStatus(JobStatus.INSTALL_COMPLETED);
 
-        DigitalExchangeJob _job1 = jobRepository.save(job1);
+        EntandoBundleJob _job1 = jobRepository.save(job1);
         jobs.put(_job1.getId(), _job1);
 
-        DigitalExchangeJob job2 = new DigitalExchangeJob();
+        EntandoBundleJob job2 = new EntandoBundleJob();
         job2.setComponentId("id2");
         job2.setComponentName("my-other-bundle");
         job2.setDigitalExchange("external");
@@ -150,10 +150,10 @@ public class DigitalExchangeJobControllerTest {
         job2.setFinishedAt(null);
         job2.setStatus(JobStatus.INSTALL_IN_PROGRESS);
 
-        DigitalExchangeJob _job2 = jobRepository.save(job2);
+        EntandoBundleJob _job2 = jobRepository.save(job2);
         jobs.put(_job2.getId(), _job2);
 
-        DigitalExchangeJob job1_uninstall = new DigitalExchangeJob();
+        EntandoBundleJob job1_uninstall = new EntandoBundleJob();
         job1_uninstall.setComponentId("id1");
         job1_uninstall.setComponentName("my-bundle");
         job1_uninstall.setDigitalExchange("local");
@@ -163,10 +163,10 @@ public class DigitalExchangeJobControllerTest {
         job1_uninstall.setFinishedAt(job1_uninstall.getStartedAt().plusSeconds(30L));
         job1_uninstall.setStatus(JobStatus.UNINSTALL_COMPLETED);
 
-        DigitalExchangeJob _job1_uninstall = jobRepository.save(job1_uninstall);
+        EntandoBundleJob _job1_uninstall = jobRepository.save(job1_uninstall);
         jobs.put(_job1_uninstall.getId(), _job1_uninstall);
 
-        DigitalExchangeJob job1_reinstall = new DigitalExchangeJob();
+        EntandoBundleJob job1_reinstall = new EntandoBundleJob();
         job1_reinstall.setComponentId("id1");
         job1_reinstall.setComponentName("my-bundle");
         job1_reinstall.setDigitalExchange("local");
@@ -176,7 +176,7 @@ public class DigitalExchangeJobControllerTest {
         job1_reinstall.setFinishedAt(job1_reinstall.getStartedAt().plusMinutes(2L));
         job1_reinstall.setStatus(JobStatus.INSTALL_COMPLETED);
 
-        DigitalExchangeJob _job1_reinstall = jobRepository.save(job1_reinstall);
+        EntandoBundleJob _job1_reinstall = jobRepository.save(job1_reinstall);
         jobs.put(_job1_reinstall.getId(), _job1_reinstall);
 
     }

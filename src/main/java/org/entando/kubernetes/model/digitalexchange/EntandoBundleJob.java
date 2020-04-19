@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Table(name = "digital_exchange_job")
-public class DigitalExchangeJob {
+public class EntandoBundleJob {
 
     @Id
     @Column

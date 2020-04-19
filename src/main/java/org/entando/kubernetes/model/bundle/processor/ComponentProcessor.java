@@ -7,8 +7,8 @@ import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the
@@ -28,7 +28,7 @@ public interface ComponentProcessor {
      * @return Should return a list of Installables
      * @throws IOException in case of any error while reading any the file from the Zip package
      */
-    List<Installable> process(DigitalExchangeJob job, BundleReader bundleReader,
+    List<Installable> process(EntandoBundleJob job, BundleReader bundleReader,
                                         ComponentDescriptor descriptor) throws IOException;
 
     /**
@@ -43,7 +43,7 @@ public interface ComponentProcessor {
      * Performs the uninstallation of this component
      * @param component the component to be uninstalled
      */
-    void uninstall(DigitalExchangeJobComponent component);
+    void uninstall(EntandoBundleComponentJob component);
 
     default String getRelativePath(String referenceFile, String fileName) {
         return Paths.get(referenceFile).resolveSibling(fileName).toString();

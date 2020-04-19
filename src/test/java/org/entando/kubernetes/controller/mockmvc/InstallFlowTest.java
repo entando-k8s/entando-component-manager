@@ -57,15 +57,15 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -121,13 +121,13 @@ public class InstallFlowTest {
     private K8SServiceClient k8SServiceClient;
 
     @Autowired
-    private DigitalExchangeJobComponentRepository jobComponentRepository;
+    private EntandoBundleComponentJobRepository jobComponentRepository;
 
     @Autowired
-    private DigitalExchangeJobRepository jobRepository;
+    private EntandoBundleJobRepository jobRepository;
 
     @Autowired
-    private DigitalExchangeInstalledComponentRepository installedCompRepo;
+    private InstalledEntandoBundleRepository installedCompRepo;
 
     @MockBean
     private GitBundleDownloader gitBundleDownloader;
@@ -299,13 +299,13 @@ public class InstallFlowTest {
     public void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-        List<DigitalExchangeJob> jobs = jobRepository.findAll();
+        List<EntandoBundleJob> jobs = jobRepository.findAll();
         assertThat(jobs).hasSize(1);
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
 
-        List<DigitalExchangeJobComponent> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
+        List<EntandoBundleComponentJob> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
         assertThat(jobComponentList).hasSize(22);
-        List<String> jobComponentNames = jobComponentList.stream().map(DigitalExchangeJobComponent::getName).collect(Collectors.toList());
+        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName).collect(Collectors.toList());
         assertThat(jobComponentNames).containsExactlyInAnyOrder(
                 "/todomvc",
                 "/todomvc/js",
@@ -332,7 +332,7 @@ public class InstallFlowTest {
         );
 
         Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
-        for(DigitalExchangeJobComponent jcomp: jobComponentList) {
+        for(EntandoBundleComponentJob jcomp: jobComponentList) {
             Integer n = jobComponentTypes.getOrDefault(jcomp.getComponentType(), 0);
             jobComponentTypes.put(jcomp.getComponentType(), n + 1);
         }
@@ -380,19 +380,19 @@ public class InstallFlowTest {
         verifyJobHasComponentAndStatus(jobId, JobStatus.INSTALL_COMPLETED);
 
         simulateSuccessfullyCompletedUninstall();
-        List<DigitalExchangeJob> jobs = jobRepository.findAll();
+        List<EntandoBundleJob> jobs = jobRepository.findAll();
         assertThat(jobs).hasSize(2);
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
         assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
 
-        List<DigitalExchangeJobComponent> installedComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
-        List<DigitalExchangeJobComponent> uninstalledComponentList = jobComponentRepository.findAllByJob(jobs.get(1));
+        List<EntandoBundleComponentJob> installedComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
+        List<EntandoBundleComponentJob> uninstalledComponentList = jobComponentRepository.findAllByJob(jobs.get(1));
         assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
-        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(DigitalExchangeJobComponent::getStatus).collect(Collectors.toList());
+        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJob::getStatus).collect(Collectors.toList());
         assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
 
         boolean matchFound = false;
-        for(DigitalExchangeJobComponent ic: installedComponentList) {
+        for(EntandoBundleComponentJob ic: installedComponentList) {
             matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
                 return uc.getJob().getId().equals(jobs.get(1).getId()) &&
                         uc.getName().equals(ic.getName()) &&
@@ -418,7 +418,7 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
-        List<DigitalExchangeComponent> installedComponents = installedCompRepo.findAll();
+        List<EntandoBundle> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
         assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
@@ -439,16 +439,16 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
-        Optional<DigitalExchangeJob> job = jobRepository.findById(UUID.fromString(failingJobId));
+        Optional<EntandoBundleJob> job = jobRepository.findById(UUID.fromString(failingJobId));
         assertThat(job.isPresent()).isTrue();
 
         // And for each installed component job there should be a component job that rollbacked the install
-        List<DigitalExchangeJobComponent> jobRelatedComponents = jobComponentRepository.findAllByJob(job.get());
-        List<DigitalExchangeJobComponent> installedComponents = jobRelatedComponents.stream().filter(j ->
+        List<EntandoBundleComponentJob> jobRelatedComponents = jobComponentRepository.findAllByJob(job.get());
+        List<EntandoBundleComponentJob> installedComponents = jobRelatedComponents.stream().filter(j ->
                 j.getStatus().equals(JobStatus.INSTALL_COMPLETED)).collect(
                 Collectors.toList());
-        for(DigitalExchangeJobComponent c : installedComponents) {
-            List<DigitalExchangeJobComponent> jobs = jobRelatedComponents.stream().filter(j ->
+        for(EntandoBundleComponentJob c : installedComponents) {
+            List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream().filter(j ->
                     j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
                     .collect(Collectors.toList());
             assertThat(jobs.size()).isEqualTo(2);
@@ -792,16 +792,16 @@ public class InstallFlowTest {
                 .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
     }
 
-    private SimpleRestResponse<DigitalExchangeJob> getInstallJob() throws Exception{
+    private SimpleRestResponse<EntandoBundleJob> getInstallJob() throws Exception{
         return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
+                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<EntandoBundleJob>>(){});
     }
 
-    private SimpleRestResponse<DigitalExchangeJob> getUninstallJob() throws Exception{
+    private SimpleRestResponse<EntandoBundleJob> getUninstallJob() throws Exception{
         return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=UNINSTALL"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<DigitalExchangeJob>>(){});
+                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<EntandoBundleJob>>(){});
     }
 
     private byte[] readFromDEPackage() throws IOException {

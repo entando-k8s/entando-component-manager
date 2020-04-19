@@ -10,11 +10,12 @@ import java.util.List;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
-import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsServiceImpl;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -22,22 +23,24 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 @Tag("unit")
-public class ComponentServiceTest {
+public class EntandoBundleServiceTest {
 
     private K8SServiceClientTestDouble k8SServiceClient;
-    private DigitalExchangeComponentsService service;
-    private DigitalExchangeJobRepository jobRepository;
-    private DigitalExchangeInstalledComponentRepository installedComponentRepository;
+    private EntandoBundleService service;
+    private EntandoBundleJobRepository jobRepository;
+    private EntandoBundleComponentJobRepository componentJobRepository;
+    private InstalledEntandoBundleRepository installedComponentRepository;
 
     private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
 
     @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        jobRepository = Mockito.mock(DigitalExchangeJobRepository.class);
-        installedComponentRepository = Mockito.mock(DigitalExchangeInstalledComponentRepository.class);
-        service = new DigitalExchangeComponentsServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository,
-                installedComponentRepository);
+        jobRepository = Mockito.mock(EntandoBundleJobRepository.class);
+        componentJobRepository = Mockito.mock(EntandoBundleComponentJobRepository.class);
+        installedComponentRepository = Mockito.mock(InstalledEntandoBundleRepository.class);
+        service = new EntandoBundleServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository,
+                componentJobRepository, installedComponentRepository);
     }
 
     @AfterEach
@@ -49,19 +52,19 @@ public class ComponentServiceTest {
     public void shouldReturnAllComponentsAvailable() {
         k8SServiceClient.addInMemoryBundle(TestEntitiesGenerator.getTestBundle());
         when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
-        List<DigitalExchangeComponent> bundles = service.getComponents();
-        assertThat(bundles.size()).isEqualTo(1);
-        assertThat(bundles.get(0).getDigitalExchangeName()).isEqualTo(DEFAULT_BUNDLE_NAMESPACE);
+        List<EntandoBundle> entandoBundles = service.getComponents();
+        assertThat(entandoBundles.size()).isEqualTo(1);
+        assertThat(entandoBundles.get(0).getDigitalExchangeName()).isEqualTo(DEFAULT_BUNDLE_NAMESPACE);
     }
 
     @Test
     public void shouldReturnInstalledComponents() {
         EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
-        DigitalExchangeComponent component = DigitalExchangeComponent.newFrom(bundle);
+        EntandoBundle component = EntandoBundle.newFrom(bundle);
         component.setInstalled(true);
 
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
-        List<DigitalExchangeComponent> components = service.getComponents();
+        List<EntandoBundle> components = service.getComponents();
         assertThat(components.size()).isEqualTo(1);
         assertThat(components.get(0).getId()).isEqualTo(bundle.getMetadata().getName());
 

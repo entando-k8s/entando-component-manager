@@ -21,39 +21,44 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComponentsService {
+public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     private final K8SServiceClient k8SServiceClient;
     private final List<String> accessibleDigitalExchanges;
-    private final DigitalExchangeJobRepository jobRepository;
-    private final DigitalExchangeInstalledComponentRepository installedComponentRepo;
+    private final EntandoBundleJobRepository jobRepository;
+    private final InstalledEntandoBundleRepository installedComponentRepo;
+    private final EntandoBundleComponentJobRepository jobComponentRepository;
 
-    public DigitalExchangeComponentsServiceImpl(K8SServiceClient k8SServiceClient,
+    public EntandoBundleServiceImpl(K8SServiceClient k8SServiceClient,
             @Value("${entando.digital-exchanges.name:}") List<String> accessibleDigitalExchanges,
-            DigitalExchangeJobRepository jobRepository,
-            DigitalExchangeInstalledComponentRepository installedComponentRepo) {
+            EntandoBundleJobRepository jobRepository,
+            EntandoBundleComponentJobRepository jobComponentRepository,
+            InstalledEntandoBundleRepository installedComponentRepo) {
         this.k8SServiceClient = k8SServiceClient;
         this.accessibleDigitalExchanges = accessibleDigitalExchanges
                 .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
         this.jobRepository = jobRepository;
+        this.jobComponentRepository = jobComponentRepository;
         this.installedComponentRepo = installedComponentRepo;
     }
 
 
     @Override
-    public List<DigitalExchangeComponent> getComponents() {
-        List<DigitalExchangeComponent> allComponents = new ArrayList<>();
-        List<DigitalExchangeComponent> installedComponents = installedComponentRepo.findAll();
-        List<DigitalExchangeComponent> externalComponents = getAvailableComponentsFromDigitalExchanges();
-        List<DigitalExchangeComponent> notAlreadyInstalled = installedComponents.isEmpty() ?
+    public List<EntandoBundle> getComponents() {
+        List<EntandoBundle> allComponents = new ArrayList<>();
+        List<EntandoBundle> installedComponents = installedComponentRepo.findAll();
+        List<EntandoBundle> externalComponents = getAvailableComponentsFromDigitalExchanges();
+        List<EntandoBundle> notAlreadyInstalled = installedComponents.isEmpty() ?
                 externalComponents :
                 filterNotInstalledComponents(externalComponents, installedComponents);
 
@@ -63,18 +68,24 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     }
 
     @Override
-    public Optional<DigitalExchangeComponent> getInstalledComponent(String id) {
+    public Optional<EntandoBundle> getInstalledComponent(String id) {
         return installedComponentRepo.findById(id);
     }
 
+    @Override
+    public List<EntandoBundleComponentJob> getBundleInstalledComponents(String id) {
 
-    private List<DigitalExchangeComponent> filterNotInstalledComponents(
-            List<DigitalExchangeComponent> externalComponents, List<DigitalExchangeComponent> installedComponents) {
+        return null;
+    }
+
+
+    private List<EntandoBundle> filterNotInstalledComponents(
+            List<EntandoBundle> externalComponents, List<EntandoBundle> installedComponents) {
         Map<String, String> installedVersions = installedComponents.stream()
-                .collect(Collectors.toMap(DigitalExchangeComponent::getId, DigitalExchangeComponent::getVersion));
+                .collect(Collectors.toMap(EntandoBundle::getId, EntandoBundle::getVersion));
 
-        List<DigitalExchangeComponent> notInstalledComponents = new ArrayList<>();
-        for (DigitalExchangeComponent dec: externalComponents) {
+        List<EntandoBundle> notInstalledComponents = new ArrayList<>();
+        for (EntandoBundle dec: externalComponents) {
             String k = dec.getId();
             String v = dec.getVersion();
             if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
@@ -86,7 +97,7 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         return notInstalledComponents;
     }
 
-    private List<DigitalExchangeComponent> getAvailableComponentsFromDigitalExchanges() {
+    private List<EntandoBundle> getAvailableComponentsFromDigitalExchanges() {
         List<EntandoDeBundle> bundles;
         if(accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
@@ -97,8 +108,8 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
     }
 
 
-    public DigitalExchangeComponent convertBundleToLegacyComponent(EntandoDeBundle bundle) {
-        DigitalExchangeComponent dec = DigitalExchangeComponent.newFrom(bundle);
+    public EntandoBundle convertBundleToLegacyComponent(EntandoDeBundle bundle) {
+        EntandoBundle dec = EntandoBundle.newFrom(bundle);
         dec.setInstalled(checkIfInstalled(bundle));
         return dec;
     }

@@ -6,9 +6,9 @@ import static org.mockito.Mockito.when;
 
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
-import org.entando.kubernetes.model.entandocore.usage.IrrelevantEntandoCoreComponentUsage;
-import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsUsageService;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantEntandoCoreComponentUsage;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,13 +17,13 @@ import org.mockito.Mockito;
 @Tag("in-process")
 public class ComponentUsageServiceTest {
 
-    private DigitalExchangeComponentsUsageService usageService;
+    private EntandoBundleComponentUsageService usageService;
     private EntandoCoreClient client;
 
     @BeforeEach
     public void setup() {
         client = Mockito.mock(EntandoCoreClient.class);
-        this.usageService = new DigitalExchangeComponentsUsageService(client);
+        this.usageService = new EntandoBundleComponentUsageService(client);
     }
 
     @Test
