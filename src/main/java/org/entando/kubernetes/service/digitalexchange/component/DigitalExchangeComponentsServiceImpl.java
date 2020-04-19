@@ -16,6 +16,7 @@ package org.entando.kubernetes.service.digitalexchange.component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -60,6 +61,12 @@ public class DigitalExchangeComponentsServiceImpl implements DigitalExchangeComp
         allComponents.addAll(notAlreadyInstalled);
         return allComponents;
     }
+
+    @Override
+    public Optional<DigitalExchangeComponent> getInstalledComponent(String id) {
+        return installedComponentRepo.findById(id);
+    }
+
 
     private List<DigitalExchangeComponent> filterNotInstalledComponents(
             List<DigitalExchangeComponent> externalComponents, List<DigitalExchangeComponent> installedComponents) {

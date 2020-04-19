@@ -14,7 +14,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FragmentProcessor implements ComponentProcessor {
 
-    private final EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
     @Override
     public List<Installable> process(DigitalExchangeJob job, BundleReader npr, ComponentDescriptor descriptor)

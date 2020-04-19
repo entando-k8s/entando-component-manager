@@ -1,4 +1,4 @@
-package org.entando.kubernetes.controller;
+package org.entando.kubernetes.controller.mockmvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasKey;
@@ -41,7 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")
-public class DigitalExchangeComponentsTest {
+public class DigitalExchangeComponentsApiTest {
 
     @Autowired
     private WebApplicationContext context;
@@ -109,6 +109,12 @@ public class DigitalExchangeComponentsTest {
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
 
+    }
+
+    @Test
+    public void shouldReturnBadRequestForNotInstalledBundles() throws Exception {
+        mockMvc.perform(get("/components/temp/usage").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
 

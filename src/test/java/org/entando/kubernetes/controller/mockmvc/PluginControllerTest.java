@@ -1,4 +1,4 @@
-package org.entando.kubernetes.controller;
+package org.entando.kubernetes.controller.mockmvc;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;

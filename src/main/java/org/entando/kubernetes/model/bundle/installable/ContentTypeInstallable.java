@@ -3,16 +3,15 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
-import org.entando.kubernetes.model.bundle.processor.CmsProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 
 @Slf4j
 public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
 
-    private EntandoCoreService engineService;
+    private EntandoCoreClient engineService;
 
-    public ContentTypeInstallable(EntandoCoreService service, ContentTypeDescriptor contentTypeDescriptor) {
+    public ContentTypeInstallable(EntandoCoreClient service, ContentTypeDescriptor contentTypeDescriptor) {
         super(contentTypeDescriptor);
         this.engineService = service;
     }

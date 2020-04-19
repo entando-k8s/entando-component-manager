@@ -19,7 +19,7 @@ import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import org.mockito.MockitoAnnotations;
 @Tag("unit")
 public class LabelProcessorTest {
 
-    @Mock private EntandoCoreService engineService;
+    @Mock private EntandoCoreClient engineService;
     @Mock private BundleReader bundleReader;
 
     private LabelProcessor processor;

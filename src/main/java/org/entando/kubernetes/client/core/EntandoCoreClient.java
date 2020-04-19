@@ -1,6 +1,7 @@
-package org.entando.kubernetes.service.digitalexchange.entandocore;
+package org.entando.kubernetes.client.core;
 
 import java.nio.file.Paths;
+import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -9,6 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
@@ -16,7 +18,12 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
 import org.entando.kubernetes.model.entandocore.EntandoCorePage;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
@@ -25,12 +32,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
-public class EntandoCoreService {
+public class EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
 
-    public EntandoCoreService(
+    public EntandoCoreClient(
             @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
             @Value("${spring.security.oauth2.client.registration.oidc.client-secret}") final String clientSecret,
             @Value("${entando.auth-url}") final String tokenUri,
@@ -47,6 +54,12 @@ public class EntandoCoreService {
         this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
     }
 
+    public EntandoCoreClient(@Value("${entando.url}") String entandoUrl, OAuth2RestTemplate restTemplate) {
+        this.entandoUrl = entandoUrl;
+        this.restTemplate = restTemplate;
+    }
+
+
     public void registerWidget(final WidgetDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "widgets").build().toUri(), new EntandoCoreWidget(descriptor), Void.class);
     }
@@ -55,12 +68,34 @@ public class EntandoCoreService {
         restTemplate.delete(resolvePathSegments("api", "widgets", code).build().toUri());
     }
 
+    public EntandoCoreComponentUsage getWidgetUsage(String code) {
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+                .exchange(resolvePathSegments("api", "widgets", code, "usage").build().toUri(), HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            return usage.getBody().getPayload();
+        } else {
+            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving widget " + code + " usage");
+        }
+    }
+
     public void registerFragment(FragmentDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "fragments").build().toUri(), new EntandoCoreFragment(descriptor), Void.class);
     }
 
     public void deleteFragment(String code) {
         restTemplate.delete(resolvePathSegments("api","fragments", code).build().toUri());
+    }
+
+    public EntandoCoreComponentUsage getFragmentUsage(String code) {
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+                .exchange(resolvePathSegments("api", "fragments", code, "usage").build().toUri(), HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            return usage.getBody().getPayload();
+        } else {
+            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving fragment " + code + " usage");
+        }
     }
 
     public void registerLabel(final LabelDescriptor descriptor) {
@@ -79,12 +114,34 @@ public class EntandoCoreService {
         restTemplate.delete(resolvePathSegments("api", "pages", code).build().toUri());
     }
 
+    public EntandoCoreComponentUsage getPageUsage(String code) {
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+                .exchange(resolvePathSegments("api", "pages", code, "usage").build().toUri(), HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            return usage.getBody().getPayload();
+        } else {
+            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving page " + code + " usage");
+        }
+    }
+
     public void registerPageModel(final PageModelDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
     }
 
     public void deletePageModel(final String code) {
         restTemplate.delete(resolvePathSegments("api", "pageModels", code).build().toUri());
+    }
+
+    public EntandoCoreComponentUsage getPageModelUsage(String code) {
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+                .exchange(resolvePathSegments("api", "pageModels", code, "usage").build().toUri(), HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            return usage.getBody().getPayload();
+        } else {
+            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving page model " + code + " usage");
+        }
     }
 
     public void deleteContentModel(final String code) {
@@ -101,6 +158,17 @@ public class EntandoCoreService {
 
     public void deleteContentType(final String code) {
         restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentTypes", code).build().toUri());
+    }
+
+    public EntandoCoreComponentUsage getContentTypeUsage(String code) {
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+                .exchange(resolvePathSegments("api", "plugins", "cms", "contentTypes", code, "usage").build().toUri(), HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            return usage.getBody().getPayload();
+        } else {
+            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving content type " + code + " usage");
+        }
     }
 
     public void createFolder(final String folder) {

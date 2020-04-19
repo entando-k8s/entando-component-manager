@@ -4,14 +4,14 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 
 @Slf4j
 public class PageModelInstallable extends Installable<PageModelDescriptor> {
 
-    private EntandoCoreService engineService;
+    private EntandoCoreClient engineService;
 
-    public PageModelInstallable(EntandoCoreService engineService, PageModelDescriptor pageModelDescriptor) {
+    public PageModelInstallable(EntandoCoreClient engineService, PageModelDescriptor pageModelDescriptor) {
         super(pageModelDescriptor);
         this.engineService = engineService;
     }

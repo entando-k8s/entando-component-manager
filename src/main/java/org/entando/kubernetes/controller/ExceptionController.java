@@ -6,7 +6,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.http.HttpException;
 import org.entando.kubernetes.exception.http.WithArgumentException;
 import org.entando.kubernetes.exception.http.WithPredefinedMessage;
-import org.entando.kubernetes.model.web.exception.ErrorResponse;
+import org.entando.kubernetes.exception.web.ErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;

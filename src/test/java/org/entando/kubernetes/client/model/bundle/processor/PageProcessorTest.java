@@ -17,7 +17,7 @@ import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import org.mockito.MockitoAnnotations;
 public class PageProcessorTest {
 
     @Mock
-    private EntandoCoreService entandoCoreService;
+    private EntandoCoreClient entandoCoreClient;
 
     @Mock
     private BundleReader bundleReader;
@@ -38,7 +38,7 @@ public class PageProcessorTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        pageProcessor = new PageProcessor(entandoCoreService);
+        pageProcessor = new PageProcessor(entandoCoreClient);
     }
 
     @Test

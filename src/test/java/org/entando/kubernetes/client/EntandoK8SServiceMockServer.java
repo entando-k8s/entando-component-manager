@@ -10,37 +10,18 @@ import static org.springframework.cloud.contract.wiremock.WireMockSpring.options
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EntandoK8SServiceMockServer {
-
-    private WireMockServer wireMockServer;
-    private static int port;
-
-
-    static {
-        port = findFreePort().orElse(9080);
-    }
+public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
 
     public EntandoK8SServiceMockServer() {
-        wireMockServer = new WireMockServer(options().port(port));
-        populateServer(wireMockServer);
-        if (!wireMockServer.isRunning()) {
-            wireMockServer.start();
-        }
+        super();
     }
 
-    private void populateServer(WireMockServer wireMockServer) {
+    @Override
+    protected void init(WireMockServer wireMockServer) {
         addApiRoot(wireMockServer);
         addAppPluginLinksResource(wireMockServer);
         addAppsResource(wireMockServer);
@@ -193,67 +174,4 @@ public class EntandoK8SServiceMockServer {
 
     }
 
-    public void start() {
-        wireMockServer.start();
-    }
-
-    public void stop() {
-        wireMockServer.stop();
-    }
-
-    public void tearDown() {
-        wireMockServer.resetAll();
-        wireMockServer.stop();
-    }
-
-    public void resetRequests() {
-        wireMockServer.resetRequests();
-    }
-
-    public void resetMappings() {
-        wireMockServer.resetAll();
-        populateServer(wireMockServer);
-    }
-
-    public WireMockServer getInnerServer() {
-       return wireMockServer;
-    }
-
-    public void addStub(MappingBuilder stub) {
-        wireMockServer.stubFor(stub);
-    }
-
-    public String getApiRoot() {
-        return "http://localhost:" + port;
-    }
-
-    private static Optional<Integer> findFreePort() {
-        Integer port = null;
-        try {
-            // Get a free port
-            ServerSocket s = new ServerSocket(0);
-            port = s.getLocalPort();
-            s.close();
-
-        } catch (IOException e) {
-            // No OPS
-        }
-        return Optional.ofNullable(port);
-    }
-
-    public String readResourceAsString(String resourcePath) {
-
-        try
-        {
-            Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            String content = new String ( Files.readAllBytes(rp) );
-            content = content.replaceAll("localhost:9080", "localhost:"+port);
-            return content;
-        }
-        catch (IOException | URISyntaxException e)
-        {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
 }

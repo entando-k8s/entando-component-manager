@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.web.exception;
+package org.entando.kubernetes.exception.web;
 
 public class BadRequestException extends IllegalArgumentException {
 

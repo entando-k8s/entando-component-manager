@@ -24,7 +24,7 @@ import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentReposi
 import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class DigitalExchangeUninstallService implements ApplicationContextAware 
     private final @NonNull DigitalExchangeJobRepository jobRepository;
     private final @NonNull DigitalExchangeJobComponentRepository componentRepository;
     private final @NonNull DigitalExchangeInstalledComponentRepository installedComponentRepository;
-    private final @NonNull EntandoCoreService engineService;
+    private final @NonNull EntandoCoreClient engineService;
     private final @NonNull KubernetesService k8sService;
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();

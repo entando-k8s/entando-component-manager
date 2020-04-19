@@ -3,16 +3,15 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 
 @Slf4j
 public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
-    private EntandoCoreService engineService;
+    private EntandoCoreClient engineService;
 
-    public WidgetInstallable(EntandoCoreService engineService, WidgetDescriptor widgetDescriptor) {
+    public WidgetInstallable(EntandoCoreClient engineService, WidgetDescriptor widgetDescriptor) {
         super(widgetDescriptor);
         this.engineService = engineService;
     }

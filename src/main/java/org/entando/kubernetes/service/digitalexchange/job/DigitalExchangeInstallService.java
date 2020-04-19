@@ -37,7 +37,7 @@ import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
 import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -50,7 +50,7 @@ public class DigitalExchangeInstallService implements ApplicationContextAware {
 
     private final @NonNull KubernetesService k8sService;
     private final @NonNull DigitalExchangeJobService jobService;
-    private final @NonNull EntandoCoreService engineService;
+    private final @NonNull EntandoCoreClient engineService;
     private final @NonNull BundleDownloader bundleDownloader;
     private final @NonNull DigitalExchangeJobRepository jobRepo;
     private final @NonNull DigitalExchangeJobComponentRepository jobComponentRepo;

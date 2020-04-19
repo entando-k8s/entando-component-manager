@@ -14,7 +14,7 @@ import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class AssetProcessorTest {
 
-    @Mock private EntandoCoreService engineService;
+    @Mock private EntandoCoreClient engineService;
     private BundleReader bundleReader;
     private AssetProcessor assetProcessor;
 

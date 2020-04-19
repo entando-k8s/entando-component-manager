@@ -1,4 +1,4 @@
-package org.entando.kubernetes.controller;
+package org.entando.kubernetes.controller.mockmvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

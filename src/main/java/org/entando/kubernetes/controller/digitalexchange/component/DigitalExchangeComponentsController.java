@@ -14,8 +14,11 @@
 package org.entando.kubernetes.controller.digitalexchange.component;
 
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.exception.web.BadRequestException;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.DigitalExchangeComponentsService;
@@ -36,5 +39,13 @@ public class DigitalExchangeComponentsController implements DigitalExchangeCompo
         pagedMetadata.setBody(bundles);
         PagedRestResponse<DigitalExchangeComponent> response = new PagedRestResponse(pagedMetadata);
         return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<EntandoBundleUsageSummary> getUsageSummary(String component) {
+        DigitalExchangeComponent installedComponent = componentsService.getInstalledComponent(component)
+                .orElseThrow(() -> new BadRequestException("Component " + component + " is not installed"));
+
+        return ResponseEntity.ok(new EntandoBundleUsageSummary());
     }
 }
