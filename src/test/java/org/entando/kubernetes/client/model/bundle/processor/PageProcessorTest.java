@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -17,7 +18,6 @@ import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import org.mockito.MockitoAnnotations;
 public class PageProcessorTest {
 
     @Mock
-    private EntandoCoreClient entandoCoreClient;
+    private DefaultEntandoCoreClient entandoCoreClient;
 
     @Mock
     private BundleReader bundleReader;

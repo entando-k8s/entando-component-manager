@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client;
+package org.entando.kubernetes.utils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -12,10 +12,9 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import lombok.Getter;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 

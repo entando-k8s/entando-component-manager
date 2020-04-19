@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client;
+package org.entando.kubernetes.utils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static org.springframework.cloud.contract.wiremock.WireMockSpring.options;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.github.tomakehurst.wiremock.WireMockServer;

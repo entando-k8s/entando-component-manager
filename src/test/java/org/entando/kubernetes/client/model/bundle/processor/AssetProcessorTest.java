@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -14,7 +15,6 @@ import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class AssetProcessorTest {
 
-    @Mock private EntandoCoreClient engineService;
+    @Mock private DefaultEntandoCoreClient engineService;
     private BundleReader bundleReader;
     private AssetProcessor assetProcessor;
 

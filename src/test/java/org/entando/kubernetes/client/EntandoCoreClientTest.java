@@ -2,9 +2,11 @@ package org.entando.kubernetes.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
+import org.entando.kubernetes.utils.EntandoCoreMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -24,7 +26,7 @@ public class EntandoCoreClientTest {
         String keycloakClientSecret = "clientSecret";
         String keycloakAuthEndpoint = coreMockServer.getApiRoot() + "/auth/protocol/openid-connect/auth";
         String entandoCoreUrl = coreMockServer.getApiRoot() + "/";
-        this.client = new EntandoCoreClient(keycloakClientId, keycloakClientSecret, keycloakAuthEndpoint,
+        this.client = new DefaultEntandoCoreClient(keycloakClientId, keycloakClientSecret, keycloakAuthEndpoint,
                 entandoCoreUrl);
     }
 

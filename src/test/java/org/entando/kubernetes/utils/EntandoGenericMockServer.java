@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client;
+package org.entando.kubernetes.utils;
 
 import static org.springframework.cloud.contract.wiremock.WireMockSpring.options;
 

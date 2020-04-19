@@ -1,23 +1,31 @@
 package org.entando.kubernetes.model.bundle;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import java.util.ArrayList;
+import java.util.List;
+import org.entando.kubernetes.model.entandocore.usage.EntandoCoreComponentUsage;
 
 public class EntandoBundleUsageSummary {
 
-    public Map<ComponentType, Integer> componentUsage;
+    public List<EntandoCoreComponentUsage> componentUsage;
 
     public EntandoBundleUsageSummary() {
-       componentUsage = new HashMap<>();
+       componentUsage = new ArrayList<>();
     }
 
-    public EntandoBundleUsageSummary setComponentUsage(ComponentType type, int numberOfUsaged) {
-        this.componentUsage.put(type, numberOfUsaged);
+    public EntandoBundleUsageSummary addComponentUsage(String type, String componentCode, int usageNumber) {
+        this.componentUsage.add(new EntandoCoreComponentUsage(type, componentCode, usageNumber));
         return this;
     }
 
-    public int getComponentUsage(ComponentType type) {
-        return this.componentUsage.getOrDefault(type, 0);
+    public int getComponentUsage(String componentType, String componentCode) {
+        return this.componentUsage.stream()
+                .filter(cu -> cu.getType().equals(componentType) && cu.getCode().equals(componentCode))
+                .findFirst()
+                .map(EntandoCoreComponentUsage::getUsage)
+                .orElse(0);
+    }
+
+    public List<EntandoCoreComponentUsage> getSummary() {
+        return this.componentUsage;
     }
 }

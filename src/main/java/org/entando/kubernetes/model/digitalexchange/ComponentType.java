@@ -1,5 +1,9 @@
 package org.entando.kubernetes.model.digitalexchange;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * The type of the component to be (or already) registered.
  *
@@ -51,4 +55,12 @@ public enum ComponentType {
      * A Gui fragment
      */
     GUI_FRAGMENT;
+
+    public String toUsageType() {
+        String usageType = null;
+        for(String sect:  this.name().toLowerCase().split("_")){
+            usageType = usageType == null ? usageType + sect : usageType + StringUtils.capitalize(sect);
+        }
+        return usageType;
+    }
 }

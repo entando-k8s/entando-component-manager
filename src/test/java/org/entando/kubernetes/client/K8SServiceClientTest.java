@@ -34,6 +34,7 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

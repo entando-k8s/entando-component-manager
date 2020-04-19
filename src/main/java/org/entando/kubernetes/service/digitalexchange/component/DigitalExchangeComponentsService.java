@@ -16,10 +16,13 @@ package org.entando.kubernetes.service.digitalexchange.component;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.model.digitalexchange.DigitalExchangeComponent;
+import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
 
 public interface DigitalExchangeComponentsService {
 
     List<DigitalExchangeComponent> getComponents();
 
     Optional<DigitalExchangeComponent> getInstalledComponent(String id);
+
+//    List<DigitalExchangeJobComponent> getBundleInstalledComponents(String id);
 }
