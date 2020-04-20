@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.util.Strings;
 import org.assertj.core.api.Assertions;
 
@@ -41,12 +42,14 @@ public class DigitalExchangeTestUtils {
         return DE_PRIVATE_KEY;
     }
 
-    public static String readFileAsBase64(String filePath) throws Exception {
+    @SneakyThrows
+    public static String readFileAsBase64(String filePath) {
         final Path path = Paths.get(DigitalExchangeTestUtils.class.getResource(filePath).toURI());
         return Base64.getEncoder().encodeToString(Files.readAllBytes(path));
     }
 
-    public static String readFile(String filePath) throws Exception {
+    @SneakyThrows
+    public static String readFile(String filePath) {
         final Path path = Paths.get(DigitalExchangeTestUtils.class.getResource(filePath).toURI());
         return new String(Files.readAllBytes(path));
     }

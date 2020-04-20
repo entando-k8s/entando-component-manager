@@ -3,6 +3,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,20 +12,21 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobExecutionException;
-import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -37,57 +39,52 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
     private final @NonNull EntandoBundleJobRepository jobRepository;
     private final @NonNull EntandoBundleComponentJobRepository componentRepository;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
-    private final @NonNull EntandoCoreClient engineService;
+    private final @NonNull EntandoCoreClient coreClient;
+    private final @NonNull EntandoBundleComponentUsageService usageService;
     private final @NonNull KubernetesService k8sService;
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
     public EntandoBundleJob uninstall(String componentId) {
-        EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
-                .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found"));
-        EntandoBundleJob lastAvailableJob = getLastAvailableJob(bundle)
-                .orElseThrow(() -> new RuntimeException("No job found for " + componentId));
+        EntandoBundle installedBundle = installedComponentRepository.findById(componentId)
+                .orElseThrow(() -> new BundleNotInstalledException("Bundle " + componentId + " is not installed"));
 
-        verifyJobStatusCompatibleWithUninstall(lastAvailableJob);
+        verifyBundleUninstallIsPossibleOrThrow(installedBundle);
 
-        EntandoBundleJob uninstallJob;
-        if (lastAvailableJob.getStatus().isOfType(JobType.INSTALL)) {
-            uninstallJob = submitNewUninstallJob(lastAvailableJob);
-        } else {
-            EntandoBundleJob lastInstallAttemptJob = findLastInstallJob(bundle)
-                    .orElseThrow(() -> new RuntimeException(
-                            "No install job associated with " + componentId + " has been found"));
-            uninstallJob = submitNewUninstallJob(lastInstallAttemptJob);
-        }
+        EntandoBundleJob uninstallJob = submitNewUninstallJob(installedBundle.getJob());
+
 
         return uninstallJob;
 
     }
 
-    private void verifyJobStatusCompatibleWithUninstall(EntandoBundleJob job) {
-        if (job.getStatus().isOfType(JobType.UNFINISHED)) {
-            throw new JobConflictException(
-                    "Install job for the component " + job.getComponentId() + " is in progress - JOB ID: " + job
-                            .getId());
+    private void verifyBundleUninstallIsPossibleOrThrow(EntandoBundle bundle) {
+        if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+            verifyNoComponentInUseOrThrow(bundle);
+            verifyNoConcurrentUninstallOrThrow(bundle);
+        } else {
+            throw new EntandoComponentManagerException("Installed bundle " + bundle.getId() + " associated with invalid job");
         }
     }
 
-
-    private Optional<EntandoBundleJob> getLastAvailableJob(EntandoDeBundle bundle) {
-        String digitalExchange = bundle.getMetadata().getNamespace();
-        String componentId = bundle.getMetadata().getName();
-
-        return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId);
+    private void verifyNoConcurrentUninstallOrThrow(EntandoBundle bundle) {
+        Optional<EntandoBundleJob> lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(bundle.getId());
+        if (lastJob.isPresent() ) {
+            if (lastJob.get().getStatus().isAny(EnumSet.of(
+                    JobStatus.UNINSTALL_IN_PROGRESS,
+                    JobStatus.UNINSTALL_CREATED))) {
+                throw new JobConflictException("A concurrent uninstall process for bundle " + bundle.getId() + " is running");
+            }
+        }
     }
 
-    private Optional<EntandoBundleJob> findLastInstallJob(EntandoDeBundle bundle) {
-        String digitalExchange = bundle.getMetadata().getNamespace();
-        String componentId = bundle.getMetadata().getName();
-        return jobRepository.findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchange, componentId)
-                .stream()
-                .filter(j -> j.getStatus().isOfType(JobType.INSTALL))
-                .findFirst();
+    private void verifyNoComponentInUseOrThrow(EntandoBundle bundle) {
+        List<EntandoBundleComponentJob> bundleComponentJobs = componentRepository.findAllByJob(bundle.getJob());
+        if (bundleComponentJobs.stream().anyMatch(e -> usageService.getUsage(e.getComponentType(), e.getName()).getUsage() > 0)) {
+            throw new JobConflictException("Some of bundle " + bundle.getId() + " components are in use and bundle can't be uninstalled");
+        }
     }
+
 
     private EntandoBundleJob submitNewUninstallJob(EntandoBundleJob lastAvailableJob) {
         List<EntandoBundleComponentJob> components = componentRepository.findAllByJob(lastAvailableJob);
@@ -169,7 +166,7 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         ).findFirst();
 
         if (rootResourceFolder.isPresent()) {
-            engineService.deleteFolder("/" + job.getComponentId());
+            coreClient.deleteFolder("/" + job.getComponentId());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
                         EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();

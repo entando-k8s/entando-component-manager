@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantEntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -38,7 +38,7 @@ public class ComponentUsageServiceTest {
     @Test
     public void shouldReturnIrrelevantUsageInformation() {
         EntandoCoreComponentUsage cu = this.usageService.getUsage(ComponentType.LABEL, "my-great-label");
-        assertThat(cu).isInstanceOf(IrrelevantEntandoCoreComponentUsage.class);
+        assertThat(cu).isInstanceOf(IrrelevantComponentUsage.class);
         assertThat(cu.getType()).isEqualTo("irrelevant");
         assertThat(cu.getCode()).isEqualTo("my-great-label");
         assertThat(cu.getUsage()).isEqualTo(0);

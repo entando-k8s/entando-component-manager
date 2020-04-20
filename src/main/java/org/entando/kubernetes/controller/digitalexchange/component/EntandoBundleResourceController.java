@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantEntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
@@ -52,7 +52,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
         EntandoBundleUsageSummary summary = new EntandoBundleUsageSummary();
         bundleInstalledComponents.stream()
                 .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getName()))
-                .filter(u -> !(u instanceof IrrelevantEntandoCoreComponentUsage))
+                .filter(u -> !(u instanceof IrrelevantComponentUsage))
                 .forEach(summary::addComponentUsage);
 
         return ResponseEntity.ok(summary);

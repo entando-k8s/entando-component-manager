@@ -13,6 +13,8 @@
  */
 package org.entando.kubernetes.model.digitalexchange;
 
+import java.util.EnumSet;
+
 public enum JobStatus {
 
     INSTALL_CREATED,
@@ -28,5 +30,9 @@ public enum JobStatus {
 
     public boolean isOfType(JobType type) {
         return type.matches(this);
+    }
+
+    public boolean isAny(EnumSet<JobStatus> possible) {
+        return possible.contains(this);
     }
 }
