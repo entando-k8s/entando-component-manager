@@ -28,10 +28,11 @@ public class ComponentUsageServiceTest {
 
     @Test
     public void shouldReturnComponentUsageForValidComponent() {
-       when(client.getWidgetUsage(eq("my-widget"))).thenReturn(new EntandoCoreComponentUsage("widgets", "my-widget", 1));
-       EntandoCoreComponentUsage cu = this.usageService.getUsage(ComponentType.WIDGET, "my-widget");
-       assertThat(cu.getCode()).isEqualTo("my-widget");
-       assertThat(cu.getUsage()).isEqualTo(1);
+        when(client.getWidgetUsage(eq("my-widget")))
+                .thenReturn(new EntandoCoreComponentUsage("widgets", "my-widget", 1));
+        EntandoCoreComponentUsage cu = this.usageService.getUsage(ComponentType.WIDGET, "my-widget");
+        assertThat(cu.getCode()).isEqualTo("my-widget");
+        assertThat(cu.getUsage()).isEqualTo(1);
     }
 
     @Test

@@ -22,8 +22,8 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUID
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -40,8 +40,8 @@ public class EntandoBundleReaderTest {
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
-       bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-       r = new BundleReader(bundleFolder) ;
+        bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+        r = new BundleReader(bundleFolder);
     }
 
 

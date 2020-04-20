@@ -1,6 +1,6 @@
 package org.entando.kubernetes.exception;
 
-public class EntandoGeneralSignatureException extends RuntimeException{
+public class EntandoGeneralSignatureException extends RuntimeException {
 
     public EntandoGeneralSignatureException() {
         super();

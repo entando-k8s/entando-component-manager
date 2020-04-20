@@ -18,7 +18,7 @@ public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJ
 
     @Query("SELECT job FROM EntandoBundleJob job WHERE job.status <> :status AND job.componentId = :componentId")
     Optional<EntandoBundleJob> findByComponentIdAndStatusNotEqual(@Param("componentId") String componentId,
-                                                                    @Param("status") JobStatus status);
+            @Param("status") JobStatus status);
 
     Optional<EntandoBundleJob> findFirstByComponentIdAndAndStatusNotOrderByStartedAtDesc(
             String componentId,
@@ -36,9 +36,11 @@ public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJ
 
     List<EntandoBundleJob> findAllByComponentIdOrderByStartedAtDesc(String componentId);
 
-    Optional<EntandoBundleJob> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId, List<JobStatus> status);
+    Optional<EntandoBundleJob> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId,
+            List<JobStatus> status);
 
-    Optional<EntandoBundleJob> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId, JobStatus status);
+    Optional<EntandoBundleJob> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId,
+            JobStatus status);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)

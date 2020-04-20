@@ -1,11 +1,11 @@
 /*
  * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
- * 
+ *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation; either version 2.1 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
@@ -42,17 +42,17 @@ public class EntandoBundle {
     @Id
     @NotNull
     @Size(min = 1, max = 255)
-    @Column(name="id", unique = true, nullable = false)
+    @Column(name = "id", unique = true, nullable = false)
     private String id;
 
     @NotNull
     @Size(min = 1, max = 30)
-    @Column(name="name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @NotNull
     @Size(min = 1, max = 30)
-    @Column(name="type")
+    @Column(name = "type")
     private String type;
 
     @OneToOne
@@ -60,40 +60,40 @@ public class EntandoBundle {
     private EntandoBundleJob job;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = SystemConstants.API_DATE_FORMAT)
-    @Column(name="last_update")
+    @Column(name = "last_update")
     private Date lastUpdate;
 
-    @Column(name="version", nullable = false)
+    @Column(name = "version", nullable = false)
     private String version;
 
-    @Column(name="description")
+    @Column(name = "description")
     private String description;
 
     @Lob
-    @Column(name="image" )
+    @Column(name = "image")
     @Convert(converter = ImageConverter.class)
     private String image;
 
-    @Column(name="rating")
+    @Column(name = "rating")
     private double rating;
 
-    @Column(name="installed")
+    @Column(name = "installed")
     private boolean installed;
 
-    @Column(name="digital_exchange_name", nullable = false)
+    @Column(name = "digital_exchange_name", nullable = false)
     private String digitalExchangeName;
 
     // NOTE: the id can be removed when we will return the installation link
     // following the HATEOAS principle
 
-    @Column(name="digital_exchange_id", nullable = false)
+    @Column(name = "digital_exchange_id", nullable = false)
     private String digitalExchangeId;
 
-    @Column(name="signature")
+    @Column(name = "signature")
     private String signature;
 
     @Convert(converter = HashMapConverter.class)
-    @Column(name="metadata")
+    @Column(name = "metadata")
     private Map<String, String> metadata;
 
     public static EntandoBundle newFrom(EntandoDeBundle bundle) {

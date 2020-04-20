@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -28,16 +29,15 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
-import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -75,7 +75,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         return job;
     }
 
-    private Optional<EntandoBundleJob> searchForCompletedOrConflictingJob(EntandoDeBundle bundle ) {
+    private Optional<EntandoBundleJob> searchForCompletedOrConflictingJob(EntandoDeBundle bundle) {
 
         log.info("Verify validity of a new install job for component " + bundle.getMetadata().getName());
 
@@ -115,7 +115,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         log.info("Extracting version " + version + " from bundle");
         String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
         return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
-                .orElseThrow(() -> new InvalidBundleException("Version " + version + " not defined in bundle versions"));
+                .orElseThrow(
+                        () -> new InvalidBundleException("Version " + version + " not defined in bundle versions"));
     }
 
     private EntandoBundleJob createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
@@ -185,8 +186,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
             // For each installed component
             List<EntandoBundleComponentJob> nonResourceComponents =
                     installedOrInProgress.stream().filter(c -> c.getComponentType() != ComponentType.RESOURCE)
-                    .collect(Collectors.toList());
-            for(EntandoBundleComponentJob jc: nonResourceComponents) {
+                            .collect(Collectors.toList());
+            for (EntandoBundleComponentJob jc : nonResourceComponents) {
                 // Revert the operation
                 EntandoBundleComponentJob revertJob = jc.duplicate();
                 componentProcessors.stream()
@@ -197,7 +198,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
             }
             rollbackResult = JobStatus.INSTALL_ROLLBACK;
         } catch (Exception e) {
-           rollbackResult = JobStatus.INSTALL_ERROR;
+            rollbackResult = JobStatus.INSTALL_ERROR;
         }
         // In case of the plugin, that would mean delete the link
         return rollbackResult;
@@ -226,11 +227,12 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         log.info("Processing installable list for component " + job.getComponentId());
 
         JobStatus installSucceded = JobStatus.INSTALL_COMPLETED;
-        for (Installable installable: installableList) {
+        for (Installable installable : installableList) {
             installable.setComponent(persistComponent(job, installable));
             installSucceded = processInstallable(installable);
             if (installSucceded.equals(JobStatus.INSTALL_ERROR)) {
-                throw new RuntimeException(job.getComponentId() + " installation can't proceed due to an error with one of the installed components");
+                throw new RuntimeException(job.getComponentId()
+                        + " installation can't proceed due to an error with one of the installed components");
             }
         }
         return installSucceded;

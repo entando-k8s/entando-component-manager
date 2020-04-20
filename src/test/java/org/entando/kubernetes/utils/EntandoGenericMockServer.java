@@ -54,7 +54,7 @@ public abstract class EntandoGenericMockServer {
     }
 
     public WireMockServer getInnerServer() {
-       return wireMockServer;
+        return wireMockServer;
     }
 
     public void addStub(MappingBuilder stub) {
@@ -67,15 +67,12 @@ public abstract class EntandoGenericMockServer {
 
     public String readResourceAsString(String resourcePath) {
 
-        try
-        {
+        try {
             Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            String content = new String ( Files.readAllBytes(rp) );
-            content = content.replaceAll("localhost:9080", "localhost:"+ port);
+            String content = new String(Files.readAllBytes(rp));
+            content = content.replaceAll("localhost:9080", "localhost:" + port);
             return content;
-        }
-        catch (IOException | URISyntaxException e)
-        {
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }

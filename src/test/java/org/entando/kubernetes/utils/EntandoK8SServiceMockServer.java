@@ -52,9 +52,12 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
 
     private void addNamespacesResource(WireMockServer wireMockServer) {
         String namespaceListResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespaces.json");
-        String myNamespaceResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespace-my-namespace.json");
-        String entandoDeBundlesNamespaceResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespace-entando-de-bundles.json");
-        String pluginNamespaceResponse = readResourceAsString("/payloads/k8s-svc/observed-namespaces/namespace-plugin-namespace.json");
+        String myNamespaceResponse = readResourceAsString(
+                "/payloads/k8s-svc/observed-namespaces/namespace-my-namespace.json");
+        String entandoDeBundlesNamespaceResponse = readResourceAsString(
+                "/payloads/k8s-svc/observed-namespaces/namespace-entando-de-bundles.json");
+        String pluginNamespaceResponse = readResourceAsString(
+                "/payloads/k8s-svc/observed-namespaces/namespace-plugin-namespace.json");
         wireMockServer.stubFor(get(urlMatching("/namespace/?"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -80,7 +83,8 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
     private void addAppsResource(WireMockServer wireMockServer) {
         String appsListResponse = this.readResourceAsString("/payloads/k8s-svc/apps/apps.json");
         String singleAppResponse = this.readResourceAsString("/payloads/k8s-svc/apps/app.json");
-        String createdLinkResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
+        String createdLinkResponse = this
+                .readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
         String appIngressResponse = this.readResourceAsString("/payloads/k8s-svc/apps/app-ingress.json");
 
         wireMockServer.stubFor(get(urlMatching("/apps/?"))
@@ -125,7 +129,8 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
 
     private void addAppPluginLinksResource(WireMockServer wireMockServer) {
         String linkListResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-links.json");
-        String singleLinkResponse = this.readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
+        String singleLinkResponse = this
+                .readResourceAsString("/payloads/k8s-svc/app-plugin-links/app-plugin-link.json");
 
         wireMockServer.stubFor(get(urlMatching("/app-plugin-links/?"))
                 .withRequestBody(new AnythingPattern())

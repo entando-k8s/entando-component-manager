@@ -26,4 +26,4 @@ services:
       ENTANDO_APP_NAME: "test-entando"
       ENTANDO_APP_NAMESPACE: "test-namespace"
     depends_on:
-        - database
+      - database

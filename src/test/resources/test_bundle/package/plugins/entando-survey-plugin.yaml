@@ -1,13 +1,13 @@
 kind: EntandoPlugin
 apiVersion: "entando.org/v1alpha"
 metadata:
-    name: inail-survey-plugin
+  name: inail-survey-plugin
 spec:
-    image: kerruba/entando-survey-plugin
-    ingressPath: /survey
-    healthCheckPath: /actuator/health
-    dbms: postgresql
-    roles:
+  image: kerruba/entando-survey-plugin
+  ingressPath: /survey
+  healthCheckPath: /actuator/health
+  dbms: postgresql
+  roles:
     - name: survey-list
       code: "survey-list"
     - name: survey-get
@@ -22,7 +22,7 @@ spec:
       code: "survey-submission-create"
     - name: survey-submission-export
       code: "survey-submission-export"
-    permissions: []
-    parameters: {}
-    securityLevel: LENIENT
-    connectionConfigNames: []
+  permissions: []
+  parameters: {}
+  securityLevel: LENIENT
+  connectionConfigNames: []

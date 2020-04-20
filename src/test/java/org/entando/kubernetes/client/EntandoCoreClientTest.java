@@ -67,7 +67,7 @@ public class EntandoCoreClientTest {
 
     @Test
     public void shouldGetUsageForPageModels() {
-        coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE_MODEL, "my-pagemodel", 1);
+        coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE_TEMPLATE, "my-pagemodel", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageModelUsage("my-pagemodel");
         assertThat(widgetUsage.getCode()).isEqualTo("my-pagemodel");
         assertThat(widgetUsage.getType()).isEqualTo("pageModels");
@@ -76,7 +76,7 @@ public class EntandoCoreClientTest {
 
     @Test
     public void shouldGetUsageForFragments() {
-        coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.GUI_FRAGMENT, "fragment-101", 1);
+        coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.FRAGMENT, "fragment-101", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getFragmentUsage("fragment-101");
         assertThat(widgetUsage.getCode()).isEqualTo("fragment-101");
         assertThat(widgetUsage.getType()).isEqualTo("fragments");

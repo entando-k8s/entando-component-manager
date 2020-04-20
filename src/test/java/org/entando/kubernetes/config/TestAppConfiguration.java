@@ -25,7 +25,8 @@ public class TestAppConfiguration {
         GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
         try {
             bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-            when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class))).thenReturn(bundleFolder);
+            when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
+                    .thenReturn(bundleFolder);
             when(git.createTargetDirectory()).thenReturn(bundleFolder);
         } catch (IOException e) {
             throw new RuntimeException("Impossible to read the bundle folder from test resources");

@@ -11,7 +11,7 @@
     "entandoPluginNamespace": "plugin-namespace",
     "entandoPluginName": "plugin"
   },
-  "entandoStatus": { },
+  "entandoStatus": {},
   "_links": {
     "self": {
       "href": "http://localhost:9080/app-plugin-links/my-app-to-plugin-link"

@@ -15,12 +15,13 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantEntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EntandoBundleResourceController implements EntandoBundleResource {
 
     private final EntandoBundleService bundleService;
+    private final EntandoBundleComponentUsageService usageService;
 
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles() {
@@ -43,17 +45,16 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
     @Override
     public ResponseEntity<EntandoBundleUsageSummary> getBundleUsageSummary(String component) {
-        //Given an installed component id
-        EntandoBundle installedComponent = bundleService.getInstalledComponent(component)
-                .orElseThrow(() -> new BundleNotInstalledException("Component " + component + " is not installed"));
-        //I should be able to retrieve the related installed components
-        List<EntandoBundleComponentJob> bundleInstalledComponents = bundleService.getBundleInstalledComponents(component);
-//        List<DigitalExchangeJobComponent> bundleInstalledComponents = componentsService.getBundleInstalledComponents(component);
+        //I should be able to retrieve the related installed components given component id
+        List<EntandoBundleComponentJob> bundleInstalledComponents = bundleService
+                .getBundleInstalledComponents(component);
         //For each installed components, I should check the summary
-//        for(DigitalExchangeJobComponent c: bundleInstalledComponents) {
-//
-//        }
+        EntandoBundleUsageSummary summary = new EntandoBundleUsageSummary();
+        bundleInstalledComponents.stream()
+                .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getName()))
+                .filter(u -> !(u instanceof IrrelevantEntandoCoreComponentUsage))
+                .forEach(summary::addComponentUsage);
 
-        return ResponseEntity.ok(new EntandoBundleUsageSummary());
+        return ResponseEntity.ok(summary);
     }
 }

@@ -75,7 +75,6 @@ public class EntandoBundleApiTest {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 
-
         mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
@@ -97,7 +96,7 @@ public class EntandoBundleApiTest {
     }
 
     @Test
-    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception{
+    public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         EntandoDeBundle bundle = getTestBundle();
         bundle.getMetadata().setNamespace("my-custom-namespace");
@@ -115,6 +114,11 @@ public class EntandoBundleApiTest {
     public void shouldReturnBadRequestForNotInstalledBundles() throws Exception {
         mockMvc.perform(get("/components/temp/usage").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void shouldReturnComponentUsageSummary() throws Exception {
+
     }
 
 
@@ -140,7 +144,8 @@ public class EntandoBundleApiTest {
                 .and()
                 .addNewTag()
                 .withVersion("0.0.1")
-                .withIntegrity("sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
+                .withIntegrity(
+                        "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
                 .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
                 .withTarball("http://localhost:8081/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
                 .endTag()

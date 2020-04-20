@@ -117,7 +117,8 @@ public class KubernetesService {
             try {
                 namespace = new String(Files.readAllBytes(namespacePath));
             } catch (IOException e) {
-                log.error(String.format("An error occurred while reading the namespace from file %s", namespacePath.toString()), e);
+                log.error(String.format("An error occurred while reading the namespace from file %s",
+                        namespacePath.toString()), e);
             }
         }
         return Optional.ofNullable(namespace);

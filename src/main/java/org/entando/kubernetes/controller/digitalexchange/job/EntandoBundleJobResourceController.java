@@ -40,12 +40,13 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
     }
 
     @Override
-    public ResponseEntity<PagedRestResponse<EntandoBundleJob>> getComponentJobs(@PathVariable("component") String componentId) {
-            List<EntandoBundleJob> componentJobs = jobService.getAllJobs(componentId);
-            PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
-            pagedMetadata.setBody(componentJobs);
-            PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse(pagedMetadata);
-            return ResponseEntity.ok(response);
+    public ResponseEntity<PagedRestResponse<EntandoBundleJob>> getComponentJobs(
+            @PathVariable("component") String componentId) {
+        List<EntandoBundleJob> componentJobs = jobService.getAllJobs(componentId);
+        PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
+        pagedMetadata.setBody(componentJobs);
+        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse(pagedMetadata);
+        return ResponseEntity.ok(response);
     }
 
     @Override
@@ -67,6 +68,6 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
     }
 
     private ThrowableProblem getGenericNotFoundJobProblem() {
-        return Problem.valueOf(Status.NOT_FOUND );
+        return Problem.valueOf(Status.NOT_FOUND);
     }
 }

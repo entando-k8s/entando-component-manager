@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -15,14 +16,12 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Widgets, can handle descriptors
- * with custom UI embedded or a separate custom UI file.
+ * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
  *
  * @author Sergio Marcelino
  */
@@ -35,9 +34,10 @@ public class WidgetProcessor implements ComponentProcessor {
 
     @Override
     public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+            final ComponentDescriptor descriptor) throws IOException {
 
-        final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getWidgets);
+        final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
+                .map(ComponentSpecDescriptor::getWidgets);
         final List<Installable> installables = new LinkedList<>();
 
         if (widgetsDescriptor.isPresent()) {

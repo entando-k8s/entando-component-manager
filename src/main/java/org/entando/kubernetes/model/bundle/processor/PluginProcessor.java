@@ -14,8 +14,8 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,8 @@ public class PluginProcessor implements ComponentProcessor {
         List<Installable> installableList = new ArrayList<>();
         if (optionalPlugins.isPresent()) {
             for (String filename : optionalPlugins.get()) {
-                EntandoPlugin plugin = npr.readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
+                EntandoPlugin plugin = npr
+                        .readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
                 installableList.add(new PluginInstallable(kubernetesService, plugin, job));
             }
         }

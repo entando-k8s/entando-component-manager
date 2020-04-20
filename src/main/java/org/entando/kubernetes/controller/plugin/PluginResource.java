@@ -32,18 +32,18 @@ public interface PluginResource {
 
     @Operation(description = "Returns list of linked plugins")
     @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(path="", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<List<EntandoPlugin>> listLinkedPlugin();
 
     @Operation(description = "Returns info about linked plugins")
     @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(path="/info", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/info", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<List<EntandoPluginInfo>> listLinkedPluginInfo();
 
     @Operation(description = "Returns plugin with given id")
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "404", description = "Not Found")
-    @GetMapping(path="/{pluginId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/{pluginId}", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<EntandoPlugin> get(@PathVariable final String pluginId);
 
 }

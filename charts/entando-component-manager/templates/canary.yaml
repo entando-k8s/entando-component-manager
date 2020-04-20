@@ -23,21 +23,21 @@ spec:
     port: {{ .Values.service.externalPort }}
     targetPort: {{ .Values.service.internalPort }}
     gateways:
-    - {{ template "fullname" . }}
+      - {{ template "fullname" . }}
     hosts:
-    - {{ .Values.canary.host }}
+      - {{ .Values.canary.host }}
   canaryAnalysis:
     interval: {{ .Values.canary.canaryAnalysis.interval }}
     threshold: {{ .Values.canary.canaryAnalysis.threshold }}
     maxWeight: {{ .Values.canary.canaryAnalysis.maxWeight }}
     stepWeight: {{ .Values.canary.canaryAnalysis.stepWeight }}
     metrics:
-    - name: request-success-rate
-      threshold: {{ .Values.canary.canaryAnalysis.metrics.requestSuccessRate.threshold }}
-      interval: {{ .Values.canary.canaryAnalysis.metrics.requestSuccessRate.interval }}
-    - name: request-duration
-      threshold: {{ .Values.canary.canaryAnalysis.metrics.requestDuration.threshold }}
-      interval: {{ .Values.canary.canaryAnalysis.metrics.requestDuration.interval }}
+      - name: request-success-rate
+        threshold: {{ .Values.canary.canaryAnalysis.metrics.requestSuccessRate.threshold }}
+        interval: {{ .Values.canary.canaryAnalysis.metrics.requestSuccessRate.interval }}
+      - name: request-duration
+        threshold: {{ .Values.canary.canaryAnalysis.metrics.requestDuration.threshold }}
+        interval: {{ .Values.canary.canaryAnalysis.metrics.requestDuration.interval }}
 
 ---
 
@@ -49,10 +49,10 @@ spec:
   selector:
     istio: ingressgateway
   servers:
-  - port:
-      number: {{ .Values.service.externalPort }}
-      name: http
-      protocol: HTTP
-    hosts:
-    - {{ .Values.canary.host }}
-{{- end }}
+    - port:
+        number: {{ .Values.service.externalPort }}
+        name: http
+        protocol: HTTP
+      hosts:
+        - {{ .Values.canary.host }}
+  {{- end }}

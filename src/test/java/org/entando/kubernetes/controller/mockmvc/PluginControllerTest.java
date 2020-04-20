@@ -41,7 +41,8 @@ public class PluginControllerTest {
     private static final String URL = "/plugins";
     private static final String URL_INFO = "/plugins/info";
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
     @MockBean
     private KubernetesService kubernetesService;
@@ -150,14 +151,14 @@ public class PluginControllerTest {
 
     private EntandoPlugin getTestEntandoPlugin() {
         return new EntandoPluginBuilder()
-                    .withNewSpec()
-                    .withReplicas(1)
-                    .withIngressPath("/pluginpath")
-                    .endSpec()
-                    .withNewMetadata()
-                    .withName("plugin-name")
-                    .endMetadata()
-                    .build();
+                .withNewSpec()
+                .withReplicas(1)
+                .withIngressPath("/pluginpath")
+                .endSpec()
+                .withNewMetadata()
+                .withName("plugin-name")
+                .endMetadata()
+                .build();
     }
 
     private EntandoPlugin getTestEntandoPluginInfoAllData() {
@@ -221,19 +222,24 @@ public class PluginControllerTest {
                 .andExpect(jsonPath(prefix + "serverStatus.volumePhase").value("Bound"))
                 .andExpect(jsonPath(prefix + "serverStatus.podStatus.phase").value("Running"))
                 .andExpect(jsonPath(prefix + "serverStatus.podStatus.conditions", hasSize(1)))
-                .andExpect(jsonPath(prefix + "serverStatus.podStatus.conditions[0].lastTransitionTime").value("2019-07-11T18:36:06Z"))
+                .andExpect(jsonPath(prefix + "serverStatus.podStatus.conditions[0].lastTransitionTime")
+                        .value("2019-07-11T18:36:06Z"))
                 .andExpect(jsonPath(prefix + "serverStatus.podStatus.conditions[0].status").value("True"))
                 .andExpect(jsonPath(prefix + "serverStatus.podStatus.conditions[0].type").value("Initialized"))
                 .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.availableReplicas").value(1))
                 .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.readyReplicas").value(1))
                 .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.replicas").value(1))
                 .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.updatedReplicas").value(1))
-                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].lastTransitionTime").value("2019-07-11T18:36:06Z"))
-                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].lastUpdateTime").value("2019-07-11T18:36:06Z"))
+                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].lastTransitionTime")
+                        .value("2019-07-11T18:36:06Z"))
+                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].lastUpdateTime")
+                        .value("2019-07-11T18:36:06Z"))
                 .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].status").value("True"))
                 .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].type").value("Progressing"))
-                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].reason").value("NewReplicaSetAvailable"))
-                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].message").value("Some message"))
+                .andExpect(jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].reason")
+                        .value("NewReplicaSetAvailable"))
+                .andExpect(
+                        jsonPath(prefix + "serverStatus.deploymentStatus.conditions[0].message").value("Some message"))
 
                 .andExpect(jsonPath(prefix + "externalServiceStatuses", hasSize(1)))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].type").value("dbServer"))
@@ -241,29 +247,47 @@ public class PluginControllerTest {
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].volumePhase").value("Bound"))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.phase").value("Running"))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions", hasSize(2)))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[0].lastTransitionTime").value("2019-07-11T18:36:06Z"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[0].lastTransitionTime")
+                        .value("2019-07-11T18:36:06Z"))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[0].status").value("True"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[0].type").value("Initialized"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[1].lastTransitionTime").value("2019-07-11T18:36:09Z"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[0].type")
+                        .value("Initialized"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[1].lastTransitionTime")
+                        .value("2019-07-11T18:36:09Z"))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[1].status").value("True"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[1].type").value("Available"))
+                .andExpect(
+                        jsonPath(prefix + "externalServiceStatuses[0].podStatus.conditions[1].type").value("Available"))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.availableReplicas").value(1))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.readyReplicas").value(1))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.replicas").value(1))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.updatedReplicas").value(1))
                 .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions", hasSize(2)))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].lastTransitionTime").value("2019-07-11T18:36:03Z"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].lastUpdateTime").value("2019-07-11T18:36:03Z"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].status").value("True"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].type").value("Progressing"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].reason").value("NewReplicaSetAvailable"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].message").value("Some message"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].lastTransitionTime").value("2019-07-11T18:36:06Z"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].lastUpdateTime").value("2019-07-11T18:36:06Z"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].status").value("True"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].type").value("Available"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].reason").value("MinimumReplicasAvailable"))
-                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].message").value("Some message"))
+                .andExpect(jsonPath(
+                        prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].lastTransitionTime")
+                        .value("2019-07-11T18:36:03Z"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].lastUpdateTime")
+                        .value("2019-07-11T18:36:03Z"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].status")
+                        .value("True"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].type")
+                        .value("Progressing"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].reason")
+                        .value("NewReplicaSetAvailable"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[0].message")
+                        .value("Some message"))
+                .andExpect(jsonPath(
+                        prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].lastTransitionTime")
+                        .value("2019-07-11T18:36:06Z"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].lastUpdateTime")
+                        .value("2019-07-11T18:36:06Z"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].status")
+                        .value("True"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].type")
+                        .value("Available"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].reason")
+                        .value("MinimumReplicasAvailable"))
+                .andExpect(jsonPath(prefix + "externalServiceStatuses[0].deploymentStatus.conditions[1].message")
+                        .value("Some message"))
         ;
     }
 

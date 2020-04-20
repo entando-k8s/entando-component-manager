@@ -2,9 +2,9 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
 
 @Slf4j
 public class ContentModelInstallable extends Installable<ContentModelDescriptor> {
@@ -27,7 +27,7 @@ public class ContentModelInstallable extends Installable<ContentModelDescriptor>
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.CONTENT_MODEL;
+        return ComponentType.CONTENT_TEMPLATE;
     }
 
     @Override

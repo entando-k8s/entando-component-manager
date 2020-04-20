@@ -15,11 +15,13 @@ import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.comparators.TransformingComparator;
 
 public class FilterUtils {
+
     private FilterUtils() {
     }
 
     public static TransformingComparator createCaseInsensitiveComparator() {
-        final Transformer caseInsensitiveTransformer = input -> input instanceof String ? ((String) input).toLowerCase() : input;
+        final Transformer caseInsensitiveTransformer = input -> input instanceof String ? ((String) input).toLowerCase()
+                : input;
         return new TransformingComparator(caseInsensitiveTransformer);
     }
 
@@ -61,17 +63,17 @@ public class FilterUtils {
         boolean result = false;
 
         while (iterator.hasNext()) {
-            boolean filterValue = (Boolean)iterator.next();
-            switch(operator) {
-            case EQUAL:
-            case LIKE:
-                result |= value == filterValue;
-                break;
-            case NOT_EQUAL:
-                result |= value != filterValue;
-                break;
-            default:
-                throw new UnsupportedOperationException(getUnsupportedOperatorMessage(filter));
+            boolean filterValue = (Boolean) iterator.next();
+            switch (operator) {
+                case EQUAL:
+                case LIKE:
+                    result |= value == filterValue;
+                    break;
+                case NOT_EQUAL:
+                    result |= value != filterValue;
+                    break;
+                default:
+                    throw new UnsupportedOperationException(getUnsupportedOperatorMessage(filter));
             }
         }
 

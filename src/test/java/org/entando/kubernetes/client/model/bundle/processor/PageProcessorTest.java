@@ -14,8 +14,8 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
+import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ public class PageProcessorTest {
     @Test
     public void shouldProcessPagesAndPageModels() {
         assertThat(pageProcessor.shouldProcess(ComponentType.PAGE)).isTrue();
-        assertThat(pageProcessor.shouldProcess(ComponentType.PAGE_MODEL)).isTrue();
+        assertThat(pageProcessor.shouldProcess(ComponentType.PAGE_TEMPLATE)).isTrue();
     }
 
     @Test

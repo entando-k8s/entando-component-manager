@@ -40,8 +40,9 @@ public class EntandoBundleDownloaderTest {
 
     @AfterEach
     public void tearDown() throws IOException {
-        if (downloader != null)
+        if (downloader != null) {
             downloader.cleanTargetDirectory();
+        }
     }
 
     @Test
@@ -104,7 +105,7 @@ public class EntandoBundleDownloaderTest {
 
     @Test
     public void shouldGetInstanceBasedOnType() {
-        downloader =  BundleDownloader.getForType("NPM");
+        downloader = BundleDownloader.getForType("NPM");
         assertThat(downloader instanceof NpmBundleDownloader).isTrue();
 
         downloader = BundleDownloader.getForType("GIT");
@@ -134,7 +135,8 @@ public class EntandoBundleDownloaderTest {
         BundleDownloaderException ex = Assertions.assertThrows(BundleDownloaderException.class, () -> {
             downloader.saveBundleLocally(bundle, tag);
         });
-        assertThat(ex.getMessage()).contains("Unsupported repository " + repository + "; Only HTTP(s) repositories are supported");
+        assertThat(ex.getMessage())
+                .contains("Unsupported repository " + repository + "; Only HTTP(s) repositories are supported");
     }
 
     private WireMockServer getMockedNpmRegistry() throws IOException {

@@ -16,8 +16,6 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -58,14 +56,14 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -99,9 +97,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class InstallFlowTest {
 
     private final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components");
-    private final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components","todomvc");
-    private final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components", "todomvc", "uninstall");
-    private final UriBuilder INSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components", "todomvc", "install");
+    private final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components", "todomvc");
+    private final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components", "todomvc", "uninstall");
+    private final UriBuilder INSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components", "todomvc", "install");
 
     private static final String JOBS_ENDPOINT = "/jobs";
     private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
@@ -161,8 +162,7 @@ public class InstallFlowTest {
     public void shouldCallCoreToInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble)  k8SServiceClient;
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
         // Verify interaction with mocks
         List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinkCopy();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
@@ -182,15 +182,15 @@ public class InstallFlowTest {
 
         List<LoggedRequest> widgetRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/widgets")));
         List<LoggedRequest> pageModelRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
+                postRequestedFor(urlEqualTo("/entando-app/api/pageModels")));
         List<LoggedRequest> directoryRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
+                postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/directory")));
         List<LoggedRequest> fileRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
+                postRequestedFor(urlEqualTo("/entando-app/api/fileBrowser/file")));
         List<LoggedRequest> contentTypeRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
+                postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentTypes")));
         List<LoggedRequest> contentModelRequests = findAll(
-          postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
+                postRequestedFor(urlEqualTo("/entando-app/api/plugins/cms/contentmodels")));
         List<LoggedRequest> labelRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/labels")));
         List<LoggedRequest> fragmentRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/fragments")));
         List<LoggedRequest> pageRequests = findAll(postRequestedFor(urlEqualTo("/entando-app/api/pages")));
@@ -305,7 +305,8 @@ public class InstallFlowTest {
 
         List<EntandoBundleComponentJob> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
         assertThat(jobComponentList).hasSize(22);
-        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName).collect(Collectors.toList());
+        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName)
+                .collect(Collectors.toList());
         assertThat(jobComponentNames).containsExactlyInAnyOrder(
                 "/todomvc",
                 "/todomvc/js",
@@ -332,7 +333,7 @@ public class InstallFlowTest {
         );
 
         Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
-        for(EntandoBundleComponentJob jcomp: jobComponentList) {
+        for (EntandoBundleComponentJob jcomp : jobComponentList) {
             Integer n = jobComponentTypes.getOrDefault(jcomp.getComponentType(), 0);
             jobComponentTypes.put(jcomp.getComponentType(), n + 1);
         }
@@ -340,11 +341,11 @@ public class InstallFlowTest {
         Map<ComponentType, Integer> expectedComponents = new HashMap<>();
         expectedComponents.put(ComponentType.WIDGET, 2);
         expectedComponents.put(ComponentType.RESOURCE, 10);
-        expectedComponents.put(ComponentType.PAGE_MODEL, 2);
+        expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
-        expectedComponents.put(ComponentType.CONTENT_MODEL, 2);
+        expectedComponents.put(ComponentType.CONTENT_TEMPLATE, 2);
         expectedComponents.put(ComponentType.LABEL, 1);
-        expectedComponents.put(ComponentType.GUI_FRAGMENT, 2);
+        expectedComponents.put(ComponentType.FRAGMENT, 2);
         expectedComponents.put(ComponentType.PAGE, 1);
         expectedComponents.put(ComponentType.PLUGIN, 1);
 
@@ -388,11 +389,12 @@ public class InstallFlowTest {
         List<EntandoBundleComponentJob> installedComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
         List<EntandoBundleComponentJob> uninstalledComponentList = jobComponentRepository.findAllByJob(jobs.get(1));
         assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
-        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJob::getStatus).collect(Collectors.toList());
+        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJob::getStatus)
+                .collect(Collectors.toList());
         assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
 
         boolean matchFound = false;
-        for(EntandoBundleComponentJob ic: installedComponentList) {
+        for (EntandoBundleComponentJob ic : installedComponentList) {
             matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
                 return uc.getJob().getId().equals(jobs.get(1).getId()) &&
                         uc.getName().equals(ic.getName()) &&
@@ -407,7 +409,8 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void installedComponentShouldReturnInstalledFieldTrueAndEntryInTheInstalledComponentDatabase() throws Exception {
+    public void installedComponentShouldReturnInstalledFieldTrueAndEntryInTheInstalledComponentDatabase()
+            throws Exception {
 
         simulateSuccessfullyCompletedInstall();
 
@@ -447,7 +450,7 @@ public class InstallFlowTest {
         List<EntandoBundleComponentJob> installedComponents = jobRelatedComponents.stream().filter(j ->
                 j.getStatus().equals(JobStatus.INSTALL_COMPLETED)).collect(
                 Collectors.toList());
-        for(EntandoBundleComponentJob c : installedComponents) {
+        for (EntandoBundleComponentJob c : installedComponents) {
             List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream().filter(j ->
                     j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
                     .collect(Collectors.toList());
@@ -496,7 +499,7 @@ public class InstallFlowTest {
         assertThat(successfulUninstallId).isNotEqualTo(failingInstallId);
 
         // All jobs should be available via the API
-        mockMvc.perform(get( JOBS_ENDPOINT + "?component={component}", "todomvc"))
+        mockMvc.perform(get(JOBS_ENDPOINT + "?component={component}", "todomvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -698,7 +701,6 @@ public class InstallFlowTest {
         stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.post(urlMatching("/entando-app/api/pages/?")).willReturn(aResponse().withStatus(500)));
 
-
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -792,16 +794,20 @@ public class InstallFlowTest {
                 .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
     }
 
-    private SimpleRestResponse<EntandoBundleJob> getInstallJob() throws Exception{
+    private SimpleRestResponse<EntandoBundleJob> getInstallJob() throws Exception {
         return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<EntandoBundleJob>>(){});
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString(),
+                new TypeReference<SimpleRestResponse<EntandoBundleJob>>() {
+                });
     }
 
-    private SimpleRestResponse<EntandoBundleJob> getUninstallJob() throws Exception{
+    private SimpleRestResponse<EntandoBundleJob> getUninstallJob() throws Exception {
         return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=UNINSTALL"))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<SimpleRestResponse<EntandoBundleJob>>(){});
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString(),
+                new TypeReference<SimpleRestResponse<EntandoBundleJob>>() {
+                });
     }
 
     private byte[] readFromDEPackage() throws IOException {
@@ -860,7 +866,8 @@ public class InstallFlowTest {
                 .and()
                 .addNewTag()
                 .withVersion("0.0.1")
-                .withIntegrity("sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
+                .withIntegrity(
+                        "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
                 .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
                 .withTarball("http://localhost:8099/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
                 .endTag()

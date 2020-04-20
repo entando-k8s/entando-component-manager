@@ -54,7 +54,7 @@ public class EntandoEntandoBundleJobControllerTest {
 
     @AfterEach
     public void teardown() {
-       jobRepository.deleteAll();
+        jobRepository.deleteAll();
     }
 
     @Test
@@ -103,7 +103,8 @@ public class EntandoEntandoBundleJobControllerTest {
         String componentId = "id1";
         JobType jobType = JobType.INSTALL;
 
-        mvc.perform(get("/jobs?component={component}&type={type}", componentId,jobType).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(
+                get("/jobs?component={component}&type={type}", componentId, jobType).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.componentId").value(componentId))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_COMPLETED.toString()))
@@ -116,7 +117,8 @@ public class EntandoEntandoBundleJobControllerTest {
         String componentId = "id1";
         JobStatus jobStatus = JobStatus.UNINSTALL_COMPLETED;
 
-        mvc.perform(get("/jobs?component={component}&status={status}", componentId,jobStatus).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/jobs?component={component}&status={status}", componentId, jobStatus)
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.componentId").value(componentId))
                 .andExpect(jsonPath("$.payload.status").value("UNINSTALL_COMPLETED"))

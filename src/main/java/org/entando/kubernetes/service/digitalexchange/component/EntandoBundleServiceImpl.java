@@ -26,9 +26,9 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -76,7 +76,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public List<EntandoBundleComponentJob> getBundleInstalledComponents(String id) {
-        return null;
+        EntandoBundle bundle = getInstalledComponent(id)
+                .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
+        if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+            return jobComponentRepository.findAllByJob(bundle.getJob());
+        } else {
+            throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
+        }
     }
 
 
@@ -86,7 +92,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .collect(Collectors.toMap(EntandoBundle::getId, EntandoBundle::getVersion));
 
         List<EntandoBundle> notInstalledComponents = new ArrayList<>();
-        for (EntandoBundle dec: externalComponents) {
+        for (EntandoBundle dec : externalComponents) {
             String k = dec.getId();
             String v = dec.getVersion();
             if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
@@ -100,7 +106,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     private List<EntandoBundle> getAvailableComponentsFromDigitalExchanges() {
         List<EntandoDeBundle> bundles;
-        if(accessibleDigitalExchanges.isEmpty()) {
+        if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);

@@ -22,10 +22,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.client.RestTemplate;
 
 public class NpmBundleDownloader extends BundleDownloader {
@@ -56,7 +54,7 @@ public class NpmBundleDownloader extends BundleDownloader {
 
         TarArchiveEntry tae;
         Map<String, File> tes = new HashMap<>();
-        while ( (tae = tarInputStream.getNextTarEntry()) != null ) {
+        while ((tae = tarInputStream.getNextTarEntry()) != null) {
             if (!tarInputStream.canReadEntryData(tae)) {
                 // log something?
                 continue;
@@ -92,11 +90,12 @@ public class NpmBundleDownloader extends BundleDownloader {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+        headers.add("user-agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
         headers.add("Accept", "*/*");
         HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
 
-        ResponseEntity<Resource> responseEntity =  restTemplate.exchange(
+        ResponseEntity<Resource> responseEntity = restTemplate.exchange(
                 tarballUrl, HttpMethod.GET, entity, Resource.class);
 
         if (responseEntity.getBody() == null) {

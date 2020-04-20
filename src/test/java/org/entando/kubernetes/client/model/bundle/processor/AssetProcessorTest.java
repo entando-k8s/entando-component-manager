@@ -9,10 +9,10 @@ import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,8 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class AssetProcessorTest {
 
-    @Mock private DefaultEntandoCoreClient engineService;
+    @Mock
+    private DefaultEntandoCoreClient engineService;
     private BundleReader bundleReader;
     private AssetProcessor assetProcessor;
 
@@ -33,7 +34,7 @@ public class AssetProcessorTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader =new BundleReader(bundleFolder) ;
+        bundleReader = new BundleReader(bundleFolder);
         assetProcessor = new AssetProcessor(engineService);
     }
 
@@ -42,7 +43,8 @@ public class AssetProcessorTest {
         final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
-        final List<? extends Installable> installables = assetProcessor.process(job, bundleReader, new ComponentDescriptor());
+        final List<? extends Installable> installables = assetProcessor
+                .process(job, bundleReader, new ComponentDescriptor());
 
         assertThat(installables).hasSize(10);
 

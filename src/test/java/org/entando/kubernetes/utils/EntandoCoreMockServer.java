@@ -37,20 +37,21 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
     public EntandoCoreMockServer withGenericComponentsUsageSupport() {
         for (ComponentUsageApiEndpoint ep : ComponentUsageApiEndpoint.values()) {
-            String codeHandlebarTemplate = "{{request.path.[" + ep.getCodePathSegmentPosition() +"]}}";
+            String codeHandlebarTemplate = "{{request.path.[" + ep.getCodePathSegmentPosition() + "]}}";
             this.wireMockServer.stubFor(WireMock.get(urlPathMatching(ep.expandUrl()))
                     .willReturn(aResponse()
-                            .withStatus(200)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody("{ \"payload\" : {\n "
-                                    + "\"type\": \"" + ep.getTypeValue() + "\",\n"
-                                    + "\"code\": \"" + codeHandlebarTemplate +"\",\n"// + codeHandlebarTemplate + "\",\n"
-                                    + "\"usage\": 1\n"
-                                    + "},\n"
-                                    + "\"metadata\": {},\n"
-                                    + "\"errors\": []\n "
-                                    + "}")
-                            .withTransformers("response-template")
+                                    .withStatus(200)
+                                    .withHeader("Content-Type", "application/json")
+                                    .withBody("{ \"payload\" : {\n "
+                                            + "\"type\": \"" + ep.getTypeValue() + "\",\n"
+                                            + "\"code\": \"" + codeHandlebarTemplate + "\",\n"
+// + codeHandlebarTemplate + "\",\n"
+                                            + "\"usage\": 1\n"
+                                            + "},\n"
+                                            + "\"metadata\": {},\n"
+                                            + "\"errors\": []\n "
+                                            + "}")
+                                    .withTransformers("response-template")
                     ));
         }
         return this;
@@ -75,9 +76,9 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     @Getter
     private enum ComponentUsageApiEndpoint {
         PAGE(ComponentType.PAGE, "pages", 3, "/api/pages/{code}/usage"),
-        PAGE_MODEL(ComponentType.PAGE_MODEL, "pageModels", 3, "/api/pageModels/{code}/usage"),
+        PAGE_MODEL(ComponentType.PAGE_TEMPLATE, "pageModels", 3, "/api/pageModels/{code}/usage"),
         WIDGET(ComponentType.WIDGET, "widgets", 3, "/api/widgets/{code}/usage"),
-        FRAGMENTS(ComponentType.GUI_FRAGMENT, "fragments", 3, "/api/fragments/{code}/usage"),
+        FRAGMENTS(ComponentType.FRAGMENT, "fragments", 3, "/api/fragments/{code}/usage"),
         CONTENT_TYPE(ComponentType.CONTENT_TYPE, "contentTypes", 4, "/api/plugins/cms/contentTypes/{code}/usage");
 
         private final ComponentType componentType;

@@ -6,15 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -31,7 +31,7 @@ public class FragmentProcessor implements ComponentProcessor {
         List<Installable> installableList = new ArrayList<>();
 
         if (optionalFragments.isPresent()) {
-            for (String fileName: optionalFragments.get() ) {
+            for (String fileName : optionalFragments.get()) {
                 FragmentDescriptor frDesc = npr.readDescriptorFile(fileName, FragmentDescriptor.class);
                 if (frDesc.getGuiCodePath() != null) {
                     String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
@@ -45,7 +45,7 @@ public class FragmentProcessor implements ComponentProcessor {
 
     @Override
     public boolean shouldProcess(ComponentType componentType) {
-        return componentType.equals(ComponentType.GUI_FRAGMENT);
+        return componentType.equals(ComponentType.FRAGMENT);
     }
 
     @Override

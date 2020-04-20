@@ -56,7 +56,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void registerWidget(final WidgetDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "widgets").build().toUri(), new EntandoCoreWidget(descriptor), Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "widgets").build().toUri(), new EntandoCoreWidget(descriptor),
+                        Void.class);
     }
 
     @Override
@@ -68,39 +70,44 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public EntandoCoreComponentUsage getWidgetUsage(String code) {
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
                 .exchange(resolvePathSegments("api", "widgets", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();
         } else {
-            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving widget " + code + " usage");
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving widget " + code + " usage");
         }
     }
 
     @Override
     public void registerFragment(FragmentDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "fragments").build().toUri(), new EntandoCoreFragment(descriptor), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "fragments").build().toUri(),
+                new EntandoCoreFragment(descriptor), Void.class);
     }
 
     @Override
     public void deleteFragment(String code) {
-        restTemplate.delete(resolvePathSegments("api","fragments", code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "fragments", code).build().toUri());
     }
 
     @Override
     public EntandoCoreComponentUsage getFragmentUsage(String code) {
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
                 .exchange(resolvePathSegments("api", "fragments", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();
         } else {
-            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving fragment " + code + " usage");
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving fragment " + code + " usage");
         }
     }
 
     @Override
     public void registerLabel(final LabelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api","labels").build().toUri(), descriptor, Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "labels").build().toUri(), descriptor, Void.class);
     }
 
     @Override
@@ -110,7 +117,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void registerPage(PageDescriptor pageDescriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "pages").build().toUri(), new EntandoCorePage(pageDescriptor), Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "pages").build().toUri(), new EntandoCorePage(pageDescriptor),
+                        Void.class);
     }
 
     @Override
@@ -122,17 +131,20 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public EntandoCoreComponentUsage getPageUsage(String code) {
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
                 .exchange(resolvePathSegments("api", "pages", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();
         } else {
-            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving page " + code + " usage");
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving page " + code + " usage");
         }
     }
 
     @Override
     public void registerPageModel(final PageModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(), new EntandoCorePageModel(descriptor), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(),
+                new EntandoCorePageModel(descriptor), Void.class);
     }
 
     @Override
@@ -144,27 +156,32 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public EntandoCoreComponentUsage getPageModelUsage(String code) {
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
                 .exchange(resolvePathSegments("api", "pageModels", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();
         } else {
-            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving page model " + code + " usage");
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving page model " + code + " usage");
         }
     }
 
     @Override
     public void deleteContentModel(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels",code).build().toUri());
+        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels", code).build().toUri());
     }
 
     @Override
     public void registerContentModel(final ContentModelDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(), new EntandoCoreContentModel(descriptor), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(),
+                new EntandoCoreContentModel(descriptor), Void.class);
     }
 
     @Override
     public void registerContentType(final ContentTypeDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentTypes").build().toUri(), descriptor, Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "plugins", "cms", "contentTypes").build().toUri(), descriptor,
+                        Void.class);
     }
 
     @Override
@@ -175,18 +192,22 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public EntandoCoreComponentUsage getContentTypeUsage(String code) {
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
-                .exchange(resolvePathSegments("api", "plugins", "cms", "contentTypes", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+                .exchange(resolvePathSegments("api", "plugins", "cms", "contentTypes", code, "usage").build().toUri(),
+                        HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();
         } else {
-            throw new HttpException(usage.getStatusCode(), "Some error occurred while retrieving content type " + code + " usage");
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving content type " + code + " usage");
         }
     }
 
     @Override
     public void createFolder(final String folder) {
-        restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "directory").build().toUri(), new EntandoCoreFolder(folder), Void.class);
+        restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "directory").build().toUri(),
+                new EntandoCoreFolder(folder), Void.class);
     }
 
     @Override
