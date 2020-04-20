@@ -20,7 +20,9 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -52,6 +54,10 @@ public class EntandoBundle {
     @Size(min = 1, max = 30)
     @Column(name="type")
     private String type;
+
+    @OneToOne
+    @JoinColumn(name = "job_id")
+    private EntandoBundleJob job;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = SystemConstants.API_DATE_FORMAT)
     @Column(name="last_update")
@@ -103,6 +109,7 @@ public class EntandoBundle {
         dec.setType("Bundle");
         dec.setLastUpdate(new Date());
         dec.setSignature("");
+        dec.setInstalled(false);
         dec.setVersion(bd.getDistTags().get("latest").toString());
         dec.setImage(bd.getThumbnail());
         return dec;

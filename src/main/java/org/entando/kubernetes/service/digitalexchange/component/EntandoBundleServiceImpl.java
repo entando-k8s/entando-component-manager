@@ -20,6 +20,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
@@ -74,7 +76,6 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public List<EntandoBundleComponentJob> getBundleInstalledComponents(String id) {
-
         return null;
     }
 
@@ -110,7 +111,11 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     public EntandoBundle convertBundleToLegacyComponent(EntandoDeBundle bundle) {
         EntandoBundle dec = EntandoBundle.newFrom(bundle);
-        dec.setInstalled(checkIfInstalled(bundle));
+        if (checkIfInstalled(bundle)) {
+            dec.setInstalled(true);
+//            dec.setJob(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(
+//                    bundle.getMetadata().getName(), JobStatus.INSTALL_COMPLETED).orElse(null));
+        }
         return dec;
     }
 

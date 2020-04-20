@@ -154,6 +154,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                     log.info("All installables have been processed correctly");
                     EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
                     installedComponent.setInstalled(true);
+                    installedComponent.setJob(job);
                     installedComponentRepo.save(installedComponent);
                     log.info("Component " + job.getComponentId() + " registered as installed in the system");
                 }

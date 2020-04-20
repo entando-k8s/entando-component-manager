@@ -33,10 +33,10 @@ public interface EntandoBundleResource {
     @Operation(description = "Returns available Digital Exchange components")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PagedRestResponse<EntandoBundle>> getComponents();
+    ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles();
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/usage", produces =  MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoBundleUsageSummary> getUsageSummary(@PathVariable("component") String component);
+    ResponseEntity<EntandoBundleUsageSummary> getBundleUsageSummary(@PathVariable("component") String component);
 }

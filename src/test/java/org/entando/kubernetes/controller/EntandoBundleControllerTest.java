@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
-import org.entando.kubernetes.exception.web.BadRequestException;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +32,7 @@ public class EntandoBundleControllerTest {
     public void shouldThrowBadRequestExceptionWhenGettingSummaryOfNotInstalledComponent() {
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.empty());
         assertThrows(BundleNotInstalledException.class, () -> {
-            controller.getUsageSummary("any");
+            controller.getBundleUsageSummary("any");
         });
     }
 
@@ -42,7 +41,7 @@ public class EntandoBundleControllerTest {
         EntandoBundle component = getTestComponent();
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
 
-        ResponseEntity response = controller.getUsageSummary("any");
+        ResponseEntity response = controller.getBundleUsageSummary("any");
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
     }
 

@@ -19,9 +19,9 @@ public class DatabaseCleaner {
     InstalledEntandoBundleRepository installedComponentRepository;
 
     public void cleanup() {
+        installedComponentRepository.deleteAll();
         jobComponentRepository.deleteAll();
         jobRepository.deleteAll();
-        installedComponentRepository.deleteAll();
     }
 
 }
