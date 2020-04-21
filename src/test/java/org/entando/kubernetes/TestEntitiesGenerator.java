@@ -38,4 +38,21 @@ public class TestEntitiesGenerator {
                 .endTag()
                 .build();
     }
+
+    public static EntandoDeBundleSpec getBundleSpecWithName(String name) {
+        return new EntandoDeBundleSpecBuilder()
+                .withNewDetails()
+                .withName(name)
+                .addNewVersion("0.0.1")
+                .addNewDistTag("latest", "0.0.1")
+                .and()
+                .addNewTag()
+                .withVersion("0.0.1")
+                .withIntegrity(
+                        "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
+                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
+                .withTarball("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
+                .endTag()
+                .build();
+    }
 }

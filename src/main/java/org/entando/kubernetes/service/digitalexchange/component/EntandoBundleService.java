@@ -17,10 +17,14 @@ import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface EntandoBundleService {
 
-    List<EntandoBundle> getComponents();
+    PagedMetadata<EntandoBundle> getComponents();
+
+    PagedMetadata<EntandoBundle> getComponents(PagedListRequest request);
 
     Optional<EntandoBundle> getInstalledComponent(String id);
 

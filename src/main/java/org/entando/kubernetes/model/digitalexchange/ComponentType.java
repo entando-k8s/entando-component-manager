@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.digitalexchange;
 
+import java.util.Arrays;
+
 /**
  * The type of the component to be (or already) registered.
  *
@@ -60,5 +62,9 @@ public enum ComponentType {
 
     public String getTypeName() {
         return this.typeName;
+    }
+
+    public static boolean isValidType(String type) {
+        return Arrays.stream(values()).anyMatch(e -> e.toString().equalsIgnoreCase(type));
     }
 }

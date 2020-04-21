@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
@@ -34,12 +35,9 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     private final EntandoBundleComponentUsageService usageService;
 
     @Override
-    public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles() {
-        List<EntandoBundle> entandoBundles = bundleService.getComponents();
-        PagedMetadata<EntandoBundle> pagedMetadata =
-                new PagedMetadata<>(1, 100, 1, entandoBundles.size());
-        pagedMetadata.setBody(entandoBundles);
-        PagedRestResponse<EntandoBundle> response = new PagedRestResponse<>(pagedMetadata);
+    public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
+        PagedMetadata<EntandoBundle> pagedBundles = bundleService.getComponents(requestList);
+        PagedRestResponse<EntandoBundle> response = new PagedRestResponse<>(pagedBundles);
         return ResponseEntity.ok(response);
     }
 

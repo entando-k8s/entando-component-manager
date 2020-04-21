@@ -26,6 +26,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
@@ -54,9 +56,27 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         this.installedComponentRepo = installedComponentRepo;
     }
 
+    @Override
+    public PagedMetadata<EntandoBundle> getComponents() {
+        return getComponents(new PagedListRequest());
+    }
 
     @Override
-    public List<EntandoBundle> getComponents() {
+    public PagedMetadata<EntandoBundle> getComponents(PagedListRequest request) {
+        List<EntandoBundle> allComponents = getAllComponents();
+        List<EntandoBundle> localFilteredList = new EntandoBundleListProcessor(request, allComponents)
+                .filterAndSort().toList();
+        List<EntandoBundle> sublist = request.getSublist(localFilteredList);
+
+        PagedMetadata<EntandoBundle> result = new PagedMetadata<>();
+        result.setBody(sublist);
+        result.setTotalItems(localFilteredList.size());
+        result.setPage(request.getPage());
+        result.setPageSize(request.getPageSize());
+        return result;
+    }
+
+    private List<EntandoBundle> getAllComponents() {
         List<EntandoBundle> allComponents = new ArrayList<>();
         List<EntandoBundle> installedComponents = installedComponentRepo.findAll();
         List<EntandoBundle> externalComponents = getAvailableComponentsFromDigitalExchanges();
