@@ -119,8 +119,6 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         EntandoBundle dec = EntandoBundle.newFrom(bundle);
         if (checkIfInstalled(bundle)) {
             dec.setInstalled(true);
-//            dec.setJob(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(
-//                    bundle.getMetadata().getName(), JobStatus.INSTALL_COMPLETED).orElse(null));
         }
         return dec;
     }

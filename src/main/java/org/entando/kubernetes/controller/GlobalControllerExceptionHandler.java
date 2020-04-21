@@ -17,12 +17,12 @@ import org.zalando.problem.spring.web.advice.ProblemHandling;
 
 @Slf4j
 @RestControllerAdvice
-public class ExceptionController implements ProblemHandling {
+public class GlobalControllerExceptionHandler implements ProblemHandling {
 
     private final MessageSource messageSource;
 
     @Autowired
-    public ExceptionController(MessageSource messageSource) {
+    public GlobalControllerExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
 
