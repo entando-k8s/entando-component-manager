@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.digitalexchange;
 
+import java.util.Arrays;
+
 /**
  * The type of the component to be (or already) registered.
  *
@@ -50,5 +52,9 @@ public enum ComponentType {
     /**
      * A Gui fragment
      */
-    GUI_FRAGMENT;
+    FRAGMENT;
+
+    public static boolean isValidType(String type) {
+        return Arrays.stream(values()).anyMatch(e -> e.toString().equalsIgnoreCase(type));
+    }
 }

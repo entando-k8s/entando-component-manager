@@ -16,6 +16,9 @@ package org.entando.kubernetes.model.digitalexchange;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -25,6 +28,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
+import org.apache.commons.compress.utils.Sets;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.web.SystemConstants;
@@ -51,7 +55,8 @@ public class DigitalExchangeComponent {
     @NotNull
     @Size(min = 1, max = 30)
     @Column(name="type")
-    private String type;
+    @Convert(converter = BundleComponentTypesConverter.class)
+    private Set<String> type;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = SystemConstants.API_DATE_FORMAT)
     @Column(name="last_update")
@@ -94,13 +99,21 @@ public class DigitalExchangeComponent {
         DigitalExchangeComponent dec = new DigitalExchangeComponent();
         String bundleId = bundle.getMetadata().getName();
         EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
+        Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
+        if (bundle.getMetadata().getLabels() != null) {
+            bundle.getMetadata().getLabels()
+                    .entrySet().stream()
+                    .filter(e -> ComponentType.isValidType(e.getKey()))
+                    .map(Entry::getKey)
+                    .forEach(bundleComponentTypes::add);
+        }
         dec.setId(bundleId);
         dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
         dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
         dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
         dec.setRating(5);
-        dec.setType("Bundle");
+        dec.setType(bundleComponentTypes);
         dec.setLastUpdate(new Date());
         dec.setSignature("");
         dec.setVersion(bd.getDistTags().get("latest").toString());
