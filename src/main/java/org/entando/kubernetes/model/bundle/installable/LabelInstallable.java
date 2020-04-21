@@ -2,22 +2,22 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 
 @Slf4j
 public class LabelInstallable extends Installable<LabelDescriptor> {
 
-    private EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
-    public LabelInstallable(EntandoCoreService engineService,  LabelDescriptor labelDescriptor) {
+    public LabelInstallable(EntandoCoreClient engineService, LabelDescriptor labelDescriptor) {
         super(labelDescriptor);
         this.engineService = engineService;
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Label {}", representation.getKey());
             engineService.registerLabel(representation);

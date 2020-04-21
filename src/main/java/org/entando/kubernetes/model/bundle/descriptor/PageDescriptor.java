@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PageDescriptor implements Descriptor{
+public class PageDescriptor implements Descriptor {
 
     private String code;
     private String parentCode;

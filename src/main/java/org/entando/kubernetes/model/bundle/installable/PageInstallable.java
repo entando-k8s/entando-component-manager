@@ -2,22 +2,22 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 
 @Slf4j
 public class PageInstallable extends Installable<PageDescriptor> {
 
-    private EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
-    public PageInstallable(EntandoCoreService engineService, PageDescriptor pd) {
+    public PageInstallable(EntandoCoreClient engineService, PageDescriptor pd) {
         super(pd);
         this.engineService = engineService;
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Page {}", representation.getCode());
             engineService.registerPage(representation);

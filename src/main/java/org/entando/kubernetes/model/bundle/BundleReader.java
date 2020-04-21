@@ -74,7 +74,7 @@ public class BundleReader {
     public String readFileAsString(String fileName) throws IOException {
         verifyFileExistance(fileName);
         try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile());
-             StringWriter writer = new StringWriter()) {
+                StringWriter writer = new StringWriter()) {
             IOUtils.copy(fis, writer, StandardCharsets.UTF_8);
             return writer.toString();
         }

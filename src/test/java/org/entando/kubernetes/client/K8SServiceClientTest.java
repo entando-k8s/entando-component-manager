@@ -34,6 +34,7 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +96,8 @@ public class K8SServiceClientTest {
         EntandoPlugin testPlugin = getTestEntandoPlugin();
         client.linkAppWithPlugin("my-app", "my-namespace", testPlugin);
         mockServer.getInnerServer().verify(1, postRequestedFor(urlEqualTo("/apps/my-app/links")));
-        List<LoggedRequest> loggedRequests = mockServer.getInnerServer().findAll(postRequestedFor(urlEqualTo("/apps/my-app/links")));
+        List<LoggedRequest> loggedRequests = mockServer.getInnerServer()
+                .findAll(postRequestedFor(urlEqualTo("/apps/my-app/links")));
         loggedRequests.get(0).getBodyAsString().contains("name: " + testPlugin.getMetadata().getName());
         loggedRequests.get(0).getBodyAsString().contains("namespace: " + testPlugin.getMetadata().getNamespace());
     }
@@ -126,7 +128,7 @@ public class K8SServiceClientTest {
         EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
         client.unlink(getTestEntandoAppPluginLink());
         String name = testLink.getMetadata().getName();
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/"+ name)));
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/" + name)));
 
     }
 
@@ -140,7 +142,8 @@ public class K8SServiceClientTest {
     @Test
     public void shouldThrowExceptionWhenUnlinkError() {
         EntandoAppPluginLink link = getTestEntandoAppPluginLink();
-        mockServer.addStub(delete(anyUrl()).willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
+        mockServer
+                .addStub(delete(anyUrl()).willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
         Assertions.assertThrows(KubernetesClientException.class, () -> {
             client.unlink(link);
         });
@@ -291,12 +294,12 @@ public class K8SServiceClientTest {
     }
 
     private EntandoPlugin getTestEntandoPlugin() {
-       return new EntandoPluginBuilder()
-               .withNewMetadata()
-               .withName("plugin")
-               .withNamespace("plugin-namespace")
-               .endMetadata()
-               .build();
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName("plugin")
+                .withNamespace("plugin-namespace")
+                .endMetadata()
+                .build();
     }
 
     private EntandoPlugin getTestEntandoPluginWithIngressPath() {
@@ -328,13 +331,10 @@ public class K8SServiceClientTest {
 
     private String readResourceAsString(String resourcePath) {
 
-        try
-        {
+        try {
             Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            return new String ( Files.readAllBytes(rp) );
-        }
-        catch (IOException | URISyntaxException e)
-        {
+            return new String(Files.readAllBytes(rp));
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }

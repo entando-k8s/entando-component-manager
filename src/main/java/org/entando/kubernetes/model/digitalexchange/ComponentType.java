@@ -12,47 +12,57 @@ public enum ComponentType {
     /**
      * A Widget
      */
-    WIDGET,
+    WIDGET("widget"),
 
     /**
-     * A Page Model
+     * A Page template
      */
-    PAGE_MODEL,
+    PAGE_TEMPLATE("pageTemplate"),
 
     /**
      * A Page
      */
-    PAGE,
+    PAGE("page"),
 
     /**
-     * A Content Model from CMS
+     * A Content template from CMS
      */
-    CONTENT_MODEL,
+    CONTENT_TEMPLATE("contentTemplate"),
 
     /**
      * A Content Type from CMS
      */
-    CONTENT_TYPE,
+    CONTENT_TYPE("contentType"),
 
     /**
      * A label
      */
-    LABEL,
+    LABEL("label"),
 
     /**
      * A static resource (AKA asset)
      */
-    RESOURCE,
+    RESOURCE("resource"),
 
     /**
      * A Service Deployment on Kubernetes (or any similar platform).
      */
-    PLUGIN,
+    PLUGIN("plugin"),
 
     /**
-     * A Gui fragment
+     * A fragment
      */
-    FRAGMENT;
+    FRAGMENT("fragment");
+
+    private String typeName;
+
+    ComponentType(String typeName) {
+        this.typeName = typeName;
+    }
+
+    public String getTypeName() {
+        return this.typeName;
+    }
 
     public static boolean isValidType(String type) {
         return Arrays.stream(values()).anyMatch(e -> e.toString().equalsIgnoreCase(type));

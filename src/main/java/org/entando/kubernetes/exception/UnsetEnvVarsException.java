@@ -11,7 +11,7 @@ public class UnsetEnvVarsException extends EntandoComponentManagerException impl
 
     private final transient Object[] envs;
 
-    public UnsetEnvVarsException(final Object ... envs) {
+    public UnsetEnvVarsException(final Object... envs) {
         super();
         this.envs = envs;
     }

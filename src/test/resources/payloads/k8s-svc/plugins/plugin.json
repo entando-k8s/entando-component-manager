@@ -23,7 +23,7 @@
     "connectionConfigNames": [],
     "companionContainers": []
   },
-  "entandoStatus": { },
+  "entandoStatus": {},
   "_links": {
     "self": {
       "href": "http://localhost:9080/plugins/plugin"

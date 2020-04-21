@@ -19,22 +19,26 @@ public class TraversonTest {
     @Test
     @Disabled("Scope of this is to evaluate functionalities of Traverson on a real service, not part of tests")
     public void testTraversonGetCollection() {
-       Traverson traverson = new Traverson(URI.create("http://qst-eci-cm-cui.lab.entando.org/k8s/"), MediaTypes.HAL_JSON);
-       EntityModel<EntandoApp> app = traverson.follow("apps")
-               .follow(Hop.rel("app").withParameter("name", "qst"))
-               .toObject(new ParameterizedTypeReference<EntityModel<EntandoApp>>() {});
-       EntityModel<EntandoPlugin> plugin = traverson.follow("plugins")
-               .follow(Hop.rel("plugin").withParameter("name", "tecnici-plugin"))
-               .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() { });
-       assertThat(app.getContent().getMetadata().getName()).isEqualTo("qst");
-       assertThat(plugin.getContent().getMetadata().getName()).isEqualTo("tecnici-plugin");
+        Traverson traverson = new Traverson(URI.create("http://qst-eci-cm-cui.lab.entando.org/k8s/"),
+                MediaTypes.HAL_JSON);
+        EntityModel<EntandoApp> app = traverson.follow("apps")
+                .follow(Hop.rel("app").withParameter("name", "qst"))
+                .toObject(new ParameterizedTypeReference<EntityModel<EntandoApp>>() {
+                });
+        EntityModel<EntandoPlugin> plugin = traverson.follow("plugins")
+                .follow(Hop.rel("plugin").withParameter("name", "tecnici-plugin"))
+                .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                });
+        assertThat(app.getContent().getMetadata().getName()).isEqualTo("qst");
+        assertThat(plugin.getContent().getMetadata().getName()).isEqualTo("tecnici-plugin");
 
     }
 
     @Test
     @Disabled("Scope of this is to evaluate functionalities of Traverson on a real service, not part of tests")
     public void testTraversonJsonPath() {
-        Traverson traverson = new Traverson(URI.create("http://qst-eci-cm-cui.lab.entando.org/k8s/"), MediaTypes.HAL_JSON);
+        Traverson traverson = new Traverson(URI.create("http://qst-eci-cm-cui.lab.entando.org/k8s/"),
+                MediaTypes.HAL_JSON);
         List<String> appNames = traverson.follow("apps")
                 .toObject("$._embedded.entandoApps.*.metadata.name");
         assertThat(appNames).containsOnly("qst");

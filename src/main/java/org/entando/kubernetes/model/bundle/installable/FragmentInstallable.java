@@ -2,22 +2,22 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 
 @Slf4j
 public class FragmentInstallable extends Installable<FragmentDescriptor> {
 
-    private EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
-    public FragmentInstallable(EntandoCoreService engineService, FragmentDescriptor fragmentDescriptor) {
+    public FragmentInstallable(EntandoCoreClient engineService, FragmentDescriptor fragmentDescriptor) {
         super(fragmentDescriptor);
         this.engineService = engineService;
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Fragment {}", representation.getCode());
             engineService.registerFragment(representation);

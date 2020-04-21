@@ -8,6 +8,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 
 @Data
 public class EntandoCorePage {
+
     private String code;
     private String parentCode;
     private Map<String, String> titles;
@@ -19,7 +20,8 @@ public class EntandoCorePage {
     private String charset;
     private String status;
 
-    private EntandoCorePage() {}
+    private EntandoCorePage() {
+    }
 
     public EntandoCorePage(PageDescriptor pd) {
         this.code = pd.getCode();

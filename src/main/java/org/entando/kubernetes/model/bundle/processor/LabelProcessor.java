@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -15,9 +16,8 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,13 +30,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LabelProcessor implements ComponentProcessor {
 
-    private final EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+    public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
+            final ComponentDescriptor descriptor) throws IOException {
 
-        final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents()).map(ComponentSpecDescriptor::getLabels);
+        final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents())
+                .map(ComponentSpecDescriptor::getLabels);
         final List<Installable> installables = new LinkedList<>();
 
         if (labelDescriptors.isPresent()) {
@@ -54,7 +55,7 @@ public class LabelProcessor implements ComponentProcessor {
     }
 
     @Override
-    public void uninstall(final DigitalExchangeJobComponent component) {
+    public void uninstall(final EntandoBundleComponentJob component) {
         log.info("Removing Label {}", component.getName());
         engineService.deleteLabel(component.getName());
     }

@@ -6,10 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter@Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LabelDescriptor {
+public class LabelDescriptor implements Descriptor {
 
     private String key;
     private Map<String, String> titles;

@@ -34,7 +34,9 @@ public abstract class RequestListProcessor<T> {
             for (final Filter filter : filters) {
                 final String filterAttribute = filter.getAttribute();
                 final String filterValue = filter.getValue();
-                if (filterAttribute != null && !filterAttribute.isEmpty() && (filterValue != null && !filterValue.isEmpty() || filter.getAllowedValues() != null && filter.getAllowedValues().length > 0)) {
+                if (filterAttribute != null && !filterAttribute.isEmpty() && (
+                        filterValue != null && !filterValue.isEmpty()
+                                || filter.getAllowedValues() != null && filter.getAllowedValues().length > 0)) {
                     final Predicate<T> predicate = predicatesProvider.apply(filter);
                     if (null != predicate) {
                         this.stream = this.stream.filter(predicate);
@@ -52,7 +54,7 @@ public abstract class RequestListProcessor<T> {
         final String direction = this.pagedListRequest.getDirection();
 
         if (sort != null && direction != null) {
-            Comparator comparator = comparatorsProvider.apply(this.pagedListRequest.getSort());
+            Comparator<T> comparator = comparatorsProvider.apply(this.pagedListRequest.getSort());
             if (comparator != null) {
                 if (direction.equalsIgnoreCase(Filter.DESC_ORDER)) {
                     comparator = comparator.reversed();

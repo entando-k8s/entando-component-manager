@@ -1,8 +1,8 @@
 package org.entando.kubernetes;
 
-import org.entando.kubernetes.repository.DigitalExchangeInstalledComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobComponentRepository;
-import org.entando.kubernetes.repository.DigitalExchangeJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -10,18 +10,18 @@ import org.springframework.stereotype.Component;
 public class DatabaseCleaner {
 
     @Autowired
-    DigitalExchangeJobRepository jobRepository;
+    EntandoBundleJobRepository jobRepository;
 
     @Autowired
-    DigitalExchangeJobComponentRepository jobComponentRepository;
+    EntandoBundleComponentJobRepository jobComponentRepository;
 
     @Autowired
-    DigitalExchangeInstalledComponentRepository installedComponentRepository;
+    InstalledEntandoBundleRepository installedComponentRepository;
 
     public void cleanup() {
+        installedComponentRepository.deleteAll();
         jobComponentRepository.deleteAll();
         jobRepository.deleteAll();
-        installedComponentRepository.deleteAll();
     }
 
 }

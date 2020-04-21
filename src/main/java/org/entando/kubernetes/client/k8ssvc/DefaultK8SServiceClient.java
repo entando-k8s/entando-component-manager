@@ -61,7 +61,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate restTemplate;
     private Traverson traverson;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri)  {
+    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tokenUri = tokenUri;
@@ -90,7 +90,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             CollectionModel<EntityModel<EntandoAppPluginLink>> links = traverson
                     .follow(APP_PLUGIN_LINKS_ENDPOINT)
                     .follow(Hop.rel("app-links").withParameter("app", entandoAppName))
-                    .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>(){});
+                    .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {
+                    });
             assert links != null;
             return links.getContent().stream()
                     .map(EntityModel::getContent)
@@ -104,7 +105,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return tryOrThrow(() -> traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", el.getMetadata().getName()))
                 .follow("plugin")
-                .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {})
+                .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                })
                 .getContent(), "get plugin associated with link " + el.getMetadata().getName());
     }
 
@@ -116,7 +118,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         Link unlinkHref = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
                 .asLink();
-        tryOrThrow(() -> restTemplate.delete(unlinkHref.toUri()), String.format("unlink app %s and plugin %s", appName, pluginName));
+        tryOrThrow(() -> restTemplate.delete(unlinkHref.toUri()),
+                String.format("unlink app %s and plugin %s", appName, pluginName));
     }
 
     @Override
@@ -127,7 +130,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     .asLink();
             return UriComponentsBuilder.fromUri(linkToApp.toUri()).pathSegment("links").build(Collections.emptyMap());
         });
-
 
         tryOrThrow(() -> {
                     RequestEntity<EntandoPlugin> request = RequestEntity
@@ -143,7 +145,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
         return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                })
                 .getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
@@ -153,7 +156,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
         return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
                 .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {})
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                })
                 .getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
@@ -183,9 +187,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             bundle = traverson.follow(BUNDLES_ENDPOINT)
                     .follow(Hop.rel("bundle").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {})
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    })
                     .getContent();
-            
+
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
@@ -204,21 +209,23 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
         if (plugin.getSpec().getIngressPath() == null) {
-           return false;
+            return false;
         }
         Ingress appIngress = getAppIngress(appName);
-        IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().<RuntimeException>orElseThrow(() -> {
-            throw new K8SServiceClientException("EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
-        });
+        IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().<RuntimeException>orElseThrow(
+                () -> {
+                    throw new K8SServiceClientException(
+                            "EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
+                });
 
         String appHost = ingressRule.getHost();
-        UriComponents pluginHealthCheck =  UriComponentsBuilder.newInstance()
+        UriComponents pluginHealthCheck = UriComponentsBuilder.newInstance()
                 .scheme(appIngress.getSpec().getTls().isEmpty() ? "http" : "https")
                 .host(appHost)
                 .path(plugin.getSpec().getIngressPath())
                 .path(plugin.getSpec().getHealthCheckPath())
                 .build();
-        RequestEntity request = RequestEntity
+        RequestEntity<?> request = RequestEntity
                 .get(URI.create(pluginHealthCheck.toUriString()))
                 .accept(MediaType.APPLICATION_JSON)
                 .build();
@@ -241,7 +248,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return tryOrThrow(() -> traverson.follow(APPS_ENDPOINT)
                 .follow(Hop.rel("app").withParameter("name", appName))
                 .follow("app-ingress")
-                .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {})
+                .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {
+                })
                 .getContent());
     }
 
@@ -255,8 +263,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setRequestFactory(getRequestFactory());
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
-        List<HttpMessageConverter<?>> messageConverters = Traverson.getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
-        if (messageConverters.stream().noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
+        List<HttpMessageConverter<?>> messageConverters = Traverson
+                .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
+        if (messageConverters.stream()
+                .noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
             messageConverters.add(0, getJsonConverter());
         }
         template.setMessageConverters(messageConverters);
@@ -315,7 +325,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getResponseBodyAsString()),
                     ex);
         } catch (Exception ex) {
-            throw new KubernetesClientException( "A generic error occurred while " + actionDescription, ex);
+            throw new KubernetesClientException("A generic error occurred while " + actionDescription, ex);
         }
     }
 
@@ -335,7 +345,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             ex.getResponseBodyAsString()),
                     ex);
         } catch (Exception ex) {
-            throw new KubernetesClientException( "A generic error occurred while " + action, ex);
+            throw new KubernetesClientException("A generic error occurred while " + action, ex);
         }
     }
 

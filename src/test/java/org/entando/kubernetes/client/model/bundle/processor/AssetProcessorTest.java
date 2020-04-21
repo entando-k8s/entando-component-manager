@@ -5,16 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,8 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class AssetProcessorTest {
 
-    @Mock private EntandoCoreService engineService;
+    @Mock
+    private DefaultEntandoCoreClient engineService;
     private BundleReader bundleReader;
     private AssetProcessor assetProcessor;
 
@@ -33,16 +34,17 @@ public class AssetProcessorTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader =new BundleReader(bundleFolder) ;
+        bundleReader = new BundleReader(bundleFolder);
         assetProcessor = new AssetProcessor(engineService);
     }
 
     @Test
     public void testCreateFoldersAndFiles() throws IOException {
-        final DigitalExchangeJob job = new DigitalExchangeJob();
+        final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
-        final List<? extends Installable> installables = assetProcessor.process(job, bundleReader, new ComponentDescriptor());
+        final List<? extends Installable> installables = assetProcessor
+                .process(job, bundleReader, new ComponentDescriptor());
 
         assertThat(installables).hasSize(10);
 

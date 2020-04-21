@@ -2,21 +2,21 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
 
 @Slf4j
 public class DirectoryInstallable extends Installable<String> {
 
-    private EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
-    public DirectoryInstallable(EntandoCoreService engineService, String directory) {
+    public DirectoryInstallable(EntandoCoreClient engineService, String directory) {
         super(directory);
         this.engineService = engineService;
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Creating directory {}", representation);
             engineService.createFolder(representation);

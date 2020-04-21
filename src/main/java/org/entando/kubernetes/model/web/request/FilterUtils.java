@@ -15,11 +15,13 @@ import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.comparators.TransformingComparator;
 
 public class FilterUtils {
+
     private FilterUtils() {
     }
 
     public static TransformingComparator createCaseInsensitiveComparator() {
-        final Transformer caseInsensitiveTransformer = input -> input instanceof String ? ((String) input).toLowerCase() : input;
+        final Transformer caseInsensitiveTransformer = input -> input instanceof String ? ((String) input).toLowerCase()
+                : input;
         return new TransformingComparator(caseInsensitiveTransformer);
     }
 
@@ -57,21 +59,21 @@ public class FilterUtils {
 
     public static boolean filterBoolean(Filter filter, boolean value) {
         final FilterOperator operator = getFilterOperator(filter);
-        final Iterator iterator = getTypedAllowedValues(filter, v -> Boolean.parseBoolean(v.toLowerCase())).iterator();
+        final Iterator<Boolean> iterator = getTypedAllowedValues(filter, v -> Boolean.parseBoolean(v.toLowerCase())).iterator();
         boolean result = false;
 
         while (iterator.hasNext()) {
-            boolean filterValue = (Boolean)iterator.next();
-            switch(operator) {
-            case EQUAL:
-            case LIKE:
-                result |= value == filterValue;
-                break;
-            case NOT_EQUAL:
-                result |= value != filterValue;
-                break;
-            default:
-                throw new UnsupportedOperationException(getUnsupportedOperatorMessage(filter));
+            boolean filterValue = iterator.next();
+            switch (operator) {
+                case EQUAL:
+                case LIKE:
+                    result |= value == filterValue;
+                    break;
+                case NOT_EQUAL:
+                    result |= value != filterValue;
+                    break;
+                default:
+                    throw new UnsupportedOperationException(getUnsupportedOperatorMessage(filter));
             }
         }
 

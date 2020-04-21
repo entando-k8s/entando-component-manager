@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -17,14 +18,12 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.installable.PageModelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJobComponent;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Page Models, can handle descriptors
- * with template embedded or a separate template file.
+ * Processor to create Page Models, can handle descriptors with template embedded or a separate template file.
  *
  * @author Sergio Marcelino
  */
@@ -33,11 +32,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PageProcessor implements ComponentProcessor {
 
-    private final EntandoCoreService engineService;
+    private final EntandoCoreClient engineService;
 
     @Override
-    public List<Installable> process(final DigitalExchangeJob job, final BundleReader npr,
-                                               final ComponentDescriptor descriptor) throws IOException {
+    public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
+            final ComponentDescriptor descriptor) throws IOException {
 
         List<String> pageModelsDescriptor = ofNullable(descriptor.getComponents())
                 .map(ComponentSpecDescriptor::getPageModels)
@@ -56,7 +55,7 @@ public class PageProcessor implements ComponentProcessor {
             installables.add(new PageModelInstallable(engineService, pageModelDescriptor));
         }
 
-        for (String fileName : pageDescriptorList)  {
+        for (String fileName : pageDescriptorList) {
             PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
             installables.add(new PageInstallable(engineService, pageDescriptor));
         }
@@ -66,12 +65,12 @@ public class PageProcessor implements ComponentProcessor {
 
     @Override
     public boolean shouldProcess(final ComponentType componentType) {
-        return componentType == ComponentType.PAGE_MODEL || componentType == ComponentType.PAGE;
+        return componentType == ComponentType.PAGE_TEMPLATE || componentType == ComponentType.PAGE;
     }
 
     @Override
-    public void uninstall(final DigitalExchangeJobComponent component) {
-        if (component.getComponentType().equals(ComponentType.PAGE_MODEL)) {
+    public void uninstall(final EntandoBundleComponentJob component) {
+        if (component.getComponentType().equals(ComponentType.PAGE_TEMPLATE)) {
             log.info("Removing PageModel {}", component.getName());
             engineService.deletePageModel(component.getName());
         }

@@ -218,4 +218,17 @@ databaseChangeLog:
             columnNames: id
             constraintName: uk_n385agwefm1rpoa2dmsj661n3
             tableName: digital_exchange_installed_components
-
+  - changeSet:
+      id: 1584975542724-6
+      author: kerruba (generated)
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: job_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_component
+                    references: digital_exchange_job(id)
+            tableName: digital_exchange_installed_components

@@ -6,7 +6,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 
 public class TestEntitiesGenerator {
-    public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles" ;
+
+    public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
 
     public static EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()

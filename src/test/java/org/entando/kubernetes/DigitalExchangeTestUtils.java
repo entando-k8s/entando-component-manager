@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.util.Strings;
 import org.assertj.core.api.Assertions;
 
@@ -18,7 +19,8 @@ public class DigitalExchangeTestUtils {
     public static String getTestPublicKey() {
         if (Strings.isEmpty(DE_PUBLIC_KEY)) {
             try {
-                final Path publicKeyPath = Paths.get(DigitalExchangeTestUtils.class.getResource("/de_test_public_key.txt").toURI());
+                final Path publicKeyPath = Paths
+                        .get(DigitalExchangeTestUtils.class.getResource("/de_test_public_key.txt").toURI());
                 DE_PUBLIC_KEY = new String(Files.readAllBytes(publicKeyPath));
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -30,7 +32,8 @@ public class DigitalExchangeTestUtils {
     public static String getTestPrivateKey() {
         if (Strings.isEmpty(DE_PRIVATE_KEY)) {
             try {
-                final Path publicKeyPath = Paths.get(DigitalExchangeTestUtils.class.getResource("/de_test_private_key.txt").toURI());
+                final Path publicKeyPath = Paths
+                        .get(DigitalExchangeTestUtils.class.getResource("/de_test_private_key.txt").toURI());
                 DE_PRIVATE_KEY = new String(Files.readAllBytes(publicKeyPath));
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -39,12 +42,14 @@ public class DigitalExchangeTestUtils {
         return DE_PRIVATE_KEY;
     }
 
-    public static String readFileAsBase64(String filePath) throws Exception {
+    @SneakyThrows
+    public static String readFileAsBase64(String filePath) {
         final Path path = Paths.get(DigitalExchangeTestUtils.class.getResource(filePath).toURI());
         return Base64.getEncoder().encodeToString(Files.readAllBytes(path));
     }
 
-    public static String readFile(String filePath) throws Exception {
+    @SneakyThrows
+    public static String readFile(String filePath) {
         final Path path = Paths.get(DigitalExchangeTestUtils.class.getResource(filePath).toURI());
         return new String(Files.readAllBytes(path));
     }
@@ -56,6 +61,7 @@ public class DigitalExchangeTestUtils {
     }
 
     public static class RequestChecker {
+
         private final DocumentContext context;
 
         private RequestChecker(final DocumentContext context) {

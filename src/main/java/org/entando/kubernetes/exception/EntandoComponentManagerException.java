@@ -1,6 +1,6 @@
 package org.entando.kubernetes.exception;
 
-public class EntandoComponentManagerException extends RuntimeException{
+public class EntandoComponentManagerException extends RuntimeException {
 
     public EntandoComponentManagerException() {
         super();

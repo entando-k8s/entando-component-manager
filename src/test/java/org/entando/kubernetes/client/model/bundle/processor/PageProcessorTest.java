@@ -8,16 +8,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
+import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchangeJob;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoCoreService;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import org.mockito.MockitoAnnotations;
 public class PageProcessorTest {
 
     @Mock
-    private EntandoCoreService entandoCoreService;
+    private DefaultEntandoCoreClient entandoCoreClient;
 
     @Mock
     private BundleReader bundleReader;
@@ -38,13 +38,13 @@ public class PageProcessorTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        pageProcessor = new PageProcessor(entandoCoreService);
+        pageProcessor = new PageProcessor(entandoCoreClient);
     }
 
     @Test
     public void shouldProcessPagesAndPageModels() {
         assertThat(pageProcessor.shouldProcess(ComponentType.PAGE)).isTrue();
-        assertThat(pageProcessor.shouldProcess(ComponentType.PAGE_MODEL)).isTrue();
+        assertThat(pageProcessor.shouldProcess(ComponentType.PAGE_TEMPLATE)).isTrue();
     }
 
     @Test
@@ -54,7 +54,7 @@ public class PageProcessorTest {
 
     @Test
     public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
-        final DigitalExchangeJob job = new DigitalExchangeJob();
+        final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
         ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
