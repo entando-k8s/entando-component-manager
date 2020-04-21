@@ -18,6 +18,11 @@ import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -82,11 +87,11 @@ public class EntandoBundleServiceTest {
         EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
-                    .withName("bundleA")
-                    .withDistTags(baseSpec.getDetails().getDistTags())
-                    .withVersions(baseSpec.getDetails().getVersions())
-                    .withKeywords(baseSpec.getDetails().getKeywords())
-                    .withDescription(baseSpec.getDetails().getDescription())
+                .withName("bundleA")
+                .withDistTags(baseSpec.getDetails().getDistTags())
+                .withVersions(baseSpec.getDetails().getVersions())
+                .withKeywords(baseSpec.getDetails().getKeywords())
+                .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
         EntandoDeBundleSpec specBundleB = new EntandoDeBundleSpecBuilder()
@@ -101,8 +106,8 @@ public class EntandoBundleServiceTest {
                 .build();
         EntandoDeBundle bundleA = new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                    .withName("my-bundleA")
-                    .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .withName("my-bundleA")
+                .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
                 .endMetadata()
                 .withSpec(specBundleA)
                 .build();
@@ -122,7 +127,7 @@ public class EntandoBundleServiceTest {
         PagedListRequest request = new PagedListRequest();
         request.setSort("name");
         request.setDirection(Filter.DESC_ORDER);
-        PagedMetadata<DigitalExchangeComponent> components = service.getComponents(request);
+        PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
         assertThat(components.getBody().get(0).getName()).isEqualTo(bundleB.getSpec().getDetails().getName());
@@ -169,7 +174,6 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleA)
                 .build();
 
-
         EntandoDeBundle bundleB = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleB")
@@ -178,7 +182,7 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleB)
                 .build();
 
-        DigitalExchangeComponent installedComponent = DigitalExchangeComponent.newFrom(bundleB);
+        EntandoBundle installedComponent = EntandoBundle.newFrom(bundleB);
         installedComponent.setInstalled(true);
 
         k8SServiceClient.addInMemoryBundle(bundleA);
@@ -186,7 +190,7 @@ public class EntandoBundleServiceTest {
 
         PagedListRequest request = new PagedListRequest();
         request.addFilter(new Filter("installed", "true"));
-        PagedMetadata<DigitalExchangeComponent> components = service.getComponents(request);
+        PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(1);
         assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
@@ -273,7 +277,7 @@ public class EntandoBundleServiceTest {
 
         PagedListRequest request = new PagedListRequest();
         request.addFilter(new Filter("type", "widget"));
-        PagedMetadata<DigitalExchangeComponent> components = service.getComponents(request);
+        PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
         assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
@@ -298,7 +302,6 @@ public class EntandoBundleServiceTest {
         assertThat(components.getTotalItems()).isEqualTo(1);
         assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
         assertThat(components.getBody().get(0).getType().contains("page")).isTrue();
-
 
         request = new PagedListRequest();
         Filter multiValueFilter = new Filter();
