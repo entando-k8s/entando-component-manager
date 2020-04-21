@@ -95,6 +95,38 @@ public class EntandoBundleApiTest {
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
     }
 
+    @WithMockUser
+    @Test
+    public void apiShouldSupportFiltering() throws Exception {
+
+        K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
+        kc.addInMemoryBundle(getTestBundle());
+
+        mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=widget").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+                .andExpect(jsonPath("payload[0]").isMap())
+                .andExpect(jsonPath("payload[0]", hasKey("id")))
+                .andExpect(jsonPath("payload[0]", hasKey("name")))
+                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
+                .andExpect(jsonPath("payload[0]", hasKey("version")))
+                .andExpect(jsonPath("payload[0]", hasKey("type")))
+                .andExpect(jsonPath("payload[0]", hasKey("description")))
+                .andExpect(jsonPath("payload[0]", hasKey("image")))
+                .andExpect(jsonPath("payload[0]", hasKey("rating")))
+                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeId")))
+                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
+                .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"))
+                .andExpect(jsonPath("metaData.page").value(1));
+
+        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
+
+        mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=page").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(0)));
+
+    }
+
     @Test
     public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
@@ -127,6 +159,7 @@ public class EntandoBundleApiTest {
                 .withNewMetadata()
                 .withName("my-bundle")
                 .withNamespace("entando-de-bundles")
+                .addToLabels("widget", "true")
                 .endMetadata()
                 .withSpec(getTestEntandoDeBundleSpec()).build();
 
