@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.Irrele
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<EntandoBundleUsageSummary> getBundleUsageSummary(String component) {
+    public ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> getBundleUsageSummary(String component) {
         //I should be able to retrieve the related installed components given component id
         List<EntandoBundleComponentJob> bundleInstalledComponents = bundleService
                 .getBundleInstalledComponents(component);
@@ -53,6 +54,6 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
                 .filter(u -> !(u instanceof IrrelevantComponentUsage))
                 .forEach(summary::addComponentUsage);
 
-        return ResponseEntity.ok(summary);
+        return ResponseEntity.ok(new SimpleRestResponse<>(summary));
     }
 }

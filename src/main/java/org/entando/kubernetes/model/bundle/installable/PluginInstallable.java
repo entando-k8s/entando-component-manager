@@ -11,7 +11,7 @@ import org.entando.kubernetes.service.KubernetesService;
 public class PluginInstallable extends Installable<EntandoPlugin> {
 
     private final EntandoBundleJob job;
-    private KubernetesService kubernetesService;
+    private final KubernetesService kubernetesService;
 
     public PluginInstallable(
             KubernetesService kubernetesService,
@@ -23,7 +23,7 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Deploying a new plugin {}", representation.getSpec().getImage());
             kubernetesService.linkAndWaitForPlugin(representation);

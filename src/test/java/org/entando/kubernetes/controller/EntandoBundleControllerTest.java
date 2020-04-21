@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
@@ -70,9 +71,9 @@ public class EntandoBundleControllerTest {
         component.setJob(getTestJob());
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
 
-        ResponseEntity<EntandoBundleUsageSummary> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(resp.getBody()).getSummary().size()).isZero();
+        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().getSummary().size()).isZero();
     }
 
     @Test
@@ -91,9 +92,9 @@ public class EntandoBundleControllerTest {
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
         when(componentsService.getBundleInstalledComponents(any())).thenReturn(Collections.singletonList(componentJob));
 
-        ResponseEntity<EntandoBundleUsageSummary> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(resp.getBody()).getSummary().size()).isZero();
+        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().getSummary().size()).isZero();
     }
 
     @Test
@@ -128,10 +129,10 @@ public class EntandoBundleControllerTest {
         when(coreClient.getPageUsage(eq("my-magic-page"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page", 5));
 
-        ResponseEntity<EntandoBundleUsageSummary> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
-        EntandoBundleUsageSummary summary = resp.getBody();
+        EntandoBundleUsageSummary summary = resp.getBody().getPayload();
 
         assertThat(summary.getSummary().size()).isEqualTo(2);
         assertThat(summary.getComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget")).isEqualTo(11);
@@ -174,10 +175,10 @@ public class EntandoBundleControllerTest {
         when(coreClient.getWidgetUsage(eq("my-other-widget"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget", 5));
 
-        ResponseEntity<EntandoBundleUsageSummary> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
-        EntandoBundleUsageSummary summary = resp.getBody();
+        EntandoBundleUsageSummary summary = resp.getBody().getPayload();
 
         assertThat(summary.getSummary().size()).isEqualTo(2);
         assertThat(summary.getComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget")).isEqualTo(11);

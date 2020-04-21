@@ -17,6 +17,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -231,7 +232,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
             installable.setComponent(persistComponent(job, installable));
             installSucceded = processInstallable(installable);
             if (installSucceded.equals(JobStatus.INSTALL_ERROR)) {
-                throw new RuntimeException(job.getComponentId()
+                throw new EntandoComponentManagerException(job.getComponentId()
                         + " installation can't proceed due to an error with one of the installed components");
             }
         }

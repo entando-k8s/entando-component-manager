@@ -18,7 +18,7 @@ import org.springframework.validation.FieldError;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = false)
 public class ValidationErrorResponse extends ErrorResponse {
 
     private ErrorData data;
@@ -33,12 +33,7 @@ public class ValidationErrorResponse extends ErrorResponse {
         errors.forEach(this::addError);
     }
 
-    private void addError(@NotNull final FieldError fieldError) {
-        final String message = fieldError.getDefaultMessage();
-        this.data.getErrors().put(fieldError.getField(), singletonList(message));
-    }
-
-    public void addError(final MessageSource messageSource, final Locale locale, @NotNull final FieldError fieldError) {
+    public void addError(@NotNull final FieldError fieldError) {
         final String message = fieldError.getDefaultMessage();
         if (fieldError.getArguments() != null) {
             this.data.getErrors().put(fieldError.getField(), singletonList(message));
@@ -52,8 +47,7 @@ public class ValidationErrorResponse extends ErrorResponse {
     }
 
     @Data
-    private class ErrorData {
-
+    private static class ErrorData {
         private Map<String, List<String>> errors = new HashMap<>();
     }
 }

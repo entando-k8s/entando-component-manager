@@ -9,7 +9,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Slf4j
 public class PageInstallable extends Installable<PageDescriptor> {
 
-    private EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public PageInstallable(EntandoCoreClient engineService, PageDescriptor pd) {
         super(pd);
@@ -17,7 +17,7 @@ public class PageInstallable extends Installable<PageDescriptor> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Page {}", representation.getCode());
             engineService.registerPage(representation);

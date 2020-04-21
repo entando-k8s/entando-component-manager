@@ -1,9 +1,12 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import io.fabric8.zjsonpatch.internal.guava.Strings;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 public class BundleUtilities {
+
+    private BundleUtilities() {}
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -12,7 +15,7 @@ public class BundleUtilities {
             version = (String) bundle.getSpec().getDetails().getDistTags().get(versionReference);
         }
         if (Strings.isNullOrEmpty(version)) {
-            throw new RuntimeException(
+            throw new EntandoComponentManagerException(
                     "Invalid version '" + versionReference + "' for bundle '" + bundle.getSpec().getDetails().getName()
                             + "'");
         }

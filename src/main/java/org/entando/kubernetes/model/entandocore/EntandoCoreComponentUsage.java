@@ -1,12 +1,9 @@
 package org.entando.kubernetes.model.entandocore;
 
-import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.springframework.cglib.core.HashCodeCustomizer;
 
 @Getter
 @NoArgsConstructor
@@ -17,13 +14,7 @@ public class EntandoCoreComponentUsage {
     private String code;
     private int usage;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(type, code);
-    }
-
     public static class NoUsageComponent extends EntandoCoreComponentUsage {
-
 
         public NoUsageComponent(ComponentType type) {
             super(type.getTypeName(), null, 0);

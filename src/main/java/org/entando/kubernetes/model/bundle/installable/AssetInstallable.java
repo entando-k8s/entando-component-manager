@@ -10,7 +10,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 public class AssetInstallable extends Installable<FileDescriptor> {
 
 
-    public EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public AssetInstallable(EntandoCoreClient engineService,
             FileDescriptor fileDescriptor) {
@@ -19,7 +19,7 @@ public class AssetInstallable extends Installable<FileDescriptor> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Uploading file {}", representation.getFilename());
             engineService.uploadFile(representation);

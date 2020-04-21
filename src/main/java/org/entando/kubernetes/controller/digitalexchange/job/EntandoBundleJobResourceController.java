@@ -28,7 +28,7 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
         List<EntandoBundleJob> allJobs = jobService.getAllJobs();
         PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
         pagedMetadata.setBody(allJobs);
-        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse(pagedMetadata);
+        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse<>(pagedMetadata);
         return ResponseEntity.ok(response);
     }
 
@@ -36,7 +36,7 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
     public SimpleRestResponse<EntandoBundleJob> getJob(String jobId) {
         EntandoBundleJob job = jobService.getById(jobId).orElseThrow(() ->
                 getNotFoundJobProblem(jobId));
-        return new SimpleRestResponse(job);
+        return new SimpleRestResponse<>(job);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
         List<EntandoBundleJob> componentJobs = jobService.getAllJobs(componentId);
         PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
         pagedMetadata.setBody(componentJobs);
-        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse(pagedMetadata);
+        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse<>(pagedMetadata);
         return ResponseEntity.ok(response);
     }
 

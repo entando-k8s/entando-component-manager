@@ -8,7 +8,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Slf4j
 public class DirectoryInstallable extends Installable<String> {
 
-    private EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public DirectoryInstallable(EntandoCoreClient engineService, String directory) {
         super(directory);
@@ -16,7 +16,7 @@ public class DirectoryInstallable extends Installable<String> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Creating directory {}", representation);
             engineService.createFolder(representation);

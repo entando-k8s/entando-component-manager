@@ -225,7 +225,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .path(plugin.getSpec().getIngressPath())
                 .path(plugin.getSpec().getHealthCheckPath())
                 .build();
-        RequestEntity request = RequestEntity
+        RequestEntity<?> request = RequestEntity
                 .get(URI.create(pluginHealthCheck.toUriString()))
                 .accept(MediaType.APPLICATION_JSON)
                 .build();

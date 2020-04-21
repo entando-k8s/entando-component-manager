@@ -9,7 +9,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Slf4j
 public class FragmentInstallable extends Installable<FragmentDescriptor> {
 
-    private EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public FragmentInstallable(EntandoCoreClient engineService, FragmentDescriptor fragmentDescriptor) {
         super(fragmentDescriptor);
@@ -17,7 +17,7 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Fragment {}", representation.getCode());
             engineService.registerFragment(representation);

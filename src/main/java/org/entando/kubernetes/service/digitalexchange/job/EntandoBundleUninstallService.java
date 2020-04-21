@@ -51,10 +51,7 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
 
         verifyBundleUninstallIsPossibleOrThrow(installedBundle);
 
-        EntandoBundleJob uninstallJob = submitNewUninstallJob(installedBundle.getJob());
-
-
-        return uninstallJob;
+        return submitNewUninstallJob(installedBundle.getJob());
 
     }
 
@@ -69,13 +66,10 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
 
     private void verifyNoConcurrentUninstallOrThrow(EntandoBundle bundle) {
         Optional<EntandoBundleJob> lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(bundle.getId());
-        if (lastJob.isPresent() ) {
-            if (lastJob.get().getStatus().isAny(EnumSet.of(
-                    JobStatus.UNINSTALL_IN_PROGRESS,
-                    JobStatus.UNINSTALL_CREATED))) {
+        EnumSet<JobStatus> concurrentUninstallJobStatus = EnumSet.of( JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_CREATED);
+        if (lastJob.isPresent() && lastJob.get().getStatus().isAny(concurrentUninstallJobStatus)) {
                 throw new JobConflictException("A concurrent uninstall process for bundle " + bundle.getId() + " is running");
             }
-        }
     }
 
     private void verifyNoComponentInUseOrThrow(EntandoBundle bundle) {

@@ -30,7 +30,7 @@ public abstract class Installable<T> {
      *
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
-    public abstract CompletableFuture install();
+    public abstract CompletableFuture<Void> install();
 
     /**
      * Should return the component type to understand what to do in case of a rollback

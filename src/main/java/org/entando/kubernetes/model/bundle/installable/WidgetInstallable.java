@@ -9,7 +9,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Slf4j
 public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
-    private EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public WidgetInstallable(EntandoCoreClient engineService, WidgetDescriptor widgetDescriptor) {
         super(widgetDescriptor);
@@ -17,7 +17,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Widget {}", representation.getCode());
             engineService.registerWidget(representation);

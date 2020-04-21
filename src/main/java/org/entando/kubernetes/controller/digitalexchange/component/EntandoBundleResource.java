@@ -21,6 +21,7 @@ import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,5 +40,5 @@ public interface EntandoBundleResource {
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/usage", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<EntandoBundleUsageSummary> getBundleUsageSummary(@PathVariable("component") String component);
+    ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> getBundleUsageSummary(@PathVariable("component") String component);
 }

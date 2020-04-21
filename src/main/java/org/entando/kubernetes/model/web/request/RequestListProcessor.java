@@ -54,7 +54,7 @@ public abstract class RequestListProcessor<T> {
         final String direction = this.pagedListRequest.getDirection();
 
         if (sort != null && direction != null) {
-            Comparator comparator = comparatorsProvider.apply(this.pagedListRequest.getSort());
+            Comparator<T> comparator = comparatorsProvider.apply(this.pagedListRequest.getSort());
             if (comparator != null) {
                 if (direction.equalsIgnoreCase(Filter.DESC_ORDER)) {
                     comparator = comparator.reversed();

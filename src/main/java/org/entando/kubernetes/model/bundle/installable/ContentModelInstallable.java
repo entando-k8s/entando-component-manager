@@ -9,7 +9,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Slf4j
 public class ContentModelInstallable extends Installable<ContentModelDescriptor> {
 
-    private EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public ContentModelInstallable(EntandoCoreClient service,
             final ContentModelDescriptor contentModelDescriptor) {
@@ -18,7 +18,7 @@ public class ContentModelInstallable extends Installable<ContentModelDescriptor>
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Content Model {}", representation.getId());
             engineService.registerContentModel(representation);

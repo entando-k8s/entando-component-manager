@@ -13,7 +13,7 @@
  */
 package org.entando.kubernetes.model.digitalexchange;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 public enum JobStatus {
 
@@ -32,7 +32,7 @@ public enum JobStatus {
         return type.matches(this);
     }
 
-    public boolean isAny(EnumSet<JobStatus> possible) {
+    public boolean isAny(Set<JobStatus> possible) {
         return possible.contains(this);
     }
 }

@@ -9,7 +9,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Slf4j
 public class LabelInstallable extends Installable<LabelDescriptor> {
 
-    private EntandoCoreClient engineService;
+    private final EntandoCoreClient engineService;
 
     public LabelInstallable(EntandoCoreClient engineService, LabelDescriptor labelDescriptor) {
         super(labelDescriptor);
@@ -17,7 +17,7 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     }
 
     @Override
-    public CompletableFuture install() {
+    public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Label {}", representation.getKey());
             engineService.registerLabel(representation);
