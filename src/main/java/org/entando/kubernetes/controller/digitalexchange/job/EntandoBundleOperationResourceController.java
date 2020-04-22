@@ -56,7 +56,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     public SimpleRestResponse<EntandoBundleJob> getLastUninstallJob(@PathVariable("component") String componentId) {
         EntandoBundleJob lastUninstallJob = installService.getAllJobs(componentId)
                 .stream()
-                .filter(j -> j.getStatus().isOfType(JobType.INSTALL))
+                .filter(j -> j.getStatus().isOfType(JobType.UNINSTALL))
                 .findFirst()
                 .orElseThrow(JobNotFoundException::new);
         return new SimpleRestResponse<>(lastUninstallJob);
