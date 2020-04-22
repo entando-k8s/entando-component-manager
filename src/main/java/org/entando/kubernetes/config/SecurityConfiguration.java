@@ -57,7 +57,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/actuator/info").permitAll()
                 .antMatchers("/actuator/prometheus").permitAll()
                 .antMatchers("/actuator/**").hasAuthority(ADMIN)
-//                .antMatchers("/**").authenticated()
+                .antMatchers("/**").authenticated()
                 .and()
                 .oauth2ResourceServer()
                 .jwt()
