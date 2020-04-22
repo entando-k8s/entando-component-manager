@@ -68,12 +68,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .filterAndSort().toList();
         List<EntandoBundle> sublist = request.getSublist(localFilteredList);
 
-        PagedMetadata<EntandoBundle> result = new PagedMetadata<>();
-        result.setBody(sublist);
-        result.setTotalItems(localFilteredList.size());
-        result.setPage(request.getPage());
-        result.setPageSize(request.getPageSize());
-        return result;
+        return new PagedMetadata<>(request, sublist, localFilteredList.size());
     }
 
     private List<EntandoBundle> getAllComponents() {

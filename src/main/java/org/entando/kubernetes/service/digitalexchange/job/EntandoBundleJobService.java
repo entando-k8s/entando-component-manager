@@ -30,12 +30,7 @@ public class EntandoBundleJobService {
                 .filterAndSort().toList();
         List<EntandoBundleJob> sublist = request.getSublist(filteredList);
 
-        PagedMetadata<EntandoBundleJob> result = new PagedMetadata<>();
-        result.setBody(sublist);
-        result.setTotalItems(filteredList.size());
-        result.setPage(request.getPage());
-        result.setPageSize(request.getPageSize());
-        return result;
+        return new PagedMetadata<>(request, sublist, filteredList.size());
     }
 
     public List<EntandoBundleComponentJob> getJobRelatedComponentJobs(EntandoBundleJob job) {
