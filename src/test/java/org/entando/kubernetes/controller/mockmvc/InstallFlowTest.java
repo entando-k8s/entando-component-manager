@@ -1,7 +1,6 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -44,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
@@ -69,10 +69,12 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJobDto;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
@@ -90,6 +92,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -533,7 +536,7 @@ public class InstallFlowTest {
         assertThat(successfulUninstallId).isNotEqualTo(failingInstallId);
 
         // All jobs should be available via the API
-        mockMvc.perform(get(JOBS_ENDPOINT + "?component={component}", "todomvc"))
+        mockMvc.perform(get("/jobs?filters[0].attribute=componentId&filters[0].operator=eq&filters[0].value=todomvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -866,35 +869,55 @@ public class InstallFlowTest {
     private void waitForPossibleStatus(JobStatus... statuses) {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> Arrays.asList(statuses).contains(getInstallJob().getPayload().getStatus()));
+                .until(() -> Arrays.asList(statuses).contains(getComponentLastJobStatusOfType("todomvc", JobType.INSTALL.getStatuses())));
     }
 
     private void waitForInstallStatus(JobStatus status) {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getInstallJob().getPayload().getStatus().equals(status));
+                .until(() -> getComponentLastJobStatusOfType("todomvc", JobType.INSTALL.getStatuses()).equals(status));
     }
 
     private void waitForUninstallStatus(JobStatus status) {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
+                .until(() -> getComponentLastJobStatusOfType("todomvc", JobType.UNINSTALL.getStatuses()).equals(status));
     }
 
-    private SimpleRestResponse<EntandoBundleJob> getInstallJob() throws Exception {
+    private PagedMetadata<EntandoBundleJob> getInstallJob() throws Exception {
         return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                new TypeReference<SimpleRestResponse<EntandoBundleJob>>() {
+                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
                 });
     }
 
-    private SimpleRestResponse<EntandoBundleJob> getUninstallJob() throws Exception {
-        return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=UNINSTALL"))
+    private PagedMetadata<EntandoBundleJob> getUninstallJob() throws Exception {
+        List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name).collect(Collectors.toList());
+        return mapper.readValue(mockMvc.perform(get("/jobs"
+                        + "?sort=startedAt"
+                        + "&direction=DESC"
+                        + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues="+String.join(",", allowedValues)
+                        + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                new TypeReference<SimpleRestResponse<EntandoBundleJob>>() {
+                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
                 });
+    }
+
+    private JobStatus getComponentLastJobStatusOfType(String component, Set<JobStatus> possibleStatues) throws Exception {
+        List<String> allowedValues = possibleStatues.stream().map(JobStatus::name).collect(Collectors.toList());
+        MockHttpServletResponse response = mockMvc.perform(get("/jobs"
+                + "?sort=startedAt"
+                + "&direction=DESC"
+                + "&pageSize=1"
+                + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues="+String.join(",", allowedValues)
+                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value="+component))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").value(hasSize(1)))
+                .andExpect(jsonPath("$.payload.[0].componentId").value(component))
+                .andReturn().getResponse();
+        return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.[0].status"));
     }
 
     private byte[] readFromDEPackage() throws IOException {

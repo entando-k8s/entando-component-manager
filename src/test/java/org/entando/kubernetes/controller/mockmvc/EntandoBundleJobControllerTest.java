@@ -37,7 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")
-public class EntandoEntandoBundleJobControllerTest {
+public class EntandoBundleJobControllerTest {
 
     @Autowired
     MockMvc mvc;
@@ -58,9 +58,9 @@ public class EntandoEntandoBundleJobControllerTest {
     }
 
     @Test
-    public void shouldReturnAllJobsSortedByFinishTime() throws Exception {
+    public void shouldReturnAllJobsSortedByStartTime() throws Exception {
 
-        mvc.perform(get("/jobs").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/jobs?sort=startedAt&direction=DESC").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").value(hasSize(4)))
                 .andExpect(jsonPath("$.payload[0].componentId").value("id1"))
@@ -101,14 +101,17 @@ public class EntandoEntandoBundleJobControllerTest {
     public void shouldReturnLastJobOfType() throws Exception {
 
         String componentId = "id1";
-        JobType jobType = JobType.INSTALL;
 
         mvc.perform(
-                get("/jobs?component={component}&type={type}", componentId, jobType).accept(MediaType.APPLICATION_JSON))
+                get("/jobs"
+                        + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
+                        + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].allowedValues=INSTALL_COMPLETED,INSTALL_IN_PROGRESS"
+                        + "&pageSize=1&sort=startedAt&direction=DESC")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.componentId").value(componentId))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_COMPLETED.toString()))
-                .andExpect(jsonPath("$.payload.finishedAt").value("2020-03-05T14:32:00"));
+                .andExpect(jsonPath("$.payload.[0].componentId").value(componentId))
+                .andExpect(jsonPath("$.payload.[0].status").value(JobStatus.INSTALL_COMPLETED.toString()))
+                .andExpect(jsonPath("$.payload.[0].finishedAt").value("2020-03-05T14:32:00"));
     }
 
     @Test
@@ -117,13 +120,16 @@ public class EntandoEntandoBundleJobControllerTest {
         String componentId = "id1";
         JobStatus jobStatus = JobStatus.UNINSTALL_COMPLETED;
 
-        mvc.perform(get("/jobs?component={component}&status={status}", componentId, jobStatus)
+        mvc.perform(get("/jobs"
+                + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
+                + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].value=UNINSTALL_COMPLETED"
+                + "&pageSize=1&sort=startedAt&direction=DESC")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.componentId").value(componentId))
-                .andExpect(jsonPath("$.payload.status").value("UNINSTALL_COMPLETED"))
-                .andExpect(jsonPath("$.payload.startedAt").value("2020-02-02T07:23:00"))
-                .andExpect(jsonPath("$.payload.finishedAt").value("2020-02-02T07:23:30"));
+                .andExpect(jsonPath("$.payload.[0].componentId").value(componentId))
+                .andExpect(jsonPath("$.payload.[0].status").value("UNINSTALL_COMPLETED"))
+                .andExpect(jsonPath("$.payload.[0].startedAt").value("2020-02-02T07:23:00"))
+                .andExpect(jsonPath("$.payload.[0].finishedAt").value("2020-02-02T07:23:30"));
     }
 
     private void populateTestDatabase() {

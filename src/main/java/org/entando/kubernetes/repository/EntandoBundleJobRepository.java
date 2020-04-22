@@ -2,6 +2,7 @@ package org.entando.kubernetes.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
@@ -37,7 +38,7 @@ public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJ
     List<EntandoBundleJob> findAllByComponentIdOrderByStartedAtDesc(String componentId);
 
     Optional<EntandoBundleJob> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId,
-            List<JobStatus> status);
+            Set<JobStatus> status);
 
     Optional<EntandoBundleJob> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId,
             JobStatus status);

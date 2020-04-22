@@ -137,7 +137,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
     }
 
     public List<EntandoBundleJob> getAllJobs(String componentId) {
-        return jobService.getAllJobs(componentId);
+        return jobService.getJobs(componentId);
     }
 
     private void submitInstallAsync(EntandoBundleJob job, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
