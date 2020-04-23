@@ -1,11 +1,15 @@
 package org.entando.kubernetes.controller.digitalexchange.job;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJobDto;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
@@ -24,43 +28,22 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
     private final @NonNull EntandoBundleJobService jobService;
 
     @Override
-    public ResponseEntity<PagedRestResponse<EntandoBundleJob>> getAllJobs() {
-        List<EntandoBundleJob> allJobs = jobService.getAllJobs();
-        PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
-        pagedMetadata.setBody(allJobs);
-        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse<>(pagedMetadata);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PagedRestResponse<EntandoBundleJobDto>> getAllJobs(PagedListRequest request) {
+        PagedMetadata<EntandoBundleJob> tempJobs = jobService.getJobs(request);
+        List<EntandoBundleJobDto> jobDtos = tempJobs.getBody().stream()
+                .map(j -> EntandoBundleJobDto.from(j, jobService.getJobRelatedComponentJobs(j)))
+                .collect(Collectors.toList());
+        PagedMetadata<EntandoBundleJobDto> pagedMetadata = new PagedMetadata<>(request, jobDtos, tempJobs.getTotalItems());
+        return ResponseEntity.ok(new PagedRestResponse<>(pagedMetadata));
     }
 
     @Override
-    public SimpleRestResponse<EntandoBundleJob> getJob(String jobId) {
+    public SimpleRestResponse<EntandoBundleJobDto> getJob(String jobId) {
         EntandoBundleJob job = jobService.getById(jobId).orElseThrow(() ->
                 getNotFoundJobProblem(jobId));
-        return new SimpleRestResponse<>(job);
-    }
-
-    @Override
-    public ResponseEntity<PagedRestResponse<EntandoBundleJob>> getComponentJobs(
-            @PathVariable("component") String componentId) {
-        List<EntandoBundleJob> componentJobs = jobService.getAllJobs(componentId);
-        PagedMetadata<EntandoBundleJob> pagedMetadata = new PagedMetadata<>();
-        pagedMetadata.setBody(componentJobs);
-        PagedRestResponse<EntandoBundleJob> response = new PagedRestResponse<>(pagedMetadata);
-        return ResponseEntity.ok(response);
-    }
-
-    @Override
-    public SimpleRestResponse<EntandoBundleJob> getLastComponentJobOfType(String componentId, JobType type) {
-        EntandoBundleJob lastJobOfType = jobService.getComponentLastJobOfType(componentId, type)
-                .orElseThrow(this::getGenericNotFoundJobProblem);
-        return new SimpleRestResponse<>(lastJobOfType);
-    }
-
-    @Override
-    public SimpleRestResponse<EntandoBundleJob> getLastComponentJobWithStatus(String componentId, JobStatus type) {
-        EntandoBundleJob lastJobOfType = jobService.getComponentLastJobWithStatus(componentId, type)
-                .orElseThrow(this::getGenericNotFoundJobProblem);
-        return new SimpleRestResponse<>(lastJobOfType);
+        List<EntandoBundleComponentJob> jobRelatedComponentJobs = jobService.getJobRelatedComponentJobs(job);
+        EntandoBundleJobDto jobDto = EntandoBundleJobDto.from(job, jobRelatedComponentJobs);
+        return new SimpleRestResponse<>(jobDto);
     }
 
     private ThrowableProblem getNotFoundJobProblem(String jobId) {

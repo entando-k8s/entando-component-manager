@@ -38,7 +38,7 @@ import org.springframework.validation.annotation.Validated;
 @Data
 @Validated
 @Entity
-@Table(name = "digital_exchange_installed_components")
+@Table(name = "installed_entando_bundles")
 public class EntandoBundle {
 
 
@@ -49,12 +49,12 @@ public class EntandoBundle {
     private String id;
 
     @NotNull
-    @Size(min = 1, max = 30)
+    @Size(min = 1, max = 255)
     @Column(name = "name", nullable = false)
     private String name;
 
     @NotNull
-    @Size(min = 1, max = 30)
+    @Size(min = 1, max = 255)
     @Column(name = "type")
     @Convert(converter = BundleComponentTypesConverter.class)
     private Set<String> type;
@@ -84,15 +84,6 @@ public class EntandoBundle {
     @Column(name = "installed")
     private boolean installed;
 
-    @Column(name = "digital_exchange_name", nullable = false)
-    private String digitalExchangeName;
-
-    // NOTE: the id can be removed when we will return the installation link
-    // following the HATEOAS principle
-
-    @Column(name = "digital_exchange_id", nullable = false)
-    private String digitalExchangeId;
-
     @Column(name = "signature")
     private String signature;
 
@@ -115,8 +106,6 @@ public class EntandoBundle {
         dec.setId(bundleId);
         dec.setName(bundle.getSpec().getDetails().getName());
         dec.setDescription(bd.getDescription());
-        dec.setDigitalExchangeId(bundle.getMetadata().getNamespace());
-        dec.setDigitalExchangeName(bundle.getMetadata().getNamespace());
         dec.setRating(5);
         dec.setType(bundleComponentTypes);
         dec.setLastUpdate(new Date());

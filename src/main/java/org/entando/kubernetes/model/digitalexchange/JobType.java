@@ -12,7 +12,9 @@ import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_I
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public enum JobType {
 
@@ -23,18 +25,18 @@ public enum JobType {
     SUCCESSFUL(INSTALL_COMPLETED, UNINSTALL_COMPLETED),
     ERROR(INSTALL_ERROR, UNINSTALL_ERROR);
 
-    private List<JobStatus> statusList;
+    private Set<JobStatus> statusSet;
 
-    JobType(JobStatus... statuses) {
-        this.statusList = Arrays.asList(statuses);
+    JobType(JobStatus status, JobStatus... others) {
+        this.statusSet = EnumSet.of(status, others);
     }
 
     public boolean matches(JobStatus status) {
-        return this.statusList.contains(status);
+        return this.statusSet.contains(status);
     }
 
-    public List<JobStatus> getStatusList() {
-        return new ArrayList<>(this.statusList);
+    public Set<JobStatus> getStatuses() {
+        return this.statusSet;
     }
 
 }

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,7 +16,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
-import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
@@ -71,9 +71,9 @@ public class EntandoBundleControllerTest {
         component.setJob(getTestJob());
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
 
-        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().getSummary().size()).isZero();
+        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().size()).isZero();
     }
 
     @Test
@@ -92,9 +92,9 @@ public class EntandoBundleControllerTest {
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
         when(componentsService.getBundleInstalledComponents(any())).thenReturn(Collections.singletonList(componentJob));
 
-        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().getSummary().size()).isZero();
+        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().size()).isZero();
     }
 
     @Test
@@ -129,17 +129,23 @@ public class EntandoBundleControllerTest {
         when(coreClient.getPageUsage(eq("my-magic-page"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page", 5));
 
-        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
-        EntandoBundleUsageSummary summary = resp.getBody().getPayload();
+        List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
 
-        assertThat(summary.getSummary().size()).isEqualTo(2);
-        assertThat(summary.getComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget")).isEqualTo(11);
-        assertThat(summary.getComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page")).isEqualTo(5);
-        assertThat(summary.getSummary().stream().map(EntandoCoreComponentUsage::getType).distinct().count())
+        assertThat(usageList.size()).isEqualTo(2);
+        assertThat(usageList.stream()
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-magic-widget"))
+                .count()
+                ).isEqualTo(11);
+        assertThat(usageList.stream()
+                .filter(usc -> usc.getType().equals(ComponentType.PAGE.getTypeName()) && usc.getCode().equals("my-magic-page"))
+                .count())
+                .isEqualTo(5);
+        assertThat(usageList.stream().map(EntandoCoreComponentUsage::getType).distinct().count())
                 .isEqualTo(2);
-        assertThat(summary.getSummary().stream().map(EntandoCoreComponentUsage::getUsage).reduce(0, Integer::sum))
+        assertThat(usageList.stream().map(EntandoCoreComponentUsage::getUsage).reduce(0, Integer::sum))
                 .isEqualTo(16);
     }
 
@@ -175,14 +181,22 @@ public class EntandoBundleControllerTest {
         when(coreClient.getWidgetUsage(eq("my-other-widget"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget", 5));
 
-        ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
-        EntandoBundleUsageSummary summary = resp.getBody().getPayload();
+        assertThat(resp.getStatusCodeValue()).isEqualTo(200);
+        assertThat(resp.getBody()).isNotNull();
+        List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
 
-        assertThat(summary.getSummary().size()).isEqualTo(2);
-        assertThat(summary.getComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget")).isEqualTo(11);
-        assertThat(summary.getComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget")).isEqualTo(5);
+        assertThat(usageList.size()).isEqualTo(2);
+        assertThat(usageList.stream()
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-magic-widget"))
+                .count()
+        ).isEqualTo(11);
+        assertThat(usageList.stream()
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-other-widget"))
+                .count())
+                .isEqualTo(5);
 
     }
 

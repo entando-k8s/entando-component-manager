@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
       id: 20190809112455
-      author: s.marcelino@entando.com
+      author: l.cherubin@entando.com
       changes:
         - createTable:
-            tableName: digital_exchange
+            tableName: entando_bundle_jobs
             columns:
               - column:
                   name: id
@@ -13,64 +13,13 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: name
-                  type: varchar(64)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: url
+                  name: component_id
                   type: varchar(255)
                   constraints:
                     nullable: false
               - column:
-                  name: client_id
-                  type: varchar(128)
-                  constraints:
-                    nullable: true
-              - column:
-                  name: client_secret
-                  type: varchar(128)
-                  constraints:
-                    nullable: true
-              - column:
-                  name: public_key
-                  type: text
-                  constraints:
-                    nullable: true
-              - column:
-                  name: timeout
-                  type: int
-                  constraints:
-                    nullable: true
-              - column:
-                  name: active
-                  type: BOOLEAN
-                  defaultValueBoolean: true
-                  constraints:
-                    nullable: false
-
-        - createTable:
-            tableName: digital_exchange_job
-            columns:
-              - column:
-                  name: id
-                  type: uuid
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: digital_exchange_id
-                  type: varchar(128)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: component_id
-                  type: varchar(128)
-                  constraints:
-                    nullable: false
-              - column:
                   name: component_name
-                  type: varchar(128)
+                  type: varchar(255)
                   constraints:
                     nullable: false
               - column:
@@ -90,7 +39,7 @@ databaseChangeLog:
                     nullable: true
               - column:
                   name: user_id
-                  type: varchar(128)
+                  type: varchar(255)
                   constraints:
                     nullable: true
               - column:
@@ -105,7 +54,7 @@ databaseChangeLog:
                     nullable: false
 
         - createTable:
-            tableName: digital_exchange_job_component
+            tableName: entando_bundle_component_jobs
             columns:
               - column:
                   name: id
@@ -114,15 +63,15 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: digital_exchange_job_id
+                  name: parent_entando_bundle_job_id
                   type: uuid
                   constraints:
                     nullable: false
                     foreignKeyName: fk_de_comp_job
-                    references: digital_exchange_job(id)
+                    references: entando_bundle_jobs(id)
               - column:
                   name: name
-                  type: varchar(256)
+                  type: varchar(255)
                   constraints:
                     nullable: false
               - column:
@@ -146,31 +95,18 @@ databaseChangeLog:
                   constraints:
                     nullable: false
 
-  - changeSet:
-      id: 1584975542724-3
-      author: kerruba (generated)
-      changes:
         - createTable:
+            tableName: installed_entando_bundles
             columns:
               - column:
                   constraints:
                     nullable: false
                     primaryKey: true
-                    primaryKeyName: digital_exchange_installed_components_pkey
+                    primaryKeyName: installed_entando_bundles_pkey
                   name: id
                   type: VARCHAR(255)
               - column:
                   name: description
-                  type: VARCHAR(255)
-              - column:
-                  constraints:
-                    nullable: false
-                  name: digital_exchange_id
-                  type: VARCHAR(255)
-              - column:
-                  constraints:
-                    nullable: false
-                  name: digital_exchange_name
                   type: VARCHAR(255)
               - column:
                   name: image
@@ -181,6 +117,13 @@ databaseChangeLog:
                   name: installed
                   type: BOOLEAN
               - column:
+                  name: job_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_component
+                    references: entando_bundle_jobs(id)
+              - column:
                   name: last_update
                   type: TIMESTAMP WITHOUT TIME ZONE
               - column:
@@ -190,7 +133,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                   name: name
-                  type: VARCHAR(30)
+                  type: VARCHAR(255)
               - column:
                   constraints:
                     nullable: false
@@ -203,32 +146,14 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                   name: type
-                  type: VARCHAR(30)
+                  type: VARCHAR(255)
               - column:
                   constraints:
                     nullable: false
                   name: version
                   type: VARCHAR(255)
-            tableName: digital_exchange_installed_components
-  - changeSet:
-      id: 1584975542724-5
-      author: kerruba (generated)
-      changes:
+
         - addUniqueConstraint:
             columnNames: id
             constraintName: uk_n385agwefm1rpoa2dmsj661n3
-            tableName: digital_exchange_installed_components
-  - changeSet:
-      id: 1584975542724-6
-      author: kerruba (generated)
-      changes:
-        - addColumn:
-            columns:
-              - column:
-                  name: job_id
-                  type: uuid
-                  constraints:
-                    nullable: false
-                    foreignKeyName: fk_component
-                    references: digital_exchange_job(id)
-            tableName: digital_exchange_installed_components
+            tableName: installed_entando_bundles

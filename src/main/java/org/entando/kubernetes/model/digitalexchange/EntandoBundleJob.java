@@ -28,15 +28,12 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @NoArgsConstructor
-@Table(name = "digital_exchange_job")
+@Table(name = "entando_bundle_jobs")
 public class EntandoBundleJob {
 
     @Id
     @Column
     private UUID id;
-
-    @Column(name = "digital_exchange_id")
-    private String digitalExchange;
 
     @Column
     private String componentId;

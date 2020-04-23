@@ -14,10 +14,11 @@
 package org.entando.kubernetes.controller.digitalexchange.component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
@@ -43,17 +44,16 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> getBundleUsageSummary(String component) {
+    public ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(String component) {
         //I should be able to retrieve the related installed components given component id
         List<EntandoBundleComponentJob> bundleInstalledComponents = bundleService
                 .getBundleInstalledComponents(component);
         //For each installed components, I should check the summary
-        EntandoBundleUsageSummary summary = new EntandoBundleUsageSummary();
-        bundleInstalledComponents.stream()
+        List<EntandoCoreComponentUsage> usageList = bundleInstalledComponents.stream()
                 .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getName()))
                 .filter(u -> !(u instanceof IrrelevantComponentUsage))
-                .forEach(summary::addComponentUsage);
+                .collect(Collectors.toList());
 
-        return ResponseEntity.ok(new SimpleRestResponse<>(summary));
+        return ResponseEntity.ok(new SimpleRestResponse<>(usageList));
     }
 }

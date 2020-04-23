@@ -86,7 +86,6 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         EntandoBundleJob uninstallJob = new EntandoBundleJob();
         uninstallJob.setComponentId(lastAvailableJob.getComponentId());
         uninstallJob.setComponentName(lastAvailableJob.getComponentName());
-        uninstallJob.setDigitalExchange(lastAvailableJob.getDigitalExchange());
         uninstallJob.setComponentVersion(lastAvailableJob.getComponentVersion());
         uninstallJob.setStartedAt(LocalDateTime.now());
         uninstallJob.setStatus(JobStatus.UNINSTALL_CREATED);
@@ -106,6 +105,7 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
             try {
                 uninstallStatus = uninstallComponent(job, components);
                 installedComponentRepository.deleteById(job.getComponentId());
+                log.info("Component " + job.getComponentId() + " uninstalled successfully");
             } catch (Exception ex) {
                 log.error("An error occurred while uninstalling component " + job.getComponentId(), ex);
                 uninstallStatus = JobStatus.UNINSTALL_ERROR;

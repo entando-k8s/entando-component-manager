@@ -1,7 +1,6 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -13,6 +12,7 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,6 +22,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -44,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
@@ -69,15 +72,18 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleJobDto;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -90,10 +96,14 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -109,6 +119,7 @@ import org.springframework.web.util.UriComponentsBuilder;
         })
 @ActiveProfiles({"test"})
 @Tag("component")
+@WithMockUser
 public class InstallFlowTest {
 
     private final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components");
@@ -124,11 +135,13 @@ public class InstallFlowTest {
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofMinutes(45);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
-    @Autowired
-    private ObjectMapper mapper;
+    private MockMvc mockMvc;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebApplicationContext context;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Autowired
     private DatabaseCleaner databaseCleaner;
@@ -151,16 +164,13 @@ public class InstallFlowTest {
     @MockBean
     private EntandoCoreClient coreClient;
 
-//    @TestConfiguration
-//    static class TestConfig {
-//
-//        @Bean
-//        @Primary
-//        public DigitalExchangeJobRepository jobRepository() {
-//            return Mockito.spy(DigitalExchangeJobRepository.class);
-//        }
-//
-//    }
+    @BeforeEach
+    public void setup() {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+    }
 
 
     @AfterEach
@@ -459,9 +469,6 @@ public class InstallFlowTest {
         assertThat(installedComponents).hasSize(1);
         assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
-        assertThat(installedComponents.get(0).getDigitalExchangeId()).isEqualTo("entando-de-bundles");
-        assertThat(installedComponents.get(0).getDigitalExchangeName()).isEqualTo("entando-de-bundles");
-
     }
 
     @Test
@@ -533,11 +540,11 @@ public class InstallFlowTest {
         assertThat(successfulUninstallId).isNotEqualTo(failingInstallId);
 
         // All jobs should be available via the API
-        mockMvc.perform(get(JOBS_ENDPOINT + "?component={component}", "todomvc"))
+        mockMvc.perform(get("/jobs?filters[0].attribute=componentId&filters[0].operator=eq&filters[0].value=todomvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
-                .andExpect(jsonPath("$.payload.*.id").value(contains(
+                .andExpect(jsonPath("$.payload.*.id").value(containsInAnyOrder(
                         failingInstallId, successfulUninstallId, successfulInstallId
                 )));
     }
@@ -866,35 +873,56 @@ public class InstallFlowTest {
     private void waitForPossibleStatus(JobStatus... statuses) {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> Arrays.asList(statuses).contains(getInstallJob().getPayload().getStatus()));
+                .until(() -> Arrays.asList(statuses).contains(getComponentLastJobStatusOfType("todomvc", JobType.INSTALL.getStatuses())));
     }
 
     private void waitForInstallStatus(JobStatus status) {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getInstallJob().getPayload().getStatus().equals(status));
+                .until(() -> getComponentLastJobStatusOfType("todomvc", JobType.INSTALL.getStatuses()).equals(status));
     }
 
     private void waitForUninstallStatus(JobStatus status) {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getUninstallJob().getPayload().getStatus().equals(status));
+                .until(() -> getComponentLastJobStatusOfType("todomvc", JobType.UNINSTALL.getStatuses()).equals(status));
     }
 
-    private SimpleRestResponse<EntandoBundleJob> getInstallJob() throws Exception {
+    private PagedMetadata<EntandoBundleJob> getInstallJob() throws Exception {
         return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                new TypeReference<SimpleRestResponse<EntandoBundleJob>>() {
+                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
                 });
     }
 
-    private SimpleRestResponse<EntandoBundleJob> getUninstallJob() throws Exception {
-        return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=UNINSTALL"))
+    private PagedMetadata<EntandoBundleJob> getUninstallJob() throws Exception {
+        List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name).collect(Collectors.toList());
+        return mapper.readValue(mockMvc.perform(get("/jobs"
+                        + "?sort=startedAt"
+                        + "&direction=DESC"
+                        + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues="+String.join(",", allowedValues)
+                        + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                new TypeReference<SimpleRestResponse<EntandoBundleJob>>() {
+                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
                 });
+    }
+
+    private JobStatus getComponentLastJobStatusOfType(String component, Set<JobStatus> possibleStatues) throws Exception {
+        List<String> allowedValues = possibleStatues.stream().map(JobStatus::name).collect(Collectors.toList());
+        MockHttpServletResponse response = mockMvc.perform(get("/jobs"
+                + "?sort=startedAt"
+                + "&direction=DESC"
+                + "&pageSize=1"
+                + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues="+String.join(",", allowedValues)
+                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value="+component)
+                .with(user("user")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").value(hasSize(1)))
+                .andExpect(jsonPath("$.payload.[0].componentId").value(component))
+                .andReturn().getResponse();
+        return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.[0].status"));
     }
 
     private byte[] readFromDEPackage() throws IOException {

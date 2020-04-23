@@ -34,8 +34,6 @@ public class EntandoBundleServiceTest {
 
     private K8SServiceClientTestDouble k8SServiceClient;
     private EntandoBundleService service;
-    private EntandoBundleJobRepository jobRepository;
-    private EntandoBundleComponentJobRepository componentJobRepository;
     private InstalledEntandoBundleRepository installedComponentRepository;
 
     private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
@@ -43,8 +41,9 @@ public class EntandoBundleServiceTest {
     @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        jobRepository = Mockito.mock(EntandoBundleJobRepository.class);
-        componentJobRepository = Mockito.mock(EntandoBundleComponentJobRepository.class);
+        EntandoBundleJobRepository jobRepository = Mockito.mock(EntandoBundleJobRepository.class);
+        EntandoBundleComponentJobRepository componentJobRepository = Mockito
+                .mock(EntandoBundleComponentJobRepository.class);
         installedComponentRepository = Mockito.mock(InstalledEntandoBundleRepository.class);
         service = new EntandoBundleServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository,
                 componentJobRepository, installedComponentRepository);
@@ -62,7 +61,6 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> bundles = service.getComponents();
         assertThat(bundles.getTotalItems()).isEqualTo(1);
         assertThat(bundles.getBody().size()).isEqualTo(1);
-        assertThat(bundles.getBody().get(0).getDigitalExchangeName()).isEqualTo(DEFAULT_BUNDLE_NAMESPACE);
     }
 
     @Test

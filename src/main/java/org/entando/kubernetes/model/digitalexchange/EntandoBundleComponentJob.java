@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @NoArgsConstructor
-@Table(name = "digital_exchange_job_component")
+@Table(name = "entando_bundle_component_jobs")
 public class EntandoBundleComponentJob {
 
     @Id
@@ -24,7 +24,7 @@ public class EntandoBundleComponentJob {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "digital_exchange_job_id")
+    @JoinColumn(name = "parent_entando_bundle_job_id")
     private EntandoBundleJob job;
 
     @Column(name = "component_type")
