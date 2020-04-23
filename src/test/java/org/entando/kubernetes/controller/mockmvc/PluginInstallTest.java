@@ -10,7 +10,6 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.DbmsVendor;
-import org.entando.kubernetes.model.digitalexchange.DigitalExchange;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
@@ -20,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
 @AutoConfigureMockMvc
@@ -28,10 +28,8 @@ import org.springframework.test.context.ActiveProfiles;
         classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
 @ActiveProfiles({"test"})
 @Tag("component")
+@WithMockUser
 public class PluginInstallTest {
-
-    private static final String DIGITAL_EXCHANGE_ID = "community";
-    private static final String DIGITAL_EXCHANGE_URL = "https://community.de.entando.org";
 
     @Autowired
     private KubernetesService kubernetesService;
@@ -55,10 +53,6 @@ public class PluginInstallTest {
                 .addNewPermission("another-client", "read")
                 .endSpec()
                 .build();
-
-        final DigitalExchange digitalExchange = new DigitalExchange();
-        digitalExchange.setId(DIGITAL_EXCHANGE_ID);
-        digitalExchange.setUrl(DIGITAL_EXCHANGE_URL);
 
         kubernetesService.linkPlugin(entandoPlugin);
 

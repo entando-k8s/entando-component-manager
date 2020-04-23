@@ -61,7 +61,6 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> bundles = service.getComponents();
         assertThat(bundles.getTotalItems()).isEqualTo(1);
         assertThat(bundles.getBody().size()).isEqualTo(1);
-        assertThat(bundles.getBody().get(0).getDigitalExchangeName()).isEqualTo(DEFAULT_BUNDLE_NAMESPACE);
     }
 
     @Test

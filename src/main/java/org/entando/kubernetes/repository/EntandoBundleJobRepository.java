@@ -17,23 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJob, UUID> {
 
-    @Query("SELECT job FROM EntandoBundleJob job WHERE job.status <> :status AND job.componentId = :componentId")
-    Optional<EntandoBundleJob> findByComponentIdAndStatusNotEqual(@Param("componentId") String componentId,
-            @Param("status") JobStatus status);
-
-    Optional<EntandoBundleJob> findFirstByComponentIdAndAndStatusNotOrderByStartedAtDesc(
-            String componentId,
-            JobStatus status);
-
-    Optional<EntandoBundleJob> findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
-            String digitalExchangeId,
-            String componentId);
-
     List<EntandoBundleJob> findAllByOrderByStartedAtDesc();
-
-    List<EntandoBundleJob> findAllByDigitalExchangeAndComponentIdOrderByStartedAtDesc(
-            String digitalExchange,
-            String componentId);
 
     List<EntandoBundleJob> findAllByComponentIdOrderByStartedAtDesc(String componentId);
 

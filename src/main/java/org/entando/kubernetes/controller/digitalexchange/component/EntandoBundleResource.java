@@ -17,8 +17,9 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.entando.kubernetes.model.bundle.EntandoBundleUsageSummary;
+import java.util.List;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
@@ -40,5 +41,5 @@ public interface EntandoBundleResource {
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/usage", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundleUsageSummary>> getBundleUsageSummary(@PathVariable("component") String component);
+    ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(@PathVariable("component") String component);
 }

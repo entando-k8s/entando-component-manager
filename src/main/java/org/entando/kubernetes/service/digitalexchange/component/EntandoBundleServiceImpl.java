@@ -139,9 +139,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     private boolean checkIfInstalled(EntandoDeBundle bundle) {
-        String deId = bundle.getMetadata().getNamespace();
         String componentId = bundle.getMetadata().getName();
-        return jobRepository.findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(deId, componentId)
+        return jobRepository.findFirstByComponentIdOrderByStartedAtDesc(componentId)
                 .map(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .orElse(false);
     }

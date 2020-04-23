@@ -2,6 +2,7 @@ package org.entando.kubernetes.controller.mockmvc;
 
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,7 +18,6 @@ import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,8 +28,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
@@ -37,10 +40,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")
+@WithMockUser
 public class EntandoBundleJobControllerTest {
 
-    @Autowired
     MockMvc mvc;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private EntandoBundleJobRepository jobRepository;
@@ -49,6 +55,10 @@ public class EntandoBundleJobControllerTest {
 
     @BeforeEach
     public void setup() {
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
         populateTestDatabase();
     }
 
@@ -118,7 +128,6 @@ public class EntandoBundleJobControllerTest {
     public void shouldReturnLastJobWithStatus() throws Exception {
 
         String componentId = "id1";
-        JobStatus jobStatus = JobStatus.UNINSTALL_COMPLETED;
 
         mvc.perform(get("/jobs"
                 + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
@@ -138,7 +147,6 @@ public class EntandoBundleJobControllerTest {
         EntandoBundleJob job1 = new EntandoBundleJob();
         job1.setComponentId("id1");
         job1.setComponentName("my-bundle");
-        job1.setDigitalExchange("local");
         job1.setProgress(1.0);
         job1.setComponentVersion("1.0.0");
         job1.setStartedAt(LocalDateTime.of(2020, Month.JANUARY, 10, 10, 30));
@@ -151,7 +159,6 @@ public class EntandoBundleJobControllerTest {
         EntandoBundleJob job2 = new EntandoBundleJob();
         job2.setComponentId("id2");
         job2.setComponentName("my-other-bundle");
-        job2.setDigitalExchange("external");
         job2.setComponentVersion("1.0.0");
         job2.setProgress(0.5);
         job2.setStartedAt(LocalDateTime.of(2020, Month.JANUARY, 14, 7, 23));
@@ -164,7 +171,6 @@ public class EntandoBundleJobControllerTest {
         EntandoBundleJob job1_uninstall = new EntandoBundleJob();
         job1_uninstall.setComponentId("id1");
         job1_uninstall.setComponentName("my-bundle");
-        job1_uninstall.setDigitalExchange("local");
         job1_uninstall.setComponentVersion("1.0.0");
         job1_uninstall.setProgress(1.0);
         job1_uninstall.setStartedAt(LocalDateTime.of(2020, Month.FEBRUARY, 2, 7, 23));
@@ -177,7 +183,6 @@ public class EntandoBundleJobControllerTest {
         EntandoBundleJob job1_reinstall = new EntandoBundleJob();
         job1_reinstall.setComponentId("id1");
         job1_reinstall.setComponentName("my-bundle");
-        job1_reinstall.setDigitalExchange("local");
         job1_reinstall.setProgress(1.0);
         job1_reinstall.setComponentVersion("1.0.0");
         job1_reinstall.setStartedAt(LocalDateTime.of(2020, Month.MARCH, 5, 14, 30));

@@ -37,7 +37,7 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
 
     @Override
     public String getName() {
-        return job.getComponentId();
+        return this.representation.getMetadata().getName();
     }
 
 }

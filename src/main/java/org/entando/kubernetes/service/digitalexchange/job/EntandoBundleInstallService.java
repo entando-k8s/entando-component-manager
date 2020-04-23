@@ -98,10 +98,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
     }
 
     private Optional<EntandoBundleJob> getExistingJob(EntandoDeBundle bundle) {
-        String digitalExchangeId = bundle.getMetadata().getNamespace();
         String componentId = bundle.getSpec().getDetails().getName();
-        Optional<EntandoBundleJob> lastJobStarted = jobRepo
-                .findFirstByDigitalExchangeAndComponentIdOrderByStartedAtDesc(digitalExchangeId, componentId);
+        Optional<EntandoBundleJob> lastJobStarted = jobRepo.findFirstByComponentIdOrderByStartedAtDesc(componentId);
         if (lastJobStarted.isPresent()) {
             // To be an existing job it should be Running or completed
             if (lastJobStarted.get().getStatus() == JobStatus.UNINSTALL_COMPLETED) {
@@ -126,7 +124,6 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         job.setComponentId(bundle.getMetadata().getName());
         job.setComponentName(bundle.getSpec().getDetails().getName());
         job.setComponentVersion(tag.getVersion());
-        job.setDigitalExchange(bundle.getMetadata().getNamespace());
         job.setProgress(0);
         job.setStartedAt(LocalDateTime.now());
         job.setStatus(JobStatus.INSTALL_CREATED);

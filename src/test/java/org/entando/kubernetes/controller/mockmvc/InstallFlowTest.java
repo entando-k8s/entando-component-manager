@@ -12,6 +12,7 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +22,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -80,6 +83,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -93,10 +97,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -112,6 +119,7 @@ import org.springframework.web.util.UriComponentsBuilder;
         })
 @ActiveProfiles({"test"})
 @Tag("component")
+@WithMockUser
 public class InstallFlowTest {
 
     private final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components");
@@ -127,11 +135,13 @@ public class InstallFlowTest {
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofMinutes(45);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
-    @Autowired
-    private ObjectMapper mapper;
+    private MockMvc mockMvc;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebApplicationContext context;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Autowired
     private DatabaseCleaner databaseCleaner;
@@ -154,16 +164,13 @@ public class InstallFlowTest {
     @MockBean
     private EntandoCoreClient coreClient;
 
-//    @TestConfiguration
-//    static class TestConfig {
-//
-//        @Bean
-//        @Primary
-//        public DigitalExchangeJobRepository jobRepository() {
-//            return Mockito.spy(DigitalExchangeJobRepository.class);
-//        }
-//
-//    }
+    @BeforeEach
+    public void setup() {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+    }
 
 
     @AfterEach
@@ -462,9 +469,6 @@ public class InstallFlowTest {
         assertThat(installedComponents).hasSize(1);
         assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
-        assertThat(installedComponents.get(0).getDigitalExchangeId()).isEqualTo("entando-de-bundles");
-        assertThat(installedComponents.get(0).getDigitalExchangeName()).isEqualTo("entando-de-bundles");
-
     }
 
     @Test
@@ -540,7 +544,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
-                .andExpect(jsonPath("$.payload.*.id").value(contains(
+                .andExpect(jsonPath("$.payload.*.id").value(containsInAnyOrder(
                         failingInstallId, successfulUninstallId, successfulInstallId
                 )));
     }
@@ -912,7 +916,8 @@ public class InstallFlowTest {
                 + "&direction=DESC"
                 + "&pageSize=1"
                 + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues="+String.join(",", allowedValues)
-                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value="+component))
+                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value="+component)
+                .with(user("user")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").value(hasSize(1)))
                 .andExpect(jsonPath("$.payload.[0].componentId").value(component))

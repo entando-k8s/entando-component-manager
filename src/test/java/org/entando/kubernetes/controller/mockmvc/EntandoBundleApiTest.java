@@ -41,6 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")
+@WithMockUser
 public class EntandoBundleApiTest {
 
     @Autowired
@@ -68,7 +69,6 @@ public class EntandoBundleApiTest {
         assertThat(mockMvc).isNotNull();
     }
 
-    @WithMockUser
     @Test
     public void apiShouldMaintainCompatibilityWithAppBuilder() throws Exception {
 
@@ -87,15 +87,11 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload[0]", hasKey("description")))
                 .andExpect(jsonPath("payload[0]", hasKey("image")))
                 .andExpect(jsonPath("payload[0]", hasKey("rating")))
-                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeId")))
-                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
-                .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"))
                 .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
     }
 
-    @WithMockUser
     @Test
     public void apiShouldSupportFiltering() throws Exception {
 
@@ -114,9 +110,6 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload[0]", hasKey("description")))
                 .andExpect(jsonPath("payload[0]", hasKey("image")))
                 .andExpect(jsonPath("payload[0]", hasKey("rating")))
-                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeId")))
-                .andExpect(jsonPath("payload[0]", hasKey("digitalExchangeName")))
-                .andExpect(jsonPath("payload[0].digitalExchangeId").value("entando-de-bundles"))
                 .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();

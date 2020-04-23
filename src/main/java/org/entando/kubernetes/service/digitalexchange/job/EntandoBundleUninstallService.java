@@ -86,7 +86,6 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         EntandoBundleJob uninstallJob = new EntandoBundleJob();
         uninstallJob.setComponentId(lastAvailableJob.getComponentId());
         uninstallJob.setComponentName(lastAvailableJob.getComponentName());
-        uninstallJob.setDigitalExchange(lastAvailableJob.getDigitalExchange());
         uninstallJob.setComponentVersion(lastAvailableJob.getComponentVersion());
         uninstallJob.setStartedAt(LocalDateTime.now());
         uninstallJob.setStatus(JobStatus.UNINSTALL_CREATED);
