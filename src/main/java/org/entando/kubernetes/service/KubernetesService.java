@@ -1,16 +1,21 @@
 package org.entando.kubernetes.service;
 
+import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
+import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.exception.k8ssvc.EntandoAppPluginLinkingProcessException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -43,41 +48,41 @@ public class KubernetesService {
     }
 
     public List<EntandoPlugin> getLinkedPlugins() {
-        return getCurrentAppLinkedPlugins()
+        return getCurrentAppLinks()
                 .stream().map(k8sServiceClient::getPluginForLink)
                 .collect(Collectors.toList());
     }
 
     public EntandoPlugin getLinkedPlugin(String pluginId) {
-        return getCurrentAppLinkedPlugin(pluginId)
+        return getCurrentAppLinkToPlugin(pluginId)
                 .map(k8sServiceClient::getPluginForLink)
                 .orElseThrow(PluginNotFoundException::new);
     }
 
     public boolean isLinkedPlugin(String pluginId) {
-        return getCurrentAppLinkedPlugin(pluginId).isPresent();
+        return getCurrentAppLinkToPlugin(pluginId).isPresent();
     }
 
     public boolean isPluginReady(EntandoPlugin plugin) {
         return k8sServiceClient.isPluginReadyToServeApp(plugin, entandoAppName);
     }
 
-    private List<EntandoAppPluginLink> getCurrentAppLinkedPlugins() {
+    private List<EntandoAppPluginLink> getCurrentAppLinks() {
         return k8sServiceClient.getAppLinks(entandoAppName);
     }
 
-    private Optional<EntandoAppPluginLink> getCurrentAppLinkedPlugin(String pluginId) {
-        return getCurrentAppLinkedPlugins()
+    private Optional<EntandoAppPluginLink> getCurrentAppLinkToPlugin(String pluginId) {
+        return getCurrentAppLinks()
                 .stream()
                 .filter(el -> el.getSpec().getEntandoPluginName().equals(pluginId))
                 .findFirst();
     }
 
     public void unlinkPlugin(String pluginId) {
-        getCurrentAppLinkedPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
+        getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
     }
 
-    public void linkPlugin(EntandoPlugin plugin) {
+    public EntandoAppPluginLink linkPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = new EntandoPluginBuilder()
                 .withMetadata(plugin.getMetadata())
                 .withSpec(plugin.getSpec())
@@ -85,17 +90,32 @@ public class KubernetesService {
 
         newPlugin.getMetadata().setNamespace(null);
 
-        k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
+        return k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
     }
 
-    public void linkAndWaitForPlugin(EntandoPlugin plugin) {
-        this.linkPlugin(plugin);
+    public void linkPluginAndWaitForSuccess(EntandoPlugin plugin) {
+        EntandoAppPluginLink createdLink = this.linkPlugin(plugin);
         try {
-            this.waitingConditionFactory.until(() -> this.isPluginReady(plugin));
+            this.waitingConditionFactory.until(() -> this.hasLinkingProcessCompletedSuccessfully(createdLink, plugin));
         } catch (ConditionTimeoutException e) {
             throw new PluginNotReadyException(plugin.getMetadata().getName());
         }
 
+    }
+
+    public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin)
+            throws EntandoAppPluginLinkingProcessException {
+        boolean result = false;
+        Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());
+        if (linkByName.isPresent()) {
+            if (linkByName.get().getStatus().getEntandoDeploymentPhase().equals(FAILED)) {
+                String msg = String.format("Linking procedure between app %s and plugin %s failed", entandoAppName, plugin.getMetadata().getName());
+                throw new EntandoAppPluginLinkingProcessException(msg);
+            }
+            result = linkByName.get().getStatus().getEntandoDeploymentPhase().equals(SUCCESSFUL)
+                    && isPluginReady(plugin);
+        }
+        return result;
     }
 
     public List<EntandoDeBundle> getBundlesInDefaultNamespace() {

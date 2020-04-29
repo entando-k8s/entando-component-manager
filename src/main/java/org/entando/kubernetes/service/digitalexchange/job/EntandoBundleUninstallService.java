@@ -3,6 +3,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -154,13 +155,14 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
     }
 
     private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream().filter(component ->
-                component.getComponentType() == ComponentType.RESOURCE
-                        && component.getName().equals("/" + job.getComponentId())
-        ).findFirst();
+        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream()
+                .filter(component -> component.getComponentType() == ComponentType.RESOURCE)
+                .sorted(Comparator.comparing(EntandoBundleComponentJob::getName))
+                .limit(1)
+                .findFirst();
 
         if (rootResourceFolder.isPresent()) {
-            coreClient.deleteFolder("/" + job.getComponentId());
+            coreClient.deleteFolder(rootResourceFolder.get().getName());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
                         EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();

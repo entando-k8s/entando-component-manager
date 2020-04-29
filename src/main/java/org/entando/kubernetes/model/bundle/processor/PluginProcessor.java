@@ -58,7 +58,7 @@ public class PluginProcessor implements ComponentProcessor {
 
     @Override
     public void uninstall(final EntandoBundleComponentJob component) {
-        log.info("Removing deployment {}", component.getName());
+        log.info("Removing link to plugin {}", component.getName());
         kubernetesService.unlinkPlugin(component.getName());
     }
 

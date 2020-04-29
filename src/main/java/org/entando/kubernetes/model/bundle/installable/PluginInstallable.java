@@ -25,8 +25,8 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Deploying a new plugin {}", representation.getSpec().getImage());
-            kubernetesService.linkAndWaitForPlugin(representation);
+            log.info("Deploying plugin {}", representation.getMetadata().getName());
+            kubernetesService.linkPluginAndWaitForSuccess(representation);
         });
     }
 

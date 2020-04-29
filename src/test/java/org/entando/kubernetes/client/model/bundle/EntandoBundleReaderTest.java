@@ -44,6 +44,10 @@ public class EntandoBundleReaderTest {
         r = new BundleReader(bundleFolder);
     }
 
+    @Test
+    public void shouldReadBundleIdCorrectly() throws IOException {
+        assertThat(r.getBundleCode()).isEqualTo("something");
+    }
 
     @Test
     public void shouldRebaseBundleEntriesToDescriptorRoot() throws IOException {
