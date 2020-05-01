@@ -113,17 +113,18 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public Optional<EntandoPlugin> getPluginByName(String name) {
         EntandoPlugin plugin = null;
-         try {
-             plugin = traverson.follow(PLUGINS_ENDPOINT)
-                     .follow(Hop.rel("plugin").withParameter("name", name))
-                     .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>(){})
-                     .getContent();
-         } catch (RestClientResponseException ex) {
-             if (ex.getRawStatusCode() != 404) {
-                 throw new KubernetesClientException("An error occurred while retrieving plugin with name " + name, ex);
-             }
-         }
-         return Optional.ofNullable(plugin);
+        try {
+            plugin = traverson.follow(PLUGINS_ENDPOINT)
+                    .follow(Hop.rel("plugin").withParameter("name", name))
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                    })
+                    .getContent();
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException("An error occurred while retrieving plugin with name " + name, ex);
+            }
+        }
+        return Optional.ofNullable(plugin);
     }
 
     @Override
@@ -153,7 +154,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             .contentType(MediaType.APPLICATION_JSON)
                             .body(plugin);
                     ResponseEntity<EntityModel<EntandoAppPluginLink>> resp = restTemplate
-                            .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {});
+                            .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {
+                            });
                     if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                         return resp.getBody().getContent();
                     }
@@ -171,11 +173,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             link = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                     .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>(){})
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {
+                    })
                     .getContent();
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
-                throw new KubernetesClientException("An error occurred while retrieving entando-app-plugin-link with name " + linkName, ex);
+                throw new KubernetesClientException(
+                        "An error occurred while retrieving entando-app-plugin-link with name " + linkName, ex);
             }
         }
         return Optional.ofNullable(link);
@@ -226,7 +230,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             bundle = traverson.follow(BUNDLES_ENDPOINT)
                     .follow(Hop.rel("bundle").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {})
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    })
                     .getContent();
 
         } catch (RestClientResponseException ex) {

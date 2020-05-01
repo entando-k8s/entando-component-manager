@@ -10,10 +10,7 @@ import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_C
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_ERROR;
 import static org.entando.kubernetes.model.digitalexchange.JobStatus.UNINSTALL_IN_PROGRESS;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 public enum JobType {

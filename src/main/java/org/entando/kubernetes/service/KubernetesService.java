@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +108,8 @@ public class KubernetesService {
         Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());
         if (linkByName.isPresent()) {
             if (linkByName.get().getStatus().getEntandoDeploymentPhase().equals(FAILED)) {
-                String msg = String.format("Linking procedure between app %s and plugin %s failed", entandoAppName, plugin.getMetadata().getName());
+                String msg = String.format("Linking procedure between app %s and plugin %s failed", entandoAppName,
+                        plugin.getMetadata().getName());
                 throw new EntandoAppPluginLinkingProcessException(msg);
             }
             result = linkByName.get().getStatus().getEntandoDeploymentPhase().equals(SUCCESSFUL)

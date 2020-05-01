@@ -59,7 +59,8 @@ public class FilterUtils {
 
     public static boolean filterBoolean(Filter filter, boolean value) {
         final FilterOperator operator = getFilterOperator(filter);
-        final Iterator<Boolean> iterator = getTypedAllowedValues(filter, v -> Boolean.parseBoolean(v.toLowerCase())).iterator();
+        final Iterator<Boolean> iterator = getTypedAllowedValues(filter, v -> Boolean.parseBoolean(v.toLowerCase()))
+                .iterator();
         boolean result = false;
 
         while (iterator.hasNext()) {

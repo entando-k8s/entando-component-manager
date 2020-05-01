@@ -61,22 +61,27 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
             verifyNoComponentInUseOrThrow(bundle);
             verifyNoConcurrentUninstallOrThrow(bundle);
         } else {
-            throw new EntandoComponentManagerException("Installed bundle " + bundle.getId() + " associated with invalid job");
+            throw new EntandoComponentManagerException(
+                    "Installed bundle " + bundle.getId() + " associated with invalid job");
         }
     }
 
     private void verifyNoConcurrentUninstallOrThrow(EntandoBundle bundle) {
         Optional<EntandoBundleJob> lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(bundle.getId());
-        EnumSet<JobStatus> concurrentUninstallJobStatus = EnumSet.of( JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_CREATED);
+        EnumSet<JobStatus> concurrentUninstallJobStatus = EnumSet
+                .of(JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_CREATED);
         if (lastJob.isPresent() && lastJob.get().getStatus().isAny(concurrentUninstallJobStatus)) {
-                throw new JobConflictException("A concurrent uninstall process for bundle " + bundle.getId() + " is running");
-            }
+            throw new JobConflictException(
+                    "A concurrent uninstall process for bundle " + bundle.getId() + " is running");
+        }
     }
 
     private void verifyNoComponentInUseOrThrow(EntandoBundle bundle) {
         List<EntandoBundleComponentJob> bundleComponentJobs = componentRepository.findAllByJob(bundle.getJob());
-        if (bundleComponentJobs.stream().anyMatch(e -> usageService.getUsage(e.getComponentType(), e.getName()).getUsage() > 0)) {
-            throw new JobConflictException("Some of bundle " + bundle.getId() + " components are in use and bundle can't be uninstalled");
+        if (bundleComponentJobs.stream()
+                .anyMatch(e -> usageService.getUsage(e.getComponentType(), e.getName()).getUsage() > 0)) {
+            throw new JobConflictException(
+                    "Some of bundle " + bundle.getId() + " components are in use and bundle can't be uninstalled");
         }
     }
 
@@ -162,6 +167,7 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
                 .findFirst();
 
         if (rootResourceFolder.isPresent()) {
+            log.info("Removing directory {}", rootResourceFolder.get().getName());
             coreClient.deleteFolder(rootResourceFolder.get().getName());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {

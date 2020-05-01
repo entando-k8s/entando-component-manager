@@ -2,6 +2,7 @@ package org.entando.kubernetes.utils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -54,6 +55,17 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
                                     .withTransformers("response-template")
                     ));
         }
+        return this;
+    }
+
+    public EntandoCoreMockServer withContentModelPageReference() {
+        String response = readResourceAsString("/payloads/entando-core/content-template/content-template-page-reference.json");
+        this.wireMockServer.stubFor(WireMock.get(urlMatching("/api/plugins/cms/contentmodels/12345/pagereferences"))
+                .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(response)
+                ));
         return this;
     }
 

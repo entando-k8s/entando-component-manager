@@ -48,6 +48,7 @@ public class ValidationErrorResponse extends ErrorResponse {
 
     @Data
     private static class ErrorData {
+
         private Map<String, List<String>> errors = new HashMap<>();
     }
 }

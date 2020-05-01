@@ -41,5 +41,6 @@ public interface EntandoBundleResource {
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/usage", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(@PathVariable("component") String component);
+    ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(
+            @PathVariable("component") String component);
 }

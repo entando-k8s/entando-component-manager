@@ -6,7 +6,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 public class BundleUtilities {
 
-    private BundleUtilities() {}
+    private BundleUtilities() {
+    }
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 

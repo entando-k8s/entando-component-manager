@@ -12,7 +12,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -178,7 +177,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         // Filter jobs that are "uninstallable"
         List<EntandoBundleComponentJob> jobsToRollback = jobRelatedComponents.stream()
                 .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED)
-                        || (j.getStatus().equals(JobStatus.INSTALL_ERROR) && j.getComponentType().equals(ComponentType.PLUGIN)))
+                        || (j.getStatus().equals(JobStatus.INSTALL_ERROR) && j.getComponentType()
+                        .equals(ComponentType.PLUGIN)))
                 .collect(Collectors.toList());
 
         try {
@@ -213,6 +213,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                 .findFirst();
 
         if (rootResourceFolder.isPresent()) {
+            log.info("Removing directory {}", rootResourceFolder.get().getName());
             engineService.deleteFolder(rootResourceFolder.get().getName());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
@@ -228,7 +229,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         log.info("Processing installable list for component " + job.getComponentId());
 
         JobStatus installSucceded = JobStatus.INSTALL_COMPLETED;
-        for (int i=0, n=installableList.size(); i<n; i++) {
+        for (int i = 0, n = installableList.size(); i < n; i++) {
             Installable installable = installableList.get(i);
             installable.setComponent(persistComponent(job, installable));
             installSucceded = processInstallable(installable);

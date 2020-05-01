@@ -44,6 +44,8 @@ public interface EntandoCoreClient {
 
     void registerContentModel(ContentModelDescriptor descriptor);
 
+    EntandoCoreComponentUsage getContentModelUsage(String code);
+
     void registerContentType(ContentTypeDescriptor descriptor);
 
     void deleteContentType(String code);
