@@ -7,4 +7,4 @@ customUi: <h2>Bundle 1 Widget</h2>
 configUi:
   customElement: my-config
   resources:
-    - js/configUiScript.js
+    - something/js/configUiScript.js
