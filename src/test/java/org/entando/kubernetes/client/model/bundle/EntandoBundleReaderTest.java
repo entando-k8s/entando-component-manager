@@ -123,7 +123,7 @@ public class EntandoBundleReaderTest {
         assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
         assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");
         assertThat(wd.getConfigUi().getResources()).hasSize(1);
-        assertThat(wd.getConfigUi().getResources()).contains("js/configUiScript.js", Index.atIndex(0));
+        assertThat(wd.getConfigUi().getResources()).contains("something/js/configUiScript.js", Index.atIndex(0));
 
     }
 
