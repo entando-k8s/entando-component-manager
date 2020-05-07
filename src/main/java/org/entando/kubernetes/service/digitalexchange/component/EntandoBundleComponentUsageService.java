@@ -27,6 +27,8 @@ public class EntandoBundleComponentUsageService {
                 return this.client.getPageModelUsage(componentCode);
             case CONTENT_TYPE:
                 return this.client.getContentTypeUsage(componentCode);
+            case CONTENT_TEMPLATE:
+                return this.client.getContentModelUsage(componentCode);
             default:
                 return new IrrelevantComponentUsage(componentCode);
         }

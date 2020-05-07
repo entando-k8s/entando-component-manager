@@ -12,9 +12,13 @@ public interface K8SServiceClient {
 
     EntandoPlugin getPluginForLink(EntandoAppPluginLink el);
 
+    Optional<EntandoPlugin> getPluginByName(String pluginName);
+
     void unlink(EntandoAppPluginLink el);
 
-    void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);
+    EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);
+
+    Optional<EntandoAppPluginLink> getLinkByName(String linkName);
 
     List<EntandoDeBundle> getBundlesInObservedNamespaces();
 

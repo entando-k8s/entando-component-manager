@@ -30,6 +30,7 @@ public class EntandoCoreComponentUsage {
     }
 
     public static class IrrelevantComponentUsage extends NoUsageComponent {
+
         public IrrelevantComponentUsage(String code) {
             super("irrelevant", code);
         }

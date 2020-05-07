@@ -24,5 +24,5 @@ buildNumber.properties
 # Removes attach_pid files
 .attach_pid*
 
-# Removes ctags
+# Removes tags
 tags

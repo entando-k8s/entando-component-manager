@@ -3,6 +3,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -60,22 +61,27 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
             verifyNoComponentInUseOrThrow(bundle);
             verifyNoConcurrentUninstallOrThrow(bundle);
         } else {
-            throw new EntandoComponentManagerException("Installed bundle " + bundle.getId() + " associated with invalid job");
+            throw new EntandoComponentManagerException(
+                    "Installed bundle " + bundle.getId() + " associated with invalid job");
         }
     }
 
     private void verifyNoConcurrentUninstallOrThrow(EntandoBundle bundle) {
         Optional<EntandoBundleJob> lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(bundle.getId());
-        EnumSet<JobStatus> concurrentUninstallJobStatus = EnumSet.of( JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_CREATED);
+        EnumSet<JobStatus> concurrentUninstallJobStatus = EnumSet
+                .of(JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_CREATED);
         if (lastJob.isPresent() && lastJob.get().getStatus().isAny(concurrentUninstallJobStatus)) {
-                throw new JobConflictException("A concurrent uninstall process for bundle " + bundle.getId() + " is running");
-            }
+            throw new JobConflictException(
+                    "A concurrent uninstall process for bundle " + bundle.getId() + " is running");
+        }
     }
 
     private void verifyNoComponentInUseOrThrow(EntandoBundle bundle) {
         List<EntandoBundleComponentJob> bundleComponentJobs = componentRepository.findAllByJob(bundle.getJob());
-        if (bundleComponentJobs.stream().anyMatch(e -> usageService.getUsage(e.getComponentType(), e.getName()).getUsage() > 0)) {
-            throw new JobConflictException("Some of bundle " + bundle.getId() + " components are in use and bundle can't be uninstalled");
+        if (bundleComponentJobs.stream()
+                .anyMatch(e -> usageService.getUsage(e.getComponentType(), e.getName()).getUsage() > 0)) {
+            throw new JobConflictException(
+                    "Some of bundle " + bundle.getId() + " components are in use and bundle can't be uninstalled");
         }
     }
 
@@ -154,13 +160,15 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
     }
 
     private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream().filter(component ->
-                component.getComponentType() == ComponentType.RESOURCE
-                        && component.getName().equals("/" + job.getComponentId())
-        ).findFirst();
+        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream()
+                .filter(component -> component.getComponentType() == ComponentType.RESOURCE)
+                .sorted(Comparator.comparing(EntandoBundleComponentJob::getName))
+                .limit(1)
+                .findFirst();
 
         if (rootResourceFolder.isPresent()) {
-            coreClient.deleteFolder("/" + job.getComponentId());
+            log.info("Removing directory {}", rootResourceFolder.get().getName());
+            coreClient.deleteFolder(rootResourceFolder.get().getName());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
                         EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();

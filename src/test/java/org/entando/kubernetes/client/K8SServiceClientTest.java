@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
+import org.entando.kubernetes.model.app.EntandoApp;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
@@ -81,6 +82,16 @@ public class K8SServiceClientTest {
     }
 
     @Test
+    public void shouldReturnLinkByName() {
+        Optional<EntandoAppPluginLink>  link = client.getLinkByName("my-app-to-plugin-link");
+        assertThat(link.isPresent()).isTrue();
+        assertThat(link.get().getMetadata().getName()).isEqualTo("my-app-to-plugin-link");
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/?")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/app-plugin-links/?")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/app-plugin-links/my-app-to-plugin-link")));
+    }
+
+    @Test
     public void shouldReturnLinksToApp() {
         List<EntandoAppPluginLink> returnedLink = client.getAppLinks("my-app");
         mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/?")));
@@ -129,6 +140,20 @@ public class K8SServiceClientTest {
         client.unlink(getTestEntandoAppPluginLink());
         String name = testLink.getMetadata().getName();
         mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/" + name)));
+
+    }
+
+    @Test
+    public void shouldGetPluginByName() {
+        EntandoPlugin testPlugin = getTestEntandoPluginWithIngressPath();
+        String pluginName = testPlugin.getMetadata().getName();
+
+        Optional<EntandoPlugin> foundPlugin = client.getPluginByName(pluginName);
+        assertThat(foundPlugin.isPresent()).isTrue();
+        assertThat(foundPlugin.get().getMetadata().getName()).isEqualTo(pluginName);
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/?")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/plugins/?")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/plugins/" + pluginName)));
 
     }
 

@@ -137,12 +137,10 @@ public class EntandoBundleControllerTest {
         assertThat(usageList.size()).isEqualTo(2);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-magic-widget"))
-                .count()
-                ).isEqualTo(11);
+                .findFirst().get().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.PAGE.getTypeName()) && usc.getCode().equals("my-magic-page"))
-                .count())
-                .isEqualTo(5);
+                .findFirst().get().getUsage()).isEqualTo(5);
         assertThat(usageList.stream().map(EntandoCoreComponentUsage::getType).distinct().count())
                 .isEqualTo(2);
         assertThat(usageList.stream().map(EntandoCoreComponentUsage::getUsage).reduce(0, Integer::sum))
@@ -191,11 +189,13 @@ public class EntandoBundleControllerTest {
         assertThat(usageList.size()).isEqualTo(2);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-magic-widget"))
-                .count()
-        ).isEqualTo(11);
+                .findFirst()
+                .get().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-other-widget"))
-                .count())
+                .findFirst()
+                .get()
+                .getUsage())
                 .isEqualTo(5);
 
     }

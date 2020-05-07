@@ -66,7 +66,7 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForPageModels() {
+    public void shouldGetUsageForPageTemplates() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE_TEMPLATE, "my-pagemodel", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageModelUsage("my-pagemodel");
         assertThat(widgetUsage.getCode()).isEqualTo("my-pagemodel");
@@ -90,5 +90,14 @@ public class EntandoCoreClientTest {
         assertThat(widgetUsage.getCode()).isEqualTo("CT092");
         assertThat(widgetUsage.getType()).isEqualTo("contentTypes");
         assertThat(widgetUsage.getUsage()).isEqualTo(2);
+    }
+
+    @Test
+    public void shouldGetUsageForContentTemplate() {
+        coreMockServer = coreMockServer.withContentModelPageReference();
+        EntandoCoreComponentUsage contentModelUsage = this.client.getContentModelUsage("12345");
+        assertThat(contentModelUsage.getCode()).isEqualTo("12345");
+        assertThat(contentModelUsage.getType()).isEqualTo("contentTemplate");
+        assertThat(contentModelUsage.getUsage()).isEqualTo(6);
     }
 }

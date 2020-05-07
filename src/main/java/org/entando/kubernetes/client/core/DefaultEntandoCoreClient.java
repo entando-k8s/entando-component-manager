@@ -1,6 +1,8 @@
 package org.entando.kubernetes.client.core;
 
+import com.jayway.jsonpath.JsonPath;
 import java.nio.file.Paths;
+import java.util.List;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
@@ -10,6 +12,7 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
@@ -175,6 +178,24 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void registerContentModel(final ContentModelDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(),
                 new EntandoCoreContentModel(descriptor), Void.class);
+    }
+
+    @Override
+    public EntandoCoreComponentUsage getContentModelUsage(String code) {
+        ResponseEntity<String> usage = restTemplate
+                .exchange(resolvePathSegments("api", "plugins", "cms", "contentmodels", code, "pagereferences").build().toUri(),
+                        HttpMethod.GET, null, String.class);
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            List<String> contentIds = JsonPath.read(usage.getBody(), "$.payload.*.contentsId.*");
+            return new EntandoCoreComponentUsage(
+                    ComponentType.CONTENT_TEMPLATE.getTypeName(),
+                    code,
+                    contentIds.size()
+            );
+        } else {
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving content type " + code + " usage");
+        }
     }
 
     @Override

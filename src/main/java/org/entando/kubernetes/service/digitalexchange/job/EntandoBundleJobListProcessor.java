@@ -61,7 +61,7 @@ public class EntandoBundleJobListProcessor extends RequestListProcessor<EntandoB
         return sort -> {
             switch (sort) {
                 case COMPONENT_ID:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getComponentId(),b.getComponentId());
+                    return (a, b) -> StringUtils.compareIgnoreCase(a.getComponentId(), b.getComponentId());
                 case COMPONENT_NAME:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getComponentName(), b.getComponentName());
                 case COMPONENT_VERSION:

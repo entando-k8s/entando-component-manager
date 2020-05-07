@@ -3,6 +3,7 @@ package org.entando.kubernetes.config;
 import org.entando.kubernetes.security.oauth2.JwtAuthorityExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -56,6 +57,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/actuator/health").permitAll()
                 .antMatchers("/actuator/info").permitAll()
                 .antMatchers("/actuator/prometheus").permitAll()
+                .antMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .antMatchers("/actuator/**").hasAuthority(ADMIN)
                 .antMatchers("/**").authenticated()
                 .and()

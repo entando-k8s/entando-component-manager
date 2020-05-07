@@ -11,13 +11,11 @@ import static org.awaitility.Awaitility.await;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,6 +56,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
@@ -72,7 +71,6 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJobDto;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
@@ -178,6 +176,7 @@ public class InstallFlowTest {
         WireMock.reset();
         databaseCleaner.cleanup();
         ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
+        ((K8SServiceClientTestDouble) k8SServiceClient).setDeployedLinkPhase(EntandoDeploymentPhase.SUCCESSFUL);
     }
 
     @Test
@@ -192,7 +191,7 @@ public class InstallFlowTest {
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
         // Verify interaction with mocks
-        List<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinkCopy();
+        Set<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinks();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
                 .filter(link -> link.getSpec().getEntandoPluginName().equals("todomvc")).findAny();
 
@@ -255,16 +254,16 @@ public class InstallFlowTest {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css") &&
-                fd.getFolder().equals("/todomvc/css") &&
+                fd.getFolder().equals("/something/css") &&
                 fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css") &&
-                fd.getFolder().equals("/todomvc/css") &&
+                fd.getFolder().equals("/something/css") &&
                 fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js") &&
-                fd.getFolder().equals("/todomvc/js") &&
+                fd.getFolder().equals("/something/js") &&
                 fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js") &&
-                fd.getFolder().equals("/todomvc/js") &&
+                fd.getFolder().equals("/something/js") &&
                 fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
     }
 
@@ -276,9 +275,9 @@ public class InstallFlowTest {
                 .stream().sorted(Comparator.comparing(String::toLowerCase))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFolders.get(0)).isEqualTo("/todomvc");
-        assertThat(allPassedFolders.get(1)).isEqualTo("/todomvc/css");
-        assertThat(allPassedFolders.get(2)).isEqualTo("/todomvc/js");
+        assertThat(allPassedFolders.get(0)).isEqualTo("/something");
+        assertThat(allPassedFolders.get(1)).isEqualTo("/something/css");
+        assertThat(allPassedFolders.get(2)).isEqualTo("/something/js");
     }
 
     private void verifyPageModelsRequests(EntandoCoreClient coreClient) throws Exception {
@@ -342,16 +341,16 @@ public class InstallFlowTest {
         List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName)
                 .collect(Collectors.toList());
         assertThat(jobComponentNames).containsExactlyInAnyOrder(
-                "/todomvc",
-                "/todomvc/js",
-                "/todomvc/css",
-                "/todomvc/vendor",
-                "/todomvc/vendor/jquery",
-                "/todomvc/css/style.css",
-                "/todomvc/js/script.js",
-                "/todomvc/css/custom.css",
-                "/todomvc/js/configUiScript.js",
-                "/todomvc/vendor/jquery/jquery.js",
+                "/something",
+                "/something/js",
+                "/something/css",
+                "/something/vendor",
+                "/something/vendor/jquery",
+                "/something/css/style.css",
+                "/something/js/script.js",
+                "/something/css/custom.css",
+                "/something/js/configUiScript.js",
+                "/something/vendor/jquery/jquery.js",
                 "todomvc",
                 "my-page",
                 "todomvc_another_page_model",
@@ -404,7 +403,7 @@ public class InstallFlowTest {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("/todomvc", ac.getValue());
+        assertEquals("/something", ac.getValue());
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteFragment(ac.capture());
@@ -577,6 +576,48 @@ public class InstallFlowTest {
     }
 
     @Test
+    public void shouldRollbackFailingPluginLinking() throws Exception {
+        Mockito.reset(coreClient);
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        k8SServiceClientTestDouble.setDeployedLinkPhase(EntandoDeploymentPhase.FAILED);
+
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage())));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+
+        Optional<EntandoBundleJob> job = jobRepository.findById(UUID.fromString(jobId));
+
+        assertThat(job.isPresent()).isTrue();
+
+        List<EntandoBundleComponentJob> jobComponentList = jobComponentRepository.findAllByJob(job.get());
+
+        List<EntandoBundleComponentJob> pluginJobs = jobComponentList.stream().filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
+                .collect(Collectors.toList());
+        assertThat(pluginJobs.size()).isEqualTo(2);
+        assertThat(pluginJobs.stream().map(EntandoBundleComponentJob::getStatus).collect(Collectors.toList())).containsOnly(
+                JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
+        );
+
+    }
+
+    @Test
     public void shouldUpdateDatabaseOnlyWhenOperationIsCompleted() throws Exception {
         simulateInProgressInstall();
         assertThat(installedCompRepo.findAll()).isEmpty();
@@ -684,7 +725,7 @@ public class InstallFlowTest {
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
         k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
 
-        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
                         .withBody(readFromDEPackage())));
 
@@ -715,6 +756,7 @@ public class InstallFlowTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
         when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
+        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
@@ -740,7 +782,7 @@ public class InstallFlowTest {
 
         k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
 
-        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
                         .withBody(readFromDEPackage())));
 
@@ -751,9 +793,6 @@ public class InstallFlowTest {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
                 .when(coreClient).registerPage(any(PageDescriptor.class));
-//        stubFor(WireMock.delete(urlMatching("/entando-app/api.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/pages/?")).willReturn(aResponse().withStatus(500)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
@@ -778,6 +817,7 @@ public class InstallFlowTest {
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
+        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
         doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteFolder(any());
         doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteContentModel(any());
         doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteContentType(any());
@@ -807,7 +847,7 @@ public class InstallFlowTest {
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
         k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
 
-        stubFor(WireMock.get("/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
                         .withBody(readFromDEPackage())));
 
@@ -850,6 +890,7 @@ public class InstallFlowTest {
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
+        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
         doSleep(Duration.ofSeconds(1)).when(coreClient).deletePage(any());
         doSleep(Duration.ofSeconds(1)).when(coreClient).deletePageModel(any());
         doSleep(Duration.ofSeconds(1)).when(coreClient).deleteWidget(any());
@@ -972,7 +1013,7 @@ public class InstallFlowTest {
                 .withIntegrity(
                         "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
                 .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8099/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .withTarball("http://localhost:8099/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .endTag()
                 .build();
     }

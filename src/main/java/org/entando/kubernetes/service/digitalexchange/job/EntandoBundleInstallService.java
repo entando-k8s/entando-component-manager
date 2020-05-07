@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -174,16 +175,18 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         List<EntandoBundleComponentJob> jobRelatedComponents = jobComponentRepo.findAllByJob(job);
 
         // Filter jobs that are "uninstallable"
-        List<EntandoBundleComponentJob> installedOrInProgress = jobRelatedComponents.stream()
-                .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
+        List<EntandoBundleComponentJob> jobsToRollback = jobRelatedComponents.stream()
+                .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED)
+                        || (j.getStatus().equals(JobStatus.INSTALL_ERROR) && j.getComponentType()
+                        .equals(ComponentType.PLUGIN)))
                 .collect(Collectors.toList());
 
         try {
             // Cleanup resource folder
-            cleanupResourceFolder(job, installedOrInProgress);
+            cleanupResourceFolder(job, jobsToRollback);
             // For each installed component
             List<EntandoBundleComponentJob> nonResourceComponents =
-                    installedOrInProgress.stream().filter(c -> c.getComponentType() != ComponentType.RESOURCE)
+                    jobsToRollback.stream().filter(c -> c.getComponentType() != ComponentType.RESOURCE)
                             .collect(Collectors.toList());
             for (EntandoBundleComponentJob jc : nonResourceComponents) {
                 // Revert the operation
@@ -203,14 +206,15 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
     }
 
     private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        String componentRootFolder = "/" + job.getComponentId();
-        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream().filter(component ->
-                component.getComponentType() == ComponentType.RESOURCE
-                        && component.getName().equals(componentRootFolder)
-        ).findFirst();
+        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream()
+                .filter(component -> component.getComponentType() == ComponentType.RESOURCE)
+                .sorted(Comparator.comparing(EntandoBundleComponentJob::getName))
+                .limit(1)
+                .findFirst();
 
         if (rootResourceFolder.isPresent()) {
-            engineService.deleteFolder(componentRootFolder);
+            log.info("Removing directory {}", rootResourceFolder.get().getName());
+            engineService.deleteFolder(rootResourceFolder.get().getName());
             components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
                     .forEach(component -> {
                         EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();
@@ -225,7 +229,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         log.info("Processing installable list for component " + job.getComponentId());
 
         JobStatus installSucceded = JobStatus.INSTALL_COMPLETED;
-        for (Installable installable : installableList) {
+        for (int i = 0, n = installableList.size(); i < n; i++) {
+            Installable installable = installableList.get(i);
             installable.setComponent(persistComponent(job, installable));
             installSucceded = processInstallable(installable);
             if (installSucceded.equals(JobStatus.INSTALL_ERROR)) {

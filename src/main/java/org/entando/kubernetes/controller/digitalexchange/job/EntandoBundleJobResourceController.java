@@ -7,15 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJobDto;
-import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -33,7 +30,8 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
         List<EntandoBundleJobDto> jobDtos = tempJobs.getBody().stream()
                 .map(j -> EntandoBundleJobDto.from(j, jobService.getJobRelatedComponentJobs(j)))
                 .collect(Collectors.toList());
-        PagedMetadata<EntandoBundleJobDto> pagedMetadata = new PagedMetadata<>(request, jobDtos, tempJobs.getTotalItems());
+        PagedMetadata<EntandoBundleJobDto> pagedMetadata = new PagedMetadata<>(request, jobDtos,
+                tempJobs.getTotalItems());
         return ResponseEntity.ok(new PagedRestResponse<>(pagedMetadata));
     }
 

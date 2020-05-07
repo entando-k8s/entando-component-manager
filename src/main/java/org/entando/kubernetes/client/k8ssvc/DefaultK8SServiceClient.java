@@ -51,6 +51,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     public static final String APPS_ENDPOINT = "apps";
+    public static final String PLUGINS_ENDPOINT = "plugins";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
 
@@ -96,7 +97,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             return links.getContent().stream()
                     .map(EntityModel::getContent)
                     .collect(Collectors.toList());
-
         });
     }
 
@@ -108,6 +108,23 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
                 })
                 .getContent(), "get plugin associated with link " + el.getMetadata().getName());
+    }
+
+    @Override
+    public Optional<EntandoPlugin> getPluginByName(String name) {
+        EntandoPlugin plugin = null;
+        try {
+            plugin = traverson.follow(PLUGINS_ENDPOINT)
+                    .follow(Hop.rel("plugin").withParameter("name", name))
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                    })
+                    .getContent();
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException("An error occurred while retrieving plugin with name " + name, ex);
+            }
+        }
+        return Optional.ofNullable(plugin);
     }
 
     @Override
@@ -123,7 +140,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public void linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
+    public EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
         URI linkToCall = tryOrThrow(() -> {
             Link linkToApp = traverson.follow("apps")
                     .follow(Hop.rel("app").withParameter("name", name))
@@ -131,15 +148,41 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             return UriComponentsBuilder.fromUri(linkToApp.toUri()).pathSegment("links").build(Collections.emptyMap());
         });
 
-        tryOrThrow(() -> {
+        return tryOrThrow(() -> {
                     RequestEntity<EntandoPlugin> request = RequestEntity
                             .post(linkToCall)
                             .contentType(MediaType.APPLICATION_JSON)
                             .body(plugin);
-                    restTemplate.exchange(request, Void.class);
+                    ResponseEntity<EntityModel<EntandoAppPluginLink>> resp = restTemplate
+                            .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {
+                            });
+                    if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                        return resp.getBody().getContent();
+                    }
+                    throw new RestClientResponseException("Linking process failed",
+                            resp.getStatusCodeValue(), resp.getStatusCode().getReasonPhrase(),
+                            null, null, null);
                 },
                 String.format("linking app %s to plugin %s", name, plugin.getMetadata().getName())
         );
+    }
+
+    @Override
+    public Optional<EntandoAppPluginLink> getLinkByName(String linkName) {
+        EntandoAppPluginLink link = null;
+        try {
+            link = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
+                    .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {
+                    })
+                    .getContent();
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException(
+                        "An error occurred while retrieving entando-app-plugin-link with name " + linkName, ex);
+            }
+        }
+        return Optional.ofNullable(link);
     }
 
     @Override

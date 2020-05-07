@@ -1,0 +1,26 @@
+{
+  "payload": [
+    {
+      "pageCode": "demo",
+      "online": true,
+      "contentsId": [
+        "PST2",
+        "PST1",
+        "PST3"
+      ],
+      "widgetPosition": 0
+    },
+    {
+      "pageCode": "demo",
+      "online": false,
+      "contentsId": [
+        "PST2",
+        "PST1",
+        "PST3"
+      ],
+      "widgetPosition": 0
+    }
+  ],
+  "metaData": {},
+  "errors": []
+}

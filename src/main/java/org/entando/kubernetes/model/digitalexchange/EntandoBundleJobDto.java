@@ -29,13 +29,13 @@ public class EntandoBundleJobDto {
                 .componentName(job.getComponentName())
                 .componentVersion(job.getComponentVersion())
                 .componentJobs(
-                       componentJobs.stream().map(cj -> BundleComponentJobDto.builder()
-                               .id(cj.getId())
-                               .checksum(cj.getChecksum())
-                               .name(cj.getName())
-                               .status(cj.getStatus())
-                               .type(cj.getComponentType())
-                               .build()).collect(Collectors.toList())
+                        componentJobs.stream().map(cj -> BundleComponentJobDto.builder()
+                                .id(cj.getId())
+                                .checksum(cj.getChecksum())
+                                .name(cj.getName())
+                                .status(cj.getStatus())
+                                .type(cj.getComponentType())
+                                .build()).collect(Collectors.toList())
                 )
                 .startedAt(job.getStartedAt())
                 .finishedAt(job.getFinishedAt())
@@ -46,11 +46,12 @@ public class EntandoBundleJobDto {
     @Data
     @Builder
     @RequiredArgsConstructor
-    public static class BundleComponentJobDto  {
-       private final UUID id;
-       private final ComponentType type;
-       private final String name;
-       private final String checksum;
-       private final JobStatus status;
+    public static class BundleComponentJobDto {
+
+        private final UUID id;
+        private final ComponentType type;
+        private final String name;
+        private final String checksum;
+        private final JobStatus status;
     }
 }

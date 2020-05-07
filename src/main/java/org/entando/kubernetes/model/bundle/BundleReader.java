@@ -41,6 +41,10 @@ public class BundleReader {
         return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
 
+    public String getBundleCode() throws IOException {
+        return readBundleDescriptor().getCode();
+    }
+
     public List<String> getResourceFolders() {
         return getResourceOfType(Files::isDirectory);
     }

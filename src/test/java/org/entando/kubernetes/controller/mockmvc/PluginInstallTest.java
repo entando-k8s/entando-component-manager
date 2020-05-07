@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -57,9 +58,9 @@ public class PluginInstallTest {
         kubernetesService.linkPlugin(entandoPlugin);
 
         K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble) k8SServiceClient;
-        List<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPluginsCopy();
+        Set<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPlugins();
         assertThat(linkedPluginDatabase.size()).isEqualTo(1);
-        EntandoPlugin plugin = linkedPluginDatabase.get(0);
+        EntandoPlugin plugin = linkedPluginDatabase.iterator().next();
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/avatar");
         assertThat(plugin.getSpec().getDbms()).isEqualTo(Optional.of(DbmsVendor.MYSQL));
