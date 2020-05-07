@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile;
 @Profile("!test")
 public class AppConfiguration {
 
-    @Value("${entando.bundle.type:npm}")
+    @Value("${entando.bundle.type:git}")
     public String type;
 
     @Bean
