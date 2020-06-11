@@ -24,6 +24,6 @@ public interface EntandoBundleJobResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "404", description = "Not Found")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoBundleJobDto> getJob(@PathVariable("id") String jobId);
+    SimpleRestResponse<EntandoBundleJobDto> getJob(@PathVariable("id") String id);
 
 }

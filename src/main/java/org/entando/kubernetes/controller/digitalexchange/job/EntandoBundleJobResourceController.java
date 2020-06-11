@@ -13,6 +13,7 @@ import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -36,9 +37,9 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
     }
 
     @Override
-    public SimpleRestResponse<EntandoBundleJobDto> getJob(String jobId) {
-        EntandoBundleJob job = jobService.getById(jobId).orElseThrow(() ->
-                getNotFoundJobProblem(jobId));
+    public SimpleRestResponse<EntandoBundleJobDto> getJob(@PathVariable("id") String id) {
+        EntandoBundleJob job = jobService.getById(id).orElseThrow(() ->
+                getNotFoundJobProblem(id));
         List<EntandoBundleComponentJob> jobRelatedComponentJobs = jobService.getJobRelatedComponentJobs(job);
         EntandoBundleJobDto jobDto = EntandoBundleJobDto.from(job, jobRelatedComponentJobs);
         return new SimpleRestResponse<>(jobDto);
