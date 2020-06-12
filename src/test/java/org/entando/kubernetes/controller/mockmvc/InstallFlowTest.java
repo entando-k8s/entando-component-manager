@@ -13,6 +13,7 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +39,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -595,7 +598,7 @@ public class InstallFlowTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
@@ -659,6 +662,35 @@ public class InstallFlowTest {
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict());
         waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
+    }
+
+    @Test
+    public void shouldCreateJobAndReturn201StatusAndLocationHeader() throws Exception {
+
+            Mockito.reset(coreClient);
+            WireMock.reset();
+            WireMock.setGlobalFixedDelay(0);
+
+            K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+            k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+            stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                            .withBody(readFromDEPackage())));
+
+            stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                            .withBody("{ \"access_token\": \"iddqd\" }")));
+            stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
+//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+
+            MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+            assertThat(result.getResponse().containsHeader("Location")).isTrue();
+            assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
     }
 
     @Test
@@ -736,14 +768,17 @@ public class InstallFlowTest {
 //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
 
         waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
 
-        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        return jobId;
     }
-
 
     private String simulateSuccessfullyCompletedUninstall() throws Exception {
 
@@ -764,12 +799,16 @@ public class InstallFlowTest {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
 
         waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
 
-        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        return jobId;
     }
 
     private String simulateFailingInstall() throws Exception {
@@ -795,8 +834,12 @@ public class InstallFlowTest {
                 .when(coreClient).registerPage(any(PageDescriptor.class));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
 
         waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
 
@@ -830,8 +873,13 @@ public class InstallFlowTest {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
+
         waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
@@ -868,8 +916,12 @@ public class InstallFlowTest {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
 
         waitForInstallStatus(JobStatus.INSTALL_IN_PROGRESS);
 
@@ -902,8 +954,11 @@ public class InstallFlowTest {
 
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
         waitForUninstallStatus(JobStatus.UNINSTALL_IN_PROGRESS);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
