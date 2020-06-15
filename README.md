@@ -15,19 +15,20 @@ EntandoDeBundles served in the cluster can be installed in an EntandoApp using t
 You'll need a Kubernetes cluster running, configure the environments described down below and execute the project.
 
 ## Environment Variables
-|Env variable|Description|
-|:---|:---|
-|SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER-URI| The issuer of the token, e.g http://insecure-keycloak-cacms.apps.serv.run/auth/realms/entando|
-|SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-ID| The client id for the service|
-|SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-SECRET| The client secret                                                    |
-|DB_VENDOR| Which database will be used. Default `postgres`                                                                                            |
-|DB_HOST| Database host. Default `localhost`                                                                                                           |
-|DB_PORT| Database port. Default `5432`                                                                                                                |
-|DB_NAME| Database name. Default `digital_exchange`                                                                                                    |
-|DB_OPTIONS| Database options. Default `useSSL=false`                                                                                                  |
-|DB_USER| Database user. Default `admin`                                                                                                               |
-|DB_PASS| Database password. Default `admin`                                                                                                           |
-|ENTANDO_URL| The URL to access the Entando App instance.                                                                                              |
-|ENTANDO_APP_NAMESPACE| The kubernetes namespace where the entando app is running. Default to `test-namespace`;                                        |
-|ENTANDO_APP_NAME| The entando app name that this service is in. Defaults to `test-entando`.                                                           |
-                                                                                                                                                                                                                                                                                                     
+| Env variable                                                  | Description                                                                                                   |
+| :---                                                          | :---                                                                                                          |
+| SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER-URI        | The issuer of the token, e.g http://insecure-keycloak-cacms.apps.serv.run/auth/realms/entando                 |
+| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-ID     | The client id for the service                                                                                 |
+| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-SECRET | The client secret                                                                                             |
+| DB_VENDOR                                                     | Which database will be used. Default `postgres`                                                               |
+| DB_HOST                                                       | Database host. Default `localhost`                                                                            |
+| DB_PORT                                                       | Database port. Default `5432`                                                                                 |
+| DB_NAME                                                       | Database name. Default `digital_exchange`                                                                     |
+| DB_OPTIONS                                                    | Database options. Default `useSSL=false`                                                                      |
+| DB_USER                                                       | Database user. Default `admin`                                                                                |
+| DB_PASS                                                       | Database password. Default `admin`                                                                            |
+| ENTANDO_URL                                                   | The URL to access the Entando App instance.                                                                   |
+| ENTANDO_APP_NAMESPACE                                         | The kubernetes namespace where the entando app is running. Default to `test-namespace`;                       |
+| ENTANDO_APP_NAME                                              | The entando app name that this service is in. Defaults to `test-entando`.                                     |
+| ENTANDO_BUNDLE_TYPE                                           | The bundle type that should be handled by this service. It can be `git` or `npm`. The default value is `git`. |
+
