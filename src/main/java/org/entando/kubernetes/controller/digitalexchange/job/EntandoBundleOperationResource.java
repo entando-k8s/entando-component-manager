@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,14 +37,14 @@ public interface EntandoBundleOperationResource {
     @Operation(description = "Starts component installation job")
     @ApiResponse(responseCode = "201", description = "Created")
     @PostMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoBundleJob> install(
+    ResponseEntity<SimpleRestResponse<EntandoBundleJob>> install(
             @PathVariable("component") String componentId,
             @RequestParam(name = "version", required = true, defaultValue = "latest") String version);
 
     @Operation(description = "Starts component remove job ")
     @ApiResponse(responseCode = "201", description = "Created")
     @PostMapping(value = "/{component}/uninstall", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoBundleJob> uninstall(@PathVariable("component") String componentId,
+    ResponseEntity<SimpleRestResponse<EntandoBundleJob>> uninstall(@PathVariable("component") String componentId,
             HttpServletRequest request) throws URISyntaxException;
 
     @Operation(description = "Checks installation job status")

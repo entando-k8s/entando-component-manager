@@ -1,5 +1,8 @@
 package org.entando.kubernetes.controller.digitalexchange.job;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +14,11 @@ import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,7 +28,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleUninstallService uninstallService;
 
     @Override
-    public SimpleRestResponse<EntandoBundleJob> install(
+    public ResponseEntity<SimpleRestResponse<EntandoBundleJob>> install(
             @PathVariable("component") String componentId,
             @RequestParam(name = "version", required = true, defaultValue = "latest") String version) {
 
@@ -33,8 +38,11 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         } catch (K8SServiceClientException ex) {
             throw new BundleNotFoundException(componentId);
         }
-        return new SimpleRestResponse<>(installJob);
+        return ResponseEntity.created(
+                getJobLocationURI(installJob))
+                .body(new SimpleRestResponse<>(installJob));
     }
+
 
     @Override
     public SimpleRestResponse<EntandoBundleJob> getLastInstallJob(@PathVariable("component") String componentId) {
@@ -47,9 +55,12 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     @Override
-    public SimpleRestResponse<EntandoBundleJob> uninstall(
+    public ResponseEntity<SimpleRestResponse<EntandoBundleJob>> uninstall(
             @PathVariable("component") String componentId, HttpServletRequest request) {
-        return new SimpleRestResponse<>(uninstallService.uninstall(componentId));
+        EntandoBundleJob uninstallJob = uninstallService.uninstall(componentId);
+        return ResponseEntity.created(
+                getJobLocationURI(uninstallJob))
+                .body(new SimpleRestResponse<>(uninstallJob));
     }
 
     @Override
@@ -60,6 +71,12 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .findFirst()
                 .orElseThrow(JobNotFoundException::new);
         return new SimpleRestResponse<>(lastUninstallJob);
+    }
+
+    private URI getJobLocationURI(EntandoBundleJob job) {
+        return MvcUriComponentsBuilder
+                .fromMethodCall(on(EntandoBundleJobResourceController.class).getJob(job.getId().toString()))
+                .build().toUri();
     }
 
 }
