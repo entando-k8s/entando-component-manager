@@ -13,7 +13,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 import java.util.List;
 
-@EnableWebMvc
 @Configuration
 @ConfigurationProperties(prefix = "cors.access.control.allow")
 @Setter
