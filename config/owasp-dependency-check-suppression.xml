@@ -59,11 +59,4 @@
         </packageUrl>
         <cve>CVE-2018-1258</cve>
     </suppress>
-    <suppress>
-        <notes><![CDATA[-->
-            Not a lot we can do right now as it's the latest version available
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/mysql/mysql\-connector\-java@.*$</packageUrl>
-        <cve>CVE-2020-2934</cve>
-    </suppress>
 </suppressions>
