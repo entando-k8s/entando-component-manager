@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.List;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
@@ -44,7 +43,7 @@ public class AssetProcessorTest {
         job.setComponentId("my-component-id");
 
         final List<? extends Installable> installables = assetProcessor
-                .process(job, bundleReader, new ComponentDescriptor());
+                .process(job, bundleReader);
 
         assertThat(installables).hasSize(10);
 

@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -35,31 +37,38 @@ public class PluginProcessor implements ComponentProcessor {
     private final KubernetesService kubernetesService;
 
     @Override
+    public ComponentType getComponentType() {
+        return ComponentType.PLUGIN;
+    }
+
+    @Override
     public List<Installable> process(EntandoBundleJob job,
-            BundleReader npr,
-            ComponentDescriptor descriptor) throws IOException {
-        Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getPlugins);
-        List<Installable> installableList = new ArrayList<>();
-        if (optionalPlugins.isPresent()) {
-            for (String filename : optionalPlugins.get()) {
-                EntandoPlugin plugin = npr
-                        .readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
-                installableList.add(new PluginInstallable(kubernetesService, plugin, job));
+            BundleReader npr) {
+        try {
+            ComponentDescriptor descriptor = npr.readBundleDescriptor();
+            Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getPlugins);
+
+            List<Installable> installableList = new ArrayList<>();
+            if (optionalPlugins.isPresent()) {
+                for (String filename : optionalPlugins.get()) {
+                    EntandoPlugin plugin = npr
+                            .readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
+                    installableList.add(new PluginInstallable(kubernetesService, plugin));
+                }
             }
+            return installableList;
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
         }
-        return installableList;
     }
 
     @Override
-    public boolean shouldProcess(final ComponentType componentType) {
-        return componentType == ComponentType.PLUGIN;
-    }
-
-    @Override
-    public void uninstall(final EntandoBundleComponentJob component) {
-        log.info("Removing link to plugin {}", component.getName());
-        kubernetesService.unlinkPlugin(component.getName());
+    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+        return components.stream()
+                .filter(c -> c.getComponentType() == ComponentType.PLUGIN)
+                .map(c -> new PluginInstallable(kubernetesService, c))
+                .collect(Collectors.toList());
     }
 
 }

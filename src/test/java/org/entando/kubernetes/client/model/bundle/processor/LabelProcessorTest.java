@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,8 +52,9 @@ public class LabelProcessorTest {
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         final ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
         spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
+        when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
-        final List<? extends Installable> installables = processor.process(job, bundleReader, descriptor);
+        final List<? extends Installable> installables = processor.process(job, bundleReader);
 
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0)).isInstanceOf(LabelInstallable.class);

@@ -3,21 +3,21 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 
 @Slf4j
-public class PageInstallable extends Installable<PageDescriptor> {
+public class PageTemplateInstallable extends Installable<PageTemplateDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public PageInstallable(EntandoCoreClient engineService, PageDescriptor pd) {
-        super(pd);
+    public PageTemplateInstallable(EntandoCoreClient engineService, PageTemplateDescriptor pageTemplateDescriptor) {
+        super(pageTemplateDescriptor);
         this.engineService = engineService;
     }
 
-    public PageInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
+    public PageTemplateInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
         super(component);
         this.engineService = service;
     }
@@ -25,22 +25,22 @@ public class PageInstallable extends Installable<PageDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Page {}", getName());
-            engineService.registerPage(representation);
+            log.info("Registering Page Model {}", getName());
+            engineService.registerPageModel(representation);
         });
     }
 
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Removing Page {}", getName());
-            engineService.deletePage(getName());
+            log.info("Removing PageTemplate {}", getName());
+            engineService.deletePageModel(getName());
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.PAGE;
+        return ComponentType.PAGE_TEMPLATE;
     }
 
     @Override
@@ -49,14 +49,14 @@ public class PageInstallable extends Installable<PageDescriptor> {
     }
 
     @Override
-    public PageDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return PageDescriptor.builder()
+    public PageTemplateDescriptor representationFromComponent(EntandoBundleComponentJob component) {
+        return PageTemplateDescriptor.builder()
                 .code(component.getName())
                 .build();
     }
 
     @Override
     public InstallPriority getInstallPriority() {
-        return InstallPriority.PAGE;
+        return InstallPriority.PAGE_TEMPLATE;
     }
 }

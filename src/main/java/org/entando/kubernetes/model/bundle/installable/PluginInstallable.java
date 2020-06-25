@@ -3,30 +3,39 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
 
 @Slf4j
 public class PluginInstallable extends Installable<EntandoPlugin> {
 
-    private final EntandoBundleJob job;
     private final KubernetesService kubernetesService;
 
-    public PluginInstallable(
-            KubernetesService kubernetesService,
-            EntandoPlugin plugin,
-            EntandoBundleJob job) {
+    public PluginInstallable(KubernetesService kubernetesService, EntandoPlugin plugin) {
         super(plugin);
-        this.job = job;
+        this.kubernetesService = kubernetesService;
+    }
+
+    public PluginInstallable(KubernetesService kubernetesService, EntandoBundleComponentJob component) {
+        super(component);
         this.kubernetesService = kubernetesService;
     }
 
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Deploying plugin {}", representation.getMetadata().getName());
+            log.info("Deploying plugin {}", getName());
             kubernetesService.linkPluginAndWaitForSuccess(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing link to plugin {}", getName());
+            kubernetesService.unlinkPlugin(getName());
         });
     }
 
@@ -40,4 +49,17 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
         return this.representation.getMetadata().getName();
     }
 
+    @Override
+    public EntandoPlugin representationFromComponent(EntandoBundleComponentJob component) {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName(component.getName())
+                .endMetadata()
+                .build();
+    }
+
+    @Override
+    public InstallPriority getInstallPriority() {
+        return InstallPriority.PLUGIN;
+    }
 }

@@ -159,19 +159,18 @@ public class EntandoBundleReaderTest {
     private static class DumbComponentProcessor implements ComponentProcessor {
 
         @Override
-        public List<Installable> process(EntandoBundleJob job, BundleReader bundleReader,
-                ComponentDescriptor descriptor) throws IOException {
+        public List<Installable> process(EntandoBundleJob job, BundleReader bundleReader) {
             return null;
         }
 
         @Override
-        public boolean shouldProcess(ComponentType componentType) {
-            return false;
+        public List<Installable> process(List<EntandoBundleComponentJob> components) {
+            return null;
         }
 
         @Override
-        public void uninstall(EntandoBundleComponentJob component) {
-
+        public ComponentType getComponentType() {
+            return null;
         }
     }
 

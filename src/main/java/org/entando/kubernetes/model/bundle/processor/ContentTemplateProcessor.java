@@ -3,9 +3,9 @@ package org.entando.kubernetes.model.bundle.processor;
 import static java.util.Optional.ofNullable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,50 +14,48 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.installable.ContentTemplateInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
- *
- * @author Sergio Marcelino
+ * Processor to handle Bundles with CMS ContentTemplates
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WidgetProcessor implements ComponentProcessor {
+public class ContentTemplateProcessor implements ComponentProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.WIDGET;
+        return ComponentType.CONTENT_TEMPLATE;
     }
 
     @Override
     public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
         try {
             ComponentDescriptor descriptor = npr.readBundleDescriptor();
+            List<String> contentModelsDescriptor = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getContentModels)
+                    .orElse(new ArrayList<>());
 
-            final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getWidgets);
-            final List<Installable> installables = new LinkedList<>();
+            List<Installable> installables = new LinkedList<>();
+            for (String fileName : contentModelsDescriptor) {
+                ContentTemplateDescriptor contentTemplateDescriptor = npr.readDescriptorFile(fileName,
+                        ContentTemplateDescriptor.class);
 
-            if (widgetsDescriptor.isPresent()) {
-                for (final String fileName : widgetsDescriptor.get()) {
-                    final WidgetDescriptor widgetDescriptor = npr.readDescriptorFile(fileName, WidgetDescriptor.class);
-                    if (widgetDescriptor.getCustomUiPath() != null) {
-                        String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
-                        widgetDescriptor.setCustomUi(npr.readFileAsString(widgetUiPath));
-                    }
-                    widgetDescriptor.setBundleId(descriptor.getCode());
-                    installables.add(new WidgetInstallable(engineService, widgetDescriptor));
+                if (contentTemplateDescriptor.getContentShapePath() != null) {
+                    String csPath = getRelativePath(fileName, contentTemplateDescriptor.getContentShapePath());
+                    contentTemplateDescriptor.setContentShape(npr.readFileAsString(csPath));
                 }
+
+                installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor));
             }
 
             return installables;
@@ -69,9 +67,8 @@ public class WidgetProcessor implements ComponentProcessor {
     @Override
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.WIDGET)
-                .map(c -> new WidgetInstallable(engineService, c))
+                .filter(c -> c.getComponentType() == ComponentType.CONTENT_TEMPLATE)
+                .map(c -> new ContentTemplateInstallable(engineService, c))
                 .collect(Collectors.toList());
     }
-
 }

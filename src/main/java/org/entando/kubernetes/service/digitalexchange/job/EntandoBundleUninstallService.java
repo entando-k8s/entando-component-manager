@@ -6,9 +6,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,8 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.job.JobConflictException;
-import org.entando.kubernetes.exception.job.JobExecutionException;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
+import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
@@ -31,6 +32,7 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleCom
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @Service
@@ -43,6 +45,7 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
     private final @NonNull EntandoCoreClient coreClient;
     private final @NonNull EntandoBundleComponentUsageService usageService;
     private final @NonNull KubernetesService k8sService;
+    private final @NonNull BundleDownloader bundleDownloader;
 
     private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
 
@@ -53,7 +56,6 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         verifyBundleUninstallIsPossibleOrThrow(installedBundle);
 
         return submitNewUninstallJob(installedBundle.getJob());
-
     }
 
     private void verifyBundleUninstallIsPossibleOrThrow(EntandoBundle bundle) {
@@ -85,7 +87,6 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         }
     }
 
-
     private EntandoBundleJob submitNewUninstallJob(EntandoBundleJob lastAvailableJob) {
         List<EntandoBundleComponentJob> components = componentRepository.findAllByJob(lastAvailableJob);
 
@@ -108,82 +109,106 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         CompletableFuture.runAsync(() -> {
             JobStatus uninstallStatus = JobStatus.UNINSTALL_IN_PROGRESS;
             jobRepository.updateJobStatus(job.getId(), uninstallStatus);
+
             try {
-                uninstallStatus = uninstallComponent(job, components);
+                uninstallResources(job, components);
+                uninstallStatus = uninstallInstallables(job, components);
+
                 installedComponentRepository.deleteById(job.getComponentId());
                 log.info("Component " + job.getComponentId() + " uninstalled successfully");
             } catch (Exception ex) {
                 log.error("An error occurred while uninstalling component " + job.getComponentId(), ex);
                 uninstallStatus = JobStatus.UNINSTALL_ERROR;
             }
+
             jobRepository.updateJobStatus(job.getId(), uninstallStatus);
         });
     }
 
-    private JobStatus uninstallComponent(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
+    private JobStatus uninstallInstallables(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
+        log.info("Processing uninstallation list for component " + job.getComponentId());
 
-        try {
-            cleanupResourceFolder(job, components);
-        } catch (Exception e) {
-            throw new JobExecutionException("An error occurred while cleaning up component "
-                    + job.getComponentId() + " resources", e);
-        }
+        componentProcessors.stream()
+                .filter(processor -> processor.getComponentType() != ComponentType.RESOURCE)
+                .map(processor -> processor.process(components))
+                .flatMap(List::stream)
+                .sorted(Comparator.comparingInt((Installable i) -> i.getInstallPriority().getPriority()).reversed())
+                .forEach(installable -> {
+                    persistComponent(job, installable, JobStatus.UNINSTALL_CREATED);
+                    JobStatus result = uninstallInstallable(installable);
 
-        CompletableFuture[] completableFutures = components.stream()
-                .map(component -> {
-                    if (component.getStatus() == JobStatus.INSTALL_COMPLETED
-                            && component.getComponentType() != ComponentType.RESOURCE) {
-                        EntandoBundleComponentJob ujc = component.duplicate();
-                        ujc.setJob(job);
-                        ujc.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
-                        return componentRepository.save(ujc);
+                    if (result.equals(JobStatus.UNINSTALL_ERROR)) {
+                        throw new EntandoComponentManagerException(job.getComponentId()
+                                + " uninstallation can't proceed due to an error with one of the installed components");
                     }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .map(ujc -> {
-                    CompletableFuture<Void> future = deleteComponent(ujc);
-                    future.thenAccept(justVoid -> componentRepository
-                            .updateJobStatus(ujc.getId(), JobStatus.UNINSTALL_COMPLETED));
-                    future.exceptionally(ex -> {
-                        log.error("Error while trying to uninstall component {}", ujc.getId(), ex);
-                        componentRepository
-                                .updateJobStatus(ujc.getId(), JobStatus.UNINSTALL_ERROR, ex.getMessage());
-                        return null;
-                    });
-                    return future;
-                })
-                .toArray(CompletableFuture[]::new);
+                });
 
-        CompletableFuture.allOf(completableFutures).join();
         return JobStatus.UNINSTALL_COMPLETED;
     }
 
-    private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream()
-                .filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                .sorted(Comparator.comparing(EntandoBundleComponentJob::getName))
-                .limit(1)
-                .findFirst();
+    private JobStatus uninstallInstallable(Installable installable) {
+        EntandoBundleComponentJob installableComponent = installable.getComponent();
+        componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.UNINSTALL_IN_PROGRESS);
 
-        if (rootResourceFolder.isPresent()) {
-            log.info("Removing directory {}", rootResourceFolder.get().getName());
-            coreClient.deleteFolder(rootResourceFolder.get().getName());
-            components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                    .forEach(component -> {
-                        EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();
-                        uninstalledJobComponent.setJob(job);
-                        uninstalledJobComponent.setStatus(JobStatus.UNINSTALL_COMPLETED);
-                        componentRepository.save(uninstalledJobComponent);
-                    });
-        }
+        CompletableFuture<?> future = installable.uninstall();
+        CompletableFuture<JobStatus> uninstallResult = future.thenApply(vd -> {
+            log.debug("Uninstallation of installable '{}' finished successfully", installable.getName());
+            componentRepository.updateJobStatus(installableComponent.getId(), JobStatus.UNINSTALL_COMPLETED);
+            return JobStatus.UNINSTALL_COMPLETED;
+        }).exceptionally(th -> {
+            log.error("Uninstallation of installable '{}' has errors", installable.getName(), th.getCause());
+
+            installableComponent.setStatus(JobStatus.UNINSTALL_ERROR);
+            if (th.getCause() != null) {
+                String message = th.getCause().getMessage();
+                if (th.getCause() instanceof HttpClientErrorException) {
+                    HttpClientErrorException httpException = (HttpClientErrorException) th.getCause();
+                    message =
+                            httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
+                }
+                componentRepository
+                        .updateJobStatus(installableComponent.getId(), JobStatus.UNINSTALL_ERROR, message);
+            } else {
+                componentRepository
+                        .updateJobStatus(installableComponent.getId(), JobStatus.UNINSTALL_ERROR, th.getMessage());
+            }
+            return JobStatus.UNINSTALL_ERROR;
+        });
+        return uninstallResult.join();
     }
 
-    private CompletableFuture<Void> deleteComponent(final EntandoBundleComponentJob component) {
-        return CompletableFuture.runAsync(() -> componentProcessors.stream()
-                .filter(processor -> processor.shouldProcess(component.getComponentType()))
-                .forEach(processor -> processor.uninstall(component))
-        );
+    private EntandoBundleComponentJob persistComponent(EntandoBundleJob job, Installable installable, JobStatus status) {
+        EntandoBundleComponentJob component = installable.getComponent();
+        component.setJob(job);
+        component.setStatus(status);
+
+        component = componentRepository.save(component);
+
+        log.debug("New component uninstall job created "
+                + "for component of type " + installable.getComponentType() + " with name " + installable.getName());
+
+        installable.setComponent(component);
+        return component;
+    }
+
+    private void uninstallResources(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
+        List<Installable> resourceInstallables = componentProcessors.stream()
+                .filter(processor -> processor.getComponentType() == ComponentType.RESOURCE)
+                .map(processor -> processor.process(components))
+                .flatMap(List::stream)
+                .sorted(Comparator.comparing(Installable::getName))
+                .collect(Collectors.toList());
+
+        resourceInstallables.stream()
+                .findFirst()
+                .ifPresent(rootResourceInstallable -> {
+                    //Remove root folder
+                    log.info("Removing directory {}", rootResourceInstallable.getName());
+                    coreClient.deleteFolder(rootResourceInstallable.getName());
+
+                    //Mark all resources as uninstalled
+                    resourceInstallables.forEach(i -> persistComponent(job, i, JobStatus.UNINSTALL_COMPLETED));
+                });
     }
 
     @Override

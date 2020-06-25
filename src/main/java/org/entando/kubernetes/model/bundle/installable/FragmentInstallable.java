@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 
 @Slf4j
 public class FragmentInstallable extends Installable<FragmentDescriptor> {
@@ -16,11 +17,24 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
         this.engineService = engineService;
     }
 
+    public FragmentInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
+        super(component);
+        this.engineService = service;
+    }
+
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Fragment {}", representation.getCode());
+            log.info("Registering Fragment {}", getName());
             engineService.registerFragment(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing Fragment {}", getName());
+            engineService.deleteFragment(getName());
         });
     }
 
@@ -34,4 +48,15 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
         return representation.getCode();
     }
 
+    @Override
+    public FragmentDescriptor representationFromComponent(EntandoBundleComponentJob component) {
+        return FragmentDescriptor.builder()
+                .code(component.getName())
+                .build();
+    }
+
+    @Override
+    public InstallPriority getInstallPriority() {
+        return InstallPriority.FRAGMENT;
+    }
 }

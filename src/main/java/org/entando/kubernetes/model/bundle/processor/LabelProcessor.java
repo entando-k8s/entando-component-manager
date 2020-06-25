@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -33,31 +35,37 @@ public class LabelProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
-            final ComponentDescriptor descriptor) throws IOException {
+    public ComponentType getComponentType() {
+        return ComponentType.LABEL;
+    }
 
-        final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getLabels);
-        final List<Installable> installables = new LinkedList<>();
+    @Override
+    public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
+        try {
+            ComponentDescriptor descriptor = npr.readBundleDescriptor();
 
-        if (labelDescriptors.isPresent()) {
-            for (final LabelDescriptor labelDescriptor : labelDescriptors.get()) {
-                installables.add(new LabelInstallable(engineService, labelDescriptor));
+            final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getLabels);
+            final List<Installable> installables = new LinkedList<>();
+
+            if (labelDescriptors.isPresent()) {
+                for (final LabelDescriptor labelDescriptor : labelDescriptors.get()) {
+                    installables.add(new LabelInstallable(engineService, labelDescriptor));
+                }
             }
+
+            return installables;
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
         }
-
-        return installables;
     }
 
     @Override
-    public boolean shouldProcess(final ComponentType componentType) {
-        return componentType == ComponentType.LABEL;
-    }
-
-    @Override
-    public void uninstall(final EntandoBundleComponentJob component) {
-        log.info("Removing Label {}", component.getName());
-        engineService.deleteLabel(component.getName());
+    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+        return components.stream()
+                .filter(c -> c.getComponentType() == ComponentType.LABEL)
+                .map(c -> new LabelInstallable(engineService, c))
+                .collect(Collectors.toList());
     }
 
 }

@@ -1,11 +1,17 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ContentModelDescriptor implements Descriptor {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ContentTemplateDescriptor implements Descriptor {
 
     private String id;
     private String contentType;

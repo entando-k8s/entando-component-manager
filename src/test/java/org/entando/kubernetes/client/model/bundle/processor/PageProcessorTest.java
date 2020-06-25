@@ -16,7 +16,6 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.processor.PageProcessor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -42,17 +41,6 @@ public class PageProcessorTest {
     }
 
     @Test
-    public void shouldProcessPagesAndPageModels() {
-        assertThat(pageProcessor.shouldProcess(ComponentType.PAGE)).isTrue();
-        assertThat(pageProcessor.shouldProcess(ComponentType.PAGE_TEMPLATE)).isTrue();
-    }
-
-    @Test
-    public void shouldNotProcessOtherTypes() {
-        assertThat(pageProcessor.shouldProcess(ComponentType.CONTENT_TYPE)).isFalse();
-    }
-
-    @Test
     public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
         final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
@@ -64,21 +52,23 @@ public class PageProcessorTest {
         pageTitles.put("it", "La mia pagina");
         pageTitles.put("en", "My page");
 
-        PageDescriptor pageDescriptor = new PageDescriptor();
-        pageDescriptor.setCode("my-page");
-        pageDescriptor.setParentCode("homepage");
-        pageDescriptor.setCharset("utf-8");
-        pageDescriptor.setDisplayedInMenu(true);
-        pageDescriptor.setPageModel("service");
-        pageDescriptor.setOwnerGroup("administrators");
-        pageDescriptor.setSeo(false);
-        pageDescriptor.setTitles(pageTitles);
+        PageDescriptor pageDescriptor = PageDescriptor.builder()
+                .code("my-page")
+                .parentCode("homepage")
+                .charset("utf-8")
+                .displayedInMenu(true)
+                .pageModel("service")
+                .ownerGroup("administrators")
+                .seo(false)
+                .titles(pageTitles)
+                .build();
 
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class)).thenReturn(pageDescriptor);
 
         ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
+        when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
-        List<? extends Installable> installables = pageProcessor.process(job, bundleReader, descriptor);
+        List<? extends Installable> installables = pageProcessor.process(job, bundleReader);
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0)).isInstanceOf(PageInstallable.class);
         PageInstallable pginst = (PageInstallable) installables.get(0);

@@ -3,21 +3,21 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 
 @Slf4j
-public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
+public class ContentTemplateInstallable extends Installable<ContentTemplateDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public ContentTypeInstallable(EntandoCoreClient service, ContentTypeDescriptor contentTypeDescriptor) {
-        super(contentTypeDescriptor);
+    public ContentTemplateInstallable(EntandoCoreClient service, ContentTemplateDescriptor contentTemplateDescriptor) {
+        super(contentTemplateDescriptor);
         this.engineService = service;
     }
 
-    public ContentTypeInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
+    public ContentTemplateInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
         super(component);
         this.engineService = service;
     }
@@ -25,38 +25,38 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Content Type {}", getName());
-            engineService.registerContentType(representation);
+            log.info("Registering Content Template {}", getName());
+            engineService.registerContentModel(representation);
         });
     }
 
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Removing Content Type {}", getName());
-            engineService.deleteContentType(getName());
+            log.info("Removing Content Template {}", getName());
+            engineService.deleteContentModel(getName());
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.CONTENT_TYPE;
+        return ComponentType.CONTENT_TEMPLATE;
     }
 
     @Override
     public String getName() {
-        return representation.getCode();
+        return representation.getId();
     }
 
     @Override
-    public ContentTypeDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return ContentTypeDescriptor.builder()
-                .code(component.getName())
+    public ContentTemplateDescriptor representationFromComponent(EntandoBundleComponentJob component) {
+        return ContentTemplateDescriptor.builder()
+                .id(component.getName())
                 .build();
     }
 
     @Override
     public InstallPriority getInstallPriority() {
-        return InstallPriority.CONTENT_TYPE;
+        return InstallPriority.CONTENT_TEMPLATE;
     }
 }

@@ -6,26 +6,24 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
-import org.entando.kubernetes.model.bundle.installable.PageModelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Page Models, can handle descriptors with template embedded or a separate template file.
- *
- * @author Sergio Marcelino
+ * Processor to handle Pages
  */
 @Slf4j
 @Service
@@ -35,49 +33,37 @@ public class PageProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public List<Installable> process(final EntandoBundleJob job, final BundleReader npr,
-            final ComponentDescriptor descriptor) throws IOException {
+    public ComponentType getComponentType() {
+        return ComponentType.PAGE;
+    }
 
-        List<String> pageModelsDescriptor = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getPageModels)
-                .orElse(Collections.emptyList());
-        List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
-                .map(ComponentSpecDescriptor::getPages)
-                .orElse(Collections.emptyList());
-        List<Installable> installables = new LinkedList<>();
+    @Override
+    public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
+        try {
+            ComponentDescriptor descriptor = npr.readBundleDescriptor();
+            List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getPages)
+                    .orElse(Collections.emptyList());
 
-        for (final String fileName : pageModelsDescriptor) {
-            final PageModelDescriptor pageModelDescriptor = npr.readDescriptorFile(fileName, PageModelDescriptor.class);
-            if (pageModelDescriptor.getTemplatePath() != null) {
-                String tp = getRelativePath(fileName, pageModelDescriptor.getTemplatePath());
-                pageModelDescriptor.setTemplate(npr.readFileAsString(tp));
+            List<Installable> installables = new LinkedList<>();
+
+            for (String fileName : pageDescriptorList) {
+                PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
+                installables.add(new PageInstallable(engineService, pageDescriptor));
             }
-            installables.add(new PageModelInstallable(engineService, pageModelDescriptor));
-        }
 
-        for (String fileName : pageDescriptorList) {
-            PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
-            installables.add(new PageInstallable(engineService, pageDescriptor));
+            return installables;
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
         }
-
-        return installables;
     }
 
     @Override
-    public boolean shouldProcess(final ComponentType componentType) {
-        return componentType == ComponentType.PAGE_TEMPLATE || componentType == ComponentType.PAGE;
-    }
-
-    @Override
-    public void uninstall(final EntandoBundleComponentJob component) {
-        if (component.getComponentType().equals(ComponentType.PAGE_TEMPLATE)) {
-            log.info("Removing PageModel {}", component.getName());
-            engineService.deletePageModel(component.getName());
-        }
-        if (component.getComponentType().equals(ComponentType.PAGE)) {
-            log.info("Removing Page {}", component.getName());
-            engineService.deletePage(component.getName());
-        }
+    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+        return components.stream()
+                .filter(c -> c.getComponentType() == ComponentType.PAGE)
+                .map(c -> new PageInstallable(engineService, c))
+                .collect(Collectors.toList());
     }
 
 }

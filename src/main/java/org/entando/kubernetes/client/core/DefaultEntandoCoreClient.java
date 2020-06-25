@@ -4,13 +4,13 @@ import com.jayway.jsonpath.JsonPath;
 import java.nio.file.Paths;
 import java.util.List;
 import org.entando.kubernetes.exception.web.HttpException;
-import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
@@ -145,7 +145,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerPageModel(final PageModelDescriptor descriptor) {
+    public void registerPageModel(final PageTemplateDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(),
                 new EntandoCorePageModel(descriptor), Void.class);
     }
@@ -175,7 +175,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerContentModel(final ContentModelDescriptor descriptor) {
+    public void registerContentModel(final ContentTemplateDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(),
                 new EntandoCoreContentModel(descriptor), Void.class);
     }

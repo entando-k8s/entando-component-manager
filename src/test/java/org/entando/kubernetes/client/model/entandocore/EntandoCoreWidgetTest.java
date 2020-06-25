@@ -61,12 +61,12 @@ public class EntandoCoreWidgetTest {
         titles.put("en", "My title");
         titles.put("it", "Il mio titolo");
 
-        WidgetDescriptor descriptor = new WidgetDescriptor();
-        descriptor.setCode("my-code");
-        descriptor.setBundleId("my-bundle");
-        descriptor.setCustomUi("<h1>Hello world</h1>");
-        descriptor.setGroup("free");
-        descriptor.setTitles(titles);
-        return descriptor;
+        return WidgetDescriptor.builder()
+                .code("my-code")
+                .bundleId("my-bundle")
+                .customUi("<h1>Hello world</h1>")
+                .group("free")
+                .titles(titles)
+                .build();
     }
 }
