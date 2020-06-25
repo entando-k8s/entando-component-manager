@@ -40,9 +40,14 @@ public enum ComponentType {
     LABEL("label"),
 
     /**
-     * A static resource (AKA asset)
+     * A static asset
      */
-    RESOURCE("resource"),
+    ASSET("asset"),
+
+    /**
+     * A static asset directory
+     */
+    DIRECTORY("directory"),
 
     /**
      * A Service Deployment on Kubernetes (or any similar platform).

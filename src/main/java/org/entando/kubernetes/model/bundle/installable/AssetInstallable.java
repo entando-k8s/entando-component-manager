@@ -34,13 +34,13 @@ public class AssetInstallable extends Installable<FileDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            //Do nothing since Assets shouldn't be removed during uninstall
+            //Do nothing since Directories and Assets are uninstalled in a different way
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.RESOURCE;
+        return ComponentType.ASSET;
     }
 
     @Override

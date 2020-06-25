@@ -38,58 +38,34 @@ public class AssetProcessorTest {
     }
 
     @Test
-    public void testCreateFoldersAndFiles() throws IOException {
+    public void testCreateFiles() throws IOException {
         final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
         final List<? extends Installable> installables = assetProcessor
                 .process(job, bundleReader);
 
-        assertThat(installables).hasSize(10);
+        assertThat(installables).hasSize(5);
 
-        assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(0).getName()).isEqualTo("/something");
+        assertThat(installables.get(0)).isInstanceOf(AssetInstallable.class);
+        assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(0).getName()).isEqualTo("/something/css/custom.css");
 
-        assertThat(installables.get(1)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(1).getName()).isEqualTo("/something/css");
+        assertThat(installables.get(1)).isInstanceOf(AssetInstallable.class);
+        assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(1).getName()).isEqualTo("/something/css/style.css");
 
-        assertThat(installables.get(2)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(2).getName()).isEqualTo("/something/js");
+        assertThat(installables.get(2)).isInstanceOf(AssetInstallable.class);
+        assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(2).getName()).isEqualTo("/something/js/configUiScript.js");
 
-        assertThat(installables.get(3)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(3).getName()).isEqualTo("/something/vendor");
+        assertThat(installables.get(3)).isInstanceOf(AssetInstallable.class);
+        assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(3).getName()).isEqualTo("/something/js/script.js");
 
-        assertThat(installables.get(4)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery");
-
-        assertThat(installables.get(5)).isInstanceOf(AssetInstallable.class);
-        assertThat(installables.get(5).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(5).getName()).isEqualTo("/something/css/custom.css");
-
-        assertThat(installables.get(6)).isInstanceOf(AssetInstallable.class);
-        assertThat(installables.get(6).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(6).getName()).isEqualTo("/something/css/style.css");
-
-        assertThat(installables.get(7)).isInstanceOf(AssetInstallable.class);
-        assertThat(installables.get(7).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(7).getName()).isEqualTo("/something/js/configUiScript.js");
-
-        assertThat(installables.get(8)).isInstanceOf(AssetInstallable.class);
-        assertThat(installables.get(8).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(8).getName()).isEqualTo("/something/js/script.js");
-
-        assertThat(installables.get(9)).isInstanceOf(AssetInstallable.class);
-        assertThat(installables.get(9).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(9).getName()).isEqualTo("/something/vendor/jquery/jquery.js");
-    }
-
-    private FileDescriptor file(final String folder, final String name, final String base64) {
-        return new FileDescriptor(folder, name, base64);
+        assertThat(installables.get(4)).isInstanceOf(AssetInstallable.class);
+        assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery/jquery.js");
     }
 
 }

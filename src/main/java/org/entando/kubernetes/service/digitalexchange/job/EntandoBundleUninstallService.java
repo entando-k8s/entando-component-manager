@@ -42,7 +42,7 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
     private final @NonNull EntandoBundleJobRepository jobRepository;
     private final @NonNull EntandoBundleComponentJobRepository componentRepository;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
-    private final @NonNull EntandoCoreClient coreClient;
+    private final @NonNull EntandoCoreClient engineService;
     private final @NonNull EntandoBundleComponentUsageService usageService;
     private final @NonNull KubernetesService k8sService;
     private final @NonNull BundleDownloader bundleDownloader;
@@ -129,7 +129,8 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
         log.info("Processing uninstallation list for component " + job.getComponentId());
 
         componentProcessors.stream()
-                .filter(processor -> processor.getComponentType() != ComponentType.RESOURCE)
+                .filter(processor -> processor.getComponentType() != ComponentType.ASSET
+                        && processor.getComponentType() != ComponentType.DIRECTORY)
                 .map(processor -> processor.process(components))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt((Installable i) -> i.getInstallPriority().getPriority()).reversed())
@@ -192,22 +193,22 @@ public class EntandoBundleUninstallService implements ApplicationContextAware {
     }
 
     private void uninstallResources(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        List<Installable> resourceInstallables = componentProcessors.stream()
-                .filter(processor -> processor.getComponentType() == ComponentType.RESOURCE)
+        List<Installable> resources = componentProcessors.stream()
+                .filter(processor -> processor.getComponentType() == ComponentType.ASSET
+                        || processor.getComponentType() == ComponentType.DIRECTORY)
                 .map(processor -> processor.process(components))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparing(Installable::getName))
+                .peek(installable -> persistComponent(job, installable, JobStatus.UNINSTALL_COMPLETED))
                 .collect(Collectors.toList());
 
-        resourceInstallables.stream()
+        resources.stream()
+                .filter(installable -> installable.getComponentType() == ComponentType.DIRECTORY)
                 .findFirst()
                 .ifPresent(rootResourceInstallable -> {
                     //Remove root folder
                     log.info("Removing directory {}", rootResourceInstallable.getName());
-                    coreClient.deleteFolder(rootResourceInstallable.getName());
-
-                    //Mark all resources as uninstalled
-                    resourceInstallables.forEach(i -> persistComponent(job, i, JobStatus.UNINSTALL_COMPLETED));
+                    engineService.deleteFolder(rootResourceInstallable.getName());
                 });
     }
 

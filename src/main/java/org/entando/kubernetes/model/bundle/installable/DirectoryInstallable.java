@@ -16,6 +16,11 @@ public class DirectoryInstallable extends Installable<String> {
         this.engineService = engineService;
     }
 
+    public DirectoryInstallable(EntandoCoreClient engineService, EntandoBundleComponentJob component) {
+        super(component);
+        this.engineService = engineService;
+    }
+
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -27,13 +32,13 @@ public class DirectoryInstallable extends Installable<String> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            //Do nothing since Assets shouldn't be removed during uninstall
+            //Do nothing since Directories and Assets are uninstalled in a different way
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.RESOURCE;
+        return ComponentType.DIRECTORY;
     }
 
     @Override
@@ -43,7 +48,7 @@ public class DirectoryInstallable extends Installable<String> {
 
     @Override
     public String representationFromComponent(EntandoBundleComponentJob component) {
-        return null; //Not used during uninstall
+        return component.getName();
     }
 
     @Override

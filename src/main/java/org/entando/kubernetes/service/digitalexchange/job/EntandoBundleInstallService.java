@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import javax.enterprise.inject.Instance;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -205,14 +206,16 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
           Except for IN_PROGRESS, everything should be uninstallable
           Uninstall operations should be idempotent to be able to provide this
          */
-        return component.getComponentType() != ComponentType.RESOURCE
+        return component.getComponentType() != ComponentType.ASSET
+                && component.getComponentType() != ComponentType.DIRECTORY
                 && (component.getStatus().equals(JobStatus.INSTALL_COMPLETED)
                 || (component.getStatus().equals(JobStatus.INSTALL_ERROR) && component.getComponentType() == ComponentType.PLUGIN));
     }
 
     private void uninstallResources(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        componentProcessors.stream()
-                .filter(processor -> processor.getComponentType() == ComponentType.RESOURCE)
+        List<Installable> resources = componentProcessors.stream()
+                .filter(processor -> processor.getComponentType() == ComponentType.ASSET
+                        || processor.getComponentType() == ComponentType.DIRECTORY)
                 .map(processor -> processor.process(components))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparing(Installable::getName))
@@ -222,6 +225,10 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                     uninstalledJobComponent.setStatus(JobStatus.INSTALL_ROLLBACK);
                     installable.setComponent(jobComponentRepo.save(uninstalledJobComponent));
                 })
+                .collect(Collectors.toList());
+
+        resources.stream()
+                .filter(installable -> installable.getComponentType() == ComponentType.DIRECTORY)
                 .findFirst()
                 .ifPresent(rootResourceInstallable -> {
                     //Remove root folder

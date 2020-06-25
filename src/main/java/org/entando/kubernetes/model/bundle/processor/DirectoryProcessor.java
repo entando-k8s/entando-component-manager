@@ -31,13 +31,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AssetProcessor implements ComponentProcessor {
+public class DirectoryProcessor implements ComponentProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.ASSET;
+        return ComponentType.DIRECTORY;
     }
 
     @Override
@@ -47,16 +47,14 @@ public class AssetProcessor implements ComponentProcessor {
         try {
             if (npr.containsResourceFolder()) {
                 final String componentFolder = "/" + npr.getBundleCode();
+                installables.add(new DirectoryInstallable(engineService, componentFolder));
 
-                List<String> resourceFiles = npr.getResourceFiles().stream().sorted().collect(Collectors.toList());
-                for (final String resourceFile : resourceFiles) {
-                    final FileDescriptor fileDescriptor = npr.getResourceFileAsDescriptor(resourceFile);
-
+                List<String> resourceFolders = npr.getResourceFolders().stream().sorted().collect(Collectors.toList());
+                for (final String resourceFolder : resourceFolders) {
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
-                            .relativize(Paths.get(fileDescriptor.getFolder()));
+                            .relativize(Paths.get(resourceFolder));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
-                    fileDescriptor.setFolder(folder);
-                    installables.add(new AssetInstallable(engineService, fileDescriptor));
+                    installables.add(new DirectoryInstallable(engineService, folder));
                 }
             }
         } catch (IOException e) {
@@ -69,8 +67,8 @@ public class AssetProcessor implements ComponentProcessor {
     @Override
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.ASSET)
-                .map(c -> new AssetInstallable(engineService, c))
+                .filter(c -> c.getComponentType() == ComponentType.DIRECTORY)
+                .map(c -> new DirectoryInstallable(engineService, c))
                 .collect(Collectors.toList());
     }
 }
