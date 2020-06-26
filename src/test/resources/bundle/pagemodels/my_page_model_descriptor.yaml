@@ -9,12 +9,17 @@ configuration:
   frames:
     - pos: 0
       description: Header
+      defaultWidget: null
       sketch:
         x1: 0
         y1: 0
         x2: 11
         y2: 0
     - pos: 1
+      defaultWidget:
+        code: my-widget
+        properties:
+          - title: My fantastic widget
       description: Breadcrumb
       sketch: { x1: 0, y1: 1, x2: 11, y2: 1 }
 

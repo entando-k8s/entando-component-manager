@@ -9,5 +9,6 @@ public class FrameDescriptor {
     private String description;
     private boolean mainFrame;
     private SketchDescriptor sketch;
+    private DefaultWidgetDescriptor defaultWidget;
 
 }
