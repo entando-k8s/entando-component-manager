@@ -17,11 +17,6 @@ public class PageInstallable extends Installable<PageDescriptor> {
         this.engineService = engineService;
     }
 
-    public PageInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -46,13 +41,6 @@ public class PageInstallable extends Installable<PageDescriptor> {
     @Override
     public String getName() {
         return representation.getCode();
-    }
-
-    @Override
-    public PageDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return PageDescriptor.builder()
-                .code(component.getName())
-                .build();
     }
 
     @Override

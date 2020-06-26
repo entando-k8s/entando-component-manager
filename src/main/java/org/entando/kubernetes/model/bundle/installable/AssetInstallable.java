@@ -1,13 +1,12 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class AssetInstallable extends Installable<FileDescriptor> {
@@ -18,10 +17,6 @@ public class AssetInstallable extends Installable<FileDescriptor> {
         this.engineService = engineService;
     }
 
-    public AssetInstallable(EntandoCoreClient engineService, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = engineService;
-    }
 
     @Override
     public CompletableFuture<Void> install() {
@@ -48,17 +43,6 @@ public class AssetInstallable extends Installable<FileDescriptor> {
         return representation.getFolder() + "/" + representation.getFilename();
     }
 
-    @Override
-    public FileDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        List<String> split = Arrays.asList(component.getName().split("/"));
-        String folder = String.join("/", split.subList(0, split.size() - 1)); //all others except last
-        String filename = String.join("/", split.subList(split.size() -1, split.size())); //last
-
-        return FileDescriptor.builder()
-                .folder(folder)
-                .filename(filename)
-                .build();
-    }
 
     @Override
     public InstallPriority getInstallPriority() {

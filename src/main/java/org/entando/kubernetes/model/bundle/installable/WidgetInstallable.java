@@ -17,11 +17,6 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         this.engineService = engineService;
     }
 
-    public WidgetInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -46,13 +41,6 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     @Override
     public String getName() {
         return representation.getCode();
-    }
-
-    @Override
-    public WidgetDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return WidgetDescriptor.builder()
-                .code(component.getName())
-                .build();
     }
 
     @Override

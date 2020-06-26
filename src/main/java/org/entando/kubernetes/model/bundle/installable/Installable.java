@@ -18,7 +18,6 @@ import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 public abstract class Installable<T> {
 
     protected final T representation;
-    protected EntandoBundleComponentJob component;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -26,10 +25,6 @@ public abstract class Installable<T> {
         this.representation = representation;
     }
 
-    public Installable(EntandoBundleComponentJob component) {
-        this.representation = representationFromComponent(component);
-        this.component = component.duplicate();
-    }
 
     /**
      * This method will be called when every component was validated on the Digital Exchange bundle file
@@ -54,7 +49,6 @@ public abstract class Installable<T> {
 
     public abstract String getName();
 
-    public abstract T representationFromComponent(EntandoBundleComponentJob component);
 
     /**
      * Important to understand if something has changed in case of an updated If the checksum didn't change, we don't
@@ -69,14 +63,6 @@ public abstract class Installable<T> {
             log.error("Problem while processing checksum", e);
         }
         return null;
-    }
-
-    public EntandoBundleComponentJob getComponent() {
-        return component;
-    }
-
-    public void setComponent(final EntandoBundleComponentJob component) {
-        this.component = component;
     }
 
     public abstract InstallPriority getInstallPriority();

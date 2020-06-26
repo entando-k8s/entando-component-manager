@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
@@ -35,6 +36,8 @@ public interface ComponentProcessor {
      * @return List of installable components
      */
     List<Installable> process(List<EntandoBundleComponentJob> components);
+
+    Object buildDescriptorFromComponentJob(EntandoBundleComponentJob component);
 
     ComponentType getComponentType();
 

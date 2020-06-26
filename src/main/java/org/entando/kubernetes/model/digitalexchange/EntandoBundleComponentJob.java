@@ -1,17 +1,11 @@
 package org.entando.kubernetes.model.digitalexchange;
 
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
+import javax.persistence.*;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
 
 @Data
 @Entity
@@ -51,6 +45,9 @@ public class EntandoBundleComponentJob {
         this.id = UUID.randomUUID();
     }
 
+    @Transient
+    private Installable installable;
+
     public EntandoBundleComponentJob duplicate() {
         EntandoBundleComponentJob newComponent = new EntandoBundleComponentJob();
         newComponent.setName(getName());
@@ -61,4 +58,5 @@ public class EntandoBundleComponentJob {
         newComponent.setErrorMessage(getErrorMessage());
         return newComponent;
     }
+
 }

@@ -15,12 +15,15 @@ import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
+
+import javax.mail.internet.ContentType;
 
 /**
  * Processor to handle Bundles with CMS ContentTypes
@@ -63,7 +66,15 @@ public class ContentTypeProcessor implements ComponentProcessor {
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT_TYPE)
-                .map(c -> new ContentTypeInstallable(engineService, c))
+                .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public ContentTypeDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        return ContentTypeDescriptor.builder()
+                .code(component.getName())
+                .build();
+    }
+
 }

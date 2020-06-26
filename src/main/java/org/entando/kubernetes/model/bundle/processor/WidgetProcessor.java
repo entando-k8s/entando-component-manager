@@ -70,8 +70,15 @@ public class WidgetProcessor implements ComponentProcessor {
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.WIDGET)
-                .map(c -> new WidgetInstallable(engineService, c))
+                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public WidgetDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        return WidgetDescriptor.builder()
+                .code(component.getName())
+                .build();
     }
 
 }

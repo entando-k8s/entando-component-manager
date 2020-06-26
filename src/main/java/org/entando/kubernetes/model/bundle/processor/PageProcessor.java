@@ -14,6 +14,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
@@ -62,8 +63,15 @@ public class PageProcessor implements ComponentProcessor {
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PAGE)
-                .map(c -> new PageInstallable(engineService, c))
+                .map(c -> new PageInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PageDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        return PageDescriptor.builder()
+                .code(component.getName())
+                .build();
     }
 
 }

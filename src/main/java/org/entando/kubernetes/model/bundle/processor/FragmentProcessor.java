@@ -11,6 +11,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -59,8 +60,15 @@ public class FragmentProcessor implements ComponentProcessor {
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.FRAGMENT)
-                .map(c -> new FragmentInstallable(engineService, c))
+                .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public FragmentDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        return FragmentDescriptor.builder()
+                .code(component.getName())
+                .build();
     }
 
 }

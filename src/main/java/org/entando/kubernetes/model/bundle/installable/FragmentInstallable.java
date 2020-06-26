@@ -17,11 +17,6 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
         this.engineService = engineService;
     }
 
-    public FragmentInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -46,13 +41,6 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
     @Override
     public String getName() {
         return representation.getCode();
-    }
-
-    @Override
-    public FragmentDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return FragmentDescriptor.builder()
-                .code(component.getName())
-                .build();
     }
 
     @Override

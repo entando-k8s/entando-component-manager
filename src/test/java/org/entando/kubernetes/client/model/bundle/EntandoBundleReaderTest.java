@@ -169,6 +169,11 @@ public class EntandoBundleReaderTest {
         }
 
         @Override
+        public Object buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+            return null;
+        }
+
+        @Override
         public ComponentType getComponentType() {
             return null;
         }

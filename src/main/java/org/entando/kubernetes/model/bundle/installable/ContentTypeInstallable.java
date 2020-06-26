@@ -17,11 +17,6 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
         this.engineService = service;
     }
 
-    public ContentTypeInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -48,12 +43,6 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
         return representation.getCode();
     }
 
-    @Override
-    public ContentTypeDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return ContentTypeDescriptor.builder()
-                .code(component.getName())
-                .build();
-    }
 
     @Override
     public InstallPriority getInstallPriority() {

@@ -17,11 +17,6 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
         this.engineService = service;
     }
 
-    public ContentTemplateInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -46,13 +41,6 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
     @Override
     public String getName() {
         return representation.getId();
-    }
-
-    @Override
-    public ContentTemplateDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return ContentTemplateDescriptor.builder()
-                .id(component.getName())
-                .build();
     }
 
     @Override

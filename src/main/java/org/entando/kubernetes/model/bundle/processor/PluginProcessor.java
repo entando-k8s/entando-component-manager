@@ -13,12 +13,14 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
 
@@ -67,8 +69,17 @@ public class PluginProcessor implements ComponentProcessor {
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PLUGIN)
-                .map(c -> new PluginInstallable(kubernetesService, c))
+                .map(c -> new PluginInstallable(kubernetesService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public EntandoPlugin buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName(component.getName())
+                .endMetadata()
+                .build();
     }
 
 }

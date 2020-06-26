@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+
+import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -13,6 +15,7 @@ import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -66,6 +69,16 @@ public class AssetProcessorTest {
         assertThat(installables.get(4)).isInstanceOf(AssetInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.ASSET);
         assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery/jquery.js");
+    }
+
+    @Test
+    public void shouldConvertEntandoBundleComponentJobToDescriptor() {
+        EntandoBundleComponentJob bundleComponentJob = new EntandoBundleComponentJob();
+        bundleComponentJob.setName("/my-app/static/js/lib.js");
+        FileDescriptor fileDescriptor = this.assetProcessor.buildDescriptorFromComponentJob(bundleComponentJob);
+        Assertions.assertThat(fileDescriptor.getFilename()).isEqualTo("lib.js");
+        Assertions.assertThat(fileDescriptor.getFolder()).isEqualTo("/my-app/static/js");
+
     }
 
 }

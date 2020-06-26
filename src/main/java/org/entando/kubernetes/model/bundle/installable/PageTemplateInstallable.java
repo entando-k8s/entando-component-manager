@@ -17,11 +17,6 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
         this.engineService = engineService;
     }
 
-    public PageTemplateInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -46,13 +41,6 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
     @Override
     public String getName() {
         return representation.getCode();
-    }
-
-    @Override
-    public PageTemplateDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return PageTemplateDescriptor.builder()
-                .code(component.getName())
-                .build();
     }
 
     @Override

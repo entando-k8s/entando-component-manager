@@ -18,11 +18,6 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
         this.kubernetesService = kubernetesService;
     }
 
-    public PluginInstallable(KubernetesService kubernetesService, EntandoBundleComponentJob component) {
-        super(component);
-        this.kubernetesService = kubernetesService;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -47,15 +42,6 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
     @Override
     public String getName() {
         return this.representation.getMetadata().getName();
-    }
-
-    @Override
-    public EntandoPlugin representationFromComponent(EntandoBundleComponentJob component) {
-        return new EntandoPluginBuilder()
-                .withNewMetadata()
-                .withName(component.getName())
-                .endMetadata()
-                .build();
     }
 
     @Override

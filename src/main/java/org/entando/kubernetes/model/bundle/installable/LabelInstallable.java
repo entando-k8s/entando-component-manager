@@ -17,11 +17,6 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
         this.engineService = engineService;
     }
 
-    public LabelInstallable(EntandoCoreClient service, EntandoBundleComponentJob component) {
-        super(component);
-        this.engineService = service;
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -46,13 +41,6 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     @Override
     public String getName() {
         return representation.getKey();
-    }
-
-    @Override
-    public LabelDescriptor representationFromComponent(EntandoBundleComponentJob component) {
-        return LabelDescriptor.builder()
-                .key(component.getName())
-                .build();
     }
 
     @Override

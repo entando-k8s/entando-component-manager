@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
@@ -70,7 +72,16 @@ public class AssetProcessor implements ComponentProcessor {
     public List<Installable> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.ASSET)
-                .map(c -> new AssetInstallable(engineService, c))
+                .map(c ->  new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public FileDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        File file = FileUtils.getFile(component.getName());
+        return FileDescriptor.builder()
+                .folder(file.getParent())
+                .filename(file.getName())
+                .build();
     }
 }
