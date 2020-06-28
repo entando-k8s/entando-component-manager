@@ -12,11 +12,6 @@ public class JobTracker {
     Deque<EntandoBundleComponentJob> componentJobQueue;
     Deque<EntandoBundleComponentJob> processedComponentStack;
 
-    public JobTracker() {
-        this.componentJobQueue = new ArrayDeque<>();
-        this.processedComponentStack = new ArrayDeque<>();
-    }
-
     public JobTracker(EntandoBundleJobRepository jobRepository) {
         this.jobRepository = jobRepository;
         this.componentJobQueue = new ArrayDeque<>();
@@ -32,7 +27,7 @@ public class JobTracker {
 
     public void updateTrackedJobStatus(JobStatus jobStatus) {
         this.job.setStatus(jobStatus);
-        this.jobRepository.save(this.job);
+        this.jobRepository.updateJobStatus(this.job.getId(), jobStatus);
     }
 
     public void setJob(EntandoBundleJob job) {

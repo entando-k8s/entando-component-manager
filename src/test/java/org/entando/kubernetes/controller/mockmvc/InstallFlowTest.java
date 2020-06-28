@@ -527,7 +527,7 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
+    public void shouldReturnTheSameJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
 
         // Given I try to reinstall a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();

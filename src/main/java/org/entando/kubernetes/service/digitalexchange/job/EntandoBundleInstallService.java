@@ -128,9 +128,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
             log.info("Started new install job for component " + job.getComponentId() + "@" + tag.getVersion());
 
             JobTracker tracker = new JobTracker(job, jobRepo);
-            tracker.setJob(job);
-            tracker.getJob().setStatus(JobStatus.INSTALL_IN_PROGRESS);
-            jobRepo.save(tracker.getJob());
+            JobStatus installJobStatus = JobStatus.INSTALL_IN_PROGRESS;
+            tracker.updateTrackedJobStatus(installJobStatus);
 
             Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
             BundleReader bundleReader = new BundleReader(pathToDownloadedBundle);
@@ -167,7 +166,9 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                     ocj = tracker.extractNextComponentJobToProcess();
                 }
 
-                tracker.getJob().setStatus(JobStatus.INSTALL_COMPLETED);
+                saveAsInstalledBundle(bundle, tracker);
+
+                installJobStatus = JobStatus.INSTALL_COMPLETED;
                 log.info("Bundle installed correctly");
 
             } catch (Exception e) {
@@ -190,24 +191,21 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                     ocj = tracker.extractNextComponentJobToProcess();
                 }
 
-                if (tracker.hasAnyComponentError()) {
-                    tracker.getJob().setStatus(JobStatus.INSTALL_ERROR);
-                } else {
-                    tracker.getJob().setStatus(JobStatus.INSTALL_ROLLBACK);
-                }
+                installJobStatus = tracker.hasAnyComponentError() ? JobStatus.INSTALL_ERROR : JobStatus.INSTALL_ROLLBACK;
 
             }
 
-            if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
-                EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
-                installedComponent.setInstalled(true);
-                installedComponent.setJob(tracker.getJob());
-                installedComponentRepo.save(installedComponent);
-                log.info("Component " + tracker.getJob().getComponentId() + " registered as installed in the system");
-            }
-            jobRepo.updateJobStatus(tracker.getJob().getId(), tracker.getJob().getStatus());
+            tracker.updateTrackedJobStatus(installJobStatus);
             bundleDownloader.cleanTargetDirectory();
         });
+    }
+
+    private void saveAsInstalledBundle(EntandoDeBundle bundle, JobTracker tracker) {
+        EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
+        installedComponent.setInstalled(true);
+        installedComponent.setJob(tracker.getJob());
+        installedComponentRepo.save(installedComponent);
+        log.info("Component " + tracker.getJob().getComponentId() + " registered as installed in the system");
     }
 
     private JobResult rollback(Installable<?> installable) {
