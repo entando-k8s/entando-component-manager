@@ -261,6 +261,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                             .build();
                 });
 
+        // FIXME I get here after having activated the rollback!
         return installResult.join();
     }
 
