@@ -113,7 +113,7 @@ public class EntandoBundleUninstallService {
             jobRepository.save(tracker.getJob());
 
             try {
-                List<EntandoBundleComponentJob> uninstallJobs = createUninstallComponentJobs(referenceJob);
+                List<EntandoBundleComponentJob> uninstallJobs = createUninstallComponentJobs(referenceJob, tracker.getJob());
                 tracker.queueAllComponentJobs(uninstallJobs);
 
                 Optional<EntandoBundleComponentJob> ocj = tracker.extractNextComponentJobToProcess();
@@ -122,15 +122,19 @@ public class EntandoBundleUninstallService {
                     componentJob.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
                     componentRepository.save(componentJob);
                     Installable installable = componentJob.getInstallable();
-                    JobResult installResult = executeUninstall(installable);
-                    componentJob.setStatus(installResult.getStatus());
-                    installResult.getException().ifPresent(ex -> componentJob.setErrorMessage(ex.getMessage()));
+                    JobResult operationResult = executeUninstall(installable);
+                    componentJob.setStatus(operationResult.getStatus());
+                    operationResult.getException().ifPresent(ex -> componentJob.setErrorMessage(ex.getMessage()));
                     componentRepository.save(componentJob);
                     tracker.recordProcessedComponentJob(componentJob);
+                    if (operationResult.getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
+                        throw new EntandoComponentManagerException(tracker.getJob().getComponentId()
+                                + " uninstall can't proceed due to an error with one of the components");
+                    }
                     ocj = tracker.extractNextComponentJobToProcess();
                 }
 
-                installedComponentRepository.deleteById(job.getComponentId());
+                installedComponentRepository.deleteById(tracker.getJob().getComponentId());
                 tracker.getJob().setStatus(JobStatus.UNINSTALL_COMPLETED);
                 log.info("Component " + tracker.getJob().getComponentId() + " uninstalled successfully");
 
@@ -144,11 +148,12 @@ public class EntandoBundleUninstallService {
         });
     }
 
-    private List<EntandoBundleComponentJob> createUninstallComponentJobs(EntandoBundleJob referenceJob) {
+    private List<EntandoBundleComponentJob> createUninstallComponentJobs(EntandoBundleJob referenceJob, EntandoBundleJob currentJob) {
         List<EntandoBundleComponentJob> installJobs = componentRepository.findAllByJob(referenceJob);
         return installJobs.stream()
                 .map(cj -> {
                     EntandoBundleComponentJob uninstallJob = cj.duplicate();
+                    uninstallJob.setJob(currentJob);
                     Installable uninstallJobWorker = processorMap.get(uninstallJob.getComponentType()).process(uninstallJob);
                     uninstallJob.setInstallable(uninstallJobWorker);
                     return uninstallJob;

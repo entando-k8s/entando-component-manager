@@ -1,17 +1,10 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
+import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.processor.DirectoryProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
@@ -21,6 +14,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ClassPathResource;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("unit")
 public class DirectoryProcessorTest {
@@ -67,6 +67,21 @@ public class DirectoryProcessorTest {
         assertThat(installables.get(4)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
         assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery");
+    }
+
+    @Test
+    public void shouldExtractRootFolder() {
+        final EntandoBundleJob job = new EntandoBundleJob();
+        job.setComponentId("my-component-id");
+
+        List<DirectoryDescriptor> rootFolders = directoryProcessor
+                .process(job, bundleReader).stream()
+                .map(installable -> (DirectoryDescriptor) installable.getRepresentation())
+                .filter(r -> ((DirectoryDescriptor) r).isRoot())
+                .collect(Collectors.toList());
+
+        assertThat(rootFolders).hasSize(1);
+        assertThat(rootFolders.get(0).getName()).isEqualTo("/something");
     }
 
 }

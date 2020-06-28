@@ -1,21 +1,38 @@
 package org.entando.kubernetes.model.digitalexchange;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+
+import java.util.*;
 
 
 public class JobTracker {
 
     EntandoBundleJob job;
+    EntandoBundleJobRepository jobRepository;
     Deque<EntandoBundleComponentJob> componentJobQueue;
     Deque<EntandoBundleComponentJob> processedComponentStack;
 
     public JobTracker() {
         this.componentJobQueue = new ArrayDeque<>();
         this.processedComponentStack = new ArrayDeque<>();
+    }
+
+    public JobTracker(EntandoBundleJobRepository jobRepository) {
+        this.jobRepository = jobRepository;
+        this.componentJobQueue = new ArrayDeque<>();
+        this.processedComponentStack = new ArrayDeque<>();
+    }
+
+    public JobTracker(EntandoBundleJob job, EntandoBundleJobRepository jobRepository) {
+        this.job = job;
+        this.jobRepository = jobRepository;
+        this.componentJobQueue = new ArrayDeque<>();
+        this.processedComponentStack = new ArrayDeque<>();
+    }
+
+    public void updateTrackedJobStatus(JobStatus jobStatus) {
+        this.job.setStatus(jobStatus);
+        this.jobRepository.save(this.job);
     }
 
     public void setJob(EntandoBundleJob job) {
@@ -56,13 +73,6 @@ public class JobTracker {
         processedComponentStack.addLast(componentJob);
     }
 
-    public Optional<EntandoBundleComponentJob> extractLastProcessedComponentJob() {
-        EntandoBundleComponentJob lastProcessedComponentJob = null;
-        if (!processedComponentStack.isEmpty()) {
-            lastProcessedComponentJob = componentJobQueue.removeLast();
-        }
-        return Optional.ofNullable(lastProcessedComponentJob);
-    }
 
     public void activateRollbackMode() {
         this.clearJobQueue();
@@ -74,6 +84,7 @@ public class JobTracker {
             rollbackQueue.addLast(clonedJob);
         }
         this.componentJobQueue = rollbackQueue;
+        this.clearProcessedStack();
     }
 
     public boolean hasAnyComponentError() {

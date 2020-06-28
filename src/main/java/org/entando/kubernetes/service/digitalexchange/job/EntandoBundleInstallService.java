@@ -127,10 +127,10 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + job.getComponentId() + "@" + tag.getVersion());
 
-            JobTracker tracker = new JobTracker();
-            job.setStatus(JobStatus.INSTALL_IN_PROGRESS);
+            JobTracker tracker = new JobTracker(job, jobRepo);
             tracker.setJob(job);
-            jobRepo.save(job);
+            tracker.getJob().setStatus(JobStatus.INSTALL_IN_PROGRESS);
+            jobRepo.save(tracker.getJob());
 
             Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
             BundleReader bundleReader = new BundleReader(pathToDownloadedBundle);
@@ -141,7 +141,7 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                     .collect(Collectors.toList());
 
             for(Installable i: installablesByPriority) {
-                EntandoBundleComponentJob componentJob = buildComponentJob(job, i);
+                EntandoBundleComponentJob componentJob = buildComponentJob(tracker.getJob(), i);
                 tracker.queueComponentJob(componentJob);
             }
 
@@ -160,21 +160,15 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                     tracker.recordProcessedComponentJob(componentJob);
 
                     if (installResult.getStatus().equals(JobStatus.INSTALL_ERROR)) {
-                        throw new EntandoComponentManagerException(job.getComponentId()
+                        throw new EntandoComponentManagerException(tracker.getJob().getComponentId()
                                 + " install can't proceed due to an error with one of the components");
                     }
 
                     ocj = tracker.extractNextComponentJobToProcess();
                 }
 
-                log.info("Bundle installed correctly");
-                EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
-                installedComponent.setInstalled(true);
-                installedComponent.setJob(job);
-                installedComponentRepo.save(installedComponent);
-                log.info("Component " + job.getComponentId() + " registered as installed in the system");
-
                 tracker.getJob().setStatus(JobStatus.INSTALL_COMPLETED);
+                log.info("Bundle installed correctly");
 
             } catch (Exception e) {
                 log.error("An error occurred during component installation", e);
@@ -185,9 +179,9 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
                 while(ocj.isPresent()) {
                     EntandoBundleComponentJob componentRollbackJob = ocj.get();
                     if (isUninstallable(componentRollbackJob)) {
-                        JobResult componentRollbackResult = rollback(componentRollbackJob.getInstallable());
-                        componentRollbackJob.setStatus(componentRollbackResult.getStatus());
-                        componentRollbackResult.getException().ifPresent(ex -> {
+                        JobResult rollbackJR = rollback(componentRollbackJob.getInstallable());
+                        componentRollbackJob.setStatus(rollbackJR.getStatus());
+                        rollbackJR.getException().ifPresent(ex -> {
                             componentRollbackJob.setErrorMessage(ex.getMessage());
                         });
                         jobComponentRepo.save(componentRollbackJob);
@@ -204,7 +198,14 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
 
             }
 
-            jobRepo.save(tracker.getJob());
+            if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+                EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
+                installedComponent.setInstalled(true);
+                installedComponent.setJob(tracker.getJob());
+                installedComponentRepo.save(installedComponent);
+                log.info("Component " + tracker.getJob().getComponentId() + " registered as installed in the system");
+            }
+            jobRepo.updateJobStatus(tracker.getJob().getId(), tracker.getJob().getStatus());
             bundleDownloader.cleanTargetDirectory();
         });
     }
@@ -229,10 +230,8 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
           Except for IN_PROGRESS, everything should be uninstallable
           Uninstall operations should be idempotent to be able to provide this
          */
-        return component.getComponentType() != ComponentType.ASSET
-                && component.getComponentType() != ComponentType.DIRECTORY
-                && (component.getStatus().equals(JobStatus.INSTALL_COMPLETED)
-                || (component.getStatus().equals(JobStatus.INSTALL_ERROR) && component.getComponentType() == ComponentType.PLUGIN));
+        return component.getStatus().equals(JobStatus.INSTALL_COMPLETED) ||
+                (component.getStatus().equals(JobStatus.INSTALL_ERROR) && component.getComponentType() == ComponentType.PLUGIN);
     }
 
 

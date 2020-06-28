@@ -65,5 +65,9 @@ public abstract class Installable<T> {
         return null;
     }
 
+    public T getRepresentation() {
+       return this.representation;
+    }
+
     public abstract InstallPriority getInstallPriority();
 }
