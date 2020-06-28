@@ -52,10 +52,16 @@ public class EntandoBundleComponentJob {
         EntandoBundleComponentJob newComponent = new EntandoBundleComponentJob();
         newComponent.setName(getName());
         newComponent.setJob(getJob());
-        newComponent.setStatus(getStatus());
         newComponent.setComponentType(getComponentType());
         newComponent.setChecksum(getChecksum());
-        newComponent.setErrorMessage(getErrorMessage());
+        newComponent.setInstallable(getInstallable());
+        return newComponent;
+    }
+
+    public EntandoBundleComponentJob duplicateAllFields() {
+        EntandoBundleComponentJob newComponent = this.duplicate();
+        newComponent.setStatus(this.status);
+        newComponent.setErrorMessage(this.errorMessage);
         return newComponent;
     }
 

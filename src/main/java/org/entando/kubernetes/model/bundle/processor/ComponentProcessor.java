@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
@@ -37,9 +38,20 @@ public interface ComponentProcessor {
      */
     List<Installable> process(List<EntandoBundleComponentJob> components);
 
+    default Installable process(EntandoBundleComponentJob componentJob) {
+        if (supportComponent(componentJob.getComponentType())) {
+            return process(Collections.singletonList(componentJob)).get(0);
+        }
+        return null;
+    }
+
     Object buildDescriptorFromComponentJob(EntandoBundleComponentJob component);
 
-    ComponentType getComponentType();
+    ComponentType getSupportedComponentType();
+
+    default boolean supportComponent(ComponentType ct) {
+        return this.getSupportedComponentType().equals(ct);
+    }
 
     default String getRelativePath(String referenceFile, String fileName) {
         return Paths.get(referenceFile).resolveSibling(fileName).toString();

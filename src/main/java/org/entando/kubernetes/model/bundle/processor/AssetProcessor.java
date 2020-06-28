@@ -38,7 +38,7 @@ public class AssetProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public ComponentType getComponentType() {
+    public ComponentType getSupportedComponentType() {
         return ComponentType.ASSET;
     }
 

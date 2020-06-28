@@ -35,7 +35,7 @@ public class WidgetProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public ComponentType getComponentType() {
+    public ComponentType getSupportedComponentType() {
         return ComponentType.WIDGET;
     }
 

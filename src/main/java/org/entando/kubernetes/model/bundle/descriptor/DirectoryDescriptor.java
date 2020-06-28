@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DirectoryDescriptor implements Descriptor  {
     String name;
+    boolean isRoot;
 }

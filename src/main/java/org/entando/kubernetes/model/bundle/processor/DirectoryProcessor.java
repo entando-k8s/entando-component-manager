@@ -36,7 +36,7 @@ public class DirectoryProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public ComponentType getComponentType() {
+    public ComponentType getSupportedComponentType() {
         return ComponentType.DIRECTORY;
     }
 
@@ -47,14 +47,14 @@ public class DirectoryProcessor implements ComponentProcessor {
         try {
             if (npr.containsResourceFolder()) {
                 final String componentFolder = "/" + npr.getBundleCode();
-                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder)));
+                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true)));
 
                 List<String> resourceFolders = npr.getResourceFolders().stream().sorted().collect(Collectors.toList());
                 for (final String resourceFolder : resourceFolders) {
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(resourceFolder));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
-                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder)));
+                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false)));
                 }
             }
         } catch (IOException e) {
@@ -73,7 +73,20 @@ public class DirectoryProcessor implements ComponentProcessor {
     }
 
     @Override
+    public Installable process(EntandoBundleComponentJob componentJob) {
+        if (!componentJob.getComponentType().equals(this.getSupportedComponentType())) {
+            throw new IllegalArgumentException("Processor only support components of type " + this.getSupportedComponentType());
+        }
+        return new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(componentJob));
+    }
+
+    @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
-        return new DirectoryDescriptor(component.getName());
+        Path dirPath = Paths.get(component.getName());
+        boolean isRoot = false;
+        if(dirPath.getParent().equals(dirPath.getRoot())) {
+            isRoot = true;
+        }
+        return new DirectoryDescriptor(component.getName(), isRoot);
     }
 }

@@ -28,7 +28,9 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            //Do nothing since Directories and Assets are uninstalled in a different way
+            if (this.representation.isRoot()) {
+                engineService.deleteFolder(this.representation.getName());
+            }
         });
     }
 

@@ -174,7 +174,7 @@ public class EntandoBundleReaderTest {
         }
 
         @Override
-        public ComponentType getComponentType() {
+        public ComponentType getSupportedComponentType() {
             return null;
         }
     }

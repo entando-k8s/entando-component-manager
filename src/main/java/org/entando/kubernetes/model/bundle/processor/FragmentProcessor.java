@@ -28,7 +28,7 @@ public class FragmentProcessor implements ComponentProcessor {
     private final EntandoCoreClient engineService;
 
     @Override
-    public ComponentType getComponentType() {
+    public ComponentType getSupportedComponentType() {
         return ComponentType.FRAGMENT;
     }
 

@@ -39,7 +39,7 @@ public class PluginProcessor implements ComponentProcessor {
     private final KubernetesService kubernetesService;
 
     @Override
-    public ComponentType getComponentType() {
+    public ComponentType getSupportedComponentType() {
         return ComponentType.PLUGIN;
     }
 
