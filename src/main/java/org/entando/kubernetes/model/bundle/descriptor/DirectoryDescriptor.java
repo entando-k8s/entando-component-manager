@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class FileDescriptor implements Descriptor {
-
-    private String folder;
-    private String filename;
-    private String base64;
-
+public class DirectoryDescriptor implements Descriptor  {
+    String name;
+    boolean isRoot;
 }

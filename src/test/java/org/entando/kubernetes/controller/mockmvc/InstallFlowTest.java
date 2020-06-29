@@ -13,7 +13,6 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,19 +26,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -63,7 +61,7 @@ import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -284,11 +282,11 @@ public class InstallFlowTest {
     }
 
     private void verifyPageModelsRequests(EntandoCoreClient coreClient) throws Exception {
-        ArgumentCaptor<PageModelDescriptor> pageModelDescrArgCaptor = ArgumentCaptor.forClass(PageModelDescriptor.class);
+        ArgumentCaptor<PageTemplateDescriptor> pageModelDescrArgCaptor = ArgumentCaptor.forClass(PageTemplateDescriptor.class);
         verify(coreClient, times(2)).registerPageModel(pageModelDescrArgCaptor.capture());
 
-        List<PageModelDescriptor> allPassedPageModels = pageModelDescrArgCaptor.getAllValues()
-                .stream().sorted(Comparator.comparing(PageModelDescriptor::getCode))
+        List<PageTemplateDescriptor> allPassedPageModels = pageModelDescrArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(PageTemplateDescriptor::getCode))
                 .collect(Collectors.toList());
 
         assertThat(allPassedPageModels.get(0).getCode()).isEqualTo("todomvc_another_page_model");
@@ -339,34 +337,35 @@ public class InstallFlowTest {
         assertThat(jobs).hasSize(1);
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
 
-        List<EntandoBundleComponentJob> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
-        assertThat(jobComponentList).hasSize(22);
-        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName)
-                .collect(Collectors.toList());
-        assertThat(jobComponentNames).containsExactlyInAnyOrder(
+        List<String> expected = Arrays.asList(
+                "todomvc",
                 "/something",
-                "/something/js",
                 "/something/css",
+                "/something/js",
                 "/something/vendor",
                 "/something/vendor/jquery",
-                "/something/css/style.css",
-                "/something/js/script.js",
+                "HELLO",
                 "/something/css/custom.css",
+                "/something/css/style.css",
                 "/something/js/configUiScript.js",
+                "/something/js/script.js",
                 "/something/vendor/jquery/jquery.js",
-                "todomvc",
-                "my-page",
-                "todomvc_another_page_model",
-                "todomvc_page_model",
-                "another_fragment",
-                "title_fragment",
-                "CNG",
-                "8880002",
-                "8880003",
                 "todomvc_widget",
                 "another_todomvc_widget",
-                "HELLO"
-        );
+                "CNG",
+                "8880003",
+                "8880002",
+                "title_fragment",
+                "another_fragment",
+                "todomvc_page_model",
+                "todomvc_another_page_model",
+                "my-page");
+
+        List<EntandoBundleComponentJob> jobComponentList = jobComponentRepository.findAllByJob(jobs.get(0));
+        assertThat(jobComponentList).hasSize(expected.size());
+        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName)
+                .collect(Collectors.toList());
+        assertThat(jobComponentNames).isEqualTo(expected);
 
         Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
         for (EntandoBundleComponentJob jcomp : jobComponentList) {
@@ -376,7 +375,8 @@ public class InstallFlowTest {
 
         Map<ComponentType, Integer> expectedComponents = new HashMap<>();
         expectedComponents.put(ComponentType.WIDGET, 2);
-        expectedComponents.put(ComponentType.RESOURCE, 10);
+        expectedComponents.put(ComponentType.ASSET, 5);
+        expectedComponents.put(ComponentType.DIRECTORY, 5);
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
         expectedComponents.put(ComponentType.CONTENT_TEMPLATE, 2);
@@ -490,12 +490,13 @@ public class InstallFlowTest {
 
         // And for each installed component job there should be a component job that rollbacked the install
         List<EntandoBundleComponentJob> jobRelatedComponents = jobComponentRepository.findAllByJob(job.get());
-        List<EntandoBundleComponentJob> installedComponents = jobRelatedComponents.stream().filter(j ->
-                j.getStatus().equals(JobStatus.INSTALL_COMPLETED)).collect(
-                Collectors.toList());
+        List<EntandoBundleComponentJob> installedComponents = jobRelatedComponents.stream()
+                .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
+                .collect(Collectors.toList());
+
         for (EntandoBundleComponentJob c : installedComponents) {
-            List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream().filter(j ->
-                    j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
+            List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream()
+                    .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
                     .collect(Collectors.toList());
             assertThat(jobs.size()).isEqualTo(2);
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
@@ -552,7 +553,7 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void shouldReturnTheSameJobIdWhenTemptingToInstallTheSameComponentTwice() throws Exception {
+    public void shouldReturnTheSameJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
 
         // Given I try to reinstall a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
@@ -841,7 +842,7 @@ public class InstallFlowTest {
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/"+jobId);
 
-        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
+        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR, JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
@@ -890,7 +891,8 @@ public class InstallFlowTest {
 
         Mockito.reset(coreClient);
         WireMock.reset();
-        WireMock.setGlobalFixedDelay(1000);
+        UniformDistribution delayDistribution = new UniformDistribution(200, 500);
+        WireMock.setGlobalRandomDelay(delayDistribution);
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
         k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
@@ -903,15 +905,15 @@ public class InstallFlowTest {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerPage(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerPageModel(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerWidget(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerFragment(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerContentType(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerContentModel(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).registerLabel(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).createFolder(any());
-        doSleep(Duration.ofMillis(200)).when(coreClient).uploadFile(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPage(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPageModel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerWidget(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerFragment(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentType(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentModel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerLabel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFolder(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).uploadFile(any());
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
@@ -930,9 +932,10 @@ public class InstallFlowTest {
 
     private String simulateInProgressUninstall() throws Exception {
 
+        UniformDistribution delayDistribution = new UniformDistribution(200, 500);
         Mockito.reset(coreClient);
         WireMock.reset();
-        WireMock.setGlobalFixedDelay(1000);
+        WireMock.setGlobalRandomDelay(delayDistribution);
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -943,14 +946,15 @@ public class InstallFlowTest {
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
         when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deletePage(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deletePageModel(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deleteWidget(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deleteFragment(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deleteContentType(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deleteContentModel(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deleteLabel(any());
-        doSleep(Duration.ofSeconds(1)).when(coreClient).deleteFolder(any());
+
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePage(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePageModel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteWidget(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFragment(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentType(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentModel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteLabel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFolder(any());
 
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
@@ -962,8 +966,6 @@ public class InstallFlowTest {
         waitForUninstallStatus(JobStatus.UNINSTALL_IN_PROGRESS);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-
-
     }
 
     private void waitForPossibleStatus(JobStatus... statuses) {

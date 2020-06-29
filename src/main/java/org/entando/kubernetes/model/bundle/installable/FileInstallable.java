@@ -7,16 +7,14 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
 @Slf4j
-public class AssetInstallable extends Installable<FileDescriptor> {
-
-
+public class FileInstallable extends Installable<FileDescriptor> {
     private final EntandoCoreClient engineService;
 
-    public AssetInstallable(EntandoCoreClient engineService,
-            FileDescriptor fileDescriptor) {
+    public FileInstallable(EntandoCoreClient engineService, FileDescriptor fileDescriptor) {
         super(fileDescriptor);
         this.engineService = engineService;
     }
+
 
     @Override
     public CompletableFuture<Void> install() {
@@ -27,8 +25,15 @@ public class AssetInstallable extends Installable<FileDescriptor> {
     }
 
     @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            //Do nothing since Directories and Assets are uninstalled in a different way
+        });
+    }
+
+    @Override
     public ComponentType getComponentType() {
-        return ComponentType.RESOURCE;
+        return ComponentType.ASSET;
     }
 
     @Override
@@ -36,4 +41,9 @@ public class AssetInstallable extends Installable<FileDescriptor> {
         return representation.getFolder() + "/" + representation.getFilename();
     }
 
+
+    @Override
+    public InstallPriority getInstallPriority() {
+        return InstallPriority.ASSET;
+    }
 }

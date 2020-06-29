@@ -51,17 +51,16 @@ public class EntandoCorePageTest {
         pageTitles.put("it", "La mia pagina");
         pageTitles.put("en", "My page");
 
-        PageDescriptor pageDescriptor = new PageDescriptor();
-        pageDescriptor.setCode("my-page");
-        pageDescriptor.setParentCode("plugins");
-        pageDescriptor.setCharset("iso1923-12");
-        pageDescriptor.setDisplayedInMenu(true);
-        pageDescriptor.setPageModel("service");
-        pageDescriptor.setOwnerGroup("administrators");
-        pageDescriptor.setTitles(pageTitles);
-        pageDescriptor.setStatus("published");
-        pageDescriptor.setJoinGroups(Collections.singletonList("free"));
-
-        return pageDescriptor;
+        return PageDescriptor.builder()
+                .code("my-page")
+                .parentCode("plugins")
+                .charset("iso1923-12")
+                .displayedInMenu(true)
+                .pageModel("service")
+                .ownerGroup("administrators")
+                .titles(pageTitles)
+                .status("published")
+                .joinGroups(Collections.singletonList("free"))
+                .build();
     }
 }

@@ -1,8 +1,10 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class FrameDescriptor {
 
     private String pos;

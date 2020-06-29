@@ -19,8 +19,16 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Content Type {}", representation.getCode());
+            log.info("Registering Content Type {}", getName());
             engineService.registerContentType(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing Content Type {}", getName());
+            engineService.deleteContentType(getName());
         });
     }
 
@@ -34,4 +42,9 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
         return representation.getCode();
     }
 
+
+    @Override
+    public InstallPriority getInstallPriority() {
+        return InstallPriority.CONTENT_TYPE;
+    }
 }

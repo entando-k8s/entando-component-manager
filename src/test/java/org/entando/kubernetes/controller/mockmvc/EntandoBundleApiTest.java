@@ -23,7 +23,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -141,12 +140,6 @@ public class EntandoBundleApiTest {
         mockMvc.perform(get("/components/temp/usage").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
-
-    @Test
-    public void shouldReturnComponentUsageSummary() throws Exception {
-
-    }
-
 
     private EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()

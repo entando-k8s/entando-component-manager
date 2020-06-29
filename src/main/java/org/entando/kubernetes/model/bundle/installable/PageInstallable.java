@@ -19,8 +19,16 @@ public class PageInstallable extends Installable<PageDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Page {}", representation.getCode());
+            log.info("Registering Page {}", getName());
             engineService.registerPage(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing Page {}", getName());
+            engineService.deletePage(getName());
         });
     }
 
@@ -34,4 +42,8 @@ public class PageInstallable extends Installable<PageDescriptor> {
         return representation.getCode();
     }
 
+    @Override
+    public InstallPriority getInstallPriority() {
+        return InstallPriority.PAGE;
+    }
 }

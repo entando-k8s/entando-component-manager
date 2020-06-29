@@ -19,8 +19,16 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Fragment {}", representation.getCode());
+            log.info("Registering Fragment {}", getName());
             engineService.registerFragment(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing Fragment {}", getName());
+            engineService.deleteFragment(getName());
         });
     }
 
@@ -34,4 +42,8 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
         return representation.getCode();
     }
 
+    @Override
+    public InstallPriority getInstallPriority() {
+        return InstallPriority.FRAGMENT;
+    }
 }

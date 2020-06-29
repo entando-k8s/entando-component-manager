@@ -1,29 +1,21 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import static java.util.Optional.ofNullable;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -33,31 +25,29 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.digitalexchange.JobResult;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.digitalexchange.JobTracker;
 import org.entando.kubernetes.model.digitalexchange.JobType;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EntandoBundleInstallService implements ApplicationContextAware {
+public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private final @NonNull KubernetesService k8sService;
     private final @NonNull EntandoBundleJobService jobService;
-    private final @NonNull EntandoCoreClient engineService;
     private final @NonNull BundleDownloader bundleDownloader;
     private final @NonNull EntandoBundleJobRepository jobRepo;
     private final @NonNull EntandoBundleComponentJobRepository jobComponentRepo;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepo;
-    private Collection<ComponentProcessor> componentProcessors = new ArrayList<>();
+    private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJob install(String componentId, String version) {
         EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
@@ -66,7 +56,6 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         Optional<EntandoBundleJob> j = searchForCompletedOrConflictingJob(bundle);
 
         return j.orElseGet(() -> createAndSubmitNewInstallJob(bundle, version));
-
     }
 
     private EntandoBundleJob createAndSubmitNewInstallJob(EntandoDeBundle bundle, String version) {
@@ -142,176 +131,157 @@ public class EntandoBundleInstallService implements ApplicationContextAware {
         CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + job.getComponentId() + "@" + tag.getVersion());
 
-            JobStatus pipelineStatus = JobStatus.INSTALL_IN_PROGRESS;
-            jobRepo.updateJobStatus(job.getId(), pipelineStatus);
+            JobTracker tracker = new JobTracker(job, jobRepo);
+            JobStatus installJobStatus = JobStatus.INSTALL_IN_PROGRESS;
+            tracker.updateTrackedJobStatus(installJobStatus);
+
+            List<Installable<?>> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag);
+            List<EntandoBundleComponentJob> componentJobs = bundleInstallableComponents.stream()
+                    .map(i -> buildComponentJob(tracker.getJob(), i))
+                    .collect(Collectors.toList());
+            tracker.queueAllComponentJobs(componentJobs);
 
             try {
-                bundleDownloader.createTargetDirectory();
-                Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-                List<Installable> installables = getInstallables(job, pathToDownloadedBundle);
-                pipelineStatus = processInstallableList(job, installables);
-                if (pipelineStatus.equals(JobStatus.INSTALL_COMPLETED)) {
-                    log.info("All installables have been processed correctly");
-                    EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
-                    installedComponent.setInstalled(true);
-                    installedComponent.setJob(job);
-                    installedComponentRepo.save(installedComponent);
-                    log.info("Component " + job.getComponentId() + " registered as installed in the system");
+
+                Optional<EntandoBundleComponentJob> ocj = tracker.extractNextComponentJobToProcess();
+                while(ocj.isPresent()) {
+                    EntandoBundleComponentJob componentJob = ocj.get();
+                    processComponentJob(tracker, componentJob);
+                    ocj = tracker.extractNextComponentJobToProcess();
                 }
 
+                saveAsInstalledBundle(bundle, tracker);
+
+                installJobStatus = JobStatus.INSTALL_COMPLETED;
+                log.info("Bundle installed correctly");
+
             } catch (Exception e) {
-                log.error("An error occurred during digital-exchange component installation", e.getCause());
-                pipelineStatus = rollback(job);
+                log.error("An error occurred during component installation", e);
+
+                tracker.activateRollbackMode();
+
+                Optional<EntandoBundleComponentJob> ocj = tracker.extractNextComponentJobToProcess();
+                while(ocj.isPresent()) {
+                    EntandoBundleComponentJob componentRollbackJob = ocj.get();
+                    processComponentJobRollback(tracker, componentRollbackJob);
+                    ocj = tracker.extractNextComponentJobToProcess();
+                }
+
+                installJobStatus = tracker.hasAnyComponentError() ? JobStatus.INSTALL_ERROR : JobStatus.INSTALL_ROLLBACK;
+
             }
 
-            jobRepo.updateJobStatus(job.getId(), pipelineStatus);
+            tracker.updateTrackedJobStatus(installJobStatus);
             bundleDownloader.cleanTargetDirectory();
         });
     }
 
-    private JobStatus rollback(EntandoBundleJob job) {
-        JobStatus rollbackResult;
-        // Get all the installed components for the job
-        List<EntandoBundleComponentJob> jobRelatedComponents = jobComponentRepo.findAllByJob(job);
+    private List<Installable<?>> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+        Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
+        return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle));
+    }
 
-        // Filter jobs that are "uninstallable"
-        List<EntandoBundleComponentJob> jobsToRollback = jobRelatedComponents.stream()
-                .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED)
-                        || (j.getStatus().equals(JobStatus.INSTALL_ERROR) && j.getComponentType()
-                        .equals(ComponentType.PLUGIN)))
+    private void processComponentJobRollback(JobTracker tracker, EntandoBundleComponentJob componentRollbackJob) {
+        if (isUninstallable(componentRollbackJob)) {
+            JobResult rollbackJR = rollback(componentRollbackJob.getInstallable());
+            componentRollbackJob.setStatus(rollbackJR.getStatus());
+            rollbackJR.getException().ifPresent(ex -> componentRollbackJob.setErrorMessage(ex.getMessage()));
+            jobComponentRepo.save(componentRollbackJob);
+            tracker.recordProcessedComponentJob(componentRollbackJob);
+        }
+    }
+
+    private JobResult processComponentJob(JobTracker tracker, EntandoBundleComponentJob componentJob) {
+        componentJob.setStatus(JobStatus.INSTALL_IN_PROGRESS);
+        jobComponentRepo.save(componentJob);
+        Installable installable = componentJob.getInstallable();
+        JobResult installableResult = executeInstall(installable);
+        componentJob.setStatus(installableResult.getStatus());
+        installableResult.getException().ifPresent(ex -> componentJob.setErrorMessage(ex.getMessage()));
+        jobComponentRepo.save(componentJob);
+        tracker.recordProcessedComponentJob(componentJob);
+        if (installableResult.getStatus().equals(JobStatus.INSTALL_ERROR)) {
+            throw new EntandoComponentManagerException(tracker.getJob().getComponentId()
+                    + " install can't proceed due to an error with one of the components");
+        }
+        return installableResult;
+    }
+
+    private List<Installable<?>> getInstallableComponentsByPriority(BundleReader bundleReader) {
+        return processorMap.values().stream()
+                .map(processor -> processor.process(bundleReader))
+                .flatMap(List::stream)
+                .sorted(Comparator.comparingInt(i -> i.getInstallPriority().getPriority()))
                 .collect(Collectors.toList());
-
-        try {
-            // Cleanup resource folder
-            cleanupResourceFolder(job, jobsToRollback);
-            // For each installed component
-            List<EntandoBundleComponentJob> nonResourceComponents =
-                    jobsToRollback.stream().filter(c -> c.getComponentType() != ComponentType.RESOURCE)
-                            .collect(Collectors.toList());
-            for (EntandoBundleComponentJob jc : nonResourceComponents) {
-                // Revert the operation
-                EntandoBundleComponentJob revertJob = jc.duplicate();
-                componentProcessors.stream()
-                        .filter(processor -> processor.shouldProcess(revertJob.getComponentType()))
-                        .forEach(processor -> processor.uninstall(revertJob));
-                revertJob.setStatus(JobStatus.INSTALL_ROLLBACK);
-                jobComponentRepo.save(revertJob);
-            }
-            rollbackResult = JobStatus.INSTALL_ROLLBACK;
-        } catch (Exception e) {
-            rollbackResult = JobStatus.INSTALL_ERROR;
-        }
-        // In case of the plugin, that would mean delete the link
-        return rollbackResult;
     }
 
-    private void cleanupResourceFolder(EntandoBundleJob job, List<EntandoBundleComponentJob> components) {
-        Optional<EntandoBundleComponentJob> rootResourceFolder = components.stream()
-                .filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                .sorted(Comparator.comparing(EntandoBundleComponentJob::getName))
-                .limit(1)
-                .findFirst();
-
-        if (rootResourceFolder.isPresent()) {
-            log.info("Removing directory {}", rootResourceFolder.get().getName());
-            engineService.deleteFolder(rootResourceFolder.get().getName());
-            components.stream().filter(component -> component.getComponentType() == ComponentType.RESOURCE)
-                    .forEach(component -> {
-                        EntandoBundleComponentJob uninstalledJobComponent = component.duplicate();
-                        uninstalledJobComponent.setJob(job);
-                        uninstalledJobComponent.setStatus(JobStatus.INSTALL_ROLLBACK);
-                        jobComponentRepo.save(uninstalledJobComponent);
-                    });
-        }
+    private void saveAsInstalledBundle(EntandoDeBundle bundle, JobTracker tracker) {
+        EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
+        installedComponent.setInstalled(true);
+        installedComponent.setJob(tracker.getJob());
+        installedComponentRepo.save(installedComponent);
+        log.info("Component " + tracker.getJob().getComponentId() + " registered as installed in the system");
     }
 
-    private JobStatus processInstallableList(EntandoBundleJob job, List<Installable> installableList) {
-        log.info("Processing installable list for component " + job.getComponentId());
-
-        JobStatus installSucceded = JobStatus.INSTALL_COMPLETED;
-        for (int i = 0, n = installableList.size(); i < n; i++) {
-            Installable installable = installableList.get(i);
-            installable.setComponent(persistComponent(job, installable));
-            installSucceded = processInstallable(installable);
-            if (installSucceded.equals(JobStatus.INSTALL_ERROR)) {
-                throw new EntandoComponentManagerException(job.getComponentId()
-                        + " installation can't proceed due to an error with one of the installed components");
-            }
-        }
-        return installSucceded;
+    private JobResult rollback(Installable<?> installable) {
+        return installable.uninstall()
+                .thenApply(vd -> JobResult.builder().status(JobStatus.INSTALL_ROLLBACK).build())
+                .exceptionally(th -> {
+                    log.error(String.format("Error rolling back %s %s",
+                            installable.getComponentType(),
+                            installable.getName()), th);
+                    String message = getMeaningfulErrorMessage(th);
+                    return JobResult.builder()
+                            .status(JobStatus.INSTALL_ROLLBACK_ERROR)
+                            .exception(new Exception(message))
+                            .build();
+                })
+                .join();
     }
 
-    private JobStatus processInstallable(Installable installable) {
-        EntandoBundleComponentJob installableComponent = installable.getComponent();
-        jobComponentRepo.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_IN_PROGRESS);
+    private boolean isUninstallable(EntandoBundleComponentJob component) {
+        /* TODO: related to ENG-415 (https://jira.entando.org/browse/ENG-415)
+          Except for IN_PROGRESS, everything should be uninstallable
+          Uninstall operations should be idempotent to be able to provide this
+         */
+        return component.getStatus().equals(JobStatus.INSTALL_COMPLETED) ||
+                (component.getStatus().equals(JobStatus.INSTALL_ERROR) && component.getComponentType() == ComponentType.PLUGIN);
+    }
+
+
+
+    private <T> JobResult executeInstall(Installable<T> installable) {
 
         CompletableFuture<?> future = installable.install();
-        CompletableFuture<JobStatus> installResult = future.thenApply(vd -> {
-            log.debug("Installable '{}' finished successfully", installable.getName());
-            jobComponentRepo.updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_COMPLETED);
-            return JobStatus.INSTALL_COMPLETED;
-        }).exceptionally(th -> {
-            log.error("Installable '{}' has errors", installable.getName(), th.getCause());
+        CompletableFuture<JobResult> installResult = future
+                .thenApply(vd -> {
+                    log.debug("Installable '{}' finished successfully", installable.getName());
+                    return JobResult.builder().status(JobStatus.INSTALL_COMPLETED).build();
+                }).exceptionally(th -> {
+                    log.error("Installable '{}' has errors", installable.getName(), th.getCause());
+                    String message = getMeaningfulErrorMessage(th);
+                    return JobResult.builder()
+                            .status(JobStatus.INSTALL_ERROR)
+                            .exception(new Exception(message))
+                            .build();
+                });
 
-            installableComponent.setStatus(JobStatus.INSTALL_ERROR);
-            if (th.getCause() != null) {
-                String message = th.getCause().getMessage();
-                if (th.getCause() instanceof HttpClientErrorException) {
-                    HttpClientErrorException httpException = (HttpClientErrorException) th.getCause();
-                    message =
-                            httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
-                }
-                jobComponentRepo
-                        .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, message);
-            } else {
-                jobComponentRepo
-                        .updateJobStatus(installableComponent.getId(), JobStatus.INSTALL_ERROR, th.getMessage());
-            }
-            return JobStatus.INSTALL_ERROR;
-        });
         return installResult.join();
     }
 
-    private List<Installable> getInstallables(EntandoBundleJob job, Path p) {
-        log.info("Extracting installable components from downloaded bundle");
-        try {
-            BundleReader r = new BundleReader(p);
-            ComponentDescriptor descriptor = r.readBundleDescriptor();
-            return getInstallables(job, r, descriptor);
-        } catch (IOException e) {
-            log.error("An error occurred while getting installables components", e);
-            throw new UncheckedIOException(e);
-        }
-    }
 
-    private List<Installable> getInstallables(EntandoBundleJob job, BundleReader r,
-            ComponentDescriptor descriptor) throws IOException {
-        List<Installable> installables = new LinkedList<>();
-        for (ComponentProcessor processor : componentProcessors) {
-            ofNullable(processor.process(job, r, descriptor))
-                    .ifPresent(installables::addAll);
-        }
-        return installables;
-    }
-
-    private EntandoBundleComponentJob persistComponent(EntandoBundleJob job, Installable installable) {
+    private EntandoBundleComponentJob buildComponentJob(EntandoBundleJob job, Installable installable) {
         EntandoBundleComponentJob component = new EntandoBundleComponentJob();
         component.setJob(job);
         component.setComponentType(installable.getComponentType());
         component.setName(installable.getName());
         component.setChecksum(installable.getChecksum());
         component.setStatus(JobStatus.INSTALL_CREATED);
-
-        component = jobComponentRepo.save(component);
+        component.setInstallable(installable);
 
         log.debug("New component job created "
                 + "for component of type " + installable.getComponentType() + " with name " + installable.getName());
         return component;
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        componentProcessors = applicationContext.getBeansOfType(ComponentProcessor.class).values();
     }
 
 }

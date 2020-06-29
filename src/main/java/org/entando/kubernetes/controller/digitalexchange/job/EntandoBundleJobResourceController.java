@@ -49,7 +49,4 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
         return Problem.valueOf(Status.NOT_FOUND, "A job with id " + jobId + " could not be found");
     }
 
-    private ThrowableProblem getGenericNotFoundJobProblem() {
-        return Problem.valueOf(Status.NOT_FOUND);
-    }
 }

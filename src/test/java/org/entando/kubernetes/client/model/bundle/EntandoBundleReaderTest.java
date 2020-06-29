@@ -23,7 +23,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -156,22 +155,26 @@ public class EntandoBundleReaderTest {
         }
     }
 
-    private static class DumbComponentProcessor implements ComponentProcessor {
+    private static class DumbComponentProcessor implements ComponentProcessor<Object> {
 
         @Override
-        public List<Installable> process(EntandoBundleJob job, BundleReader bundleReader,
-                ComponentDescriptor descriptor) throws IOException {
+        public List<Installable<Object>> process(BundleReader bundleReader) {
             return null;
         }
 
         @Override
-        public boolean shouldProcess(ComponentType componentType) {
-            return false;
+        public List<Installable<Object>> process(List<EntandoBundleComponentJob> components) {
+            return null;
         }
 
         @Override
-        public void uninstall(EntandoBundleComponentJob component) {
+        public Object buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+            return null;
+        }
 
+        @Override
+        public ComponentType getSupportedComponentType() {
+            return null;
         }
     }
 
