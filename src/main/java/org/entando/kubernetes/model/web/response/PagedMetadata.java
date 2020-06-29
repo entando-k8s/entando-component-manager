@@ -1,17 +1,16 @@
 package org.entando.kubernetes.model.web.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import org.entando.kubernetes.model.web.request.Filter;
-import org.entando.kubernetes.model.web.request.PagedListRequest;
+import static java.util.Optional.ofNullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static java.util.Optional.ofNullable;
+import lombok.Data;
+import org.entando.kubernetes.model.web.request.Filter;
+import org.entando.kubernetes.model.web.request.PagedListRequest;
 
 @Data
 public class PagedMetadata<T> {

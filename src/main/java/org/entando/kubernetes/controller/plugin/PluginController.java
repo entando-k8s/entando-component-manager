@@ -1,5 +1,7 @@
 package org.entando.kubernetes.controller.plugin;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginInfo;
@@ -7,9 +9,6 @@ import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController

@@ -1,16 +1,19 @@
 package org.entando.kubernetes.exception.web;
 
-import lombok.*;
-import org.springframework.context.MessageSource;
-import org.springframework.validation.FieldError;
+import static java.util.Collections.singletonList;
 
-import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import static java.util.Collections.singletonList;
+import javax.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.context.MessageSource;
+import org.springframework.validation.FieldError;
 
 @Getter
 @Setter

@@ -1,9 +1,8 @@
 package org.entando.kubernetes.exception.job;
 
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
-
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 
 public class JobPackageException extends EntandoComponentManagerException {
 

@@ -1,9 +1,9 @@
 package org.entando.kubernetes.utils;
 
+import static org.mockito.Mockito.doAnswer;
+
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Mockito.doAnswer;
 
 public class SleepStubber {
 

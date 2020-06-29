@@ -1,9 +1,8 @@
 package org.entando.kubernetes.model.entandocore;
 
+import java.util.Map;
 import lombok.Data;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
-
-import java.util.Map;
 
 @Data
 public class EntandoCorePageModel {

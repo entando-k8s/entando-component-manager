@@ -1,5 +1,7 @@
 package org.entando.kubernetes.config;
 
+import java.util.EnumMap;
+import java.util.Map;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
@@ -8,9 +10,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 @Configuration
 @Profile("!test")

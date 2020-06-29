@@ -1,5 +1,12 @@
 package org.entando.kubernetes.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.digitalexchange.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
@@ -14,14 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 @Tag("in-process")
 public class EntandoBundleJobServiceTest {
