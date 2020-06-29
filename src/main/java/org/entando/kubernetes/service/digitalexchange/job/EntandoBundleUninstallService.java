@@ -1,54 +1,34 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.job.JobConflictException;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
-import org.entando.kubernetes.model.digitalexchange.JobResult;
-import org.entando.kubernetes.model.digitalexchange.JobStatus;
-import org.entando.kubernetes.model.digitalexchange.JobTracker;
+import org.entando.kubernetes.model.digitalexchange.*;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
-import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EntandoBundleUninstallService {
+public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
     private final @NonNull EntandoBundleJobRepository jobRepository;
     private final @NonNull EntandoBundleComponentJobRepository componentRepository;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
-    private final @NonNull EntandoCoreClient engineService;
     private final @NonNull EntandoBundleComponentUsageService usageService;
-    private final @NonNull KubernetesService k8sService;
-    private final @NonNull BundleDownloader bundleDownloader;
     private final @NonNull Map<ComponentType, ComponentProcessor> processorMap;
 
     public EntandoBundleJob uninstall(String componentId) {
@@ -118,18 +98,7 @@ public class EntandoBundleUninstallService {
                 Optional<EntandoBundleComponentJob> ocj = tracker.extractNextComponentJobToProcess();
                 while(ocj.isPresent()) {
                     EntandoBundleComponentJob componentJob = ocj.get();
-                    componentJob.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
-                    componentRepository.save(componentJob);
-                    Installable installable = componentJob.getInstallable();
-                    JobResult operationResult = executeUninstall(installable);
-                    componentJob.setStatus(operationResult.getStatus());
-                    operationResult.getException().ifPresent(ex -> componentJob.setErrorMessage(ex.getMessage()));
-                    componentRepository.save(componentJob);
-                    tracker.recordProcessedComponentJob(componentJob);
-                    if (operationResult.getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
-                        throw new EntandoComponentManagerException(tracker.getJob().getComponentId()
-                                + " uninstall can't proceed due to an error with one of the components");
-                    }
+                    processComponentJob(tracker, componentJob);
                     ocj = tracker.extractNextComponentJobToProcess();
                 }
 
@@ -145,6 +114,21 @@ public class EntandoBundleUninstallService {
 
             tracker.updateTrackedJobStatus(uninstallJobStatus);
         });
+    }
+
+    private void processComponentJob(JobTracker tracker, EntandoBundleComponentJob componentJob) {
+        componentJob.setStatus(JobStatus.UNINSTALL_IN_PROGRESS);
+        componentRepository.save(componentJob);
+        Installable installable = componentJob.getInstallable();
+        JobResult operationResult = executeUninstall(installable);
+        componentJob.setStatus(operationResult.getStatus());
+        operationResult.getException().ifPresent(ex -> componentJob.setErrorMessage(ex.getMessage()));
+        componentRepository.save(componentJob);
+        tracker.recordProcessedComponentJob(componentJob);
+        if (operationResult.getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
+            throw new EntandoComponentManagerException(tracker.getJob().getComponentId()
+                    + " uninstall can't proceed due to an error with one of the components");
+        }
     }
 
     private List<EntandoBundleComponentJob> createUninstallComponentJobs(EntandoBundleJob referenceJob, EntandoBundleJob currentJob) {
@@ -171,15 +155,7 @@ public class EntandoBundleUninstallService {
                     return JobResult.builder().status(JobStatus.UNINSTALL_COMPLETED).build();
                 }).exceptionally(th -> {
                     log.error("Installable '{}' had errors during uninstall", installable.getName(), th.getCause());
-                    String message = th.getMessage();
-                    if (th.getCause() != null) {
-                        message = th.getCause().getMessage();
-                        if (th.getCause() instanceof HttpClientErrorException) {
-                            HttpClientErrorException httpException = (HttpClientErrorException) th.getCause();
-                            message =
-                                    httpException.getMessage() + "\n" + httpException.getResponseBodyAsString();
-                        }
-                    }
+                    String message = getMeaningfulErrorMessage(th);
                     return JobResult.builder()
                             .status(JobStatus.UNINSTALL_ERROR)
                             .exception(new Exception(message))

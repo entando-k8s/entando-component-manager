@@ -1,9 +1,9 @@
 package org.entando.kubernetes.model.digitalexchange;
 
+import javax.persistence.AttributeConverter;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.AttributeConverter;
 
 public class BundleComponentTypesConverter implements AttributeConverter<Set<String>, String> {
 

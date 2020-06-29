@@ -1,28 +1,27 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -34,7 +33,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PluginProcessor implements ComponentProcessor {
+public class PluginProcessor implements ComponentProcessor<EntandoPlugin> {
 
     private final KubernetesService kubernetesService;
 
@@ -44,14 +43,13 @@ public class PluginProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(EntandoBundleJob job,
-            BundleReader npr) {
+    public List<Installable<EntandoPlugin>> process(BundleReader npr) {
         try {
             ComponentDescriptor descriptor = npr.readBundleDescriptor();
             Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPlugins);
 
-            List<Installable> installableList = new ArrayList<>();
+            List<Installable<EntandoPlugin>> installableList = new ArrayList<>();
             if (optionalPlugins.isPresent()) {
                 for (String filename : optionalPlugins.get()) {
                     EntandoPlugin plugin = npr
@@ -66,7 +64,7 @@ public class PluginProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<EntandoPlugin>> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PLUGIN)
                 .map(c -> new PluginInstallable(kubernetesService, this.buildDescriptorFromComponentJob(c)))

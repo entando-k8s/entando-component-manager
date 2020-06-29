@@ -1,13 +1,6 @@
 package org.entando.kubernetes.client.core;
 
-import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.*;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
 public interface EntandoCoreClient {

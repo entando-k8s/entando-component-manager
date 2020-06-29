@@ -43,8 +43,7 @@ public class DirectoryProcessorTest {
         final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
-        final List<? extends Installable> installables = directoryProcessor
-                .process(job, bundleReader);
+        final List<? extends Installable> installables = directoryProcessor.process(bundleReader);
 
         assertThat(installables).hasSize(5);
 
@@ -75,9 +74,9 @@ public class DirectoryProcessorTest {
         job.setComponentId("my-component-id");
 
         List<DirectoryDescriptor> rootFolders = directoryProcessor
-                .process(job, bundleReader).stream()
-                .map(installable -> (DirectoryDescriptor) installable.getRepresentation())
-                .filter(r -> ((DirectoryDescriptor) r).isRoot())
+                .process(bundleReader).stream()
+                .map(Installable::getRepresentation)
+                .filter(DirectoryDescriptor::isRoot)
                 .collect(Collectors.toList());
 
         assertThat(rootFolders).hasSize(1);

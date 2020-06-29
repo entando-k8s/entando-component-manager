@@ -1,9 +1,10 @@
 package org.entando.kubernetes.model.entandocore;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Data;
 import org.entando.kubernetes.model.bundle.descriptor.PageModelConfiguration;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class EntandoCorePageModelConfiguration {

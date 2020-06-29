@@ -56,7 +56,6 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static junit.framework.TestCase.assertEquals;
@@ -471,8 +470,7 @@ public class InstallFlowTest {
             List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream()
                     .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
                     .collect(Collectors.toList());
-            assertThat(jobs.size()).isEqualTo(2)
-                    .withFailMessage("{} component {} doesn't have two jobs" + c.getComponentType(), c.getName());
+            assertThat(jobs.size()).isEqualTo(2);
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
         }
 

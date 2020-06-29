@@ -11,7 +11,6 @@ import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DirectoryProcessor implements ComponentProcessor {
+public class DirectoryProcessor implements ComponentProcessor<DirectoryDescriptor> {
 
     private final EntandoCoreClient engineService;
 
@@ -41,8 +40,8 @@ public class DirectoryProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
-        final List<Installable> installables = new LinkedList<>();
+    public List<Installable<DirectoryDescriptor>> process(BundleReader npr) {
+        final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
         try {
             if (npr.containsResourceFolder()) {
@@ -65,20 +64,13 @@ public class DirectoryProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<DirectoryDescriptor>> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.DIRECTORY)
                 .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public Installable process(EntandoBundleComponentJob componentJob) {
-        if (!componentJob.getComponentType().equals(this.getSupportedComponentType())) {
-            throw new IllegalArgumentException("Processor only support components of type " + this.getSupportedComponentType());
-        }
-        return new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(componentJob));
-    }
 
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {

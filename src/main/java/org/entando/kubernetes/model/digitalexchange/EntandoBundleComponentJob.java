@@ -1,11 +1,11 @@
 package org.entando.kubernetes.model.digitalexchange;
 
-import java.util.UUID;
-import javax.persistence.*;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+
+import javax.persistence.*;
+import java.util.UUID;
 
 @Data
 @Entity

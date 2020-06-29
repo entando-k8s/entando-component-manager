@@ -1,12 +1,11 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
+
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class PluginInstallable extends Installable<EntandoPlugin> {

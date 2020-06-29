@@ -1,12 +1,5 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -15,13 +8,19 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
-import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
+import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Processor to handle Static files to be stored by Entando. Commonly used for js, images and css.
@@ -33,7 +32,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AssetProcessor implements ComponentProcessor {
+public class FileProcessor implements ComponentProcessor<FileDescriptor> {
 
     private final EntandoCoreClient engineService;
 
@@ -43,8 +42,8 @@ public class AssetProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
-        final List<Installable> installables = new LinkedList<>();
+    public List<Installable<FileDescriptor>> process(BundleReader npr) {
+        final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         try {
             if (npr.containsResourceFolder()) {
@@ -58,7 +57,7 @@ public class AssetProcessor implements ComponentProcessor {
                             .relativize(Paths.get(fileDescriptor.getFolder()));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
                     fileDescriptor.setFolder(folder);
-                    installables.add(new AssetInstallable(engineService, fileDescriptor));
+                    installables.add(new FileInstallable(engineService, fileDescriptor));
                 }
             }
         } catch (IOException e) {
@@ -69,10 +68,10 @@ public class AssetProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<FileDescriptor>> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.ASSET)
-                .map(c ->  new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c ->  new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }
 

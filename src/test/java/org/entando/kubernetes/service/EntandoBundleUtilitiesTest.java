@@ -1,12 +1,12 @@
 package org.entando.kubernetes.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
-
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 
 @Tag("unit")
 public class EntandoBundleUtilitiesTest {

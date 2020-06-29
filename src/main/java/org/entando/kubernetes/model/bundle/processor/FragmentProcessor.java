@@ -1,29 +1,28 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FragmentProcessor implements ComponentProcessor {
+public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor> {
 
     private final EntandoCoreClient engineService;
 
@@ -33,12 +32,12 @@ public class FragmentProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
+    public List<Installable<FragmentDescriptor>> process(BundleReader npr) {
         try {
             ComponentDescriptor descriptor = npr.readBundleDescriptor();
 
             Optional<List<String>> optionalFragments = Optional.ofNullable(descriptor.getComponents().getFragments());
-            List<Installable> installableList = new ArrayList<>();
+            List<Installable<FragmentDescriptor>> installableList = new ArrayList<>();
 
             if (optionalFragments.isPresent()) {
                 for (String fileName : optionalFragments.get()) {
@@ -57,7 +56,7 @@ public class FragmentProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<FragmentDescriptor>> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.FRAGMENT)
                 .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))

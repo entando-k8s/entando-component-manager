@@ -4,15 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
 
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class AssetInstallable extends Installable<FileDescriptor> {
+public class FileInstallable extends Installable<FileDescriptor> {
     private final EntandoCoreClient engineService;
 
-    public AssetInstallable(EntandoCoreClient engineService, FileDescriptor fileDescriptor) {
+    public FileInstallable(EntandoCoreClient engineService, FileDescriptor fileDescriptor) {
         super(fileDescriptor);
         this.engineService = engineService;
     }

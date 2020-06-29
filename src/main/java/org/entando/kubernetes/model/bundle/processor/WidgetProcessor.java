@@ -1,12 +1,5 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -19,8 +12,15 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WidgetProcessor implements ComponentProcessor {
+public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
 
     private final EntandoCoreClient engineService;
 
@@ -40,13 +40,13 @@ public class WidgetProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(EntandoBundleJob job, BundleReader npr) {
+    public List<Installable<WidgetDescriptor>> process(BundleReader npr) {
         try {
             ComponentDescriptor descriptor = npr.readBundleDescriptor();
 
             final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getWidgets);
-            final List<Installable> installables = new LinkedList<>();
+            final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
 
             if (widgetsDescriptor.isPresent()) {
                 for (final String fileName : widgetsDescriptor.get()) {
@@ -67,7 +67,7 @@ public class WidgetProcessor implements ComponentProcessor {
     }
 
     @Override
-    public List<Installable> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJob> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.WIDGET)
                 .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))

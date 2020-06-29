@@ -13,8 +13,6 @@
  */
 package org.entando.kubernetes.controller.digitalexchange.component;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
@@ -28,6 +26,9 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleCom
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
