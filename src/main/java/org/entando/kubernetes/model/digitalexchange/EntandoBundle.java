@@ -32,6 +32,7 @@ import lombok.Data;
 import org.apache.commons.compress.utils.Sets;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.springframework.validation.annotation.Validated;
 

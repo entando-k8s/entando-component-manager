@@ -7,7 +7,7 @@ import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the context to process the Zip File

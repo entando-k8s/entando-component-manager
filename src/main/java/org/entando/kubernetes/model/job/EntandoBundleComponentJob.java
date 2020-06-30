@@ -1,19 +1,13 @@
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
-import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -22,30 +16,35 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 public class EntandoBundleComponentJob {
 
     @Id
-    @Column(name = "id")
+    @Column
     private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "parent_entando_bundle_job_id")
     private EntandoBundleJob job;
 
-    @Column(name = "component_type")
+    @Column
     @Enumerated(EnumType.STRING)
     private ComponentType componentType;
 
-    @Column(name = "name")
+    @Column
     private String name;
 
-    @Column(name = "error_message")
+    @Column
     private String errorMessage;
 
-    @Column(name = "checksum")
+    @Column
     private String checksum;
 
-    @Column(name = "status")
+    @Column
     @Enumerated(EnumType.STRING)
     private JobStatus status;
 
+    @Column
+    private LocalDateTime startedAt;
+
+    @Column
+    private LocalDateTime finishedAt;
     // metadata?
 
     @PrePersist
@@ -53,24 +52,29 @@ public class EntandoBundleComponentJob {
         this.id = UUID.randomUUID();
     }
 
-    @Transient
-    private Installable installable;
-
-    public EntandoBundleComponentJob duplicate() {
+    public EntandoBundleComponentJob duplicateMetadataWithoutStatus() {
         EntandoBundleComponentJob newComponent = new EntandoBundleComponentJob();
         newComponent.setName(getName());
         newComponent.setJob(getJob());
         newComponent.setComponentType(getComponentType());
         newComponent.setChecksum(getChecksum());
-        newComponent.setInstallable(getInstallable());
         return newComponent;
     }
 
-    public EntandoBundleComponentJob duplicateAllFields() {
-        EntandoBundleComponentJob newComponent = this.duplicate();
+    public EntandoBundleComponentJob duplicateMetadataWithStatus() {
+        EntandoBundleComponentJob newComponent = this.duplicateMetadataWithoutStatus();
         newComponent.setStatus(this.status);
         newComponent.setErrorMessage(this.errorMessage);
         return newComponent;
+    }
+
+    public static EntandoBundleComponentJob create(Installable i, EntandoBundleJob parentJob) {
+        EntandoBundleComponentJob component = new EntandoBundleComponentJob();
+        component.setJob(parentJob);
+        component.setComponentType(i.getComponentType());
+        component.setName(i.getName());
+        component.setChecksum(i.getChecksum());
+        return component;
     }
 
 }

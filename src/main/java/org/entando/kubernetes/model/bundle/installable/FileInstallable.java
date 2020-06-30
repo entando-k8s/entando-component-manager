@@ -42,8 +42,4 @@ public class FileInstallable extends Installable<FileDescriptor> {
     }
 
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.ASSET;
-    }
 }

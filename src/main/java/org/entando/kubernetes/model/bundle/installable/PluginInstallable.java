@@ -42,8 +42,4 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
         return this.representation.getMetadata().getName();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.PLUGIN;
-    }
 }

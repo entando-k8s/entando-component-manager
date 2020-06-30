@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -59,6 +59,9 @@ public class EntandoBundleJob {
     @Column
     @Enumerated(EnumType.STRING)
     private JobStatus status;
+
+    @Column
+    private String errorMessage;
 
     @PrePersist
     public void generateId() {

@@ -42,8 +42,4 @@ public class PageInstallable extends Installable<PageDescriptor> {
         return representation.getCode();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.PAGE;
-    }
 }

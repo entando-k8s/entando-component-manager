@@ -42,8 +42,4 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
         return representation.getCode();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.PAGE_TEMPLATE;
-    }
 }

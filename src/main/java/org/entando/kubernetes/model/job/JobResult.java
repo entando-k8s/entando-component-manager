@@ -1,6 +1,5 @@
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
-import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,12 +14,19 @@ public class JobResult {
     JobStatus status;
     Exception exception;
 
-    public Optional<Exception> getException() {
-        return Optional.ofNullable(this.exception);
+    public Exception getException() {
+        return exception;
     }
 
     public boolean hasException() {
         return this.exception != null;
     }
 
+    public String getErrorMessage() {
+        return exception.getMessage();
+    }
+
+    public void clearException() {
+        this.exception = null;
+    }
 }
