@@ -69,7 +69,7 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
     @Override
     public ContentTypeDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return ContentTypeDescriptor.builder()
-                .code(component.getName())
+                .code(component.getComponentId())
                 .build();
     }
 

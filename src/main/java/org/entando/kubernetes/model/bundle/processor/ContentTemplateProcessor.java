@@ -74,7 +74,7 @@ public class ContentTemplateProcessor implements ComponentProcessor<ContentTempl
     @Override
     public ContentTemplateDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return ContentTemplateDescriptor.builder()
-                .id(component.getName())
+                .id(component.getComponentId())
                 .build();
     }
 }

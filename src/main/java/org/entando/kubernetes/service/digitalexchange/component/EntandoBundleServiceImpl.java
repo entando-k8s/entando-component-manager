@@ -94,7 +94,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         EntandoBundle bundle = getInstalledComponent(id)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
         if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
-            return jobComponentRepository.findAllByJob(bundle.getJob());
+            return jobComponentRepository.findAllByParentJob(bundle.getJob());
         } else {
             throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
         }

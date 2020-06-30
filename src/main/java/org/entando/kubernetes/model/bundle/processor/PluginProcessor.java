@@ -74,7 +74,7 @@ public class PluginProcessor implements ComponentProcessor<EntandoPlugin> {
     public EntandoPlugin buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(component.getName())
+                .withName(component.getComponentId())
                 .endMetadata()
                 .build();
     }

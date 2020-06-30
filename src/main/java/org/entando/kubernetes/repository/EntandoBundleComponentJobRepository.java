@@ -18,7 +18,7 @@ import java.util.UUID;
 @Repository
 public interface EntandoBundleComponentJobRepository extends JpaRepository<EntandoBundleComponentJob, UUID> {
 
-    List<EntandoBundleComponentJob> findAllByJob(EntandoBundleJob job);
+    List<EntandoBundleComponentJob> findAllByParentJob(EntandoBundleJob job);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)

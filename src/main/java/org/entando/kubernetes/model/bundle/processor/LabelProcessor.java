@@ -70,7 +70,7 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
     @Override
     public LabelDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return LabelDescriptor.builder()
-                .key(component.getName())
+                .key(component.getComponentId())
                 .build();
     }
 

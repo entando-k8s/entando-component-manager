@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
+import javax.ejb.Local;
+
 @Data
 @Builder
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class EntandoBundleJobDto {
     private final JobStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime finishedAt;
+    private final String errorMesage;
     private final List<BundleComponentJobDto> componentJobs;
 
     public static EntandoBundleJobDto from(EntandoBundleJob job, List<EntandoBundleComponentJob> componentJobs) {
@@ -33,14 +36,18 @@ public class EntandoBundleJobDto {
                         componentJobs.stream().map(cj -> BundleComponentJobDto.builder()
                                 .id(cj.getId())
                                 .checksum(cj.getChecksum())
-                                .name(cj.getName())
+                                .componentId(cj.getComponentId())
                                 .status(cj.getStatus())
                                 .type(cj.getComponentType())
+                                .startedAt(cj.getStartedAt())
+                                .finishedAt(cj.getFinishedAt())
+                                .errorMessage(cj.getErrorMessage())
                                 .build()).collect(Collectors.toList())
                 )
                 .startedAt(job.getStartedAt())
                 .finishedAt(job.getFinishedAt())
                 .status(job.getStatus())
+                .errorMesage(job.getErrorMessage())
                 .build();
     }
 
@@ -51,8 +58,11 @@ public class EntandoBundleJobDto {
 
         private final UUID id;
         private final ComponentType type;
-        private final String name;
+        private final String componentId;
         private final String checksum;
         private final JobStatus status;
+        private final LocalDateTime startedAt;
+        private final LocalDateTime finishedAt;
+        private final String errorMessage;
     }
 }

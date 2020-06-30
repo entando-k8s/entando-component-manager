@@ -34,7 +34,7 @@ public class EntandoBundleJobService {
     }
 
     public List<EntandoBundleComponentJob> getJobRelatedComponentJobs(EntandoBundleJob job) {
-        return componentJobRepository.findAllByJob(job);
+        return componentJobRepository.findAllByParentJob(job);
     }
 
     public List<EntandoBundleJob> getJobs() {

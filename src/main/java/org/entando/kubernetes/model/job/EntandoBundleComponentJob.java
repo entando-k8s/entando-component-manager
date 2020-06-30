@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.job;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
@@ -9,7 +8,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter()
 @Entity
 @NoArgsConstructor
 @Table(name = "entando_bundle_component_jobs")
@@ -21,14 +21,14 @@ public class EntandoBundleComponentJob {
 
     @ManyToOne
     @JoinColumn(name = "parent_entando_bundle_job_id")
-    private EntandoBundleJob job;
+    private EntandoBundleJob parentJob;
 
     @Column
     @Enumerated(EnumType.STRING)
     private ComponentType componentType;
 
     @Column
-    private String name;
+    private String componentId;
 
     @Column
     private String errorMessage;
@@ -47,34 +47,26 @@ public class EntandoBundleComponentJob {
     private LocalDateTime finishedAt;
     // metadata?
 
+    @Transient
+    Installable installable;
+
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();
     }
 
-    public EntandoBundleComponentJob duplicateMetadataWithoutStatus() {
+    public static EntandoBundleComponentJob getNewCopy(EntandoBundleComponentJob o) {
         EntandoBundleComponentJob newComponent = new EntandoBundleComponentJob();
-        newComponent.setName(getName());
-        newComponent.setJob(getJob());
-        newComponent.setComponentType(getComponentType());
-        newComponent.setChecksum(getChecksum());
+        newComponent.setParentJob(o.getParentJob());
+        newComponent.setComponentType(o.getComponentType());
+        newComponent.setComponentId(o.getComponentId());
+        newComponent.setChecksum(o.getChecksum());
+        newComponent.setStartedAt(o.getStartedAt());
+        newComponent.setFinishedAt(o.getFinishedAt());
+        newComponent.setStatus(o.getStatus());
+        newComponent.setInstallable(o.getInstallable());
+        newComponent.setErrorMessage(o.getErrorMessage());
         return newComponent;
-    }
-
-    public EntandoBundleComponentJob duplicateMetadataWithStatus() {
-        EntandoBundleComponentJob newComponent = this.duplicateMetadataWithoutStatus();
-        newComponent.setStatus(this.status);
-        newComponent.setErrorMessage(this.errorMessage);
-        return newComponent;
-    }
-
-    public static EntandoBundleComponentJob create(Installable i, EntandoBundleJob parentJob) {
-        EntandoBundleComponentJob component = new EntandoBundleComponentJob();
-        component.setJob(parentJob);
-        component.setComponentType(i.getComponentType());
-        component.setName(i.getName());
-        component.setChecksum(i.getChecksum());
-        return component;
     }
 
 }

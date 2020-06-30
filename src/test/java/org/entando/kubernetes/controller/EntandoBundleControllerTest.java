@@ -1,27 +1,15 @@
 package org.entando.kubernetes.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
@@ -31,6 +19,14 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
+
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @Tag("in-process")
 public class EntandoBundleControllerTest {
@@ -82,8 +78,8 @@ public class EntandoBundleControllerTest {
 
         EntandoBundleComponentJob componentJob = new EntandoBundleComponentJob();
         componentJob.setStatus(JobStatus.INSTALL_COMPLETED);
-        componentJob.setJob(job);
-        componentJob.setName("my-magic-resource");
+        componentJob.setParentJob(job);
+        componentJob.setComponentId("my-magic-resource");
         componentJob.setComponentType(ComponentType.ASSET);
 
         EntandoBundle component = getTestComponent();
@@ -103,20 +99,20 @@ public class EntandoBundleControllerTest {
 
         EntandoBundleComponentJob cjA = new EntandoBundleComponentJob();
         cjA.setStatus(JobStatus.INSTALL_COMPLETED);
-        cjA.setJob(job);
-        cjA.setName("my-magic-resource");
+        cjA.setParentJob(job);
+        cjA.setComponentId("my-magic-resource");
         cjA.setComponentType(ComponentType.ASSET);
 
         EntandoBundleComponentJob cjB = new EntandoBundleComponentJob();
         cjB.setStatus(JobStatus.INSTALL_COMPLETED);
-        cjB.setJob(job);
-        cjB.setName("my-magic-widget");
+        cjB.setParentJob(job);
+        cjB.setComponentId("my-magic-widget");
         cjB.setComponentType(ComponentType.WIDGET);
 
         EntandoBundleComponentJob cjC = new EntandoBundleComponentJob();
         cjC.setStatus(JobStatus.INSTALL_COMPLETED);
-        cjC.setJob(job);
-        cjC.setName("my-magic-page");
+        cjC.setParentJob(job);
+        cjC.setComponentId("my-magic-page");
         cjC.setComponentType(ComponentType.PAGE);
 
         EntandoBundle component = getTestComponent();
@@ -153,20 +149,20 @@ public class EntandoBundleControllerTest {
 
         EntandoBundleComponentJob cjA = new EntandoBundleComponentJob();
         cjA.setStatus(JobStatus.INSTALL_COMPLETED);
-        cjA.setJob(job);
-        cjA.setName("my-magic-resource");
+        cjA.setParentJob(job);
+        cjA.setComponentId("my-magic-resource");
         cjA.setComponentType(ComponentType.ASSET);
 
         EntandoBundleComponentJob cjB = new EntandoBundleComponentJob();
         cjB.setStatus(JobStatus.INSTALL_COMPLETED);
-        cjB.setJob(job);
-        cjB.setName("my-magic-widget");
+        cjB.setParentJob(job);
+        cjB.setComponentId("my-magic-widget");
         cjB.setComponentType(ComponentType.WIDGET);
 
         EntandoBundleComponentJob cjC = new EntandoBundleComponentJob();
         cjC.setStatus(JobStatus.INSTALL_COMPLETED);
-        cjC.setJob(job);
-        cjC.setName("my-other-widget");
+        cjC.setParentJob(job);
+        cjC.setComponentId("my-other-widget");
         cjC.setComponentType(ComponentType.WIDGET);
 
         EntandoBundle component = getTestComponent();

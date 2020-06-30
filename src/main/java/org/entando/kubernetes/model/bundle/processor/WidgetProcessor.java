@@ -76,7 +76,7 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     @Override
     public WidgetDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return WidgetDescriptor.builder()
-                .code(component.getName())
+                .code(component.getComponentId())
                 .build();
     }
 

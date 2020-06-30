@@ -1,56 +1,11 @@
 package org.entando.kubernetes.controller.mockmvc;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
-import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
-import static org.entando.kubernetes.utils.SleepStubber.doSleep;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Duration;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
@@ -61,11 +16,7 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.*;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -75,22 +26,17 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,6 +57,35 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Duration;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
+import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
+import static org.entando.kubernetes.utils.SleepStubber.doSleep;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureWireMock(port = 8099)
 @AutoConfigureMockMvc
@@ -371,12 +346,12 @@ public class InstallFlowTest {
                 "my-page");
 
         List<EntandoBundleComponentJob> jobComponentList = componentJobRepository
-                .findAllByJob(jobs.get(0))
+                .findAllByParentJob(jobs.get(0))
                 .stream()
                 .sorted(Comparator.comparingLong(cj -> cj.getStartedAt().toInstant(ZoneOffset.UTC).toEpochMilli()))
                 .collect(Collectors.toList());
         assertThat(jobComponentList).hasSize(expected.size());
-        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getName)
+        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getComponentId)
                 .collect(Collectors.toList());
         assertThat(jobComponentNames).isEqualTo(expected);
 
@@ -416,12 +391,12 @@ public class InstallFlowTest {
 
         String jobId = simulateSuccessfullyCompletedUninstall();
         EntandoBundleJob uninstallJob = jobRepository.getOne(UUID.fromString(jobId));
-        List<EntandoBundleComponentJob> uninstallJobs = componentJobRepository.findAllByJob(uninstallJob)
+        List<EntandoBundleComponentJob> uninstallJobs = componentJobRepository.findAllByParentJob(uninstallJob)
                 .stream()
                 .sorted(Comparator.comparingLong(j -> j.getStartedAt().toInstant(ZoneOffset.UTC).toEpochMilli()))
                 .collect(Collectors.toList());
 
-        for (int i = 1; i < jobs.size(); i++) {
+        for (int i = 1; i < uninstallJobs.size(); i++) {
             Installable thisInstallable = processorMap.get(uninstallJobs.get(i).getComponentType()).process(uninstallJobs.get(i));
             Installable prevInstallable = processorMap.get(uninstallJobs.get(i - 1).getComponentType()).process(uninstallJobs.get(i - 1));
 
@@ -477,8 +452,8 @@ public class InstallFlowTest {
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
         assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
 
-        List<EntandoBundleComponentJob> installedComponentList = componentJobRepository.findAllByJob(jobs.get(0));
-        List<EntandoBundleComponentJob> uninstalledComponentList = componentJobRepository.findAllByJob(jobs.get(1));
+        List<EntandoBundleComponentJob> installedComponentList = componentJobRepository.findAllByParentJob(jobs.get(0));
+        List<EntandoBundleComponentJob> uninstalledComponentList = componentJobRepository.findAllByParentJob(jobs.get(1));
         assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
         List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJob::getStatus)
                 .collect(Collectors.toList());
@@ -487,8 +462,8 @@ public class InstallFlowTest {
         boolean matchFound = false;
         for (EntandoBundleComponentJob ic : installedComponentList) {
             matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
-                return uc.getJob().getId().equals(jobs.get(1).getId()) &&
-                        uc.getName().equals(ic.getName()) &&
+                return uc.getParentJob().getId().equals(jobs.get(1).getId()) &&
+                        uc.getComponentId().equals(ic.getComponentId()) &&
                         uc.getComponentType().equals(ic.getComponentType());
 //                        uc.getChecksum().equals(ic.getChecksum()); // FIXME when building descriptor for uninstall we use only code, this changes the checksum
             });
@@ -534,14 +509,14 @@ public class InstallFlowTest {
         assertThat(job.isPresent()).isTrue();
 
         // And for each installed component job there should be a component job that rollbacked the install
-        List<EntandoBundleComponentJob> jobRelatedComponents = componentJobRepository.findAllByJob(job.get());
+        List<EntandoBundleComponentJob> jobRelatedComponents = componentJobRepository.findAllByParentJob(job.get());
         List<EntandoBundleComponentJob> installedComponents = jobRelatedComponents.stream()
                 .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .collect(Collectors.toList());
 
         for (EntandoBundleComponentJob c : installedComponents) {
             List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream()
-                    .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getName().equals(c.getName()))
+                    .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getComponentId().equals(c.getComponentId()))
                     .collect(Collectors.toList());
             assertThat(jobs.size()).isEqualTo(2);
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK_COMPLETED))).isTrue();
@@ -655,7 +630,7 @@ public class InstallFlowTest {
 
         assertThat(job.isPresent()).isTrue();
 
-        List<EntandoBundleComponentJob> jobComponentList = componentJobRepository.findAllByJob(job.get());
+        List<EntandoBundleComponentJob> jobComponentList = componentJobRepository.findAllByParentJob(job.get());
 
         List<EntandoBundleComponentJob> pluginJobs = jobComponentList.stream().filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());

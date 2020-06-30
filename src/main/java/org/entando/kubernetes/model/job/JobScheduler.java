@@ -6,8 +6,8 @@ import java.util.*;
 
 public class JobScheduler {
 
-    Deque<Installable> jobQueue;
-    Deque<JobTracker> processedJobStack;
+    Deque<EntandoBundleComponentJob> jobQueue;
+    Deque<EntandoBundleComponentJob> processedJobStack;
 
 
     public JobScheduler() {
@@ -23,43 +23,45 @@ public class JobScheduler {
         this.processedJobStack.clear();
     }
 
-    public void addToQueue(Installable job) {
+    public void addToQueue(EntandoBundleComponentJob job) {
         jobQueue.addLast(job);
     }
 
-    public void queueAll(List<Installable> jobs) {
-        for (Installable job : jobs) {
+    public void queueAll(Collection<EntandoBundleComponentJob> jobs) {
+        for (EntandoBundleComponentJob job : jobs) {
             this.addToQueue(job);
         }
     }
 
-    public Optional<Installable> extractFromQueue() {
-        Installable nextComponentJob = null;
+    public Optional<EntandoBundleComponentJob> extractFromQueue() {
+        EntandoBundleComponentJob nextComponentJob = null;
         if (!jobQueue.isEmpty()) {
             nextComponentJob = jobQueue.removeFirst();
         }
         return Optional.ofNullable(nextComponentJob);
     }
 
-    public void recordProcessedComponentJob(JobTracker componentJob) {
+    public void recordProcessedComponentJob(EntandoBundleComponentJob componentJob) {
         processedJobStack.addLast(componentJob);
     }
 
     public void activateRollbackMode() {
-        Deque<Installable> rollbackQueue = new ArrayDeque<>();
-        Iterator<JobTracker> jobIterator = this.processedJobStack
+        Deque<EntandoBundleComponentJob> rollbackQueue = new ArrayDeque<>();
+        Iterator<EntandoBundleComponentJob> jobIterator = this.processedJobStack
                 .descendingIterator();
         while(jobIterator.hasNext()) {
-            JobTracker trackedJob = jobIterator.next();
-            rollbackQueue.addLast(trackedJob.installable);
+            EntandoBundleComponentJob duplicateJob = EntandoBundleComponentJob.getNewCopy(jobIterator.next());
+            duplicateJob.setStartedAt(null);
+            duplicateJob.setFinishedAt(null);
+            rollbackQueue.addLast(duplicateJob);
         }
         this.jobQueue = rollbackQueue;
         this.clearProcessedStack();
     }
 
-    public Optional<JobTracker> componentJobWithError() {
+    public Optional<EntandoBundleComponentJob> componentJobWithError() {
         return this.processedJobStack.stream()
-                .filter(trJob -> trJob.getTrackedJob().getStatus().isOfType(JobType.ERROR))
+                .filter(trJob -> trJob.getStatus().isOfType(JobType.ERROR))
                 .findFirst();
     }
 }

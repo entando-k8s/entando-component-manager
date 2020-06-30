@@ -76,7 +76,7 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor> {
 
     @Override
     public FileDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
-        File file = FileUtils.getFile(component.getName());
+        File file = FileUtils.getFile(component.getComponentId());
         return FileDescriptor.builder()
                 .folder(file.getParent())
                 .filename(file.getName())

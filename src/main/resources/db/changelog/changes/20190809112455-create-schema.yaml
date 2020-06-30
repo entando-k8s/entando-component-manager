@@ -75,7 +75,7 @@ databaseChangeLog:
                     foreignKeyName: fk_de_comp_job
                     references: entando_bundle_jobs(id)
               - column:
-                  name: name
+                  name: component_id
                   type: varchar(255)
                   constraints:
                     nullable: false

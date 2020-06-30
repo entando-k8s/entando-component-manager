@@ -72,7 +72,7 @@ public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDes
     @Override
     public PageTemplateDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return PageTemplateDescriptor.builder()
-                .code(component.getName())
+                .code(component.getComponentId())
                 .build();
     }
 

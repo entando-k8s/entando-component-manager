@@ -68,7 +68,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     @Override
     public PageDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return PageDescriptor.builder()
-                .code(component.getName())
+                .code(component.getComponentId())
                 .build();
     }
 

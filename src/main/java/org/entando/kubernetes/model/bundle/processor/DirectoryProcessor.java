@@ -73,11 +73,11 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
 
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
-        Path dirPath = Paths.get(component.getName());
+        Path dirPath = Paths.get(component.getComponentId());
         boolean isRoot = false;
         if(dirPath.getParent().equals(dirPath.getRoot())) {
             isRoot = true;
         }
-        return new DirectoryDescriptor(component.getName(), isRoot);
+        return new DirectoryDescriptor(component.getComponentId(), isRoot);
     }
 }

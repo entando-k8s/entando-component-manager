@@ -65,7 +65,7 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
     @Override
     public FragmentDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return FragmentDescriptor.builder()
-                .code(component.getName())
+                .code(component.getComponentId())
                 .build();
     }
 

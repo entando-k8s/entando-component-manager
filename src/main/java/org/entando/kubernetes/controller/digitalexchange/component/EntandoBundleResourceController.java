@@ -50,7 +50,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
                 .getBundleInstalledComponents(component);
         //For each installed components, I should check the summary
         List<EntandoCoreComponentUsage> usageList = bundleInstalledComponents.stream()
-                .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getName()))
+                .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getComponentId()))
                 .filter(u -> !(u instanceof IrrelevantComponentUsage))
                 .collect(Collectors.toList());
 
