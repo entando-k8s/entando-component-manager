@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @NoArgsConstructor
 @Table(name = "entando_bundle_component_jobs")
-public class EntandoBundleComponentJob {
+public class EntandoBundleComponentJob implements TrackableJob {
 
     @Id
     @Column

@@ -87,11 +87,11 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
     private void submitUninstallAsync(EntandoBundleJob parentJob, EntandoBundleJob referenceJob) {
         CompletableFuture.runAsync(() -> {
-            JobResult parentJobResult = JobResult.builder().status(JobStatus.UNINSTALL_IN_PROGRESS).build();
+            JobTracker<EntandoBundleJob> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobScheduler scheduler = new JobScheduler();
-            parentJob.setStartedAt(LocalDateTime.now());
-            parentJob.setStatus(parentJobResult.getStatus());
-            jobRepo.save(parentJob);
+
+            JobResult parentJobResult = JobResult.builder().status(JobStatus.UNINSTALL_IN_PROGRESS).build();
+            parentJobTracker.startTracking(parentJobResult.getStatus());
 
             try {
                 Queue<EntandoBundleComponentJob> uninstallJobs = createUninstallComponentJobs(parentJob, referenceJob);
@@ -100,7 +100,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 Optional<EntandoBundleComponentJob> optCompJob = scheduler.extractFromQueue();
                 while(optCompJob.isPresent()) {
                     EntandoBundleComponentJob uninstallJob = optCompJob.get();
-                    JobTracker cjt = trackExecution(uninstallJob, this::uninstall);
+                    JobTracker<EntandoBundleComponentJob> cjt = trackExecution(uninstallJob, this::uninstall);
                     if (cjt.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
@@ -121,20 +121,15 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 parentJobResult.setException(ex);
             }
 
-            parentJob.setFinishedAt(LocalDateTime.now());
-            parentJob.setStatus(parentJobResult.getStatus());
-            if (parentJobResult.hasException()) {
-                parentJob.setErrorMessage(parentJobResult.getErrorMessage());
-            }
-            jobRepo.save(parentJob);
+            parentJobTracker.stopTrackingTime(parentJobResult);
         });
     }
 
-    private JobTracker trackExecution(EntandoBundleComponentJob cj, Function<Installable, JobResult> action) {
-        JobTracker cjt = new JobTracker(cj, compJobRepo);
+    private JobTracker<EntandoBundleComponentJob> trackExecution(EntandoBundleComponentJob cj, Function<Installable, JobResult> action) {
+        JobTracker<EntandoBundleComponentJob> cjt = new JobTracker<>(cj, compJobRepo);
         cjt.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
-        JobResult operationResult = action.apply(cj.getInstallable());
-        cjt.stopTrackingTime(operationResult);
+        JobResult result = action.apply(cj.getInstallable());
+        cjt.stopTrackingTime(result);
         return cjt;
     }
 

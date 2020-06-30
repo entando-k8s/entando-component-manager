@@ -1,16 +1,18 @@
 package org.entando.kubernetes.model.job;
 
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
-public class JobTracker {
+public class JobTracker<T extends TrackableJob> {
 
-    EntandoBundleComponentJob job;
-    EntandoBundleComponentJobRepository repo;
+    T job;
+    JpaRepository<T, UUID> repo;
 
-    public JobTracker(EntandoBundleComponentJob job, EntandoBundleComponentJobRepository repo) {
+    public JobTracker(T job, JpaRepository<T, UUID> repo) {
         this.job = job;
         this.repo = repo;
     }
@@ -30,7 +32,7 @@ public class JobTracker {
         repo.save(this.job);
     }
 
-    public EntandoBundleComponentJob getJob() {
+    public T getJob() {
         return this.job;
     }
 

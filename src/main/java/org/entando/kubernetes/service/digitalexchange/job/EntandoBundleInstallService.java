@@ -122,12 +122,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
-            JobResult parentJobResult = JobResult.builder().status(JobStatus.INSTALL_IN_PROGRESS).build();
-
+            JobTracker<EntandoBundleJob> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobScheduler scheduler = new JobScheduler();
-            parentJob.setStartedAt(LocalDateTime.now());
-            parentJob.setStatus(parentJobResult.getStatus());
-            jobRepo.save(parentJob);
+
+            JobResult parentJobResult = JobResult.builder().status(JobStatus.INSTALL_IN_PROGRESS).build();
+            parentJobTracker.startTracking(parentJobResult.getStatus());
 
             Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag);
             Queue<EntandoBundleComponentJob> componentJobQueue = bundleInstallableComponents.stream()
@@ -148,7 +147,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 Optional<EntandoBundleComponentJob> optCompJob = scheduler.extractFromQueue();
                 while(optCompJob.isPresent()) {
                     EntandoBundleComponentJob installJob = optCompJob.get();
-                    JobTracker tracker = trackExecution(installJob, this::executeInstall);
+                    JobTracker<EntandoBundleComponentJob> tracker = trackExecution(installJob, this::executeInstall);
                     scheduler.recordProcessedComponentJob(tracker.getJob());
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ERROR)) {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
@@ -167,12 +166,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 parentJobResult = rollback(scheduler);
             }
 
-            parentJob.setFinishedAt(LocalDateTime.now());
-            parentJob.setStatus(parentJobResult.getStatus());
-            if (parentJobResult.hasException()) {
-                parentJob.setErrorMessage(parentJobResult.getErrorMessage());
-            }
-            jobRepo.save(parentJob);
+            parentJobTracker.stopTrackingTime(parentJobResult);
             bundleDownloader.cleanTargetDirectory();
         });
     }
@@ -185,7 +179,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             while(optCompJob.isPresent()) {
                 EntandoBundleComponentJob rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
-                    JobTracker tracker = trackExecution(rollbackJob, this::rollback);
+                    JobTracker<EntandoBundleComponentJob> tracker = trackExecution(rollbackJob, this::rollback);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
                         throw new EntandoComponentManagerException(rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
                                 + " rollback can't proceed due to an error with one of the components");
@@ -212,8 +206,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle));
     }
 
-    private JobTracker trackExecution(EntandoBundleComponentJob job, Function<Installable, JobResult> action) {
-        JobTracker componentJobTracker = new JobTracker(job, compJobRepo);
+    private JobTracker<EntandoBundleComponentJob> trackExecution(EntandoBundleComponentJob job, Function<Installable, JobResult> action) {
+        JobTracker<EntandoBundleComponentJob> componentJobTracker = new JobTracker<>(job, compJobRepo);
         componentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
         JobResult result = action.apply(job.getInstallable());
         componentJobTracker.stopTrackingTime(result);

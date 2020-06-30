@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Table(name = "entando_bundle_jobs")
-public class EntandoBundleJob {
+public class EntandoBundleJob implements TrackableJob {
 
     @Id
     @Column
