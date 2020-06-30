@@ -1,15 +1,14 @@
 package org.entando.kubernetes.model.job;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
-import javax.ejb.Local;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
