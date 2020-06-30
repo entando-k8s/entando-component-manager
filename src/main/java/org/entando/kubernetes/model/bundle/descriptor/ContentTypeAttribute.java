@@ -23,5 +23,7 @@ public class ContentTypeAttribute {
 
     private ContentTypeValidationRule validationRules;
 
+    private ContentTypeAttribute nestedAttribute;
+    private List<ContentTypeAttribute> compositeAttributes;
 
 }

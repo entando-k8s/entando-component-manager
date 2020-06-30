@@ -17,6 +17,8 @@ public class ContentTypeDescriptor implements Descriptor {
     private String code;
     private String name;
     private String status;
+    private String defaultContentModel;
+    private String defaultContentModelList;
 
     private List<ContentTypeAttribute> attributes;
 

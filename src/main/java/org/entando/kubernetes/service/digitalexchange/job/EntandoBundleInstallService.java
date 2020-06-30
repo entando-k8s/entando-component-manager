@@ -135,13 +135,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             JobStatus installJobStatus = JobStatus.INSTALL_IN_PROGRESS;
             tracker.updateTrackedJobStatus(installJobStatus);
 
-            List<Installable<?>> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag);
-            List<EntandoBundleComponentJob> componentJobs = bundleInstallableComponents.stream()
-                    .map(i -> buildComponentJob(tracker.getJob(), i))
-                    .collect(Collectors.toList());
-            tracker.queueAllComponentJobs(componentJobs);
-
             try {
+                List<Installable<?>> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag);
+                List<EntandoBundleComponentJob> componentJobs = bundleInstallableComponents.stream()
+                        .map(i -> buildComponentJob(tracker.getJob(), i))
+                        .collect(Collectors.toList());
+                tracker.queueAllComponentJobs(componentJobs);
 
                 Optional<EntandoBundleComponentJob> ocj = tracker.extractNextComponentJobToProcess();
                 while(ocj.isPresent()) {
