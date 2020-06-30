@@ -34,7 +34,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         EntandoBundleJob installJob;
         try {
-            installJob = installService.trackInstall(componentId, version);
+            installJob = installService.install(componentId, version);
         } catch (K8SServiceClientException ex) {
             throw new BundleNotFoundException(componentId);
         }

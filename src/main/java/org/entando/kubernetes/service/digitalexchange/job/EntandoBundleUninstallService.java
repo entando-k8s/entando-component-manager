@@ -1,6 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -100,7 +99,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 Optional<EntandoBundleComponentJob> optCompJob = scheduler.extractFromQueue();
                 while(optCompJob.isPresent()) {
                     EntandoBundleComponentJob uninstallJob = optCompJob.get();
-                    JobTracker<EntandoBundleComponentJob> cjt = trackExecution(uninstallJob, this::uninstall);
+                    JobTracker<EntandoBundleComponentJob> cjt = trackExecution(uninstallJob, this::executeUninstall);
                     if (cjt.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
@@ -137,7 +136,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         List<EntandoBundleComponentJob> installJobs = compJobRepo.findAllByParentJob(referenceJob);
         return installJobs.stream()
                 .map(cj -> {
-                    Installable i = processorMap.get(cj.getComponentType()).process(cj);
+                    Installable<?> i = processorMap.get(cj.getComponentType()).process(cj);
                     EntandoBundleComponentJob uninstallCopy = EntandoBundleComponentJob.getNewCopy(cj);
                     uninstallCopy.setParentJob(parentJob);
                     uninstallCopy.setStatus(JobStatus.UNINSTALL_CREATED);
@@ -148,7 +147,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
-    private JobResult uninstall(Installable installable) {
+    private JobResult executeUninstall(Installable<?> installable) {
 
         CompletableFuture<?> future = installable.uninstall();
         CompletableFuture<JobResult> uninstallResult = future
