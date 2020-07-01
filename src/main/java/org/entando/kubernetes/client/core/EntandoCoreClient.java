@@ -1,12 +1,12 @@
 package org.entando.kubernetes.client.core;
 
-import org.entando.kubernetes.model.bundle.descriptor.ContentModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
@@ -34,7 +34,7 @@ public interface EntandoCoreClient {
 
     EntandoCoreComponentUsage getPageUsage(String code);
 
-    void registerPageModel(PageModelDescriptor descriptor);
+    void registerPageModel(PageTemplateDescriptor descriptor);
 
     void deletePageModel(String code);
 
@@ -42,7 +42,7 @@ public interface EntandoCoreClient {
 
     void deleteContentModel(String code);
 
-    void registerContentModel(ContentModelDescriptor descriptor);
+    void registerContentModel(ContentTemplateDescriptor descriptor);
 
     EntandoCoreComponentUsage getContentModelUsage(String code);
 

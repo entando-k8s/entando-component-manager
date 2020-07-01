@@ -1,16 +1,17 @@
 package org.entando.kubernetes.client.model.entandocore;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("unit")
 public class EntandoCoreWidgetTest {
@@ -61,12 +62,12 @@ public class EntandoCoreWidgetTest {
         titles.put("en", "My title");
         titles.put("it", "Il mio titolo");
 
-        WidgetDescriptor descriptor = new WidgetDescriptor();
-        descriptor.setCode("my-code");
-        descriptor.setBundleId("my-bundle");
-        descriptor.setCustomUi("<h1>Hello world</h1>");
-        descriptor.setGroup("free");
-        descriptor.setTitles(titles);
-        return descriptor;
+        return WidgetDescriptor.builder()
+                .code("my-code")
+                .bundleId("my-bundle")
+                .customUi("<h1>Hello world</h1>")
+                .group("free")
+                .titles(titles)
+                .build();
     }
 }

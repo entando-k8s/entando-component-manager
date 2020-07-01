@@ -1,14 +1,15 @@
 package org.entando.kubernetes.service.digitalexchange.signature;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("unit")
 public class SignatureUtilTest {

@@ -19,8 +19,16 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Widget {}", representation.getCode());
+            log.info("Registering Widget {}", getName());
             engineService.registerWidget(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing Widget {}", getName());
+            engineService.deleteWidget(getName());
         });
     }
 

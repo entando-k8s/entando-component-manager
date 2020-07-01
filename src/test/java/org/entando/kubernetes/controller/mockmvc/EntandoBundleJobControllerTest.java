@@ -1,23 +1,11 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
-import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +21,19 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,

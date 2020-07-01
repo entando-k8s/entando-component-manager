@@ -102,8 +102,7 @@ public class KubernetesService {
 
     }
 
-    public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin)
-            throws EntandoAppPluginLinkingProcessException {
+    public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin) {
         boolean result = false;
         Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());
         if (linkByName.isPresent()) {

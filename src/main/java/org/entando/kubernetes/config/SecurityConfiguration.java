@@ -3,7 +3,6 @@ package org.entando.kubernetes.config;
 import org.entando.kubernetes.security.oauth2.JwtAuthorityExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

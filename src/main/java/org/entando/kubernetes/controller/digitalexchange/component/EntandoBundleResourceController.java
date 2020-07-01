@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -50,7 +50,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
                 .getBundleInstalledComponents(component);
         //For each installed components, I should check the summary
         List<EntandoCoreComponentUsage> usageList = bundleInstalledComponents.stream()
-                .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getName()))
+                .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getComponentId()))
                 .filter(u -> !(u instanceof IrrelevantComponentUsage))
                 .collect(Collectors.toList());
 

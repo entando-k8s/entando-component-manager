@@ -1,14 +1,5 @@
 package org.entando.kubernetes.client.model.bundle;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -22,13 +13,22 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUID
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 @Tag("unit")
 public class EntandoBundleReaderTest {
@@ -156,22 +156,26 @@ public class EntandoBundleReaderTest {
         }
     }
 
-    private static class DumbComponentProcessor implements ComponentProcessor {
+    private static class DumbComponentProcessor implements ComponentProcessor<Object> {
 
         @Override
-        public List<Installable> process(EntandoBundleJob job, BundleReader bundleReader,
-                ComponentDescriptor descriptor) throws IOException {
+        public List<Installable<Object>> process(BundleReader bundleReader) {
             return null;
         }
 
         @Override
-        public boolean shouldProcess(ComponentType componentType) {
-            return false;
+        public List<Installable<Object>> process(List<EntandoBundleComponentJob> components) {
+            return null;
         }
 
         @Override
-        public void uninstall(EntandoBundleComponentJob component) {
+        public Object buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+            return null;
+        }
 
+        @Override
+        public ComponentType getSupportedComponentType() {
+            return null;
         }
     }
 

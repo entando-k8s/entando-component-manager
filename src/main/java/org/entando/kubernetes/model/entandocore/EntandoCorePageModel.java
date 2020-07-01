@@ -2,7 +2,7 @@ package org.entando.kubernetes.model.entandocore;
 
 import java.util.Map;
 import lombok.Data;
-import org.entando.kubernetes.model.bundle.descriptor.PageModelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 
 @Data
 public class EntandoCorePageModel {
@@ -13,7 +13,7 @@ public class EntandoCorePageModel {
     private String template;
     private EntandoCorePageModelConfiguration configuration;
 
-    public EntandoCorePageModel(final PageModelDescriptor descriptor) {
+    public EntandoCorePageModel(final PageTemplateDescriptor descriptor) {
         this.code = descriptor.getCode();
         this.descr = descriptor.getDescription();
         this.titles = descriptor.getTitles();

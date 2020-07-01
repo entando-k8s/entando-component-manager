@@ -1,6 +1,8 @@
 code: CNG
 name: Demo
 status: 0 # what the heck means 0?
+defaultContentModel:
+defaultContentModelList:
 
 attributes:
   - code: title
@@ -46,3 +48,147 @@ attributes:
         keyForErrorMessage: some
         keyForHelpMessage: thing
         ognlExpression: string
+  - code: attachments
+    type: Monolist
+    name:
+    roles: []
+    disablingCodes: []
+    mandatory: false
+    listFilter: false
+    indexable: false
+    enumeratorStaticItems:
+    enumeratorStaticItemsSeparator:
+    enumeratorExtractorBean:
+    validationRules:
+      minLength:
+      maxLength:
+      regex:
+      rangeStartString:
+      rangeEndString:
+      rangeStartStringAttribute:
+      rangeEndStringAttribute:
+      equalString:
+      equalStringAttribute:
+      rangeStartDate:
+      rangeEndDate:
+      rangeStartDateAttribute:
+      rangeEndDateAttribute:
+      equalDate:
+      equalDateAttribute:
+      rangeStartNumber:
+      rangeStartNumberAttribute:
+      rangeEndNumber:
+      rangeEndNumberAttribute:
+      equalNumber:
+      equalNumberAttribute:
+      ognlValidation:
+    nestedAttribute:
+      code: attach
+      type: Attach
+      name:
+      roles: []
+      disablingCodes: []
+      mandatory: false
+      listFilter: false
+      indexable: true
+      enumeratorStaticItems:
+      enumeratorStaticItemsSeparator:
+      enumeratorExtractorBean:
+      validationRules:
+        minLength:
+        maxLength:
+        regex:
+        rangeStartString:
+        rangeEndString:
+        rangeStartStringAttribute:
+        rangeEndStringAttribute:
+        equalString:
+        equalStringAttribute:
+        rangeStartDate:
+        rangeEndDate:
+        rangeStartDateAttribute:
+        rangeEndDateAttribute:
+        equalDate:
+        equalDateAttribute:
+        rangeStartNumber:
+        rangeStartNumberAttribute:
+        rangeEndNumber:
+        rangeEndNumberAttribute:
+        equalNumber:
+        equalNumberAttribute:
+        ognlValidation:
+      nestedAttribute:
+      compositeAttributes:
+    compositeAttributes:
+  - code: composite
+    type: Composite
+    name: Testo
+    roles:
+    disablingCodes:
+    mandatory: false
+    listFilter: false
+    indexable: false
+    enumeratorStaticItems:
+    enumeratorStaticItemsSeparator:
+    enumeratorExtractorBean:
+    validationRules:
+      minLength:
+      maxLength:
+      regex:
+      rangeStartString:
+      rangeEndString:
+      rangeStartStringAttribute:
+      rangeEndStringAttribute:
+      equalString:
+      equalStringAttribute:
+      rangeStartDate:
+      rangeEndDate:
+      rangeStartDateAttribute:
+      rangeEndDateAttribute:
+      equalDate:
+      equalDateAttribute:
+      rangeStartNumber:
+      rangeStartNumberAttribute:
+      rangeEndNumber:
+      rangeEndNumberAttribute:
+      equalNumber:
+      equalNumberAttribute:
+      ognlValidation:
+    nestedAttribute:
+    compositeAttributes:
+      - code: comp_img
+        type: Image
+        name: Testo
+        roles:
+        disablingCodes:
+        mandatory: false
+        listFilter: false
+        indexable: false
+        enumeratorStaticItems:
+        enumeratorStaticItemsSeparator:
+        enumeratorExtractorBean:
+        validationRules:
+          minLength:
+          maxLength:
+          regex:
+          rangeStartString:
+          rangeEndString:
+          rangeStartStringAttribute:
+          rangeEndStringAttribute:
+          equalString:
+          equalStringAttribute:
+          rangeStartDate:
+          rangeEndDate:
+          rangeStartDateAttribute:
+          rangeEndDateAttribute:
+          equalDate:
+          equalDateAttribute:
+          rangeStartNumber:
+          rangeStartNumberAttribute:
+          rangeEndNumber:
+          rangeEndNumberAttribute:
+          equalNumber:
+          equalNumberAttribute:
+          ognlValidation:
+        nestedAttribute:
+        compositeAttributes:

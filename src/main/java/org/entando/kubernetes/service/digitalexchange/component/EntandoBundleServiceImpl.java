@@ -24,8 +24,8 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
@@ -94,7 +94,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         EntandoBundle bundle = getInstalledComponent(id)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
         if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
-            return jobComponentRepository.findAllByJob(bundle.getJob());
+            return jobComponentRepository.findAllByParentJob(bundle.getJob());
         } else {
             throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
         }

@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJobDto;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobDto;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
@@ -49,7 +49,4 @@ public class EntandoBundleJobResourceController implements EntandoBundleJobResou
         return Problem.valueOf(Status.NOT_FOUND, "A job with id " + jobId + " could not be found");
     }
 
-    private ThrowableProblem getGenericNotFoundJobProblem() {
-        return Problem.valueOf(Status.NOT_FOUND);
-    }
 }

@@ -19,8 +19,16 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Label {}", representation.getKey());
+            log.info("Registering Label {}", getName());
             engineService.registerLabel(representation);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> uninstall() {
+        return CompletableFuture.runAsync(() -> {
+            log.info("Removing Label {}", getName());
+            engineService.deleteLabel(getName());
         });
     }
 
