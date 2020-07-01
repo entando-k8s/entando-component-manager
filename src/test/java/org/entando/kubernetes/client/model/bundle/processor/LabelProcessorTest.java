@@ -2,7 +2,7 @@ package org.entando.kubernetes.client.model.bundle.processor;
 
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -48,7 +48,7 @@ public class LabelProcessorTest {
         job.setComponentId("my-component-id");
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        final ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
+        final BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
         spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 

@@ -1,10 +1,14 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
-import lombok.Data;
+import lombok.*;
 
 import java.util.Map;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DefaultWidgetDescriptor {
 
     private String code;

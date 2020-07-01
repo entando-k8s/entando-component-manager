@@ -9,7 +9,6 @@ configuration:
   frames:
     - pos: 0
       description: Header
-      defaultWidget: null
       sketch:
         x1: 0
         y1: 0
@@ -17,11 +16,21 @@ configuration:
         y2: 0
     - pos: 1
       defaultWidget:
-        code: my-widget
-        properties:
-          - title: My fantastic widget
+        code: breadcrumb
       description: Breadcrumb
       sketch: { x1: 0, y1: 1, x2: 11, y2: 1 }
+    - pos: 2
+      defaultWidget:
+        code: my-widget
+        properties:
+          title: My fantastic widget
+      description: Body
+      mainFrame: true
+      sketch: { x1: 0, y1: 2, x2: 11, y2: 2 }
+    - pos: 3
+      defaultWidget: null
+      description: Footer
+      sketch: { x1: 0, y1: 3, x2: 11, y2: 3 }
 
 template: >-
   <#assign wp=JspTaglibs[\"/aps-core\"]>
@@ -33,9 +42,12 @@ template: >-
       <body>
           <h1><@wp.currentPage param=\"title\" /></h1>
           <a href=\"<@wp.url page=\"homepage\"/>\">Home</a><br>
+          <header><@wp.show frame=0 /></header>
+          <div class="breadcrumb"><@wp.show frame=1></div>
           <div>
               <h1>Bundle 1 Page Model</h1>
-              <@wp.show frame=0 />
+              <div><@wp.show frame=2 /></div>
           </div>
+          <footer><@wp.show frame=3 /></footer>
       </body>
   </html>

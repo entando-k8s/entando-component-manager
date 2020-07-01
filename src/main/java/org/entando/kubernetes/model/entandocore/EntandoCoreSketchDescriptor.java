@@ -1,9 +1,13 @@
 package org.entando.kubernetes.model.entandocore;
 
-import lombok.Data;
+import lombok.*;
 import org.entando.kubernetes.model.bundle.descriptor.SketchDescriptor;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EntandoCoreSketchDescriptor {
 
     private int x1;
@@ -12,9 +16,9 @@ public class EntandoCoreSketchDescriptor {
     private int y2;
 
     public EntandoCoreSketchDescriptor(final SketchDescriptor sketch) {
-        this.x1 = Integer.parseInt(sketch.getX1());
-        this.x2 = Integer.parseInt(sketch.getX2());
-        this.y1 = Integer.parseInt(sketch.getY1());
-        this.y2 = Integer.parseInt(sketch.getY2());
+        this.x1 = sketch.getX1();
+        this.x2 = sketch.getX2();
+        this.y1 = sketch.getY1();
+        this.y2 = sketch.getY2();
     }
 }

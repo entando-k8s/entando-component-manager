@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ComponentDescriptor implements Descriptor {
+public class BundleDescriptor implements Descriptor {
 
     private String code;
     private String description;

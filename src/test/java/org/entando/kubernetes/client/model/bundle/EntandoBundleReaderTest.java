@@ -6,7 +6,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
@@ -51,7 +51,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldRebaseBundleEntriesToDescriptorRoot() throws IOException {
-        ComponentDescriptor cd = r.readDescriptorFile("descriptor.yaml", ComponentDescriptor.class);
+        BundleDescriptor cd = r.readDescriptorFile("descriptor.yaml", BundleDescriptor.class);
         assertThat(cd).isNotNull();
     }
 

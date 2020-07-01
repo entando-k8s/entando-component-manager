@@ -284,17 +284,17 @@ public class InstallFlowTest {
         assertThat(allPassedPageModels.get(1).getConfiguration().getFrames().get(0))
                 .matches(f -> f.getPos().equals("0") &&
                         f.getDescription().equals("Header") &&
-                        f.getSketch().getX1().equals("0") &&
-                        f.getSketch().getY1().equals("0") &&
-                        f.getSketch().getX2().equals("11") &&
-                        f.getSketch().getY2().equals("0"));
+                        f.getSketch().getX1() == 0 &&
+                        f.getSketch().getY1() == 0  &&
+                        f.getSketch().getX2() == 11 &&
+                        f.getSketch().getY2() == 0);
         assertThat(allPassedPageModels.get(1).getConfiguration().getFrames().get(1))
                 .matches(f -> f.getPos().equals("1") &&
                         f.getDescription().equals("Breadcrumb") &&
-                        f.getSketch().getX1().equals("0") &&
-                        f.getSketch().getY1().equals("1") &&
-                        f.getSketch().getX2().equals("11") &&
-                        f.getSketch().getY2().equals("1"));
+                        f.getSketch().getX1() == 0 &&
+                        f.getSketch().getY1() == 1 &&
+                        f.getSketch().getX2() == 11 &&
+                        f.getSketch().getY2() == 1);
     }
 
     private void verifyWidgetsRequests(EntandoCoreClient coreClient) throws Exception {

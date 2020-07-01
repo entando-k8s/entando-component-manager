@@ -2,7 +2,7 @@ package org.entando.kubernetes.client.model.bundle.processor;
 
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -66,7 +66,7 @@ public class PageProcessorTest {
 
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class)).thenReturn(pageDescriptor);
 
-        ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = pageProcessor.process(bundleReader);

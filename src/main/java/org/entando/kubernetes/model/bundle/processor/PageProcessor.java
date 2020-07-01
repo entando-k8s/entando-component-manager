@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -39,7 +39,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     @Override
     public List<Installable<PageDescriptor>> process(BundleReader npr) {
         try {
-            ComponentDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = npr.readBundleDescriptor();
             List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPages)
                     .orElse(Collections.emptyList());

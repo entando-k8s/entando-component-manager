@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -33,7 +33,7 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
     @Override
     public List<Installable<FragmentDescriptor>> process(BundleReader npr) {
         try {
-            ComponentDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = npr.readBundleDescriptor();
 
             Optional<List<String>> optionalFragments = Optional.ofNullable(descriptor.getComponents().getFragments());
             List<Installable<FragmentDescriptor>> installableList = new ArrayList<>();
