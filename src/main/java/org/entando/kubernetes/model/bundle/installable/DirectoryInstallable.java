@@ -44,8 +44,4 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     }
 
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.DIRECTORY;
-    }
 }

@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
 import java.util.Set;
 
@@ -21,7 +21,9 @@ public enum JobStatus {
     INSTALL_IN_PROGRESS,
     INSTALL_COMPLETED,
     INSTALL_ERROR,
-    INSTALL_ROLLBACK,
+
+    INSTALL_ROLLBACK_IN_PROGRESS,
+    INSTALL_ROLLBACK_COMPLETED,
     INSTALL_ROLLBACK_ERROR,
 
     UNINSTALL_CREATED,

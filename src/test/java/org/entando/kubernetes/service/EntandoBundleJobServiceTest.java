@@ -1,14 +1,7 @@
 package org.entando.kubernetes.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleJob;
-import org.entando.kubernetes.model.digitalexchange.JobStatus;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -21,6 +14,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @Tag("in-process")
 public class EntandoBundleJobServiceTest {
@@ -53,7 +54,7 @@ public class EntandoBundleJobServiceTest {
         testJob2.setComponentId("component-2-id");
         testJob2.setComponentName("component-2-name");
         testJob2.setComponentVersion("component-2-version");
-        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK);
+        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK_COMPLETED);
         testJob2.setProgress(1.0);
         testJob2.setStartedAt(LocalDateTime.of(2020, 4, 22, 20, 0, 0));
         testJob2.setFinishedAt(LocalDateTime.of(2020, 4, 22, 21, 15, 0));
@@ -94,7 +95,7 @@ public class EntandoBundleJobServiceTest {
         testJob2.setComponentId("component-2-id");
         testJob2.setComponentName("component-2-name");
         testJob2.setComponentVersion("component-2-version");
-        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK);
+        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK_COMPLETED);
         testJob2.setProgress(1.0);
         testJob2.setStartedAt(LocalDateTime.of(2020, 4, 22, 20, 0, 0));
         testJob2.setFinishedAt(LocalDateTime.of(2020, 4, 22, 21, 15, 0));
@@ -135,7 +136,7 @@ public class EntandoBundleJobServiceTest {
         filterValue.setOperator(FilterOperator.EQUAL.getValue());
         filterValue.setAllowedValues(new String[]{
                 JobStatus.INSTALL_COMPLETED.name(),
-                JobStatus.INSTALL_ROLLBACK.name()});
+                JobStatus.INSTALL_ROLLBACK_COMPLETED.name()});
         request.addFilter(filterValue);
         request.setSort(EntandoBundleJobListProcessor.COMPONENT_VERSION);
         request.setDirection(Filter.DESC_ORDER);

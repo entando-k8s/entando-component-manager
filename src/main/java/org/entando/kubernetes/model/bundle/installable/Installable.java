@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 
 /**
  * This class will represent something that can be installed on Entando architecture.
@@ -17,6 +18,8 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 public abstract class Installable<T> {
 
     protected final T representation;
+
+    protected EntandoBundleComponentJob job;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -68,5 +71,16 @@ public abstract class Installable<T> {
        return this.representation;
     }
 
-    public abstract InstallPriority getInstallPriority();
+    public int getPriority() {
+        return this.getComponentType().getInstallPriority();
+    }
+
+    public EntandoBundleComponentJob getJob() {
+       return this.job;
+    }
+
+    public void setJob(EntandoBundleComponentJob job) {
+        this.job = job;
+    }
+
 }

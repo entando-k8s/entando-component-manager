@@ -18,7 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.springframework.stereotype.Service;
 
 /**
@@ -70,7 +70,7 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
     @Override
     public LabelDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return LabelDescriptor.builder()
-                .key(component.getName())
+                .key(component.getComponentId())
                 .build();
     }
 

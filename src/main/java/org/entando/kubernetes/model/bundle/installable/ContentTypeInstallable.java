@@ -43,8 +43,4 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
     }
 
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.CONTENT_TYPE;
-    }
 }

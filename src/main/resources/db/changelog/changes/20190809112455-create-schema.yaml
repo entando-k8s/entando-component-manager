@@ -31,7 +31,7 @@ databaseChangeLog:
                   name: started_at
                   type: timestamp
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: finished_at
                   type: timestamp
@@ -47,6 +47,11 @@ databaseChangeLog:
                   type: TEXT
                   constraints:
                     nullable: false
+              - column:
+                  name: error_message
+                  type: TEXT
+                  constraints:
+                    nullable: true
               - column:
                   name: progress
                   type: double
@@ -70,7 +75,7 @@ databaseChangeLog:
                     foreignKeyName: fk_de_comp_job
                     references: entando_bundle_jobs(id)
               - column:
-                  name: name
+                  name: component_id
                   type: varchar(255)
                   constraints:
                     nullable: false
@@ -94,6 +99,16 @@ databaseChangeLog:
                   type: TEXT
                   constraints:
                     nullable: false
+              - column:
+                  name: started_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: finished_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
 
         - createTable:
             tableName: installed_entando_bundles

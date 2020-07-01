@@ -18,7 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageTemplateInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.springframework.stereotype.Service;
 
 /**
@@ -72,7 +72,7 @@ public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDes
     @Override
     public PageTemplateDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return PageTemplateDescriptor.builder()
-                .code(component.getName())
+                .code(component.getComponentId())
                 .build();
     }
 

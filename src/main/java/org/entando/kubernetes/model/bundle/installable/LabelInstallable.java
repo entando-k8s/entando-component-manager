@@ -42,8 +42,4 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
         return representation.getKey();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.LABEL;
-    }
 }

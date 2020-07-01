@@ -16,7 +16,7 @@ import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.springframework.stereotype.Service;
 
 /**
@@ -73,11 +73,11 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
 
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
-        Path dirPath = Paths.get(component.getName());
+        Path dirPath = Paths.get(component.getComponentId());
         boolean isRoot = false;
         if(dirPath.getParent().equals(dirPath.getRoot())) {
             isRoot = true;
         }
-        return new DirectoryDescriptor(component.getName(), isRoot);
+        return new DirectoryDescriptor(component.getComponentId(), isRoot);
     }
 }

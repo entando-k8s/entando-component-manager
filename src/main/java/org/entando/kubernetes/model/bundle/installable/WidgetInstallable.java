@@ -42,8 +42,4 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         return representation.getCode();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.WIDGET;
-    }
 }

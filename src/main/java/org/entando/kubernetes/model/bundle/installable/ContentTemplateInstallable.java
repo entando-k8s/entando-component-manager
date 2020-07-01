@@ -42,8 +42,4 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
         return representation.getId();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.CONTENT_TEMPLATE;
-    }
 }

@@ -9,67 +9,35 @@ import java.util.Arrays;
  */
 public enum ComponentType {
 
-    /**
-     * A Widget
-     */
-    WIDGET("widget"),
-
-    /**
-     * A Page template
-     */
-    PAGE_TEMPLATE("pageTemplate"),
-
-    /**
-     * A Page
-     */
-    PAGE("page"),
-
-    /**
-     * A Content template from CMS
-     */
-    CONTENT_TEMPLATE("contentTemplate"),
-
-    /**
-     * A Content Type from CMS
-     */
-    CONTENT_TYPE("contentType"),
-
-    /**
-     * A label
-     */
-    LABEL("label"),
-
-    /**
-     * A static asset
-     */
-    ASSET("asset"),
-
-    /**
-     * A static asset directory
-     */
-    DIRECTORY("directory"),
-
-    /**
-     * A Service Deployment on Kubernetes (or any similar platform).
-     */
-    PLUGIN("plugin"),
-
-    /**
-     * A fragment
-     */
-    FRAGMENT("fragment");
+    PLUGIN("plugin", 0),
+    DIRECTORY("directory", 1),
+    LABEL("label",2),
+    ASSET("asset", 3),
+    WIDGET("widget", 4),
+    CONTENT_TYPE("contentType", 5),
+    CONTENT_TEMPLATE("contentTemplate", 6),
+    FRAGMENT("fragment", 7),
+    PAGE_TEMPLATE("pageTemplate", 8),
+    PAGE("page", 9);
 
     private String typeName;
+    private int installPriority;
 
-    ComponentType(String typeName) {
+    ComponentType(String typeName, int installPriority) {
         this.typeName = typeName;
+        this.installPriority = installPriority;
     }
 
     public String getTypeName() {
         return this.typeName;
     }
 
+    public int getInstallPriority() {
+        return this.installPriority;
+    }
+
     public static boolean isValidType(String type) {
         return Arrays.stream(values()).anyMatch(e -> e.toString().equalsIgnoreCase(type));
     }
+
 }

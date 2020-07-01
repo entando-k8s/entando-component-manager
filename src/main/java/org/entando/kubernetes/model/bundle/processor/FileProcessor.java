@@ -18,7 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.springframework.stereotype.Service;
 
 /**
@@ -76,7 +76,7 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor> {
 
     @Override
     public FileDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
-        File file = FileUtils.getFile(component.getName());
+        File file = FileUtils.getFile(component.getComponentId());
         return FileDescriptor.builder()
                 .folder(file.getParent())
                 .filename(file.getName())

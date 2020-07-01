@@ -42,8 +42,4 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
         return representation.getCode();
     }
 
-    @Override
-    public InstallPriority getInstallPriority() {
-        return InstallPriority.FRAGMENT;
-    }
 }

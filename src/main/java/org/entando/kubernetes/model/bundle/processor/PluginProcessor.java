@@ -16,7 +16,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
@@ -74,7 +74,7 @@ public class PluginProcessor implements ComponentProcessor<EntandoPlugin> {
     public EntandoPlugin buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(component.getName())
+                .withName(component.getComponentId())
                 .endMetadata()
                 .build();
     }
