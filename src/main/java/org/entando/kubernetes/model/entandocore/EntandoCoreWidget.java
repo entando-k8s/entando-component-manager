@@ -1,10 +1,9 @@
 package org.entando.kubernetes.model.entandocore;
 
-import lombok.Data;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 
 @Data
 public class EntandoCoreWidget {

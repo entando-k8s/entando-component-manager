@@ -2,10 +2,9 @@ package org.entando.kubernetes.model.web.response;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import lombok.NoArgsConstructor;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class BaseMapModel {

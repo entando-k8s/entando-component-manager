@@ -1,9 +1,8 @@
 package org.entando.kubernetes.model.job;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 
 public class JobTracker<T extends TrackableJob> {

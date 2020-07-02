@@ -1,11 +1,10 @@
 package org.entando.kubernetes.model.entandocore;
 
+import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 public class EntandoCorePage {

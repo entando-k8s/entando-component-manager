@@ -1,11 +1,10 @@
 package org.entando.kubernetes.model.bundle.downloader;
 
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 public class GitBundleDownloader extends BundleDownloader {
 

@@ -1,6 +1,8 @@
 package org.entando.kubernetes.client.core;
 
 import com.jayway.jsonpath.JsonPath;
+import java.nio.file.Paths;
+import java.util.List;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
@@ -31,9 +33,6 @@ import org.springframework.security.oauth2.client.token.grant.client.ClientCrede
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.nio.file.Paths;
-import java.util.List;
 
 @Service
 public class DefaultEntandoCoreClient implements EntandoCoreClient {

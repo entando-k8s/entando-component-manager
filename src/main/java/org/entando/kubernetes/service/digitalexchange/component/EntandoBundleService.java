@@ -13,13 +13,12 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import java.util.List;
+import java.util.Optional;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface EntandoBundleService {
 

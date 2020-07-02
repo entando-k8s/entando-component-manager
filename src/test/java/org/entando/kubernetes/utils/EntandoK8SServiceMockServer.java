@@ -1,9 +1,5 @@
 package org.entando.kubernetes.utils;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.matching.AnythingPattern;
-import lombok.extern.slf4j.Slf4j;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -11,6 +7,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.matching.AnythingPattern;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {

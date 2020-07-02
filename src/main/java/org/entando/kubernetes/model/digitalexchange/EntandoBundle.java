@@ -14,14 +14,10 @@
 package org.entando.kubernetes.model.digitalexchange;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Data;
-import org.apache.commons.compress.utils.Sets;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
-import org.entando.kubernetes.model.web.SystemConstants;
-import org.springframework.validation.annotation.Validated;
-
+import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -32,10 +28,13 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import lombok.Data;
+import org.apache.commons.compress.utils.Sets;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.web.SystemConstants;
+import org.springframework.validation.annotation.Validated;
 
 @Data
 @Validated

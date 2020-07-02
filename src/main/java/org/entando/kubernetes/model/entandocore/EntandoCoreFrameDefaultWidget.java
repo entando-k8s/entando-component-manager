@@ -1,13 +1,12 @@
 package org.entando.kubernetes.model.entandocore;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.DefaultWidgetDescriptor;
-
-import java.util.Map;
 
 @Getter
 @Setter

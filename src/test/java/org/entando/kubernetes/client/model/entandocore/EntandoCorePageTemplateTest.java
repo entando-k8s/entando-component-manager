@@ -1,5 +1,10 @@
 package org.entando.kubernetes.client.model.entandocore;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.entando.kubernetes.model.bundle.descriptor.DefaultWidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationDescriptor;
@@ -9,12 +14,6 @@ import org.entando.kubernetes.model.entandocore.EntandoCorePageTemplate;
 import org.entando.kubernetes.model.entandocore.EntandoCoreSketchDescriptor;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("unit")
 public class EntandoCorePageTemplateTest {

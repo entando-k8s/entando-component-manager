@@ -1,6 +1,9 @@
 package org.entando.kubernetes.config;
 
+import static org.awaitility.Awaitility.await;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.time.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -10,10 +13,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-
-import java.time.Duration;
-
-import static org.awaitility.Awaitility.await;
 
 @TestConfiguration
 @Profile("test")

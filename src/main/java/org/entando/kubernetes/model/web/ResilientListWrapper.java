@@ -13,12 +13,11 @@
  */
 package org.entando.kubernetes.model.web;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import org.entando.kubernetes.model.web.response.RestError;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Wrapper for handling a sequence of responses with partial failure.
