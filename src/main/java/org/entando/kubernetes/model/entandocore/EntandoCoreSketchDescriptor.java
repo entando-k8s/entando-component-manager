@@ -1,6 +1,10 @@
 package org.entando.kubernetes.model.entandocore;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.SketchDescriptor;
 
 @Getter

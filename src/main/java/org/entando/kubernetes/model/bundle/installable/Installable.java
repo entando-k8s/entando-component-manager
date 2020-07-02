@@ -2,11 +2,12 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class will represent something that can be installed on Entando architecture.

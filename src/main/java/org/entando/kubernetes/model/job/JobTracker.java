@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.job;
 
-import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

@@ -1,9 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,13 +8,30 @@ import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledExcept
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.digitalexchange.*;
-import org.entando.kubernetes.model.job.*;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.JobResult;
+import org.entando.kubernetes.model.job.JobScheduler;
+import org.entando.kubernetes.model.job.JobStatus;
+import org.entando.kubernetes.model.job.JobTracker;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service

@@ -13,6 +13,8 @@
  */
 package org.entando.kubernetes.service.digitalexchange.signature;
 
+import org.entando.kubernetes.exception.EntandoGeneralSignatureException;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +29,6 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import org.entando.kubernetes.exception.EntandoGeneralSignatureException;
 
 public class SignatureUtil {
 

@@ -1,6 +1,10 @@
 package org.entando.kubernetes.client.model.entandocore;
 
-import org.entando.kubernetes.model.bundle.descriptor.*;
+import org.entando.kubernetes.model.bundle.descriptor.DefaultWidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.SketchDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageTemplate;
 import org.entando.kubernetes.model.entandocore.EntandoCoreSketchDescriptor;
 import org.junit.jupiter.api.Tag;

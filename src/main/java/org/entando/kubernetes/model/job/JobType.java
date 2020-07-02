@@ -1,5 +1,8 @@
 package org.entando.kubernetes.model.job;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import static org.entando.kubernetes.model.job.JobStatus.INSTALL_COMPLETED;
 import static org.entando.kubernetes.model.job.JobStatus.INSTALL_CREATED;
 import static org.entando.kubernetes.model.job.JobStatus.INSTALL_ERROR;
@@ -9,9 +12,6 @@ import static org.entando.kubernetes.model.job.JobStatus.UNINSTALL_COMPLETED;
 import static org.entando.kubernetes.model.job.JobStatus.UNINSTALL_CREATED;
 import static org.entando.kubernetes.model.job.JobStatus.UNINSTALL_ERROR;
 import static org.entando.kubernetes.model.job.JobStatus.UNINSTALL_IN_PROGRESS;
-
-import java.util.EnumSet;
-import java.util.Set;
 
 public enum JobType {
 

@@ -1,11 +1,12 @@
 package org.entando.kubernetes.utils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.exception.web.InternalServerException;
 import org.springframework.core.io.ClassPathResource;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 public class FileUtils {
     public static String readFromFile(String filename) {

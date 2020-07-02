@@ -1,12 +1,9 @@
 package org.entando.kubernetes.config;
 
-import static org.awaitility.Awaitility.await;
-
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import java.time.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -14,6 +11,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+
+import java.time.Duration;
+
+import static org.awaitility.Awaitility.await;
 
 @Configuration
 @Profile("!test")

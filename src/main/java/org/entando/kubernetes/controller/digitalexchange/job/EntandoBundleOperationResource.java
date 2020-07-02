@@ -18,8 +18,6 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.net.URISyntaxException;
-import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
@@ -29,6 +27,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletRequest;
+import java.net.URISyntaxException;
 
 @OpenAPIDefinition(tags = {@Tag(name = "digital-exchange"), @Tag(name = "installation")})
 @RequestMapping(value = "/components")

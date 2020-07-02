@@ -1,15 +1,5 @@
 package org.entando.kubernetes.service;
 
-import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
-import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
@@ -23,6 +13,17 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
+import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
 
 @Slf4j
 @Component

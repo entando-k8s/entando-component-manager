@@ -1,6 +1,7 @@
 package org.entando.kubernetes.security.oauth2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.UUID;
 

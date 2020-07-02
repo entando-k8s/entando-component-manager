@@ -13,11 +13,6 @@
  */
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -33,6 +28,12 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EntandoBundleServiceImpl implements EntandoBundleService {

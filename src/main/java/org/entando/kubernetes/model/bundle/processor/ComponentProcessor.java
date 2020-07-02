@@ -1,13 +1,14 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the context to process the Zip File

@@ -13,8 +13,9 @@
  */
 package org.entando.kubernetes.model.job;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -22,8 +23,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Entity

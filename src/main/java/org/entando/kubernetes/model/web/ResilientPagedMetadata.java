@@ -1,8 +1,6 @@
 package org.entando.kubernetes.model.web;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +8,9 @@ import lombok.Setter;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.RestError;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter

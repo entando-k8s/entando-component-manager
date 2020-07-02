@@ -1,14 +1,15 @@
 package org.entando.kubernetes.model.bundle.downloader;
 
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 @Slf4j
 public abstract class BundleDownloader {

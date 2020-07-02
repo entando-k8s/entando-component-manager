@@ -1,6 +1,14 @@
 package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,13 +23,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
 @Slf4j
 public class BundleReader {

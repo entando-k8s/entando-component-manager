@@ -1,11 +1,13 @@
 package org.entando.kubernetes.model.entandocore;
 
-import static java.util.Optional.ofNullable;
-
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
 
-import java.util.Map;
+import static java.util.Optional.ofNullable;
 
 @Getter
 @Setter

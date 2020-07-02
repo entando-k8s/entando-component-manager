@@ -1,11 +1,12 @@
 package org.entando.kubernetes.model.web.response;
 
-import static java.util.Optional.ofNullable;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
-import lombok.Getter;
-import lombok.Setter;
+
+import static java.util.Optional.ofNullable;
 
 @Getter
 @Setter
