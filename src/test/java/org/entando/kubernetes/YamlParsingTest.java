@@ -1,15 +1,14 @@
 package org.entando.kubernetes;
 
+import static org.junit.Assert.assertEquals;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
 
 @Tag("unit")
 public class YamlParsingTest {

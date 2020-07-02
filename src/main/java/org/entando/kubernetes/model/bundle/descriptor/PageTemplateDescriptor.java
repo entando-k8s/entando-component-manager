@@ -19,6 +19,6 @@ public class PageTemplateDescriptor implements Descriptor {
     private Map<String, String> titles;
     private String template;
     private String templatePath;
-    private PageModelConfiguration configuration;
+    private PageTemplateConfigurationDescriptor configuration;
 
 }

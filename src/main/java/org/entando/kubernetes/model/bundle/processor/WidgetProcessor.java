@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -41,7 +41,7 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     @Override
     public List<Installable<WidgetDescriptor>> process(BundleReader npr) {
         try {
-            ComponentDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = npr.readBundleDescriptor();
 
             final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getWidgets);

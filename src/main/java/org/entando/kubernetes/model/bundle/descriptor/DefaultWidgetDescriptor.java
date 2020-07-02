@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +12,8 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SketchDescriptor {
+public class DefaultWidgetDescriptor {
 
-    private int x1;
-    private int y1;
-    private int x2;
-    private int y2;
-
+    private String code;
+    private Map<String, String> properties;
 }

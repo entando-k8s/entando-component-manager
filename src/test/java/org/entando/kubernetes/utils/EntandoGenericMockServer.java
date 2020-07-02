@@ -1,8 +1,9 @@
 package org.entando.kubernetes.utils;
 
+import static org.springframework.cloud.contract.wiremock.WireMockSpring.options;
+
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;
@@ -10,8 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-
-import static org.springframework.cloud.contract.wiremock.WireMockSpring.options;
 
 public abstract class EntandoGenericMockServer {
 

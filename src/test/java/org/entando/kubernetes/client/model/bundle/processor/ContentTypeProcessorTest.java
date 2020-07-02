@@ -1,10 +1,17 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.entando.kubernetes.utils.FileUtils.readFromFile;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
-import org.entando.kubernetes.model.bundle.descriptor.ComponentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeAttribute;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
@@ -17,15 +24,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.entando.kubernetes.utils.FileUtils.readFromFile;
-import static org.mockito.Mockito.when;
 
 @Tag("unit")
 public class ContentTypeProcessorTest {
@@ -61,7 +59,7 @@ public class ContentTypeProcessorTest {
         when(bundleReader.readDescriptorFile("/contenttypes/my_content_type_descriptor.yaml", ContentTypeDescriptor.class))
                 .thenReturn(contentTypeDescriptor);
 
-        ComponentDescriptor descriptor = new ComponentDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = contentTypeProcessor.process(bundleReader);
@@ -91,9 +89,4 @@ public class ContentTypeProcessorTest {
         assertThat(attribute3.getCompositeAttributes().get(0).getType()).isEqualTo("Image");
     }
 
-    private List<ContentTypeAttribute> createContenTypeAttributes() {
-        List<ContentTypeAttribute> attributes = new ArrayList<>();
-
-        return attributes;
-    }
 }

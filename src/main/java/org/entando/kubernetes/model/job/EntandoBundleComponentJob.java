@@ -1,12 +1,22 @@
 package org.entando.kubernetes.model.job;
 
-import lombok.*;
-import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
 @Getter
 @Setter()

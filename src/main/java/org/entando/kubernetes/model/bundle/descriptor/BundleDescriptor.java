@@ -1,21 +1,19 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SketchDescriptor {
+public class BundleDescriptor implements Descriptor {
 
-    private int x1;
-    private int y1;
-    private int x2;
-    private int y2;
+    private String code;
+    private String description;
+
+    private ComponentSpecDescriptor components;
 
 }

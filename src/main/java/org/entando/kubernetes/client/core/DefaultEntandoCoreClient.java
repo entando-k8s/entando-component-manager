@@ -19,7 +19,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
 import org.entando.kubernetes.model.entandocore.EntandoCorePage;
-import org.entando.kubernetes.model.entandocore.EntandoCorePageModel;
+import org.entando.kubernetes.model.entandocore.EntandoCorePageTemplate;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
@@ -147,7 +147,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void registerPageModel(final PageTemplateDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(),
-                new EntandoCorePageModel(descriptor), Void.class);
+                new EntandoCorePageTemplate(descriptor), Void.class);
     }
 
     @Override
