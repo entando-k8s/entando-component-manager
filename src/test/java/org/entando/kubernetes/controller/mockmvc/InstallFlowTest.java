@@ -526,7 +526,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK_COMPLETED.toString()));
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
         Optional<EntandoBundleJob> job = jobRepository.findById(UUID.fromString(failingJobId));
         assertThat(job.isPresent()).isTrue();
@@ -542,7 +542,7 @@ public class InstallFlowTest {
                     .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getComponentId().equals(c.getComponentId()))
                     .collect(Collectors.toList());
             assertThat(jobs.size()).isEqualTo(2);
-            assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK_COMPLETED))).isTrue();
+            assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
         }
 
         // And component should not be part of the installed components
@@ -567,7 +567,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK_COMPLETED.toString()));
+                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
         // And component should not be installed
         assertThat(installedCompRepo.findAll()).isEmpty();
@@ -645,7 +645,7 @@ public class InstallFlowTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK_COMPLETED, JobStatus.INSTALL_ERROR);
+        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
@@ -659,7 +659,7 @@ public class InstallFlowTest {
                 .collect(Collectors.toList());
         assertThat(pluginJobs.size()).isEqualTo(2);
         assertThat(pluginJobs.stream().map(EntandoBundleComponentJob::getStatus).collect(Collectors.toList())).containsOnly(
-                JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK_COMPLETED
+                JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
         );
 
     }
@@ -889,7 +889,7 @@ public class InstallFlowTest {
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
 
-        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK_COMPLETED, JobStatus.INSTALL_ROLLBACK_ERROR, JobStatus.INSTALL_ERROR);
+        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR, JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }

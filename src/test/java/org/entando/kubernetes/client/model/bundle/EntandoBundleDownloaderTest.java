@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.BundleDownloaderException;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -112,10 +114,28 @@ public class EntandoBundleDownloaderTest {
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
         downloader = BundleDownloader.getForType("ANYTHING");
-        assertThat(downloader instanceof NpmBundleDownloader).isTrue();
+        assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
         downloader = BundleDownloader.getForType(null);
-        assertThat(downloader instanceof NpmBundleDownloader).isTrue();
+        assertThat(downloader instanceof GitBundleDownloader).isTrue();
+    }
+
+    @Test
+    public void factoryShouldCreateCorrectly() {
+        BundleDownloaderFactory factory = new BundleDownloaderFactory();
+        factory.setDefaultSupplier(GitBundleDownloader::new);
+
+        factory.registerSupplier(Type.NPM, NpmBundleDownloader::new);
+        factory.registerSupplier(Type.GIT, GitBundleDownloader::new);
+
+        downloader = factory.newDownloader();
+        assertThat(downloader).isInstanceOf(GitBundleDownloader.class);
+
+        downloader = factory.newDownloader(Type.GIT);
+        assertThat(downloader).isInstanceOf(GitBundleDownloader.class);
+
+        downloader = factory.newDownloader(Type.NPM);
+        assertThat(downloader).isInstanceOf(NpmBundleDownloader.class);
     }
 
     @Test

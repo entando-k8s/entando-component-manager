@@ -10,6 +10,12 @@ databaseChangeLog:
   - changeSet:
       id: 1593777772216-2
       author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            columnExists:
+              columnName: ERROR_MESSAGE
+              tableName: ENTANDO_BUNDLE_JOBS
       changes:
         - addColumn:
             columns:
@@ -20,6 +26,11 @@ databaseChangeLog:
   - changeSet:
       id: 1593777772216-3
       author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          columnExists:
+            columnName: NAME
+            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
       changes:
         - renameColumn:
             columnDataType:  VARCHAR(255 BYTE)
@@ -29,6 +40,12 @@ databaseChangeLog:
   - changeSet:
       id: 1593777772216-4
       author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            columnExists:
+              columnName: STARTED_AT
+              tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
       changes:
         - addColumn:
             columns:
@@ -39,6 +56,12 @@ databaseChangeLog:
   - changeSet:
       id: 1593777772216-5
       author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            columnExists:
+              columnName: FINISHED_AT
+              tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
       changes:
         - addColumn:
             columns:
@@ -46,27 +69,27 @@ databaseChangeLog:
                   name: FINISHED_AT
                   type: TIMESTAMP
             tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
-  - changeSet:
-      id: 1593777772216-6
-      author: kerruba (generated)
-      changes:
-        - update:
-            columns:
-              - column:
-                  name:  status
-                  value:  INSTALL_ROLLBACK_COMPLETED
-            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
-            where:  status='INSTALL_ROLLBACK'
-  - changeSet:
-      id: 1593777772216-7
-      author: kerruba (generated)
-      changes:
-        - update:
-            columns:
-              - column:
-                  name:  status
-                  value:  INSTALL_ROLLBACK_COMPLETED
-            tableName: ENTANDO_BUNDLE_JOBS
-            where:  status='INSTALL_ROLLBACK'
+#  - changeSet:
+#      id: 1593777772216-6
+#      author: kerruba (generated)
+#      changes:
+#        - update:
+#            columns:
+#              - column:
+#                  name:  status
+#                  value:  INSTALL_ROLLBACK_COMPLETED
+#            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+#            where:  status='INSTALL_ROLLBACK'
+#  - changeSet:
+#      id: 1593777772216-7
+#      author: kerruba (generated)
+#      changes:
+#        - update:
+#            columns:
+#              - column:
+#                  name:  status
+#                  value:  INSTALL_ROLLBACK_COMPLETED
+#            tableName: ENTANDO_BUNDLE_JOBS
+#            where:  status='INSTALL_ROLLBACK'
 
 

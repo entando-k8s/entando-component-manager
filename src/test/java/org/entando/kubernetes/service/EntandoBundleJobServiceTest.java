@@ -53,7 +53,7 @@ public class EntandoBundleJobServiceTest {
         testJob2.setComponentId("component-2-id");
         testJob2.setComponentName("component-2-name");
         testJob2.setComponentVersion("component-2-version");
-        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK_COMPLETED);
+        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK);
         testJob2.setProgress(1.0);
         testJob2.setStartedAt(LocalDateTime.of(2020, 4, 22, 20, 0, 0));
         testJob2.setFinishedAt(LocalDateTime.of(2020, 4, 22, 21, 15, 0));
@@ -94,7 +94,7 @@ public class EntandoBundleJobServiceTest {
         testJob2.setComponentId("component-2-id");
         testJob2.setComponentName("component-2-name");
         testJob2.setComponentVersion("component-2-version");
-        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK_COMPLETED);
+        testJob2.setStatus(JobStatus.INSTALL_ROLLBACK);
         testJob2.setProgress(1.0);
         testJob2.setStartedAt(LocalDateTime.of(2020, 4, 22, 20, 0, 0));
         testJob2.setFinishedAt(LocalDateTime.of(2020, 4, 22, 21, 15, 0));
@@ -135,7 +135,7 @@ public class EntandoBundleJobServiceTest {
         filterValue.setOperator(FilterOperator.EQUAL.getValue());
         filterValue.setAllowedValues(new String[]{
                 JobStatus.INSTALL_COMPLETED.name(),
-                JobStatus.INSTALL_ROLLBACK_COMPLETED.name()});
+                JobStatus.INSTALL_ROLLBACK.name()});
         request.addFilter(filterValue);
         request.setSort(EntandoBundleJobListProcessor.COMPONENT_VERSION);
         request.setDirection(Filter.DESC_ORDER);
