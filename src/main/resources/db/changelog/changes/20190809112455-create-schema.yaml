@@ -2,6 +2,18 @@ databaseChangeLog:
   - changeSet:
       id: 20190809112455
       author: l.cherubin@entando.com
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - and:
+                tableExists:
+                  tableName: entando_bundle_jobs
+            - and:
+                tableExists:
+                  tableName: entando_bundle_component_jobs
+            - and:
+                tableExists:
+                  tableName: installed_entando_bundles
       changes:
         - createTable:
             tableName: entando_bundle_jobs
@@ -31,7 +43,7 @@ databaseChangeLog:
                   name: started_at
                   type: timestamp
                   constraints:
-                    nullable: true
+                    nullable: false
               - column:
                   name: finished_at
                   type: timestamp
@@ -47,11 +59,6 @@ databaseChangeLog:
                   type: TEXT
                   constraints:
                     nullable: false
-              - column:
-                  name: error_message
-                  type: TEXT
-                  constraints:
-                    nullable: true
               - column:
                   name: progress
                   type: double
@@ -75,7 +82,7 @@ databaseChangeLog:
                     foreignKeyName: fk_de_comp_job
                     references: entando_bundle_jobs(id)
               - column:
-                  name: component_id
+                  name: name
                   type: varchar(255)
                   constraints:
                     nullable: false
@@ -99,16 +106,6 @@ databaseChangeLog:
                   type: TEXT
                   constraints:
                     nullable: false
-              - column:
-                  name: started_at
-                  type: timestamp
-                  constraints:
-                    nullable: true
-              - column:
-                  name: finished_at
-                  type: timestamp
-                  constraints:
-                    nullable: true
 
         - createTable:
             tableName: installed_entando_bundles
