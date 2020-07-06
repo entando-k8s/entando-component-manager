@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
@@ -64,6 +65,8 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -164,14 +167,17 @@ public class InstallFlowTest {
     @Autowired
     private Map<ComponentType, ComponentProcessor> processorMap;
 
-    @MockBean
-    private GitBundleDownloader gitBundleDownloader;
+    @Autowired
+    private BundleDownloaderFactory downloaderFactory;
 
     @MockBean
     private EntandoCoreClient coreClient;
 
+    private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
+
     @BeforeEach
     public void setup() {
+        defaultBundleDownloaderSupplier = downloaderFactory.getDefaultSupplier();
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .apply(springSecurity())
@@ -185,6 +191,7 @@ public class InstallFlowTest {
         databaseCleaner.cleanup();
         ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
         ((K8SServiceClientTestDouble) k8SServiceClient).setDeployedLinkPhase(EntandoDeploymentPhase.SUCCESSFUL);
+        downloaderFactory.setDefaultSupplier(defaultBundleDownloaderSupplier);
     }
 
     @Test
@@ -742,7 +749,22 @@ public class InstallFlowTest {
     }
 
     @Test
-    @Disabled("Ignore untill rollback is implemented and #fails is tracked")
+    public void shouldFailInstallAndHandleExceptionDuringBundleDownloadError() throws Exception {
+        String jobId = simulateBundleDownloadError();
+        Optional<EntandoBundleJob> optJob = jobRepository.findById(UUID.fromString(jobId));
+
+        assertThat(optJob.isPresent()).isTrue();
+        EntandoBundleJob job = optJob.get();
+        assertThat(job.getStatus()).isEqualByComparingTo(JobStatus.INSTALL_ERROR);
+        assertThat(job.getFinishedAt() != null);
+        assertThat(job.getStartedAt()).isBeforeOrEqualTo(job.getFinishedAt());
+
+        List<EntandoBundleComponentJob> componentJobs = componentJobRepository.findAllByParentJob(job);
+        assertThat(componentJobs).isEmpty();
+    }
+
+    @Test
+    @Disabled("Ignore until rollback is implemented and #fails is tracked")
     public void shouldThrowInternalServerErrorWhenActingOnPreviousInstallErrorState() throws Exception {
         simulateFailingInstall();
 
@@ -794,6 +816,37 @@ public class InstallFlowTest {
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value("todomvc"))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
+    }
+
+    private String simulateBundleDownloadError() throws Exception {
+        Mockito.reset(coreClient);
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        downloaderFactory.setDefaultSupplier(() -> null);
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(500)));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
+//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
+
+        waitForInstallStatus(JobStatus.INSTALL_ERROR);
+        return jobId;
     }
 
     private String simulateSuccessfullyCompletedInstall() throws Exception {
