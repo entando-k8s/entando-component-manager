@@ -1,59 +1,95 @@
 databaseChangeLog:
-- changeSet:
-    id: 1593777772216-2
-    author: kerruba (generated)
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            constraints:
-              nullable: false
-            name: COMPONENT_ID
-            type: VARCHAR(255 BYTE)
-        tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
-- changeSet:
-    id: 1593777772216-3
-    author: kerruba (generated)
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            name: STARTED_AT
-            type: TIMESTAMP
-        tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
-- changeSet:
-    id: 1593777772216-4
-    author: kerruba (generated)
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            name: ERROR_MESSAGE
-            type: CLOB(2147483647)
-        tableName: ENTANDO_BUNDLE_JOBS
-- changeSet:
-    id: 1593777772216-5
-    author: kerruba (generated)
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            name: FINISHED_AT
-            type: TIMESTAMP
-        tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
-- changeSet:
-    id: 1593777772216-6
-    author: kerruba (generated)
-    changes:
-    - dropColumn:
-        columnName: NAME
-        tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
-- changeSet:
-    id: 1593777772216-1
-    author: kerruba (generated)
-    changes:
-    - dropNotNullConstraint:
-        columnDataType: timestamp
-        columnName: STARTED_AT
-        tableName: ENTANDO_BUNDLE_JOBS
+  - changeSet:
+      id: 1593777772216-1
+      author: kerruba (generated)
+      changes:
+        - dropNotNullConstraint:
+            columnDataType: timestamp
+            columnName: STARTED_AT
+            tableName: ENTANDO_BUNDLE_JOBS
+  - changeSet:
+      id: 1593777772216-2
+      author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            columnExists:
+              columnName: ERROR_MESSAGE
+              tableName: ENTANDO_BUNDLE_JOBS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: ERROR_MESSAGE
+                  type: CLOB(2147483647)
+            tableName: ENTANDO_BUNDLE_JOBS
+  - changeSet:
+      id: 1593777772216-3
+      author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          columnExists:
+            columnName: NAME
+            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+      changes:
+        - renameColumn:
+            columnDataType:  VARCHAR(255 BYTE)
+            newColumnName:  COMPONENT_ID
+            oldColumnName:  NAME
+            tableName:  ENTANDO_BUNDLE_COMPONENT_JOBS
+  - changeSet:
+      id: 1593777772216-4
+      author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            columnExists:
+              columnName: STARTED_AT
+              tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: STARTED_AT
+                  type: TIMESTAMP
+            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+  - changeSet:
+      id: 1593777772216-5
+      author: kerruba (generated)
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            columnExists:
+              columnName: FINISHED_AT
+              tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: FINISHED_AT
+                  type: TIMESTAMP
+            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+#  - changeSet:
+#      id: 1593777772216-6
+#      author: kerruba (generated)
+#      changes:
+#        - update:
+#            columns:
+#              - column:
+#                  name:  status
+#                  value:  INSTALL_ROLLBACK_COMPLETED
+#            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+#            where:  status='INSTALL_ROLLBACK'
+#  - changeSet:
+#      id: 1593777772216-7
+#      author: kerruba (generated)
+#      changes:
+#        - update:
+#            columns:
+#              - column:
+#                  name:  status
+#                  value:  INSTALL_ROLLBACK_COMPLETED
+#            tableName: ENTANDO_BUNDLE_JOBS
+#            where:  status='INSTALL_ROLLBACK'
+
 

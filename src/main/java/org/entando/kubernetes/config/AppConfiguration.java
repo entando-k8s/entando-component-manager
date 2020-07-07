@@ -2,7 +2,10 @@ package org.entando.kubernetes.config;
 
 import java.util.EnumMap;
 import java.util.Map;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +22,14 @@ public class AppConfiguration {
     public String type;
 
     @Bean
-    public BundleDownloader bundleDownloader() {
-        return BundleDownloader.getForType(type);
+    public BundleDownloaderFactory bundleDownloaderFactory() {
+        BundleDownloaderFactory factory = new BundleDownloaderFactory();
+        if (type.equalsIgnoreCase("npm")) {
+            factory.setDefaultSupplier(NpmBundleDownloader::new);
+        } else {
+            factory.setDefaultSupplier(GitBundleDownloader::new);
+        }
+        return factory;
     }
 
     @Bean

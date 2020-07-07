@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -29,18 +30,22 @@ public class TestAppConfiguration {
     ApplicationContext appContext;
 
     @Bean
-    public BundleDownloader bundleDownloader() {
-        Path bundleFolder = null;
-        GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
-        try {
-            bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-            when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
-                    .thenReturn(bundleFolder);
-            when(git.createTargetDirectory()).thenReturn(bundleFolder);
-        } catch (IOException e) {
-            throw new RuntimeException("Impossible to read the bundle folder from test resources");
-        }
-        return git;
+    public BundleDownloaderFactory bundleDownloaderFactory() {
+        BundleDownloaderFactory factory = new BundleDownloaderFactory();
+        factory.setDefaultSupplier(() -> {
+            Path bundleFolder = null;
+            GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
+            try {
+                bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+                when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
+                        .thenReturn(bundleFolder);
+                when(git.createTargetDirectory()).thenReturn(bundleFolder);
+            } catch (IOException e) {
+                throw new RuntimeException("Impossible to read the bundle folder from test resources");
+            }
+            return git;
+        });
+        return factory;
     }
 
     @Bean
