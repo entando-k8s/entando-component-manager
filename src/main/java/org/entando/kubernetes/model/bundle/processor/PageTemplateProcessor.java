@@ -41,7 +41,7 @@ public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDes
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
             List<String> pageTemplatesDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getPageModels)
+                    .map(ComponentSpecDescriptor::getPageTemplates)
                     .orElse(Collections.emptyList());
 
             List<Installable<PageTemplateDescriptor>> installables = new LinkedList<>();

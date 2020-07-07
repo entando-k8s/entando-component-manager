@@ -15,10 +15,8 @@ import org.entando.kubernetes.model.bundle.descriptor.DefaultWidgetDescriptor;
 @AllArgsConstructor
 public class EntandoCoreFrameDefaultWidget {
     String code;
-    Map<String, String> properties;
 
     public EntandoCoreFrameDefaultWidget(DefaultWidgetDescriptor defaultWidgetDescriptor) {
         this.code = defaultWidgetDescriptor.getCode();
-        this.properties = defaultWidgetDescriptor.getProperties();
     }
 }

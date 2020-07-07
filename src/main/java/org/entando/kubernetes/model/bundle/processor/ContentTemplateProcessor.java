@@ -41,7 +41,7 @@ public class ContentTemplateProcessor implements ComponentProcessor<ContentTempl
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
             List<String> contentModelsDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getContentModels)
+                    .map(ComponentSpecDescriptor::getContentTemplates)
                     .orElse(new ArrayList<>());
 
             List<Installable<ContentTemplateDescriptor>> installables = new LinkedList<>();
