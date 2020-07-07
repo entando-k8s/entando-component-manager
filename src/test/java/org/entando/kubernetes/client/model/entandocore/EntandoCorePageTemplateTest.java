@@ -31,7 +31,6 @@ public class EntandoCorePageTemplateTest {
         assertThat(ecpt.getConfiguration().getFrames().get(0).getSketch())
                 .isEqualToComparingFieldByField(new EntandoCoreSketchDescriptor(0, 0, 11, 0));
         assertThat(ecpt.getConfiguration().getFrames().get(0).getDefaultWidget().getCode()).isEqualTo("default-widget");
-        assertThat(ecpt.getConfiguration().getFrames().get(0).getDefaultWidget().getProperties().get("title")).isEqualTo("default");
         assertThat(ecpt.getTitles().keySet()).containsExactlyInAnyOrder("it", "en");
         assertThat(ecpt.getTitles().values()).containsExactlyInAnyOrder("Il mio template di pagina", "My page template");
     }
@@ -51,7 +50,6 @@ public class EntandoCorePageTemplateTest {
                 .sketch(new SketchDescriptor(0, 0, 11, 0))
                 .defaultWidget(DefaultWidgetDescriptor.builder()
                         .code("default-widget")
-                        .properties(properties)
                         .build())
                 .build();
 

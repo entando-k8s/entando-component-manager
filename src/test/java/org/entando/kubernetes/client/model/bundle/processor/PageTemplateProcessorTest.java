@@ -51,7 +51,7 @@ public class PageTemplateProcessorTest {
         job.setComponentId("my-component-id");
 
         ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        spec.setPageModels(Collections.singletonList("/pagemodels/my_page_model_descriptor.yaml"));
+        spec.setPageTemplates(Collections.singletonList("/pagemodels/my_page_model_descriptor.yaml"));
 
         PageTemplateDescriptor pageTe = MAPPER.readValue(
                 readFromFile("bundle/pagemodels/my_page_model_descriptor.yaml"),
@@ -92,13 +92,10 @@ public class PageTemplateProcessorTest {
         assertThat(breadCrumbFrame.getDescription()).isEqualTo("Breadcrumb");
         assertThat(breadCrumbFrame.getDefaultWidget()).isNotNull();
         assertThat(breadCrumbFrame.getDefaultWidget().getCode()).isEqualTo("breadcrumb");
-        assertThat(breadCrumbFrame.getDefaultWidget().getProperties()).isNull();
 
         assertThat(bodyFrame.getDescription()).isEqualTo("Body");
         assertThat(bodyFrame.getDefaultWidget()).isNotNull();
         assertThat(bodyFrame.getDefaultWidget().getCode()).isEqualTo("my-widget");
-        assertThat(bodyFrame.getDefaultWidget().getProperties()).isNotNull();
-        assertThat(bodyFrame.getDefaultWidget().getProperties().get("title")).isEqualTo("My fantastic widget");
 
         assertThat(footerFrame.getDescription()).isEqualTo("Footer");
         assertThat(footerFrame.getDefaultWidget()).isNull();

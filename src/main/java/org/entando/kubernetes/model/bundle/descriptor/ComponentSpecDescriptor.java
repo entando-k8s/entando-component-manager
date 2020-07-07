@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import java.util.List;
 import lombok.Data;
 
@@ -10,10 +11,18 @@ public class ComponentSpecDescriptor {
     private List<String> widgets;
     private List<String> fragments;
     private List<String> pages;
-    private List<String> pageModels;
+    private List<String> pageTemplates;
     private List<String> contentTypes;
-    private List<String> contentModels;
+    private List<String> contentTemplates;
     private List<LabelDescriptor> labels;
 
+    @JsonSetter(value = "contentModels")
+    private void setContentModels(List<String> contentModels) {
+        this.contentTemplates = contentModels;
+    }
 
+    @JsonSetter(value = "pageModels")
+    private void setPageModels(List<String> contentModels) {
+        this.pageTemplates = contentModels;
+    }
 }
