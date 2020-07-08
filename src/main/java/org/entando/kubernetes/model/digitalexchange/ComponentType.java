@@ -37,7 +37,7 @@ public enum ComponentType {
     }
 
     public static boolean isValidType(String type) {
-        return Arrays.stream(values()).anyMatch(e -> e.toString().equalsIgnoreCase(type));
+        return Arrays.stream(values()).anyMatch(e -> e.getTypeName().equalsIgnoreCase(type));
     }
 
 }

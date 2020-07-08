@@ -242,7 +242,7 @@ public class EntandoBundleServiceTest {
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
                 .addToLabels("widget", "true")
                 .addToLabels("page", "true")
-                .addToLabels("page_model", "true")
+                .addToLabels("pageModel", "true")
                 .endMetadata()
                 .withSpec(specBundleA)
                 .build();
@@ -252,8 +252,8 @@ public class EntandoBundleServiceTest {
                 .withName("my-bundleB")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
                 .addToLabels("widget", "true")
-                .addToLabels("content_type", "true")
-                .addToLabels("content_model", "true")
+                .addToLabels("contentType", "true")
+                .addToLabels("contentModel", "true")
                 .endMetadata()
                 .withSpec(specBundleB)
                 .build();
@@ -263,7 +263,7 @@ public class EntandoBundleServiceTest {
                 .withName("my-bundleC")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
                 .addToLabels("plugin", "true")
-                .addToLabels("content_type", "true")
+                .addToLabels("contentType", "true")
                 .endMetadata()
                 .withSpec(specBundleC)
                 .build();
@@ -284,14 +284,14 @@ public class EntandoBundleServiceTest {
         assertThat(components.getBody().get(1).getType().contains("widget")).isTrue();
 
         request = new PagedListRequest();
-        request.addFilter(new Filter("type", "content_type"));
+        request.addFilter(new Filter("type", "contentType"));
 
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(2);
         assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
         assertThat(components.getBody().get(1).getName()).isEqualTo("bundleC");
-        assertThat(components.getBody().get(0).getType().contains("content_type")).isTrue();
-        assertThat(components.getBody().get(1).getType().contains("content_type")).isTrue();
+        assertThat(components.getBody().get(0).getType().contains("contentType")).isTrue();
+        assertThat(components.getBody().get(1).getType().contains("contentType")).isTrue();
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "page"));
@@ -305,7 +305,7 @@ public class EntandoBundleServiceTest {
         Filter multiValueFilter = new Filter();
         multiValueFilter.setAttribute("type");
         multiValueFilter.setOperator(FilterOperator.EQUAL.getValue());
-        multiValueFilter.setAllowedValues(new String[]{"page", "content_type", "plugin"});
+        multiValueFilter.setAllowedValues(new String[]{"page", "contentType", "plugin"});
         request.addFilter(multiValueFilter);
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(3);
