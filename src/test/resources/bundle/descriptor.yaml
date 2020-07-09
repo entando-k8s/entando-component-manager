@@ -1,6 +1,5 @@
 code: something
 
-processPages: true
 components:
   plugins:
     - plugins/todomvc.yaml
