@@ -3,11 +3,13 @@ package org.entando.kubernetes.model.bundle.processor;
 import static java.util.Optional.ofNullable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Setter
 public class PageProcessor implements ComponentProcessor<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
@@ -40,6 +43,12 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     public List<Installable<PageDescriptor>> process(BundleReader npr) {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
+
+            if (!ofNullable(descriptor.getProcessPages()).orElse(false)) {
+                //Don't process pages from the bundle
+                return new ArrayList<>();
+            }
+
             List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPages)
                     .orElse(Collections.emptyList());
@@ -71,5 +80,4 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
                 .code(component.getComponentId())
                 .build();
     }
-
 }

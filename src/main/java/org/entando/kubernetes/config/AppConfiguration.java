@@ -2,7 +2,6 @@ package org.entando.kubernetes.config;
 
 import java.util.EnumMap;
 import java.util.Map;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
