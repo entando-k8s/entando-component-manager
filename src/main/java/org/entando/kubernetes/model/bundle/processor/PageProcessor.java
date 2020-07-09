@@ -45,7 +45,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
 
             if (!ofNullable(descriptor.getProcessPages()).orElse(false)) {
-                //Don't process pages from the bundle
+                log.warn("Bundle page processing skipped due to configuration. Check bundle descriptor flag: processPages:<boolean>");
                 return new ArrayList<>();
             }
 
