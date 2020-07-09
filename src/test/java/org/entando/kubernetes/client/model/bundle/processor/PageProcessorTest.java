@@ -43,7 +43,8 @@ public class PageProcessorTest {
 
     @Test
     public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
-        initBundleReader(true);
+        initBundleReader();
+        pageProcessor.setEnabled(true);
 
         List<? extends Installable> installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
@@ -54,14 +55,14 @@ public class PageProcessorTest {
     }
 
     @Test
-    public void shouldReturnEmptyListWhenDisabled() throws IOException {
-        initBundleReader(false);
+    public void shouldReturnEmptyListByDefault() throws IOException {
+        initBundleReader();
 
         List<Installable<PageDescriptor>> installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(0);
     }
 
-    private void initBundleReader(boolean pageProcessorEnabled) throws IOException {
+    private void initBundleReader() throws IOException {
         final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
@@ -86,7 +87,7 @@ public class PageProcessorTest {
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
                 .thenReturn(pageDescriptor);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", pageProcessorEnabled, spec);
+        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
         when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
     }

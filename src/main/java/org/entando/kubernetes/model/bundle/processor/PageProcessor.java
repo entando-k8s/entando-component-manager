@@ -21,6 +21,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -34,6 +35,9 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
 
+    @Value("${entando.componentManager.processor.page.enabled}")
+    private boolean isEnabled = false;
+
     @Override
     public ComponentType getSupportedComponentType() {
         return ComponentType.PAGE;
@@ -43,17 +47,16 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     public List<Installable<PageDescriptor>> process(BundleReader npr) {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
-
-            if (!ofNullable(descriptor.getProcessPages()).orElse(false)) {
-                log.warn("Bundle page processing skipped due to configuration. Check bundle descriptor flag: processPages:<boolean>");
-                return new ArrayList<>();
-            }
-
             List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPages)
                     .orElse(Collections.emptyList());
 
             List<Installable<PageDescriptor>> installables = new LinkedList<>();
+
+            if (!isEnabled) {
+                log.warn("Bundle page processing skipped due to configuration. Check application.properties and restart");
+                return installables;
+            }
 
             for (String fileName : pageDescriptorList) {
                 PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);

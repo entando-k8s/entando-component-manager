@@ -13,7 +13,6 @@ public class BundleDescriptor implements Descriptor {
 
     private String code;
     private String description;
-    private Boolean processPages;
 
     private ComponentSpecDescriptor components;
 
