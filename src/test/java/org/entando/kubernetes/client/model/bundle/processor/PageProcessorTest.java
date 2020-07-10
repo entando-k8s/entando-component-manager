@@ -44,7 +44,6 @@ public class PageProcessorTest {
     @Test
     public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
         initBundleReader();
-        pageProcessor.setEnabled(true);
 
         List<? extends Installable> installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
@@ -52,14 +51,6 @@ public class PageProcessorTest {
         PageInstallable pginst = (PageInstallable) installables.get(0);
 
         assertThat(pginst.getName()).isEqualTo("my-page");
-    }
-
-    @Test
-    public void shouldReturnEmptyListByDefault() throws IOException {
-        initBundleReader();
-
-        List<Installable<PageDescriptor>> installables = pageProcessor.process(bundleReader);
-        assertThat(installables).hasSize(0);
     }
 
     private void initBundleReader() throws IOException {

@@ -30,13 +30,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Setter
 public class PageProcessor implements ComponentProcessor<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
-
-    @Value("${entando.componentManager.processor.page.enabled}")
-    private boolean isEnabled = false;
 
     @Override
     public ComponentType getSupportedComponentType() {
@@ -52,11 +48,6 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
                     .orElse(Collections.emptyList());
 
             List<Installable<PageDescriptor>> installables = new LinkedList<>();
-
-            if (!isEnabled) {
-                log.warn("Bundle page processing skipped due to configuration. Check application.properties and restart");
-                return installables;
-            }
 
             for (String fileName : pageDescriptorList) {
                 PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);

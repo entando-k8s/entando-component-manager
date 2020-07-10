@@ -7,20 +7,24 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
-import static org.entando.kubernetes.utils.SleepStubber.doSleep;
+import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
+import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
+import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
+import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
+import static org.entando.kubernetes.utils.TestInstallUtils.getTestBundle;
+import static org.entando.kubernetes.utils.TestInstallUtils.readFromDEPackage;
+import static org.entando.kubernetes.utils.TestInstallUtils.verifyJobHasComponentAndStatus;
+import static org.entando.kubernetes.utils.TestInstallUtils.waitForInstallStatus;
+import static org.entando.kubernetes.utils.TestInstallUtils.waitForJobStatus;
+import static org.entando.kubernetes.utils.TestInstallUtils.waitForUninstallStatus;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,16 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.http.UniformDistribution;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Duration;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -50,7 +46,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
@@ -69,24 +64,18 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -101,16 +90,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.util.UriBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @AutoConfigureWireMock(port = 8099)
 @AutoConfigureMockMvc
@@ -126,27 +111,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Tag("component")
 @WithMockUser
 public class InstallFlowTest {
-
-    private final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components");
-    private final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc");
-    private final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc", "uninstall");
-    private final UriBuilder INSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc", "install");
-
-    private static final String JOBS_ENDPOINT = "/jobs";
-    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
-    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
-    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
-
     private MockMvc mockMvc;
 
     @Autowired
     private WebApplicationContext context;
-
-    @Autowired
-    private ObjectMapper mapper;
 
     @Autowired
     private DatabaseCleaner databaseCleaner;
@@ -174,6 +142,8 @@ public class InstallFlowTest {
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
+    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
+
     @BeforeEach
     public void setup() {
         defaultBundleDownloaderSupplier = downloaderFactory.getDefaultSupplier();
@@ -182,7 +152,6 @@ public class InstallFlowTest {
                 .apply(springSecurity())
                 .build();
     }
-
 
     @AfterEach
     public void cleanup() {
@@ -221,8 +190,6 @@ public class InstallFlowTest {
         verify(coreClient, times(1)).registerContentType(any());
         verify(coreClient, times(2)).registerContentModel(any());
         verify(coreClient, times(1)).registerLabel(any());
-
-
     }
 
     private void verifyPageRequests(EntandoCoreClient coreClient) {
@@ -432,15 +399,13 @@ public class InstallFlowTest {
             assertThat(thisInstallable.getPriority()).isLessThanOrEqualTo(prevInstallable.getPriority());
             assertThat(uninstallJobs.get(i).getStartedAt()).isAfterOrEqualTo(uninstallJobs.get(i - 1).getStartedAt());
         }
-
-
     }
 
     @Test
     public void shouldCallCoreToUninstallComponents() throws Exception {
         String jobId = simulateSuccessfullyCompletedInstall();
 
-        verifyJobHasComponentAndStatus(jobId, JobStatus.INSTALL_COMPLETED);
+        verifyJobHasComponentAndStatus(mockMvc, jobId, JobStatus.INSTALL_COMPLETED);
 
         String uninstallJobId = simulateSuccessfullyCompletedUninstall();
 
@@ -464,8 +429,7 @@ public class InstallFlowTest {
         verify(coreClient, times(1)).deletePage(ac.capture());
         assertEquals("my-page", ac.getValue());
 
-        verifyJobHasComponentAndStatus(uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
-
+        verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
     }
 
     @Test
@@ -473,7 +437,7 @@ public class InstallFlowTest {
         assertThat(jobRepository.findAll()).isEmpty();
         String jobId = simulateSuccessfullyCompletedInstall();
 
-        verifyJobHasComponentAndStatus(jobId, JobStatus.INSTALL_COMPLETED);
+        verifyJobHasComponentAndStatus(mockMvc, jobId, JobStatus.INSTALL_COMPLETED);
 
         simulateSuccessfullyCompletedUninstall();
         List<EntandoBundleJob> jobs = jobRepository.findAll();
@@ -603,7 +567,6 @@ public class InstallFlowTest {
 
     @Test
     public void shouldReturnTheSameJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
-
         // Given I try to reinstall a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();
@@ -625,7 +588,7 @@ public class InstallFlowTest {
 //        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
 //                .andExpect(status().isConflict())
 //                .andExpect(content().string(containsString("JOB ID: " + jobId)));
-        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
     }
 
     @Test
@@ -641,7 +604,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage())));
+                        .withBody(readFromDEPackage(MOCK_BUNDLE_NAME))));
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -651,7 +614,7 @@ public class InstallFlowTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
@@ -667,7 +630,6 @@ public class InstallFlowTest {
         assertThat(pluginJobs.stream().map(EntandoBundleComponentJob::getStatus).collect(Collectors.toList())).containsOnly(
                 JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
         );
-
     }
 
     @Test
@@ -675,13 +637,13 @@ public class InstallFlowTest {
         simulateInProgressInstall();
         assertThat(installedCompRepo.findAll()).isEmpty();
 
-        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
         assertThat(installedCompRepo.findAll()).isNotEmpty();
 
         simulateInProgressUninstall();
         assertThat(installedCompRepo.findAll()).isNotEmpty();
 
-        waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
+        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_COMPLETED);
         assertThat(installedCompRepo.findAll()).isEmpty();
     }
 
@@ -697,7 +659,6 @@ public class InstallFlowTest {
 
         simulateFailingUninstall();
         assertThat(installedCompRepo.findAll()).isNotEmpty();
-
     }
 
     @Test
@@ -711,12 +672,11 @@ public class InstallFlowTest {
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict());
-        waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
+        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_COMPLETED);
     }
 
     @Test
     public void shouldCreateJobAndReturn201StatusAndLocationHeader() throws Exception {
-
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -726,7 +686,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage())));
+                        .withBody(readFromDEPackage(MOCK_BUNDLE_NAME))));
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -741,10 +701,7 @@ public class InstallFlowTest {
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
-                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getJobStatus(jobId).isOfType(JobType.FINISHED));
-
+        waitForJobStatus(() -> getJobStatus(mockMvc, jobId), JobType.FINISHED.getStatuses());
     }
 
     @Test
@@ -777,7 +734,6 @@ public class InstallFlowTest {
     @Test
     @Disabled("Ignore untill rollback is implemented and #fails is tracked")
     public void shouldThrowInternalServerErrorWhenActingOnPreviousUninstallErrorState() throws Exception {
-
         simulateSuccessfullyCompletedInstall();
         simulateFailingUninstall();
 
@@ -790,7 +746,6 @@ public class InstallFlowTest {
     @Test
     @Disabled("Just to test install/uninstall and debug")
     public void testErroneousUninstall() throws Exception {
-
         simulateSuccessfullyCompletedInstall();
 
         WireMock.reset();
@@ -805,381 +760,35 @@ public class InstallFlowTest {
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
-        waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
+        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_ERROR);
         assertThat(true).isTrue();
     }
 
-    private void verifyJobHasComponentAndStatus(String jobId, JobStatus expectedStatus)
-            throws Exception {
-        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
-                .andDo(print()).andExpect(status().isOk())
-                .andExpect(jsonPath("payload.componentId").value("todomvc"))
-                .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
+    private String simulateSuccessfullyCompletedInstall() {
+        return TestInstallUtils.simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
     }
 
-    private String simulateBundleDownloadError() throws Exception {
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        WireMock.setGlobalFixedDelay(0);
-
-        downloaderFactory.setDefaultSupplier(() -> null);
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
-
-
-        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
-                .willReturn(aResponse().withStatus(500)));
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
-
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-
-        waitForInstallStatus(JobStatus.INSTALL_ERROR);
-        return jobId;
+    private String simulateSuccessfullyCompletedUninstall() {
+        return TestInstallUtils.simulateSuccessfullyCompletedUninstall(mockMvc, coreClient);
     }
 
-    private String simulateSuccessfullyCompletedInstall() throws Exception {
-
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        WireMock.setGlobalFixedDelay(0);
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
-
-        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage())));
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
-
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-
-        waitForInstallStatus(JobStatus.INSTALL_COMPLETED);
-
-        return jobId;
+    private String simulateInProgressInstall() {
+        return TestInstallUtils.simulateInProgressInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
     }
 
-    private String simulateSuccessfullyCompletedUninstall() throws Exception {
-
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        WireMock.setGlobalFixedDelay(0);
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-//        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
-        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-
-        waitForUninstallStatus(JobStatus.UNINSTALL_COMPLETED);
-
-        return jobId;
+    private String simulateInProgressUninstall() {
+        return TestInstallUtils.simulateInProgressUninstall(mockMvc, coreClient);
     }
 
-    private String simulateFailingInstall() throws Exception {
-
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        WireMock.setGlobalFixedDelay(0);
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
-
-        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage())));
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-
-        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-        doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
-                .when(coreClient).registerPage(any(PageDescriptor.class));
-
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-
-        waitForPossibleStatus(JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR, JobStatus.INSTALL_ERROR);
-
-        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+    private String simulateFailingInstall() {
+        return TestInstallUtils.simulateFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
     }
 
-    private String simulateFailingUninstall() throws Exception {
-
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        WireMock.setGlobalFixedDelay(0);
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteFolder(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteContentModel(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteContentType(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteFragment(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteWidget(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deletePage(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deletePageModel(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteLabel(any());
-
-        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-
-        waitForUninstallStatus(JobStatus.UNINSTALL_ERROR);
-
-        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-
+    private String simulateFailingUninstall() {
+        return TestInstallUtils.simulateFailingUninstall(mockMvc, coreClient);
     }
 
-    private String simulateInProgressInstall() throws Exception {
-
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        UniformDistribution delayDistribution = new UniformDistribution(200, 500);
-        WireMock.setGlobalRandomDelay(delayDistribution);
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
-
-        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage())));
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPage(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPageModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerWidget(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerFragment(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentType(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerLabel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFolder(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).uploadFile(any());
-
-        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-
-        waitForInstallStatus(JobStatus.INSTALL_IN_PROGRESS);
-
-        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+    private String simulateBundleDownloadError() {
+        return TestInstallUtils.simulateBundleDownloadError(mockMvc, coreClient, k8SServiceClient, downloaderFactory);
     }
-
-    private String simulateInProgressUninstall() throws Exception {
-
-        UniformDistribution delayDistribution = new UniformDistribution(200, 500);
-        Mockito.reset(coreClient);
-        WireMock.reset();
-        WireMock.setGlobalRandomDelay(delayDistribution);
-
-        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePage(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePageModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteWidget(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFragment(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentType(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteLabel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFolder(any());
-
-
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
-        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-        assertThat(result.getResponse().containsHeader("Location")).isTrue();
-        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-        waitForUninstallStatus(JobStatus.UNINSTALL_IN_PROGRESS);
-
-        return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-    }
-
-    private void waitForPossibleStatus(JobStatus... statuses) {
-        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
-                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> Arrays.asList(statuses).contains(getComponentLastJobStatusOfType("todomvc", JobType.INSTALL.getStatuses())));
-    }
-
-    private void waitForInstallStatus(JobStatus status) {
-        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
-                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getComponentLastJobStatusOfType("todomvc", JobType.INSTALL.getStatuses()).equals(status));
-    }
-
-    private void waitForUninstallStatus(JobStatus status) {
-        await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
-                .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
-                .until(() -> getComponentLastJobStatusOfType("todomvc", JobType.UNINSTALL.getStatuses()).equals(status));
-    }
-
-    private PagedMetadata<EntandoBundleJob> getInstallJob() throws Exception {
-        return mapper.readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
-                        .andExpect(status().isOk())
-                        .andReturn().getResponse().getContentAsString(),
-                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
-                });
-    }
-
-    private PagedMetadata<EntandoBundleJob> getUninstallJob() throws Exception {
-        List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name).collect(Collectors.toList());
-        return mapper.readValue(mockMvc.perform(get("/jobs"
-                        + "?sort=startedAt"
-                        + "&direction=DESC"
-                        + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String.join(",", allowedValues)
-                        + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
-                        .andExpect(status().isOk())
-                        .andReturn().getResponse().getContentAsString(),
-                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
-                });
-    }
-
-    private JobStatus getComponentLastJobStatusOfType(String component, Set<JobStatus> possibleStatues) throws Exception {
-        List<String> allowedValues = possibleStatues.stream().map(JobStatus::name).collect(Collectors.toList());
-        MockHttpServletResponse response = mockMvc.perform(get("/jobs"
-                + "?sort=startedAt"
-                + "&direction=DESC"
-                + "&pageSize=1"
-                + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String.join(",", allowedValues)
-                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component)
-                .with(user("user")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload").value(hasSize(1)))
-                .andExpect(jsonPath("$.payload.[0].componentId").value(component))
-                .andReturn().getResponse();
-        return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.[0].status"));
-    }
-
-    private JobStatus getJobStatus(String jobId) throws Exception {
-        MockHttpServletResponse response = mockMvc.perform(get("/jobs/" + jobId)
-                .with(user("user")))
-                .andReturn().getResponse();
-        return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.status"));
-    }
-
-
-    private byte[] readFromDEPackage() throws IOException {
-        try (final InputStream inputStream = getClass().getClassLoader().getResourceAsStream(MOCK_BUNDLE_NAME)) {
-            try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                Assertions.assertNotNull(inputStream);
-                IOUtils.copy(inputStream, outputStream);
-                return outputStream.toByteArray();
-            }
-        }
-    }
-
-    private static String requestProperty(final LoggedRequest request, final String property) {
-        return JsonPath.read(new String(request.getBody()), property);
-    }
-
-    private static String requestCode(final LoggedRequest request) {
-        return requestProperty(request, "code");
-    }
-
-    private static String requestPath(final LoggedRequest request) {
-        return requestProperty(request, "path");
-    }
-
-    private EntandoDeBundle getTestBundle() {
-        return new EntandoDeBundleBuilder()
-                .withNewMetadata()
-                .withName("todomvc")
-                .withNamespace("entando-de-bundles")
-                .endMetadata()
-                .withSpec(getTestEntandoDeBundleSpec()).build();
-
-    }
-
-    private EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
-        return new EntandoDeBundleSpecBuilder()
-                .withNewDetails()
-                .withDescription("A bundle containing some demo components for Entando6")
-                .withName("todomvc")
-                .addNewVersion("0.0.1")
-                .addNewKeyword("entando6")
-                .addNewKeyword("digital-exchange")
-                .addNewDistTag("latest", "0.0.1")
-                .and()
-                .addNewTag()
-                .withVersion("0.0.1")
-                .withIntegrity(
-                        "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
-                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8099/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
-                .endTag()
-                .build();
-    }
-
 }

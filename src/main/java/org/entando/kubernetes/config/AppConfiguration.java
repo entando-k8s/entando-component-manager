@@ -1,12 +1,15 @@
 package org.entando.kubernetes.config;
 
-import java.util.EnumMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -17,8 +20,14 @@ import org.springframework.context.annotation.Profile;
 @Profile("!test")
 public class AppConfiguration {
 
+    @Autowired
+    protected ApplicationContext appContext;
+
     @Value("${entando.bundle.type:git}")
     public String type;
+
+    @Value("${entando.componentManager.processor.page.enabled}")
+    private boolean pageProcessorEnabled = false;
 
     @Bean
     public BundleDownloaderFactory bundleDownloaderFactory() {
@@ -33,10 +42,8 @@ public class AppConfiguration {
 
     @Bean
     public Map<ComponentType, ComponentProcessor> processorMap(ApplicationContext appContext) {
-        Map<ComponentType, ComponentProcessor> processorMap = new EnumMap<>(ComponentType.class);
-        for(ComponentProcessor pr:appContext.getBeansOfType(ComponentProcessor.class).values()) {
-            processorMap.put(pr.getSupportedComponentType(), pr);
-        }
-        return processorMap;
+        return appContext.getBeansOfType(ComponentProcessor.class).values().stream()
+                .filter(processor -> !(processor instanceof PageProcessor) || pageProcessorEnabled)
+                .collect(Collectors.toMap(ComponentProcessor::getSupportedComponentType, Function.identity()));
     }
 }
