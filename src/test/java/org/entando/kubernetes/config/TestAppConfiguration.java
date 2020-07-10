@@ -24,7 +24,7 @@ public class TestAppConfiguration extends AppConfiguration {
     public BundleDownloaderFactory bundleDownloaderFactory() {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(() -> {
-            Path bundleFolder = null;
+            Path bundleFolder;
             GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
             try {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
