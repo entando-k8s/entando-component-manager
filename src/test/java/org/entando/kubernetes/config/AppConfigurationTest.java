@@ -49,7 +49,7 @@ public class AppConfigurationTest {
         when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
 
         ComponentType[] expected = Arrays.stream(ComponentType.values())
-                .filter(c -> enabled || c != ComponentType.PAGE)
+                .filter(c -> c != ComponentType.PAGE || enabled)
                 .toArray(ComponentType[]::new);
 
         assertThat(app.processorMap(context).keySet()).containsExactlyInAnyOrder(expected);
