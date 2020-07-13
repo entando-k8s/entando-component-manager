@@ -1,6 +1,7 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -42,6 +43,17 @@ public class PageProcessorTest {
 
     @Test
     public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
+        initBundleReader();
+
+        List<? extends Installable> installables = pageProcessor.process(bundleReader);
+        assertThat(installables).hasSize(1);
+        assertThat(installables.get(0)).isInstanceOf(PageInstallable.class);
+        PageInstallable pginst = (PageInstallable) installables.get(0);
+
+        assertThat(pginst.getName()).isEqualTo("my-page");
+    }
+
+    private void initBundleReader() throws IOException {
         final EntandoBundleJob job = new EntandoBundleJob();
         job.setComponentId("my-component-id");
 
@@ -63,18 +75,11 @@ public class PageProcessorTest {
                 .titles(pageTitles)
                 .build();
 
-        when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class)).thenReturn(pageDescriptor);
+        when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
+                .thenReturn(pageDescriptor);
 
         BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
-        when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
-
-        List<? extends Installable> installables = pageProcessor.process(bundleReader);
-        assertThat(installables).hasSize(1);
-        assertThat(installables.get(0)).isInstanceOf(PageInstallable.class);
-        PageInstallable pginst = (PageInstallable) installables.get(0);
-
-        assertThat(pginst.getName()).isEqualTo("my-page");
+        when(bundleReader.readBundleDescriptor())
+                .thenReturn(descriptor);
     }
-
-
 }
