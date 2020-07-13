@@ -16,10 +16,10 @@ import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpecBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -123,7 +123,7 @@ public class EntandoBundleApiTest {
     @Test
     public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
-        EntandoDeBundle bundle = getTestBundle();
+        EntandoComponentBundle bundle = getTestBundle();
         bundle.getMetadata().setNamespace("my-custom-namespace");
         kc.addInMemoryBundle(bundle);
 
@@ -141,8 +141,8 @@ public class EntandoBundleApiTest {
                 .andExpect(status().isNotFound());
     }
 
-    private EntandoDeBundle getTestBundle() {
-        return new EntandoDeBundleBuilder()
+    private EntandoComponentBundle getTestBundle() {
+        return new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundle")
                 .withNamespace("entando-de-bundles")
@@ -152,11 +152,10 @@ public class EntandoBundleApiTest {
 
     }
 
-    private EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
-        return new EntandoDeBundleSpecBuilder()
-                .withNewDetails()
+    private EntandoComponentBundleSpec getTestEntandoDeBundleSpec() {
+        return new EntandoComponentBundleSpecBuilder()
                 .withDescription("A bundle containing some demo components for Entando6")
-                .withName("inail_bundle")
+                .withCode("inail_bundle")
                 .addNewVersion("0.0.1")
                 .addNewKeyword("entando6")
                 .addNewKeyword("digital-exchange")

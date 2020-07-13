@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.springframework.core.ParameterizedTypeReference;
@@ -186,9 +186,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+    public List<EntandoComponentBundle> getBundlesInObservedNamespaces() {
         return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoComponentBundle>>>() {
                 })
                 .getContent()
                 .stream().map(EntityModel::getContent)
@@ -196,10 +196,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+    public List<EntandoComponentBundle> getBundlesInNamespace(String namespace) {
         return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
                 .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoComponentBundle>>>() {
                 })
                 .getContent()
                 .stream().map(EntityModel::getContent)
@@ -207,9 +207,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+    public List<EntandoComponentBundle> getBundlesInNamespaces(List<String> namespaces) {
         @SuppressWarnings("unchecked")
-        CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
+        CompletableFuture<List<EntandoComponentBundle>>[] futures = namespaces.stream()
                 .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n))
                         .exceptionally(ex -> {
                             LOGGER.log(Level.SEVERE, "An error occurred while retrieving bundle from a namespace", ex);
@@ -225,12 +225,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public Optional<EntandoDeBundle> getBundleWithName(String name) {
-        EntandoDeBundle bundle = null;
+    public Optional<EntandoComponentBundle> getBundleWithName(String name) {
+        EntandoComponentBundle bundle = null;
         try {
             bundle = traverson.follow(BUNDLES_ENDPOINT)
                     .follow(Hop.rel("bundle").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoComponentBundle>>() {
                     })
                     .getContent();
 
@@ -243,7 +243,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
+    public Optional<EntandoComponentBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         return getBundlesInNamespace(namespace).stream()
                 .filter(b -> b.getMetadata().getName().equals(name))
                 .findFirst();

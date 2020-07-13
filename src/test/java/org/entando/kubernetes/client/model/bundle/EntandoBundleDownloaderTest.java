@@ -17,7 +17,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
@@ -49,7 +49,7 @@ public class EntandoBundleDownloaderTest {
 
     @Test
     public void shouldCloneGitBundle() {
-        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
@@ -71,7 +71,7 @@ public class EntandoBundleDownloaderTest {
                 .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
 
-        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
@@ -89,7 +89,7 @@ public class EntandoBundleDownloaderTest {
                 .withTarball("http://localhost:" + port + "/my-package.tar.gz")
                 .build();
 
-        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
@@ -146,7 +146,7 @@ public class EntandoBundleDownloaderTest {
                 .withTarball(repository)
                 .build();
 
-        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()

@@ -7,8 +7,8 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleVersion;
 
 @Slf4j
 public abstract class BundleDownloader {
@@ -24,11 +24,11 @@ public abstract class BundleDownloader {
 
     }
 
-    public Path saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        log.info("Downloading bundle " + bundle.getMetadata().getName() + "@" + tag.getVersion() + " locally");
+    public Path saveBundleLocally(EntandoComponentBundle bundle, EntandoComponentBundleVersion version) {
+        log.info("Downloading bundle " + bundle.getMetadata().getName() + "@" + version.getVersion() + " locally");
         try {
             createTargetDirectory();
-            saveBundleStrategy(tag, targetPath);
+            saveBundleStrategy(bundle, version, targetPath);
             log.info("Bundle downloaded locally at path " + targetPath.toAbsolutePath());
         } catch (BundleDownloaderException | IOException e) {
             log.error("An error occurred while during download operation", e);
@@ -37,7 +37,7 @@ public abstract class BundleDownloader {
         return this.targetPath;
     }
 
-    protected abstract Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
+    protected abstract Path saveBundleStrategy(EntandoComponentBundle bundle, EntandoComponentBundleVersion version, Path targetPath);
 
     public Path getTargetPath() {
         return this.targetPath;

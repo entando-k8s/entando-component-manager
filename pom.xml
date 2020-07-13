@@ -87,7 +87,8 @@
 
         <!--dependencies -->
         <postgresql.driver.version>42.2.13</postgresql.driver.version>
-        <entando.k8s.custom.model.version>6.0.65</entando.k8s.custom.model.version>
+        <entando.k8s.custom.model.version>6.1.0-SNAPSHOT</entando.k8s.custom.model.version>
+        <entando.k8s.component.bundle.custom.model.version>6.1.0-SNAPSHOT</entando.k8s.component.bundle.custom.model.version>
 
         <!-- plugin  versions -->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -145,7 +146,7 @@
 
         <!-- Finish OWASP -->
         <dependency>
-            <groupId>org.entando.kubernetes</groupId>
+            <groupId>org.entando</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
             <version>${entando.k8s.custom.model.version}</version>
             <exclusions>
@@ -158,6 +159,11 @@
                     <artifactId>slf4j-jboss-logging</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.entando</groupId>
+            <artifactId>entando-component-bundle-k8s-model</artifactId>
+            <version>${entando.k8s.component.bundle.custom.model.version}</version>
         </dependency>
 
         <dependency>

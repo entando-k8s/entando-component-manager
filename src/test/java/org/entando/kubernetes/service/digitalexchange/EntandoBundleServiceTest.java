@@ -9,10 +9,10 @@ import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
@@ -65,7 +65,7 @@ public class EntandoBundleServiceTest {
 
     @Test
     public void shouldReturnInstalledComponents() {
-        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        EntandoComponentBundle bundle = TestEntitiesGenerator.getTestBundle();
         EntandoBundle component = EntandoBundle.newFrom(bundle);
         component.setInstalled(true);
 
@@ -81,8 +81,8 @@ public class EntandoBundleServiceTest {
     @Test
     public void shouldSortAndFilter() {
 
-        EntandoDeBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoDeBundleSpec();
-        EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoComponentBundleSpec();
+        EntandoComponentBundleSpec specBundleA = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleA")
@@ -92,7 +92,7 @@ public class EntandoBundleServiceTest {
                 .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
-        EntandoDeBundleSpec specBundleB = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleB")
@@ -102,7 +102,7 @@ public class EntandoBundleServiceTest {
                 .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
-        EntandoDeBundle bundleA = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleA = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleA")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
@@ -110,7 +110,7 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleA)
                 .build();
 
-        EntandoDeBundle bundleB = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleB = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleB")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
@@ -143,8 +143,8 @@ public class EntandoBundleServiceTest {
     @Test
     public void shouldFilterInstalledComponents() {
 
-        EntandoDeBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoDeBundleSpec();
-        EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoComponentBundleSpec();
+        EntandoComponentBundleSpec specBundleA = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleA")
@@ -154,7 +154,7 @@ public class EntandoBundleServiceTest {
                 .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
-        EntandoDeBundleSpec specBundleB = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleB")
@@ -164,7 +164,7 @@ public class EntandoBundleServiceTest {
                 .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
-        EntandoDeBundle bundleA = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleA = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleA")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
@@ -172,7 +172,7 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleA)
                 .build();
 
-        EntandoDeBundle bundleB = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleB = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleB")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
@@ -204,8 +204,8 @@ public class EntandoBundleServiceTest {
     @Test
     public void shouldFilterByBundleContent() {
 
-        EntandoDeBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoDeBundleSpec();
-        EntandoDeBundleSpec specBundleA = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoComponentBundleSpec();
+        EntandoComponentBundleSpec specBundleA = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleA")
@@ -215,7 +215,7 @@ public class EntandoBundleServiceTest {
                 .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
-        EntandoDeBundleSpec specBundleB = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleB")
@@ -225,7 +225,7 @@ public class EntandoBundleServiceTest {
                 .withDescription(baseSpec.getDetails().getDescription())
                 .endDetails()
                 .build();
-        EntandoDeBundleSpec specBundleC = new EntandoDeBundleSpecBuilder()
+        EntandoComponentBundleSpec specBundleC = new EntandoComponentBundleSpecBuilder()
                 .withTags(baseSpec.getTags())
                 .withNewDetails()
                 .withName("bundleC")
@@ -236,7 +236,7 @@ public class EntandoBundleServiceTest {
                 .endDetails()
                 .build();
 
-        EntandoDeBundle bundleA = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleA = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleA")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
@@ -247,7 +247,7 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleA)
                 .build();
 
-        EntandoDeBundle bundleB = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleB = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleB")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
@@ -258,7 +258,7 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleB)
                 .build();
 
-        EntandoDeBundle bundleC = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundleC = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-bundleC")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)

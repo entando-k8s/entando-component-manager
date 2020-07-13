@@ -4,15 +4,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleVersion;
 
 public class GitBundleDownloader extends BundleDownloader {
 
     @Override
-    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
+    protected Path saveBundleStrategy(EntandoComponentBundle bundle, EntandoComponentBundleVersion version, Path targetPath) {
         try {
-            validateRepoUrl(tag.getTarball());
-            cloneUsingCliImplementation(tag, targetPath);
+            validateRepoUrl(bundle.getSpec().getUrl());
+            cloneUsingCliImplementation(bundle.getSpec().getUrl(), version.getVersion(), targetPath);
             return targetPath;
         } catch (IOException e) {
             throw new BundleDownloaderException("An error occurred while cloning git repo", e);
@@ -29,13 +30,11 @@ public class GitBundleDownloader extends BundleDownloader {
         }
     }
 
-    private void cloneUsingCliImplementation(EntandoDeBundleTag tag, Path targetPath)
+    private void cloneUsingCliImplementation(String url, String tag, Path targetPath)
             throws IOException, InterruptedException {
         List<String> commands = new ArrayList<>();
         String gitCommand = String.format("git clone --branch %s --depth 1 %s %s",
-                tag.getVersion(),
-                tag.getTarball(),
-                targetPath.toAbsolutePath());
+                tag, url, targetPath.toAbsolutePath());
         commands.add("/bin/sh");
         commands.add("-c");
         commands.add(gitCommand);

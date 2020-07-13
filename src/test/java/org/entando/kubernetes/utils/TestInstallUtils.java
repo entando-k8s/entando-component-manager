@@ -38,12 +38,12 @@ import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpecBuilder;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
@@ -106,8 +106,8 @@ public class TestInstallUtils {
         return jobId;
     }
 
-    public static EntandoDeBundle getTestBundle() {
-        return new EntandoDeBundleBuilder()
+    public static EntandoComponentBundle getTestBundle() {
+        return new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("todomvc")
                 .withNamespace("entando-de-bundles")
@@ -116,11 +116,10 @@ public class TestInstallUtils {
 
     }
 
-    public static EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
-        return new EntandoDeBundleSpecBuilder()
-                .withNewDetails()
+    public static EntandoComponentBundleSpec getTestEntandoDeBundleSpec() {
+        return new EntandoComponentBundleSpecBuilder()
                 .withDescription("A bundle containing some demo components for Entando6")
-                .withName("todomvc")
+                .withCode("todomvc")
                 .addNewVersion("0.0.1")
                 .addNewKeyword("entando6")
                 .addNewKeyword("digital-exchange")

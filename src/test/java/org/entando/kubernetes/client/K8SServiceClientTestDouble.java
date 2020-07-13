@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -17,7 +17,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     private Set<EntandoAppPluginLink> inMemoryLinks = new HashSet<>();
     private Set<EntandoPlugin> inMemoryPlugins = new HashSet<>();
-    private Set<EntandoDeBundle> inMemoryBundles = new HashSet<>();
+    private Set<EntandoComponentBundle> inMemoryBundles = new HashSet<>();
     private EntandoDeploymentPhase deployedLinkPhase = EntandoDeploymentPhase.SUCCESSFUL;
 
     public void addInMemoryLinkedPlugins(EntandoPlugin plugin) {
@@ -28,7 +28,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         this.inMemoryLinks.add(link);
     }
 
-    public void addInMemoryBundle(EntandoDeBundle bundle) {
+    public void addInMemoryBundle(EntandoComponentBundle bundle) {
         this.inMemoryBundles.add(bundle);
     }
 
@@ -101,37 +101,37 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+    public List<EntandoComponentBundle> getBundlesInObservedNamespaces() {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals("entando-de-bundles"))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+    public List<EntandoComponentBundle> getBundlesInNamespace(String namespace) {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals(namespace))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+    public List<EntandoComponentBundle> getBundlesInNamespaces(List<String> namespaces) {
         return inMemoryBundles.stream()
                 .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<EntandoDeBundle> getBundleWithName(String name) {
+    public Optional<EntandoComponentBundle> getBundleWithName(String name) {
         return inMemoryBundles.stream()
-                .filter(b -> b.getSpec().getDetails().getName().equals(name))
+                .filter(b -> b.getSpec().getCode().equals(name))
                 .findAny();
     }
 
     @Override
-    public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
+    public Optional<EntandoComponentBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         return inMemoryBundles.stream()
-                .filter(b -> b.getSpec().getDetails().getName().equals(name) && b.getMetadata().getNamespace()
+                .filter(b -> b.getSpec().getCode().equals(name) && b.getMetadata().getNamespace()
                         .equals(namespace))
                 .findFirst();
     }

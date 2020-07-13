@@ -22,7 +22,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -120,7 +120,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     private List<EntandoBundle> getAvailableComponentsFromDigitalExchanges() {
-        List<EntandoDeBundle> bundles;
+        List<EntandoComponentBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
         } else {
@@ -130,7 +130,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
 
-    public EntandoBundle convertBundleToLegacyComponent(EntandoDeBundle bundle) {
+    public EntandoBundle convertBundleToLegacyComponent(EntandoComponentBundle bundle) {
         EntandoBundle dec = EntandoBundle.newFrom(bundle);
         if (checkIfInstalled(bundle)) {
             dec.setInstalled(true);
@@ -138,7 +138,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         return dec;
     }
 
-    private boolean checkIfInstalled(EntandoDeBundle bundle) {
+    private boolean checkIfInstalled(EntandoComponentBundle bundle) {
         String componentId = bundle.getMetadata().getName();
         return jobRepository.findFirstByComponentIdOrderByStartedAtDesc(componentId)
                 .map(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))

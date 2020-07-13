@@ -18,7 +18,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.exception.job.JobPackageException;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleVersion;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,9 +30,9 @@ import org.springframework.web.client.RestTemplate;
 public class NpmBundleDownloader extends BundleDownloader {
 
     @Override
-    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
+    protected Path saveBundleStrategy(EntandoComponentBundle bundle, EntandoComponentBundleVersion version, Path targetPath) {
         try {
-            InputStream is = downloadComponentPackage(tag);
+            InputStream is = downloadComponentPackage(bundle.getSpec().getUrl());
             Path tarPath = savePackageStreamLocally(is);
             unpackTar(tarPath, targetPath);
             return targetPath;
@@ -85,9 +86,7 @@ public class NpmBundleDownloader extends BundleDownloader {
     }
 
 
-    private InputStream downloadComponentPackage(EntandoDeBundleTag tag) {
-        String tarballUrl = tag.getTarball();
-
+    private InputStream downloadComponentPackage(String url) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.add("user-agent",
@@ -96,7 +95,7 @@ public class NpmBundleDownloader extends BundleDownloader {
         HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
 
         ResponseEntity<Resource> responseEntity = restTemplate.exchange(
-                tarballUrl, HttpMethod.GET, entity, Resource.class);
+                url, HttpMethod.GET, entity, Resource.class);
 
         if (responseEntity.getBody() == null) {
             throw new BundleDownloaderException("Requested package returned an empty body");

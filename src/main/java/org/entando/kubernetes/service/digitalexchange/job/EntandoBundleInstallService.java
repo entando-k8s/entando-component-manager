@@ -14,16 +14,15 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleVersion;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
@@ -54,7 +53,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJob install(String componentId, String version) {
-        EntandoDeBundle bundle = k8sService.getBundleByName(componentId)
+        EntandoComponentBundle bundle = k8sService.getBundleByName(componentId)
                 .orElseThrow(() -> new K8SServiceClientException("Bundle with name " + componentId + " not found"));
 
         Optional<EntandoBundleJob> j = searchForCompletedOrConflictingJob(bundle);
@@ -62,15 +61,15 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return j.orElseGet(() -> createAndSubmitNewInstallJob(bundle, version));
     }
 
-    private EntandoBundleJob createAndSubmitNewInstallJob(EntandoDeBundle bundle, String version) {
-        EntandoDeBundleTag versionToInstall = getBundleTag(bundle, version);
+    private EntandoBundleJob createAndSubmitNewInstallJob(EntandoComponentBundle bundle, String version) {
+        EntandoComponentBundleVersion versionToInstall = getBundleTag(bundle, version);
         EntandoBundleJob job = createInstallJob(bundle, versionToInstall);
 
         submitInstallAsync(job, bundle, versionToInstall);
         return job;
     }
 
-    private Optional<EntandoBundleJob> searchForCompletedOrConflictingJob(EntandoDeBundle bundle) {
+    private Optional<EntandoBundleJob> searchForCompletedOrConflictingJob(EntandoComponentBundle bundle) {
 
         log.info("Verify validity of a new install job for component " + bundle.getMetadata().getName());
 
@@ -91,8 +90,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return Optional.ofNullable(installCompletedJob);
     }
 
-    private Optional<EntandoBundleJob> getExistingJob(EntandoDeBundle bundle) {
-        String componentId = bundle.getSpec().getDetails().getName();
+    private Optional<EntandoBundleJob> getExistingJob(EntandoComponentBundle bundle) {
+        String componentId = bundle.getSpec().getCode();
         Optional<EntandoBundleJob> lastJobStarted = jobRepo.findFirstByComponentIdOrderByStartedAtDesc(componentId);
         if (lastJobStarted.isPresent()) {
             // To be an existing job it should be Running or completed
@@ -104,20 +103,17 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return Optional.empty();
     }
 
-    private EntandoDeBundleTag getBundleTag(EntandoDeBundle bundle, String version) {
+    private EntandoComponentBundleVersion getBundleTag(EntandoComponentBundle bundle, String version) {
         log.info("Extracting version " + version + " from bundle");
-        String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
-        return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
-                .orElseThrow(
-                        () -> new InvalidBundleException("Version " + version + " not defined in bundle versions"));
+        return BundleUtilities.getBundleVersionOrFail(bundle, version);
     }
 
-    private EntandoBundleJob createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    private EntandoBundleJob createInstallJob(EntandoComponentBundle bundle, EntandoComponentBundleVersion version) {
         final EntandoBundleJob job = new EntandoBundleJob();
 
         job.setComponentId(bundle.getMetadata().getName());
-        job.setComponentName(bundle.getSpec().getDetails().getName());
-        job.setComponentVersion(tag.getVersion());
+        job.setComponentName(bundle.getSpec().getTitle());
+        job.setComponentVersion(version.getVersion());
         job.setProgress(0);
         job.setStatus(JobStatus.INSTALL_CREATED);
 
@@ -130,9 +126,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return jobService.getJobs(componentId);
     }
 
-    private void submitInstallAsync(EntandoBundleJob parentJob, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    private void submitInstallAsync(EntandoBundleJob parentJob, EntandoComponentBundle bundle, EntandoComponentBundleVersion version) {
         CompletableFuture.runAsync(() -> {
-            log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
+            log.info("Started new install job for component " + parentJob.getComponentId() + "@" + version.getVersion());
 
             JobTracker<EntandoBundleJob> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobScheduler scheduler = new JobScheduler();
@@ -143,7 +139,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
 
             try {
-                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag, bundleDownloader);
+                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, version, bundleDownloader);
                 Queue<EntandoBundleComponentJob> componentJobQueue = bundleInstallableComponents.stream()
                         .map(i -> {
                             EntandoBundleComponentJob cj = new EntandoBundleComponentJob();
@@ -195,8 +191,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
 
-    private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag, BundleDownloader bundleDownloader) {
-        Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
+    private Queue<Installable> getBundleInstallableComponents(EntandoComponentBundle bundle, EntandoComponentBundleVersion version, BundleDownloader bundleDownloader) {
+        Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, version);
         return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle));
     }
 
@@ -216,7 +212,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
-    private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJob job) {
+    private void saveAsInstalledBundle(EntandoComponentBundle bundle, EntandoBundleJob job) {
         EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
         installedComponent.setInstalled(true);
         installedComponent.setJob(job);

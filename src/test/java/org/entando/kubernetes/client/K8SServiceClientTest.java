@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -210,15 +210,15 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldGetBundlesFromAllObservedNamespaces() {
-        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
+        List<EntandoComponentBundle> bundles = client.getBundlesInObservedNamespaces();
         assertThat(bundles).hasSize(1);
         assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
-        assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("@entando/my-bundle");
+        assertThat(bundles.get(0).getSpec().getCode()).isEqualTo("@entando/my-bundle");
     }
 
     @Test
     public void shouldGetBundlesFromSingleNamespace() {
-        List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
+        List<EntandoComponentBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
         assertThat(bundles).hasSize(1);
     }
@@ -241,7 +241,7 @@ public class K8SServiceClientTest {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
+        List<EntandoComponentBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third")));
@@ -250,14 +250,14 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldGetBundleWithName() {
-        Optional<EntandoDeBundle> bundle = client.getBundleWithName("my-bundle");
+        Optional<EntandoComponentBundle> bundle = client.getBundleWithName("my-bundle");
         assertThat(bundle.isPresent()).isTrue();
-        assertThat(bundle.get().getSpec().getDetails().getName()).isEqualTo("@entando/my-bundle");
+        assertThat(bundle.get().getSpec().getCode()).isEqualTo("@entando/my-bundle");
     }
 
     @Test
     public void shouldNotFindBundleWithName() {
-        Optional<EntandoDeBundle> bundle = client.getBundleWithName("not-existent-bundle");
+        Optional<EntandoComponentBundle> bundle = client.getBundleWithName("not-existent-bundle");
         assertThat(bundle.isPresent()).isFalse();
     }
 
@@ -269,13 +269,13 @@ public class K8SServiceClientTest {
                         .withStatus(200)
                         .withBody(stubResponse)
                         .withHeader("Content-Type", HAL_JSON_VALUE)));
-        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "my-namespace");
+        Optional<EntandoComponentBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "my-namespace");
         assertThat(bundle.isPresent()).isFalse();
     }
 
     @Test
     public void shouldGetBundleWithNameAndNamespace() {
-        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundles");
+        Optional<EntandoComponentBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundles");
         assertThat(bundle.isPresent()).isTrue();
         assertThat(bundle.get().getMetadata().getName()).isEqualTo("my-bundle");
     }

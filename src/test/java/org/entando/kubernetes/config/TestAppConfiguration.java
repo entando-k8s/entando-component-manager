@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -28,7 +28,7 @@ public class TestAppConfiguration extends AppConfiguration {
             GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
             try {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-                when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
+                when(git.saveBundleLocally(any(EntandoComponentBundle.class), any(EntandoDeBundleTag.class)))
                         .thenReturn(bundleFolder);
                 when(git.createTargetDirectory()).thenReturn(bundleFolder);
             } catch (IOException e) {

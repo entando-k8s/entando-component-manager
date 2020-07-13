@@ -30,10 +30,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
 import org.apache.commons.compress.utils.Sets;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.web.SystemConstants;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -92,10 +93,10 @@ public class EntandoBundle {
     @Column(name = "metadata")
     private Map<String, String> metadata;
 
-    public static EntandoBundle newFrom(EntandoDeBundle bundle) {
+    public static EntandoBundle newFrom(EntandoComponentBundle bundle) {
         EntandoBundle dec = new EntandoBundle();
         String bundleId = bundle.getMetadata().getName();
-        EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
+        EntandoComponentBundleSpec bd = bundle.getSpec();
         Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
         if (bundle.getMetadata().getLabels() != null) {
             bundle.getMetadata().getLabels()
@@ -105,14 +106,14 @@ public class EntandoBundle {
                     .forEach(bundleComponentTypes::add);
         }
         dec.setId(bundleId);
-        dec.setName(bundle.getSpec().getDetails().getName());
+        dec.setName(bundle.getSpec().getTitle());
         dec.setDescription(bd.getDescription());
         dec.setRating(5);
         dec.setType(bundleComponentTypes);
         dec.setLastUpdate(new Date());
         dec.setSignature("");
         dec.setInstalled(false);
-        dec.setVersion(bd.getDistTags().get("latest").toString());
+        dec.setVersion(BundleUtilities.getBundleLatestVersion(bundle).getVersion()); //TODO @luca.cherubin Please check if this shouls always point to latest as was before this refactor!!
         dec.setImage(bd.getThumbnail());
         return dec;
     }

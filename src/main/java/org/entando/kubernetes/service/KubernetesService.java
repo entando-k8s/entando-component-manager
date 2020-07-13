@@ -17,7 +17,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.k8ssvc.EntandoAppPluginLinkingProcessException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
@@ -117,15 +117,15 @@ public class KubernetesService {
         return result;
     }
 
-    public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
+    public List<EntandoComponentBundle> getBundlesInDefaultNamespace() {
         return k8sServiceClient.getBundlesInObservedNamespaces();
     }
 
-    public Optional<EntandoDeBundle> getBundleByName(String name) {
+    public Optional<EntandoComponentBundle> getBundleByName(String name) {
         return k8sServiceClient.getBundleWithName(name);
     }
 
-    public Optional<EntandoDeBundle> getBundleByNameAndDigitalExchange(String name, String deId) {
+    public Optional<EntandoComponentBundle> getBundleByNameAndDigitalExchange(String name, String deId) {
         return k8sServiceClient.getBundleWithNameAndNamespace(name, deId);
     }
 
