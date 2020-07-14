@@ -32,7 +32,7 @@ public class NpmBundleDownloader extends BundleDownloader {
     @Override
     protected Path saveBundleStrategy(EntandoComponentBundle bundle, EntandoComponentBundleVersion version, Path targetPath) {
         try {
-            InputStream is = downloadComponentPackage(bundle.getSpec().getUrl());
+            InputStream is = downloadComponentPackage(version.getUrl());
             Path tarPath = savePackageStreamLocally(is);
             unpackTar(tarPath, targetPath);
             return targetPath;

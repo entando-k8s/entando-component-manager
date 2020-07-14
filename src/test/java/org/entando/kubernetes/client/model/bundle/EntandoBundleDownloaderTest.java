@@ -11,16 +11,16 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleVersion;
+import org.entando.kubernetes.model.bundle.EntandoComponentBundleVersionBuilder;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.BundleDownloaderException;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
-import org.entando.kubernetes.model.debundle.EntandoComponentBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -49,32 +49,39 @@ public class EntandoBundleDownloaderTest {
 
     @Test
     public void shouldCloneGitBundle() {
-        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundleVersion version = new EntandoComponentBundleVersionBuilder()
+                .withVersion("v0.0.1")
+                .build();
+
+        EntandoComponentBundle bundle = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
+                .withNewSpec()
+                .withUrl(BUNDLE_REMOTE_REPOSITORY)
+                .endSpec()
                 .build();
-        EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
-                .withVersion("v0.0.1")
-                .withTarball(BUNDLE_REMOTE_REPOSITORY)
-                .build();
+
         downloader = new GitBundleDownloader();
-        Path target = downloader.saveBundleLocally(bundle, tag);
+        Path target = downloader.saveBundleLocally(bundle, version);
         Path expectedFile = target.resolve("descriptor.yaml");
         assertThat(expectedFile.toFile().exists()).isTrue();
     }
 
     @Test
     public void shouldCloneGitBundleWithAnotherVersion() {
-        EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
+        EntandoComponentBundleVersion tag = new EntandoComponentBundleVersionBuilder()
                 .withVersion("v0.0.2")
-                .withTarball(BUNDLE_REMOTE_REPOSITORY)
+//                .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
 
-        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
+                .withNewSpec()
+                .withUrl(BUNDLE_REMOTE_REPOSITORY)
+                .endSpec()
                 .build();
         downloader = BundleDownloader.getForType("git");
         Path target = downloader.saveBundleLocally(bundle, tag);
@@ -84,12 +91,12 @@ public class EntandoBundleDownloaderTest {
 
     @Test
     public void shouldReadTarZipFile() throws IOException {
-        EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
+        EntandoComponentBundleVersion tag = new EntandoComponentBundleVersionBuilder()
                 .withVersion("v0.0.1")
-                .withTarball("http://localhost:" + port + "/my-package.tar.gz")
+                .withUrl("http://localhost:" + port + "/my-package.tar.gz")
                 .build();
 
-        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
@@ -141,19 +148,21 @@ public class EntandoBundleDownloaderTest {
     @Test
     public void shouldThrowAnErrorWhenCloningRepoOverSSH() {
         String repository = "git@github.com:kerruba-bundles/entando-survey-bundle.git";
-        EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
+        EntandoComponentBundleVersion bundleVersion = new EntandoComponentBundleVersionBuilder()
                 .withVersion("v0.0.2")
-                .withTarball(repository)
                 .build();
 
-        EntandoComponentBundle bundle = new EntandoDeBundleBuilder()
+        EntandoComponentBundle bundle = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
                 .endMetadata()
+                .withNewSpec()
+                .withUrl(repository)
+                .endSpec()
                 .build();
         downloader = BundleDownloader.getForType("git");
         BundleDownloaderException ex = Assertions.assertThrows(BundleDownloaderException.class, () -> {
-            downloader.saveBundleLocally(bundle, tag);
+            downloader.saveBundleLocally(bundle, bundleVersion);
         });
         assertThat(ex.getMessage())
                 .contains("Unsupported repository " + repository + "; Only HTTP(s) repositories are supported");
