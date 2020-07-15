@@ -23,34 +23,23 @@ public class TestEntitiesGenerator {
         return new EntandoComponentBundleSpecBuilder()
                 .withDescription("A bundle containing some demo components for Entano6")
                 .withCode("my-bundle")
-                .addNewVersion("0.0.1")
-                .addNewKeyword("entando6")
-                .addNewKeyword("digital-exchange")
-                .addNewDistTag("latest", "0.0.1")
-                .and()
-                .addNewTag()
+                .addNewVersion()
                 .withVersion("0.0.1")
                 .withIntegrity(
                         "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
-                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
-                .endTag()
+                .withUrl("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
+                .endVersion()
                 .build();
     }
 
     public static EntandoComponentBundleSpec getBundleSpecWithName(String name) {
         return new EntandoComponentBundleSpecBuilder()
                 .withCode(name)
-                .addNewVersion("0.0.1")
-                .addNewDistTag("latest", "0.0.1")
-                .and()
-                .addNewTag()
+                .addNewVersion()
                 .withVersion("0.0.1")
-                .withIntegrity(
-                        "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
-                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
-                .endTag()
+                .withIntegrity("sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
+                .withUrl("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
+                .endVersion()
                 .build();
     }
 }

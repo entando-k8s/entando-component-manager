@@ -148,26 +148,20 @@ public class EntandoBundleApiTest {
                 .withNamespace("entando-de-bundles")
                 .addToLabels("widget", "true")
                 .endMetadata()
-                .withSpec(getTestEntandoDeBundleSpec()).build();
+                .withSpec(getTestEntandoComponentBundleSpec()).build();
 
     }
 
-    private EntandoComponentBundleSpec getTestEntandoDeBundleSpec() {
+    private EntandoComponentBundleSpec getTestEntandoComponentBundleSpec() {
         return new EntandoComponentBundleSpecBuilder()
                 .withDescription("A bundle containing some demo components for Entando6")
                 .withCode("inail_bundle")
-                .addNewVersion("0.0.1")
-                .addNewKeyword("entando6")
-                .addNewKeyword("digital-exchange")
-                .addNewDistTag("latest", "0.0.1")
-                .and()
-                .addNewTag()
+                .addNewVersion()
                 .withVersion("0.0.1")
                 .withIntegrity(
                         "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
-                .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8081/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
-                .endTag()
+                .withUrl("http://localhost:8081/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
+                .endVersion()
                 .build();
     }
 

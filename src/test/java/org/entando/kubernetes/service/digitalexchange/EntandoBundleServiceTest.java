@@ -83,24 +83,14 @@ public class EntandoBundleServiceTest {
 
         EntandoComponentBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoComponentBundleSpec();
         EntandoComponentBundleSpec specBundleA = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleA")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+                .withTitle("bundleA")
+                .withDescription(baseSpec.getDescription())
                 .build();
         EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleB")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+                .withTitle("bundleB")
+                .withDescription(baseSpec.getDescription())
                 .build();
         EntandoComponentBundle bundleA = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
@@ -128,8 +118,8 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleB.getSpec().getDetails().getName());
-        assertThat(components.getBody().get(1).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
+        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleB.getSpec().getTitle());
+        assertThat(components.getBody().get(1).getName()).isEqualTo(bundleA.getSpec().getTitle());
 
         request = new PagedListRequest();
         request.addFilter(new Filter("name", "bundleA"));
@@ -137,7 +127,7 @@ public class EntandoBundleServiceTest {
         components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
+        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleA.getSpec().getTitle());
     }
 
     @Test
@@ -145,24 +135,17 @@ public class EntandoBundleServiceTest {
 
         EntandoComponentBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoComponentBundleSpec();
         EntandoComponentBundleSpec specBundleA = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleA")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+                .withTitle("bundleA")
+                .withVersions(baseSpec.getVersions())
+                .withDescription(baseSpec.getDescription())
                 .build();
         EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleB")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+
+                .withTitle("bundleB")
+                .withVersions(baseSpec.getVersions())
+                .withDescription(baseSpec.getDescription())
                 .build();
         EntandoComponentBundle bundleA = new EntandoComponentBundleBuilder()
                 .withNewMetadata()
@@ -206,34 +189,22 @@ public class EntandoBundleServiceTest {
 
         EntandoComponentBundleSpec baseSpec = TestEntitiesGenerator.getTestEntandoComponentBundleSpec();
         EntandoComponentBundleSpec specBundleA = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleA")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+                .withTitle("bundleA")
+                .withVersions(baseSpec.getVersions())
+                .withDescription(baseSpec.getDescription())
                 .build();
         EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleB")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+                .withTitle("bundleB")
+                .withVersions(baseSpec.getVersions())
+                .withDescription(baseSpec.getDescription())
                 .build();
         EntandoComponentBundleSpec specBundleC = new EntandoComponentBundleSpecBuilder()
-                .withTags(baseSpec.getTags())
-                .withNewDetails()
-                .withName("bundleC")
-                .withDistTags(baseSpec.getDetails().getDistTags())
-                .withVersions(baseSpec.getDetails().getVersions())
-                .withKeywords(baseSpec.getDetails().getKeywords())
-                .withDescription(baseSpec.getDetails().getDescription())
-                .endDetails()
+                .withVersions(baseSpec.getVersions())
+                .withTitle("bundleC")
+                .withVersions(baseSpec.getVersions())
+                .withDescription(baseSpec.getDescription())
                 .build();
 
         EntandoComponentBundle bundleA = new EntandoComponentBundleBuilder()

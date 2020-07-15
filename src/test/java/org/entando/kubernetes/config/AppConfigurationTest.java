@@ -1,17 +1,12 @@
 package org.entando.kubernetes.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTemplateProcessor;
@@ -26,9 +21,11 @@ import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.service.KubernetesService;
-import org.junit.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 
+@Tag("unit")
 public class AppConfigurationTest {
 
     @Test

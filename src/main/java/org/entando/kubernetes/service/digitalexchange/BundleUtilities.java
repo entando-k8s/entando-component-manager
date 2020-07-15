@@ -16,8 +16,13 @@ public class BundleUtilities {
     private BundleUtilities() { }
 
     public static EntandoComponentBundleVersion getBundleVersionOrFail(EntandoComponentBundle bundle, String version) {
-        if (version == null || !isSemanticVersion(version)) {
+        if (isLatestVersion(version)) {
             return getBundleLatestVersion(bundle);
+        }
+
+        if (!isSemanticVersion(version)) {
+            throw new EntandoComponentManagerException(
+                    "Invalid version '" + version + "' for bundle '" + bundle.getSpec().getCode() + "'");
         }
 
         return bundle.getSpec().getVersions().stream()
@@ -37,6 +42,10 @@ public class BundleUtilities {
     @SneakyThrows
     private static Date parseDate(EntandoComponentBundleVersion version) {
         return dateFormat.parse(version.getTimestamp());
+    }
+
+    public static boolean isLatestVersion(String version) {
+        return version == null || version.equals("latest");
     }
 
     public static boolean isSemanticVersion(String versionToFind) {
