@@ -50,7 +50,11 @@ public class LabelProcessorTest {
         job.setComponentId("my-component-id");
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        final BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        final BundleDescriptor descriptor = BundleDescriptor.builder()
+                .code("my-component")
+                .description("desc")
+                .components(spec)
+                .build();
         spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 

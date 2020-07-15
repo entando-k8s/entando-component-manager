@@ -41,7 +41,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Entity
 @Table(name = "installed_entando_bundles")
-public class EntandoBundle {
+public class EntandoBundleEntity {
 
 
     @Id
@@ -93,8 +93,8 @@ public class EntandoBundle {
     @Column(name = "metadata")
     private Map<String, String> metadata;
 
-    public static EntandoBundle newFrom(EntandoComponentBundle bundle) {
-        EntandoBundle dec = new EntandoBundle();
+    public static EntandoBundleEntity newFrom(EntandoComponentBundle bundle) {
+        EntandoBundleEntity dec = new EntandoBundleEntity();
         String bundleId = bundle.getMetadata().getName();
         EntandoComponentBundleSpec bd = bundle.getSpec();
         Set<String> bundleComponentTypes = Sets.newHashSet("bundle");

@@ -13,11 +13,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundle;
 import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
@@ -57,7 +58,7 @@ public class EntandoBundleControllerTest {
 
     @Test
     public void shouldThrowIfInstalledBundleDoesntHaveAssociatedCompletedJob() {
-        EntandoBundle component = getTestComponent();
+        EntandoBundle component = EntandoBundle.fromEntity(getTestComponent());
         when(componentsService.getBundleInstalledComponents(any())).thenCallRealMethod();
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
 
@@ -67,7 +68,7 @@ public class EntandoBundleControllerTest {
 
     @Test
     public void shouldReturnEmptySummaryIfBundleHasNoComponents() {
-        EntandoBundle component = getTestComponent();
+        EntandoBundle component = EntandoBundle.fromEntity(getTestComponent());
         component.setJob(getTestJob());
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
 
@@ -86,7 +87,7 @@ public class EntandoBundleControllerTest {
         componentJob.setComponentId("my-magic-resource");
         componentJob.setComponentType(ComponentType.ASSET);
 
-        EntandoBundle component = getTestComponent();
+        EntandoBundle component = EntandoBundle.fromEntity(getTestComponent());
         component.setJob(job);
 
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
@@ -119,7 +120,7 @@ public class EntandoBundleControllerTest {
         cjC.setComponentId("my-magic-page");
         cjC.setComponentType(ComponentType.PAGE);
 
-        EntandoBundle component = getTestComponent();
+        EntandoBundle component = EntandoBundle.fromEntity(getTestComponent());
         component.setJob(job);
 
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
@@ -169,7 +170,7 @@ public class EntandoBundleControllerTest {
         cjC.setComponentId("my-other-widget");
         cjC.setComponentType(ComponentType.WIDGET);
 
-        EntandoBundle component = getTestComponent();
+        EntandoBundle component = EntandoBundle.fromEntity(getTestComponent());
         component.setJob(job);
 
         when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
@@ -200,8 +201,8 @@ public class EntandoBundleControllerTest {
 
     }
 
-    private EntandoBundle getTestComponent() {
-        EntandoBundle component = new EntandoBundle();
+    private EntandoBundleEntity getTestComponent() {
+        EntandoBundleEntity component = new EntandoBundleEntity();
         component.setId("my-component");
         component.setName("my-component-name");
         component.setInstalled(true);

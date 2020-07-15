@@ -9,11 +9,12 @@ import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpecBuilder;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -66,7 +67,7 @@ public class EntandoBundleServiceTest {
     @Test
     public void shouldReturnInstalledComponents() {
         EntandoComponentBundle bundle = TestEntitiesGenerator.getTestBundle();
-        EntandoBundle component = EntandoBundle.newFrom(bundle);
+        EntandoBundleEntity component = EntandoBundleEntity.newFrom(bundle);
         component.setInstalled(true);
 
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
@@ -163,7 +164,7 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleB)
                 .build();
 
-        EntandoBundle installedComponent = EntandoBundle.newFrom(bundleB);
+        EntandoBundleEntity installedComponent = EntandoBundleEntity.newFrom(bundleB);
         installedComponent.setInstalled(true);
 
         k8SServiceClient.addInMemoryBundle(bundleA);

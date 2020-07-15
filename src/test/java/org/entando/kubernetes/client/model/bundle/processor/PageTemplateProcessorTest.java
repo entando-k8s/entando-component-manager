@@ -60,7 +60,11 @@ public class PageTemplateProcessorTest {
         when(bundleReader.readDescriptorFile("/pagemodels/my_page_model_descriptor.yaml", PageTemplateDescriptor.class))
                 .thenReturn(pageTe);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleDescriptor.builder()
+                .code("my-component")
+                .description("desc")
+                .components(spec)
+                .build();
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = pageTemplateProcessor.process(bundleReader);

@@ -20,10 +20,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundle;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -63,19 +64,22 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public PagedMetadata<EntandoBundle> getComponents(PagedListRequest request) {
-        List<EntandoBundle> allComponents = getAllComponents();
-        List<EntandoBundle> localFilteredList = new EntandoBundleListProcessor(request, allComponents)
+        List<EntandoBundleEntity> allComponents = getAllComponents();
+        List<EntandoBundleEntity> localFilteredList = new EntandoBundleListProcessor(request, allComponents)
                 .filterAndSort().toList();
-        List<EntandoBundle> sublist = request.getSublist(localFilteredList);
+
+        List<EntandoBundle> sublist = request.getSublist(localFilteredList) //Get page
+                .stream().map(EntandoBundle::fromEntity) //Convert to DTO
+                .collect(Collectors.toList());
 
         return new PagedMetadata<>(request, sublist, localFilteredList.size());
     }
 
-    private List<EntandoBundle> getAllComponents() {
-        List<EntandoBundle> allComponents = new ArrayList<>();
-        List<EntandoBundle> installedComponents = installedComponentRepo.findAll();
-        List<EntandoBundle> externalComponents = getAvailableComponentsFromDigitalExchanges();
-        List<EntandoBundle> notAlreadyInstalled = installedComponents.isEmpty() ?
+    private List<EntandoBundleEntity> getAllComponents() {
+        List<EntandoBundleEntity> allComponents = new ArrayList<>();
+        List<EntandoBundleEntity> installedComponents = installedComponentRepo.findAll();
+        List<EntandoBundleEntity> externalComponents = getAvailableComponentsFromDigitalExchanges();
+        List<EntandoBundleEntity> notAlreadyInstalled = installedComponents.isEmpty() ?
                 externalComponents :
                 filterNotInstalledComponents(externalComponents, installedComponents);
 
@@ -86,7 +90,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public Optional<EntandoBundle> getInstalledComponent(String id) {
-        return installedComponentRepo.findById(id);
+        return installedComponentRepo.findById(id)
+                .map(EntandoBundle::fromEntity);
     }
 
     @Override
@@ -101,13 +106,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
 
-    private List<EntandoBundle> filterNotInstalledComponents(
-            List<EntandoBundle> externalComponents, List<EntandoBundle> installedComponents) {
+    private List<EntandoBundleEntity> filterNotInstalledComponents(
+            List<EntandoBundleEntity> externalComponents, List<EntandoBundleEntity> installedComponents) {
         Map<String, String> installedVersions = installedComponents.stream()
-                .collect(Collectors.toMap(EntandoBundle::getId, EntandoBundle::getVersion));
+                .collect(Collectors.toMap(EntandoBundleEntity::getId, EntandoBundleEntity::getVersion));
 
-        List<EntandoBundle> notInstalledComponents = new ArrayList<>();
-        for (EntandoBundle dec : externalComponents) {
+        List<EntandoBundleEntity> notInstalledComponents = new ArrayList<>();
+        for (EntandoBundleEntity dec : externalComponents) {
             String k = dec.getId();
             String v = dec.getVersion();
             if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
@@ -119,7 +124,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         return notInstalledComponents;
     }
 
-    private List<EntandoBundle> getAvailableComponentsFromDigitalExchanges() {
+    private List<EntandoBundleEntity> getAvailableComponentsFromDigitalExchanges() {
         List<EntandoComponentBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
@@ -130,8 +135,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
 
-    public EntandoBundle convertBundleToLegacyComponent(EntandoComponentBundle bundle) {
-        EntandoBundle dec = EntandoBundle.newFrom(bundle);
+    public EntandoBundleEntity convertBundleToLegacyComponent(EntandoComponentBundle bundle) {
+        EntandoBundleEntity dec = EntandoBundleEntity.newFrom(bundle);
         if (checkIfInstalled(bundle)) {
             dec.setInstalled(true);
         }

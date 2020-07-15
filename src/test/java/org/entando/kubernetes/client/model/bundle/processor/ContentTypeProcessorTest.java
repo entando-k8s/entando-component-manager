@@ -59,7 +59,11 @@ public class ContentTypeProcessorTest {
         when(bundleReader.readDescriptorFile("/contenttypes/my_content_type_descriptor.yaml", ContentTypeDescriptor.class))
                 .thenReturn(contentTypeDescriptor);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleDescriptor.builder()
+                .code("my-component")
+                .description("desc")
+                .components(spec)
+                .build();
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = contentTypeProcessor.process(bundleReader);

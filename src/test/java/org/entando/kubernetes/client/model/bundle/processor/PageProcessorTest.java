@@ -1,7 +1,6 @@
 package org.entando.kubernetes.client.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -78,7 +77,11 @@ public class PageProcessorTest {
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
                 .thenReturn(pageDescriptor);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleDescriptor.builder()
+                .code("my-component")
+                .description("desc")
+                .components(spec)
+                .build();
         when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
     }

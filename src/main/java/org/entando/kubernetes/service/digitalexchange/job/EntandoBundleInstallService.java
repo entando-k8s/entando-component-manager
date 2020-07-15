@@ -24,7 +24,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobResult;
@@ -213,7 +213,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private void saveAsInstalledBundle(EntandoComponentBundle bundle, EntandoBundleJob job) {
-        EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
+        EntandoBundleEntity installedComponent = EntandoBundleEntity.newFrom(bundle);
         installedComponent.setInstalled(true);
         installedComponent.setJob(job);
         installedComponentRepo.save(installedComponent);

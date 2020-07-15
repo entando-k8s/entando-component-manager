@@ -19,13 +19,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterUtils;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.request.RequestListProcessor;
 
-public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundle> {
+public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundleEntity> {
 
     private static final String ID = "id";
     private static final String NAME = "name";
@@ -34,16 +34,16 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     private static final String VERSION = "version";
     private static final String DESCRIPTION = "description";
 
-    public EntandoBundleListProcessor(PagedListRequest listRequest, List<EntandoBundle> components) {
+    public EntandoBundleListProcessor(PagedListRequest listRequest, List<EntandoBundleEntity> components) {
         super(listRequest, components);
     }
 
-    public EntandoBundleListProcessor(PagedListRequest listRequest, Stream<EntandoBundle> components) {
+    public EntandoBundleListProcessor(PagedListRequest listRequest, Stream<EntandoBundleEntity> components) {
         super(listRequest, components);
     }
 
     @Override
-    protected Function<Filter, Predicate<EntandoBundle>> getPredicates() {
+    protected Function<Filter, Predicate<EntandoBundleEntity>> getPredicates() {
         return filter -> {
             switch (filter.getAttribute()) {
                 case ID:
@@ -65,7 +65,7 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     }
 
     @Override
-    protected Function<String, Comparator<EntandoBundle>> getComparators() {
+    protected Function<String, Comparator<EntandoBundleEntity>> getComparators() {
         return sort -> {
             switch (sort) {
                 case VERSION:

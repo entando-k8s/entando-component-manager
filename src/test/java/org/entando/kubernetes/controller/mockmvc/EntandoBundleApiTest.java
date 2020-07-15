@@ -86,7 +86,6 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload[0]", hasKey("type")))
                 .andExpect(jsonPath("payload[0]", hasKey("description")))
                 .andExpect(jsonPath("payload[0]", hasKey("image")))
-                .andExpect(jsonPath("payload[0]", hasKey("rating")))
                 .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
@@ -109,7 +108,6 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload[0]", hasKey("type")))
                 .andExpect(jsonPath("payload[0]", hasKey("description")))
                 .andExpect(jsonPath("payload[0]", hasKey("image")))
-                .andExpect(jsonPath("payload[0]", hasKey("rating")))
                 .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
