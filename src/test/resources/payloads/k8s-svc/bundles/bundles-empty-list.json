@@ -1,6 +1,6 @@
 {
   "_embedded": {
-    "entandoDeBundles": []
+    "entandoComponentBundles": []
   },
   "_links": {
     "bundle": {

@@ -120,6 +120,7 @@ public class TestInstallUtils {
         return new EntandoComponentBundleSpecBuilder()
                 .withDescription("A bundle containing some demo components for Entando6")
                 .withCode("todomvc")
+                .withTitle("todomvc")
                 .addNewVersion()
                 .withVersion("0.0.1")
                 .withIntegrity(

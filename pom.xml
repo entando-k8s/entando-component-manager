@@ -88,7 +88,7 @@
         <!--dependencies -->
         <postgresql.driver.version>42.2.13</postgresql.driver.version>
         <entando.k8s.custom.model.version>6.1.5</entando.k8s.custom.model.version>
-        <entando.k8s.component.bundle.custom.model.version>6.1.12</entando.k8s.component.bundle.custom.model.version>
+        <entando.k8s.component.bundle.custom.model.version>6.1.13</entando.k8s.component.bundle.custom.model.version>
 
         <!-- plugin  versions -->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>

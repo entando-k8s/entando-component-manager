@@ -5,8 +5,8 @@ databaseChangeLog:
       changes:
         - dropNotNullConstraint:
             columnDataType: timestamp
-            columnName: STARTED_AT
-            tableName: ENTANDO_BUNDLE_JOBS
+            columnName: started_at
+            tableName: entando_bundle_jobs
   - changeSet:
       id: 1593777772216-2
       author: kerruba (generated)
@@ -14,29 +14,29 @@ databaseChangeLog:
         - onFail: MARK_RAN
           not:
             columnExists:
-              columnName: ERROR_MESSAGE
-              tableName: ENTANDO_BUNDLE_JOBS
+              columnName: error_message
+              tableName: entando_bundle_jobs
       changes:
         - addColumn:
             columns:
               - column:
-                  name: ERROR_MESSAGE
+                  name: error_message
                   type: CLOB(2147483647)
-            tableName: ENTANDO_BUNDLE_JOBS
+            tableName: entando_bundle_jobs
   - changeSet:
       id: 1593777772216-3
       author: kerruba (generated)
       preConditions:
         - onFail: MARK_RAN
           columnExists:
-            columnName: NAME
-            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+            columnName: name
+            tableName: entando_bundle_component_jobs
       changes:
         - renameColumn:
             columnDataType:  VARCHAR(255 BYTE)
-            newColumnName:  COMPONENT_ID
-            oldColumnName:  NAME
-            tableName:  ENTANDO_BUNDLE_COMPONENT_JOBS
+            newColumnName:  component_id
+            oldColumnName:  name
+            tableName:  entando_bundle_component_jobs
   - changeSet:
       id: 1593777772216-4
       author: kerruba (generated)
@@ -44,15 +44,15 @@ databaseChangeLog:
         - onFail: MARK_RAN
           not:
             columnExists:
-              columnName: STARTED_AT
-              tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+              columnName: started_at
+              tableName: entando_bundle_component_jobs
       changes:
         - addColumn:
             columns:
               - column:
-                  name: STARTED_AT
-                  type: TIMESTAMP
-            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+                  name: started_at
+                  type: timestamp
+            tableName: entando_bundle_component_jobs
   - changeSet:
       id: 1593777772216-5
       author: kerruba (generated)
@@ -60,15 +60,15 @@ databaseChangeLog:
         - onFail: MARK_RAN
           not:
             columnExists:
-              columnName: FINISHED_AT
-              tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+              columnName: finished_at
+              tableName: entando_bundle_component_jobs
       changes:
         - addColumn:
             columns:
               - column:
-                  name: FINISHED_AT
-                  type: TIMESTAMP
-            tableName: ENTANDO_BUNDLE_COMPONENT_JOBS
+                  name: finished_at
+                  type: timestamp
+            tableName: entando_bundle_component_jobs
 #  - changeSet:
 #      id: 1593777772216-6
 #      author: kerruba (generated)

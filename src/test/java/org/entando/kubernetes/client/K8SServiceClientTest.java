@@ -213,7 +213,7 @@ public class K8SServiceClientTest {
         List<EntandoComponentBundle> bundles = client.getBundlesInObservedNamespaces();
         assertThat(bundles).hasSize(1);
         assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
-        assertThat(bundles.get(0).getSpec().getCode()).isEqualTo("@entando/my-bundle");
+        assertThat(bundles.get(0).getSpec().getCode()).isEqualTo("my-bundle");
     }
 
     @Test
@@ -252,7 +252,7 @@ public class K8SServiceClientTest {
     public void shouldGetBundleWithName() {
         Optional<EntandoComponentBundle> bundle = client.getBundleWithName("my-bundle");
         assertThat(bundle.isPresent()).isTrue();
-        assertThat(bundle.get().getSpec().getCode()).isEqualTo("@entando/my-bundle");
+        assertThat(bundle.get().getSpec().getCode()).isEqualTo("my-bundle");
     }
 
     @Test
