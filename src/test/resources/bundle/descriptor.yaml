@@ -1,4 +1,12 @@
 code: something
+title: My bundle
+description: My bundle description
+organization: entando
+author:
+  name: Entando Dev
+  email: fake-entando-dev-email@email.com
+
+thumbnail: ./example-bundle-thumbnail.jpg
 
 components:
   plugins:
@@ -16,15 +24,15 @@ components:
     - pages/my_page_descriptor.yaml
 
   pageModels:
-    - pagemodels/my_page_model_descriptor.yaml
-    - pagemodels/another_page_model_descriptor.yaml
+    - page-templates/my_page_template_descriptor.yaml
+    - page-templates/another_page_template_descriptor.yaml
 
   contentTypes:
     - contenttypes/my_content_type_descriptor.yaml
 
-  contentModels:
-    - contentmodels/my_content_model_descriptor.yaml
-    - contentmodels/another_content_model_descriptor.yaml
+  contentTemplates:
+    - content-templates/my_content_template_descriptor.yaml
+    - content-templates/another_content_template_descriptor.yaml
 
   labels:
     - key: HELLO

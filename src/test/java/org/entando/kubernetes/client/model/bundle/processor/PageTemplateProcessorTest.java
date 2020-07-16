@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.descriptor.BundleAuthorDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
@@ -51,20 +52,21 @@ public class PageTemplateProcessorTest {
         job.setComponentId("my-component-id");
 
         ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        spec.setPageTemplates(Collections.singletonList("/pagemodels/my_page_model_descriptor.yaml"));
+        spec.setPageTemplates(Collections.singletonList("/pagemodels/my_page_template_descriptor.yaml"));
 
         PageTemplateDescriptor pageTe = MAPPER.readValue(
-                readFromFile("bundle/pagemodels/my_page_model_descriptor.yaml"),
+                readFromFile("bundle/page-templates/my_page_template_descriptor.yaml"),
                 PageTemplateDescriptor.class);
 
-        when(bundleReader.readDescriptorFile("/pagemodels/my_page_model_descriptor.yaml", PageTemplateDescriptor.class))
+        when(bundleReader.readDescriptorFile("/pagemodels/my_page_template_descriptor.yaml", PageTemplateDescriptor.class))
                 .thenReturn(pageTe);
 
-        BundleDescriptor descriptor = BundleDescriptor.builder()
-                .code("my-component")
-                .description("desc")
-                .components(spec)
-                .build();
+        BundleDescriptor descriptor = new BundleDescriptor();
+        descriptor.setCode("my-component");
+        descriptor.setDescription("desc");
+        descriptor.setComponents(spec);
+        descriptor.setOrganization("entando");
+        descriptor.setAuthor(new BundleAuthorDescriptor("Entando dev", "fake-entando-dev@email.com"));
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = pageTemplateProcessor.process(bundleReader);

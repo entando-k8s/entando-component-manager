@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.descriptor.BundleAuthorDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
@@ -50,12 +51,13 @@ public class LabelProcessorTest {
         job.setComponentId("my-component-id");
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        final BundleDescriptor descriptor = BundleDescriptor.builder()
-                .code("my-component")
-                .description("desc")
-                .components(spec)
-                .build();
         spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
+        BundleDescriptor descriptor = new BundleDescriptor();
+        descriptor.setCode("my-component");
+        descriptor.setDescription("desc");
+        descriptor.setComponents(spec);
+        descriptor.setOrganization("entando");
+        descriptor.setAuthor(new BundleAuthorDescriptor("Entando dev", "fake-entando-dev@email.com"));
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         final List<? extends Installable> installables = processor.process(bundleReader);

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.descriptor.BundleAuthorDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
@@ -77,12 +78,12 @@ public class PageProcessorTest {
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
                 .thenReturn(pageDescriptor);
 
-        BundleDescriptor descriptor = BundleDescriptor.builder()
-                .code("my-component")
-                .description("desc")
-                .components(spec)
-                .build();
-        when(bundleReader.readBundleDescriptor())
-                .thenReturn(descriptor);
+        BundleDescriptor descriptor = new BundleDescriptor();
+        descriptor.setCode("my-component");
+        descriptor.setDescription("desc");
+        descriptor.setComponents(spec);
+        descriptor.setOrganization("entando");
+        descriptor.setAuthor(new BundleAuthorDescriptor("Entando dev", "fake-entando-dev@email.com"));
+        when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
     }
 }

@@ -273,7 +273,7 @@ public class InstallFlowTest {
         assertThat(allPassedPageModels.get(0).getDescription()).isEqualTo("TODO MVC another page model");
         assertThat(allPassedPageModels.get(0).getConfiguration().getFrames().get(0))
                 .matches(f -> f.getPos().equals("0") && f.getDescription().equals("Simple Frame"));
-        assertThat(allPassedPageModels.get(0).getTemplate()).isEqualTo(readFile("/bundle/pagemodels/page.ftl"));
+        assertThat(allPassedPageModels.get(0).getTemplate()).isEqualTo(readFile("/bundle/page-templates/page.ftl"));
 
         assertThat(allPassedPageModels.get(1).getCode()).isEqualTo("todomvc_page_model");
         assertThat(allPassedPageModels.get(1).getDescription()).isEqualTo("TODO MVC basic page model");

@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.descriptor.BundleAuthorDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeAttribute;
@@ -59,11 +60,12 @@ public class ContentTypeProcessorTest {
         when(bundleReader.readDescriptorFile("/contenttypes/my_content_type_descriptor.yaml", ContentTypeDescriptor.class))
                 .thenReturn(contentTypeDescriptor);
 
-        BundleDescriptor descriptor = BundleDescriptor.builder()
-                .code("my-component")
-                .description("desc")
-                .components(spec)
-                .build();
+        BundleDescriptor descriptor = new BundleDescriptor();
+        descriptor.setCode("my-component");
+        descriptor.setDescription("desc");
+        descriptor.setComponents(spec);
+        descriptor.setOrganization("entando");
+        descriptor.setAuthor(new BundleAuthorDescriptor("Entando dev", "fake-entando-dev@email.com"));
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = contentTypeProcessor.process(bundleReader);

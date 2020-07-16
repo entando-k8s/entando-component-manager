@@ -12,6 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class BundleAuthorDescriptor implements Descriptor {
-    private String author;
+    private String name;
     private String email;
 }
