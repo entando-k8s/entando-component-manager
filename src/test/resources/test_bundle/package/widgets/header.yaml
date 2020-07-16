@@ -1,6 +1,0 @@
-code: inail_header
-titles:
-  en: Inail Header
-  it: Inail Header
-group: free
-customUiPath: header.ftl
