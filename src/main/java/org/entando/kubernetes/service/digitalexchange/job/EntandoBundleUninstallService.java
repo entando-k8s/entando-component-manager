@@ -49,11 +49,11 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
         verifyBundleUninstallIsPossibleOrThrow(installedBundle);
 
-        return createAndSubmitUninstallJob(installedBundle.getJob());
+        return createAndSubmitUninstallJob(installedBundle.getInstalledJob());
     }
 
     private void verifyBundleUninstallIsPossibleOrThrow(EntandoBundleEntity bundle) {
-        if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+        if (bundle.getInstalledJob() != null && bundle.getInstalledJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
             verifyNoComponentInUseOrThrow(bundle);
             verifyNoConcurrentUninstallOrThrow(bundle);
         } else {
@@ -73,7 +73,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     }
 
     private void verifyNoComponentInUseOrThrow(EntandoBundleEntity bundle) {
-        List<EntandoBundleComponentJob> bundleComponentJobs = compJobRepo.findAllByParentJob(bundle.getJob());
+        List<EntandoBundleComponentJob> bundleComponentJobs = compJobRepo.findAllByParentJob(bundle.getInstalledJob());
         if (bundleComponentJobs.stream()
                 .anyMatch(e -> usageService.getUsage(e.getComponentType(), e.getComponentId()).getUsage() > 0)) {
             throw new JobConflictException(

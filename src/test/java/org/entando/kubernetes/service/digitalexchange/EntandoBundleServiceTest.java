@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
@@ -119,8 +119,8 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleB.getSpec().getTitle());
-        assertThat(components.getBody().get(1).getName()).isEqualTo(bundleA.getSpec().getTitle());
+        assertThat(components.getBody().get(0).getCode()).isEqualTo(bundleB.getSpec().getTitle());
+        assertThat(components.getBody().get(1).getCode()).isEqualTo(bundleA.getSpec().getTitle());
 
         request = new PagedListRequest();
         request.addFilter(new Filter("name", "bundleA"));
@@ -128,7 +128,7 @@ public class EntandoBundleServiceTest {
         components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleA.getSpec().getTitle());
+        assertThat(components.getBody().get(0).getCode()).isEqualTo(bundleA.getSpec().getTitle());
     }
 
     @Test
@@ -175,14 +175,14 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleB");
 
         request = new PagedListRequest();
         request.addFilter(new Filter("installed", "false"));
 
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleA");
     }
 
     @Test
@@ -250,28 +250,28 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> components = service.getComponents(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
-        assertThat(components.getBody().get(1).getName()).isEqualTo("bundleB");
-        assertThat(components.getBody().get(0).getType().contains("widget")).isTrue();
-        assertThat(components.getBody().get(1).getType().contains("widget")).isTrue();
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleA");
+        assertThat(components.getBody().get(1).getCode()).isEqualTo("bundleB");
+        assertThat(components.getBody().get(0).getComponentTypes().contains("widget")).isTrue();
+        assertThat(components.getBody().get(1).getComponentTypes().contains("widget")).isTrue();
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "contentType"));
 
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
-        assertThat(components.getBody().get(1).getName()).isEqualTo("bundleC");
-        assertThat(components.getBody().get(0).getType().contains("contentType")).isTrue();
-        assertThat(components.getBody().get(1).getType().contains("contentType")).isTrue();
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleB");
+        assertThat(components.getBody().get(1).getCode()).isEqualTo("bundleC");
+        assertThat(components.getBody().get(0).getComponentTypes().contains("contentType")).isTrue();
+        assertThat(components.getBody().get(1).getComponentTypes().contains("contentType")).isTrue();
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "page"));
 
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
-        assertThat(components.getBody().get(0).getType().contains("page")).isTrue();
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleA");
+        assertThat(components.getBody().get(0).getComponentTypes().contains("page")).isTrue();
 
         request = new PagedListRequest();
         Filter multiValueFilter = new Filter();
@@ -286,7 +286,7 @@ public class EntandoBundleServiceTest {
         request.addFilter(new Filter("type", "plugin"));
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleC");
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleC");
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "resource"));

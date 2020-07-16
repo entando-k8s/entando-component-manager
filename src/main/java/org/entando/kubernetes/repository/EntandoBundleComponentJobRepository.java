@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface EntandoBundleComponentJobRepository extends JpaRepository<EntandoBundleComponentJob, UUID> {
 
     List<EntandoBundleComponentJob> findAllByParentJob(EntandoBundleJob job);
+    List<EntandoBundleComponentJob> findAllByParentJobId(UUID jobId);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)

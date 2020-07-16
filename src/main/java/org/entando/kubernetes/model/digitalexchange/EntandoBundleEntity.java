@@ -15,7 +15,6 @@ package org.entando.kubernetes.model.digitalexchange;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.persistence.Column;
@@ -33,8 +32,6 @@ import org.apache.commons.compress.utils.Sets;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
-import org.entando.kubernetes.model.web.SystemConstants;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -43,17 +40,41 @@ import org.springframework.validation.annotation.Validated;
 @Table(name = "installed_entando_bundles")
 public class EntandoBundleEntity {
 
-
     @Id
     @NotNull
     @Size(min = 1, max = 255)
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 
+
     @NotNull
     @Size(min = 1, max = 255)
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "ecrId", nullable = false )
+    private String ecrId;
+
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "code", nullable = false)
+    private String code;
+
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "title")
+    private String title;
+
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "organization", nullable = false)
+    private String organization;
+
+    @Column(name = "description")
+    private String description;
+
+    @Lob
+    @Column(name = "thumbnail")
+    @Convert(converter = ImageConverter.class)
+    private String thumbnail;
+
 
     @NotNull
     @Size(min = 1, max = 255)
@@ -62,36 +83,12 @@ public class EntandoBundleEntity {
     private Set<String> type;
 
     @OneToOne
-    @JoinColumn(name = "job_id")
-    private EntandoBundleJob job;
+    @JoinColumn(name = "last_job_id")
+    private EntandoBundleJob lastJob;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = SystemConstants.API_DATE_FORMAT)
-    @Column(name = "last_update")
-    private Date lastUpdate;
-
-    @Column(name = "version", nullable = false)
-    private String version;
-
-    @Column(name = "description")
-    private String description;
-
-    @Lob
-    @Column(name = "image")
-    @Convert(converter = ImageConverter.class)
-    private String image;
-
-    @Column(name = "rating")
-    private double rating;
-
-    @Column(name = "installed")
-    private boolean installed;
-
-    @Column(name = "signature")
-    private String signature;
-
-    @Convert(converter = HashMapConverter.class)
-    @Column(name = "metadata")
-    private Map<String, String> metadata;
+    @OneToOne
+    @JoinColumn(name = "installed_job_id")
+    private EntandoBundleJob installedJob;
 
     public static EntandoBundleEntity newFrom(EntandoComponentBundle bundle) {
         EntandoBundleEntity dec = new EntandoBundleEntity();
@@ -106,15 +103,10 @@ public class EntandoBundleEntity {
                     .forEach(bundleComponentTypes::add);
         }
         dec.setId(bundleId);
-        dec.setName(bundle.getSpec().getTitle());
+        dec.setTitle(bundle.getSpec().getTitle());
         dec.setDescription(bd.getDescription());
-        dec.setRating(5);
         dec.setType(bundleComponentTypes);
-        dec.setLastUpdate(new Date());
-        dec.setSignature("");
-        dec.setInstalled(false);
-        dec.setVersion(BundleUtilities.getBundleLatestVersion(bundle).getVersion()); //TODO @luca.cherubin Please check if this shouls always point to latest as was before this refactor!!
-        dec.setImage(bd.getThumbnail());
+        dec.setThumbnail(bd.getThumbnail());
         return dec;
     }
 }

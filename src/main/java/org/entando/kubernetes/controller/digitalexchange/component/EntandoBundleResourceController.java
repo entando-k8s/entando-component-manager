@@ -16,6 +16,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;

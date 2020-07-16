@@ -214,8 +214,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private void saveAsInstalledBundle(EntandoComponentBundle bundle, EntandoBundleJob job) {
         EntandoBundleEntity installedComponent = EntandoBundleEntity.newFrom(bundle);
-        installedComponent.setInstalled(true);
-        installedComponent.setJob(job);
+        installedComponent.setInstalledJob(job);
+        installedComponent.setLastJob(job);
         installedComponentRepo.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");
     }

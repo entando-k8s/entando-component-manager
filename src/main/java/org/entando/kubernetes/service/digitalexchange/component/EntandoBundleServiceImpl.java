@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
-import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
@@ -32,6 +32,7 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.ModelConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -64,90 +65,64 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public PagedMetadata<EntandoBundle> getComponents(PagedListRequest request) {
-        List<EntandoBundleEntity> allComponents = getAllComponents();
-        List<EntandoBundleEntity> localFilteredList = new EntandoBundleListProcessor(request, allComponents)
+        List<EntandoBundle> allComponents = getAllComponents();
+        List<EntandoBundle> localFilteredList = new EntandoBundleListProcessor(request, allComponents)
                 .filterAndSort().toList();
 
-        List<EntandoBundle> sublist = request.getSublist(localFilteredList) //Get page
-                .stream().map(EntandoBundle::fromEntity) //Convert to DTO
-                .collect(Collectors.toList());
+        List<EntandoBundle> sublist = request.getSublist(localFilteredList);
 
         return new PagedMetadata<>(request, sublist, localFilteredList.size());
     }
 
-    private List<EntandoBundleEntity> getAllComponents() {
-        List<EntandoBundleEntity> allComponents = new ArrayList<>();
-        List<EntandoBundleEntity> installedComponents = installedComponentRepo.findAll();
-        List<EntandoBundleEntity> externalComponents = getAvailableComponentsFromDigitalExchanges();
-        List<EntandoBundleEntity> notAlreadyInstalled = installedComponents.isEmpty() ?
-                externalComponents :
-                filterNotInstalledComponents(externalComponents, installedComponents);
+    private List<EntandoBundle> getAllComponents() {
+        return mergeInstalledBundlesWithEcrBundles(installedComponentRepo.findAll(), getComponentsFromECR());
+    }
 
-        allComponents.addAll(installedComponents);
-        allComponents.addAll(notAlreadyInstalled);
-        return allComponents;
+    private List<EntandoBundle> mergeInstalledBundlesWithEcrBundles(List<EntandoBundleEntity> installedBundles,
+            List<EntandoComponentBundle> externalComponents) {
+
+        Map<String, EntandoBundle> bundleMap = installedBundles.stream()
+                .map(ModelConverter::fromEntity)
+                .collect(Collectors.toMap(EntandoBundle::getEcrId, eb -> eb));
+
+        List<EntandoBundle> ecrBundleList = externalComponents.stream().map(ModelConverter::fromECR).collect(Collectors.toList());
+
+        for (EntandoBundle ecrBundle : ecrBundleList) {
+            bundleMap.merge(ecrBundle.getEcrId(), ecrBundle, (installedBundle, externalBundle) -> {
+                installedBundle.setVersions(ecrBundle.getVersions());
+                return installedBundle;
+            });
+        }
+
+        return new ArrayList<>(bundleMap.values());
+
     }
 
     @Override
     public Optional<EntandoBundle> getInstalledComponent(String id) {
         return installedComponentRepo.findById(id)
-                .map(EntandoBundle::fromEntity);
+                .map(ModelConverter::fromEntity);
     }
 
     @Override
     public List<EntandoBundleComponentJob> getBundleInstalledComponents(String id) {
         EntandoBundle bundle = getInstalledComponent(id)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
-        if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
-            return jobComponentRepository.findAllByParentJob(bundle.getJob());
+        if (bundle.getLastJob() != null && bundle.getLastJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+            return jobComponentRepository.findAllByParentJobId(bundle.getLastJob().getId());
         } else {
             throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
         }
     }
 
-
-    private List<EntandoBundleEntity> filterNotInstalledComponents(
-            List<EntandoBundleEntity> externalComponents, List<EntandoBundleEntity> installedComponents) {
-        Map<String, String> installedVersions = installedComponents.stream()
-                .collect(Collectors.toMap(EntandoBundleEntity::getId, EntandoBundleEntity::getVersion));
-
-        List<EntandoBundleEntity> notInstalledComponents = new ArrayList<>();
-        for (EntandoBundleEntity dec : externalComponents) {
-            String k = dec.getId();
-            String v = dec.getVersion();
-            if (installedVersions.containsKey(k) && installedVersions.get(k).equals(v)) {
-                continue;
-            }
-            notInstalledComponents.add(dec);
-        }
-
-        return notInstalledComponents;
-    }
-
-    private List<EntandoBundleEntity> getAvailableComponentsFromDigitalExchanges() {
+    private List<EntandoComponentBundle> getComponentsFromECR() {
         List<EntandoComponentBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
         }
-        return bundles.stream().map(this::convertBundleToLegacyComponent).collect(Collectors.toList());
-    }
-
-
-    public EntandoBundleEntity convertBundleToLegacyComponent(EntandoComponentBundle bundle) {
-        EntandoBundleEntity dec = EntandoBundleEntity.newFrom(bundle);
-        if (checkIfInstalled(bundle)) {
-            dec.setInstalled(true);
-        }
-        return dec;
-    }
-
-    private boolean checkIfInstalled(EntandoComponentBundle bundle) {
-        String componentId = bundle.getMetadata().getName();
-        return jobRepository.findFirstByComponentIdOrderByStartedAtDesc(componentId)
-                .map(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
-                .orElse(false);
+        return bundles;
     }
 
 }

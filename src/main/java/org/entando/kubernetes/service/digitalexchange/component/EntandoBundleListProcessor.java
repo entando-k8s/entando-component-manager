@@ -19,13 +19,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterUtils;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.request.RequestListProcessor;
 
-public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundleEntity> {
+public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundle> {
 
     private static final String ID = "id";
     private static final String NAME = "name";
@@ -34,26 +34,26 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     private static final String VERSION = "version";
     private static final String DESCRIPTION = "description";
 
-    public EntandoBundleListProcessor(PagedListRequest listRequest, List<EntandoBundleEntity> components) {
+    public EntandoBundleListProcessor(PagedListRequest listRequest, List<EntandoBundle> components) {
         super(listRequest, components);
     }
 
-    public EntandoBundleListProcessor(PagedListRequest listRequest, Stream<EntandoBundleEntity> components) {
+    public EntandoBundleListProcessor(PagedListRequest listRequest, Stream<EntandoBundle> components) {
         super(listRequest, components);
     }
 
     @Override
-    protected Function<Filter, Predicate<EntandoBundleEntity>> getPredicates() {
+    protected Function<Filter, Predicate<EntandoBundle>> getPredicates() {
         return filter -> {
             switch (filter.getAttribute()) {
                 case ID:
                     return c -> FilterUtils.filterString(filter, c.getId());
                 case NAME:
-                    return c -> FilterUtils.filterString(filter, c.getName());
+                    return c -> FilterUtils.filterString(filter, c.getCode());
                 case TYPE:
-                    return c -> c.getType().stream().anyMatch(t -> FilterUtils.filterString(filter, t));
+                    return c -> c.getComponentTypes().stream().anyMatch(t -> FilterUtils.filterString(filter, t));
                 case VERSION:
-                    return c -> FilterUtils.filterString(filter, c.getVersion());
+                    return c -> c.getVersions().stream().anyMatch(v -> FilterUtils.filterString(filter, v.getVersion()));
                 case DESCRIPTION:
                     return c -> FilterUtils.filterString(filter, c.getDescription());
                 case INSTALLED:
@@ -65,15 +65,13 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     }
 
     @Override
-    protected Function<String, Comparator<EntandoBundleEntity>> getComparators() {
+    protected Function<String, Comparator<EntandoBundle>> getComparators() {
         return sort -> {
             switch (sort) {
-                case VERSION:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getVersion(), b.getVersion());
                 case INSTALLED:
                     return (a, b) -> Boolean.compare(a.isInstalled(), b.isInstalled());
                 case NAME:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getName(), b.getName());
+                    return (a, b) -> StringUtils.compareIgnoreCase(a.getCode(), b.getCode());
                 case ID: // id is the default sorting field
                 default:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getId(), b.getId());
