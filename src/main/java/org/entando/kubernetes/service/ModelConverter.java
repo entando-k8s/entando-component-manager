@@ -18,7 +18,7 @@ public class ModelConverter {
 
     public static EntandoBundle fromEntity(EntandoBundleEntity entity) {
             return EntandoBundle.builder()
-                    .id(entity.getId())
+                    .id(entity.getId().toString())
                     .ecrId(entity.getEcrId())
                     .code(entity.getCode())
                     .title(entity.getTitle())

@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoBundleEntity, String> {
 
-
     @Transactional
     void deleteById(String id);
 }

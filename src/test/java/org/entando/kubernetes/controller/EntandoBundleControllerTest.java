@@ -213,7 +213,8 @@ public class EntandoBundleControllerTest {
         installJob.setFinishedAt(LocalDateTime.of(2020, 7, 15, 12,24,30));
 
         EntandoBundleEntity component = new EntandoBundleEntity();
-        component.setId("my-component");
+        component.setId(UUID.randomUUID());
+        component.setCode("my-component");
         component.setTitle("my-component-name");
         component.setInstalledJob(installJob);
         component.setLastJob(installJob);

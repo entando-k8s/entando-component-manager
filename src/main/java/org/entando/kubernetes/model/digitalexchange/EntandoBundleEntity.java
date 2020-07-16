@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -24,6 +25,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -42,9 +44,8 @@ public class EntandoBundleEntity {
 
     @Id
     @NotNull
-    @Size(min = 1, max = 255)
     @Column(name = "id", unique = true, nullable = false)
-    private String id;
+    private UUID id;
 
 
     @NotNull
@@ -90,10 +91,15 @@ public class EntandoBundleEntity {
     @JoinColumn(name = "installed_job_id")
     private EntandoBundleJob installedJob;
 
+    @PrePersist
+    public void generateId() {
+        this.id = UUID.randomUUID();
+    }
+
+
     public static EntandoBundleEntity newFrom(EntandoComponentBundle bundle) {
         EntandoBundleEntity dec = new EntandoBundleEntity();
-        String bundleId = bundle.getMetadata().getName();
-        EntandoComponentBundleSpec bd = bundle.getSpec();
+        EntandoComponentBundleSpec bspc = bundle.getSpec();
         Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
         if (bundle.getMetadata().getLabels() != null) {
             bundle.getMetadata().getLabels()
@@ -102,11 +108,13 @@ public class EntandoBundleEntity {
                     .map(Entry::getKey)
                     .forEach(bundleComponentTypes::add);
         }
-        dec.setId(bundleId);
-        dec.setTitle(bundle.getSpec().getTitle());
-        dec.setDescription(bd.getDescription());
+        dec.setEcrId(bundle.getMetadata().getName());
+        dec.setCode(bspc.getCode());
+        dec.setTitle(bspc.getTitle());
+        dec.setDescription(bspc.getDescription());
+        dec.setThumbnail(bspc.getThumbnail());
+        dec.setOrganization(bspc.getOrganization());
         dec.setType(bundleComponentTypes);
-        dec.setThumbnail(bd.getThumbnail());
         return dec;
     }
 }

@@ -5,6 +5,7 @@ import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESP
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.TestEntitiesGenerator;
@@ -15,6 +16,8 @@ import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -67,8 +70,11 @@ public class EntandoBundleServiceTest {
     @Test
     public void shouldReturnInstalledComponents() {
         EntandoComponentBundle bundle = TestEntitiesGenerator.getTestBundle();
+
+
         EntandoBundleEntity component = EntandoBundleEntity.newFrom(bundle);
-        component.setInstalled(true);
+        EntandoBundleJob installJob = getTestInstallJob(component);
+        component.setInstalledJob(installJob);
 
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
         PagedMetadata<EntandoBundle> components = service.getComponents();
@@ -143,7 +149,6 @@ public class EntandoBundleServiceTest {
                 .build();
         EntandoComponentBundleSpec specBundleB = new EntandoComponentBundleSpecBuilder()
                 .withVersions(baseSpec.getVersions())
-
                 .withTitle("bundleB")
                 .withVersions(baseSpec.getVersions())
                 .withDescription(baseSpec.getDescription())
@@ -165,7 +170,8 @@ public class EntandoBundleServiceTest {
                 .build();
 
         EntandoBundleEntity installedComponent = EntandoBundleEntity.newFrom(bundleB);
-        installedComponent.setInstalled(true);
+        EntandoBundleJob installJob = getTestInstallJob(installedComponent);
+        installedComponent.setInstalledJob(installJob);
 
         k8SServiceClient.addInMemoryBundle(bundleA);
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(installedComponent));
@@ -183,6 +189,17 @@ public class EntandoBundleServiceTest {
         components = service.getComponents(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
         assertThat(components.getBody().get(0).getCode()).isEqualTo("bundleA");
+    }
+
+    private EntandoBundleJob getTestInstallJob(EntandoBundleEntity installedComponent) {
+        EntandoBundleJob installJob = new EntandoBundleJob();
+        installJob.setStartedAt(LocalDateTime.of(2020, 12, 13, 12, 0 ));
+        installJob.setFinishedAt(LocalDateTime.of(2020, 12, 13, 12, 1));
+        installJob.setComponentId(installedComponent.getEcrId());
+        installJob.setComponentName(installedComponent.getCode());
+        installJob.setComponentVersion("0.0.1");
+        installJob. setStatus(JobStatus.INSTALL_COMPLETED);
+        return installJob;
     }
 
     @Test
