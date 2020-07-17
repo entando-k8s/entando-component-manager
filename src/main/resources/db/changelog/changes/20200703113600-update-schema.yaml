@@ -92,4 +92,3 @@ databaseChangeLog:
 #            tableName: ENTANDO_BUNDLE_JOBS
 #            where:  status='INSTALL_ROLLBACK'
 
-
