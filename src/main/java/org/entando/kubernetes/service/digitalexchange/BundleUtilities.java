@@ -12,9 +12,10 @@ public class BundleUtilities {
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
         String version = versionReference;
-        if (!hasVersionFormat(versionReference)) {
+        if (!isSemanticVersion(versionReference)) {
             version = (String) bundle.getSpec().getDetails().getDistTags().get(versionReference);
         }
+
         if (Strings.isNullOrEmpty(version)) {
             throw new EntandoComponentManagerException(
                     "Invalid version '" + versionReference + "' for bundle '" + bundle.getSpec().getDetails().getName()
@@ -24,8 +25,17 @@ public class BundleUtilities {
 
     }
 
-    private static boolean hasVersionFormat(String versionToFind) {
-        // Check if the provided string has version format ##.##.##
-        return versionToFind.matches("\\d+\\.\\d+") || versionToFind.matches("\\d+\\.\\d+\\.\\d+");
+    public static boolean isSemanticVersion(String versionToFind) {
+        String possibleSemVer = versionToFind.startsWith("v") ? versionToFind.substring(1) : versionToFind;
+        return possibleSemVer.matches(getOfficialSemanticVersionRegex());
+    }
+
+    /**
+     * Check semantic version definition: https://semver.org/#is-v123-a-semantic-version
+     *
+     * @return The semantic version PCRE compatible regular expression
+     */
+    public static String getOfficialSemanticVersionRegex() {
+        return "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
     }
 }

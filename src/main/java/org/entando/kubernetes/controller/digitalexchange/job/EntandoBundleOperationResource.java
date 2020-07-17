@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
@@ -27,8 +28,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @OpenAPIDefinition(tags = {@Tag(name = "digital-exchange"), @Tag(name = "installation")})
 @RequestMapping(value = "/components")
@@ -39,7 +40,7 @@ public interface EntandoBundleOperationResource {
     @PostMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<EntandoBundleJob>> install(
             @PathVariable("component") String componentId,
-            @RequestParam(name = "version", required = true, defaultValue = "latest") String version);
+            @RequestBody InstallRequest request);
 
     @Operation(description = "Starts component remove job ")
     @ApiResponse(responseCode = "201", description = "Created")
