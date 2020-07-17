@@ -14,10 +14,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
@@ -53,16 +53,16 @@ public class EntandoBundleControllerTest {
 
     @Test
     public void shouldThrowBadRequestExceptionWhenGettingSummaryOfNotInstalledComponent() {
-        when(componentsService.getInstalledComponent(any())).thenReturn(Optional.empty());
-        when(componentsService.getBundleInstalledComponents(any())).thenCallRealMethod();
+        when(componentsService.getInstalledBundle(any())).thenReturn(Optional.empty());
+        when(componentsService.getInstalledBundleComponents(any())).thenCallRealMethod();
         assertThrows(BundleNotInstalledException.class, () -> controller.getBundleUsageSummary("any"));
     }
 
     @Test
     public void shouldThrowIfInstalledBundleDoesntHaveAssociatedCompletedJob() {
-        EntandoBundle component = ModelConverter.fromEntity(getTestComponent());
-        when(componentsService.getBundleInstalledComponents(any())).thenCallRealMethod();
-        when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
+        EntandoBundle component = ModelConverter.fromEntity(getTestComponentWithoutJob());
+        when(componentsService.getInstalledBundle(any())).thenReturn(Optional.of(component));
+        when(componentsService.getInstalledBundleComponents(any())).thenCallRealMethod();
 
         assertThrows(EntandoComponentManagerException.class, () -> controller.getBundleUsageSummary("any"));
 
@@ -72,7 +72,7 @@ public class EntandoBundleControllerTest {
     public void shouldReturnEmptySummaryIfBundleHasNoComponents() {
         EntandoBundle component = ModelConverter.fromEntity(getTestComponent());
         component.setLastJob(getTestJob());
-        when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
+        when(componentsService.getInstalledBundle(any())).thenReturn(Optional.of(component));
 
         ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
@@ -92,8 +92,8 @@ public class EntandoBundleControllerTest {
         EntandoBundle component = ModelConverter.fromEntity(getTestComponent());
         component.setLastJob(job);
 
-        when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
-        when(componentsService.getBundleInstalledComponents(any())).thenReturn(Collections.singletonList(componentJob));
+        when(componentsService.getInstalledBundle(any())).thenReturn(Optional.of(component));
+        when(componentsService.getInstalledBundleComponents(any())).thenReturn(Collections.singletonList(componentJob));
 
         ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
@@ -125,8 +125,8 @@ public class EntandoBundleControllerTest {
         EntandoBundle component = ModelConverter.fromEntity(getTestComponent());
         component.setLastJob(job);
 
-        when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
-        when(componentsService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
+        when(componentsService.getInstalledBundle(any())).thenReturn(Optional.of(component));
+        when(componentsService.getInstalledBundleComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
         when(coreClient.getWidgetUsage(eq("my-magic-widget"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget", 11));
         when(coreClient.getPageUsage(eq("my-magic-page"))).thenReturn(
@@ -175,8 +175,8 @@ public class EntandoBundleControllerTest {
         EntandoBundle component = ModelConverter.fromEntity(getTestComponent());
         component.setLastJob(job);
 
-        when(componentsService.getInstalledComponent(any())).thenReturn(Optional.of(component));
-        when(componentsService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
+        when(componentsService.getInstalledBundle(any())).thenReturn(Optional.of(component));
+        when(componentsService.getInstalledBundleComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
         when(coreClient.getWidgetUsage(eq("my-magic-widget"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget", 11));
         when(coreClient.getWidgetUsage(eq("my-other-widget"))).thenReturn(
@@ -203,9 +203,17 @@ public class EntandoBundleControllerTest {
 
     }
 
+    private EntandoBundleEntity getTestComponentWithoutJob() {
+        EntandoBundleEntity result = getTestComponent();
+        result.setLastJob(null);
+        result.setInstalledJob(null);
+        return result;
+    }
+
     private EntandoBundleEntity getTestComponent() {
 
         EntandoBundleJob installJob = new EntandoBundleJob();
+        installJob.setId(UUID.randomUUID());
         installJob.setComponentId("my-component");
         installJob.setStatus(JobStatus.INSTALL_COMPLETED);
         installJob.setComponentName("my-component-name");

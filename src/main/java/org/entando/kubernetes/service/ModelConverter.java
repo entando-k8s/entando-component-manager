@@ -1,13 +1,13 @@
 package org.entando.kubernetes.service;
 
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.compress.utils.Sets;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.controller.digitalexchange.component.model.EntandoBundleDTO;
 import org.entando.kubernetes.model.bundle.BundleVersion;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
@@ -42,8 +42,8 @@ public class ModelConverter {
         }
 
         return EntandoBundle.builder()
-                .id(null)
-                .ecrId(ecb.getMetadata().getName())
+                .id(ecb.getMetadata().getName())
+                .ecrId(UUID.randomUUID().toString()) //TODO should be which hash function? hash(organization+code)
                 .code(ecb.getSpec().getCode())
                 .title(StringUtils.defaultIfBlank(ecb.getSpec().getTitle(), ecb.getSpec().getCode()))
                 .description(ecb.getSpec().getDescription())
@@ -53,7 +53,7 @@ public class ModelConverter {
                 .versions(ecb.getSpec().getVersions().stream().map(v ->
                         BundleVersion.builder()
                                 .version(v.getVersion())
-                                .timestamp(ZonedDateTime.parse(v.getTimestamp()))
+                                .timestamp(ZonedDateTime.parse(v.getTimestamp(), DateTimeFormatter.ISO_DATE_TIME))
                                 .build())
                         .collect(Collectors.toList()))
                 .build();

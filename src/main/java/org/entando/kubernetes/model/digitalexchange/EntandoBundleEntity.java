@@ -13,8 +13,6 @@
  */
 package org.entando.kubernetes.model.digitalexchange;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.util.Date;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
@@ -50,7 +48,7 @@ public class EntandoBundleEntity {
 
     @NotNull
     @Size(min = 1, max = 255)
-    @Column(name = "ecrId", nullable = false )
+    @Column(name = "ecr_id", nullable = false )
     private String ecrId;
 
     @NotNull
@@ -75,7 +73,6 @@ public class EntandoBundleEntity {
     @Column(name = "thumbnail")
     @Convert(converter = ImageConverter.class)
     private String thumbnail;
-
 
     @NotNull
     @Size(min = 1, max = 255)
@@ -108,6 +105,7 @@ public class EntandoBundleEntity {
                     .map(Entry::getKey)
                     .forEach(bundleComponentTypes::add);
         }
+
         dec.setEcrId(bundle.getMetadata().getName());
         dec.setCode(bspc.getCode());
         dec.setTitle(bspc.getTitle());

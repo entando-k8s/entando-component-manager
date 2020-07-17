@@ -2,13 +2,11 @@ package org.entando.kubernetes.model.bundle;
 
 import java.time.ZonedDateTime;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 
 @Data

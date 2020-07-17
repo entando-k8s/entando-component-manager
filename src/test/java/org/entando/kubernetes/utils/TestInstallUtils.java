@@ -121,6 +121,7 @@ public class TestInstallUtils {
                 .withDescription("A bundle containing some demo components for Entando6")
                 .withCode("todomvc")
                 .withTitle("todomvc")
+                .withOrganization("entando")
                 .addNewVersion()
                 .withVersion("0.0.1")
                 .withIntegrity(

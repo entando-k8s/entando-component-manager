@@ -22,11 +22,11 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface EntandoBundleService {
 
-    PagedMetadata<EntandoBundle> getComponents();
+    PagedMetadata<EntandoBundle> listBundles();
 
-    PagedMetadata<EntandoBundle> getComponents(PagedListRequest request);
+    PagedMetadata<EntandoBundle> listBundles(PagedListRequest request);
 
-    Optional<EntandoBundle> getInstalledComponent(String id);
+    Optional<EntandoBundle> getInstalledBundle(String ecrId);
 
-    List<EntandoBundleComponentJob> getBundleInstalledComponents(String id);
+    List<EntandoBundleComponentJob> getInstalledBundleComponents(String ecrId);
 }

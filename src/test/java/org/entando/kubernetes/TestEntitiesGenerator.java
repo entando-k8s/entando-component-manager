@@ -21,13 +21,17 @@ public class TestEntitiesGenerator {
 
     public static EntandoComponentBundleSpec getTestEntandoComponentBundleSpec() {
         return new EntandoComponentBundleSpecBuilder()
+                .withTitle("My Demo Bundle")
                 .withDescription("A bundle containing some demo components for Entano6")
                 .withCode("my-bundle")
+                .withOrganization("entando")
+                .withThumbnail("resources/thumbail.png")
                 .addNewVersion()
                 .withVersion("0.0.1")
                 .withIntegrity(
                         "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
                 .withUrl("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
+                .withTimestamp("2020-07-19T16:20:00.000Z")
                 .endVersion()
                 .build();
     }

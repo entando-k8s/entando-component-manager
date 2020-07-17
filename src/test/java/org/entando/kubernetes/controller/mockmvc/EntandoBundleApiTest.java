@@ -1,6 +1,7 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.times;
@@ -17,9 +18,6 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
-import org.entando.kubernetes.model.bundle.EntandoComponentBundleBuilder;
-import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpec;
-import org.entando.kubernetes.model.bundle.EntandoComponentBundleSpecBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -80,12 +78,16 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0]").isMap())
                 .andExpect(jsonPath("payload[0]", hasKey("id")))
-                .andExpect(jsonPath("payload[0]", hasKey("name")))
-                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
-                .andExpect(jsonPath("payload[0]", hasKey("version")))
-                .andExpect(jsonPath("payload[0]", hasKey("type")))
+                .andExpect(jsonPath("payload[0]", hasKey("code")))
+                .andExpect(jsonPath("payload[0]", hasKey("organization")))
+                .andExpect(jsonPath("payload[0]", hasKey("title")))
+                .andExpect(jsonPath("payload[0]", hasKey("componentTypes")))
                 .andExpect(jsonPath("payload[0]", hasKey("description")))
-                .andExpect(jsonPath("payload[0]", hasKey("image")))
+                .andExpect(jsonPath("payload[0]", hasKey("thumbnail")))
+                .andExpect(jsonPath("payload[0]", hasKey("lastJob")))
+                .andExpect(jsonPath("payload[0]", hasKey("installedJob")))
+                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
+                .andExpect(jsonPath("payload[0]", hasKey("versions")))
                 .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
@@ -122,7 +124,7 @@ public class EntandoBundleApiTest {
     public void shouldNotBeAbleToGetComponentsFromNotRegisteredDigitalExchanges() throws Exception {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         EntandoComponentBundle bundle = getTestBundle();
-        bundle.getMetadata().setNamespace("my-custom-namespace");
+        bundle.getMetadata().setNamespace("not-existent-namespace");
         kc.addInMemoryBundle(bundle);
 
         mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
@@ -138,30 +140,5 @@ public class EntandoBundleApiTest {
         mockMvc.perform(get("/components/temp/usage").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
-
-    private EntandoComponentBundle getTestBundle() {
-        return new EntandoComponentBundleBuilder()
-                .withNewMetadata()
-                .withName("my-bundle")
-                .withNamespace("entando-de-bundles")
-                .addToLabels("widget", "true")
-                .endMetadata()
-                .withSpec(getTestEntandoComponentBundleSpec()).build();
-
-    }
-
-    private EntandoComponentBundleSpec getTestEntandoComponentBundleSpec() {
-        return new EntandoComponentBundleSpecBuilder()
-                .withDescription("A bundle containing some demo components for Entando6")
-                .withCode("inail_bundle")
-                .addNewVersion()
-                .withVersion("0.0.1")
-                .withIntegrity(
-                        "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
-                .withUrl("http://localhost:8081/repository/npm-internal/inail_bundle/-/inail_bundle-0.0.1.tgz")
-                .endVersion()
-                .build();
-    }
-
 
 }

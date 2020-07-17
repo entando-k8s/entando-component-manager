@@ -20,9 +20,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
-import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoComponentBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
@@ -59,12 +59,12 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
-    public PagedMetadata<EntandoBundle> getComponents() {
-        return getComponents(new PagedListRequest());
+    public PagedMetadata<EntandoBundle> listBundles() {
+        return listBundles(new PagedListRequest());
     }
 
     @Override
-    public PagedMetadata<EntandoBundle> getComponents(PagedListRequest request) {
+    public PagedMetadata<EntandoBundle> listBundles(PagedListRequest request) {
         List<EntandoBundle> allComponents = getAllComponents();
         List<EntandoBundle> localFilteredList = new EntandoBundleListProcessor(request, allComponents)
                 .filterAndSort().toList();
@@ -99,19 +99,19 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
-    public Optional<EntandoBundle> getInstalledComponent(String id) {
-        return installedComponentRepo.findById(id)
+    public Optional<EntandoBundle> getInstalledBundle(String ecrId) {
+        return installedComponentRepo.findByEcrId(ecrId)
                 .map(ModelConverter::fromEntity);
     }
 
     @Override
-    public List<EntandoBundleComponentJob> getBundleInstalledComponents(String id) {
-        EntandoBundle bundle = getInstalledComponent(id)
-                .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
+    public List<EntandoBundleComponentJob> getInstalledBundleComponents(String ecrId) {
+        EntandoBundle bundle = getInstalledBundle(ecrId)
+                .orElseThrow(() -> new BundleNotInstalledException("Bundle " + ecrId + " is not installed in the system"));
         if (bundle.getLastJob() != null && bundle.getLastJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
             return jobComponentRepository.findAllByParentJobId(bundle.getLastJob().getId());
         } else {
-            throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
+            throw new EntandoComponentManagerException("Bundle " + ecrId + " is not installed correctly");
         }
     }
 

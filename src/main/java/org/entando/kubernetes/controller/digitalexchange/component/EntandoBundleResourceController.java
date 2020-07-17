@@ -38,7 +38,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
-        PagedMetadata<EntandoBundle> pagedBundles = bundleService.getComponents(requestList);
+        PagedMetadata<EntandoBundle> pagedBundles = bundleService.listBundles(requestList);
         PagedRestResponse<EntandoBundle> response = new PagedRestResponse<>(pagedBundles);
         return ResponseEntity.ok(response);
     }
@@ -47,7 +47,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     public ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(String component) {
         //I should be able to retrieve the related installed components given component id
         List<EntandoBundleComponentJob> bundleInstalledComponents = bundleService
-                .getBundleInstalledComponents(component);
+                .getInstalledBundleComponents(component);
         //For each installed components, I should check the summary
         List<EntandoCoreComponentUsage> usageList = bundleInstalledComponents.stream()
                 .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getComponentId()))
