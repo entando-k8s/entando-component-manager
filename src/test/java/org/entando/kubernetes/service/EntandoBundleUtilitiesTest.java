@@ -32,5 +32,12 @@ public class EntandoBundleUtilitiesTest {
         assertThat(version).isEqualTo("0.0.1");
     }
 
+    @Test
+    public void shouldVerifySemVersion() {
+        assertThat(BundleUtilities.isSemanticVersion("v0.0.1")).isTrue();
+        assertThat(BundleUtilities.isSemanticVersion("0.1.10-SNAPSHOT")).isTrue();
+        assertThat(BundleUtilities.isSemanticVersion("my-great-version")).isFalse();
+    }
+
 
 }

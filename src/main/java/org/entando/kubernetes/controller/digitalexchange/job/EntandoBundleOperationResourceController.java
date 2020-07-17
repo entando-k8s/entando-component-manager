@@ -1,11 +1,13 @@
 package org.entando.kubernetes.controller.digitalexchange.job;
 
+import static java.util.Optional.ofNullable;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -16,7 +18,7 @@ import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallSe
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
@@ -30,11 +32,12 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJob>> install(
             @PathVariable("component") String componentId,
-            @RequestParam(name = "version", required = true, defaultValue = "latest") String version) {
+            @RequestBody(required = false) InstallRequest request) {
 
         EntandoBundleJob installJob;
         try {
-            installJob = installService.install(componentId, version);
+            installJob = installService.install(componentId, ofNullable(request)
+                    .orElse(new InstallRequest("latest")).getVersion());
         } catch (K8SServiceClientException ex) {
             throw new BundleNotFoundException(componentId);
         }
