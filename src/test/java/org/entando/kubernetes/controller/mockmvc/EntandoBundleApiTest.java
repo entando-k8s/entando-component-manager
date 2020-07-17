@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -104,12 +105,16 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0]").isMap())
                 .andExpect(jsonPath("payload[0]", hasKey("id")))
-                .andExpect(jsonPath("payload[0]", hasKey("name")))
-                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
-                .andExpect(jsonPath("payload[0]", hasKey("version")))
-                .andExpect(jsonPath("payload[0]", hasKey("type")))
+                .andExpect(jsonPath("payload[0]", hasKey("code")))
+                .andExpect(jsonPath("payload[0]", hasKey("title")))
                 .andExpect(jsonPath("payload[0]", hasKey("description")))
-                .andExpect(jsonPath("payload[0]", hasKey("image")))
+                .andExpect(jsonPath("payload[0]", hasKey("organization")))
+                .andExpect(jsonPath("payload[0]", hasKey("thumbnail")))
+                .andExpect(jsonPath("payload[0]", hasKey("lastUpdate")))
+                .andExpect(jsonPath("payload[0]", hasKey("versions")))
+                .andExpect(jsonPath("payload[0]", hasKey("componentTypes")))
+                .andExpect(jsonPath("payload[0]", hasKey("lastJob")))
+                .andExpect(jsonPath("payload[0]", hasKey("installedJob")))
                 .andExpect(jsonPath("metaData.page").value(1));
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();

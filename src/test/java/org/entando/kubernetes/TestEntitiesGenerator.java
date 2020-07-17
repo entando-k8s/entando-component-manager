@@ -14,6 +14,7 @@ public class TestEntitiesGenerator {
                 .withNewMetadata()
                 .withName("my-bundle")
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
+                .addToLabels("widget", "true")
                 .endMetadata()
                 .withSpec(TestEntitiesGenerator.getTestEntandoComponentBundleSpec()).build();
 
