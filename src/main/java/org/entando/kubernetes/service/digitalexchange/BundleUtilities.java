@@ -6,6 +6,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 public class BundleUtilities {
 
+    public static final String OFFICIAL_SEMANTIC_VERSION_REGEX = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+
     private BundleUtilities() {
     }
 
@@ -36,6 +38,6 @@ public class BundleUtilities {
      * @return The semantic version PCRE compatible regular expression
      */
     public static String getOfficialSemanticVersionRegex() {
-        return "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+        return OFFICIAL_SEMANTIC_VERSION_REGEX;
     }
 }
