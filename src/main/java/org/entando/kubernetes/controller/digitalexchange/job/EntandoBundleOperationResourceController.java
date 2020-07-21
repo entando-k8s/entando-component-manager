@@ -35,9 +35,13 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
             @RequestBody(required = false) InstallRequest request) {
 
         EntandoBundleJob installJob;
+        String version = "latest";
+        if (request != null && request.getVersion() != null) {
+            version = request.getVersion();
+        }
+
         try {
-            installJob = installService.install(componentId, ofNullable(request)
-                    .orElse(new InstallRequest("latest")).getVersion());
+            installJob = installService.install(componentId, version);
         } catch (K8SServiceClientException ex) {
             throw new BundleNotFoundException(componentId);
         }
