@@ -1,12 +1,14 @@
 package org.entando.kubernetes;
 
 import java.util.UUID;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleJob;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 
 public class TestEntitiesGenerator {
@@ -62,18 +64,49 @@ public class TestEntitiesGenerator {
 
     public static EntandoBundleEntity getTestComponent() {
         EntandoBundleEntity component = new EntandoBundleEntity();
-        component.setId(UUID.randomUUID().toString());
-        component.setName("my-bundle-name");
+        component.setId("my-bundle");
+        component.setName("My Bundle Title");
         component.setInstalled(true);
         return component;
     }
 
+    public static EntandoBundleEntity getTestComponent(String code, String title) {
+        EntandoBundleEntity component = getTestComponent();
+        component.setId(code);
+        component.setName(title);
+        return component;
+    }
+
+    public static EntandoBundle getTestEntandoBundle() {
+        return getTestEntandoBundle(null);
+    }
+
+    public static EntandoBundle getTestEntandoBundle(EntandoBundleJob installJob) {
+        return EntandoBundle.builder()
+                .code("my-bundle")
+                .title("My Bundle Title")
+                .installedJob(installJob)
+                .lastJob(installJob)
+                .build();
+    }
+
     public static EntandoBundleJob getTestJob() {
-        EntandoBundleJob job = new EntandoBundleJob();
-        job.setId(UUID.randomUUID());
-        job.setComponentId("my-bundle");
-        job.setComponentName("My Bundle Name");
-        job.setStatus(JobStatus.INSTALL_COMPLETED);
+        return EntandoBundleJob.fromEntity(getTestJobEntity());
+    }
+
+    public static EntandoBundleJobEntity getTestJobEntity(String code, String title) {
+        EntandoBundleJobEntity job = getTestJobEntity();
+        job.setComponentId(code);
+        job.setComponentName(title);
         return job;
+    }
+
+    public static EntandoBundleJobEntity getTestJobEntity() {
+        return EntandoBundleJobEntity.builder()
+                .id(UUID.randomUUID())
+                .componentId("my-bundle")
+                .componentName("My Bundle Title")
+                .status(JobStatus.INSTALL_COMPLETED)
+                .build();
     }
 }

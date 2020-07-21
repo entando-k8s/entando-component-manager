@@ -18,7 +18,7 @@ import java.util.Optional;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 
@@ -30,7 +30,7 @@ public interface EntandoBundleService {
 
     Optional<EntandoBundle> getInstalledBundle(String id);
 
-    List<EntandoBundleComponentJob> getBundleInstalledComponents(String id);
+    List<EntandoBundleComponentJobEntity> getBundleInstalledComponents(String id);
 
     //Utility converters
     EntandoBundle convertToBundleFromEntity(EntandoBundleEntity entity);

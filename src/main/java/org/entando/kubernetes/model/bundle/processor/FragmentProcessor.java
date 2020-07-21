@@ -15,7 +15,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -55,7 +55,7 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
     }
 
     @Override
-    public List<Installable<FragmentDescriptor>> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<FragmentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.FRAGMENT)
                 .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
@@ -63,7 +63,7 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
     }
 
     @Override
-    public FragmentDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+    public FragmentDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return FragmentDescriptor.builder()
                 .code(component.getComponentId())
                 .build();

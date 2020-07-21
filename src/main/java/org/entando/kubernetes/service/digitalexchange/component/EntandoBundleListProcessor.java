@@ -28,8 +28,10 @@ import org.entando.kubernetes.model.web.request.RequestListProcessor;
 public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundle> {
 
     private static final String CODE = "code";
+    private static final String TITLE = "title";
     private static final String TYPE = "type";
     private static final String DESCRIPTION = "description";
+    private static final String INSTALLED = "installed";
 
     public EntandoBundleListProcessor(PagedListRequest listRequest, List<EntandoBundle> components) {
         super(listRequest, components);
@@ -45,10 +47,14 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
             switch (filter.getAttribute()) {
                 case CODE:
                     return c -> FilterUtils.filterString(filter, c.getCode());
+                case TITLE:
+                    return c -> FilterUtils.filterString(filter, c.getTitle());
                 case TYPE:
                     return c -> c.getComponentTypes().stream().anyMatch(t -> FilterUtils.filterString(filter, t));
                 case DESCRIPTION:
                     return c -> FilterUtils.filterString(filter, c.getDescription());
+                case INSTALLED:
+                    return c -> FilterUtils.filterBoolean(filter, c.isInstalled());
                 default:
                     return null;
             }
@@ -59,6 +65,8 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     protected Function<String, Comparator<EntandoBundle>> getComparators() {
         return sort -> {
             switch (sort) {
+                case TITLE:
+                    return (a, b) -> StringUtils.compareIgnoreCase(a.getTitle(), b.getTitle());
                 case CODE: //default comparator field
                 default:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getCode(), b.getCode());

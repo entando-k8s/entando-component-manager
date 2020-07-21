@@ -23,7 +23,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 @Entity
 @NoArgsConstructor
 @Table(name = "entando_bundle_component_jobs")
-public class EntandoBundleComponentJob implements TrackableJob {
+public class EntandoBundleComponentJobEntity implements TrackableJob {
 
     @Id
     @Column
@@ -31,7 +31,7 @@ public class EntandoBundleComponentJob implements TrackableJob {
 
     @ManyToOne
     @JoinColumn(name = "parent_entando_bundle_job_id")
-    private EntandoBundleJob parentJob;
+    private EntandoBundleJobEntity parentJob;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -65,8 +65,8 @@ public class EntandoBundleComponentJob implements TrackableJob {
         this.id = UUID.randomUUID();
     }
 
-    public static EntandoBundleComponentJob getNewCopy(EntandoBundleComponentJob o) {
-        EntandoBundleComponentJob newComponent = new EntandoBundleComponentJob();
+    public static EntandoBundleComponentJobEntity getNewCopy(EntandoBundleComponentJobEntity o) {
+        EntandoBundleComponentJobEntity newComponent = new EntandoBundleComponentJobEntity();
         newComponent.setParentJob(o.getParentJob());
         newComponent.setComponentType(o.getComponentType());
         newComponent.setComponentId(o.getComponentId());

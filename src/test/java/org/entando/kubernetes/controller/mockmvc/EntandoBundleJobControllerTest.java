@@ -16,7 +16,7 @@ import java.util.UUID;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -51,7 +51,7 @@ public class EntandoBundleJobControllerTest {
     @Autowired
     private EntandoBundleJobRepository jobRepository;
 
-    Map<UUID, EntandoBundleJob> jobs;
+    Map<UUID, EntandoBundleJobEntity> jobs;
 
     @BeforeEach
     public void setup() {
@@ -90,7 +90,7 @@ public class EntandoBundleJobControllerTest {
     @Test
     public void shouldReturnJobById() throws Exception {
 
-        EntandoBundleJob job = jobs.entrySet().stream().findFirst().map(Entry::getValue).get();
+        EntandoBundleJobEntity job = jobs.entrySet().stream().findFirst().map(Entry::getValue).get();
 
         mvc.perform(get("/jobs/{id}", job.getId()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -144,7 +144,7 @@ public class EntandoBundleJobControllerTest {
     private void populateTestDatabase() {
         jobs = new HashMap<>();
 
-        EntandoBundleJob job1 = new EntandoBundleJob();
+        EntandoBundleJobEntity job1 = new EntandoBundleJobEntity();
         job1.setComponentId("id1");
         job1.setComponentName("my-bundle");
         job1.setProgress(1.0);
@@ -153,10 +153,10 @@ public class EntandoBundleJobControllerTest {
         job1.setFinishedAt(job1.getStartedAt().plusMinutes(1L));
         job1.setStatus(JobStatus.INSTALL_COMPLETED);
 
-        EntandoBundleJob _job1 = jobRepository.save(job1);
+        EntandoBundleJobEntity _job1 = jobRepository.save(job1);
         jobs.put(_job1.getId(), _job1);
 
-        EntandoBundleJob job2 = new EntandoBundleJob();
+        EntandoBundleJobEntity job2 = new EntandoBundleJobEntity();
         job2.setComponentId("id2");
         job2.setComponentName("my-other-bundle");
         job2.setComponentVersion("1.0.0");
@@ -165,10 +165,10 @@ public class EntandoBundleJobControllerTest {
         job2.setFinishedAt(null);
         job2.setStatus(JobStatus.INSTALL_IN_PROGRESS);
 
-        EntandoBundleJob _job2 = jobRepository.save(job2);
+        EntandoBundleJobEntity _job2 = jobRepository.save(job2);
         jobs.put(_job2.getId(), _job2);
 
-        EntandoBundleJob job1_uninstall = new EntandoBundleJob();
+        EntandoBundleJobEntity job1_uninstall = new EntandoBundleJobEntity();
         job1_uninstall.setComponentId("id1");
         job1_uninstall.setComponentName("my-bundle");
         job1_uninstall.setComponentVersion("1.0.0");
@@ -177,10 +177,10 @@ public class EntandoBundleJobControllerTest {
         job1_uninstall.setFinishedAt(job1_uninstall.getStartedAt().plusSeconds(30L));
         job1_uninstall.setStatus(JobStatus.UNINSTALL_COMPLETED);
 
-        EntandoBundleJob _job1_uninstall = jobRepository.save(job1_uninstall);
+        EntandoBundleJobEntity _job1_uninstall = jobRepository.save(job1_uninstall);
         jobs.put(_job1_uninstall.getId(), _job1_uninstall);
 
-        EntandoBundleJob job1_reinstall = new EntandoBundleJob();
+        EntandoBundleJobEntity job1_reinstall = new EntandoBundleJobEntity();
         job1_reinstall.setComponentId("id1");
         job1_reinstall.setComponentName("my-bundle");
         job1_reinstall.setProgress(1.0);
@@ -189,7 +189,7 @@ public class EntandoBundleJobControllerTest {
         job1_reinstall.setFinishedAt(job1_reinstall.getStartedAt().plusMinutes(2L));
         job1_reinstall.setStatus(JobStatus.INSTALL_COMPLETED);
 
-        EntandoBundleJob _job1_reinstall = jobRepository.save(job1_reinstall);
+        EntandoBundleJobEntity _job1_reinstall = jobRepository.save(job1_reinstall);
         jobs.put(_job1_reinstall.getId(), _job1_reinstall);
 
     }

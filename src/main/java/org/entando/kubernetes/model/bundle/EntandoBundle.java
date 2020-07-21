@@ -11,7 +11,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
 
 @Data
@@ -19,15 +18,12 @@ import org.entando.kubernetes.model.job.JobStatus;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude
-/*
-   TODO: Commented out code will be addressed in future sprints (f.leandro, l.cherubin)
- */
 public class EntandoBundle {
-    //private String ecrId; // hash(code + organization) = metadata.name
     private String code;
+    //private String organization;
+    //private String ecrId; // hash(code + organization) = metadata.name
     private String title;
     private String description;
-    //private String organization;
     private String thumbnail;
     private Set<String> componentTypes;
     private EntandoBundleJob installedJob;

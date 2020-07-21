@@ -18,7 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -66,7 +66,7 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     }
 
     @Override
-    public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.WIDGET)
                 .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
@@ -74,7 +74,7 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     }
 
     @Override
-    public WidgetDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+    public WidgetDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return WidgetDescriptor.builder()
                 .code(component.getComponentId())
                 .build();

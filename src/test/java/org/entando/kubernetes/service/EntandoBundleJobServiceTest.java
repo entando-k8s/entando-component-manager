@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
@@ -38,7 +38,7 @@ public class EntandoBundleJobServiceTest {
 
     @Test
     public void shouldReturnAllJobs() {
-        EntandoBundleJob testJob1 = new EntandoBundleJob();
+        EntandoBundleJobEntity testJob1 = new EntandoBundleJobEntity();
         testJob1.setId(UUID.randomUUID());
         testJob1.setComponentId("component-1-id");
         testJob1.setComponentName("component-1-name");
@@ -48,7 +48,7 @@ public class EntandoBundleJobServiceTest {
         testJob1.setStartedAt(LocalDateTime.of(2020, 4, 22, 8, 10, 0));
         testJob1.setFinishedAt(LocalDateTime.of(2020, 4, 22, 8, 15, 0));
 
-        EntandoBundleJob testJob2 = new EntandoBundleJob();
+        EntandoBundleJobEntity testJob2 = new EntandoBundleJobEntity();
         testJob2.setId(UUID.randomUUID());
         testJob2.setComponentId("component-2-id");
         testJob2.setComponentName("component-2-name");
@@ -58,7 +58,7 @@ public class EntandoBundleJobServiceTest {
         testJob2.setStartedAt(LocalDateTime.of(2020, 4, 22, 20, 0, 0));
         testJob2.setFinishedAt(LocalDateTime.of(2020, 4, 22, 21, 15, 0));
 
-        EntandoBundleJob testJob3 = new EntandoBundleJob();
+        EntandoBundleJobEntity testJob3 = new EntandoBundleJobEntity();
         testJob3.setId(UUID.randomUUID());
         testJob3.setComponentId("component-1-id");
         testJob3.setComponentName("component-1-name");
@@ -70,7 +70,7 @@ public class EntandoBundleJobServiceTest {
         when(jobService.getJobs()).thenReturn(Arrays.asList(testJob1, testJob2, testJob3));
 
 
-        List<EntandoBundleJob> allJobs = jobService.getJobs();
+        List<EntandoBundleJobEntity> allJobs = jobService.getJobs();
         assertThat(allJobs.size()).isEqualTo(3);
         assertThat(allJobs.get(0).getStartedAt()).isBefore(allJobs.get(1).getStartedAt());
         assertThat(allJobs.get(0).getId()).isEqualByComparingTo(testJob1.getId());
@@ -79,7 +79,7 @@ public class EntandoBundleJobServiceTest {
 
     @Test
     public void shouldFilterAndSort() {
-        EntandoBundleJob testJob1 = new EntandoBundleJob();
+        EntandoBundleJobEntity testJob1 = new EntandoBundleJobEntity();
         testJob1.setId(UUID.randomUUID());
         testJob1.setComponentId("component-1-id");
         testJob1.setComponentName("component-1-name");
@@ -89,7 +89,7 @@ public class EntandoBundleJobServiceTest {
         testJob1.setStartedAt(LocalDateTime.of(2020, 4, 22, 8, 10, 0));
         testJob1.setFinishedAt(LocalDateTime.of(2020, 4, 22, 8, 15, 0));
 
-        EntandoBundleJob testJob2 = new EntandoBundleJob();
+        EntandoBundleJobEntity testJob2 = new EntandoBundleJobEntity();
         testJob2.setId(UUID.randomUUID());
         testJob2.setComponentId("component-2-id");
         testJob2.setComponentName("component-2-name");
@@ -99,7 +99,7 @@ public class EntandoBundleJobServiceTest {
         testJob2.setStartedAt(LocalDateTime.of(2020, 4, 22, 20, 0, 0));
         testJob2.setFinishedAt(LocalDateTime.of(2020, 4, 22, 21, 15, 0));
 
-        EntandoBundleJob testJob3 = new EntandoBundleJob();
+        EntandoBundleJobEntity testJob3 = new EntandoBundleJobEntity();
         testJob3.setId(UUID.randomUUID());
         testJob3.setComponentId("component-1-id");
         testJob3.setComponentName("component-1-name");
@@ -112,7 +112,7 @@ public class EntandoBundleJobServiceTest {
 
         PagedListRequest request = new PagedListRequest();
         request.addFilter(new Filter(EntandoBundleJobListProcessor.ID, testJob1.getId().toString()));
-        PagedMetadata<EntandoBundleJob> jobs = jobService.getJobs(request);
+        PagedMetadata<EntandoBundleJobEntity> jobs = jobService.getJobs(request);
 
         assertThat(jobs.getTotalItems()).isEqualTo(1);
         assertThat(jobs.getBody()).hasSize(1);

@@ -7,7 +7,7 @@ import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleReader;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the context to process the Zip File
@@ -33,16 +33,16 @@ public interface ComponentProcessor<T> {
      * @param components
      * @return List of installable components
      */
-    List<Installable<T>> process(List<EntandoBundleComponentJob> components);
+    List<Installable<T>> process(List<EntandoBundleComponentJobEntity> components);
 
-    default Installable<T> process(EntandoBundleComponentJob componentJob) {
+    default Installable<T> process(EntandoBundleComponentJobEntity componentJob) {
         if (supportComponent(componentJob.getComponentType())) {
             return process(Collections.singletonList(componentJob)).get(0);
         }
         return null;
     }
 
-    T buildDescriptorFromComponentJob(EntandoBundleComponentJob component);
+    T buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component);
 
     ComponentType getSupportedComponentType();
 

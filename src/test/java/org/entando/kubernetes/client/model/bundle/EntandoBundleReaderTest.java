@@ -22,7 +22,7 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUID
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -163,12 +163,12 @@ public class EntandoBundleReaderTest {
         }
 
         @Override
-        public List<Installable<Object>> process(List<EntandoBundleComponentJob> components) {
+        public List<Installable<Object>> process(List<EntandoBundleComponentJobEntity> components) {
             return null;
         }
 
         @Override
-        public Object buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+        public Object buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
             return null;
         }
 

@@ -31,7 +31,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.springframework.validation.annotation.Validated;
 
@@ -63,7 +63,7 @@ public class EntandoBundleEntity {
 
     @OneToOne
     @JoinColumn(name = "job_id")
-    private EntandoBundleJob job;
+    private EntandoBundleJobEntity job;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = SystemConstants.API_DATE_FORMAT)
     @Column(name = "last_update")

@@ -26,13 +26,13 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleJob;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
@@ -57,7 +57,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
             EntandoBundleComponentJobRepository jobComponentRepository,
             InstalledEntandoBundleRepository installedComponentRepo) {
         this.k8SServiceClient = k8SServiceClient;
-        this.accessibleDigitalExchanges = accessibleDigitalExchanges
+        this.accessibleDigitalExchanges = Optional.ofNullable(accessibleDigitalExchanges).orElse(new ArrayList<>())
                 .stream().filter(Strings::isNotBlank).collect(Collectors.toList());
         this.jobRepository = jobRepository;
         this.jobComponentRepository = jobComponentRepository;
@@ -98,11 +98,11 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
-    public List<EntandoBundleComponentJob> getBundleInstalledComponents(String id) {
-        EntandoBundleEntity bundle = installedComponentRepo.findById(id)
+    public List<EntandoBundleComponentJobEntity> getBundleInstalledComponents(String id) {
+        EntandoBundle bundle = getInstalledBundle(id)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
-        if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
-            return jobComponentRepository.findAllByParentJob(bundle.getJob());
+        if (bundle.getInstalledJob() != null && bundle.getInstalledJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+            return jobComponentRepository.findAllByParentJobId(bundle.getInstalledJob().getId());
         } else {
             throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
         }
@@ -134,8 +134,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public EntandoBundle convertToBundleFromEntity(EntandoBundleEntity entity) {
         EntandoBundleJob installedJob = null;
+        EntandoBundleJob lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(entity.getId())
+                .map(EntandoBundleJob::fromEntity)
+                .orElse(null);
+
         if (installedComponentRepo.existsById(entity.getId())) {
             installedJob = jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(entity.getId(), JobStatus.INSTALL_COMPLETED)
+                    .map(EntandoBundleJob::fromEntity)
                     .orElse(null);
         }
 
@@ -146,7 +151,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .thumbnail(entity.getImage())
                 //.organization(entity.getOrganization())
                 .componentTypes(entity.getType())
-                .lastJob(jobRepository.findFirstByComponentIdOrderByStartedAtDesc(entity.getId()).orElse(null))
+                .lastJob(lastJob)
                 .installedJob(installedJob)
                 //.versions() //DB entity shouldn't keep all available versions
                 .build();
@@ -188,10 +193,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         String code = bundle.getMetadata().getName();
 
         EntandoBundleJob installedJob = null;
-        EntandoBundleJob lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(code).orElse(null);
+        EntandoBundleJob lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(code)
+                .map(EntandoBundleJob::fromEntity)
+                .orElse(null);
 
         if (installedComponentRepo.existsById(code)) {
             installedJob = jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(code, JobStatus.INSTALL_COMPLETED)
+                    .map(EntandoBundleJob::fromEntity)
                     .orElse(null);
         }
 

@@ -13,7 +13,7 @@ import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.DirectoryProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ public class DirectoryProcessorTest {
 
     @Test
     public void testCreateFolders() throws IOException {
-        final EntandoBundleJob job = new EntandoBundleJob();
+        final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
         final List<? extends Installable> installables = directoryProcessor.process(bundleReader);
@@ -69,7 +69,7 @@ public class DirectoryProcessorTest {
 
     @Test
     public void shouldExtractRootFolder() {
-        final EntandoBundleJob job = new EntandoBundleJob();
+        final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
         List<DirectoryDescriptor> rootFolders = directoryProcessor

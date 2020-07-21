@@ -2,7 +2,7 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.entando.kubernetes.model.job.EntandoBundleJobDto;
+import org.entando.kubernetes.model.bundle.EntandoBundleJob;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
@@ -18,12 +18,12 @@ public interface EntandoBundleJobResource {
     @Operation(description = "Get all jobs")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PagedRestResponse<EntandoBundleJobDto>> getAllJobs(PagedListRequest request);
+    ResponseEntity<PagedRestResponse<EntandoBundleJob>> getAllJobs(PagedListRequest request);
 
     @Operation(description = "Get job by id")
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "404", description = "Not Found")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoBundleJobDto> getJob(@PathVariable("id") String id);
+    SimpleRestResponse<EntandoBundleJob> getJob(@PathVariable("id") String id);
 
 }

@@ -8,8 +8,8 @@ import java.util.Optional;
 
 public class JobScheduler {
 
-    Deque<EntandoBundleComponentJob> jobQueue;
-    Deque<EntandoBundleComponentJob> processedJobStack;
+    Deque<EntandoBundleComponentJobEntity> jobQueue;
+    Deque<EntandoBundleComponentJobEntity> processedJobStack;
 
 
     public JobScheduler() {
@@ -25,34 +25,34 @@ public class JobScheduler {
         this.processedJobStack.clear();
     }
 
-    public void addToQueue(EntandoBundleComponentJob job) {
+    public void addToQueue(EntandoBundleComponentJobEntity job) {
         jobQueue.addLast(job);
     }
 
-    public void queueAll(Collection<EntandoBundleComponentJob> jobs) {
-        for (EntandoBundleComponentJob job : jobs) {
+    public void queueAll(Collection<EntandoBundleComponentJobEntity> jobs) {
+        for (EntandoBundleComponentJobEntity job : jobs) {
             this.addToQueue(job);
         }
     }
 
-    public Optional<EntandoBundleComponentJob> extractFromQueue() {
-        EntandoBundleComponentJob nextComponentJob = null;
+    public Optional<EntandoBundleComponentJobEntity> extractFromQueue() {
+        EntandoBundleComponentJobEntity nextComponentJob = null;
         if (!jobQueue.isEmpty()) {
             nextComponentJob = jobQueue.removeFirst();
         }
         return Optional.ofNullable(nextComponentJob);
     }
 
-    public void recordProcessedComponentJob(EntandoBundleComponentJob componentJob) {
+    public void recordProcessedComponentJob(EntandoBundleComponentJobEntity componentJob) {
         processedJobStack.addLast(componentJob);
     }
 
     public void activateRollbackMode() {
-        Deque<EntandoBundleComponentJob> rollbackQueue = new ArrayDeque<>();
-        Iterator<EntandoBundleComponentJob> jobIterator = this.processedJobStack
+        Deque<EntandoBundleComponentJobEntity> rollbackQueue = new ArrayDeque<>();
+        Iterator<EntandoBundleComponentJobEntity> jobIterator = this.processedJobStack
                 .descendingIterator();
         while(jobIterator.hasNext()) {
-            EntandoBundleComponentJob duplicateJob = EntandoBundleComponentJob.getNewCopy(jobIterator.next());
+            EntandoBundleComponentJobEntity duplicateJob = EntandoBundleComponentJobEntity.getNewCopy(jobIterator.next());
             duplicateJob.setStartedAt(null);
             duplicateJob.setFinishedAt(null);
             rollbackQueue.addLast(duplicateJob);
@@ -61,7 +61,7 @@ public class JobScheduler {
         this.clearProcessedStack();
     }
 
-    public Optional<EntandoBundleComponentJob> componentJobWithError() {
+    public Optional<EntandoBundleComponentJobEntity> componentJobWithError() {
         return this.processedJobStack.stream()
                 .filter(trJob -> trJob.getStatus().isOfType(JobType.ERROR))
                 .findFirst();

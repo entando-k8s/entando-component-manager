@@ -66,8 +66,8 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
@@ -313,7 +313,7 @@ public class InstallFlowTest {
     public void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-        List<EntandoBundleJob> jobs = jobRepository.findAll();
+        List<EntandoBundleJobEntity> jobs = jobRepository.findAll();
         assertThat(jobs).hasSize(1);
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
 
@@ -341,18 +341,18 @@ public class InstallFlowTest {
                 "todomvc_another_page_model",
                 "my-page");
 
-        List<EntandoBundleComponentJob> jobComponentList = componentJobRepository
+        List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository
                 .findAllByParentJob(jobs.get(0))
                 .stream()
                 .sorted(Comparator.comparingLong(cj -> cj.getStartedAt().toInstant(ZoneOffset.UTC).toEpochMilli()))
                 .collect(Collectors.toList());
         assertThat(jobComponentList).hasSize(expected.size());
-        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJob::getComponentId)
+        List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJobEntity::getComponentId)
                 .collect(Collectors.toList());
         assertThat(jobComponentNames).isEqualTo(expected);
 
         Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
-        for (EntandoBundleComponentJob jcomp : jobComponentList) {
+        for (EntandoBundleComponentJobEntity jcomp : jobComponentList) {
             Integer n = jobComponentTypes.getOrDefault(jcomp.getComponentType(), 0);
             jobComponentTypes.put(jcomp.getComponentType(), n + 1);
         }
@@ -375,7 +375,7 @@ public class InstallFlowTest {
     @Test
     public void shouldRecordInstallJobsInOrder() throws Exception {
         simulateSuccessfullyCompletedInstall();
-        List<EntandoBundleComponentJob> jobs = componentJobRepository.findAll(Sort.by(Sort.Order.asc("startedAt")));
+        List<EntandoBundleComponentJobEntity> jobs = componentJobRepository.findAll(Sort.by(Sort.Order.asc("startedAt")));
 
         for (int i = 1; i < jobs.size(); i++) {
             Installable thisInstallable = processorMap.get(jobs.get(i).getComponentType()).process(jobs.get(i));
@@ -386,8 +386,8 @@ public class InstallFlowTest {
         }
 
         String jobId = simulateSuccessfullyCompletedUninstall();
-        EntandoBundleJob uninstallJob = jobRepository.getOne(UUID.fromString(jobId));
-        List<EntandoBundleComponentJob> uninstallJobs = componentJobRepository.findAllByParentJob(uninstallJob)
+        EntandoBundleJobEntity uninstallJob = jobRepository.getOne(UUID.fromString(jobId));
+        List<EntandoBundleComponentJobEntity> uninstallJobs = componentJobRepository.findAllByParentJob(uninstallJob)
                 .stream()
                 .sorted(Comparator.comparingLong(j -> j.getStartedAt().toInstant(ZoneOffset.UTC).toEpochMilli()))
                 .collect(Collectors.toList());
@@ -440,20 +440,20 @@ public class InstallFlowTest {
         verifyJobHasComponentAndStatus(mockMvc, jobId, JobStatus.INSTALL_COMPLETED);
 
         simulateSuccessfullyCompletedUninstall();
-        List<EntandoBundleJob> jobs = jobRepository.findAll();
+        List<EntandoBundleJobEntity> jobs = jobRepository.findAll();
         assertThat(jobs).hasSize(2);
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
         assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
 
-        List<EntandoBundleComponentJob> installedComponentList = componentJobRepository.findAllByParentJob(jobs.get(0));
-        List<EntandoBundleComponentJob> uninstalledComponentList = componentJobRepository.findAllByParentJob(jobs.get(1));
+        List<EntandoBundleComponentJobEntity> installedComponentList = componentJobRepository.findAllByParentJob(jobs.get(0));
+        List<EntandoBundleComponentJobEntity> uninstalledComponentList = componentJobRepository.findAllByParentJob(jobs.get(1));
         assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
-        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJob::getStatus)
+        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJobEntity::getStatus)
                 .collect(Collectors.toList());
         assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
 
         boolean matchFound = false;
-        for (EntandoBundleComponentJob ic : installedComponentList) {
+        for (EntandoBundleComponentJobEntity ic : installedComponentList) {
             matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
                 return uc.getParentJob().getId().equals(jobs.get(1).getId()) &&
                         uc.getComponentId().equals(ic.getComponentId()) &&
@@ -477,7 +477,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].code").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
         List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
@@ -498,17 +498,17 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
-        Optional<EntandoBundleJob> job = jobRepository.findById(UUID.fromString(failingJobId));
+        Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
         assertThat(job.isPresent()).isTrue();
 
         // And for each installed component job there should be a component job that rollbacked the install
-        List<EntandoBundleComponentJob> jobRelatedComponents = componentJobRepository.findAllByParentJob(job.get());
-        List<EntandoBundleComponentJob> installedComponents = jobRelatedComponents.stream()
+        List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository.findAllByParentJob(job.get());
+        List<EntandoBundleComponentJobEntity> installedComponents = jobRelatedComponents.stream()
                 .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .collect(Collectors.toList());
 
-        for (EntandoBundleComponentJob c : installedComponents) {
-            List<EntandoBundleComponentJob> jobs = jobRelatedComponents.stream()
+        for (EntandoBundleComponentJobEntity c : installedComponents) {
+            List<EntandoBundleComponentJobEntity> jobs = jobRelatedComponents.stream()
                     .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getComponentId().equals(c.getComponentId()))
                     .collect(Collectors.toList());
             assertThat(jobs.size()).isEqualTo(2);
@@ -529,7 +529,7 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].code").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
         // Component install status should be rollback
@@ -618,16 +618,16 @@ public class InstallFlowTest {
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
-        Optional<EntandoBundleJob> job = jobRepository.findById(UUID.fromString(jobId));
+        Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
 
         assertThat(job.isPresent()).isTrue();
 
-        List<EntandoBundleComponentJob> jobComponentList = componentJobRepository.findAllByParentJob(job.get());
+        List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository.findAllByParentJob(job.get());
 
-        List<EntandoBundleComponentJob> pluginJobs = jobComponentList.stream().filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
+        List<EntandoBundleComponentJobEntity> pluginJobs = jobComponentList.stream().filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());
         assertThat(pluginJobs.size()).isEqualTo(2);
-        assertThat(pluginJobs.stream().map(EntandoBundleComponentJob::getStatus).collect(Collectors.toList())).containsOnly(
+        assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList())).containsOnly(
                 JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
         );
     }
@@ -707,15 +707,15 @@ public class InstallFlowTest {
     @Test
     public void shouldFailInstallAndHandleExceptionDuringBundleDownloadError() throws Exception {
         String jobId = simulateBundleDownloadError();
-        Optional<EntandoBundleJob> optJob = jobRepository.findById(UUID.fromString(jobId));
+        Optional<EntandoBundleJobEntity> optJob = jobRepository.findById(UUID.fromString(jobId));
 
         assertThat(optJob.isPresent()).isTrue();
-        EntandoBundleJob job = optJob.get();
+        EntandoBundleJobEntity job = optJob.get();
         assertThat(job.getStatus()).isEqualByComparingTo(JobStatus.INSTALL_ERROR);
         assertThat(job.getFinishedAt() != null);
         assertThat(job.getStartedAt()).isBeforeOrEqualTo(job.getFinishedAt());
 
-        List<EntandoBundleComponentJob> componentJobs = componentJobRepository.findAllByParentJob(job);
+        List<EntandoBundleComponentJobEntity> componentJobs = componentJobRepository.findAllByParentJob(job);
         assertThat(componentJobs).isEmpty();
     }
 

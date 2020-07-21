@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.ZonedDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +15,7 @@ import lombok.Setter;
 @JsonInclude
 public class EntandoBundleVersion {
     private String version;
-    private ZonedDateTime timestamp;
+    //private ZonedDateTime timestamp;
 
     public static EntandoBundleVersion fromEntity(String version) {
         return EntandoBundleVersion.builder()

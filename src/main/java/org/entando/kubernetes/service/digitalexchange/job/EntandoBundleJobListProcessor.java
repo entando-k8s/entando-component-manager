@@ -6,13 +6,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterUtils;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.request.RequestListProcessor;
 
-public class EntandoBundleJobListProcessor extends RequestListProcessor<EntandoBundleJob> {
+public class EntandoBundleJobListProcessor extends RequestListProcessor<EntandoBundleJobEntity> {
 
     public static final String ID = "id";
     public static final String STATUS = "status";
@@ -23,17 +23,17 @@ public class EntandoBundleJobListProcessor extends RequestListProcessor<EntandoB
     public static final String COMPONENT_VERSION = "componentVersion";
 
     public EntandoBundleJobListProcessor(PagedListRequest pagedListRequest,
-            Stream<EntandoBundleJob> stream) {
+            Stream<EntandoBundleJobEntity> stream) {
         super(pagedListRequest, stream);
     }
 
     public EntandoBundleJobListProcessor(PagedListRequest pagedListRequest,
-            List<EntandoBundleJob> items) {
+            List<EntandoBundleJobEntity> items) {
         super(pagedListRequest, items);
     }
 
     @Override
-    protected Function<Filter, Predicate<EntandoBundleJob>> getPredicates() {
+    protected Function<Filter, Predicate<EntandoBundleJobEntity>> getPredicates() {
         return filter -> {
             switch (filter.getAttribute()) {
                 case ID:
@@ -57,7 +57,7 @@ public class EntandoBundleJobListProcessor extends RequestListProcessor<EntandoB
     }
 
     @Override
-    protected Function<String, Comparator<EntandoBundleJob>> getComparators() {
+    protected Function<String, Comparator<EntandoBundleJobEntity>> getComparators() {
         return sort -> {
             switch (sort) {
                 case COMPONENT_ID:
@@ -67,12 +67,12 @@ public class EntandoBundleJobListProcessor extends RequestListProcessor<EntandoB
                 case COMPONENT_VERSION:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getComponentVersion(), b.getComponentVersion());
                 case STARTED_AT:
-                    return Comparator.comparing(EntandoBundleJob::getStartedAt);
+                    return Comparator.comparing(EntandoBundleJobEntity::getStartedAt);
                 case FINISHED_AT:
-                    return Comparator.comparing(EntandoBundleJob::getFinishedAt);
+                    return Comparator.comparing(EntandoBundleJobEntity::getFinishedAt);
                 case ID:
                 default:
-                    return Comparator.comparing(EntandoBundleJob::getId);
+                    return Comparator.comparing(EntandoBundleJobEntity::getId);
             }
         };
     }
