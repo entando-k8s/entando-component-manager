@@ -1,9 +1,13 @@
 package org.entando.kubernetes;
 
+import java.util.UUID;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.JobStatus;
 
 public class TestEntitiesGenerator {
 
@@ -54,5 +58,22 @@ public class TestEntitiesGenerator {
                 .withTarball("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
                 .endTag()
                 .build();
+    }
+
+    public static EntandoBundleEntity getTestComponent() {
+        EntandoBundleEntity component = new EntandoBundleEntity();
+        component.setId(UUID.randomUUID().toString());
+        component.setName("my-bundle-name");
+        component.setInstalled(true);
+        return component;
+    }
+
+    public static EntandoBundleJob getTestJob() {
+        EntandoBundleJob job = new EntandoBundleJob();
+        job.setId(UUID.randomUUID());
+        job.setComponentId("my-bundle");
+        job.setComponentName("My Bundle Name");
+        job.setStatus(JobStatus.INSTALL_COMPLETED);
+        return job;
     }
 }

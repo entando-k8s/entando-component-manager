@@ -12,7 +12,6 @@ public class BundleUtilities {
     }
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
-
         String version = versionReference;
         if (!isSemanticVersion(versionReference)) {
             version = (String) bundle.getSpec().getDetails().getDistTags().get(versionReference);
@@ -24,7 +23,6 @@ public class BundleUtilities {
                             + "'");
         }
         return version;
-
     }
 
     public static boolean isSemanticVersion(String versionToFind) {

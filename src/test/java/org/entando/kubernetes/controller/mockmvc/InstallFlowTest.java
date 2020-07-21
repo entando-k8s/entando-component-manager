@@ -65,7 +65,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -480,7 +480,7 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload[0].id").value("todomvc"))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
-        List<EntandoBundle> installedComponents = installedCompRepo.findAll();
+        List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
         assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);

@@ -25,7 +25,7 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobResult;
@@ -38,6 +38,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -46,11 +47,12 @@ import org.springframework.stereotype.Service;
 public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private final @NonNull KubernetesService k8sService;
+    private final @NonNull EntandoBundleService bundleService;
     private final @NonNull EntandoBundleJobService jobService;
     private final @NonNull BundleDownloaderFactory downloaderFactory;
     private final @NonNull EntandoBundleJobRepository jobRepo;
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
-    private final @NonNull InstalledEntandoBundleRepository installedComponentRepo;
+    private final @NonNull InstalledEntandoBundleRepository bundleRepository;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJob install(String componentId, String version) {
@@ -217,10 +219,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJob job) {
-        EntandoBundle installedComponent = EntandoBundle.newFrom(bundle);
-        installedComponent.setInstalled(true);
+        EntandoBundleEntity installedComponent = bundleService.convertToEntityFromEcr(bundle);
+        installedComponent.setVersion(job.getComponentVersion());
         installedComponent.setJob(job);
-        installedComponentRepo.save(installedComponent);
+        bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");
     }
 

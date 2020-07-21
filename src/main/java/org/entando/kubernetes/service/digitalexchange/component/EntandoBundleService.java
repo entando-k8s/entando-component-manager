@@ -15,18 +15,26 @@ package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.util.List;
 import java.util.Optional;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface EntandoBundleService {
 
-    PagedMetadata<EntandoBundle> getComponents();
+    PagedMetadata<EntandoBundle> listBundles();
 
-    PagedMetadata<EntandoBundle> getComponents(PagedListRequest request);
+    PagedMetadata<EntandoBundle> listBundles(PagedListRequest request);
 
-    Optional<EntandoBundle> getInstalledComponent(String id);
+    Optional<EntandoBundle> getInstalledBundle(String id);
 
     List<EntandoBundleComponentJob> getBundleInstalledComponents(String id);
+
+    //Utility converters
+    EntandoBundle convertToBundleFromEntity(EntandoBundleEntity entity);
+    EntandoBundle convertToBundleFromEcr(EntandoDeBundle bundle);
+    EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle);
+    EntandoBundleEntity convertToEntityFromEcr(EntandoDeBundle bundle);
 }
