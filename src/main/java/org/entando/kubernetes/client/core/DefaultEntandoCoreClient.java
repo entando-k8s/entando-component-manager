@@ -1,8 +1,11 @@
 package org.entando.kubernetes.client.core;
 
 import com.jayway.jsonpath.JsonPath;
+
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
@@ -26,12 +29,14 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefault
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
@@ -182,20 +187,31 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentModelUsage(String code) {
-        ResponseEntity<String> usage = restTemplate
-                .exchange(resolvePathSegments("api", "plugins", "cms", "contentmodels", code, "pagereferences").build().toUri(),
-                        HttpMethod.GET, null, String.class);
-        if (usage.getStatusCode().is2xxSuccessful()) {
-            List<String> contentIds = JsonPath.read(usage.getBody(), "$.payload.*.contentsId.*");
-            return new EntandoCoreComponentUsage(
-                    ComponentType.CONTENT_TEMPLATE.getTypeName(),
-                    code,
-                    contentIds.size()
-            );
-        } else {
-            throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving content type " + code + " usage");
+
+        List<String> contentIds = new ArrayList<>();
+
+        try {
+            ResponseEntity<String> usage = restTemplate
+                    .exchange(resolvePathSegments("api", "plugins", "cms", "contentmodels", code, "pagereferences").build().toUri(),
+                            HttpMethod.GET, null, String.class);
+
+            if (usage.getStatusCode().is2xxSuccessful()) {
+                contentIds.addAll(JsonPath.read(usage.getBody(), "$.payload.*.contentsId.*"));
+            } else {
+                throw new HttpException(usage.getStatusCode(),
+                        "Some error occurred while retrieving content model " + code + " usage");
+            }
+        } catch (HttpClientErrorException e) {
+            if (! e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                throw new HttpException(e.getStatusCode(), e.getMessage());
+            }
         }
+
+        return new EntandoCoreComponentUsage(
+                ComponentType.CONTENT_TEMPLATE.getTypeName(),
+                code,
+                contentIds.size()
+        );
     }
 
     @Override
@@ -252,4 +268,18 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .pathSegment(segments);
     }
 
+
+
+    public EntandoCoreComponentUsage getComponentUsage(String code, String[] endpointUrlParts) {
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+                .exchange(resolvePathSegments(endpointUrlParts).build().toUri(), HttpMethod.GET, null,
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
+        if (usage.getStatusCode().is2xxSuccessful()) {
+            return usage.getBody().getPayload();
+        } else {
+            throw new HttpException(usage.getStatusCode(),
+                    "Some error occurred while retrieving page model " + code + " usage");
+        }
+    }
 }
