@@ -22,14 +22,18 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @Entity
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "entando_bundle_jobs")
-public class EntandoBundleJob implements TrackableJob {
+public class EntandoBundleJobEntity implements TrackableJob {
 
     @Id
     @Column

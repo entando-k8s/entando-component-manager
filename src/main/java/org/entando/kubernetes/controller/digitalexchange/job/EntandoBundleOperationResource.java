@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,25 +38,25 @@ public interface EntandoBundleOperationResource {
     @Operation(description = "Starts component installation job")
     @ApiResponse(responseCode = "201", description = "Created")
     @PostMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundleJob>> install(
+    ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @PathVariable("component") String componentId,
             @RequestBody InstallRequest request);
 
     @Operation(description = "Starts component remove job ")
     @ApiResponse(responseCode = "201", description = "Created")
     @PostMapping(value = "/{component}/uninstall", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundleJob>> uninstall(@PathVariable("component") String componentId,
+    ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> uninstall(@PathVariable("component") String componentId,
             HttpServletRequest request) throws URISyntaxException;
 
     @Operation(description = "Checks installation job status")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoBundleJob> getLastInstallJob(@PathVariable("component") String componentId);
+    SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJob(@PathVariable("component") String componentId);
 
     @Operation(description = "Checks removal job status")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/uninstall", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoBundleJob> getLastUninstallJob(@PathVariable("component") String componentId);
+    SimpleRestResponse<EntandoBundleJobEntity> getLastUninstallJob(@PathVariable("component") String componentId);
 
 
 }

@@ -3,13 +3,11 @@ package org.entando.kubernetes.model.bundle.processor;
 import static java.util.Optional.ofNullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -20,8 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
-import org.springframework.beans.factory.annotation.Value;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -61,7 +58,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     }
 
     @Override
-    public List<Installable<PageDescriptor>> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<PageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PAGE)
                 .map(c -> new PageInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
@@ -69,7 +66,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     }
 
     @Override
-    public PageDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+    public PageDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return PageDescriptor.builder()
                 .code(component.getComponentId())
                 .build();

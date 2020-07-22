@@ -18,7 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ public class ContentTypeProcessorTest {
 
     @Test
     public void shouldReturnAListOfInstallableContentTypesFromTheBundle() throws IOException {
-        final EntandoBundleJob job = new EntandoBundleJob();
+        final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
         ComponentSpecDescriptor spec = new ComponentSpecDescriptor();

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,23 +15,22 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJob, UUID> {
+public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJobEntity, UUID> {
 
-    List<EntandoBundleJob> findAllByOrderByStartedAtDesc();
+    List<EntandoBundleJobEntity> findAllByOrderByStartedAtDesc();
 
-    List<EntandoBundleJob> findAllByComponentIdOrderByStartedAtDesc(String componentId);
+    List<EntandoBundleJobEntity> findAllByComponentIdOrderByStartedAtDesc(String componentId);
 
-    Optional<EntandoBundleJob> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId,
+    Optional<EntandoBundleJobEntity> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId,
             Set<JobStatus> status);
 
-    Optional<EntandoBundleJob> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId,
-            JobStatus status);
+    Optional<EntandoBundleJobEntity> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId, JobStatus status);
 
-    Optional<EntandoBundleJob> findFirstByComponentIdOrderByStartedAtDesc(String componentId);
+    Optional<EntandoBundleJobEntity> findFirstByComponentIdOrderByStartedAtDesc(String componentId);
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @Query("UPDATE EntandoBundleJob job SET job.status = :status WHERE job.id = :id")
+    @Query("UPDATE EntandoBundleJobEntity job SET job.status = :status WHERE job.id = :id")
     void updateJobStatus(@Param("id") UUID id, @Param("status") JobStatus status);
 
 }

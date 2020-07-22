@@ -18,7 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -59,7 +59,7 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
     }
 
     @Override
-    public List<Installable<ContentTypeDescriptor>> process(List<EntandoBundleComponentJob> components) {
+    public List<Installable<ContentTypeDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT_TYPE)
                 .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
@@ -67,7 +67,7 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
     }
 
     @Override
-    public ContentTypeDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJob component) {
+    public ContentTypeDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return ContentTypeDescriptor.builder()
                 .code(component.getComponentId())
                 .build();

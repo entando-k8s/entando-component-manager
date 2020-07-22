@@ -16,10 +16,10 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
@@ -38,7 +38,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
-        PagedMetadata<EntandoBundle> pagedBundles = bundleService.getComponents(requestList);
+        PagedMetadata<EntandoBundle> pagedBundles = bundleService.listBundles(requestList);
         PagedRestResponse<EntandoBundle> response = new PagedRestResponse<>(pagedBundles);
         return ResponseEntity.ok(response);
     }
@@ -46,7 +46,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     @Override
     public ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(String component) {
         //I should be able to retrieve the related installed components given component id
-        List<EntandoBundleComponentJob> bundleInstalledComponents = bundleService
+        List<EntandoBundleComponentJobEntity> bundleInstalledComponents = bundleService
                 .getBundleInstalledComponents(component);
         //For each installed components, I should check the summary
         List<EntandoCoreComponentUsage> usageList = bundleInstalledComponents.stream()

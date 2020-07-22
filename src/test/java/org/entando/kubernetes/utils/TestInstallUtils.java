@@ -46,7 +46,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
@@ -424,15 +424,15 @@ public class TestInstallUtils {
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
 
-    public static PagedMetadata<EntandoBundleJob> getInstallJob(MockMvc mockMvc) throws Exception {
+    public static PagedMetadata<EntandoBundleJobEntity> getInstallJob(MockMvc mockMvc) throws Exception {
         return new ObjectMapper().readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
+                new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {
                 });
     }
 
-    public static PagedMetadata<EntandoBundleJob> getUninstallJob(MockMvc mockMvc) throws Exception {
+    public static PagedMetadata<EntandoBundleJobEntity> getUninstallJob(MockMvc mockMvc) throws Exception {
         List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name).collect(Collectors.toList());
         return new ObjectMapper().readValue(mockMvc.perform(get("/jobs"
                         + "?sort=startedAt"
@@ -441,7 +441,7 @@ public class TestInstallUtils {
                         + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                new TypeReference<PagedMetadata<EntandoBundleJob>>() {
+                new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {
                 });
     }
 

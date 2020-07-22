@@ -13,8 +13,8 @@ import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.FileProcessor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ public class FileProcessorTest {
 
     @Test
     public void testCreateFiles() throws IOException {
-        final EntandoBundleJob job = new EntandoBundleJob();
+        final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
         final List<? extends Installable> installables = fileProcessor
@@ -71,7 +71,7 @@ public class FileProcessorTest {
 
     @Test
     public void shouldConvertEntandoBundleComponentJobToDescriptor() {
-        EntandoBundleComponentJob bundleComponentJob = new EntandoBundleComponentJob();
+        EntandoBundleComponentJobEntity bundleComponentJob = new EntandoBundleComponentJobEntity();
         bundleComponentJob.setComponentId("/my-app/static/js/lib.js");
         FileDescriptor fileDescriptor = this.fileProcessor.buildDescriptorFromComponentJob(bundleComponentJob);
         Assertions.assertThat(fileDescriptor.getFilename()).isEqualTo("lib.js");

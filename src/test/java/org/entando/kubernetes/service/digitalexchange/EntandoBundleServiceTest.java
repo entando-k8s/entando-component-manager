@@ -2,18 +2,25 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESPACE;
+import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
+import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundle;
+import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -35,13 +42,14 @@ public class EntandoBundleServiceTest {
     private K8SServiceClientTestDouble k8SServiceClient;
     private EntandoBundleService service;
     private InstalledEntandoBundleRepository installedComponentRepository;
+    private EntandoBundleJobRepository jobRepository;
 
     private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
 
     @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        EntandoBundleJobRepository jobRepository = Mockito.mock(EntandoBundleJobRepository.class);
+        jobRepository = Mockito.mock(EntandoBundleJobRepository.class);
         EntandoBundleComponentJobRepository componentJobRepository = Mockito
                 .mock(EntandoBundleComponentJobRepository.class);
         installedComponentRepository = Mockito.mock(InstalledEntandoBundleRepository.class);
@@ -58,7 +66,7 @@ public class EntandoBundleServiceTest {
     public void shouldReturnAllComponentsAvailable() {
         k8SServiceClient.addInMemoryBundle(TestEntitiesGenerator.getTestBundle());
         when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
-        PagedMetadata<EntandoBundle> bundles = service.getComponents();
+        PagedMetadata<EntandoBundle> bundles = service.listBundles();
         assertThat(bundles.getTotalItems()).isEqualTo(1);
         assertThat(bundles.getBody().size()).isEqualTo(1);
     }
@@ -66,13 +74,12 @@ public class EntandoBundleServiceTest {
     @Test
     public void shouldReturnInstalledComponents() {
         EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
-        EntandoBundle component = EntandoBundle.newFrom(bundle);
-        component.setInstalled(true);
+        EntandoBundleEntity component = getTestComponent();
 
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
-        PagedMetadata<EntandoBundle> components = service.getComponents();
+        PagedMetadata<EntandoBundle> components = service.listBundles();
         assertThat(components.getBody().size()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getId()).isEqualTo(bundle.getMetadata().getName());
+        assertThat(components.getBody().get(0).getCode()).isEqualTo(bundle.getMetadata().getName());
         assertThat(components.getTotalItems()).isEqualTo(1);
 
         verify(installedComponentRepository).findAll();
@@ -123,21 +130,21 @@ public class EntandoBundleServiceTest {
         when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
 
         PagedListRequest request = new PagedListRequest();
-        request.setSort("name");
+        request.setSort("title");
         request.setDirection(Filter.DESC_ORDER);
-        PagedMetadata<EntandoBundle> components = service.getComponents(request);
+        PagedMetadata<EntandoBundle> components = service.listBundles(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleB.getSpec().getDetails().getName());
-        assertThat(components.getBody().get(1).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
+        assertThat(components.getBody().get(0).getCode()).isEqualTo(bundleB.getMetadata().getName());
+        assertThat(components.getBody().get(1).getCode()).isEqualTo(bundleA.getMetadata().getName());
 
         request = new PagedListRequest();
-        request.addFilter(new Filter("name", "bundleA"));
+        request.addFilter(new Filter("title", "bundleA"));
         request.setDirection(Filter.DESC_ORDER);
-        components = service.getComponents(request);
+        components = service.listBundles(request);
 
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo(bundleA.getSpec().getDetails().getName());
+        assertThat(components.getBody().get(0).getCode()).isEqualTo(bundleA.getMetadata().getName());
     }
 
     @Test
@@ -180,25 +187,35 @@ public class EntandoBundleServiceTest {
                 .withSpec(specBundleB)
                 .build();
 
-        EntandoBundle installedComponent = EntandoBundle.newFrom(bundleB);
-        installedComponent.setInstalled(true);
+        String code = bundleB.getMetadata().getName();
+        String title = bundleB.getSpec().getDetails().getName();
+        EntandoBundleJobEntity installedJob = getTestJobEntity(code, title);
+        EntandoBundleEntity installedComponent = getTestComponent(code, title);
 
         k8SServiceClient.addInMemoryBundle(bundleA);
+        k8SServiceClient.addInMemoryBundle(bundleB);
+
+        when(installedComponentRepository.existsById(eq(code))).thenReturn(true);
+        Mockito.when(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
+                .thenReturn(Optional.of(installedJob));
+        Mockito.when(jobRepository.findFirstByComponentIdOrderByStartedAtDesc(eq(code)))
+                .thenReturn(Optional.of(installedJob));
+
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(installedComponent));
 
         PagedListRequest request = new PagedListRequest();
         request.addFilter(new Filter("installed", "true"));
-        PagedMetadata<EntandoBundle> components = service.getComponents(request);
+        PagedMetadata<EntandoBundle> components = service.listBundles(request);
 
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleB");
 
         request = new PagedListRequest();
         request.addFilter(new Filter("installed", "false"));
 
-        components = service.getComponents(request);
+        components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleA");
     }
 
     @Test
@@ -275,31 +292,31 @@ public class EntandoBundleServiceTest {
 
         PagedListRequest request = new PagedListRequest();
         request.addFilter(new Filter("type", "widget"));
-        PagedMetadata<EntandoBundle> components = service.getComponents(request);
+        PagedMetadata<EntandoBundle> components = service.listBundles(request);
 
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
-        assertThat(components.getBody().get(1).getName()).isEqualTo("bundleB");
-        assertThat(components.getBody().get(0).getType().contains("widget")).isTrue();
-        assertThat(components.getBody().get(1).getType().contains("widget")).isTrue();
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleA");
+        assertThat(components.getBody().get(1).getCode()).isEqualTo("my-bundleB");
+        assertThat(components.getBody().get(0).getComponentTypes().contains("widget")).isTrue();
+        assertThat(components.getBody().get(1).getComponentTypes().contains("widget")).isTrue();
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "contentType"));
 
-        components = service.getComponents(request);
+        components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(2);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleB");
-        assertThat(components.getBody().get(1).getName()).isEqualTo("bundleC");
-        assertThat(components.getBody().get(0).getType().contains("contentType")).isTrue();
-        assertThat(components.getBody().get(1).getType().contains("contentType")).isTrue();
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleB");
+        assertThat(components.getBody().get(1).getCode()).isEqualTo("my-bundleC");
+        assertThat(components.getBody().get(0).getComponentTypes().contains("contentType")).isTrue();
+        assertThat(components.getBody().get(1).getComponentTypes().contains("contentType")).isTrue();
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "page"));
 
-        components = service.getComponents(request);
+        components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleA");
-        assertThat(components.getBody().get(0).getType().contains("page")).isTrue();
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleA");
+        assertThat(components.getBody().get(0).getComponentTypes().contains("page")).isTrue();
 
         request = new PagedListRequest();
         Filter multiValueFilter = new Filter();
@@ -307,18 +324,18 @@ public class EntandoBundleServiceTest {
         multiValueFilter.setOperator(FilterOperator.EQUAL.getValue());
         multiValueFilter.setAllowedValues(new String[]{"page", "contentType", "plugin"});
         request.addFilter(multiValueFilter);
-        components = service.getComponents(request);
+        components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(3);
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "plugin"));
-        components = service.getComponents(request);
+        components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
-        assertThat(components.getBody().get(0).getName()).isEqualTo("bundleC");
+        assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleC");
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "resource"));
-        components = service.getComponents(request);
+        components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(0);
     }
 }

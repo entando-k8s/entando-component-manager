@@ -6,8 +6,8 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -24,36 +24,36 @@ public class EntandoBundleJobService {
     private final @NonNull EntandoBundleJobRepository jobRepository;
     private final @NonNull EntandoBundleComponentJobRepository componentJobRepository;
 
-    public PagedMetadata<EntandoBundleJob> getJobs(PagedListRequest request) {
-        List<EntandoBundleJob> allJobs = getJobs();
-        List<EntandoBundleJob> filteredList = new EntandoBundleJobListProcessor(request, allJobs)
+    public PagedMetadata<EntandoBundleJobEntity> getJobs(PagedListRequest request) {
+        List<EntandoBundleJobEntity> allJobs = getJobs();
+        List<EntandoBundleJobEntity> filteredList = new EntandoBundleJobListProcessor(request, allJobs)
                 .filterAndSort().toList();
-        List<EntandoBundleJob> sublist = request.getSublist(filteredList);
+        List<EntandoBundleJobEntity> sublist = request.getSublist(filteredList);
 
         return new PagedMetadata<>(request, sublist, filteredList.size());
     }
 
-    public List<EntandoBundleComponentJob> getJobRelatedComponentJobs(EntandoBundleJob job) {
+    public List<EntandoBundleComponentJobEntity> getJobRelatedComponentJobs(EntandoBundleJobEntity job) {
         return componentJobRepository.findAllByParentJob(job);
     }
 
-    public List<EntandoBundleJob> getJobs() {
+    public List<EntandoBundleJobEntity> getJobs() {
         return jobRepository.findAllByOrderByStartedAtDesc();
     }
 
-    public List<EntandoBundleJob> getJobs(String componentId) {
+    public List<EntandoBundleJobEntity> getJobs(String componentId) {
         return jobRepository.findAllByComponentIdOrderByStartedAtDesc(componentId);
     }
 
-    public Optional<EntandoBundleJob> getById(String jobId) {
+    public Optional<EntandoBundleJobEntity> getById(String jobId) {
         return jobRepository.findById(UUID.fromString(jobId));
     }
 
-    public Optional<EntandoBundleJob> getComponentLastJobOfType(String componentId, JobType type) {
+    public Optional<EntandoBundleJobEntity> getComponentLastJobOfType(String componentId, JobType type) {
         return jobRepository.findFirstByComponentIdAndStatusInOrderByStartedAtDesc(componentId, type.getStatuses());
     }
 
-    public Optional<EntandoBundleJob> getComponentLastJobWithStatus(String componentId, JobStatus status) {
+    public Optional<EntandoBundleJobEntity> getComponentLastJobWithStatus(String componentId, JobStatus status) {
         return jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(componentId, status);
     }
 }

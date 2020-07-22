@@ -16,7 +16,6 @@ package org.entando.kubernetes.model.digitalexchange;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -28,20 +27,22 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.compress.utils.Sets;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
-import org.entando.kubernetes.model.job.EntandoBundleJob;
+import lombok.NoArgsConstructor;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.springframework.validation.annotation.Validated;
 
 @Data
+@Builder
 @Validated
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "installed_entando_bundles")
-public class EntandoBundle {
-
+public class EntandoBundleEntity {
 
     @Id
     @NotNull
@@ -62,7 +63,7 @@ public class EntandoBundle {
 
     @OneToOne
     @JoinColumn(name = "job_id")
-    private EntandoBundleJob job;
+    private EntandoBundleJobEntity job;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = SystemConstants.API_DATE_FORMAT)
     @Column(name = "last_update")
@@ -92,28 +93,4 @@ public class EntandoBundle {
     @Column(name = "metadata")
     private Map<String, String> metadata;
 
-    public static EntandoBundle newFrom(EntandoDeBundle bundle) {
-        EntandoBundle dec = new EntandoBundle();
-        String bundleId = bundle.getMetadata().getName();
-        EntandoDeBundleDetails bd = bundle.getSpec().getDetails();
-        Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
-        if (bundle.getMetadata().getLabels() != null) {
-            bundle.getMetadata().getLabels()
-                    .entrySet().stream()
-                    .filter(e -> ComponentType.isValidType(e.getKey()))
-                    .map(Entry::getKey)
-                    .forEach(bundleComponentTypes::add);
-        }
-        dec.setId(bundleId);
-        dec.setName(bundle.getSpec().getDetails().getName());
-        dec.setDescription(bd.getDescription());
-        dec.setRating(5);
-        dec.setType(bundleComponentTypes);
-        dec.setLastUpdate(new Date());
-        dec.setSignature("");
-        dec.setInstalled(false);
-        dec.setVersion(bd.getDistTags().get("latest").toString());
-        dec.setImage(bd.getThumbnail());
-        return dec;
-    }
 }
