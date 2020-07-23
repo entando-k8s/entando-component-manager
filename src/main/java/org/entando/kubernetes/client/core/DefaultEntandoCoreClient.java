@@ -23,6 +23,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
+    private final String usagePathSegment = "usage";
 
     public DefaultEntandoCoreClient(
             @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
@@ -55,7 +56,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getWidgetUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "widgets", code, "usage"}, "widget");
+        return this.getComponentUsage(code, new String[]{"api", "widgets", code, usagePathSegment}, "widget");
     }
 
     @Override
@@ -71,7 +72,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getFragmentUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "fragments", code, "usage"}, "fragment");
+        return this.getComponentUsage(code, new String[]{"api", "fragments", code, usagePathSegment}, "fragment");
     }
 
     @Override
@@ -98,7 +99,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getPageUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "pages", code, "usage"}, "page");
+        return this.getComponentUsage(code, new String[]{"api", "pages", code, usagePathSegment}, "page");
     }
 
     @Override
@@ -114,7 +115,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getPageModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "pageModels", code, "usage"}, "page template");
+        return this.getComponentUsage(code, new String[]{"api", "pageModels", code, usagePathSegment}, "page template");
     }
 
     @Override
@@ -130,7 +131,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, "usage"}, "content template");
+        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, usagePathSegment}, "content template");
     }
 
     @Override
@@ -147,7 +148,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentTypeUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, "usage"}, "content type");
+        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, usagePathSegment}, "content type");
     }
 
     @Override
