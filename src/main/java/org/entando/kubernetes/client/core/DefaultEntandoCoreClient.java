@@ -1,43 +1,22 @@
 package org.entando.kubernetes.client.core;
 
-import com.jayway.jsonpath.JsonPath;
-
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.entando.kubernetes.exception.web.HttpException;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
-import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
-import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
-import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
-import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
-import org.entando.kubernetes.model.entandocore.EntandoCorePage;
-import org.entando.kubernetes.model.entandocore.EntandoCorePageTemplate;
-import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
+import org.entando.kubernetes.model.bundle.descriptor.*;
+import org.entando.kubernetes.model.entandocore.*;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.nio.file.Paths;
 
 @Service
 public class DefaultEntandoCoreClient implements EntandoCoreClient {
@@ -76,16 +55,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getWidgetUsage(String code) {
-        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
-                .exchange(resolvePathSegments("api", "widgets", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
-                        });
-        if (usage.getStatusCode().is2xxSuccessful()) {
-            return usage.getBody().getPayload();
-        } else {
-            throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving widget " + code + " usage");
-        }
+        return this.getComponentUsage(code, new String[]{"api", "widgets", code, "usage"}, "widget");
     }
 
     @Override
@@ -101,16 +71,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getFragmentUsage(String code) {
-        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
-                .exchange(resolvePathSegments("api", "fragments", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
-                        });
-        if (usage.getStatusCode().is2xxSuccessful()) {
-            return usage.getBody().getPayload();
-        } else {
-            throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving fragment " + code + " usage");
-        }
+        return this.getComponentUsage(code, new String[]{"api", "fragments", code, "usage"}, "fragment");
     }
 
     @Override
@@ -137,16 +98,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getPageUsage(String code) {
-        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
-                .exchange(resolvePathSegments("api", "pages", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
-                        });
-        if (usage.getStatusCode().is2xxSuccessful()) {
-            return usage.getBody().getPayload();
-        } else {
-            throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving page " + code + " usage");
-        }
+        return this.getComponentUsage(code, new String[]{"api", "pages", code, "usage"}, "page");
     }
 
     @Override
@@ -162,16 +114,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getPageModelUsage(String code) {
-        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
-                .exchange(resolvePathSegments("api", "pageModels", code, "usage").build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
-                        });
-        if (usage.getStatusCode().is2xxSuccessful()) {
-            return usage.getBody().getPayload();
-        } else {
-            throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving page model " + code + " usage");
-        }
+        return this.getComponentUsage(code, new String[]{"api", "pageModels", code, "usage"}, "page template");
     }
 
     @Override
@@ -187,31 +130,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentModelUsage(String code) {
-
-        List<String> contentIds = new ArrayList<>();
-
-        try {
-            ResponseEntity<String> usage = restTemplate
-                    .exchange(resolvePathSegments("api", "plugins", "cms", "contentmodels", code, "pagereferences").build().toUri(),
-                            HttpMethod.GET, null, String.class);
-
-            if (usage.getStatusCode().is2xxSuccessful()) {
-                contentIds.addAll(JsonPath.read(usage.getBody(), "$.payload.*.contentsId.*"));
-            } else {
-                throw new HttpException(usage.getStatusCode(),
-                        "Some error occurred while retrieving content model " + code + " usage");
-            }
-        } catch (HttpClientErrorException e) {
-            if (! e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                throw new HttpException(e.getStatusCode(), e.getMessage());
-            }
-        }
-
-        return new EntandoCoreComponentUsage(
-                ComponentType.CONTENT_TEMPLATE.getTypeName(),
-                code,
-                contentIds.size()
-        );
+        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, "usage"}, "content template");
     }
 
     @Override
@@ -228,17 +147,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentTypeUsage(String code) {
-        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
-                .exchange(resolvePathSegments("api", "plugins", "cms", "contentTypes", code, "usage").build().toUri(),
-                        HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
-                        });
-        if (usage.getStatusCode().is2xxSuccessful()) {
-            return usage.getBody().getPayload();
-        } else {
-            throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving content type " + code + " usage");
-        }
+        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, "usage"}, "content type");
     }
 
     @Override
@@ -269,17 +178,23 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
 
+    /**
+     * asks for component the received component id usage count
+     * @param code the code of the component of which get the usage count
+     * @param endpointUrlParts a String array containing the query segments representing the endpoint url to qurey
+     * @return an instance of EntandoCoreComponentUsage containing the number of the entities using the component
+     */
+    public EntandoCoreComponentUsage getComponentUsage(String code, String[] endpointUrlParts, String componentType) {
 
-    public EntandoCoreComponentUsage getComponentUsage(String code, String[] endpointUrlParts) {
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
                 .exchange(resolvePathSegments(endpointUrlParts).build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
-                        });
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();
         } else {
             throw new HttpException(usage.getStatusCode(),
-                    "Some error occurred while retrieving page model " + code + " usage");
+                    String.format("Some error occurred while retrieving %s %s usage", componentType, code));
         }
     }
 }

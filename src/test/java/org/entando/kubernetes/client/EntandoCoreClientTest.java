@@ -94,10 +94,10 @@ public class EntandoCoreClientTest {
 
     @Test
     public void shouldGetUsageForContentTemplate() {
-        coreMockServer = coreMockServer.withContentModelPageReference();
+        coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", 8);
         EntandoCoreComponentUsage contentModelUsage = this.client.getContentModelUsage("12345");
         assertThat(contentModelUsage.getCode()).isEqualTo("12345");
-        assertThat(contentModelUsage.getType()).isEqualTo("contentTemplate");
-        assertThat(contentModelUsage.getUsage()).isEqualTo(6);
+        assertThat(contentModelUsage.getType()).isEqualTo("contentTemplates");
+        assertThat(contentModelUsage.getUsage()).isEqualTo(8);
     }
 }
