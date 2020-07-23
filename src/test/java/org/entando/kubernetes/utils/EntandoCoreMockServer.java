@@ -58,17 +58,6 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         return this;
     }
 
-    public EntandoCoreMockServer withContentModelPageReference() {
-        String response = readResourceAsString("/payloads/entando-core/content-template/content-template-page-reference.json");
-        this.wireMockServer.stubFor(WireMock.get(urlMatching("/api/plugins/cms/contentmodels/12345/pagereferences"))
-                .willReturn(aResponse()
-                                .withStatus(200)
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(response)
-                ));
-        return this;
-    }
-
     public EntandoCoreMockServer withComponentUsageSupport(ComponentType type, String code, int usageCount) {
         ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
         SimpleRestResponse<EntandoCoreComponentUsage> usageResponse = new SimpleRestResponse<>(
@@ -91,7 +80,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         PAGE_MODEL(ComponentType.PAGE_TEMPLATE, "pageModels", 3, "/api/pageModels/{code}/usage"),
         WIDGET(ComponentType.WIDGET, "widgets", 3, "/api/widgets/{code}/usage"),
         FRAGMENTS(ComponentType.FRAGMENT, "fragments", 3, "/api/fragments/{code}/usage"),
-        CONTENT_TYPE(ComponentType.CONTENT_TYPE, "contentTypes", 4, "/api/plugins/cms/contentTypes/{code}/usage");
+        CONTENT_TYPE(ComponentType.CONTENT_TYPE, "contentTypes", 4, "/api/plugins/cms/contentTypes/{code}/usage"),
+        CONTENT_TEMPLATE(ComponentType.CONTENT_TEMPLATE, "contentTemplates", 5, "/api/plugins/cms/contentmodels/{code}/usage");
 
         private final ComponentType componentType;
         private final String typeValue;
