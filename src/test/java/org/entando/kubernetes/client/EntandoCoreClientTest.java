@@ -17,7 +17,7 @@ import java.util.Arrays;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Tag("in-process")
+@Tag("unit")
 class EntandoCoreClientTest {
 
     private EntandoCoreClient client;
