@@ -1,18 +1,18 @@
 package org.entando.kubernetes.utils;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import lombok.Getter;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
@@ -20,7 +20,18 @@ import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+
 public class EntandoCoreMockServer extends EntandoGenericMockServer {
+
+    public static final String WIDGET_ENDPOINT = "/api/widgets";
+    public static final String FRAGMENT_ENDPOINT = "/api/fragments";
+    public static final String LABEL_ENDPOINT = "/api/labels";
+    public static final String PAGE_ENDPOINT = "/api/pages";
+    public static final String PAGE_TEMPLATE_ENDPOINT = "/api/pageModels";
+    public static final String CONTENT_TEMPLATE_ENDPOINT = "/api/plugins/cms/contentmodels";
+    public static final String CONTENT_TYPE_ENDPOINT = "/api/plugins/cms/contentTypes";
+    public static final String CODE_PATH_PARAM = "/{code}";
 
     public EntandoCoreMockServer() {
         super();
@@ -87,6 +98,49 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             return this;
 
     }
+
+
+    public EntandoCoreMockServer withWidgetRegistrationSupport() {
+        return this.withGenericSupport(WIDGET_ENDPOINT, WireMock::post);
+    }
+
+    public EntandoCoreMockServer withWidgetDeletionSupport() {
+        return this.withGenericSupport(WIDGET_ENDPOINT, WireMock::delete);
+    }
+
+
+    /**
+     * generic method to stub a response to a particular REST request
+     * @param urlPath the url to match for the request
+     * @param wireMockHttpMethod the Http method to use in the mocked request
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withGenericSupport(String urlPath, Function<UrlPattern, MappingBuilder> wireMockHttpMethod) {
+
+        return this.withGenericSupport(urlPath, null, wireMockHttpMethod);
+    }
+
+
+    /**
+     * generic method to stub a response to a particular REST request having a path param related to the code of the component interested
+     * @param urlPath the url to match for the request
+     * @param code the path param to use
+     * @param wireMockHttpMethod the Http method to use in the mocked request
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withGenericSupport(String urlPath, String code, Function<UrlPattern, MappingBuilder> wireMockHttpMethod) {
+
+        String url = Optional.ofNullable(code)
+                .map(c -> UriComponentsBuilder.newInstance().path(urlPath + CODE_PATH_PARAM).buildAndExpand(code).toUriString())
+                .orElseGet(() -> UriComponentsBuilder.newInstance().path(urlPath).buildAndExpand().toUriString());
+
+        this.wireMockServer.stubFor(wireMockHttpMethod.apply(urlEqualTo(url))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")));
+
+        return this;
+    }
+
 
 
     @Getter
