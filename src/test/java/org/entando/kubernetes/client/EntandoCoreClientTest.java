@@ -1,10 +1,5 @@
 package org.entando.kubernetes.client;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -18,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag("in-process")
 class EntandoCoreClientTest {
@@ -121,72 +119,71 @@ class EntandoCoreClientTest {
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerWidget() {
         WidgetDescriptor wd = new WidgetDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::post);
         this.client.registerWidget(wd);
+        coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deleteWidget() {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteWidget(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerFragment() {
         FragmentDescriptor fd = new FragmentDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.FRAGMENT_ENDPOINT, WireMock::post);
         this.client.registerFragment(fd);
+        coreMockServer.verify(EntandoCoreMockServer.FRAGMENT_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deleteFragment() {
         WidgetDescriptor wd = new WidgetDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.FRAGMENT_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteFragment(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.FRAGMENT_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerLabel() {
         LabelDescriptor ld = new LabelDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.LABEL_ENDPOINT, WireMock::post);
         this.client.registerLabel(ld);
+        coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deleteLabel() {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.LABEL_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteLabel(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerPage() {
         PageDescriptor pd = new PageDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_ENDPOINT, WireMock::post);
         this.client.registerPage(pd);
+        coreMockServer.verify(EntandoCoreMockServer.PAGE_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deletePage() {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_ENDPOINT, CODE, WireMock::delete);
         this.client.deletePage(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.PAGE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerPageTemplate() {
 
@@ -199,45 +196,46 @@ class EntandoCoreClientTest {
 
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::post);
         this.client.registerPageModel(ptd);
+        coreMockServer.verify(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deletePageTemplate() {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, CODE, WireMock::delete);
         this.client.deletePageModel(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerContentTemplate() {
         ContentTemplateDescriptor ctd = new ContentTemplateDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::post);
         this.client.registerContentModel(ctd);
+        coreMockServer.verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deleteContentTemplate() {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteContentModel(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void registerContentType() {
         ContentTypeDescriptor ctd = new ContentTypeDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, WireMock::post);
         this.client.registerContentType(ctd);
+        coreMockServer.verify(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, WireMock::postRequestedFor);
     }
 
 
-    // TODO added because sonar quality blocks the merge. refine this test as soon as possible
     @Test
     void deleteContentType() {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteContentType(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 }

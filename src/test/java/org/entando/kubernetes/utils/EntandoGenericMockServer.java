@@ -1,9 +1,14 @@
 package org.entando.kubernetes.utils;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.springframework.cloud.contract.wiremock.WireMockSpring.options;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;
@@ -11,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class EntandoGenericMockServer {
 
@@ -90,5 +96,15 @@ public abstract class EntandoGenericMockServer {
             // No OPS
         }
         return Optional.ofNullable(port);
+    }
+
+
+    /**
+     * verify that the received url is called using the desired HTTP method
+     * @param url the URL to verify that it is called
+     * @param httpMethodVerifier the function to use in the verification process that reflects the HTTP method that should be used in the request
+     */
+    public void verify(String url, Function<UrlPattern, RequestPatternBuilder> httpMethodVerifier) {
+        wireMockServer.verify(httpMethodVerifier.apply(urlEqualTo(url)));
     }
 }
