@@ -17,6 +17,7 @@ import lombok.Getter;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class EntandoCoreMockServer extends EntandoGenericMockServer {
@@ -58,7 +59,9 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         return this;
     }
 
+
     public EntandoCoreMockServer withComponentUsageSupport(ComponentType type, String code, int usageCount) {
+
         ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
         SimpleRestResponse<EntandoCoreComponentUsage> usageResponse = new SimpleRestResponse<>(
                 new EntandoCoreComponentUsage(ep.getTypeValue(), code, usageCount));
@@ -73,6 +76,18 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             throw new UncheckedIOException(e);
         }
     }
+
+    public EntandoCoreMockServer withFailingComponentUsageSupport(ComponentType type, String code, HttpStatus httpStatus) {
+
+        ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
+
+            this.wireMockServer.stubFor(WireMock.get(urlPathMatching(ep.expandUrlWithCode(code)))
+                    .willReturn(aResponse().withStatus(httpStatus.value())
+                            .withHeader("Content-Type", "application/json")));
+            return this;
+
+    }
+
 
     @Getter
     private enum ComponentUsageApiEndpoint {

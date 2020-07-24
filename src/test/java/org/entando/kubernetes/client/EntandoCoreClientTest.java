@@ -1,9 +1,11 @@
 package org.entando.kubernetes.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
@@ -12,9 +14,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Tag("in-process")
-public class EntandoCoreClientTest {
+class EntandoCoreClientTest {
 
     private EntandoCoreClient client;
     private EntandoCoreMockServer coreMockServer;
@@ -38,7 +42,7 @@ public class EntandoCoreClientTest {
 
     @Test
     @Disabled("Can't make wiremock generic endpoint read code from url")
-    public void shouldWorkWithGenericComponentUsage() {
+    void shouldWorkWithGenericComponentUsage() {
         coreMockServer = coreMockServer.withGenericComponentsUsageSupport();
         EntandoCoreComponentUsage widgetUsage = this.client.getWidgetUsage("my-new-widget");
         assertThat(widgetUsage.getCode()).isEqualTo("my-new-widget");
@@ -48,7 +52,7 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForWidgets() {
+    void shouldGetUsageForWidgets() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.WIDGET, "my-widget", 11);
         EntandoCoreComponentUsage widgetUsage = this.client.getWidgetUsage("my-widget");
         assertThat(widgetUsage.getCode()).isEqualTo("my-widget");
@@ -57,7 +61,7 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForPage() {
+    void shouldGetUsageForPage() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE, "my-page", 3);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageUsage("my-page");
         assertThat(widgetUsage.getCode()).isEqualTo("my-page");
@@ -66,7 +70,7 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForPageTemplates() {
+    void shouldGetUsageForPageTemplates() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE_TEMPLATE, "my-pagemodel", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageModelUsage("my-pagemodel");
         assertThat(widgetUsage.getCode()).isEqualTo("my-pagemodel");
@@ -75,7 +79,7 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForFragments() {
+    void shouldGetUsageForFragments() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.FRAGMENT, "fragment-101", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getFragmentUsage("fragment-101");
         assertThat(widgetUsage.getCode()).isEqualTo("fragment-101");
@@ -84,7 +88,7 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForContentTypes() {
+    void shouldGetUsageForContentTypes() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TYPE, "CT092", 2);
         EntandoCoreComponentUsage widgetUsage = this.client.getContentTypeUsage("CT092");
         assertThat(widgetUsage.getCode()).isEqualTo("CT092");
@@ -93,11 +97,23 @@ public class EntandoCoreClientTest {
     }
 
     @Test
-    public void shouldGetUsageForContentTemplate() {
+    void shouldGetUsageForContentTemplate() {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", 8);
         EntandoCoreComponentUsage contentModelUsage = this.client.getContentModelUsage("12345");
         assertThat(contentModelUsage.getCode()).isEqualTo("12345");
         assertThat(contentModelUsage.getType()).isEqualTo("contentTemplates");
         assertThat(contentModelUsage.getUsage()).isEqualTo(8);
+    }
+
+    @Test
+    void getUsageReceiving3xxStatusCodeShouldBeManagedInTheCoreClient() {
+        coreMockServer = coreMockServer.withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_MODIFIED);
+        assertThrows(HttpException.class, () -> this.client.getContentModelUsage("12345"));
+    }
+
+    @Test
+    void getUsageReceiving4xxStatusCodeShouldThrowAndExceptionByRestTemplateItself() {
+        coreMockServer = coreMockServer.withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_FOUND);
+        assertThrows(HttpClientErrorException.NotFound.class, () -> this.client.getContentModelUsage("12345"));
     }
 }
