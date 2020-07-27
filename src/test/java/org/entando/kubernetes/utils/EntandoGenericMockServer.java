@@ -1,6 +1,5 @@
 package org.entando.kubernetes.utils;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.springframework.cloud.contract.wiremock.WireMockSpring.options;
 
@@ -8,7 +7,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.matching.UrlPattern;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URISyntaxException;

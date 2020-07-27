@@ -1,21 +1,32 @@
 package org.entando.kubernetes.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.util.Arrays;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.web.HttpException;
-import org.entando.kubernetes.model.bundle.descriptor.*;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
-
-import java.util.Arrays;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag("unit")
 class EntandoCoreClientTest {

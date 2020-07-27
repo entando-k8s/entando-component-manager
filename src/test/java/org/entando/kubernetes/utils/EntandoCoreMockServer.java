@@ -1,26 +1,27 @@
 package org.entando.kubernetes.utils;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import lombok.Getter;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
