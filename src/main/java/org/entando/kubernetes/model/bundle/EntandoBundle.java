@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.zafarkhaja.semver.Version;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -37,7 +38,7 @@ public class EntandoBundle {
     }
 
     public Optional<EntandoBundleVersion> getLatestVersion() {
-        return this.versions.stream().max(Comparator.comparing(EntandoBundleVersion::getVersion));
+        return this.versions.stream().max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
     }
 
 }
