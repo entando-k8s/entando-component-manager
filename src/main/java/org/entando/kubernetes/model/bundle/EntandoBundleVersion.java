@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.zafarkhaja.semver.Version;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ public class EntandoBundleVersion {
 
     private String version;
     @JsonIgnore
+    @Setter(AccessLevel.NONE)
     private Version semVersion;
     //private ZonedDateTime timestamp;
 
@@ -33,4 +35,5 @@ public class EntandoBundleVersion {
         this.semVersion = Version.valueOf(version.replaceAll("^v", ""));
         return this;
     }
+
 }

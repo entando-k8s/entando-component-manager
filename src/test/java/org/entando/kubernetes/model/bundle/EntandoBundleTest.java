@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test;
 
 class EntandoBundleTest {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     @Test
-    void testGetLatestVersionWithStartingV() throws IOException {
+    void testGetLatestVersionWithLeadingV() throws IOException {
 
         EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
 
@@ -21,34 +21,34 @@ class EntandoBundleTest {
     }
 
     @Test
-    void testGetLatestVersionWithoutStartingV() throws IOException {
+    void testGetLatestVersionWithoutLeadingV() throws IOException {
 
         EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         // remove the starting v from versions
         entandoBundle.getVersions()
-                .forEach(this::removeStartingV);
+                .forEach(this::removeLeadingV);
 
         assertEquals("0.0.13", entandoBundle.getLatestVersion().get().getVersion());
     }
 
     @Test
-    void testGetLatestVersionMixingStartingVWithFinalElementWithV() throws IOException {
+    void testGetLatestVersionMixingLeadingVWithFinalElementWithV() throws IOException {
 
         EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         // remove some starting v from versions
-        this.removeStartingV(entandoBundle.getVersions().get(4));
-        this.removeStartingV(entandoBundle.getVersions().get(6));
+        this.removeLeadingV(entandoBundle.getVersions().get(4));
+        this.removeLeadingV(entandoBundle.getVersions().get(6));
 
         assertEquals("v0.0.13", entandoBundle.getLatestVersion().get().getVersion());
     }
 
     @Test
-    void testGetLatestVersionMixingStartingVWithFinalElementWithoutV() throws IOException {
+    void testGetLatestVersionMixingLeadingVWithFinalElementWithoutV() throws IOException {
 
         EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         // remove some starting v from versions
-        this.removeStartingV(entandoBundle.getVersions().get(4));
-        this.removeStartingV(entandoBundle.getVersions().get(12));
+        this.removeLeadingV(entandoBundle.getVersions().get(4));
+        this.removeLeadingV(entandoBundle.getVersions().get(12));
 
         assertEquals("0.0.13", entandoBundle.getLatestVersion().get().getVersion());
     }
@@ -63,7 +63,7 @@ class EntandoBundleTest {
     }
 
     @Test
-    void testGetLatestVersionWithAlphaAndStartingV() throws IOException {
+    void testGetLatestVersionWithAlphaAndLeadingV() throws IOException {
 
         EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14-alpha"));
@@ -86,7 +86,7 @@ class EntandoBundleTest {
      *
      * @param entandoBundleVersion
      */
-    private void removeStartingV(EntandoBundleVersion entandoBundleVersion) {
+    private void removeLeadingV(EntandoBundleVersion entandoBundleVersion) {
         entandoBundleVersion.setVersion(entandoBundleVersion.getVersion().replaceAll("^v", ""));
     }
 
