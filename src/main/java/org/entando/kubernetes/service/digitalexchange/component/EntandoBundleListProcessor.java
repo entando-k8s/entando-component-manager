@@ -73,8 +73,10 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
         return sort -> {
             switch (sort) {
                 case NAME:
+                case TITLE:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getTitle(), b.getTitle());
                 case ID: //default comparator field
+                case CODE:
                 default:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getCode(), b.getCode());
             }
