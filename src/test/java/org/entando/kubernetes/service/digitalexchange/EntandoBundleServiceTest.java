@@ -338,4 +338,20 @@ public class EntandoBundleServiceTest {
         components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(0);
     }
+
+    @Test
+    public void shouldReturnCorrectBundleVersions() {
+        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        bundle.getSpec().getDetails().getVersions().add("version-non-present-in-tags");
+
+        k8SServiceClient.addInMemoryBundle(bundle);
+        when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
+
+        PagedMetadata<EntandoBundle> bundles = service.listBundles();
+
+        assertThat(bundles.getTotalItems()).isEqualTo(1);
+        assertThat(bundles.getBody().size()).isEqualTo(1);
+        assertThat(bundles.getBody().get(0).getVersions().size()).isEqualTo(1);
+        assertThat(bundles.getBody().get(0).getVersions().get(0).getVersion()).isEqualTo("0.0.1");
+    }
 }
