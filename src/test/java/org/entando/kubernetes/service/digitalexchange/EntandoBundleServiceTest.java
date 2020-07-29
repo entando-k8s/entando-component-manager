@@ -139,7 +139,7 @@ public class EntandoBundleServiceTest {
         assertThat(components.getBody().get(1).getCode()).isEqualTo(bundleA.getMetadata().getName());
 
         request = new PagedListRequest();
-        request.addFilter(new Filter("title", "bundleA"));
+        request.addFilter(new Filter("name", "bundleA"));
         request.setDirection(Filter.DESC_ORDER);
         components = service.listBundles(request);
 
