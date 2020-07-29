@@ -27,9 +27,12 @@ import org.entando.kubernetes.model.web.request.RequestListProcessor;
 
 public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBundle> {
 
+    private static final String ID = "id";
     private static final String CODE = "code";
+    private static final String NAME = "name";
     private static final String TITLE = "title";
     private static final String TYPE = "type";
+    private static final String VERSION = "version";
     private static final String DESCRIPTION = "description";
     private static final String INSTALLED = "installed";
 
@@ -45,8 +48,10 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     protected Function<Filter, Predicate<EntandoBundle>> getPredicates() {
         return filter -> {
             switch (filter.getAttribute()) {
+                case ID:
                 case CODE:
                     return c -> FilterUtils.filterString(filter, c.getCode());
+                case NAME:
                 case TITLE:
                     return c -> FilterUtils.filterString(filter, c.getTitle());
                 case TYPE:
@@ -55,6 +60,8 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
                     return c -> FilterUtils.filterString(filter, c.getDescription());
                 case INSTALLED:
                     return c -> FilterUtils.filterBoolean(filter, c.isInstalled());
+                case VERSION:
+                    return c -> c.getVersions().stream().anyMatch(cv -> FilterUtils.filterString(filter, cv.getVersion()));
                 default:
                     return null;
             }
@@ -65,9 +72,11 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
     protected Function<String, Comparator<EntandoBundle>> getComparators() {
         return sort -> {
             switch (sort) {
+                case NAME:
                 case TITLE:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getTitle(), b.getTitle());
-                case CODE: //default comparator field
+                case ID: //default comparator field
+                case CODE:
                 default:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getCode(), b.getCode());
             }

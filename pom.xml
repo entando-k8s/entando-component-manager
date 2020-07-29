@@ -83,11 +83,12 @@
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.java.checkstyle.reportPaths>target/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
         <sonar.coverage.exclusions>src/main/java/org/entando/kubernetes/config/*.java</sonar.coverage.exclusions>
-        <awaitility.version>4.0.1</awaitility.version>
 
         <!--dependencies -->
         <postgresql.driver.version>42.2.13</postgresql.driver.version>
         <entando.k8s.custom.model.version>6.0.65</entando.k8s.custom.model.version>
+        <tomcat-embed.version>9.0.37</tomcat-embed.version>
+        <awaitility.version>4.0.1</awaitility.version>
 
         <!-- plugin  versions -->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -119,17 +120,17 @@
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>9.0.36</version>
+            <version>${tomcat-embed.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-el</artifactId>
-            <version>9.0.36</version>
+            <version>${tomcat-embed.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-websocket</artifactId>
-            <version>9.0.36</version>
+            <version>${tomcat-embed.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.springframework.security.oauth/spring-security-oauth2 -->
         <dependency>
