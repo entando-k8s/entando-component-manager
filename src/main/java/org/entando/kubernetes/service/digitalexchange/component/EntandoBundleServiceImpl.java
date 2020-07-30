@@ -211,7 +211,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .thumbnail(details.getThumbnail())
                 .installedJob(installedJob)
                 .lastJob(lastJob)
-                .versions(details.getVersions().stream()
+                .versions(bundle.getSpec().getTags().stream()
                         .map(EntandoBundleVersion::fromEntity) //TODO how to read timestamp from k8s custom model?
                         .collect(Collectors.toList()))
                 .build();
