@@ -26,8 +26,7 @@ public class EntandoBundleVersion {
     //private ZonedDateTime timestamp;
 
     public static EntandoBundleVersion fromEntity(EntandoDeBundleTag tag) {
-        return EntandoBundleVersion.builder()
-                .version(tag.getVersion())
+        return new EntandoBundleVersion().setVersion(tag.getVersion());
                 //.timestamp() TODO how to read from k8s custom model?
     }
 
