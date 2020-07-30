@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 @Getter
 @Setter
@@ -24,9 +25,9 @@ public class EntandoBundleVersion {
     private Version semVersion;
     //private ZonedDateTime timestamp;
 
-    public static EntandoBundleVersion fromEntity(String version) {
-        return new EntandoBundleVersion()
-                .setVersion(version);
+    public static EntandoBundleVersion fromEntity(EntandoDeBundleTag tag) {
+        return EntandoBundleVersion.builder()
+                .version(tag.getVersion())
                 //.timestamp() TODO how to read from k8s custom model?
     }
 
