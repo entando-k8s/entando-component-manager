@@ -22,7 +22,7 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle Page Templates
+ * Processor to handle Page Templates.
  */
 @Slf4j
 @Service

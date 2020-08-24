@@ -22,7 +22,7 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle Bundles with CMS ContentTemplates
+ * Processor to handle Bundles with CMS ContentTemplates.
  */
 @Slf4j
 @Service

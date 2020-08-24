@@ -144,7 +144,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, USAGE_PATH_SEGMENT}, "content template");
+        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, USAGE_PATH_SEGMENT},
+                "content template");
     }
 
     @Override
@@ -161,7 +162,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentTypeUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT}, "content type");
+        return this
+                .getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT}, "content type");
     }
 
     @Override
@@ -191,9 +193,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .pathSegment(segments);
     }
 
-
     /**
-     * asks for component the received component id usage count
+     * asks for component the received component id usage count.
+     *
      * @param code the code of the component of which get the usage count
      * @param endpointUrlParts a String array containing the query segments representing the endpoint url to qurey
      * @return an instance of EntandoCoreComponentUsage containing the number of the entities using the component
@@ -202,7 +204,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
         ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
                 .exchange(resolvePathSegments(endpointUrlParts).build().toUri(), HttpMethod.GET, null,
-                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {});
+                        new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
+                        });
 
         if (usage.getStatusCode().is2xxSuccessful()) {
             return usage.getBody().getPayload();

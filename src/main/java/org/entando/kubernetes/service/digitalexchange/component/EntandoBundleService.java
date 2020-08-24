@@ -11,6 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.util.List;
@@ -34,7 +35,10 @@ public interface EntandoBundleService {
 
     //Utility converters
     EntandoBundle convertToBundleFromEntity(EntandoBundleEntity entity);
+
     EntandoBundle convertToBundleFromEcr(EntandoDeBundle bundle);
+
     EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle);
+
     EntandoBundleEntity convertToEntityFromEcr(EntandoDeBundle bundle);
 }

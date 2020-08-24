@@ -96,11 +96,12 @@ public abstract class EntandoGenericMockServer {
         return Optional.ofNullable(port);
     }
 
-
     /**
-     * verify that the received url is called using the desired HTTP method
+     * verify that the received url is called using the desired HTTP method.
+     *
      * @param url the URL to verify that it is called
-     * @param httpMethodVerifier the function to use in the verification process that reflects the HTTP method that should be used in the request
+     * @param httpMethodVerifier the function to use in the verification process that reflects the HTTP method that should be used in the
+     *         request
      */
     public void verify(String url, Function<UrlPattern, RequestPatternBuilder> httpMethodVerifier) {
         wireMockServer.verify(httpMethodVerifier.apply(urlEqualTo(url)));

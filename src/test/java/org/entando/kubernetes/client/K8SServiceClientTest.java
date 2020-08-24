@@ -53,9 +53,9 @@ import org.springframework.web.client.RestTemplate;
 public class K8SServiceClientTest {
 
     private static EntandoK8SServiceMockServer mockServer;
-    private final String CLIENT_ID = "test-entando-de";
-    private final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    private final String TOKEN_URI = "http://someurl.com";
+    private static final String CLIENT_ID = "test-entando-de";
+    private static final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
+    private static final String TOKEN_URI = "http://someurl.com";
     private DefaultK8SServiceClient client;
 
     @BeforeEach
@@ -291,7 +291,7 @@ public class K8SServiceClientTest {
 
 
     private HttpMessageConverter<?> getJsonConverter() {
-        List<MediaType> supportedMediaTypes = Collections.singletonList(MediaType.APPLICATION_JSON);
+        final List<MediaType> supportedMediaTypes = Collections.singletonList(MediaType.APPLICATION_JSON);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

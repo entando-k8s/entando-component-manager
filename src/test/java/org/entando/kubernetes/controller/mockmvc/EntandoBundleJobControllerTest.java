@@ -1,6 +1,5 @@
 package org.entando.kubernetes.controller.mockmvc;
 
-
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -115,7 +114,8 @@ public class EntandoBundleJobControllerTest {
         mvc.perform(
                 get("/jobs"
                         + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
-                        + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].allowedValues=INSTALL_COMPLETED,INSTALL_IN_PROGRESS"
+                        + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].allowedValues=INSTALL_COMPLETED,"
+                        + "INSTALL_IN_PROGRESS"
                         + "&pageSize=1&sort=startedAt&direction=DESC")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -153,8 +153,8 @@ public class EntandoBundleJobControllerTest {
         job1.setFinishedAt(job1.getStartedAt().plusMinutes(1L));
         job1.setStatus(JobStatus.INSTALL_COMPLETED);
 
-        EntandoBundleJobEntity _job1 = jobRepository.save(job1);
-        jobs.put(_job1.getId(), _job1);
+        EntandoBundleJobEntity savedJob = jobRepository.save(job1);
+        jobs.put(savedJob.getId(), savedJob);
 
         EntandoBundleJobEntity job2 = new EntandoBundleJobEntity();
         job2.setComponentId("id2");
@@ -165,34 +165,33 @@ public class EntandoBundleJobControllerTest {
         job2.setFinishedAt(null);
         job2.setStatus(JobStatus.INSTALL_IN_PROGRESS);
 
-        EntandoBundleJobEntity _job2 = jobRepository.save(job2);
-        jobs.put(_job2.getId(), _job2);
+        EntandoBundleJobEntity savedJob2 = jobRepository.save(job2);
+        jobs.put(savedJob2.getId(), savedJob2);
 
-        EntandoBundleJobEntity job1_uninstall = new EntandoBundleJobEntity();
-        job1_uninstall.setComponentId("id1");
-        job1_uninstall.setComponentName("my-bundle");
-        job1_uninstall.setComponentVersion("1.0.0");
-        job1_uninstall.setProgress(1.0);
-        job1_uninstall.setStartedAt(LocalDateTime.of(2020, Month.FEBRUARY, 2, 7, 23));
-        job1_uninstall.setFinishedAt(job1_uninstall.getStartedAt().plusSeconds(30L));
-        job1_uninstall.setStatus(JobStatus.UNINSTALL_COMPLETED);
+        EntandoBundleJobEntity job1Uninstall = new EntandoBundleJobEntity();
+        job1Uninstall.setComponentId("id1");
+        job1Uninstall.setComponentName("my-bundle");
+        job1Uninstall.setComponentVersion("1.0.0");
+        job1Uninstall.setProgress(1.0);
+        job1Uninstall.setStartedAt(LocalDateTime.of(2020, Month.FEBRUARY, 2, 7, 23));
+        job1Uninstall.setFinishedAt(job1Uninstall.getStartedAt().plusSeconds(30L));
+        job1Uninstall.setStatus(JobStatus.UNINSTALL_COMPLETED);
 
-        EntandoBundleJobEntity _job1_uninstall = jobRepository.save(job1_uninstall);
-        jobs.put(_job1_uninstall.getId(), _job1_uninstall);
+        EntandoBundleJobEntity savedJobUninstall = jobRepository.save(job1Uninstall);
+        jobs.put(savedJobUninstall.getId(), savedJobUninstall);
 
-        EntandoBundleJobEntity job1_reinstall = new EntandoBundleJobEntity();
-        job1_reinstall.setComponentId("id1");
-        job1_reinstall.setComponentName("my-bundle");
-        job1_reinstall.setProgress(1.0);
-        job1_reinstall.setComponentVersion("1.0.0");
-        job1_reinstall.setStartedAt(LocalDateTime.of(2020, Month.MARCH, 5, 14, 30));
-        job1_reinstall.setFinishedAt(job1_reinstall.getStartedAt().plusMinutes(2L));
-        job1_reinstall.setStatus(JobStatus.INSTALL_COMPLETED);
+        EntandoBundleJobEntity job1Reinstall = new EntandoBundleJobEntity();
+        job1Reinstall.setComponentId("id1");
+        job1Reinstall.setComponentName("my-bundle");
+        job1Reinstall.setProgress(1.0);
+        job1Reinstall.setComponentVersion("1.0.0");
+        job1Reinstall.setStartedAt(LocalDateTime.of(2020, Month.MARCH, 5, 14, 30));
+        job1Reinstall.setFinishedAt(job1Reinstall.getStartedAt().plusMinutes(2L));
+        job1Reinstall.setStatus(JobStatus.INSTALL_COMPLETED);
 
-        EntandoBundleJobEntity _job1_reinstall = jobRepository.save(job1_reinstall);
-        jobs.put(_job1_reinstall.getId(), _job1_reinstall);
+        EntandoBundleJobEntity savedJob1Reinstall = jobRepository.save(job1Reinstall);
+        jobs.put(savedJob1Reinstall.getId(), savedJob1Reinstall);
 
     }
-
 
 }

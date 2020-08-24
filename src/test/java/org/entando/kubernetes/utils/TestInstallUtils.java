@@ -60,6 +60,7 @@ import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
+
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
@@ -73,9 +74,9 @@ public class TestInstallUtils {
 
     public static final String JOBS_ENDPOINT = "/jobs";
 
-
     @SneakyThrows
-    public static String simulateSuccessfullyCompletedInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+    public static String simulateSuccessfullyCompletedInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -91,7 +92,7 @@ public class TestInstallUtils {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+        //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -148,7 +149,7 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus expected) {
-        waitForInstallStatus(mockMvc, new JobStatus[]{ expected });
+        waitForInstallStatus(mockMvc, new JobStatus[]{expected});
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
@@ -170,7 +171,7 @@ public class TestInstallUtils {
     }
 
     public static void waitForJobStatus(Supplier<JobStatus> jobStatus, JobStatus expected) {
-        waitForJobStatus(jobStatus, new JobStatus[]{ expected });
+        waitForJobStatus(jobStatus, new JobStatus[]{expected});
     }
 
     @SneakyThrows
@@ -206,7 +207,8 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateBundleDownloadError(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, BundleDownloaderFactory factory) {
+    public static String simulateBundleDownloadError(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+            BundleDownloaderFactory factory) {
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -215,7 +217,6 @@ public class TestInstallUtils {
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8sServiceClient;
         k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
 
-
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(500)));
 
@@ -223,7 +224,7 @@ public class TestInstallUtils {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+        //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -252,7 +253,7 @@ public class TestInstallUtils {
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-//        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+        //        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
@@ -269,7 +270,8 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+    public static String simulateFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+            String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -344,7 +346,8 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateInProgressInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+    public static String simulateInProgressInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+            String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         UniformDistribution delayDistribution = new UniformDistribution(200, 500);
@@ -411,7 +414,6 @@ public class TestInstallUtils {
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentModel(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteLabel(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFolder(any());
-
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())

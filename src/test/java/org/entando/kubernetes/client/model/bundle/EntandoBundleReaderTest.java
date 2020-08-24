@@ -32,7 +32,7 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class EntandoBundleReaderTest {
 
-    BundleReader r;
+    BundleReader bundleReader;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
     Path bundleFolder;
@@ -40,17 +40,17 @@ public class EntandoBundleReaderTest {
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        r = new BundleReader(bundleFolder);
+        bundleReader = new BundleReader(bundleFolder);
     }
 
     @Test
     public void shouldReadBundleIdCorrectly() throws IOException {
-        assertThat(r.getBundleCode()).isEqualTo("something");
+        assertThat(bundleReader.getBundleCode()).isEqualTo("something");
     }
 
     @Test
     public void shouldRebaseBundleEntriesToDescriptorRoot() throws IOException {
-        BundleDescriptor cd = r.readDescriptorFile("descriptor.yaml", BundleDescriptor.class);
+        BundleDescriptor cd = bundleReader.readDescriptorFile("descriptor.yaml", BundleDescriptor.class);
         assertThat(cd).isNotNull();
     }
 
@@ -59,9 +59,9 @@ public class EntandoBundleReaderTest {
         List<String> expectedResourceFolders = Arrays.asList(
                 "resources/js", "resources/css", "resources/vendor", "resources/vendor/jquery"
         );
-        assertThat(r.containsResourceFolder()).isTrue();
-        assertThat(r.getResourceFolders()).hasSize(expectedResourceFolders.size());
-        assertThat(r.getResourceFolders()).containsAll(expectedResourceFolders);
+        assertThat(bundleReader.containsResourceFolder()).isTrue();
+        assertThat(bundleReader.getResourceFolders()).hasSize(expectedResourceFolders.size());
+        assertThat(bundleReader.getResourceFolders()).containsAll(expectedResourceFolders);
     }
 
     @Test
@@ -70,13 +70,13 @@ public class EntandoBundleReaderTest {
                 "resources/css/custom.css", "resources/css/style.css", "resources/js/configUiScript.js",
                 "resources/js/script.js", "resources/vendor/jquery/jquery.js"
         );
-        assertThat(r.getResourceFiles()).hasSize(expectedResourceFiles.size());
-        assertThat(r.getResourceFiles()).containsAll(expectedResourceFiles);
+        assertThat(bundleReader.getResourceFiles()).hasSize(expectedResourceFiles.size());
+        assertThat(bundleReader.getResourceFiles()).containsAll(expectedResourceFiles);
     }
 
     @Test
     public void shouldReadDescriptorFile() throws IOException {
-        WidgetDescriptor wd = r.readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = bundleReader.readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
         assertThat(wd.getCode()).isEqualTo("another_todomvc_widget");
         assertThat(wd.getGroup()).isEqualTo("free");
@@ -88,21 +88,21 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadRelatedFileAsString() throws IOException {
-        String content = r.readFileAsString("widgets/widget.ftl");
+        String content = bundleReader.readFileAsString("widgets/widget.ftl");
         assertThat(content).isEqualTo("<h2>Hello World Widget</h2>");
     }
 
     @Test
     public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.getResourceFileAsDescriptor("widgets/pinco-pallo.yaml");
+            bundleReader.getResourceFileAsDescriptor("widgets/pinco-pallo.yaml");
         });
     }
 
     @Test
     public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
         Assertions.assertThrows(InvalidBundleException.class, () -> {
-            r.getResourceFileAsDescriptor("widgets/pinco-pallo-template.ftl");
+            bundleReader.getResourceFileAsDescriptor("widgets/pinco-pallo-template.ftl");
         });
     }
 
@@ -117,7 +117,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadConfigUIForWidget() throws IOException {
-        WidgetDescriptor wd = r.readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = bundleReader.readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
         assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
         assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");
@@ -128,7 +128,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void readResourceFileDescriptor() throws IOException {
-        FileDescriptor fd = r.getResourceFileAsDescriptor("resources/css/custom.css");
+        FileDescriptor fd = bundleReader.getResourceFileAsDescriptor("resources/css/custom.css");
         assertThat(fd.getFilename()).isEqualTo("custom.css");
         assertThat(fd.getFolder()).isEqualTo("resources/css/");
     }

@@ -62,7 +62,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public EntandoPlugin getPluginForLink(EntandoAppPluginLink el) {
         return this.inMemoryPlugins.stream()
-                .filter(p ->el.getSpec().getEntandoPluginName().equals(p.getMetadata().getName()))
+                .filter(p -> el.getSpec().getEntandoPluginName().equals(p.getMetadata().getName()))
                 .findFirst().orElseThrow(PluginNotFoundException::new);
     }
 
@@ -94,7 +94,8 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         return link;
     }
 
-    @Override public Optional<EntandoAppPluginLink> getLinkByName(String linkName) {
+    @Override
+    public Optional<EntandoAppPluginLink> getLinkByName(String linkName) {
         return inMemoryLinks.stream()
                 .filter(l -> l.getMetadata().getName().equals(linkName))
                 .findFirst();

@@ -11,15 +11,14 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 
 /**
  * Any classes that is called a Component Processor will be found automatically on the context to process the Zip File
- * with the Component Descriptor
+ * with the Component Descriptor.
  *
- * @author Sergio Marcelino
  */
 public interface ComponentProcessor<T> {
 
     /**
      * This method will process the component descriptor and should return an empty list or a list of all components
-     * that should be installed
+     * that should be installed.
      *
      *
      * @param bundleReader npm package reader zip file being processed
@@ -29,9 +28,7 @@ public interface ComponentProcessor<T> {
     List<Installable<T>> process(BundleReader bundleReader);
 
     /**
-     * This method extracts a list of installable components from a list of {@class EntandoBundleComponentJob}
-     * @param components
-     * @return List of installable components
+     * This method extracts a list of installable components from a list of {@class EntandoBundleComponentJob}.
      */
     List<Installable<T>> process(List<EntandoBundleComponentJobEntity> components);
 

@@ -33,16 +33,16 @@ public class EntandoBundleJobService {
         return new PagedMetadata<>(request, sublist, filteredList.size());
     }
 
-    public List<EntandoBundleComponentJobEntity> getJobRelatedComponentJobs(EntandoBundleJobEntity job) {
-        return componentJobRepository.findAllByParentJob(job);
-    }
-
     public List<EntandoBundleJobEntity> getJobs() {
         return jobRepository.findAllByOrderByStartedAtDesc();
     }
 
     public List<EntandoBundleJobEntity> getJobs(String componentId) {
         return jobRepository.findAllByComponentIdOrderByStartedAtDesc(componentId);
+    }
+
+    public List<EntandoBundleComponentJobEntity> getJobRelatedComponentJobs(EntandoBundleJobEntity job) {
+        return componentJobRepository.findAllByParentJob(job);
     }
 
     public Optional<EntandoBundleJobEntity> getById(String jobId) {

@@ -24,8 +24,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
- * <p>
- * Will read the service property on the component descriptor yaml and convert it into a EntandoPlugin custom resource
+ *
+ * <p>Will read the service property on the component descriptor yaml and convert it into a EntandoPlugin custom resource
  *
  * @author Sergio Marcelino
  */
