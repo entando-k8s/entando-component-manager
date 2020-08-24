@@ -44,7 +44,7 @@
     </repositories>
 
     <properties>
-        <preDeploymentTestGroups>unit</preDeploymentTestGroups>
+        <preDeploymentTestGroups>unit,component,in-process</preDeploymentTestGroups>
         <postDeploymentTestGroups></postDeploymentTestGroups>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
