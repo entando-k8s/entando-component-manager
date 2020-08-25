@@ -111,6 +111,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 public class InstallFlowTest {
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -200,15 +201,15 @@ public class InstallFlowTest {
                 .stream().sorted(Comparator.comparing(PageDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page") &&
-                pd.getTitles().get("it").equals("La mia pagina") &&
-                pd.getTitles().get("en").equals("My page") &&
-                pd.getPageModel().equals("service") &&
-                pd.getOwnerGroup().equals("administrators") &&
-                pd.getJoinGroups().containsAll(Arrays.asList("free", "customers", "developers")) &&
-                pd.isDisplayedInMenu() &&
-                !pd.isSeo() &&
-                pd.getStatus().equals("published")
+        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page")
+                && pd.getTitles().get("it").equals("La mia pagina")
+                && pd.getTitles().get("en").equals("My page")
+                && pd.getPageModel().equals("service")
+                && pd.getOwnerGroup().equals("administrators")
+                && pd.getJoinGroups().containsAll(Arrays.asList("free", "customers", "developers"))
+                && pd.isDisplayedInMenu()
+                && !pd.isSeo()
+                && pd.getStatus().equals("published")
         );
     }
 
@@ -234,18 +235,18 @@ public class InstallFlowTest {
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css") &&
-                fd.getFolder().equals("/something/css") &&
-                fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css") &&
-                fd.getFolder().equals("/something/css") &&
-                fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
-        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js") &&
-                fd.getFolder().equals("/something/js") &&
-                fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
-        assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js") &&
-                fd.getFolder().equals("/something/js") &&
-                fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
+        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css")
+                && fd.getFolder().equals("/something/css")
+                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
+        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css")
+                && fd.getFolder().equals("/something/css")
+                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
+        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js")
+                && fd.getFolder().equals("/something/js")
+                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
+        assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js")
+                && fd.getFolder().equals("/something/js")
+                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
     }
 
     private void verifyDirectoryRequests(EntandoCoreClient coreClient) {
@@ -278,19 +279,19 @@ public class InstallFlowTest {
         assertThat(allPassedPageModels.get(1).getCode()).isEqualTo("todomvc_page_model");
         assertThat(allPassedPageModels.get(1).getDescription()).isEqualTo("TODO MVC basic page model");
         assertThat(allPassedPageModels.get(1).getConfiguration().getFrames().get(0))
-                .matches(f -> f.getPos().equals("0") &&
-                        f.getDescription().equals("Header") &&
-                        f.getSketch().getX1() == 0 &&
-                        f.getSketch().getY1() == 0  &&
-                        f.getSketch().getX2() == 11 &&
-                        f.getSketch().getY2() == 0);
+                .matches(f -> f.getPos().equals("0")
+                        && f.getDescription().equals("Header")
+                        && f.getSketch().getX1() == 0
+                        && f.getSketch().getY1() == 0
+                        && f.getSketch().getX2() == 11
+                        && f.getSketch().getY2() == 0);
         assertThat(allPassedPageModels.get(1).getConfiguration().getFrames().get(1))
-                .matches(f -> f.getPos().equals("1") &&
-                        f.getDescription().equals("Breadcrumb") &&
-                        f.getSketch().getX1() == 0 &&
-                        f.getSketch().getY1() == 1 &&
-                        f.getSketch().getX2() == 11 &&
-                        f.getSketch().getY2() == 1);
+                .matches(f -> f.getPos().equals("1")
+                        && f.getDescription().equals("Breadcrumb")
+                        && f.getSketch().getX1() == 0
+                        && f.getSketch().getY1() == 1
+                        && f.getSketch().getX2() == 11
+                        && f.getSketch().getY2() == 1);
     }
 
     private void verifyWidgetsRequests(EntandoCoreClient coreClient) throws Exception {
@@ -407,7 +408,7 @@ public class InstallFlowTest {
 
         verifyJobHasComponentAndStatus(mockMvc, jobId, JobStatus.INSTALL_COMPLETED);
 
-        String uninstallJobId = simulateSuccessfullyCompletedUninstall();
+        final String uninstallJobId = simulateSuccessfullyCompletedUninstall();
 
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteWidget(ac.capture());
@@ -455,10 +456,11 @@ public class InstallFlowTest {
         boolean matchFound = false;
         for (EntandoBundleComponentJobEntity ic : installedComponentList) {
             matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
-                return uc.getParentJob().getId().equals(jobs.get(1).getId()) &&
-                        uc.getComponentId().equals(ic.getComponentId()) &&
-                        uc.getComponentType().equals(ic.getComponentType());
-//                        uc.getChecksum().equals(ic.getChecksum()); // FIXME when building descriptor for uninstall we use only code, this changes the checksum
+                return uc.getParentJob().getId().equals(jobs.get(1).getId())
+                        && uc.getComponentId().equals(ic.getComponentId())
+                        && uc.getComponentType().equals(ic.getComponentType());
+                //                        uc.getChecksum().equals(ic.getChecksum()); // FIXME when building descriptor for uninstall we
+                //                         use only code, this changes the checksum
             });
             if (!matchFound) {
                 break;
@@ -585,9 +587,9 @@ public class InstallFlowTest {
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
-//        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-//                .andExpect(status().isConflict())
-//                .andExpect(content().string(containsString("JOB ID: " + jobId)));
+        //        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        //                .andExpect(status().isConflict())
+        //                .andExpect(content().string(containsString("JOB ID: " + jobId)));
         waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
     }
 
@@ -624,7 +626,8 @@ public class InstallFlowTest {
 
         List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository.findAllByParentJob(job.get());
 
-        List<EntandoBundleComponentJobEntity> pluginJobs = jobComponentList.stream().filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
+        List<EntandoBundleComponentJobEntity> pluginJobs = jobComponentList.stream()
+                .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());
         assertThat(pluginJobs.size()).isEqualTo(2);
         assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList())).containsOnly(
@@ -692,7 +695,7 @@ public class InstallFlowTest {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-//        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+        //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())

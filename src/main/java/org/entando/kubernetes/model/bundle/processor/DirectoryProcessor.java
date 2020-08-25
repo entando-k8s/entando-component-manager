@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * Processor to handle Static files to be stored by Entando. Commonly used for js, images and css.
- * <p>
- * This processor will also create the folders.
+ *
+ * <p>This processor will also create the folders.
  *
  * @author Sergio Marcelino
  */
@@ -70,12 +70,11 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
                 .collect(Collectors.toList());
     }
 
-
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         Path dirPath = Paths.get(component.getComponentId());
         boolean isRoot = false;
-        if(dirPath.getParent().equals(dirPath.getRoot())) {
+        if (dirPath.getParent().equals(dirPath.getRoot())) {
             isRoot = true;
         }
         return new DirectoryDescriptor(component.getComponentId(), isRoot);

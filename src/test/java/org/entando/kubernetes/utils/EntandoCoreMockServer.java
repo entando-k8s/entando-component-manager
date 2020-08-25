@@ -54,23 +54,21 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             String codeHandlebarTemplate = "{{request.path.[" + ep.getCodePathSegmentPosition() + "]}}";
             this.wireMockServer.stubFor(WireMock.get(urlPathMatching(ep.expandUrl()))
                     .willReturn(aResponse()
-                                    .withStatus(200)
-                                    .withHeader("Content-Type", "application/json")
-                                    .withBody("{ \"payload\" : {\n "
-                                            + "\"type\": \"" + ep.getTypeValue() + "\",\n"
-                                            + "\"code\": \"" + codeHandlebarTemplate + "\",\n"
-// + codeHandlebarTemplate + "\",\n"
-                                            + "\"usage\": 1\n"
-                                            + "},\n"
-                                            + "\"metadata\": {},\n"
-                                            + "\"errors\": []\n "
-                                            + "}")
-                                    .withTransformers("response-template")
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{ \"payload\" : {\n "
+                                    + "\"type\": \"" + ep.getTypeValue() + "\",\n"
+                                    + "\"code\": \"" + codeHandlebarTemplate + "\",\n"// + codeHandlebarTemplate + "\",\n"
+                                    + "\"usage\": 1\n"
+                                    + "},\n"
+                                    + "\"metadata\": {},\n"
+                                    + "\"errors\": []\n "
+                                    + "}")
+                            .withTransformers("response-template")
                     ));
         }
         return this;
     }
-
 
     public EntandoCoreMockServer withComponentUsageSupport(ComponentType type, String code, int usageCount) {
 
@@ -93,13 +91,12 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
         ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
 
-            this.wireMockServer.stubFor(WireMock.get(urlPathMatching(ep.expandUrlWithCode(code)))
-                    .willReturn(aResponse().withStatus(httpStatus.value())
-                            .withHeader("Content-Type", "application/json")));
-            return this;
+        this.wireMockServer.stubFor(WireMock.get(urlPathMatching(ep.expandUrlWithCode(code)))
+                .willReturn(aResponse().withStatus(httpStatus.value())
+                        .withHeader("Content-Type", "application/json")));
+        return this;
 
     }
-
 
     public EntandoCoreMockServer withWidgetRegistrationSupport() {
         return this.withGenericSupport(WIDGET_ENDPOINT, WireMock::post);
@@ -109,9 +106,9 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         return this.withGenericSupport(WIDGET_ENDPOINT, WireMock::delete);
     }
 
-
     /**
-     * generic method to stub a response to a particular REST request
+     * generic method to stub a response to a particular REST request.
+     *
      * @param urlPath the url to match for the request
      * @param wireMockHttpMethod the Http method to use in the mocked request
      * @return this instance of the EntandoCoreMockServer
@@ -121,9 +118,9 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         return this.withGenericSupport(urlPath, null, wireMockHttpMethod);
     }
 
-
     /**
-     * generic method to stub a response to a particular REST request having a path param related to the code of the component interested
+     * generic method to stub a response to a particular REST request having a path param related to the code of the component interested.
+     *
      * @param urlPath the url to match for the request
      * @param code the path param to use
      * @param wireMockHttpMethod the Http method to use in the mocked request
@@ -141,8 +138,6 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
         return this;
     }
-
-
 
     @Getter
     private enum ComponentUsageApiEndpoint {

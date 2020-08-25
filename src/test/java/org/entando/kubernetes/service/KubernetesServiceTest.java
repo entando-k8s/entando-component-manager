@@ -25,9 +25,9 @@ public class KubernetesServiceTest {
 
     private KubernetesService kubernetesService;
     private K8SServiceClient client;
-    private final String APP_NAME = "test-app";
-    private final String APP_NAMESPACE = "test-namespace";
-    private final String PLUGIN_NAME = "my-plugin";
+    private static final String APP_NAME = "test-app";
+    private static final String APP_NAMESPACE = "test-namespace";
+    private static final String PLUGIN_NAME = "my-plugin";
 
 
     @BeforeEach

@@ -16,11 +16,11 @@ class EntandoBundleTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
     @Test
     void testGetLatestVersionWithLeadingV() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
 
         assertEquals("v0.0.13", entandoBundle.getLatestVersion().get().getVersion());
     }
@@ -28,7 +28,8 @@ class EntandoBundleTest {
     @Test
     void testGetLatestVersionWithoutLeadingV() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         // remove the starting v from versions
         entandoBundle.getVersions()
                 .forEach(this::removeLeadingV);
@@ -39,7 +40,8 @@ class EntandoBundleTest {
     @Test
     void testGetLatestVersionMixingLeadingVWithFinalElementWithV() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         // remove some starting v from versions
         this.removeLeadingV(entandoBundle.getVersions().get(4));
         this.removeLeadingV(entandoBundle.getVersions().get(6));
@@ -50,7 +52,8 @@ class EntandoBundleTest {
     @Test
     void testGetLatestVersionMixingLeadingVWithFinalElementWithoutV() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         // remove some starting v from versions
         this.removeLeadingV(entandoBundle.getVersions().get(4));
         this.removeLeadingV(entandoBundle.getVersions().get(12));
@@ -61,7 +64,8 @@ class EntandoBundleTest {
     @Test
     void testGetLatestVersionWithAlpha() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("0.0.14-alpha"));
 
         assertEquals("0.0.14-alpha", entandoBundle.getLatestVersion().get().getVersion());
@@ -70,7 +74,8 @@ class EntandoBundleTest {
     @Test
     void testGetLatestVersionWithAlphaAndLeadingV() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14-alpha"));
 
         assertEquals("v0.0.14-alpha", entandoBundle.getLatestVersion().get().getVersion());
@@ -79,7 +84,8 @@ class EntandoBundleTest {
     @Test
     void testGetLatestVersionWithAlphaAndStable() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14-alpha"));
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14"));
 
@@ -89,7 +95,8 @@ class EntandoBundleTest {
     @Test
     void testExpectedVersionSort() throws IOException {
 
-        EntandoBundle entandoBundle = objectMapper.readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
+        EntandoBundle entandoBundle = objectMapper
+                .readValue(new File("src/test/resources/payloads/k8s-svc/bundles/bundle_with_versions.json"), EntandoBundle.class);
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14-beta"));
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14-alpha"));
         entandoBundle.getVersions().add(new EntandoBundleVersion().setVersion("v0.0.14-rc.1"));
@@ -101,13 +108,10 @@ class EntandoBundleTest {
                 .sorted(Comparator.comparing(EntandoBundleVersion::getSemVersion, Version::compareTo).reversed())
                 .map(EntandoBundleVersion::getVersion)
                 .collect(Collectors.toList());
-        assertThat(sortedVersions).startsWith("v0.0.14", "v0.0.14-snapshot", "v0.0.14-rc.2", "v0.0.14-rc.1", "v0.0.14-beta", "v0.0.14-alpha");
+        assertThat(sortedVersions)
+                .startsWith("v0.0.14", "v0.0.14-snapshot", "v0.0.14-rc.2", "v0.0.14-rc.1", "v0.0.14-beta", "v0.0.14-alpha");
     }
 
-    /**
-     *
-     * @param entandoBundleVersion
-     */
     private void removeLeadingV(EntandoBundleVersion entandoBundleVersion) {
         entandoBundleVersion.setVersion(entandoBundleVersion.getVersion().replaceAll("^v", ""));
     }

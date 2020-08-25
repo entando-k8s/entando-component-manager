@@ -75,6 +75,10 @@ public class BundleReader {
         }
     }
 
+    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+        return mapper.readValue(file, clazz);
+    }
+
     public String readFileAsString(String fileName) throws IOException {
         verifyFileExistance(fileName);
         try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile());
@@ -96,9 +100,6 @@ public class BundleReader {
         }
     }
 
-    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
-        return mapper.readValue(file, clazz);
-    }
 
     private void verifyFileExistance(String fileName) {
         log.debug("Reading file {}", fileName);

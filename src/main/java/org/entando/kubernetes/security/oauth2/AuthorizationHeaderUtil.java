@@ -131,16 +131,16 @@ public class AuthorizationHeaderUtil {
         }
     }
 
-    private OAuth2AccessTokenResponse toOAuth2AccessTokenResponse(OAuthIdpTokenResponseDTO oAuthIdpResponse) {
+    private OAuth2AccessTokenResponse toOAuth2AccessTokenResponse(OAuthIdpTokenResponseDTO oauthIdpResponse) {
         Map<String, Object> additionalParameters = new HashMap<>();
-        additionalParameters.put("id_token", oAuthIdpResponse.getIdToken());
-        additionalParameters.put("not-before-policy", oAuthIdpResponse.getNotBefore());
-        additionalParameters.put("refresh_expires_in", oAuthIdpResponse.getRefreshExpiresIn());
-        additionalParameters.put("session_state", oAuthIdpResponse.getSessionState());
-        return OAuth2AccessTokenResponse.withToken(oAuthIdpResponse.getAccessToken())
-                .expiresIn(oAuthIdpResponse.getExpiresIn())
-                .refreshToken(oAuthIdpResponse.getRefreshToken())
-                .scopes(Pattern.compile("\\s").splitAsStream(oAuthIdpResponse.getScope()).collect(Collectors.toSet()))
+        additionalParameters.put("id_token", oauthIdpResponse.getIdToken());
+        additionalParameters.put("not-before-policy", oauthIdpResponse.getNotBefore());
+        additionalParameters.put("refresh_expires_in", oauthIdpResponse.getRefreshExpiresIn());
+        additionalParameters.put("session_state", oauthIdpResponse.getSessionState());
+        return OAuth2AccessTokenResponse.withToken(oauthIdpResponse.getAccessToken())
+                .expiresIn(oauthIdpResponse.getExpiresIn())
+                .refreshToken(oauthIdpResponse.getRefreshToken())
+                .scopes(Pattern.compile("\\s").splitAsStream(oauthIdpResponse.getScope()).collect(Collectors.toSet()))
                 .tokenType(OAuth2AccessToken.TokenType.BEARER)
                 .additionalParameters(additionalParameters)
                 .build();

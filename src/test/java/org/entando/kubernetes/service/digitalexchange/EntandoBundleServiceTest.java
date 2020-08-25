@@ -189,8 +189,8 @@ public class EntandoBundleServiceTest {
 
         String code = bundleB.getMetadata().getName();
         String title = bundleB.getSpec().getDetails().getName();
-        EntandoBundleJobEntity installedJob = getTestJobEntity(code, title);
-        EntandoBundleEntity installedComponent = getTestComponent(code, title);
+        final EntandoBundleJobEntity installedJob = getTestJobEntity(code, title);
+        final EntandoBundleEntity installedComponent = getTestComponent(code, title);
 
         k8SServiceClient.addInMemoryBundle(bundleA);
         k8SServiceClient.addInMemoryBundle(bundleB);

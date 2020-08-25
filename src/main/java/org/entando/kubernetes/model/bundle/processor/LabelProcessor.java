@@ -22,9 +22,8 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Labels
+ * Processor to create Labels.
  *
- * @author Sergio Marcelino
  */
 @Slf4j
 @Service

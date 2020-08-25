@@ -37,7 +37,7 @@ public class PagedMetadata<T> {
     }
 
     /**
-     * Constructor to build PagedMetadata using a trimmed body
+     * Constructor to build PagedMetadata using a trimmed body.
      *
      * @param req        the page request
      * @param body       the trimmed body list
@@ -50,7 +50,7 @@ public class PagedMetadata<T> {
     }
 
     /**
-     * Constructor to build PagedMetadata by trimming the full body
+     * Constructor to build PagedMetadata by trimming the full body.
      *
      * @param req      the page request
      * @param fullBody the full body list

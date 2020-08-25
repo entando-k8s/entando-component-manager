@@ -11,6 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.controller.plugin;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;

@@ -76,9 +76,9 @@ public class PageTemplateProcessorTest {
         assertThat(installable.getRepresentation().getConfiguration().getFrames()).hasSize(4);
 
         FrameDescriptor headerFrame = installable.getRepresentation().getConfiguration().getFrames().get(0);
-        FrameDescriptor breadCrumbFrame = installable.getRepresentation().getConfiguration().getFrames().get(1);
-        FrameDescriptor bodyFrame = installable.getRepresentation().getConfiguration().getFrames().get(2);
-        FrameDescriptor footerFrame = installable.getRepresentation().getConfiguration().getFrames().get(3);
+        final FrameDescriptor breadCrumbFrame = installable.getRepresentation().getConfiguration().getFrames().get(1);
+        final FrameDescriptor bodyFrame = installable.getRepresentation().getConfiguration().getFrames().get(2);
+        final FrameDescriptor footerFrame = installable.getRepresentation().getConfiguration().getFrames().get(3);
 
         assertThat(headerFrame.getDescription()).isEqualTo("Header");
         assertThat(headerFrame.getDefaultWidget()).isNull();

@@ -109,7 +109,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 scheduler.queueAll(uninstallJobs);
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
-                while(optCompJob.isPresent()) {
+                while (optCompJob.isPresent()) {
                     EntandoBundleComponentJobEntity uninstallJob = optCompJob.get();
                     JobTracker<EntandoBundleComponentJobEntity> cjt = trackExecution(uninstallJob, this::executeUninstall);
                     if (cjt.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
@@ -136,7 +136,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         });
     }
 
-    private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity cj, Function<Installable, JobResult> action) {
+    private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity cj,
+            Function<Installable, JobResult> action) {
         JobTracker<EntandoBundleComponentJobEntity> cjt = new JobTracker<>(cj, compJobRepo);
         cjt.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
         JobResult result = action.apply(cj.getInstallable());
@@ -144,7 +145,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         return cjt;
     }
 
-    private Queue<EntandoBundleComponentJobEntity> createUninstallComponentJobs(EntandoBundleJobEntity parentJob, EntandoBundleJobEntity referenceJob) {
+    private Queue<EntandoBundleComponentJobEntity> createUninstallComponentJobs(EntandoBundleJobEntity parentJob,
+            EntandoBundleJobEntity referenceJob) {
         List<EntandoBundleComponentJobEntity> installJobs = compJobRepo.findAllByParentJob(referenceJob);
         return installJobs.stream()
                 .map(cj -> {

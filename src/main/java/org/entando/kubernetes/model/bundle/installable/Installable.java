@@ -27,23 +27,22 @@ public abstract class Installable<T> {
         this.representation = representation;
     }
 
-
     /**
-     * This method will be called when every component was validated on the Digital Exchange bundle file
+     * This method will be called when every component was validated on the Digital Exchange bundle file.
      *
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
     public abstract CompletableFuture<Void> install();
 
     /**
-     * This method will be called when every component was validated on the Digital Exchange bundle file
+     * This method will be called when every component was validated on the Digital Exchange bundle file.
      *
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
     public abstract CompletableFuture<Void> uninstall();
 
     /**
-     * Should return the component type to understand what to do in case of a rollback
+     * Should return the component type to understand what to do in case of a rollback.
      *
      * @return {@link ComponentType}
      */
@@ -51,10 +50,9 @@ public abstract class Installable<T> {
 
     public abstract String getName();
 
-
     /**
-     * Important to understand if something has changed in case of an updated If the checksum didn't change, we don't
-     * need to modify this component
+     * Important to understand if something has changed in case of an updated If the checksum didn't change, we don't need to modify this
+     * component.
      *
      * @return md5 checksum of the component's payload
      */
@@ -68,7 +66,7 @@ public abstract class Installable<T> {
     }
 
     public T getRepresentation() {
-       return this.representation;
+        return this.representation;
     }
 
     public int getPriority() {
@@ -76,7 +74,7 @@ public abstract class Installable<T> {
     }
 
     public EntandoBundleComponentJobEntity getJob() {
-       return this.job;
+        return this.job;
     }
 
     public void setJob(EntandoBundleComponentJobEntity job) {

@@ -100,7 +100,8 @@ public class EntandoBundleApiTest {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 
-        mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=widget").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=widget")
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0]").isMap())
@@ -118,7 +119,8 @@ public class EntandoBundleApiTest {
 
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
 
-        mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=page").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=page")
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
 
@@ -175,6 +177,5 @@ public class EntandoBundleApiTest {
                 .endTag()
                 .build();
     }
-
 
 }

@@ -11,6 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.time.ZoneOffset;
@@ -174,8 +175,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .type(bundle.getComponentTypes())
                 .installed(bundle.isInstalled())
                 .version(bundle.isInstalled() ? bundle.getInstalledJob().getComponentVersion() : null)
-                .lastUpdate(bundle.isInstalled() ?
-                        Date.from(bundle.getLastJob().getFinishedAt().atZone(ZoneOffset.UTC).toInstant()) : null)
+                .lastUpdate(bundle.isInstalled()
+                        ? Date.from(bundle.getLastJob().getFinishedAt().atZone(ZoneOffset.UTC).toInstant()) : null)
                 .build();
     }
 

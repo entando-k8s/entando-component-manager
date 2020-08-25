@@ -11,7 +11,6 @@ public class JobScheduler {
     Deque<EntandoBundleComponentJobEntity> jobQueue;
     Deque<EntandoBundleComponentJobEntity> processedJobStack;
 
-
     public JobScheduler() {
         this.jobQueue = new ArrayDeque<>();
         this.processedJobStack = new ArrayDeque<>();
@@ -51,7 +50,7 @@ public class JobScheduler {
         Deque<EntandoBundleComponentJobEntity> rollbackQueue = new ArrayDeque<>();
         Iterator<EntandoBundleComponentJobEntity> jobIterator = this.processedJobStack
                 .descendingIterator();
-        while(jobIterator.hasNext()) {
+        while (jobIterator.hasNext()) {
             EntandoBundleComponentJobEntity duplicateJob = EntandoBundleComponentJobEntity.getNewCopy(jobIterator.next());
             duplicateJob.setStartedAt(null);
             duplicateJob.setFinishedAt(null);
