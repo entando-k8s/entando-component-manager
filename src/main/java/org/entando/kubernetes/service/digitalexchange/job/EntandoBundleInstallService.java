@@ -289,8 +289,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     log.debug("Installable '{}' finished successfully", installable.getName());
                     return JobResult.builder().status(JobStatus.INSTALL_COMPLETED).build();
                 }).exceptionally(th -> {
-                    log.error("Installable '{}' has errors", installable.getName(), th.getCause());
                     String message = getMeaningfulErrorMessage(th);
+                    log.error("Installable '{}' has errors: {}", installable.getName(), message, th);
                     return JobResult.builder()
                             .status(JobStatus.INSTALL_ERROR)
                             .exception(new Exception(message))
