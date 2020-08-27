@@ -522,6 +522,32 @@ public class InstallFlowTest {
     }
 
     @Test
+    public void shouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile() throws Exception {
+
+        // Given a failed install happened
+        String failingJobId = simulateHugeAssetFailingInstall();
+
+        // Install Job should have been rollback
+        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.id").value(failingJobId));
+
+        Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
+        assertThat(job.isPresent()).isTrue();
+
+        // And for each installed component job there should be a component job that rollbacked the install
+        List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository.findAllByParentJob(job.get());
+        Optional<EntandoBundleComponentJobEntity> optErrComponent = jobRelatedComponents.stream()
+                .filter(j -> j.getStatus().equals(JobStatus.INSTALL_ERROR))
+                .findFirst();
+
+        assertThat(optErrComponent.isPresent()).isTrue();
+        EntandoBundleComponentJobEntity ec = optErrComponent.get();
+        assertThat(ec.getErrorMessage()).contains("status code 413", "Payload Too Large");
+
+    }
+
+    @Test
     public void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstall();
@@ -708,7 +734,7 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void shouldFailInstallAndHandleExceptionDuringBundleDownloadError() throws Exception {
+    public void shouldFailInstallAndHandleExceptionDuringBundleDownloadError() {
         String jobId = simulateBundleDownloadError();
         Optional<EntandoBundleJobEntity> optJob = jobRepository.findById(UUID.fromString(jobId));
 
@@ -785,6 +811,10 @@ public class InstallFlowTest {
 
     private String simulateFailingInstall() {
         return TestInstallUtils.simulateFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+    }
+
+    private String simulateHugeAssetFailingInstall() {
+        return TestInstallUtils.simulateHugeAssetFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
     }
 
     private String simulateFailingUninstall() {
