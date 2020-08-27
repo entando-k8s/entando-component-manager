@@ -14,7 +14,7 @@ public interface EntandoBundleJobExecutor {
 
     default String getMeaningfulErrorMessage(RestClientResponseException e) {
         HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
-        String message = String.format("Rest client exception (status code %d) - %s", e.getRawStatusCode() , status.getReasonPhrase());
+        String message = String.format("Rest client exception (status code %d) - %s", e.getRawStatusCode(), status.getReasonPhrase());
         String respBody = e.getResponseBodyAsString();
         if (!respBody.isEmpty()) {
             message = message + "\n" + respBody;

@@ -307,7 +307,7 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateHugeAssetFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName){
+    public static String simulateHugeAssetFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
