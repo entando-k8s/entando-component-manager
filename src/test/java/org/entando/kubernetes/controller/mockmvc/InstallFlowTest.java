@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
@@ -35,6 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.jsonpath.JsonPath;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -44,8 +47,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.awaitility.Durations;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
@@ -791,6 +796,39 @@ public class InstallFlowTest {
                 .andReturn();
         waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_ERROR);
         assertThat(true).isTrue();
+    }
+
+    @Test
+    public void testProgressIsExposedViaApi() throws Exception {
+        String jobId = simulateInProgressInstall();
+        verifyJobProgressesFromStatusToStatus(jobId, JobStatus.INSTALL_IN_PROGRESS, JobStatus.INSTALL_COMPLETED);
+
+        jobId = simulateInProgressUninstall();
+        verifyJobProgressesFromStatusToStatus(jobId, JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_COMPLETED);
+    }
+
+    private void verifyJobProgressesFromStatusToStatus(String jobId, JobStatus startStatus, JobStatus endStatus) throws Exception {
+        LocalDateTime start = LocalDateTime.now();
+        Duration maxDuration = Duration.ofMinutes(1);
+        double lastProgress = 0.0;
+
+        EntandoBundleJobEntity job = TestInstallUtils.getJob(mockMvc, jobId);
+        double newProgress = job.getProgress();
+        JobStatus lastStatus = job.getStatus();
+        assertThat(newProgress).isGreaterThanOrEqualTo(lastProgress);
+        assertThat(lastStatus).isEqualByComparingTo(startStatus);
+        while (!lastStatus.equals(endStatus)) {
+            lastProgress = newProgress;
+            job = TestInstallUtils.getJob(mockMvc, jobId);
+            newProgress = job.getProgress();
+            lastStatus = job.getStatus();
+            assertThat(newProgress).isGreaterThanOrEqualTo(lastProgress);
+            assertThat(Duration.between(start, LocalDateTime.now())).isLessThan(maxDuration);
+            Thread.sleep(1000);
+        }
+        job = TestInstallUtils.getJob(mockMvc, jobId);
+        newProgress = job.getProgress();
+        assertThat(newProgress).isEqualTo(1.0);
     }
 
     private String simulateSuccessfullyCompletedInstall() {

@@ -58,6 +58,7 @@ public class EntandoBundleJob implements TrackableJob {
                 .startedAt(entity.getStartedAt())
                 .finishedAt(entity.getFinishedAt())
                 .status(entity.getStatus())
+                .progress(entity.getProgress())
                 .errorMessage(entity.getErrorMessage())
                 .componentJobs(componentJobs.stream()
                         .map(EntandoBundleComponentJob::fromEntity).collect(Collectors.toList())

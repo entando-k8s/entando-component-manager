@@ -153,7 +153,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 parentJobResult.setException(e);
             }
 
-            parentJobTracker.stopTrackingTime(parentJobResult);
+            parentJobTracker.finishTracking(parentJobResult);
             bundleDownloader.cleanTargetDirectory();
         });
     }
@@ -169,7 +169,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         JobTracker<EntandoBundleComponentJobEntity> componentJobTracker = new JobTracker<>(job, compJobRepo);
         componentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
         JobResult result = action.apply(job.getInstallable());
-        componentJobTracker.stopTrackingTime(result);
+        componentJobTracker.finishTracking(result);
         return componentJobTracker;
     }
 

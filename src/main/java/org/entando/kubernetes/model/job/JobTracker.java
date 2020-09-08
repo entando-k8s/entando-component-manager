@@ -32,11 +32,14 @@ public class JobTracker<T extends TrackableJob> {
         this.job = updateJob(this.job);
     }
 
-    public void stopTrackingTime(JobResult result) {
+    public void finishTracking(JobResult result) {
         this.job.setStatus(result.getStatus());
         this.job.setFinishedAt(LocalDateTime.now());
         if (result.hasException()) {
             this.job.setErrorMessage(result.getErrorMessage());
+        }
+        if (result.getProgress() != null) {
+            this.setProgress(result.getProgress());
         }
         this.job = updateJob(this.job);
     }

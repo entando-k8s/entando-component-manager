@@ -139,7 +139,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 parentJobResult.setException(ex);
             }
 
-            parentJobTracker.stopTrackingTime(parentJobResult);
+            parentJobTracker.finishTracking(parentJobResult);
         });
     }
 
@@ -148,7 +148,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         JobTracker<EntandoBundleComponentJobEntity> cjt = new JobTracker<>(cj, compJobRepo);
         cjt.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
         JobResult result = action.apply(cj.getInstallable());
-        cjt.stopTrackingTime(result);
+        cjt.finishTracking(result);
         return cjt;
     }
 

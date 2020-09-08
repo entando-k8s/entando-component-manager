@@ -51,6 +51,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -198,6 +199,18 @@ public class TestInstallUtils {
                 .andExpect(jsonPath("$.payload.[0].componentId").value(component))
                 .andReturn().getResponse();
         return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.[0].status"));
+    }
+
+    public static EntandoBundleJobEntity getJob(MockMvc mockMvc, String jobId) throws Exception {
+        String responseContent = mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString();
+        String status = JsonPath.read(responseContent, "$.payload.status");
+        double progress = JsonPath.read(responseContent, "$.payload.progress");
+        return EntandoBundleJobEntity.builder()
+                .status(JobStatus.valueOf(status))
+                .progress(progress)
+                .build();
     }
 
     public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String jobId, JobStatus expectedStatus) throws Exception {
