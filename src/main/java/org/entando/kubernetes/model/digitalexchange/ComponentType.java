@@ -11,7 +11,7 @@ public enum ComponentType {
 
     PLUGIN("plugin", 0),
     DIRECTORY("directory", 1),
-    LABEL("label",2),
+    LABEL("label", 2),
     ASSET("asset", 3),
     WIDGET("widget", 4),
     CONTENT_TYPE("contentType", 5),

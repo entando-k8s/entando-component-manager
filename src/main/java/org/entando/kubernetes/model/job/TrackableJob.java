@@ -19,4 +19,9 @@ public interface TrackableJob {
     String getErrorMessage();
 
     void setErrorMessage(String message);
+
+    double getProgress();
+
+    void setProgress(double progress);
+
 }

@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.bundle;
+package org.entando.kubernetes.model.bundle.reader;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.ByteArrayOutputStream;
@@ -20,6 +20,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 

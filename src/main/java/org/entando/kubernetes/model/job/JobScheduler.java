@@ -60,6 +60,20 @@ public class JobScheduler {
         this.clearProcessedStack();
     }
 
+    public JobScheduler createRollbackScheduler() {
+        JobScheduler rbScheduler = new JobScheduler();
+        Iterator<EntandoBundleComponentJobEntity> jobIterator = this.processedJobStack
+                .descendingIterator();
+        while (jobIterator.hasNext()) {
+            EntandoBundleComponentJobEntity je = jobIterator.next();
+            EntandoBundleComponentJobEntity duplicateJob = EntandoBundleComponentJobEntity.getNewCopy(je);
+            duplicateJob.setStartedAt(null);
+            duplicateJob.setFinishedAt(null);
+            rbScheduler.addToQueue(duplicateJob);
+        }
+        return rbScheduler;
+    }
+
     public Optional<EntandoBundleComponentJobEntity> componentJobWithError() {
         return this.processedJobStack.stream()
                 .filter(trJob -> trJob.getStatus().isOfType(JobType.ERROR))

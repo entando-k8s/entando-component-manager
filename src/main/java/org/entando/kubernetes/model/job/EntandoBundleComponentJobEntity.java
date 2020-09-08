@@ -19,11 +19,11 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
 @Getter
-@Setter()
+@Setter
 @Entity
 @NoArgsConstructor
 @Table(name = "entando_bundle_component_jobs")
-public class EntandoBundleComponentJobEntity implements TrackableJob {
+public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstallable {
 
     @Id
     @Column
@@ -56,6 +56,9 @@ public class EntandoBundleComponentJobEntity implements TrackableJob {
     @Column
     private LocalDateTime finishedAt;
     // metadata?
+
+    @Transient
+    private double progress;
 
     @Transient
     Installable installable;

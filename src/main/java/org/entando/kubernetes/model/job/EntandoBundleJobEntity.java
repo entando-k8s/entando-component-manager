@@ -23,10 +23,12 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.entando.kubernetes.model.bundle.installable.Installable;
 
 @Data
 @Entity
@@ -71,6 +73,21 @@ public class EntandoBundleJobEntity implements TrackableJob {
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();
+    }
+
+    public EntandoBundleJobEntity clone() {
+        EntandoBundleJobEntity newEntity = new EntandoBundleJobEntity();
+        newEntity.setId(this.id);
+        newEntity.setProgress(this.progress);
+        newEntity.setStatus(this.status);
+        newEntity.setComponentName(this.componentName);
+        newEntity.setComponentId(this.componentId);
+        newEntity.setComponentVersion(this.componentVersion);
+        newEntity.setErrorMessage(this.errorMessage);
+        newEntity.setStartedAt(this.startedAt);
+        newEntity.setFinishedAt(this.finishedAt);
+        newEntity.setUserId(this.userId);
+        return newEntity;
     }
 
 }

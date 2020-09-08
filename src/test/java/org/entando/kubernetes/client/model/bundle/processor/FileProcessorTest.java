@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
-import org.entando.kubernetes.model.bundle.BundleReader;
+import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;

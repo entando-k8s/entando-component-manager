@@ -6,6 +6,8 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -56,4 +58,39 @@ public class EntandoBundleJobService {
     public Optional<EntandoBundleJobEntity> getComponentLastJobWithStatus(String componentId, JobStatus status) {
         return jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(componentId, status);
     }
+
+    public Optional<EntandoBundleJobEntity> findCompletedOrConflictingInstallJob(EntandoDeBundle bundle) {
+
+        log.info("Verify validity of a new install job for component " + bundle.getMetadata().getName());
+
+        EntandoBundleJobEntity installCompletedJob = null;
+
+        Optional<EntandoBundleJobEntity> optionalExistingJob = getExistingJob(bundle);
+        if (optionalExistingJob.isPresent()) {
+            EntandoBundleJobEntity j = optionalExistingJob.get();
+            JobStatus js = j.getStatus();
+            if (js.equals(JobStatus.INSTALL_COMPLETED)) {
+                installCompletedJob = j;
+            }
+            if (js.isOfType(JobType.UNFINISHED)) {
+                throw new JobConflictException("Conflict with another job for the component " + j.getComponentId()
+                        + " - JOB ID: " + j.getId());
+            }
+        }
+        return Optional.ofNullable(installCompletedJob);
+    }
+
+    private Optional<EntandoBundleJobEntity> getExistingJob(EntandoDeBundle bundle) {
+        String componentId = bundle.getSpec().getDetails().getName();
+        Optional<EntandoBundleJobEntity> lastJobStarted = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(componentId);
+        if (lastJobStarted.isPresent()) {
+            // To be an existing job it should be Running or completed
+            if (lastJobStarted.get().getStatus() == JobStatus.UNINSTALL_COMPLETED) {
+                return Optional.empty();
+            }
+            return lastJobStarted;
+        }
+        return Optional.empty();
+    }
+
 }
