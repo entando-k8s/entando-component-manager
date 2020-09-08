@@ -41,9 +41,10 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
     private final @NonNull EntandoBundleComponentUsageService usageService;
-    private final @NonNull Map<ComponentType, ComponentProcessor> processorMap;
+    private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
-    public EntandoBundleJobEntity uninstall(String componentId) {
+    public EntandoBundleJobEntity
+    uninstall(String componentId) {
         EntandoBundleEntity installedBundle = installedComponentRepository.findById(componentId)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + componentId + " is not installed"));
 
@@ -108,6 +109,9 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 Queue<EntandoBundleComponentJobEntity> uninstallJobs = createUninstallComponentJobs(parentJob, referenceJob);
                 scheduler.queueAll(uninstallJobs);
 
+                int queueSize = uninstallJobs.size();
+                double increment = 1.0 / queueSize;
+
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
                     EntandoBundleComponentJobEntity uninstallJob = optCompJob.get();
@@ -116,11 +120,14 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
                     }
+                    parentJobTracker.incrementProgress(increment);
                     scheduler.recordProcessedComponentJob(cjt.getJob());
                     optCompJob = scheduler.extractFromQueue();
                 }
 
                 installedComponentRepository.deleteById(parentJob.getComponentId());
+                parentJobTracker.setProgress(1.0);
+
                 parentJobResult.setStatus(JobStatus.UNINSTALL_COMPLETED);
                 parentJobResult.clearException();
                 log.info("Component " + parentJob.getComponentId() + " uninstalled successfully");

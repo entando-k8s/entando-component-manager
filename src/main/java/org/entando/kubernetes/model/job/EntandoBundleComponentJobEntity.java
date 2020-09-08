@@ -58,9 +58,6 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
     // metadata?
 
     @Transient
-    private double progress;
-
-    @Transient
     Installable installable;
 
     @PrePersist

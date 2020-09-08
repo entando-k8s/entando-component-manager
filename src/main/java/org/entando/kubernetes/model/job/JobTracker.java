@@ -17,20 +17,18 @@ public class JobTracker<T extends TrackableJob> {
 
     public void startTracking(JobStatus js) {
         this.job.setStatus(js);
-        this.job.setProgress(0.0);
+        this.setProgress(this.job, 0.0);
         this.job.setStartedAt(LocalDateTime.now());
         this.job = updateJob(this.job);
     }
 
     public void incrementProgress(double increment) {
-        double currentProgress = this.getJob().getProgress();
-        double newProgress = Math.floor((currentProgress + increment) * 100) / 100;
-        this.job.setProgress(newProgress);
+        this.job = this.incrementProgress(this.job, increment);
         this.job = updateJob(this.job);
     }
 
     public void setProgress(double progress) {
-        this.job.setProgress(progress);
+        this.setProgress(this.job, progress);
         this.job = updateJob(this.job);
     }
 
@@ -47,12 +45,32 @@ public class JobTracker<T extends TrackableJob> {
         return this.job;
     }
 
+    private T incrementProgress(T job, double progressIncrement) {
+        if (job instanceof HasProgress) {
+            HasProgress j = (HasProgress) job;
+            double lastProgress = j.getProgress();
+            j.setProgress(roundProgress(lastProgress + progressIncrement));
+        }
+        return job;
+    }
+
+    private T setProgress(T job, double progress) {
+       if (job instanceof HasProgress)  {
+           ((HasProgress) job).setProgress(roundProgress(progress));
+       }
+       return job;
+    }
+
     private T updateJob(T job) {
         T updatedJob = repo.save(job);
         if (job instanceof HasInstallable) {
             ((HasInstallable) updatedJob).setInstallable(((HasInstallable) job).getInstallable());
         }
         return updatedJob;
+    }
+
+    private double roundProgress(double progress) {
+        return Math.max(0.0, Math.min(1.0, Math.floor(progress * 100) / 100));
     }
 
 }

@@ -36,7 +36,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "entando_bundle_jobs")
-public class EntandoBundleJobEntity implements TrackableJob {
+public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
 
     @Id
     @Column

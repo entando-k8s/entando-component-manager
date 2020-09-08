@@ -20,8 +20,4 @@ public interface TrackableJob {
 
     void setErrorMessage(String message);
 
-    double getProgress();
-
-    void setProgress(double progress);
-
 }
