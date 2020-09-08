@@ -26,29 +26,29 @@ import org.springframework.context.ApplicationContext;
 
 public class AppConfigurationTest {
 
-    @Test
-    public void shouldDisablePageProcessor() {
-        testPageProcessor(false);
-    }
-
-    @Test
-    public void shouldEnablePageProcessor() {
-        testPageProcessor(true);
-    }
-
-    private void testPageProcessor(boolean enabled) {
-        AppConfiguration app = new AppConfiguration();
-        app.setPageProcessorEnabled(enabled);
-
-        ApplicationContext context = mock(ApplicationContext.class);
-        when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
-
-        ComponentType[] expected = Arrays.stream(ComponentType.values())
-                .filter(c -> c != ComponentType.PAGE || enabled)
-                .toArray(ComponentType[]::new);
-
-        assertThat(app.processorMap(context).keySet()).containsExactlyInAnyOrder(expected);
-    }
+//    @Test
+//    public void shouldDisablePageProcessor() {
+//        testPageProcessor(false);
+//    }
+//
+//    @Test
+//    public void shouldEnablePageProcessor() {
+//        testPageProcessor(true);
+//    }
+//
+//    private void testPageProcessor(boolean enabled) {
+//        AppConfiguration app = new AppConfiguration();
+//        app.setPageProcessorEnabled(enabled);
+//
+//        ApplicationContext context = mock(ApplicationContext.class);
+//        when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
+//
+//        ComponentType[] expected = Arrays.stream(ComponentType.values())
+//                .filter(c -> c != ComponentType.PAGE || enabled)
+//                .toArray(ComponentType[]::new);
+//
+//        assertThat(app.processorMap(context).keySet()).containsExactlyInAnyOrder(expected);
+//    }
 
     @SuppressWarnings("rawtypes")
     private Map<String, ComponentProcessor> allProcessors() {
