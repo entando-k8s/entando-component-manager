@@ -112,6 +112,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     saveAsInstalledBundle(bundle, parentJob);
                     parentJobResult.clearException();
                     parentJobResult.setStatus(JobStatus.INSTALL_COMPLETED);
+                    parentJobResult.setProgress(1.0);
                     log.info("Bundle installed correctly");
 
                 } catch (Exception installException) {
@@ -153,7 +154,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             parentJobTracker.stopTrackingTime(parentJobResult);
-            parentJobTracker.setProgress(1.0);
             bundleDownloader.cleanTargetDirectory();
         });
     }

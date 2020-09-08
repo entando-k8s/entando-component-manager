@@ -3,11 +3,14 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +21,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
 import org.entando.kubernetes.model.bundle.processor.FileProcessor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -62,7 +66,6 @@ public class InstallServiceTest {
         installRepo = Mockito.mock(InstalledEntandoBundleRepository.class);
         coreClient = Mockito.mock(EntandoCoreClient.class);
 
-        processorMap.put(ComponentType.ASSET, new FileProcessor(coreClient));
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
         installService = new EntandoBundleInstallService(
@@ -70,9 +73,9 @@ public class InstallServiceTest {
     }
 
     @Test
-    public void shouldIncrementProgress() {
+    public void shouldIncrementProgressDuringInstallation() {
+        processorMap.put(ComponentType.ASSET, new FileProcessor(coreClient));
         EntandoDeBundle bundle = getTestBundle();
-        List<Double> progress;
 
         EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
                 .id(bundle.getMetadata().getName())
@@ -88,13 +91,60 @@ public class InstallServiceTest {
                 .pollInterval(5, TimeUnit.SECONDS)
                 .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
 
-        progress = Mockito.mockingDetails(jobRepository).getInvocations()
+        List<Double> _progr = Mockito.mockingDetails(jobRepository).getInvocations()
                 .stream().filter(i -> i.getMethod().getName().equals("save"))
                 .map(i -> ((EntandoBundleJobEntity)i.getArgument(0)).getProgress())
                 .collect(Collectors.toList());
 
-        assertThat(progress.size()).isGreaterThanOrEqualTo(6);
-        assertThat(progress).contains(0.0, 0.2, 0.4, 0.6, 0.8, 1.0);
+        List<Double> progress = getRealProgress(_progr);
+        assertThat(progress.size()).isEqualTo(6);
+        assertThat(progress).containsExactly(0.0, 0.2, 0.4, 0.6, 0.8, 1.0);
+    }
+
+    @Test
+    public void shouldIncrementProgressUpToLastInstalledWhenRollback() {
+        processorMap.put(ComponentType.ASSET, new FileProcessor(coreClient));
+        processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
+
+        EntandoDeBundle bundle = getTestBundle();
+
+
+        EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
+                .id(bundle.getMetadata().getName())
+                .name(bundle.getSpec().getDetails().getName())
+                .build();
+
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
+        doThrow(RuntimeException.class).when(coreClient).registerContentType(any());
+
+        EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0));
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        List<Double> _progr = Mockito.mockingDetails(jobRepository).getInvocations()
+                .stream().filter(i -> i.getMethod().getName().equals("save"))
+                .map(i -> ((EntandoBundleJobEntity)i.getArgument(0)).getProgress())
+                .collect(Collectors.toList());
+        List<Double> progress = getRealProgress(_progr);
+        assertThat(progress.size()).isEqualTo(6);
+        assertThat(progress).containsExactly(0.0, 0.16, 0.32, 0.48, 0.64, 0.8);
+
+    }
+
+    private List<Double> getRealProgress(List<Double> allProgresses) {
+        List<Double> validProgress = new ArrayList<>();
+
+        for (int i=0; i < allProgresses.size(); i++) {
+            Double currentProgress = allProgresses.get(i);
+            int lastValidProgressIndex = validProgress.size() - 1;
+            if (lastValidProgressIndex < 0 || !currentProgress.equals(validProgress.get(lastValidProgressIndex))) {
+                validProgress.add(currentProgress);
+            }
+        }
+        return validProgress;
     }
 
     private EntandoDeBundle getTestBundle() {

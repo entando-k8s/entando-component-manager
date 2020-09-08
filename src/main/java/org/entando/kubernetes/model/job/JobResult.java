@@ -13,6 +13,7 @@ public class JobResult {
 
     JobStatus status;
     Exception exception;
+    Double progress;
 
     public Exception getException() {
         return exception;
