@@ -24,9 +24,6 @@ public class AppConfiguration {
     @Value("${entando.bundle.type:git}")
     public String type;
 
-//    @Value("${entando.componentManager.processor.page.enabled:false}")
-//    private boolean pageProcessorEnabled;
-
     @Bean
     public BundleDownloaderFactory bundleDownloaderFactory() {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
@@ -41,7 +38,6 @@ public class AppConfiguration {
     @Bean
     public Map<ComponentType, ComponentProcessor> processorMap(ApplicationContext appContext) {
         return appContext.getBeansOfType(ComponentProcessor.class).values().stream()
-//                .filter(processor -> !(processor instanceof PageProcessor) || pageProcessorEnabled)
                 .collect(Collectors.toMap(ComponentProcessor::getSupportedComponentType, Function.identity()));
     }
 }

@@ -91,17 +91,4 @@ public class DisableProcessorsIntegrationTest {
         ((K8SServiceClientTestDouble) k8SServiceClient).setDeployedLinkPhase(EntandoDeploymentPhase.SUCCESSFUL);
         downloaderFactory.setDefaultSupplier(defaultBundleDownloaderSupplier);
     }
-
-    @Test
-    public void shouldSkipPagesWhenPageProcessorIsDisabled() {
-        simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        // Verify interaction with mocks
-        Set<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinks();
-        Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
-                .filter(link -> link.getSpec().getEntandoPluginName().equals("todomvc")).findAny();
-
-        verify(coreClient, times(0)).registerPage(any());
-    }
 }
