@@ -17,18 +17,13 @@ public class JobTracker<T extends TrackableJob> {
 
     public void startTracking(JobStatus js) {
         this.job.setStatus(js);
-        this.setProgress(this.job, 0.0);
+        this.updateJobProgress(0.0);
         this.job.setStartedAt(LocalDateTime.now());
         this.job = updateJob(this.job);
     }
 
-    public void incrementProgress(double increment) {
-        this.job = this.incrementProgress(this.job, increment);
-        this.job = updateJob(this.job);
-    }
-
     public void setProgress(double progress) {
-        this.setProgress(this.job, progress);
+        this.updateJobProgress(progress);
         this.job = updateJob(this.job);
     }
 
@@ -48,20 +43,10 @@ public class JobTracker<T extends TrackableJob> {
         return this.job;
     }
 
-    private T incrementProgress(T job, double progressIncrement) {
-        if (job instanceof HasProgress) {
-            HasProgress j = (HasProgress) job;
-            double lastProgress = j.getProgress();
-            j.setProgress(roundProgress(lastProgress + progressIncrement));
-        }
-        return job;
-    }
-
-    private T setProgress(T job, double progress) {
-       if (job instanceof HasProgress)  {
-           ((HasProgress) job).setProgress(roundProgress(progress));
+    private void updateJobProgress(double progress) {
+       if (this.job instanceof HasProgress)  {
+           ((HasProgress) this.job).setProgress(roundProgress(progress));
        }
-       return job;
     }
 
     private T updateJob(T job) {

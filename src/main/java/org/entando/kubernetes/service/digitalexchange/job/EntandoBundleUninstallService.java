@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.model.job.JobProgress;
 import org.entando.kubernetes.model.job.JobResult;
 import org.entando.kubernetes.model.job.JobScheduler;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -102,15 +103,14 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobScheduler scheduler = new JobScheduler();
 
-            JobResult parentJobResult = JobResult.builder().status(JobStatus.UNINSTALL_IN_PROGRESS).build();
-            parentJobTracker.startTracking(parentJobResult.getStatus());
+            JobResult parentJobResult = JobResult.builder().build();
 
+            parentJobTracker.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
             try {
                 Queue<EntandoBundleComponentJobEntity> uninstallJobs = createUninstallComponentJobs(parentJob, referenceJob);
                 scheduler.queueAll(uninstallJobs);
 
-                int queueSize = uninstallJobs.size();
-                double increment = 1.0 / queueSize;
+                JobProgress uninstallProgress = new JobProgress(1.0 / uninstallJobs.size());
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
@@ -120,7 +120,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
                     }
-                    parentJobTracker.incrementProgress(increment);
+                    uninstallProgress.increment();
+                    parentJobTracker.setProgress(uninstallProgress.getValue());
                     scheduler.recordProcessedComponentJob(cjt.getJob());
                     optCompJob = scheduler.extractFromQueue();
                 }

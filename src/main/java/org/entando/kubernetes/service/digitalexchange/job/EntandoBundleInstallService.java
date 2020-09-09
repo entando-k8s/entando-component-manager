@@ -1,6 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.model.job.JobProgress;
 import org.entando.kubernetes.model.job.JobResult;
 import org.entando.kubernetes.model.job.JobScheduler;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -72,12 +74,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
+            JobResult parentJobResult = JobResult.builder().build();
             JobScheduler scheduler = new JobScheduler();
             BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
-            JobResult parentJobResult = JobResult.builder().status(JobStatus.INSTALL_IN_PROGRESS).build();
-            parentJobTracker.startTracking(parentJobResult.getStatus());
 
+            parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
                 Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag, bundleDownloader);
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
@@ -92,22 +94,30 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                         })
                         .collect(Collectors.toCollection(ArrayDeque::new));
                 scheduler.queueAll(componentJobQueue);
-                int totalComponents = componentJobQueue.size();
-                double increment = 1.0/totalComponents;
 
-                try {
-                    Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
-                    while (optCompJob.isPresent()) {
-                        EntandoBundleComponentJobEntity installJob = optCompJob.get();
-                        JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(installJob, this::executeInstall);
-                        scheduler.recordProcessedComponentJob(tracker.getJob());
-                        if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ERROR)) {
-                            throw new EntandoComponentManagerException(parentJob.getComponentId()
-                                    + " install can't proceed due to an error with one of the components");
-                        }
-                        parentJobTracker.incrementProgress(increment);
-                        optCompJob = scheduler.extractFromQueue();
+                JobProgress installProgress = new JobProgress(1.0 / componentJobQueue.size());
+
+
+                Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
+                while (optCompJob.isPresent()) {
+                    EntandoBundleComponentJobEntity installJob = optCompJob.get();
+                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(installJob,
+                            this::executeInstall);
+                    scheduler.recordProcessedComponentJob(tracker.getJob());
+                    if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ERROR)) {
+                        parentJobResult.setException(new EntandoComponentManagerException(parentJob.getComponentId()
+                                + " install can't proceed due to an error with one of the components"));
+                        break;
                     }
+                    installProgress.increment();
+                    parentJobTracker.setProgress(installProgress.getValue());
+                    optCompJob = scheduler.extractFromQueue();
+                }
+                if (parentJobResult.hasException()) {
+                    log.error("An error occurred during component installation", parentJobResult.getException());
+                    log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob.getComponentVersion());
+                    parentJobResult = rollback(scheduler);
+                } else {
 
                     saveAsInstalledBundle(bundle, parentJob);
                     parentJobResult.clearException();
@@ -115,36 +125,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     parentJobResult.setProgress(1.0);
                     log.info("Bundle installed correctly");
 
-                } catch (Exception installException) {
-                    log.error("An error occurred during component installation", installException);
-                    log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob.getComponentVersion()
-                            + " back");
-
-                    JobScheduler rollbackScheduler = scheduler.createRollbackScheduler();
-                    try {
-                        Optional<EntandoBundleComponentJobEntity> optCompJob = rollbackScheduler.extractFromQueue();
-                        while (optCompJob.isPresent()) {
-                            EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
-                            if (isUninstallable(rollbackJob)) {
-                                JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob, this::executeRollback);
-                                if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
-                                    throw new EntandoComponentManagerException(rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
-                                            + " rollback can't proceed due to an error with one of the components");
-                                }
-                                rollbackScheduler.recordProcessedComponentJob(tracker.getJob());
-                            }
-                            optCompJob = rollbackScheduler.extractFromQueue();
-                        }
-
-                        log.info("Rollback operation completed successfully");
-                        parentJobResult.clearException();
-                        parentJobResult.setStatus(JobStatus.INSTALL_ROLLBACK);
-
-                    } catch (Exception rollbackException) {
-                        log.error("An error occurred during component rollback", rollbackException);
-                        parentJobResult.setStatus(JobStatus.INSTALL_ERROR);
-                        parentJobResult.setException(rollbackException);
-                    }
                 }
 
             } catch (Exception e) {
@@ -156,6 +136,36 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             parentJobTracker.finishTracking(parentJobResult);
             bundleDownloader.cleanTargetDirectory();
         });
+    }
+
+    private JobResult rollback(JobScheduler scheduler) {
+        JobResult result = JobResult.builder().build();
+        JobScheduler rollbackScheduler = scheduler.createRollbackScheduler();
+        try {
+            Optional<EntandoBundleComponentJobEntity> optCompJob = rollbackScheduler.extractFromQueue();
+            while (optCompJob.isPresent()) {
+                EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
+                if (isUninstallable(rollbackJob)) {
+                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob, this::executeRollback);
+                    if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
+                        throw new EntandoComponentManagerException(rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
+                                + " rollback can't proceed due to an error with one of the components");
+                    }
+                    rollbackScheduler.recordProcessedComponentJob(tracker.getJob());
+                }
+                optCompJob = rollbackScheduler.extractFromQueue();
+            }
+
+            log.info("Rollback operation completed successfully");
+            result.clearException();
+            result.setStatus(JobStatus.INSTALL_ROLLBACK);
+
+        } catch (Exception rollbackException) {
+            log.error("An error occurred during component rollback", rollbackException);
+            result.setStatus(JobStatus.INSTALL_ERROR);
+            result.setException(rollbackException);
+        }
+        return result;
     }
 
     private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
