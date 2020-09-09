@@ -12,13 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PluginProcessor implements ComponentProcessor<EntandoPlugin> {
+public class PluginProcessor implements ComponentProcessor<PluginDescriptor> {
 
     private final KubernetesService kubernetesService;
 
@@ -42,17 +41,17 @@ public class PluginProcessor implements ComponentProcessor<EntandoPlugin> {
     }
 
     @Override
-    public List<Installable<EntandoPlugin>> process(BundleReader npr) {
+    public List<Installable<PluginDescriptor>> process(BundleReader npr) {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
             Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPlugins);
 
-            List<Installable<EntandoPlugin>> installableList = new ArrayList<>();
+            List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             if (optionalPlugins.isPresent()) {
                 for (String filename : optionalPlugins.get()) {
-                    EntandoPlugin plugin = npr
-                            .readDescriptorFile(filename, org.entando.kubernetes.model.plugin.EntandoPlugin.class);
+
+                    PluginDescriptor plugin = npr.readDescriptorFile(filename, PluginDescriptor.class);
                     installableList.add(new PluginInstallable(kubernetesService, plugin));
                 }
             }
@@ -63,20 +62,16 @@ public class PluginProcessor implements ComponentProcessor<EntandoPlugin> {
     }
 
     @Override
-    public List<Installable<EntandoPlugin>> process(List<EntandoBundleComponentJobEntity> components) {
+    public List<Installable<PluginDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PLUGIN)
-                .map(c -> new PluginInstallable(kubernetesService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new PluginInstallable(kubernetesService, buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public EntandoPlugin buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return new EntandoPluginBuilder()
-                .withNewMetadata()
-                .withName(component.getComponentId())
-                .endMetadata()
-                .build();
+    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return PluginDescriptor.builder().image(component.getComponentId()).build();
     }
 
 }

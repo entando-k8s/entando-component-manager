@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 
@@ -15,15 +16,15 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
  * @author Sergio Marcelino
  */
 @Slf4j
-public abstract class Installable<T> {
+public abstract class Installable<Descriptor> {
 
-    protected final T representation;
+    protected final Descriptor representation;
 
     protected EntandoBundleComponentJobEntity job;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public Installable(T representation) {
+    public Installable(Descriptor representation) {
         this.representation = representation;
     }
 
@@ -65,7 +66,7 @@ public abstract class Installable<T> {
         return null;
     }
 
-    public T getRepresentation() {
+    public Descriptor getRepresentation() {
         return this.representation;
     }
 
