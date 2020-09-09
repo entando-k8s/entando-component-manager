@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.model.job.JobProgress;
 import org.entando.kubernetes.model.job.JobResult;
 import org.entando.kubernetes.model.job.JobScheduler;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -41,7 +42,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
     private final @NonNull EntandoBundleComponentUsageService usageService;
-    private final @NonNull Map<ComponentType, ComponentProcessor> processorMap;
+    private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJobEntity uninstall(String componentId) {
         EntandoBundleEntity installedBundle = installedComponentRepository.findById(componentId)
@@ -101,12 +102,14 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobScheduler scheduler = new JobScheduler();
 
-            JobResult parentJobResult = JobResult.builder().status(JobStatus.UNINSTALL_IN_PROGRESS).build();
-            parentJobTracker.startTracking(parentJobResult.getStatus());
+            JobResult parentJobResult = JobResult.builder().build();
 
+            parentJobTracker.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
             try {
                 Queue<EntandoBundleComponentJobEntity> uninstallJobs = createUninstallComponentJobs(parentJob, referenceJob);
                 scheduler.queueAll(uninstallJobs);
+
+                JobProgress uninstallProgress = new JobProgress(1.0 / uninstallJobs.size());
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
@@ -116,13 +119,17 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
                     }
+                    uninstallProgress.increment();
+                    parentJobTracker.setProgress(uninstallProgress.getValue());
                     scheduler.recordProcessedComponentJob(cjt.getJob());
                     optCompJob = scheduler.extractFromQueue();
                 }
 
                 installedComponentRepository.deleteById(parentJob.getComponentId());
-                parentJobResult.setStatus(JobStatus.UNINSTALL_COMPLETED);
+
                 parentJobResult.clearException();
+                parentJobResult.setProgress(1.0);
+                parentJobResult.setStatus(JobStatus.UNINSTALL_COMPLETED);
                 log.info("Component " + parentJob.getComponentId() + " uninstalled successfully");
 
             } catch (Exception ex) {
@@ -132,7 +139,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 parentJobResult.setException(ex);
             }
 
-            parentJobTracker.stopTrackingTime(parentJobResult);
+            parentJobTracker.finishTracking(parentJobResult);
         });
     }
 
@@ -141,7 +148,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         JobTracker<EntandoBundleComponentJobEntity> cjt = new JobTracker<>(cj, compJobRepo);
         cjt.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
         JobResult result = action.apply(cj.getInstallable());
-        cjt.stopTrackingTime(result);
+        cjt.finishTracking(result);
         return cjt;
     }
 

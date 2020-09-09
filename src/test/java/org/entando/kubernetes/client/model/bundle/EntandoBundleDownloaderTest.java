@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 public class EntandoBundleDownloaderTest {
 
     private WireMockServer wireMockServer;
-    private static int port;
+    private static final int port;
 
 
     static {

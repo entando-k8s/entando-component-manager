@@ -65,7 +65,8 @@ public class TestInstallUtils {
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
-    public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance().pathSegment("components");
+    public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components");
     public static final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", "todomvc");
     public static final UriBuilder INSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
@@ -154,11 +155,13 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
-        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.INSTALL.getStatuses()), expected);
+        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.INSTALL.getStatuses()),
+                expected);
     }
 
     public static void waitForUninstallStatus(MockMvc mockMvc, JobStatus expected) {
-        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.UNINSTALL.getStatuses()), expected);
+        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.UNINSTALL.getStatuses()),
+                expected);
     }
 
     public static void waitForJobStatus(Supplier<JobStatus> jobStatus, JobStatus... expected) {
@@ -184,13 +187,15 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static JobStatus getComponentLastJobStatusOfType(MockMvc mockMvc, String component, Set<JobStatus> possibleStatues) {
+    public static JobStatus getComponentLastJobStatusOfType(MockMvc mockMvc, String component,
+            Set<JobStatus> possibleStatues) {
         List<String> allowedValues = possibleStatues.stream().map(JobStatus::name).collect(Collectors.toList());
         MockHttpServletResponse response = mockMvc.perform(get("/jobs"
                 + "?sort=startedAt"
                 + "&direction=DESC"
                 + "&pageSize=1"
-                + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String.join(",", allowedValues)
+                + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
+                .join(",", allowedValues)
                 + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component)
                 .with(user("user")))
                 .andExpect(status().isOk())
@@ -200,7 +205,20 @@ public class TestInstallUtils {
         return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.[0].status"));
     }
 
-    public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String jobId, JobStatus expectedStatus) throws Exception {
+    public static EntandoBundleJobEntity getJob(MockMvc mockMvc, String jobId) throws Exception {
+        String responseContent = mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String status = JsonPath.read(responseContent, "$.payload.status");
+        double progress = JsonPath.read(responseContent, "$.payload.progress");
+        return EntandoBundleJobEntity.builder()
+                .status(JobStatus.valueOf(status))
+                .progress(progress)
+                .build();
+    }
+
+    public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String jobId, JobStatus expectedStatus)
+            throws Exception {
         mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value("todomvc"))
@@ -208,7 +226,8 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateBundleDownloadError(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+    public static String simulateBundleDownloadError(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient,
             BundleDownloaderFactory factory) {
         Mockito.reset(coreClient);
         WireMock.reset();
@@ -250,7 +269,8 @@ public class TestInstallUtils {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
         when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
+        when(coreClient.getContentModelUsage(anyString()))
+                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
@@ -271,7 +291,8 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+    public static String simulateFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient,
             String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
@@ -301,13 +322,15 @@ public class TestInstallUtils {
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
 
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR, JobStatus.INSTALL_ERROR);
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR,
+                JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
 
     @SneakyThrows
-    public static String simulateHugeAssetFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+    public static String simulateHugeAssetFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -336,7 +359,8 @@ public class TestInstallUtils {
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
 
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR, JobStatus.INSTALL_ERROR);
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ROLLBACK_ERROR,
+                JobStatus.INSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
@@ -355,15 +379,24 @@ public class TestInstallUtils {
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteFolder(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteContentModel(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteContentType(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteFragment(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteWidget(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deletePage(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deletePageModel(any());
-        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient).deleteLabel(any());
+        when(coreClient.getContentModelUsage(anyString()))
+                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deleteFolder(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deleteContentModel(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deleteContentType(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deleteFragment(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deleteWidget(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deletePage(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deletePageModel(any());
+        doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
+                .deleteLabel(any());
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
@@ -382,7 +415,8 @@ public class TestInstallUtils {
     }
 
     @SneakyThrows
-    public static String simulateInProgressInstall(MockMvc mockMvc, EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+    public static String simulateInProgressInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient,
             String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
@@ -440,7 +474,8 @@ public class TestInstallUtils {
         when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
         when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
         when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
+        when(coreClient.getContentModelUsage(anyString()))
+                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
 
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePage(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePageModel(any());
@@ -471,11 +506,13 @@ public class TestInstallUtils {
     }
 
     public static PagedMetadata<EntandoBundleJobEntity> getUninstallJob(MockMvc mockMvc) throws Exception {
-        List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name).collect(Collectors.toList());
+        List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name)
+                .collect(Collectors.toList());
         return new ObjectMapper().readValue(mockMvc.perform(get("/jobs"
                         + "?sort=startedAt"
                         + "&direction=DESC"
-                        + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String.join(",", allowedValues)
+                        + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
+                        .join(",", allowedValues)
                         + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
