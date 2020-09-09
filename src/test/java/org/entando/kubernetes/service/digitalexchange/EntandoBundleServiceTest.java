@@ -44,7 +44,7 @@ public class EntandoBundleServiceTest {
     private InstalledEntandoBundleRepository installedComponentRepository;
     private EntandoBundleJobRepository jobRepository;
 
-    private List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
+    private final List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
 
     @BeforeEach
     public void setup() {
@@ -196,7 +196,8 @@ public class EntandoBundleServiceTest {
         k8SServiceClient.addInMemoryBundle(bundleB);
 
         when(installedComponentRepository.existsById(eq(code))).thenReturn(true);
-        Mockito.when(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
+        Mockito.when(jobRepository
+                .findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
                 .thenReturn(Optional.of(installedJob));
         Mockito.when(jobRepository.findFirstByComponentIdOrderByStartedAtDesc(eq(code)))
                 .thenReturn(Optional.of(installedJob));

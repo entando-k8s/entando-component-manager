@@ -7,7 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
@@ -47,10 +46,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.awaitility.Durations;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
@@ -268,7 +265,8 @@ public class InstallFlowTest {
     }
 
     private void verifyPageModelsRequests(EntandoCoreClient coreClient) throws Exception {
-        ArgumentCaptor<PageTemplateDescriptor> pageModelDescrArgCaptor = ArgumentCaptor.forClass(PageTemplateDescriptor.class);
+        ArgumentCaptor<PageTemplateDescriptor> pageModelDescrArgCaptor = ArgumentCaptor
+                .forClass(PageTemplateDescriptor.class);
         verify(coreClient, times(2)).registerPageModel(pageModelDescrArgCaptor.capture());
 
         List<PageTemplateDescriptor> allPassedPageModels = pageModelDescrArgCaptor.getAllValues()
@@ -381,7 +379,8 @@ public class InstallFlowTest {
     @Test
     public void shouldRecordInstallJobsInOrder() throws Exception {
         simulateSuccessfullyCompletedInstall();
-        List<EntandoBundleComponentJobEntity> jobs = componentJobRepository.findAll(Sort.by(Sort.Order.asc("startedAt")));
+        List<EntandoBundleComponentJobEntity> jobs = componentJobRepository
+                .findAll(Sort.by(Sort.Order.asc("startedAt")));
 
         for (int i = 1; i < jobs.size(); i++) {
             Installable thisInstallable = processorMap.get(jobs.get(i).getComponentType()).process(jobs.get(i));
@@ -399,8 +398,10 @@ public class InstallFlowTest {
                 .collect(Collectors.toList());
 
         for (int i = 1; i < uninstallJobs.size(); i++) {
-            Installable thisInstallable = processorMap.get(uninstallJobs.get(i).getComponentType()).process(uninstallJobs.get(i));
-            Installable prevInstallable = processorMap.get(uninstallJobs.get(i - 1).getComponentType()).process(uninstallJobs.get(i - 1));
+            Installable thisInstallable = processorMap.get(uninstallJobs.get(i).getComponentType())
+                    .process(uninstallJobs.get(i));
+            Installable prevInstallable = processorMap.get(uninstallJobs.get(i - 1).getComponentType())
+                    .process(uninstallJobs.get(i - 1));
 
             assertThat(thisInstallable.getPriority()).isLessThanOrEqualTo(prevInstallable.getPriority());
             assertThat(uninstallJobs.get(i).getStartedAt()).isAfterOrEqualTo(uninstallJobs.get(i - 1).getStartedAt());
@@ -451,10 +452,13 @@ public class InstallFlowTest {
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
         assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
 
-        List<EntandoBundleComponentJobEntity> installedComponentList = componentJobRepository.findAllByParentJob(jobs.get(0));
-        List<EntandoBundleComponentJobEntity> uninstalledComponentList = componentJobRepository.findAllByParentJob(jobs.get(1));
+        List<EntandoBundleComponentJobEntity> installedComponentList = componentJobRepository
+                .findAllByParentJob(jobs.get(0));
+        List<EntandoBundleComponentJobEntity> uninstalledComponentList = componentJobRepository
+                .findAllByParentJob(jobs.get(1));
         assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
-        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream().map(EntandoBundleComponentJobEntity::getStatus)
+        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream()
+                .map(EntandoBundleComponentJobEntity::getStatus)
                 .collect(Collectors.toList());
         assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
 
@@ -509,14 +513,16 @@ public class InstallFlowTest {
         assertThat(job.isPresent()).isTrue();
 
         // And for each installed component job there should be a component job that rollbacked the install
-        List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository.findAllByParentJob(job.get());
+        List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository
+                .findAllByParentJob(job.get());
         List<EntandoBundleComponentJobEntity> installedComponents = jobRelatedComponents.stream()
                 .filter(j -> j.getStatus().equals(JobStatus.INSTALL_COMPLETED))
                 .collect(Collectors.toList());
 
         for (EntandoBundleComponentJobEntity c : installedComponents) {
             List<EntandoBundleComponentJobEntity> jobs = jobRelatedComponents.stream()
-                    .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getComponentId().equals(c.getComponentId()))
+                    .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getComponentId()
+                            .equals(c.getComponentId()))
                     .collect(Collectors.toList());
             assertThat(jobs.size()).isEqualTo(2);
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
@@ -541,7 +547,8 @@ public class InstallFlowTest {
         assertThat(job.isPresent()).isTrue();
 
         // And for each installed component job there should be a component job that rollbacked the install
-        List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository.findAllByParentJob(job.get());
+        List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository
+                .findAllByParentJob(job.get());
         Optional<EntandoBundleComponentJobEntity> optErrComponent = jobRelatedComponents.stream()
                 .filter(j -> j.getStatus().equals(JobStatus.INSTALL_ERROR))
                 .findFirst();
@@ -661,9 +668,10 @@ public class InstallFlowTest {
                 .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());
         assertThat(pluginJobs.size()).isEqualTo(2);
-        assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList())).containsOnly(
-                JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
-        );
+        assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList()))
+                .containsOnly(
+                        JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
+                );
     }
 
     @Test
@@ -807,7 +815,8 @@ public class InstallFlowTest {
         verifyJobProgressesFromStatusToStatus(jobId, JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_COMPLETED);
     }
 
-    private void verifyJobProgressesFromStatusToStatus(String jobId, JobStatus startStatus, JobStatus endStatus) throws Exception {
+    private void verifyJobProgressesFromStatusToStatus(String jobId, JobStatus startStatus, JobStatus endStatus)
+            throws Exception {
         LocalDateTime start = LocalDateTime.now();
         Duration maxDuration = Duration.ofMinutes(1);
         double lastProgress = 0.0;
@@ -832,7 +841,8 @@ public class InstallFlowTest {
     }
 
     private String simulateSuccessfullyCompletedInstall() {
-        return TestInstallUtils.simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+        return TestInstallUtils
+                .simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
     }
 
     private String simulateSuccessfullyCompletedUninstall() {
@@ -852,7 +862,8 @@ public class InstallFlowTest {
     }
 
     private String simulateHugeAssetFailingInstall() {
-        return TestInstallUtils.simulateHugeAssetFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+        return TestInstallUtils
+                .simulateHugeAssetFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
     }
 
     private String simulateFailingUninstall() {

@@ -6,12 +6,6 @@ public class JobProgress {
     int precision;
     double value;
 
-    public JobProgress(double increment, int precision) {
-        this.value = 0.0;
-        this.increment = increment;
-        this.precision = precision;
-    }
-
     public JobProgress(double increment) {
         this.value = 0.0;
         this.increment = increment;
@@ -32,6 +26,6 @@ public class JobProgress {
 
     private double getWithPrecision(double value) {
         int p = (int) Math.pow(10, this.precision);
-        return Math.floor(value*p)/p;
+        return Math.floor(value * p) / p;
     }
 }

@@ -53,6 +53,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 public class DisableProcessorsIntegrationTest {
+
     private MockMvc mockMvc;
 
     @Autowired

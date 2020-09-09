@@ -71,7 +71,8 @@ public class EntandoBundleControllerTest {
         EntandoBundle bundle = getTestEntandoBundle();
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(bundle));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+                .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(Objects.requireNonNull(resp.getBody()).getPayload().size()).isZero();
     }
@@ -91,7 +92,8 @@ public class EntandoBundleControllerTest {
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(component));
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Collections.singletonList(componentJob));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+                .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(Objects.requireNonNull(resp.getBody()).getPayload().size()).isZero();
     }
@@ -127,17 +129,20 @@ public class EntandoBundleControllerTest {
         when(coreClient.getPageUsage(eq("my-magic-page"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page", 5));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+                .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
         List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
 
         assertThat(usageList.size()).isEqualTo(2);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-magic-widget"))
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
+                        .equals("my-magic-widget"))
                 .findFirst().get().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.PAGE.getTypeName()) && usc.getCode().equals("my-magic-page"))
+                .filter(usc -> usc.getType().equals(ComponentType.PAGE.getTypeName()) && usc.getCode()
+                        .equals("my-magic-page"))
                 .findFirst().get().getUsage()).isEqualTo(5);
         assertThat(usageList.stream().map(EntandoCoreComponentUsage::getType).distinct().count())
                 .isEqualTo(2);
@@ -176,7 +181,8 @@ public class EntandoBundleControllerTest {
         when(coreClient.getWidgetUsage(eq("my-other-widget"))).thenReturn(
                 new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget", 5));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller.getBundleUsageSummary("my-component");
+        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+                .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
@@ -185,11 +191,13 @@ public class EntandoBundleControllerTest {
 
         assertThat(usageList.size()).isEqualTo(2);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-magic-widget"))
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
+                        .equals("my-magic-widget"))
                 .findFirst()
                 .get().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode().equals("my-other-widget"))
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
+                        .equals("my-other-widget"))
                 .findFirst()
                 .get()
                 .getUsage())

@@ -36,12 +36,16 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
 
     @Override
     public List<EntandoBundleComponentJobEntity> findAllByParentJobId(UUID id) {
-        return this.database.values().stream().filter(j -> j.getParentJob().getId().equals(id)).collect(Collectors.toList());
+        return this.database.values().stream().filter(j -> j.getParentJob().getId().equals(id))
+                .collect(Collectors.toList());
     }
 
     @Override
     public void updateJobStatus(UUID id, JobStatus status) {
-        this.database.computeIfPresent(id, (k, v) -> { v.setStatus(status); return v; });
+        this.database.computeIfPresent(id, (k, v) -> {
+            v.setStatus(status);
+            return v;
+        });
     }
 
     @Override
@@ -51,29 +55,27 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
             v.setErrorMessage(errorMessage);
             return v;
         });
-
     }
 
     @Override
     public void updateStartedAt(UUID id, LocalDateTime datetime) {
-        this.database.computeIfPresent(id, (k,v) -> {
+        this.database.computeIfPresent(id, (k, v) -> {
             v.setStartedAt(datetime);
             return v;
         });
     }
 
     @Override
-    public void updateFinisheddAt(UUID id, LocalDateTime datetime) {
-        this.database.computeIfPresent(id, (k,v) -> {
+    public void updateFinishedAt(UUID id, LocalDateTime datetime) {
+        this.database.computeIfPresent(id, (k, v) -> {
             v.setFinishedAt(datetime);
             return v;
         });
-
     }
 
     @Override
     public List<EntandoBundleComponentJobEntity> findAll() {
-        return database.values().stream().collect(Collectors.toList());
+        return new ArrayList<>(database.values());
     }
 
     @Override
@@ -90,6 +92,21 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
+    public <S extends EntandoBundleComponentJobEntity> List<S> findAll(Example<S> example) {
+        return null;
+    }
+
+    @Override
+    public <S extends EntandoBundleComponentJobEntity> List<S> findAll(Example<S> example, Sort sort) {
+        return null;
+    }
+
+    @Override
+    public <S extends EntandoBundleComponentJobEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
+        return null;
+    }
+
+    @Override
     public List<EntandoBundleComponentJobEntity> findAllById(Iterable<UUID> uuids) {
         List<UUID> ids = StreamSupport.stream(uuids.spliterator(), false).collect(Collectors.toList());
         return database.values().stream().filter(j -> ids.contains(j.getId())).collect(Collectors.toList());
@@ -98,6 +115,11 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     @Override
     public long count() {
         return database.size();
+    }
+
+    @Override
+    public <S extends EntandoBundleComponentJobEntity> long count(Example<S> example) {
+        return 0;
     }
 
     @Override
@@ -112,7 +134,7 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
 
     @Override
     public void deleteAll(Iterable<? extends EntandoBundleComponentJobEntity> entities) {
-        for(EntandoBundleComponentJobEntity e: entities) {
+        for (EntandoBundleComponentJobEntity e : entities) {
             this.delete(e);
         }
     }
@@ -135,7 +157,7 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     @Override
     public <S extends EntandoBundleComponentJobEntity> List<S> saveAll(Iterable<S> entities) {
         List<S> saved = new ArrayList<>();
-        for(S e: entities) {
+        for (S e : entities) {
             saved.add(this.save(e));
 
         }
@@ -164,7 +186,7 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
 
     @Override
     public void deleteInBatch(Iterable<EntandoBundleComponentJobEntity> entities) {
-        for(EntandoBundleComponentJobEntity e: entities) {
+        for (EntandoBundleComponentJobEntity e : entities) {
             this.delete(e);
         }
     }
@@ -185,26 +207,6 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     @Override
     public <S extends EntandoBundleComponentJobEntity> Optional<S> findOne(Example<S> example) {
         return Optional.empty();
-    }
-
-    @Override
-    public <S extends EntandoBundleComponentJobEntity> List<S> findAll(Example<S> example) {
-        return null;
-    }
-
-    @Override
-    public <S extends EntandoBundleComponentJobEntity> List<S> findAll(Example<S> example, Sort sort) {
-        return null;
-    }
-
-    @Override
-    public <S extends EntandoBundleComponentJobEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
-        return null;
-    }
-
-    @Override
-    public <S extends EntandoBundleComponentJobEntity> long count(Example<S> example) {
-        return 0;
     }
 
     @Override

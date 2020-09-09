@@ -44,8 +44,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentUsageService usageService;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
-    public EntandoBundleJobEntity
-    uninstall(String componentId) {
+    public EntandoBundleJobEntity uninstall(String componentId) {
         EntandoBundleEntity installedBundle = installedComponentRepository.findById(componentId)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + componentId + " is not installed"));
 

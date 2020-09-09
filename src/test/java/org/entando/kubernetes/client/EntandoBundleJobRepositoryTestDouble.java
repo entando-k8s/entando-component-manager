@@ -2,7 +2,6 @@ package org.entando.kubernetes.client;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,7 +74,10 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
 
     @Override
     public void updateJobStatus(UUID id, JobStatus status) {
-        this.database.computeIfPresent(id, (k, v) ->  { v.setStatus(status); return v; });
+        this.database.computeIfPresent(id, (k, v) -> {
+            v.setStatus(status);
+            return v;
+        });
     }
 
     @Override
@@ -99,6 +101,21 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public <S extends EntandoBundleJobEntity> List<S> findAll(Example<S> example) {
+        return null;
+    }
+
+    @Override
+    public <S extends EntandoBundleJobEntity> List<S> findAll(Example<S> example, Sort sort) {
+        return null;
+    }
+
+    @Override
+    public <S extends EntandoBundleJobEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
+        return null;
+    }
+
+    @Override
     public List<EntandoBundleJobEntity> findAllById(Iterable<UUID> uuids) {
         List<UUID> ids = StreamSupport.stream(uuids.spliterator(), false).collect(Collectors.toList());
         return this.database.values().stream().filter(j -> ids.contains(j.getId())).collect(Collectors.toList());
@@ -110,19 +127,25 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public <S extends EntandoBundleJobEntity> long count(Example<S> example) {
+        return 0;
+    }
+
+    @Override
     public void deleteById(UUID uuid) {
         this.database.remove(uuid);
     }
 
     @Override
     public void delete(EntandoBundleJobEntity entity) {
-        if (entity.getId() != null)
+        if (entity.getId() != null) {
             this.deleteById(entity.getId());
+        }
     }
 
     @Override
     public void deleteAll(Iterable<? extends EntandoBundleJobEntity> entities) {
-        for (EntandoBundleJobEntity e: entities) {
+        for (EntandoBundleJobEntity e : entities) {
             this.delete(e);
         }
     }
@@ -147,7 +170,7 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     @Override
     public <S extends EntandoBundleJobEntity> List<S> saveAll(Iterable<S> entities) {
         List<S> savedEntities = new ArrayList<>();
-        for (S e: entities) {
+        for (S e : entities) {
             savedEntities.add(this.save(e));
         }
         return savedEntities;
@@ -175,7 +198,7 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
 
     @Override
     public void deleteInBatch(Iterable<EntandoBundleJobEntity> entities) {
-        for (EntandoBundleJobEntity e: entities) {
+        for (EntandoBundleJobEntity e : entities) {
             this.delete(e);
         }
     }
@@ -196,26 +219,6 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     @Override
     public <S extends EntandoBundleJobEntity> Optional<S> findOne(Example<S> example) {
         return Optional.empty();
-    }
-
-    @Override
-    public <S extends EntandoBundleJobEntity> List<S> findAll(Example<S> example) {
-        return null;
-    }
-
-    @Override
-    public <S extends EntandoBundleJobEntity> List<S> findAll(Example<S> example, Sort sort) {
-        return null;
-    }
-
-    @Override
-    public <S extends EntandoBundleJobEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
-        return null;
-    }
-
-    @Override
-    public <S extends EntandoBundleJobEntity> long count(Example<S> example) {
-        return 0;
     }
 
     @Override

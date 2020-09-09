@@ -82,7 +82,7 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldReturnLinkByName() {
-        Optional<EntandoAppPluginLink>  link = client.getLinkByName("my-app-to-plugin-link");
+        Optional<EntandoAppPluginLink> link = client.getLinkByName("my-app-to-plugin-link");
         assertThat(link.isPresent()).isTrue();
         assertThat(link.get().getMetadata().getName()).isEqualTo("my-app-to-plugin-link");
         mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/?")));

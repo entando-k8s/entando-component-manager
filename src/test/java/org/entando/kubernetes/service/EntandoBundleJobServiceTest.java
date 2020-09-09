@@ -69,7 +69,6 @@ public class EntandoBundleJobServiceTest {
 
         when(jobService.getJobs()).thenReturn(Arrays.asList(testJob1, testJob2, testJob3));
 
-
         List<EntandoBundleJobEntity> allJobs = jobService.getJobs();
         assertThat(allJobs.size()).isEqualTo(3);
         assertThat(allJobs.get(0).getStartedAt()).isBefore(allJobs.get(1).getStartedAt());
@@ -127,7 +126,6 @@ public class EntandoBundleJobServiceTest {
         assertThat(jobs.getBody()).hasSize(2);
         assertThat(jobs.getBody().get(0)).isEqualTo(testJob1);
         assertThat(jobs.getBody().get(1)).isEqualTo(testJob3);
-
 
         request = new PagedListRequest();
         Filter filterValue = new Filter();

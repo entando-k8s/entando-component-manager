@@ -3,10 +3,7 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
@@ -22,7 +19,6 @@ import java.util.stream.Collectors;
 import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.model.bundle.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -48,7 +44,6 @@ import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallSe
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 public class InstallServiceTest {
@@ -89,7 +84,7 @@ public class InstallServiceTest {
                 bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap);
 
         uninstallService = new EntandoBundleUninstallService(
-                jobRepository,compJobRepo,installRepo,usageService,processorMap);
+                jobRepository, compJobRepo, installRepo, usageService, processorMap);
     }
 
     @Test
@@ -122,7 +117,6 @@ public class InstallServiceTest {
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
 
         EntandoDeBundle bundle = getTestBundle();
-
 
         EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
                 .id(bundle.getMetadata().getName())
@@ -168,7 +162,6 @@ public class InstallServiceTest {
 
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
 
-
         when(installRepo.findById(any())).thenReturn(Optional.of(bundleEntity));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getUsage(ComponentType.CONTENT_TYPE, "A"))
@@ -188,19 +181,19 @@ public class InstallServiceTest {
     }
 
     private List<Double> getJobProgress() {
-        List<Double> _progr = Mockito.mockingDetails(jobRepository).getInvocations()
+        List<Double> allProgresses = Mockito.mockingDetails(jobRepository).getInvocations()
                 .stream().filter(i -> i.getMethod().getName().equals("save"))
                 .map(i -> ((EntandoBundleJobEntity) i.getArgument(0)).getProgress())
                 .collect(Collectors.toList());
 
-        return getRealProgress(_progr);
+        return getRealProgress(allProgresses);
     }
 
 
     private List<Double> getRealProgress(List<Double> allProgresses) {
         List<Double> validProgress = new ArrayList<>();
 
-        for (int i=0; i < allProgresses.size(); i++) {
+        for (int i = 0; i < allProgresses.size(); i++) {
             Double currentProgress = allProgresses.get(i);
             int lastValidProgressIndex = validProgress.size() - 1;
             if (lastValidProgressIndex < 0 || !currentProgress.equals(validProgress.get(lastValidProgressIndex))) {
@@ -217,7 +210,8 @@ public class InstallServiceTest {
                 .withNewDetails()
                 .withName(BUNDLE_TITLE)
                 .endDetails()
-                .withTags(Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(BUNDLE_VERSION).build()))
+                .withTags(
+                        Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(BUNDLE_VERSION).build()))
                 .build();
         bundle.setSpec(bundleSpec);
         return bundle;

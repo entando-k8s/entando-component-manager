@@ -44,9 +44,9 @@ public class JobTracker<T extends TrackableJob> {
     }
 
     private void updateJobProgress(double progress) {
-       if (this.job instanceof HasProgress)  {
-           ((HasProgress) this.job).setProgress(roundProgress(progress));
-       }
+        if (this.job instanceof HasProgress) {
+            ((HasProgress) this.job).setProgress(roundProgress(progress));
+        }
     }
 
     private T updateJob(T job) {

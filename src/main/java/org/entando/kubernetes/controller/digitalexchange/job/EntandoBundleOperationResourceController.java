@@ -3,7 +3,6 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

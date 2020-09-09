@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github.zafarkhaja.semver.Version;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

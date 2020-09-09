@@ -14,13 +14,13 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
-import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.junit.jupiter.api.Assertions;
@@ -76,7 +76,8 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadDescriptorFile() throws IOException {
-        WidgetDescriptor wd = bundleReader.readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = bundleReader
+                .readDescriptorFile("widgets/another_widget_descriptor.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
         assertThat(wd.getCode()).isEqualTo("another_todomvc_widget");
         assertThat(wd.getGroup()).isEqualTo("free");
@@ -117,7 +118,8 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadConfigUIForWidget() throws IOException {
-        WidgetDescriptor wd = bundleReader.readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
+        WidgetDescriptor wd = bundleReader
+                .readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
         assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
         assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");
