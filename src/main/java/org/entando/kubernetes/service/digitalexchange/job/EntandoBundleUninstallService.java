@@ -127,10 +127,10 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 }
 
                 installedComponentRepository.deleteById(parentJob.getComponentId());
-                parentJobTracker.setProgress(1.0);
 
-                parentJobResult.setStatus(JobStatus.UNINSTALL_COMPLETED);
                 parentJobResult.clearException();
+                parentJobResult.setProgress(1.0);
+                parentJobResult.setStatus(JobStatus.UNINSTALL_COMPLETED);
                 log.info("Component " + parentJob.getComponentId() + " uninstalled successfully");
 
             } catch (Exception ex) {
