@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +19,14 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.k8ssvc.EntandoAppPluginLinkingProcessException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
+import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -79,6 +85,70 @@ public class KubernetesService {
 
     public void unlinkPlugin(String pluginId) {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
+    }
+
+    public EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName(extractNameFromDescriptor(descriptor))
+                .withLabels(extractLabelsFromDescriptor(descriptor))
+                .endMetadata()
+                .withNewSpec()
+                .withDbms(DbmsVendor.valueOf(descriptor.getDbms().toUpperCase()))
+                .withImage(descriptor.getImage())
+                .withIngressPath(extractIngressPathFromDescriptor(descriptor))
+                .withRoles(extractRolesFromDescriptor(descriptor))
+                .withHealthCheckPath(descriptor.getHealthCheckPath())
+                .endSpec()
+                .build();
+    }
+
+    public List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
+        return descriptor.getRoles().stream()
+                .distinct()
+                .map(ExpectedRole::new)
+                .collect(Collectors.toList());
+    }
+
+    public String extractNameFromDescriptor(PluginDescriptor descriptor) {
+        return composeNameFromDockerImage(descriptor.getDockerImage());
+    }
+
+    public String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
+        return composeIngressPathFromDockerImage(descriptor.getDockerImage());
+    }
+
+    public Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
+        DockerImage dockerImage = descriptor.getDockerImage();
+        return getLabelsFromImage(dockerImage);
+    }
+
+    private String composeNameFromDockerImage(DockerImage image) {
+        return String.join(".",
+                makeKubernetesCompatible(image.getOrganization()),
+                makeKubernetesCompatible(image.getName()),
+                makeKubernetesCompatible(image.getVersion()));
+    }
+
+    private String composeIngressPathFromDockerImage(DockerImage image) {
+        return "/" + String.join("/",
+                makeKubernetesCompatible(image.getOrganization()),
+                makeKubernetesCompatible(image.getName()),
+                makeKubernetesCompatible(image.getVersion()));
+    }
+
+    public Map<String, String> getLabelsFromImage(DockerImage dockerImage) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("organization", dockerImage.getOrganization());
+        labels.put("name", dockerImage.getName());
+        labels.put("version", dockerImage.getVersion());
+        return labels;
+    }
+
+    private String makeKubernetesCompatible(String value) {
+        value = value.toLowerCase();
+        value = value.replace("_", ".");
+        return value;
     }
 
     public EntandoAppPluginLink linkPlugin(EntandoPlugin plugin) {

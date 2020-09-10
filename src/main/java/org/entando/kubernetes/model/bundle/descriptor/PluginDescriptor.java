@@ -14,10 +14,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PluginDescriptor implements Descriptor {
 
-    List<String> roles;
     String image;
     String healthCheckPath;
     String dbms;
+    List<String> roles;
+
     DockerImage dockerImage;
 
     public DockerImage getDockerImage() {

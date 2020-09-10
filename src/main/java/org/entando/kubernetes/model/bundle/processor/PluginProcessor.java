@@ -50,7 +50,6 @@ public class PluginProcessor implements ComponentProcessor<PluginDescriptor> {
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             if (optionalPlugins.isPresent()) {
                 for (String filename : optionalPlugins.get()) {
-
                     PluginDescriptor plugin = npr.readDescriptorFile(filename, PluginDescriptor.class);
                     installableList.add(new PluginInstallable(kubernetesService, plugin));
                 }
