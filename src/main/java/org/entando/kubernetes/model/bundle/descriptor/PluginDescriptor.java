@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.entando.kubernetes.model.DbmsVendor;
 
 @Getter
 @Setter
@@ -19,5 +18,13 @@ public class PluginDescriptor implements Descriptor {
     String image;
     String healthCheckPath;
     String dbms;
+    DockerImage dockerImage;
+
+    public DockerImage getDockerImage() {
+        if (dockerImage == null) {
+            this.dockerImage = DockerImage.fromString(this.image);
+        }
+        return this.dockerImage;
+    }
 
 }
