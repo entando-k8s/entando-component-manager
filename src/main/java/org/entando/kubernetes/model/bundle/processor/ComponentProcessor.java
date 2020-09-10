@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
@@ -14,7 +15,7 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
  * with the Component Descriptor.
  *
  */
-public interface ComponentProcessor<T> {
+public interface ComponentProcessor<T extends Descriptor> {
 
     /**
      * This method will process the component descriptor and should return an empty list or a list of all components

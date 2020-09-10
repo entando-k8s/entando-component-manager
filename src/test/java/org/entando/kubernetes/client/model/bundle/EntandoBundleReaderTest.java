@@ -15,6 +15,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
@@ -157,20 +158,20 @@ public class EntandoBundleReaderTest {
         }
     }
 
-    private static class DumbComponentProcessor implements ComponentProcessor<Object> {
+    private static class DumbComponentProcessor implements ComponentProcessor<DumbDescriptor> {
 
         @Override
-        public List<Installable<Object>> process(BundleReader bundleReader) {
+        public List<Installable<DumbDescriptor>> process(BundleReader bundleReader) {
             return null;
         }
 
         @Override
-        public List<Installable<Object>> process(List<EntandoBundleComponentJobEntity> components) {
+        public List<Installable<DumbDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
             return null;
         }
 
         @Override
-        public Object buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        public DumbDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
             return null;
         }
 
@@ -179,5 +180,7 @@ public class EntandoBundleReaderTest {
             return null;
         }
     }
+
+    private static class DumbDescriptor implements Descriptor  { }
 
 }

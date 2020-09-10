@@ -16,15 +16,15 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
  * @author Sergio Marcelino
  */
 @Slf4j
-public abstract class Installable<Descriptor> {
+public abstract class Installable<T extends Descriptor> {
 
-    protected final Descriptor representation;
+    protected final T representation;
 
     protected EntandoBundleComponentJobEntity job;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public Installable(Descriptor representation) {
+    public Installable(T representation) {
         this.representation = representation;
     }
 
@@ -66,7 +66,7 @@ public abstract class Installable<Descriptor> {
         return null;
     }
 
-    public Descriptor getRepresentation() {
+    public T getRepresentation() {
         return this.representation;
     }
 

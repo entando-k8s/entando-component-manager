@@ -14,6 +14,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -224,7 +225,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .join();
     }
 
-    private <T> JobResult executeInstall(Installable<T> installable) {
+    private <T extends Descriptor> JobResult executeInstall(Installable<T> installable) {
 
         CompletableFuture<?> future = installable.install();
         CompletableFuture<JobResult> installResult = future
