@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client.model.bundle.processor;
+package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;

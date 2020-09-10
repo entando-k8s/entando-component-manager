@@ -1,8 +1,15 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import io.fabric8.zjsonpatch.internal.guava.Strings;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
 
 public class BundleUtilities {
 
@@ -39,5 +46,53 @@ public class BundleUtilities {
      */
     public static String getOfficialSemanticVersionRegex() {
         return OFFICIAL_SEMANTIC_VERSION_REGEX;
+    }
+
+    public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
+        return descriptor.getRoles().stream()
+                .distinct()
+                .map(ExpectedRole::new)
+                .collect(Collectors.toList());
+    }
+
+    public static String extractNameFromDescriptor(PluginDescriptor descriptor) {
+        return composeNameFromDockerImage(descriptor.getDockerImage());
+    }
+
+    public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
+        return composeIngressPathFromDockerImage(descriptor.getDockerImage());
+    }
+
+    public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
+        DockerImage dockerImage = descriptor.getDockerImage();
+        return getLabelsFromImage(dockerImage);
+    }
+
+    private static String composeNameFromDockerImage(DockerImage image) {
+        return String.join("-",
+                makeKubernetesCompatible(image.getOrganization()),
+                makeKubernetesCompatible(image.getName()),
+                makeKubernetesCompatible(image.getVersion()));
+    }
+
+    private static String composeIngressPathFromDockerImage(DockerImage image) {
+        return "/" + String.join("/",
+                makeKubernetesCompatible(image.getOrganization()),
+                makeKubernetesCompatible(image.getName()),
+                makeKubernetesCompatible(image.getVersion()));
+    }
+
+    public static Map<String, String> getLabelsFromImage(DockerImage dockerImage) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("organization", dockerImage.getOrganization());
+        labels.put("name", dockerImage.getName());
+        labels.put("version", dockerImage.getVersion());
+        return labels;
+    }
+
+    private static String makeKubernetesCompatible(String value) {
+        value = value.toLowerCase();
+        value = value.replaceAll("[._]", "-");
+        return value;
     }
 }

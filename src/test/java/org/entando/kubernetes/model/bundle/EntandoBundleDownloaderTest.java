@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client.model.bundle;
+package org.entando.kubernetes.model.bundle;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;

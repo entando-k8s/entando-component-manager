@@ -14,7 +14,7 @@ public class DockerImage {
     private static final String orgGroup = "o";
     private static final String nameGroup = "n";
     private static final String versGroup = "v";
-    private static final Pattern imagePattern = Pattern.compile("(?<o>\\w+)/(?<n>\\w+)(?:(?<v>.*))?");
+    private static final Pattern imagePattern = Pattern.compile("(?<o>[a-z0-9]{4,30})/(?<n>[a-zA-Z0-9_.\\-]+)(?::(?<v>.*))?");
 
 
     private String organization;

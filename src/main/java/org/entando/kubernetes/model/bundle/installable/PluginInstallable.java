@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractNameFromDescriptor;
+
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
@@ -33,7 +35,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing link to plugin {}", getName());
             PluginDescriptor descriptor = PluginDescriptor.builder().image(getName()).build();
-            kubernetesService.unlinkPlugin(kubernetesService.extractNameFromDescriptor(descriptor));
+            kubernetesService.unlinkPlugin(extractNameFromDescriptor(descriptor));
         });
     }
 

@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client.model.bundle;
+package org.entando.kubernetes.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;

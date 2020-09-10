@@ -1,4 +1,4 @@
-package org.entando.kubernetes.client.model.bundle.processor;
+package org.entando.kubernetes.model.bundle.processor;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
