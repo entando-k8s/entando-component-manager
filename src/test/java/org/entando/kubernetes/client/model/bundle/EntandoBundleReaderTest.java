@@ -181,6 +181,8 @@ public class EntandoBundleReaderTest {
         }
     }
 
-    private static class DumbDescriptor implements Descriptor  { }
+    private static class DumbDescriptor implements Descriptor {
+
+    }
 
 }
