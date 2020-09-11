@@ -55,16 +55,16 @@ public class PluginDescriptorConvertionTest {
         PluginDescriptor d = getTestDescriptor();
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
+        assertThat(p.getMetadata().getName()).isEqualTo(EXPECTED_PLUGIN_NAME);
+        assertThat(p.getSpec().getImage()).isEqualTo(TEST_DESCRIPTOR_IMAGE);
+        assertThat(p.getSpec().getIngressPath()).isEqualTo(EXPECTED_INGRESS_PATH);
+        assertThat(p.getSpec().getHealthCheckPath()).isEqualTo(TEST_DESCRIPTOR_HEALTH_PATH);
+
         Map<String, String> lbls = new HashMap<>();
         lbls.put("organization", "entando");
         lbls.put("name", "the-lucas");
         lbls.put("version", "0.0.1-SNAPSHOT");
-
-        assertThat(p.getMetadata().getName()).isEqualTo(EXPECTED_PLUGIN_NAME);
         assertThat(p.getMetadata().getLabels()).containsAllEntriesOf(lbls);
-        assertThat(p.getSpec().getImage()).isEqualTo(TEST_DESCRIPTOR_IMAGE);
-        assertThat(p.getSpec().getIngressPath()).isEqualTo(EXPECTED_INGRESS_PATH);
-        assertThat(p.getSpec().getHealthCheckPath()).isEqualTo(TEST_DESCRIPTOR_HEALTH_PATH);
 
         List<ExpectedRole> expectedRoles = p.getSpec().getRoles();
         List<String> expectedRolesCodes = Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE);
