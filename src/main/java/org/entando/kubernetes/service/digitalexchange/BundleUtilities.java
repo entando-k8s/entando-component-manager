@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 
 public class BundleUtilities {
@@ -51,7 +54,7 @@ public class BundleUtilities {
     public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
         return descriptor.getRoles().stream()
                 .distinct()
-                .map(ExpectedRole::new)
+                .map(role -> new ExpectedRole(role, role))
                 .collect(Collectors.toList());
     }
 
@@ -88,6 +91,22 @@ public class BundleUtilities {
         labels.put("name", dockerImage.getName());
         labels.put("version", dockerImage.getVersion());
         return labels;
+    }
+
+    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName(extractNameFromDescriptor(descriptor))
+                .withLabels(extractLabelsFromDescriptor(descriptor))
+                .endMetadata()
+                .withNewSpec()
+                .withDbms(DbmsVendor.valueOf(descriptor.getDbms().toUpperCase()))
+                .withImage(descriptor.getImage())
+                .withIngressPath(extractIngressPathFromDescriptor(descriptor))
+                .withRoles(extractRolesFromDescriptor(descriptor))
+                .withHealthCheckPath(descriptor.getHealthCheckPath())
+                .endSpec()
+                .build();
     }
 
     private static String makeKubernetesCompatible(String value) {

@@ -29,7 +29,7 @@ public class DockerImage {
         String name = m.group(nameGroup);
         String organization = m.group(orgGroup);
         String version = m.group(versGroup);
-        if (version.isEmpty()) {
+        if (version == null || version.isEmpty()) {
             version = "latest";
         }
 

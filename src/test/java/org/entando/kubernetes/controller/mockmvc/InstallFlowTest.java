@@ -179,7 +179,7 @@ public class InstallFlowTest {
         // Verify interaction with mocks
         Set<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinks();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
-                .filter(link -> link.getSpec().getEntandoPluginName().equals("entando.todomvc.latest")).findAny();
+                .filter(link -> link.getSpec().getEntandoPluginName().equals("entando-todomvc-latest")).findAny();
 
         assertTrue(appPluginLinkForTodoMvc.isPresent());
 

@@ -91,22 +91,6 @@ public class KubernetesService {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
     }
 
-    public EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
-        return new EntandoPluginBuilder()
-                .withNewMetadata()
-                .withName(extractNameFromDescriptor(descriptor))
-                .withLabels(extractLabelsFromDescriptor(descriptor))
-                .endMetadata()
-                .withNewSpec()
-                .withDbms(DbmsVendor.valueOf(descriptor.getDbms().toUpperCase()))
-                .withImage(descriptor.getImage())
-                .withIngressPath(extractIngressPathFromDescriptor(descriptor))
-                .withRoles(extractRolesFromDescriptor(descriptor))
-                .withHealthCheckPath(descriptor.getHealthCheckPath())
-                .endSpec()
-                .build();
-    }
-
 
     public EntandoAppPluginLink linkPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = new EntandoPluginBuilder()

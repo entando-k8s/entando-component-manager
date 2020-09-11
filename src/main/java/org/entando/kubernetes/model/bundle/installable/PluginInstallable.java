@@ -9,6 +9,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Slf4j
 public class PluginInstallable extends Installable<PluginDescriptor> {
@@ -24,7 +25,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Deploying plugin {}", getName());
-            EntandoPlugin plugin = kubernetesService.generatePluginFromDescriptor(representation);
+            EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
             kubernetesService.linkPluginAndWaitForSuccess(plugin);
         });
     }
