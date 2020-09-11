@@ -1,17 +1,22 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractNameFromDescriptor;
+
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Slf4j
-public class PluginInstallable extends Installable<EntandoPlugin> {
+public class PluginInstallable extends Installable<PluginDescriptor> {
 
     private final KubernetesService kubernetesService;
 
-    public PluginInstallable(KubernetesService kubernetesService, EntandoPlugin plugin) {
+    public PluginInstallable(KubernetesService kubernetesService, PluginDescriptor plugin) {
         super(plugin);
         this.kubernetesService = kubernetesService;
     }
@@ -20,15 +25,18 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Deploying plugin {}", getName());
-            kubernetesService.linkPluginAndWaitForSuccess(representation);
+            EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+            kubernetesService.linkPluginAndWaitForSuccess(plugin);
         });
     }
+
 
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing link to plugin {}", getName());
-            kubernetesService.unlinkPlugin(getName());
+            PluginDescriptor descriptor = PluginDescriptor.builder().image(getName()).build();
+            kubernetesService.unlinkPlugin(extractNameFromDescriptor(descriptor));
         });
     }
 
@@ -39,7 +47,7 @@ public class PluginInstallable extends Installable<EntandoPlugin> {
 
     @Override
     public String getName() {
-        return this.representation.getMetadata().getName();
+        return this.representation.getDockerImage().toString();
     }
 
 }
