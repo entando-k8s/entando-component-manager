@@ -68,6 +68,7 @@ public class PluginDescriptorConvertionTest {
 
         List<ExpectedRole> expectedRoles = p.getSpec().getRoles();
         List<String> expectedRolesCodes = Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE);
+        assertThat(expectedRoles.size()).isEqualTo(2);
         assertThat(expectedRoles).allMatch(role ->
                 expectedRolesCodes.contains(role.getCode()) && role.getCode().equals(role.getName()));
         assertThat(p.getSpec().getRoles().stream()
