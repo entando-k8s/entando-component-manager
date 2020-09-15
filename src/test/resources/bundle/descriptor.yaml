@@ -26,6 +26,9 @@ components:
     - contentmodels/my_content_model_descriptor.yaml
     - contentmodels/another_content_model_descriptor.yaml
 
+  groups:
+    - groups/my-group.yaml
+
   labels:
     - key: HELLO
       titles:

@@ -4,6 +4,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
@@ -27,6 +28,10 @@ public interface EntandoCoreClient {
     void registerLabel(LabelDescriptor descriptor);
 
     void deleteLabel(String code);
+
+    void registerGroup(GroupDescriptor descriptor);
+
+    void deleteGroup(String code);
 
     void registerPage(PageDescriptor pageDescriptor);
 

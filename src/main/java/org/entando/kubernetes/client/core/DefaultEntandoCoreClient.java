@@ -6,6 +6,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
@@ -96,6 +97,17 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void deleteLabel(final String code) {
         restTemplate.delete(resolvePathSegments("api", "labels", code).build().toUri());
+    }
+
+    @Override
+    public void registerGroup(GroupDescriptor descriptor) {
+        restTemplate.postForEntity(resolvePathSegments("api", "groups").build().toUri(), descriptor, Void.class);
+
+    }
+
+    @Override
+    public void deleteGroup(String code) {
+        restTemplate.delete(resolvePathSegments("api", "groups", code).build().toUri());
     }
 
     @Override
