@@ -264,16 +264,10 @@ public class TestInstallUtils {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
+        setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getContentModelUsage(anyString()))
-                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
         //        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
@@ -371,16 +365,11 @@ public class TestInstallUtils {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
+        setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getContentModelUsage(anyString()))
-                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
+
         doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
                 .deleteFolder(any());
         doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
@@ -466,16 +455,11 @@ public class TestInstallUtils {
         WireMock.reset();
         WireMock.setGlobalRandomDelay(delayDistribution);
 
+        setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getContentModelUsage(anyString()))
-                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
+
 
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePage(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePageModel(any());
@@ -495,6 +479,16 @@ public class TestInstallUtils {
         waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_IN_PROGRESS);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+    }
+
+    private static void setupComponentUsageToAllowUninstall(EntandoCoreClient coreClient) {
+        when(coreClient.getGroupUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.GROUP));
+        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
+        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
+        when(coreClient.getContentModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
+        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
+        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
+        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
     }
 
     public static PagedMetadata<EntandoBundleJobEntity> getInstallJob(MockMvc mockMvc) throws Exception {
