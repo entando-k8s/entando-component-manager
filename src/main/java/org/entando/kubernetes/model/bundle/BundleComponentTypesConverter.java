@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.bundle;
 
 import java.util.Arrays;
 import java.util.Set;

@@ -4,9 +4,8 @@ import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.ext
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;

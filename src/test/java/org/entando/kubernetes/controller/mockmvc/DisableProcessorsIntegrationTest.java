@@ -1,14 +1,8 @@
 package org.entando.kubernetes.controller.mockmvc;
 
-import static org.entando.kubernetes.utils.TestInstallUtils.simulateSuccessfullyCompletedInstall;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
@@ -21,11 +15,9 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
-import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -3,8 +3,8 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
 @Slf4j
 public class FragmentInstallable extends Installable<FragmentDescriptor> {

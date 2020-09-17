@@ -2,18 +2,12 @@ package org.entando.kubernetes.service;
 
 import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
-import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractIngressPathFromDescriptor;
-import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractLabelsFromDescriptor;
-import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractNameFromDescriptor;
-import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractRolesFromDescriptor;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +17,10 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.k8ssvc.EntandoAppPluginLinkingProcessException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
-import org.entando.kubernetes.model.DbmsVendor;
-import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
-import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

@@ -29,6 +29,9 @@ components:
   groups:
     - groups/my-group.yaml
 
+  categories:
+    - categories/my-category.yaml
+
   labels:
     - key: HELLO
       titles:

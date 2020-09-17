@@ -7,7 +7,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.entando.kubernetes.model.digitalexchange.ImageConverter;
+import org.entando.kubernetes.model.job.ImageConverter;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

@@ -11,13 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 

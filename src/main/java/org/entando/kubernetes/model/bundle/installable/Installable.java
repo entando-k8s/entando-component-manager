@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 
 /**

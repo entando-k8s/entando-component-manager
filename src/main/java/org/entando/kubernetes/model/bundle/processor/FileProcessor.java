@@ -13,11 +13,11 @@ import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.Getter;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.HttpStatus;
@@ -54,17 +54,17 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             String codeHandlebarTemplate = "{{request.path.[" + ep.getCodePathSegmentPosition() + "]}}";
             this.wireMockServer.stubFor(WireMock.get(urlPathMatching(ep.expandUrl()))
                     .willReturn(aResponse()
-                                    .withStatus(200)
-                                    .withHeader("Content-Type", "application/json")
-                                    .withBody("{ \"payload\" : {\n "
-                                            + "\"type\": \"" + ep.getTypeValue() + "\",\n"
-                                            + "\"code\": \"" + codeHandlebarTemplate + "\",\n"
-                                            + "\"usage\": 1\n"
-                                            + "},\n"
-                                            + "\"metadata\": {},\n"
-                                            + "\"errors\": []\n "
-                                            + "}")
-                                    .withTransformers("response-template")
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{ \"payload\" : {\n "
+                                    + "\"type\": \"" + ep.getTypeValue() + "\",\n"
+                                    + "\"code\": \"" + codeHandlebarTemplate + "\",\n"
+                                    + "\"usage\": 1\n"
+                                    + "},\n"
+                                    + "\"metadata\": {},\n"
+                                    + "\"errors\": []\n "
+                                    + "}")
+                            .withTransformers("response-template")
                     ));
         }
         return this;

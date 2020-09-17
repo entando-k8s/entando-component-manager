@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
 
 @Data

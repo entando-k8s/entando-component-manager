@@ -10,11 +10,11 @@ public class ComponentSpecDescriptor {
     private List<String> plugins;
     private List<String> widgets;
     private List<String> fragments;
+    private List<String> categories;
     private List<String> pages;
     private List<String> pageTemplates;
     private List<String> contentTypes;
     private List<String> contentTemplates;
-
     private List<String> groups;
     private List<LabelDescriptor> labels;
 

@@ -13,42 +13,43 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.installable.CategoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle Pages.
+ * Processor to create Groups.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageProcessor implements ComponentProcessor<PageDescriptor> {
+public class CategoryProcessor implements ComponentProcessor<CategoryDescriptor> {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
-        return ComponentType.PAGE;
+        return ComponentType.CATEGORY;
     }
 
     @Override
-    public List<Installable<PageDescriptor>> process(BundleReader npr) {
+    public List<Installable<CategoryDescriptor>> process(BundleReader npr) {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
-            List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getPages)
+
+            List<String> categoryDescriptors = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getCategories)
                     .orElse(Collections.emptyList());
 
-            List<Installable<PageDescriptor>> installables = new LinkedList<>();
+            List<Installable<CategoryDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : pageDescriptorList) {
-                PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
-                installables.add(new PageInstallable(engineService, pageDescriptor));
+            for (String fileName : categoryDescriptors) {
+                CategoryDescriptor categoryDescriptor = npr.readDescriptorFile(fileName, CategoryDescriptor.class);
+                installables.add(new CategoryInstallable(engineService, categoryDescriptor));
             }
 
             return installables;
@@ -58,17 +59,18 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     }
 
     @Override
-    public List<Installable<PageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
+    public List<Installable<CategoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.PAGE)
-                .map(c -> new PageInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == ComponentType.CATEGORY)
+                .map(c -> new CategoryInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public PageDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return PageDescriptor.builder()
+    public CategoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return CategoryDescriptor.builder()
                 .code(component.getComponentId())
                 .build();
     }
+
 }

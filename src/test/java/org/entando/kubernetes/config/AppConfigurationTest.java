@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.processor.CategoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
@@ -20,7 +22,6 @@ import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.service.KubernetesService;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
@@ -57,6 +58,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.PLUGIN.toString(), new PluginProcessor(k8sService));
         processors.put(ComponentType.WIDGET.toString(), new WidgetProcessor(coreClient));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
+        processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
 
         return processors;
     }

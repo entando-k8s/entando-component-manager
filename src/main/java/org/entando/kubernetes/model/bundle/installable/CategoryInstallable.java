@@ -4,14 +4,14 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 
 @Slf4j
-public class GroupInstallable extends Installable<GroupDescriptor> {
+public class CategoryInstallable extends Installable<CategoryDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public GroupInstallable(EntandoCoreClient engineService, GroupDescriptor descriptor) {
+    public CategoryInstallable(EntandoCoreClient engineService, CategoryDescriptor descriptor) {
         super(descriptor);
         this.engineService = engineService;
     }
@@ -20,7 +20,7 @@ public class GroupInstallable extends Installable<GroupDescriptor> {
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Label {}", getName());
-            engineService.registerGroup(representation);
+            engineService.registerCategory(representation);
         });
     }
 
@@ -28,13 +28,13 @@ public class GroupInstallable extends Installable<GroupDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Label {}", getName());
-            engineService.deleteGroup(getName());
+            engineService.deleteCategory(getName());
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.GROUP;
+        return ComponentType.CATEGORY;
     }
 
     @Override

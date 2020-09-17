@@ -14,7 +14,6 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
-import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.junit.jupiter.api.BeforeEach;
