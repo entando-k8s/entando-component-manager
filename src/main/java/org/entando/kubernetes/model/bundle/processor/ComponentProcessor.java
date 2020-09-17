@@ -7,7 +7,7 @@ import java.util.List;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 
 /**

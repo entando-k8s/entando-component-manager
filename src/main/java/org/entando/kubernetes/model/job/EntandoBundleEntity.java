@@ -12,7 +12,7 @@
  * details.
  */
 
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
@@ -32,7 +32,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.springframework.validation.annotation.Validated;
 

@@ -1,5 +1,6 @@
 package org.entando.kubernetes.client.core;
 
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -64,4 +65,10 @@ public interface EntandoCoreClient {
     void deleteFolder(String code);
 
     void uploadFile(FileDescriptor descriptor);
+
+    void registerCategory(CategoryDescriptor representation);
+
+    void deleteCategory(String code);
+
+    EntandoCoreComponentUsage getCategoryUsage(String code);
 }

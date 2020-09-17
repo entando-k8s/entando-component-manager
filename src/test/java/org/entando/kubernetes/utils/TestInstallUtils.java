@@ -45,7 +45,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsageComponent;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;

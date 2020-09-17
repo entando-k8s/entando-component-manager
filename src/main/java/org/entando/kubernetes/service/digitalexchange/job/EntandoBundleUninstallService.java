@@ -18,8 +18,8 @@ import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledExcept
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
-import org.entando.kubernetes.model.digitalexchange.EntandoBundleEntity;
+import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobProgress;

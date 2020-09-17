@@ -19,7 +19,7 @@ import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundle
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;

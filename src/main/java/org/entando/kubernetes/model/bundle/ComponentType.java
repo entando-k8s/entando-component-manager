@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.bundle;
 
 import java.util.Arrays;
 
@@ -11,15 +11,16 @@ public enum ComponentType {
 
     PLUGIN("plugin", 0),
     DIRECTORY("directory", 1),
-    GROUP("group", 2),
-    LABEL("label", 3),
-    ASSET("asset", 4),
-    WIDGET("widget", 5),
-    CONTENT_TYPE("contentType", 6),
-    CONTENT_TEMPLATE("contentTemplate", 7),
-    FRAGMENT("fragment", 8),
-    PAGE_TEMPLATE("pageTemplate", 9),
-    PAGE("page", 10);
+    CATEGORY("category", 2),
+    GROUP("group", 3),
+    LABEL("label", 4),
+    ASSET("asset", 5),
+    WIDGET("widget", 6),
+    CONTENT_TYPE("contentType", 7),
+    CONTENT_TEMPLATE("contentTemplate", 8),
+    FRAGMENT("fragment", 9),
+    PAGE_TEMPLATE("pageTemplate", 10),
+    PAGE("page", 11);
 
 
     private String typeName;

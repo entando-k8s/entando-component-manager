@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

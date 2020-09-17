@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.digitalexchange;
+package org.entando.kubernetes.model.job;
 
 import javax.persistence.AttributeConverter;
 

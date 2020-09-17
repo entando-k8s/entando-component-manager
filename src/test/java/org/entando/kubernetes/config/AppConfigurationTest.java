@@ -20,7 +20,7 @@ import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.service.KubernetesService;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;

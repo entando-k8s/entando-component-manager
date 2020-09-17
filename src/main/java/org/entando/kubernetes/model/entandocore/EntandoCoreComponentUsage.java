@@ -3,7 +3,7 @@ package org.entando.kubernetes.model.entandocore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 
 @Getter
 @NoArgsConstructor

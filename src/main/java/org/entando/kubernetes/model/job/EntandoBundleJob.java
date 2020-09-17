@@ -12,7 +12,7 @@
  * details.
  */
 
-package org.entando.kubernetes.model.bundle;
+package org.entando.kubernetes.model.job;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,10 +23,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
-import org.entando.kubernetes.model.job.JobStatus;
-import org.entando.kubernetes.model.job.TrackableJob;
 
 @Data
 @Builder

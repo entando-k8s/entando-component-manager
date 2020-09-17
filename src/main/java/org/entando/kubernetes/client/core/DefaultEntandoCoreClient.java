@@ -2,6 +2,7 @@ package org.entando.kubernetes.client.core;
 
 import java.nio.file.Paths;
 import org.entando.kubernetes.exception.web.HttpException;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -202,6 +203,22 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         final String path = Paths.get(descriptor.getFolder(), descriptor.getFilename()).toString();
         final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
         restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "file").build().toUri(), file, Void.class);
+    }
+
+    @Override
+    public void registerCategory(CategoryDescriptor representation) {
+        restTemplate.postForEntity(resolvePathSegments("api", "categories").build().toUri(), representation, Void.class);
+    }
+
+    @Override
+    public void deleteCategory(String code) {
+        restTemplate.delete(resolvePathSegments("api", "categories", code).build().toUri());
+
+    }
+
+    @Override
+    public EntandoCoreComponentUsage getCategoryUsage(String code) {
+        return this.getComponentUsage(code, new String[]{"api", "categories", code, USAGE_PATH_SEGMENT}, "category");
     }
 
     private UriComponentsBuilder resolvePathSegments(String... segments) {
