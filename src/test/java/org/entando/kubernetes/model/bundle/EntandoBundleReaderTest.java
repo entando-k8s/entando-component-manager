@@ -15,6 +15,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -95,6 +96,17 @@ public class EntandoBundleReaderTest {
         assertThat(gd).isNotNull();
         assertThat(gd.getCode()).isEqualTo("ecr");
         assertThat(gd.getName()).isEqualTo("Ecr");
+    }
+
+    @Test
+    public void shouldReadCategoriesFromBundle() throws IOException {
+        CategoryDescriptor cd = bundleReader
+                .readDescriptorFile("categories/my-category.yaml", CategoryDescriptor.class);
+        assertThat(cd).isNotNull();
+        assertThat(cd.getCode()).isEqualTo("my-category");
+        assertThat(cd.getParentCode()).isEqualTo("home");
+        assertThat(cd.getTitles()).containsEntry("it", "La mia categoria");
+        assertThat(cd.getTitles()).containsEntry("en", "My own category");
     }
 
     @Test

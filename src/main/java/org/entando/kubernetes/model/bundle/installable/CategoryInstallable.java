@@ -3,8 +3,8 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 
 @Slf4j
 public class CategoryInstallable extends Installable<CategoryDescriptor> {
@@ -28,13 +28,13 @@ public class CategoryInstallable extends Installable<CategoryDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Label {}", getName());
-            engineService.deleteLabel(getName());
+            engineService.deleteCategory(getName());
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.GROUP;
+        return ComponentType.CATEGORY;
     }
 
     @Override

@@ -14,12 +14,14 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+@Profile("mockjpa")
 public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBundleComponentJobRepository {
 
     Map<UUID, EntandoBundleComponentJobEntity> database;

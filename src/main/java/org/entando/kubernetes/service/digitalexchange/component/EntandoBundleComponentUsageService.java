@@ -23,6 +23,8 @@ public class EntandoBundleComponentUsageService {
                 return this.client.getGroupUsage(componentCode);
             case FRAGMENT:
                 return this.client.getFragmentUsage(componentCode);
+            case CATEGORY:
+                return this.client.getCategoryUsage(componentCode);
             case PAGE:
                 return this.client.getPageUsage(componentCode);
             case PAGE_TEMPLATE:

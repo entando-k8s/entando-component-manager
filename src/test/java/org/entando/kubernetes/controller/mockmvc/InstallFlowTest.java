@@ -57,6 +57,8 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
+import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -67,9 +69,8 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
@@ -185,6 +186,7 @@ public class InstallFlowTest {
         assertTrue(appPluginLinkForTodoMvc.isPresent());
 
         verifyWidgetsRequests(coreClient);
+        verifyCategoryRequests(coreClient);
         verifyGroupRequests(coreClient);
         verifyPageModelsRequests(coreClient);
         verifyDirectoryRequests(coreClient);
@@ -195,6 +197,23 @@ public class InstallFlowTest {
         verify(coreClient, times(1)).registerContentType(any());
         verify(coreClient, times(2)).registerContentModel(any());
         verify(coreClient, times(1)).registerLabel(any());
+    }
+
+    private void verifyCategoryRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<CategoryDescriptor> categoryDescriptor = ArgumentCaptor.forClass(CategoryDescriptor.class);
+        verify(coreClient, times(1)).registerCategory(categoryDescriptor.capture());
+
+        List<CategoryDescriptor> allRequests = categoryDescriptor.getAllValues()
+                .stream().sorted(Comparator.comparing(CategoryDescriptor::getCode))
+                .collect(Collectors.toList());
+
+        assertThat(allRequests.get(0)).matches(d ->
+                d.getCode().equals("my-category")
+                        && d.getParentCode().equals("home")
+                        && d.getTitles().containsKey("it")
+                        && d.getTitles().get("it").equals("La mia categoria")
+                        && d.getTitles().containsKey("en")
+                        && d.getTitles().get("en").equals("My own category"));
     }
 
     private void verifyGroupRequests(EntandoCoreClient coreClient) {
@@ -344,6 +363,8 @@ public class InstallFlowTest {
                 "/something/js",
                 "/something/vendor",
                 "/something/vendor/jquery",
+                // Categories
+                "my-category",
                 // Groups
                 "ecr",
                 // Labels
@@ -391,6 +412,7 @@ public class InstallFlowTest {
         expectedComponents.put(ComponentType.WIDGET, 2);
         expectedComponents.put(ComponentType.ASSET, 5);
         expectedComponents.put(ComponentType.GROUP, 1);
+        expectedComponents.put(ComponentType.CATEGORY, 1);
         expectedComponents.put(ComponentType.DIRECTORY, 5);
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
