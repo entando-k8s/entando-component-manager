@@ -111,6 +111,11 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
+    public EntandoCoreComponentUsage getGroupUsage(String code) {
+        return this.getComponentUsage(code, new String[]{"api", "groups", code, USAGE_PATH_SEGMENT}, "group");
+    }
+
+    @Override
     public void registerPage(PageDescriptor pageDescriptor) {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "pages").build().toUri(), new EntandoCorePage(pageDescriptor),

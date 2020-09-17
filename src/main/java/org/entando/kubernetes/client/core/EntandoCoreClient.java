@@ -33,6 +33,8 @@ public interface EntandoCoreClient {
 
     void deleteGroup(String code);
 
+    EntandoCoreComponentUsage getGroupUsage(String code);
+
     void registerPage(PageDescriptor pageDescriptor);
 
     void deletePage(String code);

@@ -19,6 +19,8 @@ public class EntandoBundleComponentUsageService {
         switch (componentType) {
             case WIDGET:
                 return this.client.getWidgetUsage(componentCode);
+            case GROUP:
+                return this.client.getGroupUsage(componentCode);
             case FRAGMENT:
                 return this.client.getFragmentUsage(componentCode);
             case PAGE:
