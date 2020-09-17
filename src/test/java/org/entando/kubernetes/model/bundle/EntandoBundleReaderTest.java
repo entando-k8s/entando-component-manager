@@ -17,6 +17,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -86,6 +87,15 @@ public class EntandoBundleReaderTest {
         assertThat(wd.getTitles()).contains(
                 entry("en", "TODO MVC Widget"),
                 entry("it", "TODO MVC Widget"));
+    }
+
+    @Test
+    public void shouldReadGroupsFromBundle() throws IOException {
+        GroupDescriptor gd = bundleReader
+                .readDescriptorFile("groups/my-group.yaml", GroupDescriptor.class);
+        assertThat(gd).isNotNull();
+        assertThat(gd.getCode()).isEqualTo("ecr");
+        assertThat(gd.getName()).isEqualTo("Ecr");
     }
 
     @Test

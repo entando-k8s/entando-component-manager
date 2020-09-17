@@ -59,6 +59,7 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
@@ -184,6 +185,7 @@ public class InstallFlowTest {
         assertTrue(appPluginLinkForTodoMvc.isPresent());
 
         verifyWidgetsRequests(coreClient);
+        verifyGroupRequests(coreClient);
         verifyPageModelsRequests(coreClient);
         verifyDirectoryRequests(coreClient);
         verifyFileRequests(coreClient);
@@ -193,6 +195,18 @@ public class InstallFlowTest {
         verify(coreClient, times(1)).registerContentType(any());
         verify(coreClient, times(2)).registerContentModel(any());
         verify(coreClient, times(1)).registerLabel(any());
+    }
+
+    private void verifyGroupRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<GroupDescriptor> groupDescriptor = ArgumentCaptor.forClass(GroupDescriptor.class);
+        verify(coreClient, times(1)).registerGroup(groupDescriptor.capture());
+
+        List<GroupDescriptor> allPageRequests = groupDescriptor.getAllValues()
+                .stream().sorted(Comparator.comparing(GroupDescriptor::getCode))
+                .collect(Collectors.toList());
+
+        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("ecr")
+                && pd.getName().equals("Ecr"));
     }
 
     private void verifyPageRequests(EntandoCoreClient coreClient) {
@@ -322,27 +336,39 @@ public class InstallFlowTest {
         assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
 
         List<String> expected = Arrays.asList(
+                // Plugins
                 "entando/todomvc:latest",
+                // Directories
                 "/something",
                 "/something/css",
                 "/something/js",
                 "/something/vendor",
                 "/something/vendor/jquery",
+                // Groups
+                "ecr",
+                // Labels
                 "HELLO",
+                // Files
                 "/something/css/custom.css",
                 "/something/css/style.css",
                 "/something/js/configUiScript.js",
                 "/something/js/script.js",
                 "/something/vendor/jquery/jquery.js",
+                //Widgets
                 "todomvc_widget",
                 "another_todomvc_widget",
+                // Content-Type
                 "CNG",
+                // Content-Template
                 "8880003",
                 "8880002",
+                // Fragments
                 "title_fragment",
                 "another_fragment",
+                // Page templates
                 "todomvc_page_model",
                 "todomvc_another_page_model",
+                // Pages
                 "my-page");
 
         List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository
@@ -364,6 +390,7 @@ public class InstallFlowTest {
         Map<ComponentType, Integer> expectedComponents = new HashMap<>();
         expectedComponents.put(ComponentType.WIDGET, 2);
         expectedComponents.put(ComponentType.ASSET, 5);
+        expectedComponents.put(ComponentType.GROUP, 1);
         expectedComponents.put(ComponentType.DIRECTORY, 5);
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);

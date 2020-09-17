@@ -14,6 +14,7 @@ import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
 import org.entando.kubernetes.model.bundle.processor.DirectoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.FileProcessor;
 import org.entando.kubernetes.model.bundle.processor.FragmentProcessor;
+import org.entando.kubernetes.model.bundle.processor.GroupProcessor;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
@@ -55,6 +56,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
         processors.put(ComponentType.PLUGIN.toString(), new PluginProcessor(k8sService));
         processors.put(ComponentType.WIDGET.toString(), new WidgetProcessor(coreClient));
+        processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
 
         return processors;
     }

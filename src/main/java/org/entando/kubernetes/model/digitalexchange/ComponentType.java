@@ -11,14 +11,16 @@ public enum ComponentType {
 
     PLUGIN("plugin", 0),
     DIRECTORY("directory", 1),
-    LABEL("label", 2),
-    ASSET("asset", 3),
-    WIDGET("widget", 4),
-    CONTENT_TYPE("contentType", 5),
-    CONTENT_TEMPLATE("contentTemplate", 6),
-    FRAGMENT("fragment", 7),
-    PAGE_TEMPLATE("pageTemplate", 8),
-    PAGE("page", 9);
+    GROUP("group", 2),
+    LABEL("label", 3),
+    ASSET("asset", 4),
+    WIDGET("widget", 5),
+    CONTENT_TYPE("contentType", 6),
+    CONTENT_TEMPLATE("contentTemplate", 7),
+    FRAGMENT("fragment", 8),
+    PAGE_TEMPLATE("pageTemplate", 9),
+    PAGE("page", 10);
+
 
     private String typeName;
     private int installPriority;
