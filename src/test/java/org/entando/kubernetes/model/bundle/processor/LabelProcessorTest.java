@@ -50,8 +50,12 @@ public class LabelProcessorTest {
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         final BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
-        spec.setLabels(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
+        spec.setLabels(singletonList("labels/labels.yaml"));
+
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
+        when(bundleReader.readListOfDescriptorFile("labels/labels.yaml", LabelDescriptor.class))
+                .thenReturn(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
+
 
         final List<? extends Installable> installables = processor.process(bundleReader);
 

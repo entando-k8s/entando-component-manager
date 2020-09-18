@@ -16,7 +16,7 @@ public class ComponentSpecDescriptor {
     private List<String> contentTypes;
     private List<String> contentTemplates;
     private List<String> groups;
-    private List<LabelDescriptor> labels;
+    private List<String> labels;
 
     @JsonSetter(value = "contentModels")
     private void setContentModels(List<String> contentModels) {
