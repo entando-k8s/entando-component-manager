@@ -91,22 +91,22 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadGroupsFromBundle() throws IOException {
-        GroupDescriptor gd = bundleReader
-                .readDescriptorFile("groups/my-group.yaml", GroupDescriptor.class);
-        assertThat(gd).isNotNull();
-        assertThat(gd.getCode()).isEqualTo("ecr");
-        assertThat(gd.getName()).isEqualTo("Ecr");
+        List<GroupDescriptor> gd = bundleReader
+                .readListOfDescriptorFile("groups/my-group.yaml", GroupDescriptor.class);
+        assertThat(gd).hasSize(1);
+        assertThat(gd.get(0).getCode()).isEqualTo("ecr");
+        assertThat(gd.get(0).getName()).isEqualTo("Ecr");
     }
 
     @Test
     public void shouldReadCategoriesFromBundle() throws IOException {
-        CategoryDescriptor cd = bundleReader
-                .readDescriptorFile("categories/my-category.yaml", CategoryDescriptor.class);
-        assertThat(cd).isNotNull();
-        assertThat(cd.getCode()).isEqualTo("my-category");
-        assertThat(cd.getParentCode()).isEqualTo("home");
-        assertThat(cd.getTitles()).containsEntry("it", "La mia categoria");
-        assertThat(cd.getTitles()).containsEntry("en", "My own category");
+        List<CategoryDescriptor> cd = bundleReader
+                .readListOfDescriptorFile("categories/my-category.yaml", CategoryDescriptor.class);
+        assertThat(cd).hasSize(1);
+        assertThat(cd.get(0).getCode()).isEqualTo("my-category");
+        assertThat(cd.get(0).getParentCode()).isEqualTo("home");
+        assertThat(cd.get(0).getTitles()).containsEntry("it", "La mia categoria");
+        assertThat(cd.get(0).getTitles()).containsEntry("en", "My own category");
     }
 
     @Test
