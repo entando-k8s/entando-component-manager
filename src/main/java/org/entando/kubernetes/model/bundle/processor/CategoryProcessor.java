@@ -41,15 +41,17 @@ public class CategoryProcessor implements ComponentProcessor<CategoryDescriptor>
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
 
-            List<String> categoryDescriptors = ofNullable(descriptor.getComponents())
+            List<String> categoryDescriptorFiles = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getCategories)
                     .orElse(Collections.emptyList());
 
             List<Installable<CategoryDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : categoryDescriptors) {
-                CategoryDescriptor categoryDescriptor = npr.readDescriptorFile(fileName, CategoryDescriptor.class);
-                installables.add(new CategoryInstallable(engineService, categoryDescriptor));
+            for (String fileName : categoryDescriptorFiles) {
+                List<CategoryDescriptor> categoryDescriptorList = npr.readListOfDescriptorFile(fileName, CategoryDescriptor.class);
+                for (CategoryDescriptor cd: categoryDescriptorList) {
+                    installables.add(new CategoryInstallable(engineService, cd));
+                }
             }
 
             return installables;

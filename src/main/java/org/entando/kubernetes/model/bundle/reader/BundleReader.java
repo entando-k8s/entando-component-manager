@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.reader;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -78,6 +79,17 @@ public class BundleReader {
 
     private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
         return mapper.readValue(file, clazz);
+    }
+
+    public <T> List<T> readListOfDescriptorFile(final String filename, final Class<T> clazz) throws IOException {
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(filename).toFile())) {
+            return readListOfDescriptorsFile(fis, clazz);
+        }
+    }
+
+    private <T> List<T> readListOfDescriptorsFile(InputStream file, Class<T> clz) throws IOException {
+        JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, clz);
+        return mapper.readValue(file, type);
     }
 
     public String readFileAsString(String fileName) throws IOException {

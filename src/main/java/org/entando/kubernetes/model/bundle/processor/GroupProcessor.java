@@ -42,15 +42,17 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor> {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
 
-            List<String> groupDescriptors = ofNullable(descriptor.getComponents())
+            List<String> groupDescriptorFiles = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getGroups)
                     .orElse(Collections.emptyList());
 
             List<Installable<GroupDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : groupDescriptors) {
-                GroupDescriptor groupDescriptor = npr.readDescriptorFile(fileName, GroupDescriptor.class);
-                installables.add(new GroupInstallable(engineService, groupDescriptor));
+            for (String fileName : groupDescriptorFiles) {
+                List<GroupDescriptor> groupDescriptorList = npr.readListOfDescriptorFile(fileName, GroupDescriptor.class);
+                for (GroupDescriptor gd: groupDescriptorList) {
+                    installables.add(new GroupInstallable(engineService, gd));
+                }
             }
 
             return installables;
