@@ -3,9 +3,9 @@ package org.entando.kubernetes.model.bundle.processor;
 import static java.util.Optional.ofNullable;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * Processor to create Labels.
- *
  */
 @Slf4j
 @Service
@@ -42,13 +41,16 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
 
-            final Optional<List<LabelDescriptor>> labelDescriptors = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getLabels);
+            final List<String> labelDescriptorFiles = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getLabels)
+                    .orElse(Collections.emptyList());
+
             final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
 
-            if (labelDescriptors.isPresent()) {
-                for (final LabelDescriptor labelDescriptor : labelDescriptors.get()) {
-                    installables.add(new LabelInstallable(engineService, labelDescriptor));
+            for (String ldf : labelDescriptorFiles) {
+                List<LabelDescriptor> labelDescriptorList = npr.readListOfDescriptorFile(ldf, LabelDescriptor.class);
+                for (LabelDescriptor ld : labelDescriptorList) {
+                    installables.add(new LabelInstallable(engineService, ld));
                 }
             }
 

@@ -33,7 +33,5 @@ components:
     - categories/my-category.yaml
 
   labels:
-    - key: HELLO
-      titles:
-        it: Mio Titolo
-        en: My Title
+    - labels/labels.yaml
+

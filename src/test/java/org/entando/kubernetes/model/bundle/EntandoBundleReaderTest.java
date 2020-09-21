@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -107,6 +108,17 @@ public class EntandoBundleReaderTest {
         assertThat(cd.get(0).getParentCode()).isEqualTo("home");
         assertThat(cd.get(0).getTitles()).containsEntry("it", "La mia categoria");
         assertThat(cd.get(0).getTitles()).containsEntry("en", "My own category");
+    }
+
+    @Test
+    public void shouldReadLabelsFromDedicatedFile() throws IOException {
+        List<LabelDescriptor> ld = bundleReader
+                .readListOfDescriptorFile("labels/labels.yaml", LabelDescriptor.class);
+        assertThat(ld).hasSize(1);
+        assertThat(ld.get(0).getKey()).isEqualTo("HELLO");
+        assertThat(ld.get(0).getTitles()).containsEntry("it", "Mio Titolo");
+        assertThat(ld.get(0).getTitles()).containsEntry("en", "My Title");
+
     }
 
     @Test
