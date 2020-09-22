@@ -149,7 +149,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getPageModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "pageModels", code, USAGE_PATH_SEGMENT}, "page template");
+        return this
+                .getComponentUsage(code, new String[]{"api", "pageModels", code, USAGE_PATH_SEGMENT}, "page template");
     }
 
     @Override
@@ -165,7 +166,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, USAGE_PATH_SEGMENT},
+        return this.getComponentUsage(code,
+                new String[]{"api", "plugins", "cms", "contentmodels", code, USAGE_PATH_SEGMENT},
                 "content template");
     }
 
@@ -184,7 +186,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public EntandoCoreComponentUsage getContentTypeUsage(String code) {
         return this
-                .getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT}, "content type");
+                .getComponentUsage(code,
+                        new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT},
+                        "content type");
     }
 
     @Override
@@ -210,7 +214,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void registerCategory(CategoryDescriptor representation) {
-        restTemplate.postForEntity(resolvePathSegments("api", "categories").build().toUri(), representation, Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "categories").build().toUri(), representation, Void.class);
     }
 
     @Override
@@ -233,7 +238,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     /**
      * asks for component the received component id usage count.
      *
-     * @param code the code of the component of which get the usage count
+     * @param code             the code of the component of which get the usage count
      * @param endpointUrlParts a String array containing the query segments representing the endpoint url to qurey
      * @return an instance of EntandoCoreComponentUsage containing the number of the entities using the component
      */
@@ -252,7 +257,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         }
     }
 
-    private void notFoundProtectedDelete(URI url){
+    private void notFoundProtectedDelete(URI url) {
         try {
             restTemplate.delete(url);
         } catch (RestClientResponseException e) {
