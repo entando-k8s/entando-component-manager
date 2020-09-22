@@ -1,5 +1,6 @@
 package org.entando.kubernetes.client.core;
 
+import java.net.URI;
 import java.nio.file.Paths;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -25,12 +26,14 @@ import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefault
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
@@ -66,7 +69,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteWidget(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "widgets", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "widgets", code).build().toUri());
     }
 
     @Override
@@ -82,7 +85,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteFragment(String code) {
-        restTemplate.delete(resolvePathSegments("api", "fragments", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "fragments", code).build().toUri());
     }
 
     @Override
@@ -97,7 +100,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteLabel(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "labels", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "labels", code).build().toUri());
     }
 
     @Override
@@ -108,7 +111,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteGroup(String code) {
-        restTemplate.delete(resolvePathSegments("api", "groups", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "groups", code).build().toUri());
     }
 
     @Override
@@ -125,7 +128,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deletePage(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "pages", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "pages", code).build().toUri());
     }
 
     @Override
@@ -141,17 +144,18 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deletePageModel(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "pageModels", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "pageModels", code).build().toUri());
     }
 
     @Override
     public EntandoCoreComponentUsage getPageModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "pageModels", code, USAGE_PATH_SEGMENT}, "page template");
+        return this
+                .getComponentUsage(code, new String[]{"api", "pageModels", code, USAGE_PATH_SEGMENT}, "page template");
     }
 
     @Override
     public void deleteContentModel(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentmodels", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "plugins", "cms", "contentmodels", code).build().toUri());
     }
 
     @Override
@@ -162,7 +166,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getContentModelUsage(String code) {
-        return this.getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentmodels", code, USAGE_PATH_SEGMENT},
+        return this.getComponentUsage(code,
+                new String[]{"api", "plugins", "cms", "contentmodels", code, USAGE_PATH_SEGMENT},
                 "content template");
     }
 
@@ -175,13 +180,15 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteContentType(final String code) {
-        restTemplate.delete(resolvePathSegments("api", "plugins", "cms", "contentTypes", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "plugins", "cms", "contentTypes", code).build().toUri());
     }
 
     @Override
     public EntandoCoreComponentUsage getContentTypeUsage(String code) {
         return this
-                .getComponentUsage(code, new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT}, "content type");
+                .getComponentUsage(code,
+                        new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT},
+                        "content type");
     }
 
     @Override
@@ -195,7 +202,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         UriComponentsBuilder builder = resolvePathSegments("api", "fileBrowser", "directory");
         builder.queryParam("protectedFolder", "false");
         builder.queryParam("currentPath", code);
-        restTemplate.delete(builder.build().toUri());
+        notFoundProtectedDelete(builder.build().toUri());
     }
 
     @Override
@@ -207,12 +214,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void registerCategory(CategoryDescriptor representation) {
-        restTemplate.postForEntity(resolvePathSegments("api", "categories").build().toUri(), representation, Void.class);
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "categories").build().toUri(), representation, Void.class);
     }
 
     @Override
     public void deleteCategory(String code) {
-        restTemplate.delete(resolvePathSegments("api", "categories", code).build().toUri());
+        notFoundProtectedDelete(resolvePathSegments("api", "categories", code).build().toUri());
 
     }
 
@@ -230,7 +238,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     /**
      * asks for component the received component id usage count.
      *
-     * @param code the code of the component of which get the usage count
+     * @param code             the code of the component of which get the usage count
      * @param endpointUrlParts a String array containing the query segments representing the endpoint url to qurey
      * @return an instance of EntandoCoreComponentUsage containing the number of the entities using the component
      */
@@ -247,5 +255,21 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
             throw new HttpException(usage.getStatusCode(),
                     String.format("Some error occurred while retrieving %s %s usage", componentType, code));
         }
+    }
+
+    private void notFoundProtectedDelete(URI url) {
+        try {
+            restTemplate.delete(url);
+        } catch (RestClientResponseException e) {
+            if (isSafeDeleteResponseStatus(e.getRawStatusCode())) {
+                return;
+            }
+            throw e;
+        }
+    }
+
+    private boolean isSafeDeleteResponseStatus(int status) {
+        HttpStatus s = HttpStatus.resolve(status);
+        return s != null && (s.is2xxSuccessful() || s.equals(HttpStatus.NOT_FOUND));
     }
 }
