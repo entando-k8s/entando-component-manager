@@ -10,6 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
@@ -18,6 +19,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
+import org.entando.kubernetes.model.entandocore.EntandoCoreLanguage;
 import org.entando.kubernetes.model.entandocore.EntandoCorePage;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageTemplate;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
@@ -102,6 +104,22 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void deleteLabel(final String code) {
         notFoundProtectedDelete(resolvePathSegments("api", "labels", code).build().toUri());
     }
+
+    @Override
+    public void enableLanguage(final LanguageDescriptor descriptor) {
+        descriptor.setActive(true);
+        restTemplate.put(resolvePathSegments("api", "languages", descriptor.getCode()).build().toUri(),
+                new EntandoCoreLanguage(descriptor));
+    }
+
+    @Override
+    public void disableLanguage(final String code) {
+        EntandoCoreLanguage entandoCoreLanguage = new EntandoCoreLanguage()
+                .setCode(code)
+                .setActive(false);
+        restTemplate.put(resolvePathSegments("api", "languages", code).build().toUri(), entandoCoreLanguage);
+    }
+
 
     @Override
     public void registerGroup(GroupDescriptor descriptor) {
