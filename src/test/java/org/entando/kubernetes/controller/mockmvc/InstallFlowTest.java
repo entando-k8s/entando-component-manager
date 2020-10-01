@@ -62,6 +62,8 @@ import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
@@ -189,6 +191,8 @@ public class InstallFlowTest {
         verifyCategoryRequests(coreClient);
         verifyGroupRequests(coreClient);
         verifyPageModelsRequests(coreClient);
+        verifyLanguagesRequests(coreClient);
+        verifyLabelsRequests(coreClient);
         verifyDirectoryRequests(coreClient);
         verifyFileRequests(coreClient);
         verifyFragmentRequests(coreClient);
@@ -284,6 +288,34 @@ public class InstallFlowTest {
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
     }
 
+
+    private void verifyLanguagesRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<LanguageDescriptor> languageArgCaptor = ArgumentCaptor.forClass(LanguageDescriptor.class);
+        verify(coreClient, times(2)).enableLanguage(languageArgCaptor.capture());
+
+        List<LanguageDescriptor> languageDescriptorList = languageArgCaptor.getAllValues().stream()
+                .sorted(Comparator.comparing(langDescriptor -> langDescriptor.getCode().toLowerCase()))
+                .collect(Collectors.toList());
+
+        assertThat(languageDescriptorList.get(0).getCode()).isEqualTo("en");
+        assertThat(languageDescriptorList.get(0).getDescription()).isEqualTo("English");
+        assertThat(languageDescriptorList.get(1).getCode()).isEqualTo("it");
+        assertThat(languageDescriptorList.get(1).getDescription()).isEqualTo("Italiano");
+    }
+
+
+    private void verifyLabelsRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<LabelDescriptor> labelArgCaptor = ArgumentCaptor.forClass(LabelDescriptor.class);
+        verify(coreClient, times(1)).registerLabel(labelArgCaptor.capture());
+
+        LabelDescriptor labelDescriptor = labelArgCaptor.getValue();
+
+        assertThat(labelDescriptor.getKey()).isEqualTo("HELLO");
+        assertThat(labelDescriptor.getTitles()).hasSize(2);
+        assertThat(labelDescriptor.getTitles()).containsEntry("it", "Mio Titolo");
+        assertThat(labelDescriptor.getTitles()).containsEntry("en", "My Title");
+    }
+
     private void verifyDirectoryRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<String> folderArgCaptor = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(5)).createFolder(folderArgCaptor.capture());
@@ -367,6 +399,9 @@ public class InstallFlowTest {
                 "my-category",
                 // Groups
                 "ecr",
+                // Languages
+                "it",
+                "en",
                 // Labels
                 "HELLO",
                 // Files
@@ -417,6 +452,7 @@ public class InstallFlowTest {
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
         expectedComponents.put(ComponentType.CONTENT_TEMPLATE, 2);
+        expectedComponents.put(ComponentType.LANGUAGE, 2);
         expectedComponents.put(ComponentType.LABEL, 1);
         expectedComponents.put(ComponentType.FRAGMENT, 2);
         expectedComponents.put(ComponentType.PAGE, 1);
@@ -472,6 +508,14 @@ public class InstallFlowTest {
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePageModel(ac.capture());
         assertTrue(ac.getAllValues().containsAll(Arrays.asList("todomvc_page_model", "todomvc_another_page_model")));
+
+        ac = ArgumentCaptor.forClass(String.class);
+        verify(coreClient, times(2)).disableLanguage(ac.capture());
+        assertTrue(ac.getAllValues().containsAll(Arrays.asList("it", "en")));
+
+        ac = ArgumentCaptor.forClass(String.class);
+        verify(coreClient, times(1)).deleteLabel(ac.capture());
+        assertThat(ac.getValue()).isEqualTo("HELLO");
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());

@@ -18,6 +18,7 @@ import org.entando.kubernetes.model.bundle.processor.FileProcessor;
 import org.entando.kubernetes.model.bundle.processor.FragmentProcessor;
 import org.entando.kubernetes.model.bundle.processor.GroupProcessor;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
+import org.entando.kubernetes.model.bundle.processor.LanguageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
@@ -52,6 +53,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.DIRECTORY.toString(), new DirectoryProcessor(coreClient));
         processors.put(ComponentType.ASSET.toString(), new FileProcessor(coreClient));
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
+        processors.put(ComponentType.LANGUAGE.toString(), new LanguageProcessor(coreClient));
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
         processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));

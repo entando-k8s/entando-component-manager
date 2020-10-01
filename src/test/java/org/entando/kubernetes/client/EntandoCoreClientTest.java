@@ -1,5 +1,7 @@
 package org.entando.kubernetes.client;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -260,5 +262,20 @@ class EntandoCoreClientTest {
                 .withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteContentType(CODE);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
+    }
+
+    @Test
+    void deleteNotFoundComponent() {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlEqualTo(EntandoCoreMockServer.LABEL_ENDPOINT + CODE))
+                .willReturn(
+                        aResponse()
+                                .withStatus(404)
+                                .withHeader("Content-Type", "application/json")
+                ));
+
+        this.client.deleteLabel(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
+
     }
 }
