@@ -11,6 +11,7 @@ import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
@@ -19,6 +20,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFragment;
 import org.entando.kubernetes.model.entandocore.EntandoCorePage;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageTemplate;
+import org.entando.kubernetes.model.entandocore.EntandoCorePageWidgetConfiguration;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
@@ -121,6 +123,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "pages").build().toUri(), new EntandoCorePage(pageDescriptor),
                         Void.class);
+    }
+
+    @Override
+    public void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+        restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode(), "widgets",
+                        widgetDescriptor.getPos().toString()).build().toUri(),
+                        new EntandoCorePageWidgetConfiguration(widgetDescriptor));
     }
 
     @Override

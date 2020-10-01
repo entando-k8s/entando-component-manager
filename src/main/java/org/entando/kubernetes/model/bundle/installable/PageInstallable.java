@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import com.sun.javafx.scene.control.skin.VirtualFlow.ArrayLinkedList;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -20,7 +22,15 @@ public class PageInstallable extends Installable<PageDescriptor> {
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Page {}", getName());
+
+            //Create Page
             engineService.registerPage(representation);
+
+            //Configure Page Widgets
+            Optional.ofNullable(representation.getWidgets())
+                    .orElse(new ArrayLinkedList<>())
+                    .parallelStream()
+                    .forEach(w -> engineService.registerPageWidget(representation, w));
         });
     }
 

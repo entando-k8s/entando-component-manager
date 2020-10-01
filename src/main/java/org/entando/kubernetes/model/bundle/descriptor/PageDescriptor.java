@@ -25,5 +25,6 @@ public class PageDescriptor implements Descriptor {
     private boolean seo;
     private String charset;
     private String status;
+    private List<WidgetConfigurationDescriptor> widgets;
 
 }

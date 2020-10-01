@@ -9,6 +9,7 @@ buildNumber.properties
 .mvn/timing.properties
 *.iml
 .idea/
+*.db
 
 # Removes VS-Code folders
 .classpath
