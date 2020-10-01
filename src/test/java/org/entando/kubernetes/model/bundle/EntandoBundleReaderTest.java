@@ -8,7 +8,9 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -20,6 +22,7 @@ import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -108,6 +111,20 @@ public class EntandoBundleReaderTest {
         assertThat(cd.get(0).getParentCode()).isEqualTo("home");
         assertThat(cd.get(0).getTitles()).containsEntry("it", "La mia categoria");
         assertThat(cd.get(0).getTitles()).containsEntry("en", "My own category");
+    }
+
+    @Test
+    public void shouldReadLanguagesFromDedicatedFile() throws IOException {
+        List<LanguageDescriptor> ld = bundleReader
+                .readListOfDescriptorFile("languages/languages.yaml", LanguageDescriptor.class)
+                .stream().sorted(Comparator.comparing(langDescriptor -> langDescriptor.getCode().toLowerCase()))
+                .collect(Collectors.toList());
+
+        assertThat(ld).hasSize(2);
+        assertThat(ld.get(0).getCode()).isEqualTo("en");
+        assertThat(ld.get(0).getDescription()).isEqualTo("English");
+        assertThat(ld.get(1).getCode()).isEqualTo("it");
+        assertThat(ld.get(1).getDescription()).isEqualTo("Italiano");
     }
 
     @Test
