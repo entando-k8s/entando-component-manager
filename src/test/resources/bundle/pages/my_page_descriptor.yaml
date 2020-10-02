@@ -1,4 +1,5 @@
 code: my-page
+parentCode: homepage
 titles:
   it: La mia pagina
   en: My page
@@ -10,3 +11,7 @@ joinGroups:
   - developers
 displayedInMenu: true
 status: published
+widgets:
+  - pos: 0
+    code: my-code
+    config: null

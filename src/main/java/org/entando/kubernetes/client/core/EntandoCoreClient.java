@@ -10,6 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
@@ -42,6 +43,8 @@ public interface EntandoCoreClient {
     EntandoCoreComponentUsage getGroupUsage(String code);
 
     void registerPage(PageDescriptor pageDescriptor);
+
+    void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
 
     void deletePage(String code);
 

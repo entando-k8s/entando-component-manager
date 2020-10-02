@@ -14,6 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PluginDescriptor implements Descriptor {
 
+    String name;
     String image;
     String healthCheckPath;
     String dbms;
