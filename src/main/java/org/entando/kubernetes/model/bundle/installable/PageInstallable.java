@@ -1,6 +1,6 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow.ArrayLinkedList;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class PageInstallable extends Installable<PageDescriptor> {
 
             //Configure Page Widgets
             Optional.ofNullable(representation.getWidgets())
-                    .orElse(new ArrayLinkedList<>())
+                    .orElse(new ArrayList<>())
                     .parallelStream()
                     .forEach(w -> engineService.registerPageWidget(representation, w));
         });
