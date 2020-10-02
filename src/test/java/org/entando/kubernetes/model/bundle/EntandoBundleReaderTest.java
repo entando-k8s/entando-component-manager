@@ -109,7 +109,7 @@ public class EntandoBundleReaderTest {
         assertThat(pd.getJoinGroups().get(0)).isEqualTo("free");
         assertThat(pd.getJoinGroups().get(1)).isEqualTo("customers");
         assertThat(pd.getJoinGroups().get(2)).isEqualTo("developers");
-        assertThat(pd.isSeo()).isTrue();
+        assertThat(pd.isSeo()).isFalse();
         assertThat(pd.isDisplayedInMenu()).isTrue();
         assertThat(pd.getStatus()).isEqualTo("published");
         assertThat(pd.getWidgets()).hasSize(1);
