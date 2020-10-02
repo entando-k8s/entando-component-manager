@@ -241,6 +241,7 @@ public class InstallFlowTest {
                 .collect(Collectors.toList());
 
         assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page")
+                && pd.getParentCode().equals("homepage")
                 && pd.getTitles().get("it").equals("La mia pagina")
                 && pd.getTitles().get("en").equals("My page")
                 && pd.getPageModel().equals("service")
@@ -248,8 +249,9 @@ public class InstallFlowTest {
                 && pd.getJoinGroups().containsAll(Arrays.asList("free", "customers", "developers"))
                 && pd.isDisplayedInMenu()
                 && !pd.isSeo()
-                && pd.getStatus().equals("published")
-        );
+                && pd.getStatus().equals("published"));
+
+        assertThat(allPageRequests.get(0).getWidgets().get(0)).matches(wd -> wd.getCode().equals("my-code"));
     }
 
     private void verifyFragmentRequests(EntandoCoreClient coreClient) {

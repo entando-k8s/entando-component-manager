@@ -12,6 +12,7 @@ import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -71,6 +72,8 @@ public class PageProcessorTest {
                 .ownerGroup("administrators")
                 .seo(false)
                 .titles(pageTitles)
+                .widgets(Collections.singletonList(WidgetConfigurationDescriptor.builder()
+                        .pos(0).code("my-code").build()))
                 .build();
 
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))

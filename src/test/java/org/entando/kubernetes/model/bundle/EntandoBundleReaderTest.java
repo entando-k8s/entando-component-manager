@@ -23,6 +23,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -91,6 +92,28 @@ public class EntandoBundleReaderTest {
         assertThat(wd.getTitles()).contains(
                 entry("en", "TODO MVC Widget"),
                 entry("it", "TODO MVC Widget"));
+    }
+
+    @Test
+    public void shouldReadPagesFromBundle() throws IOException {
+        PageDescriptor pd = bundleReader
+                .readDescriptorFile("pages/my_page_descriptor.yaml", PageDescriptor.class);
+        assertThat(pd).isNotNull();
+        assertThat(pd.getCode()).isEqualTo("my-page");
+        assertThat(pd.getParentCode()).isEqualTo("homepage");
+        assertThat(pd.getTitles()).containsEntry("it", "La mia pagina");
+        assertThat(pd.getTitles()).containsEntry("en", "My page");
+        assertThat(pd.getPageModel()).isEqualTo("service");
+        assertThat(pd.getOwnerGroup()).isEqualTo("administrators");
+        assertThat(pd.getJoinGroups()).hasSize(3);
+        assertThat(pd.getJoinGroups().get(0)).isEqualTo("free");
+        assertThat(pd.getJoinGroups().get(1)).isEqualTo("customers");
+        assertThat(pd.getJoinGroups().get(2)).isEqualTo("developers");
+        assertThat(pd.isSeo()).isTrue();
+        assertThat(pd.isDisplayedInMenu()).isTrue();
+        assertThat(pd.getStatus()).isEqualTo("published");
+        assertThat(pd.getWidgets()).hasSize(1);
+        assertThat(pd.getWidgets().get(0).getCode()).isEqualTo("my-code");
     }
 
     @Test
