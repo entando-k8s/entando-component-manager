@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.downloader;
 
+import static java.util.Optional.ofNullable;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,7 +13,7 @@ public class GitBundleDownloader extends BundleDownloader {
     @Override
     protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         try {
-            validateRepoUrl(tag.getTarball());
+            //Ampie: removed HTTP validation because we support SSH now
             cloneUsingCliImplementation(tag, targetPath);
             return targetPath;
         } catch (IOException e) {
@@ -19,13 +21,6 @@ public class GitBundleDownloader extends BundleDownloader {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BundleDownloaderException("An error occurred while cloning git repo", e);
-        }
-    }
-
-    private void validateRepoUrl(String tarball) {
-        if (!tarball.matches("^https?://.*$")) {
-            throw new BundleDownloaderException(
-                    "Unsupported repository " + tarball + "; Only HTTP(s) repositories are supported");
         }
     }
 
@@ -41,7 +36,9 @@ public class GitBundleDownloader extends BundleDownloader {
         commands.add(gitCommand);
 
         ProcessBuilder pb = new ProcessBuilder(commands);
-        pb.redirectErrorStream(true);
+        pb.inheritIO();
+        //Propagate LD_PRELOAD to ensure SSH can work
+        ofNullable(System.getenv("LD_PRELOAD")).ifPresent((s) -> pb.environment().put("LD_PRELOAD", s));
         Process process = pb.start();
 
         //EDIT:
