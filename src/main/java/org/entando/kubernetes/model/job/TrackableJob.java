@@ -19,4 +19,5 @@ public interface TrackableJob {
     String getErrorMessage();
 
     void setErrorMessage(String message);
+
 }

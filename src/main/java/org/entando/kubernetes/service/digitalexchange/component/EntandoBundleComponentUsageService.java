@@ -1,7 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.springframework.stereotype.Service;
@@ -19,8 +19,12 @@ public class EntandoBundleComponentUsageService {
         switch (componentType) {
             case WIDGET:
                 return this.client.getWidgetUsage(componentCode);
+            case GROUP:
+                return this.client.getGroupUsage(componentCode);
             case FRAGMENT:
                 return this.client.getFragmentUsage(componentCode);
+            case CATEGORY:
+                return this.client.getCategoryUsage(componentCode);
             case PAGE:
                 return this.client.getPageUsage(componentCode);
             case PAGE_TEMPLATE:

@@ -6,7 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCorePage;
+import org.entando.kubernetes.model.entandocore.EntandoCorePageWidgetConfiguration;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +17,8 @@ public class EntandoCorePageTest {
 
     @Test
     public void shouldReadDescriptorFile() {
-        EntandoCorePage ecp = new EntandoCorePage(getTestPageDescriptor());
+        PageDescriptor pageDescriptor = getTestPageDescriptor();
+        EntandoCorePage ecp = new EntandoCorePage(pageDescriptor);
         assertThat(ecp.getCharset()).isEqualTo("iso1923-12");
         assertThat(ecp.getCode()).isEqualTo("my-page");
         assertThat(ecp.getParentCode()).isEqualTo("plugins");
@@ -27,6 +30,15 @@ public class EntandoCorePageTest {
         assertThat(ecp.getPageModel()).isEqualTo("service");
         assertThat(ecp.getTitles().keySet()).containsExactlyInAnyOrder("it", "en");
         assertThat(ecp.getTitles().values()).containsExactlyInAnyOrder("La mia pagina", "My page");
+    }
+
+    @Test
+    public void shouldReadPageConfigurationDescriptor() {
+        PageDescriptor pageDescriptor = getTestPageDescriptor();
+        EntandoCorePageWidgetConfiguration widgetConfiguration = new EntandoCorePageWidgetConfiguration(
+                pageDescriptor.getWidgets().get(0));
+
+        assertThat(widgetConfiguration.getCode()).isEqualTo("my-code");
     }
 
     @Test
@@ -61,6 +73,10 @@ public class EntandoCorePageTest {
                 .titles(pageTitles)
                 .status("published")
                 .joinGroups(Collections.singletonList("free"))
+                .widgets(Collections.singletonList(WidgetConfigurationDescriptor.builder()
+                        .pos(0)
+                        .code("my-code")
+                        .build()))
                 .build();
     }
 }

@@ -26,8 +26,14 @@ components:
     - contentmodels/my_content_model_descriptor.yaml
     - contentmodels/another_content_model_descriptor.yaml
 
+  groups:
+    - groups/my-group.yaml
+
+  categories:
+    - categories/my-category.yaml
+
   labels:
-    - key: HELLO
-      titles:
-        it: Mio Titolo
-        en: My Title
+    - labels/labels.yaml
+
+  languages:
+    - languages/languages.yaml

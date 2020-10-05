@@ -1,0 +1,124 @@
+package org.entando.kubernetes.model.bundle.reader;
+
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleProperty;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+
+@Slf4j
+public class BundleReader {
+
+    private final YAMLMapper mapper = new YAMLMapper();
+    private final Path bundleBasePath;
+
+    public BundleReader(Path filePath) {
+        bundleBasePath = filePath;
+    }
+
+    public BundleDescriptor readBundleDescriptor() throws IOException {
+        return readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), BundleDescriptor.class);
+    }
+
+    public boolean containsResourceFolder() {
+        return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
+    }
+
+    public String getBundleCode() throws IOException {
+        return readBundleDescriptor().getCode();
+    }
+
+    public List<String> getResourceFolders() {
+        return getResourceOfType(Files::isDirectory);
+    }
+
+
+    public List<String> getResourceFiles() {
+        return getResourceOfType(Files::isRegularFile);
+    }
+
+    private List<String> getResourceOfType(Predicate<Path> checkFunction) {
+        List<Path> resources;
+        Path resourcePath = bundleBasePath.resolve("resources/");
+        try (Stream<Path> paths = Files.walk(resourcePath)) {
+            resources = paths
+                    .filter(checkFunction)
+                    .filter(p -> p != resourcePath)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            resources = Collections.emptyList();
+        }
+        return resources.stream().map(bundleBasePath::relativize).map(Path::toString).collect(Collectors.toList());
+
+    }
+
+    public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile())) {
+            return readDescriptorFile(fis, clazz);
+        }
+    }
+
+    private <T> T readDescriptorFile(final InputStream file, Class<T> clazz) throws IOException {
+        return mapper.readValue(file, clazz);
+    }
+
+    public <T> List<T> readListOfDescriptorFile(final String filename, final Class<T> clazz) throws IOException {
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(filename).toFile())) {
+            return readListOfDescriptorsFile(fis, clazz);
+        }
+    }
+
+    private <T> List<T> readListOfDescriptorsFile(InputStream file, Class<T> clz) throws IOException {
+        JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, clz);
+        return mapper.readValue(file, type);
+    }
+
+    public String readFileAsString(String fileName) throws IOException {
+        verifyFileExistance(fileName);
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile());
+                StringWriter writer = new StringWriter()) {
+            IOUtils.copy(fis, writer, StandardCharsets.UTF_8);
+            return writer.toString();
+        }
+    }
+
+    public FileDescriptor getResourceFileAsDescriptor(final String fileName) throws IOException {
+        verifyFileExistance(fileName);
+        File f = bundleBasePath.resolve(fileName).toFile();
+        try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            IOUtils.copy(new FileInputStream(f), outputStream);
+            final String base64 = Base64.encodeBase64String(outputStream.toByteArray());
+            final String filename = FilenameUtils.getName(fileName);
+            final String folder = FilenameUtils.getPath(fileName);
+            return new FileDescriptor(folder, filename, base64);
+        }
+    }
+
+
+    private void verifyFileExistance(String fileName) {
+        log.debug("Reading file {}", fileName);
+        if (!bundleBasePath.resolve(fileName).toFile().exists()) {
+            throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
+        }
+    }
+
+}

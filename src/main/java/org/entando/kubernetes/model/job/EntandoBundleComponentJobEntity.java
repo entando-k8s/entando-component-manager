@@ -15,15 +15,15 @@ import javax.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 
 @Getter
-@Setter()
+@Setter
 @Entity
 @NoArgsConstructor
 @Table(name = "entando_bundle_component_jobs")
-public class EntandoBundleComponentJobEntity implements TrackableJob {
+public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstallable {
 
     @Id
     @Column

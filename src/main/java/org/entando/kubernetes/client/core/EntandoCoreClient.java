@@ -1,12 +1,16 @@
 package org.entando.kubernetes.client.core;
 
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
@@ -28,7 +32,19 @@ public interface EntandoCoreClient {
 
     void deleteLabel(String code);
 
+    void enableLanguage(LanguageDescriptor descriptor);
+
+    void disableLanguage(String code);
+
+    void registerGroup(GroupDescriptor descriptor);
+
+    void deleteGroup(String code);
+
+    EntandoCoreComponentUsage getGroupUsage(String code);
+
     void registerPage(PageDescriptor pageDescriptor);
+
+    void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
 
     void deletePage(String code);
 
@@ -57,4 +73,10 @@ public interface EntandoCoreClient {
     void deleteFolder(String code);
 
     void uploadFile(FileDescriptor descriptor);
+
+    void registerCategory(CategoryDescriptor representation);
+
+    void deleteCategory(String code);
+
+    EntandoCoreComponentUsage getCategoryUsage(String code);
 }

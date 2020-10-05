@@ -34,7 +34,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "entando_bundle_jobs")
-public class EntandoBundleJobEntity implements TrackableJob {
+public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
 
     @Id
     @Column
@@ -71,6 +71,21 @@ public class EntandoBundleJobEntity implements TrackableJob {
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();
+    }
+
+    public EntandoBundleJobEntity clone() {
+        EntandoBundleJobEntity newEntity = new EntandoBundleJobEntity();
+        newEntity.setId(this.id);
+        newEntity.setProgress(this.progress);
+        newEntity.setStatus(this.status);
+        newEntity.setComponentName(this.componentName);
+        newEntity.setComponentId(this.componentId);
+        newEntity.setComponentVersion(this.componentVersion);
+        newEntity.setErrorMessage(this.errorMessage);
+        newEntity.setStartedAt(this.startedAt);
+        newEntity.setFinishedAt(this.finishedAt);
+        newEntity.setUserId(this.userId);
+        return newEntity;
     }
 
 }

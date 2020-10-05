@@ -1,5 +1,7 @@
 package org.entando.kubernetes.client;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -8,6 +10,7 @@ import java.util.Arrays;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.web.HttpException;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
@@ -17,7 +20,6 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
 import org.junit.jupiter.api.AfterEach;
@@ -119,13 +121,15 @@ class EntandoCoreClientTest {
 
     @Test
     void getUsageReceiving3xxStatusCodeShouldBeManagedInTheCoreClient() {
-        coreMockServer = coreMockServer.withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_MODIFIED);
+        coreMockServer = coreMockServer
+                .withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_MODIFIED);
         assertThrows(HttpException.class, () -> this.client.getContentModelUsage("12345"));
     }
 
     @Test
     void getUsageReceiving4xxStatusCodeShouldThrowAndExceptionByRestTemplateItself() {
-        coreMockServer = coreMockServer.withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_FOUND);
+        coreMockServer = coreMockServer
+                .withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_FOUND);
         assertThrows(HttpClientErrorException.NotFound.class, () -> this.client.getContentModelUsage("12345"));
     }
 
@@ -141,7 +145,8 @@ class EntandoCoreClientTest {
 
     @Test
     void deleteWidget() {
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteWidget(CODE);
         coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
@@ -158,7 +163,8 @@ class EntandoCoreClientTest {
     @Test
     void deleteFragment() {
         WidgetDescriptor wd = new WidgetDescriptor();
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.FRAGMENT_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.FRAGMENT_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteFragment(CODE);
         coreMockServer.verify(EntandoCoreMockServer.FRAGMENT_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
@@ -174,7 +180,8 @@ class EntandoCoreClientTest {
 
     @Test
     void deleteLabel() {
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.LABEL_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.LABEL_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteLabel(CODE);
         coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
@@ -198,14 +205,16 @@ class EntandoCoreClientTest {
     @Test
     void registerPageTemplate() {
 
-        PageTemplateConfigurationDescriptor pageTemplateConfigurationDescriptor = PageTemplateConfigurationDescriptor.builder()
+        PageTemplateConfigurationDescriptor pageTemplateConfigurationDescriptor = PageTemplateConfigurationDescriptor
+                .builder()
                 .frames(Arrays.asList(new FrameDescriptor()))
                 .build();
         PageTemplateDescriptor ptd = PageTemplateDescriptor.builder()
                 .configuration(pageTemplateConfigurationDescriptor)
                 .build();
 
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::post);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::post);
         this.client.registerPageModel(ptd);
         coreMockServer.verify(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
@@ -213,7 +222,8 @@ class EntandoCoreClientTest {
 
     @Test
     void deletePageTemplate() {
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, CODE, WireMock::delete);
         this.client.deletePageModel(CODE);
         coreMockServer.verify(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
@@ -221,7 +231,8 @@ class EntandoCoreClientTest {
     @Test
     void registerContentTemplate() {
         ContentTemplateDescriptor ctd = new ContentTemplateDescriptor();
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::post);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::post);
         this.client.registerContentModel(ctd);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
@@ -229,9 +240,11 @@ class EntandoCoreClientTest {
 
     @Test
     void deleteContentTemplate() {
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteContentModel(CODE);
-        coreMockServer.verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
+        coreMockServer
+                .verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
     @Test
@@ -245,8 +258,24 @@ class EntandoCoreClientTest {
 
     @Test
     void deleteContentType() {
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer
+                .withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, CODE, WireMock::delete);
         this.client.deleteContentType(CODE);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
+    }
+
+    @Test
+    void deleteNotFoundComponent() {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlEqualTo(EntandoCoreMockServer.LABEL_ENDPOINT + CODE))
+                .willReturn(
+                        aResponse()
+                                .withStatus(404)
+                                .withHeader("Content-Type", "application/json")
+                ));
+
+        this.client.deleteLabel(CODE);
+        coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
+
     }
 }

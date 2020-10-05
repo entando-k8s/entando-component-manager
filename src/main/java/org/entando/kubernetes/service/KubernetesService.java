@@ -81,6 +81,7 @@ public class KubernetesService {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
     }
 
+
     public EntandoAppPluginLink linkPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = new EntandoPluginBuilder()
                 .withMetadata(plugin.getMetadata())

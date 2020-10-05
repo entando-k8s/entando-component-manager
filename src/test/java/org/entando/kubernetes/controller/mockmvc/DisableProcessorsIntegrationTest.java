@@ -1,14 +1,8 @@
 package org.entando.kubernetes.controller.mockmvc;
 
-import static org.entando.kubernetes.utils.TestInstallUtils.simulateSuccessfullyCompletedInstall;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
@@ -21,11 +15,9 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
-import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -53,6 +45,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 public class DisableProcessorsIntegrationTest {
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -90,18 +83,5 @@ public class DisableProcessorsIntegrationTest {
         ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
         ((K8SServiceClientTestDouble) k8SServiceClient).setDeployedLinkPhase(EntandoDeploymentPhase.SUCCESSFUL);
         downloaderFactory.setDefaultSupplier(defaultBundleDownloaderSupplier);
-    }
-
-    @Test
-    public void shouldSkipPagesWhenPageProcessorIsDisabled() {
-        simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
-
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        // Verify interaction with mocks
-        Set<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinks();
-        Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
-                .filter(link -> link.getSpec().getEntandoPluginName().equals("todomvc")).findAny();
-
-        verify(coreClient, times(0)).registerPage(any());
     }
 }

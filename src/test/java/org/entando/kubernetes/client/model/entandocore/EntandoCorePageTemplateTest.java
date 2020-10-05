@@ -32,7 +32,8 @@ public class EntandoCorePageTemplateTest {
                 .isEqualToComparingFieldByField(new EntandoCoreSketchDescriptor(0, 0, 11, 0));
         assertThat(ecpt.getConfiguration().getFrames().get(0).getDefaultWidget().getCode()).isEqualTo("default-widget");
         assertThat(ecpt.getTitles().keySet()).containsExactlyInAnyOrder("it", "en");
-        assertThat(ecpt.getTitles().values()).containsExactlyInAnyOrder("Il mio template di pagina", "My page template");
+        assertThat(ecpt.getTitles().values())
+                .containsExactlyInAnyOrder("Il mio template di pagina", "My page template");
     }
 
     private PageTemplateDescriptor getTestPageTemplateDescriptor() {

@@ -40,6 +40,6 @@ public interface EntandoBundleComponentJobRepository extends JpaRepository<Entan
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Query("UPDATE EntandoBundleComponentJobEntity comp SET comp.finishedAt = :finishedAt WHERE comp.id = :id")
-    void updateFinisheddAt(@Param("id") UUID id, @Param("finishedAt") LocalDateTime datetime);
+    void updateFinishedAt(@Param("id") UUID id, @Param("finishedAt") LocalDateTime datetime);
 
 }

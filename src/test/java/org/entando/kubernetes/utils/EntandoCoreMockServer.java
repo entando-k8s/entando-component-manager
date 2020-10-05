@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.Getter;
-import org.entando.kubernetes.model.digitalexchange.ComponentType;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.HttpStatus;
@@ -58,7 +58,7 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
                             .withHeader("Content-Type", "application/json")
                             .withBody("{ \"payload\" : {\n "
                                     + "\"type\": \"" + ep.getTypeValue() + "\",\n"
-                                    + "\"code\": \"" + codeHandlebarTemplate + "\",\n"// + codeHandlebarTemplate + "\",\n"
+                                    + "\"code\": \"" + codeHandlebarTemplate + "\",\n"
                                     + "\"usage\": 1\n"
                                     + "},\n"
                                     + "\"metadata\": {},\n"
@@ -87,7 +87,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         }
     }
 
-    public EntandoCoreMockServer withFailingComponentUsageSupport(ComponentType type, String code, HttpStatus httpStatus) {
+    public EntandoCoreMockServer withFailingComponentUsageSupport(ComponentType type, String code,
+            HttpStatus httpStatus) {
 
         ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
 
@@ -109,27 +110,31 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     /**
      * generic method to stub a response to a particular REST request.
      *
-     * @param urlPath the url to match for the request
+     * @param urlPath            the url to match for the request
      * @param wireMockHttpMethod the Http method to use in the mocked request
      * @return this instance of the EntandoCoreMockServer
      */
-    public EntandoCoreMockServer withGenericSupport(String urlPath, Function<UrlPattern, MappingBuilder> wireMockHttpMethod) {
+    public EntandoCoreMockServer withGenericSupport(String urlPath,
+            Function<UrlPattern, MappingBuilder> wireMockHttpMethod) {
 
         return this.withGenericSupport(urlPath, null, wireMockHttpMethod);
     }
 
     /**
-     * generic method to stub a response to a particular REST request having a path param related to the code of the component interested.
+     * generic method to stub a response to a particular REST request having a path param related to the code of the
+     * component interested.
      *
-     * @param urlPath the url to match for the request
-     * @param code the path param to use
+     * @param urlPath            the url to match for the request
+     * @param code               the path param to use
      * @param wireMockHttpMethod the Http method to use in the mocked request
      * @return this instance of the EntandoCoreMockServer
      */
-    public EntandoCoreMockServer withGenericSupport(String urlPath, String code, Function<UrlPattern, MappingBuilder> wireMockHttpMethod) {
+    public EntandoCoreMockServer withGenericSupport(String urlPath, String code,
+            Function<UrlPattern, MappingBuilder> wireMockHttpMethod) {
 
         String url = Optional.ofNullable(code)
-                .map(c -> UriComponentsBuilder.newInstance().path(urlPath + CODE_PATH_PARAM).buildAndExpand(code).toUriString())
+                .map(c -> UriComponentsBuilder.newInstance().path(urlPath + CODE_PATH_PARAM).buildAndExpand(code)
+                        .toUriString())
                 .orElseGet(() -> UriComponentsBuilder.newInstance().path(urlPath).buildAndExpand().toUriString());
 
         this.wireMockServer.stubFor(wireMockHttpMethod.apply(urlEqualTo(url))
@@ -146,7 +151,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         WIDGET(ComponentType.WIDGET, "widgets", 3, "/api/widgets/{code}/usage"),
         FRAGMENTS(ComponentType.FRAGMENT, "fragments", 3, "/api/fragments/{code}/usage"),
         CONTENT_TYPE(ComponentType.CONTENT_TYPE, "contentTypes", 4, "/api/plugins/cms/contentTypes/{code}/usage"),
-        CONTENT_TEMPLATE(ComponentType.CONTENT_TEMPLATE, "contentTemplates", 5, "/api/plugins/cms/contentmodels/{code}/usage");
+        CONTENT_TEMPLATE(ComponentType.CONTENT_TEMPLATE, "contentTemplates", 5,
+                "/api/plugins/cms/contentmodels/{code}/usage");
 
         private final ComponentType componentType;
         private final String typeValue;
