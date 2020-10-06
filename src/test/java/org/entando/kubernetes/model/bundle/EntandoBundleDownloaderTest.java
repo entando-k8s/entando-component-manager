@@ -138,27 +138,6 @@ public class EntandoBundleDownloaderTest {
         assertThat(downloader).isInstanceOf(NpmBundleDownloader.class);
     }
 
-    @Test
-    public void shouldThrowAnErrorWhenCloningRepoOverSSH() {
-        String repository = "git@github.com:kerruba-bundles/entando-survey-bundle.git";
-        EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
-                .withVersion("v0.0.2")
-                .withTarball(repository)
-                .build();
-
-        EntandoDeBundle bundle = new EntandoDeBundleBuilder()
-                .withNewMetadata()
-                .withName("my-name")
-                .endMetadata()
-                .build();
-        downloader = BundleDownloader.getForType("git");
-        BundleDownloaderException ex = Assertions.assertThrows(BundleDownloaderException.class, () -> {
-            downloader.saveBundleLocally(bundle, tag);
-        });
-        assertThat(ex.getMessage())
-                .contains("Unsupported repository " + repository + "; Only HTTP(s) repositories are supported");
-    }
-
     private WireMockServer getMockedNpmRegistry() throws IOException {
         InputStream zippedBundle = this.getClass().getResourceAsStream("/npm-downloaded-bundle.tgz");
         byte[] zbBytes = new byte[zippedBundle.available()];
