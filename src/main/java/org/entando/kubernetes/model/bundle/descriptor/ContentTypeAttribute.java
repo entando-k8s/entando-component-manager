@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,7 +11,7 @@ public class ContentTypeAttribute {
 
     private String code;
     private String type;
-    private String name;
+    private Map<String, String> names;
     private List<Role> roles;
     private List<String> disablingCodes;
     private Boolean mandatory;
