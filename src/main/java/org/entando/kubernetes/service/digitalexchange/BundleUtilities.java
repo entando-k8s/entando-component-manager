@@ -8,7 +8,8 @@ import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
-import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
@@ -19,6 +20,10 @@ public class BundleUtilities {
     public static final String OFFICIAL_SEMANTIC_VERSION_REGEX = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-("
             + "(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\"
             + ".[0-9a-zA-Z-]+)*))?$";
+
+    public static final int MAX_K8S_POD_NAME_LENGTH = 63;
+    public static final int RESERVED_K8S_POD_NAME_LENGTH = 31;
+    public static final int MAX_ENTANDO_K8S_POD_NAME_LENGTH = MAX_K8S_POD_NAME_LENGTH - RESERVED_K8S_POD_NAME_LENGTH;
 
     private BundleUtilities() {
     }
@@ -72,10 +77,14 @@ public class BundleUtilities {
     }
 
     private static String composeNameFromDockerImage(DockerImage image) {
-        return String.join("-",
+        String name = String.join("-",
                 makeKubernetesCompatible(image.getOrganization()),
                 makeKubernetesCompatible(image.getName()),
                 makeKubernetesCompatible(image.getVersion()));
+
+        // final string has not be longer than 63 chars
+        return name.substring(0, Math.min(MAX_ENTANDO_K8S_POD_NAME_LENGTH, name.length()))
+                .replaceAll("-$", "");        // remove a possible ending hyphen
     }
 
     private static String composeIngressPathFromDockerImage(DockerImage image) {
@@ -93,7 +102,14 @@ public class BundleUtilities {
         return labels;
     }
 
+
     public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
+        return descriptor.isVersion1()
+                ? generatePluginFromDescriptorV1(descriptor) :
+                generatePluginFromDescriptorV2(descriptor);
+    }
+
+    public static EntandoPlugin generatePluginFromDescriptorV2(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
                 .withName(extractNameFromDescriptor(descriptor))
@@ -107,6 +123,30 @@ public class BundleUtilities {
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
                 .endSpec()
                 .build();
+    }
+
+    public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName(composeNameFromDockerImage(descriptor.getDockerImage()))
+                .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
+                .endMetadata()
+                .withNewSpec()
+                .withDbms(DbmsVendor.valueOf(descriptor.getSpec().getDbms().toUpperCase()))
+                .withImage(descriptor.getDockerImage().toString())
+                .withIngressPath(composeIngressPathFromDockerImage(descriptor.getDockerImage()))
+                .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
+                .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
+                .endSpec()
+                .build();
+    }
+
+
+    public static List<ExpectedRole> extractRolesFromRoleList(List<PluginDescriptorV1Role> roleList) {
+        return roleList.stream()
+                .distinct()
+                .map(role -> new ExpectedRole(role.getCode(), role.getName()))
+                .collect(Collectors.toList());
     }
 
     private static String makeKubernetesCompatible(String value) {

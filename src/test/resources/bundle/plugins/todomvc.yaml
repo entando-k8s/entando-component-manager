@@ -1,5 +1,0 @@
-image: entando/todomvc
-dbms: mysql
-healthCheckPath: /api/v1/todos
-roles: []
-

@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -160,6 +161,29 @@ public class EntandoBundleReaderTest {
         assertThat(ld.get(0).getTitles()).containsEntry("en", "My Title");
 
     }
+
+    @Test
+    void shouldReadPluginFromBundleV1() throws IOException {
+        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
+        assertThat(descriptor.getSpec().getDbms()).isEqualTo("mysql");
+        assertThat(descriptor.getSpec().getHealthCheckPath()).isEqualTo("/api/v1/todos");
+        assertThat(descriptor.getSpec().getImage()).isEqualTo("entando/todomvc:1.0.0");
+        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvc");
+        assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
+        assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
+    }
+
+    @Test
+    void shouldReadPluginFromBundleV2() throws IOException {
+        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
+        assertThat(descriptor.getDbms()).isEqualTo("mysql");
+        assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
+        assertThat(descriptor.getImage()).isEqualTo("entando/todomvc:1.0.0");
+        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvc");
+        assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
+        assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
+    }
+
 
     @Test
     public void shouldReadRelatedFileAsString() throws IOException {
