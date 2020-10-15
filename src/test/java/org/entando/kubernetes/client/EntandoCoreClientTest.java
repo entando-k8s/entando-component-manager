@@ -12,7 +12,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;

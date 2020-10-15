@@ -50,6 +50,7 @@ class AppConfigurationTest {
         Map<String, ComponentProcessor> processors = new HashMap<>();
         processors.put(ComponentType.CONTENT_TEMPLATE.toString(), new ContentTemplateProcessor(coreClient));
         processors.put(ComponentType.CONTENT_TYPE.toString(), new ContentTypeProcessor(coreClient));
+        processors.put(ComponentType.CONTENT.toString(), new ContentTypeProcessor(coreClient));
         processors.put(ComponentType.DIRECTORY.toString(), new DirectoryProcessor(coreClient));
         processors.put(ComponentType.ASSET.toString(), new FileProcessor(coreClient));
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
