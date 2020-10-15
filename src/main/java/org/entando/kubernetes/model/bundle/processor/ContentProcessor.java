@@ -14,42 +14,42 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
-import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
+import org.entando.kubernetes.model.bundle.installable.ContentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to handle Bundles with CMS ContentTypes.
+ * Processor to handle Bundles with CMS Content.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescriptor> {
+public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
-        return ComponentType.CONTENT_TYPE;
+        return ComponentType.CONTENT;
     }
 
     @Override
-    public List<Installable<ContentTypeDescriptor>> process(BundleReader npr) {
+    public List<Installable<ContentDescriptor>> process(BundleReader npr) {
         try {
             BundleDescriptor descriptor = npr.readBundleDescriptor();
-            List<String> contentTypesDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getContentTypes)
+            List<String> contentDescriptorList = ofNullable(descriptor.getComponents())
+                    .map(ComponentSpecDescriptor::getContents)
                     .orElse(new ArrayList<>());
 
-            List<Installable<ContentTypeDescriptor>> installables = new LinkedList<>();
+            List<Installable<ContentDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : contentTypesDescriptor) {
-                ContentTypeDescriptor contentTypeDescriptor = npr
-                        .readDescriptorFile(fileName, ContentTypeDescriptor.class);
-                installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor));
+            for (String fileName : contentDescriptorList) {
+                ContentDescriptor contentDescriptor = npr
+                        .readDescriptorFile(fileName, ContentDescriptor.class);
+                installables.add(new ContentInstallable(engineService, contentDescriptor));
             }
 
             return installables;
@@ -59,18 +59,17 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
     }
 
     @Override
-    public List<Installable<ContentTypeDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
+    public List<Installable<ContentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.CONTENT_TYPE)
-                .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == ComponentType.CONTENT)
+                .map(c -> new ContentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public ContentTypeDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return ContentTypeDescriptor.builder()
-                .code(component.getComponentId())
+    public ContentDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return ContentDescriptor.builder()
+                .id(component.getComponentId())
                 .build();
     }
-
 }

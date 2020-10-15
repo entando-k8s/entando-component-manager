@@ -2,7 +2,6 @@ package org.entando.kubernetes.client.core;
 
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -12,6 +11,8 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
 public interface EntandoCoreClient {
@@ -67,6 +68,10 @@ public interface EntandoCoreClient {
     void deleteContentType(String code);
 
     EntandoCoreComponentUsage getContentTypeUsage(String code);
+
+    void registerContent(ContentDescriptor descriptor);
+
+    void deleteContent(String code);
 
     void createFolder(String folder);
 

@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.bundle.descriptor;
+package org.entando.kubernetes.model.bundle.descriptor.contenttype;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 
 @Getter
 @Setter
