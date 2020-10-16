@@ -2,7 +2,9 @@ package org.entando.kubernetes.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -27,7 +29,7 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     public void shouldThrowAnErrorAsVersionIsNotDefined() {
-        Exception ex = Assertions.assertThrows(RuntimeException.class, () -> {
+        Exception ex = assertThrows(RuntimeException.class, () -> {
             BundleUtilities.getBundleVersionOrFail(getTestBundle(), "first");
         });
 
@@ -49,13 +51,25 @@ public class EntandoBundleUtilitiesTest {
 
 
     @Test
-    void shouldTrunkateImageNameTo33CharsInOrderToAvoidExceedingK8SMaximumLength() {
+    void shouldThrowExceptionIfPodPrefixNameLengthExceeds32Chars() {
+
+        String imageName = TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
 
         PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
-        descriptor.setImage(TestInstallUtils.TEST_DESCRIPTOR_IMAGE + TestInstallUtils.TEST_DESCRIPTOR_IMAGE);
+        descriptor.setImage(imageName);
 
-        assertThat(BundleUtilities.extractNameFromDescriptor(descriptor)).hasSize(32);
+        EntandoComponentManagerException exception = assertThrows(
+                EntandoComponentManagerException.class,
+                () -> BundleUtilities.extractNameFromDescriptor(descriptor),
+                "Expected extractNameFromDescriptor() to throw, but it didn't"
+        );
+
+        String expectedMex = String.format("The prefix \"%s\" of the pod that is about to be created is longer than %d. The prefix is "
+                + "created using this format: "
+                + "[docker-organization]-[docker-image-name]-[docker-image-version]",
+                imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
+                BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH);
+
+        assertThat(exception.getMessage()).isEqualTo(expectedMex);
     }
-
-
 }

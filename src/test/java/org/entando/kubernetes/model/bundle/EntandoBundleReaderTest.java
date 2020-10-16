@@ -167,8 +167,8 @@ public class EntandoBundleReaderTest {
         PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
         assertThat(descriptor.getSpec().getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getSpec().getHealthCheckPath()).isEqualTo("/api/v1/todos");
-        assertThat(descriptor.getSpec().getImage()).isEqualTo("entando/todomvc:1.0.0");
-        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvc");
+        assertThat(descriptor.getSpec().getImage()).isEqualTo("entando/todomvcV1:1.0.0");
+        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvcV1");
         assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
         assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
     }
@@ -178,8 +178,8 @@ public class EntandoBundleReaderTest {
         PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
         assertThat(descriptor.getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
-        assertThat(descriptor.getImage()).isEqualTo("entando/todomvc:1.0.0");
-        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvc");
+        assertThat(descriptor.getImage()).isEqualTo("entando/todomvcV2:1.0.0");
+        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvcV2");
         assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
         assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
     }

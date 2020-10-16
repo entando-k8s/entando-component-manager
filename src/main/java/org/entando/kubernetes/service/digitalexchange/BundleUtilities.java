@@ -82,9 +82,18 @@ public class BundleUtilities {
                 makeKubernetesCompatible(image.getName()),
                 makeKubernetesCompatible(image.getVersion()));
 
-        // final string has not be longer than 63 chars
-        return name.substring(0, Math.min(MAX_ENTANDO_K8S_POD_NAME_LENGTH, name.length()))
-                .replaceAll("-$", "");        // remove a possible ending hyphen
+        // final string has to not be longer than 63 chars
+        if (name.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
+            throw new EntandoComponentManagerException(
+                    String.format(
+                            "The prefix \"%s\" of the pod that is about to be created is longer than %d. The prefix is "
+                                    + "created using this format: "
+                                    + "[docker-organization]-[docker-image-name]-[docker-image-version]",
+                            name,
+                            MAX_ENTANDO_K8S_POD_NAME_LENGTH));
+        }
+
+        return name;
     }
 
     private static String composeIngressPathFromDockerImage(DockerImage image) {
