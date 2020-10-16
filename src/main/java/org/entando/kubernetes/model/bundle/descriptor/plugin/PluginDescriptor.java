@@ -40,6 +40,10 @@ public class PluginDescriptor implements Descriptor {
      */
     private String name;
     /**
+     * Base name of the plugin deployments.
+     */
+    private String deploymentBaseName;
+    /**
      * The full qualified docker image name.
      */
     private String image;

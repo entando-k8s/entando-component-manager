@@ -5,11 +5,10 @@ import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.utils.TestInstallUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -29,9 +28,11 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     public void shouldThrowAnErrorAsVersionIsNotDefined() {
-        Exception ex = assertThrows(RuntimeException.class, () -> {
-            BundleUtilities.getBundleVersionOrFail(getTestBundle(), "first");
-        });
+
+        EntandoDeBundle testBundle = getTestBundle();
+
+        Exception ex = assertThrows(EntandoComponentManagerException.class,
+                () -> BundleUtilities.getBundleVersionOrFail(testBundle, "first"));
 
         assertThat(ex.getMessage()).isEqualTo("Invalid version 'first' for bundle 'my-bundle'");
     }
@@ -51,12 +52,42 @@ public class EntandoBundleUtilitiesTest {
 
 
     @Test
-    void shouldThrowExceptionIfPodPrefixNameLengthExceeds32Chars() {
+    void shouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars() {
+
+        String imageName = TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
+
+        PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
+        descriptor.setDeploymentBaseName(TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst");
+
+        String expectedMex = String.format(BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
+                imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
+                BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
+                BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX);
+
+        genericShouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars(descriptor, expectedMex);
+    }
+
+
+    @Test
+    void shouldThrowExceptionIfPodDeploymentBaseNameLengthFromDockerImageExceeds32Chars() {
 
         String imageName = TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
 
         PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
         descriptor.setImage(imageName);
+        descriptor.setDeploymentBaseName(null);
+
+        String expectedMex = String.format(BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
+                imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
+                BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
+                BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX);
+
+        genericShouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars(descriptor, expectedMex);
+    }
+
+
+    private void genericShouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars(PluginDescriptor descriptor,
+            String expectedMex) {
 
         EntandoComponentManagerException exception = assertThrows(
                 EntandoComponentManagerException.class,
@@ -64,12 +95,23 @@ public class EntandoBundleUtilitiesTest {
                 "Expected extractNameFromDescriptor() to throw, but it didn't"
         );
 
-        String expectedMex = String.format("The prefix \"%s\" of the pod that is about to be created is longer than %d. The prefix is "
-                + "created using this format: "
-                + "[docker-organization]-[docker-image-name]-[docker-image-version]",
-                imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
-                BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH);
-
         assertThat(exception.getMessage()).isEqualTo(expectedMex);
+    }
+
+
+    @Test
+    void ifPresentShouldUseDeploymentBaseNameOverDockerImage() {
+
+        String deploymentBaseName = "testDeploymentName";
+
+        // descriptor v2
+        PluginDescriptor descriptorV2 = TestInstallUtils.getTestDescriptor();
+        descriptorV2.setDeploymentBaseName(deploymentBaseName);
+        assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV2)).isEqualTo(deploymentBaseName.toLowerCase());
+
+        // descriptor v2
+        PluginDescriptor descriptorV1 = TestInstallUtils.getTestDescriptorVersion1();
+        descriptorV1.setDeploymentBaseName(deploymentBaseName);
+        assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV1)).isEqualTo(deploymentBaseName.toLowerCase());
     }
 }

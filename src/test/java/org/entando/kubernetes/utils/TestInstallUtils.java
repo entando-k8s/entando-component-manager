@@ -547,6 +547,7 @@ public class TestInstallUtils {
                 .roles(Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE))
                 .healthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
                 .dbms(TEST_DESCRIPTOR_DBMS)
+                .deploymentBaseName(TEST_DESCRIPTOR_IMAGE)
                 .build();
     }
 
