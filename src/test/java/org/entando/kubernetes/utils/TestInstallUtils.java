@@ -28,6 +28,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -41,6 +42,9 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
@@ -75,6 +79,14 @@ public class TestInstallUtils {
             .pathSegment("components", "todomvc", "uninstall");
 
     public static final String JOBS_ENDPOINT = "/jobs";
+
+    public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas-0-0-1-snapshot";
+    public static final String EXPECTED_INGRESS_PATH = "/entando/the-lucas/0-0-1-snapshot";
+    public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
+    public static final String TEST_DESCRIPTOR_ADMIN_ROLE = "thelucas-admin";
+    public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
+    public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
+    public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
 
     @SneakyThrows
     public static String simulateSuccessfullyCompletedInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
@@ -493,7 +505,7 @@ public class TestInstallUtils {
     }
 
     public static PagedMetadata<EntandoBundleJobEntity> getInstallJob(MockMvc mockMvc) throws Exception {
-        return new ObjectMapper().readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvc&type=INSTALL"))
+        return new ObjectMapper().readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvcV1&type=INSTALL"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
                 new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {
@@ -525,5 +537,37 @@ public class TestInstallUtils {
 
     public static String requestPath(final LoggedRequest request) {
         return requestProperty(request, "path");
+    }
+
+
+
+    public static PluginDescriptor getTestDescriptor() {
+        return PluginDescriptor.builder()
+                .image(TEST_DESCRIPTOR_IMAGE)
+                .roles(Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE))
+                .healthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
+                .dbms(TEST_DESCRIPTOR_DBMS)
+                .deploymentBaseName(TEST_DESCRIPTOR_IMAGE)
+                .build();
+    }
+
+    public static PluginDescriptor getTestDescriptorVersion1() {
+        return PluginDescriptor.builder()
+                .spec(getTestDescriptorV1Spec())
+                .build();
+    }
+
+    public static PluginDescriptorV1Spec getTestDescriptorV1Spec() {
+
+        List<PluginDescriptorV1Role> roleList = Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE)
+                .stream()
+                .map(role -> new PluginDescriptorV1Role(role, role))
+                .collect(Collectors.toList());
+
+        return new PluginDescriptorV1Spec()
+                .setImage(TEST_DESCRIPTOR_IMAGE)
+                .setRoles(roleList)
+                .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
+                .setDbms(TEST_DESCRIPTOR_DBMS);
     }
 }

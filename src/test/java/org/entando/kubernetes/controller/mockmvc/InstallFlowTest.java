@@ -183,7 +183,7 @@ public class InstallFlowTest {
         // Verify interaction with mocks
         Set<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinks();
         Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
-                .filter(link -> link.getSpec().getEntandoPluginName().equals("entando-todomvc-latest")).findAny();
+                .filter(link -> link.getSpec().getEntandoPluginName().equals("entando-todomvcv2-1-0-0")).findAny();
 
         assertTrue(appPluginLinkForTodoMvc.isPresent());
 
@@ -390,7 +390,8 @@ public class InstallFlowTest {
 
         List<String> expected = Arrays.asList(
                 // Plugins
-                "entando/todomvc:latest",
+                "entando/todomvcV1:1.0.0",
+                "entando/todomvcV2:1.0.0",
                 // Directories
                 "/something",
                 "/something/css",
@@ -458,7 +459,7 @@ public class InstallFlowTest {
         expectedComponents.put(ComponentType.LABEL, 1);
         expectedComponents.put(ComponentType.FRAGMENT, 2);
         expectedComponents.put(ComponentType.PAGE, 1);
-        expectedComponents.put(ComponentType.PLUGIN, 1);
+        expectedComponents.put(ComponentType.PLUGIN, 2);
 
         assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);
     }
