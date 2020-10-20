@@ -70,7 +70,7 @@ public class PluginProcessor implements ComponentProcessor<PluginDescriptor> {
 
     @Override
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return PluginDescriptor.builder().image(component.getComponentId()).build();
+        return PluginDescriptor.builder().deploymentBaseName(component.getComponentId()).build();
     }
 
 }
