@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -44,10 +45,16 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public String getName() {
+
         if (! StringUtils.isEmpty(this.representation.getDeploymentBaseName())) {
             return this.representation.getDeploymentBaseName();
         } else {
-            return this.representation.getDockerImage().toString();
+            // TODO when we'll introduce a validation step, remove this try catch and move the check
+            try {
+                return this.representation.getDockerImage().toString();
+            } catch (Exception e) {
+                throw new EntandoComponentManagerException("There is an error in the build of the docker image. Please check to have supplied a valid docker image in the dedicated descriptor field");
+            }
         }
     }
 }
