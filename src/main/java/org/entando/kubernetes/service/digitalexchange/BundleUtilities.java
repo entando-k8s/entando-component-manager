@@ -126,7 +126,7 @@ public class BundleUtilities {
         return deploymentBaseName;
     }
 
-    private static String composeNameFromDockerImage(DockerImage image) {
+    public static String composeNameFromDockerImage(DockerImage image) {
         return String.join("-",
                 makeKubernetesCompatible(image.getOrganization()),
                 makeKubernetesCompatible(image.getName()),

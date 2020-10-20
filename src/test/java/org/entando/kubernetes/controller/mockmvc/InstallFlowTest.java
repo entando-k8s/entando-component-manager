@@ -392,6 +392,7 @@ public class InstallFlowTest {
                 // Plugins
                 "entando/todomvcV1:1.0.0",
                 "entando/todomvcV2:1.0.0",
+                "customBaseName",
                 // Directories
                 "/something",
                 "/something/css",
@@ -459,7 +460,7 @@ public class InstallFlowTest {
         expectedComponents.put(ComponentType.LABEL, 1);
         expectedComponents.put(ComponentType.FRAGMENT, 2);
         expectedComponents.put(ComponentType.PAGE, 1);
-        expectedComponents.put(ComponentType.PLUGIN, 2);
+        expectedComponents.put(ComponentType.PLUGIN, 3);
 
         assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);
     }
@@ -769,6 +770,44 @@ public class InstallFlowTest {
                         JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
                 );
     }
+
+    /**
+     * this test ensures that the plugin uninstallation can be done using the right data
+     */
+    @Test
+    void ensureEntandoBundleComponentJobEntityComponentIdCorrectness() throws Exception {
+
+        Mockito.reset(coreClient);
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
+
+        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+
+        Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
+        assertThat(job.isPresent()).isTrue();
+
+        List<EntandoBundleComponentJobEntity> pluginJobs = componentJobRepository.findAllByParentJob(job.get())
+                .stream()
+                .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
+                .collect(Collectors.toList());;
+
+        assertThat(pluginJobs.size()).isEqualTo(3);
+
+        // when deploymentBaseName is not present => component id should be the image organization, name and version
+        assertThat(pluginJobs.get(0).getComponentId()).isEqualTo("entando/todomvcV1:1.0.0");
+        assertThat(pluginJobs.get(1).getComponentId()).isEqualTo("entando/todomvcV2:1.0.0");
+        // when deploymentBaseName is not present => component id should be the deploymentBaseName itself
+        assertThat(pluginJobs.get(2).getComponentId()).isEqualTo("customBaseName");
+    }
+
 
     @Test
     public void shouldUpdateDatabaseOnlyWhenOperationIsCompleted() throws Exception {

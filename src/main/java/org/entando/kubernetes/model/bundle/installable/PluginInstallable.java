@@ -1,7 +1,5 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractNameFromDescriptor;
-
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -9,6 +7,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 public class PluginInstallable extends Installable<PluginDescriptor> {
@@ -34,8 +33,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing link to plugin {}", getName());
-            PluginDescriptor descriptor = PluginDescriptor.builder().image(getName()).build();
-            kubernetesService.unlinkPlugin(extractNameFromDescriptor(descriptor));
+            kubernetesService.unlinkPlugin(BundleUtilities.extractNameFromDescriptor(representation));
         });
     }
 
@@ -46,6 +44,10 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public String getName() {
-        return this.representation.getDockerImage().toString();
+        if (! StringUtils.isEmpty(this.representation.getDeploymentBaseName())) {
+            return this.representation.getDeploymentBaseName();
+        } else {
+            return this.representation.getDockerImage().toString();
+        }
     }
 }
