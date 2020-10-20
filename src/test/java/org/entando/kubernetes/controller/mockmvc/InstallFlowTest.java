@@ -772,7 +772,7 @@ public class InstallFlowTest {
     }
 
     /**
-     * this test ensures that the plugin uninstallation can be done using the right data
+     * this test ensures that the plugin uninstallation can be done using the right data.
      */
     @Test
     void ensureEntandoBundleComponentJobEntityComponentIdCorrectness() throws Exception {
@@ -792,7 +792,7 @@ public class InstallFlowTest {
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
-        assertThat(job.isPresent()).isTrue();
+        assertThat(job).isPresent();
 
         List<EntandoBundleComponentJobEntity> pluginJobs = componentJobRepository.findAllByParentJob(job.get())
                 .stream()
