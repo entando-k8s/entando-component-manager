@@ -53,7 +53,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             try {
                 return this.representation.getDockerImage().toString();
             } catch (Exception e) {
-                throw new EntandoComponentManagerException("There is an error in the build of the docker image. Please check to have supplied a valid docker image in the dedicated descriptor field");
+                throw new EntandoComponentManagerException("There is an error in the build of the docker image. Please "
+                        + "check to have supplied a valid docker image in the dedicated descriptor field");
             }
         }
     }
