@@ -30,8 +30,7 @@ public class BundleUtilities {
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR = "The prefix \"%s\" of the pod that is "
             + "about to be created is longer than %d. The prefix has been created using %s";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END = "Please specify a shorter value "
-            + "in the \"deploymentBaseName\" plugin descriptor property or check the doc "
-            + "https://dev.entando.org/next/docs/ecr/ecr-bundle-details.html#plugin-descriptor";
+            + "in the \"deploymentBaseName\" plugin descriptor property";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX = "the format "
             + "[docker-organization]-[docker-image-name]-[docker-image-version]. "
             + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
