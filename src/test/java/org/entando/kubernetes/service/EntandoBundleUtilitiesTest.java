@@ -4,21 +4,43 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
+import org.entando.kubernetes.model.plugin.ExpectedRole;
+import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.utils.TestInstallUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
 public class EntandoBundleUtilitiesTest {
 
-    private final String imgOrganization = "1234567890";
-    private final String imgName = "12345678901234567890";
-    private final String imgVersion = "1.0.0";
+    private BundleReader bundleReader;
+    private Path bundleFolder;
 
+    @BeforeEach
+    public void readNpmPackage() throws IOException {
+        bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+        bundleReader = new BundleReader(bundleFolder);
+    }
 
     @Test
     public void shouldReturnVersionDirectly() {
@@ -113,5 +135,164 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptorV1 = TestInstallUtils.getTestDescriptorVersion1();
         descriptorV1.setDeploymentBaseName(deploymentBaseName);
         assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV1)).isEqualTo(deploymentBaseName.toLowerCase());
+    }
+
+
+    @Test
+    void startingFromAValidDockerImageShouldReturnTheK8SCompatibleFormat() {
+
+        // given a valid docker image in a valid descriptor
+        String imageName = "organiz/imagename:1.0.0";
+        PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
+        descriptor.setImage(imageName);
+        // without the DeploymentBaseName property
+        descriptor.setDeploymentBaseName(null);
+
+        // shoudl return a compatible k8s format of the image
+        String expectedImageName = "organiz-imagename-1-0-0";
+        assertThat(BundleUtilities.extractNameFromDescriptor(descriptor)).isEqualTo(expectedImageName.toLowerCase());
+    }
+
+    @Test
+    void withPluginDescriptorV1ShouldCreateACorrectEntandoPlugin() throws IOException {
+
+        // given a plugin descriptor V1
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
+
+        // should generate the right populated EntandoPlugin
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
+
+        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv1-1-0-0", DbmsVendor.MYSQL,
+                "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
+                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1);
+    }
+
+    @Test
+    void withACompletePluginDescriptorV2ShouldCreateACorrectEntandoPlugin() throws IOException {
+
+        // given a complete plugin descriptor V2
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
+
+        // should generate the right populated EntandoPlugin
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2(descriptor);
+
+        assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
+                "/myhostname.io/entando-plugin", "/api/v1/todos",
+                getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2CompleteBundle(),
+                this::assertOnLabelsForTodoMvc2);
+    }
+
+    @Test
+    void withPluginDescriptorV2ShouldCreateACorrectEntandoPlugin() throws IOException {
+
+        // given a minimum filled plugin descriptor V2
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
+
+        // should generate the right populated EntandoPlugin
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2(descriptor);
+
+        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv2-1-0-0", DbmsVendor.MYSQL,
+                "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
+                Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2);
+    }
+
+
+    private void assertOnEntandoPlugin(EntandoPlugin entandoPlugin, String name, DbmsVendor dbmsVendor, String image,
+            String ingressPath, String healthCheckPath, List<ExpectedRole> roleList, List<Permission> permissionList,
+            Consumer<Map<String, String>> labelsAssertionFn) {
+
+        ObjectMeta metadata = entandoPlugin.getMetadata();
+        assertThat(metadata.getName()).isEqualTo(name);
+        labelsAssertionFn.accept(metadata.getLabels());
+
+        EntandoPluginSpec spec = entandoPlugin.getSpec();
+        assertThat(spec.getDbms()).contains(dbmsVendor);
+        assertThat(spec.getImage()).isEqualTo(image);
+        assertThat(spec.getIngressPath()).isEqualTo(ingressPath);
+        assertThat(spec.getHealthCheckPath()).isEqualTo(healthCheckPath);
+        assertOnExpectedRoles(spec.getRoles(), roleList);
+        assertOnPermissionsForTodoMvc2CompleteBundle(spec.getPermissions(), permissionList);
+        assertOnExpectedRoles(spec.getRoles(), roleList);
+    }
+
+
+    /*****************************************************************************************************
+     * ROLES ASSERTIONS.
+     ****************************************************************************************************/
+
+    private List<ExpectedRole> getRolesForTodoMvc1() {
+
+        return Arrays.asList(
+                new ExpectedRole("theLucas-admin", "theLucas-admin"),
+                new ExpectedRole("foo-admin", "foo-admin"));
+    }
+
+    private List<ExpectedRole> getRolesForTodoMvc2CompleteBundle() {
+
+        return Arrays.asList(new ExpectedRole("user", "user"), new ExpectedRole("admin", "admin"));
+    }
+
+    private void assertOnExpectedRoles(List<ExpectedRole> actual, List<ExpectedRole> expected) {
+
+        assertThat(actual).hasSize(expected.size());
+        IntStream.range(0, expected.size())
+                .forEach(i -> {
+                    assertThat(actual.get(0).getCode()).isEqualTo(expected.get(0).getCode());
+                    assertThat(actual.get(0).getName()).isEqualTo(expected.get(0).getName());
+                });
+    }
+
+    /*****************************************************************************************************
+     * PERMISSIONS ASSERTIONS.
+     ****************************************************************************************************/
+
+
+    private List<Permission> getPermissionsForTodoMvc2CompleteBundle() {
+
+        return Arrays.asList(
+                new Permission("realm-management", "manage-users"),
+                new Permission("realm-management", "view-users"));
+    }
+
+    private void assertOnPermissionsForTodoMvc2CompleteBundle(List<Permission> actual, List<Permission> expected) {
+
+        assertThat(actual).hasSize(expected.size());
+        IntStream.range(0, expected.size())
+                .forEach(i -> {
+                    assertThat(actual.get(0).getClientId()).isEqualTo(expected.get(0).getClientId());
+                    assertThat(actual.get(0).getRole()).isEqualTo(expected.get(0).getRole());
+                });
+    }
+
+    /*****************************************************************************************************
+     * LABELS ASSERTIONS.
+     ****************************************************************************************************/
+
+    private void assertOnLabelsForTodoMvc1(Map<String, String> labelMap) {
+
+        assertOnLabels(
+                labelMap,
+                new AbstractMap.SimpleEntry<>("organization", "entando"),
+                new AbstractMap.SimpleEntry<>("name", "todomvcV1"),
+                new AbstractMap.SimpleEntry<>("version", "1.0.0")
+        );
+    }
+
+    private void assertOnLabelsForTodoMvc2(Map<String, String> labelMap) {
+
+        assertOnLabels(
+                labelMap,
+                new AbstractMap.SimpleEntry("organization", "entando"),
+                new AbstractMap.SimpleEntry("name", "todomvcV2"),
+                new AbstractMap.SimpleEntry("version", "1.0.0")
+        );
+    }
+
+    private void assertOnLabels(Map<String, String> labelMap, AbstractMap.SimpleEntry... expectedLabels) {
+
+        assertThat(labelMap).containsExactly(expectedLabels);
     }
 }

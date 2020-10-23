@@ -1,9 +1,11 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import io.fabric8.zjsonpatch.internal.guava.Strings;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -15,6 +17,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
+import org.entando.kubernetes.model.plugin.Permission;
 import org.springframework.util.StringUtils;
 
 @UtilityClass
@@ -73,12 +76,22 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
+    public static List<Permission> extractPermissionsFromDescriptor(PluginDescriptor descriptor) {
+        return Optional.ofNullable(descriptor.getPermissions())
+                .orElse(Collections.emptyList())
+                .stream()
+                .distinct()
+                .map(permission -> new Permission(permission.getClientId(), permission.getRole()))
+                .collect(Collectors.toList());
+    }
+
     public static String extractNameFromDescriptor(PluginDescriptor descriptor) {
         return composeDeploymentBaseName(descriptor);
     }
 
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
-        return composeIngressPathFromDockerImage(descriptor.getDockerImage());
+        return Optional.ofNullable(descriptor.getIngressPath())
+                .orElse(composeIngressPathFromDockerImage(descriptor.getDockerImage()));
     }
 
     public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
@@ -167,6 +180,7 @@ public class BundleUtilities {
                 .withIngressPath(extractIngressPathFromDescriptor(descriptor))
                 .withRoles(extractRolesFromDescriptor(descriptor))
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
+                .withPermissions(extractPermissionsFromDescriptor(descriptor))
                 .endSpec()
                 .build();
     }
@@ -188,6 +202,7 @@ public class BundleUtilities {
     }
 
 
+
     public static List<ExpectedRole> extractRolesFromRoleList(List<PluginDescriptorV1Role> roleList) {
         return roleList.stream()
                 .distinct()
@@ -197,7 +212,6 @@ public class BundleUtilities {
 
     private static String makeKubernetesCompatible(String value) {
         return value.toLowerCase()
-                .replaceAll("[._]", "-")
-                .replaceAll("[\\/\\.\\:]", "-");
+                .replaceAll("[\\/\\.\\:_]", "-");
     }
 }
