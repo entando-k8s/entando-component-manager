@@ -1,7 +1,8 @@
-package org.entando.kubernetes.model.bundle.descriptor;
+package org.entando.kubernetes.model.bundle.descriptor.contenttype;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.descriptor.OgnlValidation;
 
 @Getter
 @Setter

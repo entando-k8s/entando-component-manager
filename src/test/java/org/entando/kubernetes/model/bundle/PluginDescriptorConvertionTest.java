@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;

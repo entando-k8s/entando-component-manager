@@ -19,9 +19,10 @@ public enum ComponentType {
     WIDGET("widget", 7),
     CONTENT_TYPE("contentType", 8),
     CONTENT_TEMPLATE("contentTemplate", 9),
-    FRAGMENT("fragment", 10),
-    PAGE_TEMPLATE("pageTemplate", 11),
-    PAGE("page", 12);
+    CONTENT("content", 10),
+    FRAGMENT("fragment", 11),
+    PAGE_TEMPLATE("pageTemplate", 12),
+    PAGE("page", 13);
 
     private String typeName;
     private int installPriority;

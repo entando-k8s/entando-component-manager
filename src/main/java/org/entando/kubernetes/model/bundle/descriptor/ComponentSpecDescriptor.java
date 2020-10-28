@@ -15,6 +15,7 @@ public class ComponentSpecDescriptor {
     private List<String> pageTemplates;
     private List<String> contentTypes;
     private List<String> contentTemplates;
+    private List<String> contents;
     private List<String> groups;
     private List<String> labels;
     private List<String> languages;
