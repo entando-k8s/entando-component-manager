@@ -4,7 +4,7 @@ components:
   plugins:
     - plugins/todomvcV1.yaml
     - plugins/todomvcV2.yaml
-    - plugins/todomvcV2_withDeploymentBasePath.yaml
+    - plugins/todomvcV2_complete.yaml
 
   widgets:
     - widgets/my_widget_descriptor.yaml

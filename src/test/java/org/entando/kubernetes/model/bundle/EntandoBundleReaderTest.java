@@ -27,6 +27,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -175,6 +176,27 @@ public class EntandoBundleReaderTest {
 
     @Test
     void shouldReadPluginFromBundleV2() throws IOException {
+
+        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
+        assertThat(descriptor.getDbms()).isEqualTo("mysql");
+        assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
+        assertThat(descriptor.getImage()).isEqualTo("entando/todomvcV2:1.0.0");
+        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvcV2");
+        assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
+        assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
+        assertThat(descriptor.getIngressPath()).isEqualTo("/myhostname.io/entando-plugin");
+
+        assertThat(descriptor.getPermissions()).containsExactly(
+                new PluginPermission("realm-management", "manage-users"),
+                new PluginPermission("realm-management", "view-users"));
+    }
+
+
+    @Test
+    void shouldBeTolerantWithUnknowFields() throws IOException {
+
+        // using a descriptor with only base fields
+        // should parse the descriptor without errors
         PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
         assertThat(descriptor.getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
@@ -182,6 +204,8 @@ public class EntandoBundleReaderTest {
         assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvcV2");
         assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
         assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
+        assertThat(descriptor.getIngressPath()).isNullOrEmpty();
+        assertThat(descriptor.getPermissions()).isNullOrEmpty();
     }
 
 

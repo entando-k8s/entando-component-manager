@@ -1,6 +1,0 @@
-image: entando/todomvcV2:1.0.0
-dbms: mysql
-deploymentBaseName: "customBaseName"
-healthCheckPath: /api/v1/todos
-roles: []
-

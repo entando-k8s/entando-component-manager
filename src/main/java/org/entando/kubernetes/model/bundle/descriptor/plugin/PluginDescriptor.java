@@ -59,6 +59,14 @@ public class PluginDescriptor implements Descriptor {
      * List of roles to be assigned to the plugin.
      */
     private List<String> roles;
+    /**
+     * List of permissions to be assigned to the plugin.
+     */
+    private List<PluginPermission> permissions;
+    /**
+     * The ingress path to assign to the current plugin. If not specified it will be composed by the image name
+     */
+    private String ingressPath;
 
 
     public DockerImage getDockerImage() {
