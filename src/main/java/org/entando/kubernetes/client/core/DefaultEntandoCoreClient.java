@@ -2,10 +2,10 @@ package org.entando.kubernetes.client.core;
 
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Collections;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -15,6 +15,8 @@ import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
@@ -216,6 +218,19 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .getComponentUsage(code,
                         new String[]{"api", "plugins", "cms", "contentTypes", code, USAGE_PATH_SEGMENT},
                         "content type");
+    }
+
+    @Override
+    public void registerContent(ContentDescriptor descriptor) {
+        restTemplate
+                .postForEntity(resolvePathSegments("api", "plugins", "cms", "contents").build().toUri(),
+                        Collections.singletonList(descriptor),
+                        Void.class);
+    }
+
+    @Override
+    public void deleteContent(String code) {
+        notFoundProtectedDelete(resolvePathSegments("api", "plugins", "cms", "contents", code).build().toUri());
     }
 
     @Override

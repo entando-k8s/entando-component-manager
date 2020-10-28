@@ -12,7 +12,6 @@ import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.BundleDownloaderException;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
@@ -22,7 +21,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
