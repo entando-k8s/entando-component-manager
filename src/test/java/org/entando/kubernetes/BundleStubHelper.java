@@ -9,7 +9,7 @@ public class BundleStubHelper {
 
 
     /**
-     * receives a List of ContentAttribute representing the content of the file bundle/contents/CNG-descriptor.yaml.
+     * receives a List of ContentAttribute representing the content of the file bundle/contents/cng102-descriptor.yaml.
      * @return
      */
     public static List<ContentAttribute> stubContentAttributeList() {
