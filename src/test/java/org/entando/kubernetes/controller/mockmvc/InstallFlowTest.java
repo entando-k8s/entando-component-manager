@@ -501,6 +501,7 @@ public class InstallFlowTest {
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
         expectedComponents.put(ComponentType.CONTENT_TEMPLATE, 2);
+        expectedComponents.put(ComponentType.CONTENT, 1);
         expectedComponents.put(ComponentType.ASSET, 1);
         expectedComponents.put(ComponentType.LANGUAGE, 2);
         expectedComponents.put(ComponentType.LABEL, 1);
