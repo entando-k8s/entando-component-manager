@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor.contenttype;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import org.entando.kubernetes.model.bundle.descriptor.Role;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ContentTypeAttribute {
 
     private String code;

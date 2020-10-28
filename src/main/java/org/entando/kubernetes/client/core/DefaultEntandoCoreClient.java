@@ -1,9 +1,11 @@
 package org.entando.kubernetes.client.core;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collections;
 import org.entando.kubernetes.exception.web.HttpException;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -31,14 +33,20 @@ import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -128,7 +136,6 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void registerGroup(GroupDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "groups").build().toUri(), descriptor, Void.class);
-
     }
 
     @Override
@@ -231,6 +238,26 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void deleteContent(String code) {
         notFoundProtectedDelete(resolvePathSegments("api", "plugins", "cms", "contents", code).build().toUri());
+    }
+
+    @Override
+    public void createAsset(AssetDescriptor descriptor, File file) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("metadata", descriptor);
+        body.add("file", new FileSystemResource(file));
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        restTemplate.exchange(resolvePathSegments("api", "plugins", "cms", "assets").build().toUri(),
+                HttpMethod.POST, requestEntity, String.class);
+    }
+
+    @Override
+    public void deleteAsset(String id) {
+        notFoundProtectedDelete(resolvePathSegments("api", "plugins", "cms", "assets", id).build().toUri());
     }
 
     @Override

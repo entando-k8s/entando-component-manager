@@ -113,12 +113,15 @@ public class BundleReader {
         }
     }
 
-
     private void verifyFileExistance(String fileName) {
         log.debug("Reading file {}", fileName);
         if (!bundleBasePath.resolve(fileName).toFile().exists()) {
             throw new InvalidBundleException(String.format("File with name %s not found in the bundle", fileName));
         }
+    }
+
+    public File getAssetFile(final String code, final String fileName) {
+        return bundleBasePath.resolve("assets/" + code + "/" + fileName).toFile();
     }
 
 }

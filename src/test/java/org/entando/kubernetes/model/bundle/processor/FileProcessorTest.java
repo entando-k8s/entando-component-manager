@@ -48,23 +48,23 @@ public class FileProcessorTest {
         assertThat(installables).hasSize(5);
 
         assertThat(installables.get(0)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(0).getName()).isEqualTo("/something/css/custom.css");
 
         assertThat(installables.get(1)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(1).getName()).isEqualTo("/something/css/style.css");
 
         assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(2).getName()).isEqualTo("/something/js/configUiScript.js");
 
         assertThat(installables.get(3)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(3).getName()).isEqualTo("/something/js/script.js");
 
         assertThat(installables.get(4)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.ASSET);
+        assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery/jquery.js");
     }
 

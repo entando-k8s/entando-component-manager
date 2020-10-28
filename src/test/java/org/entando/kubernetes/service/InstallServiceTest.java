@@ -89,7 +89,7 @@ public class InstallServiceTest {
 
     @Test
     public void shouldIncrementProgressDuringInstallation() {
-        processorMap.put(ComponentType.ASSET, new FileProcessor(coreClient));
+        processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
         EntandoDeBundle bundle = getTestBundle();
 
         EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
@@ -113,7 +113,7 @@ public class InstallServiceTest {
 
     @Test
     public void shouldIncrementProgressUpToLastInstalledWhenRollback() {
-        processorMap.put(ComponentType.ASSET, new FileProcessor(coreClient));
+        processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
 
         EntandoDeBundle bundle = getTestBundle();

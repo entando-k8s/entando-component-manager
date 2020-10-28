@@ -37,7 +37,7 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor> {
 
     @Override
     public ComponentType getSupportedComponentType() {
-        return ComponentType.ASSET;
+        return ComponentType.RESOURCE;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor> {
     @Override
     public List<Installable<FileDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.ASSET)
+                .filter(c -> c.getComponentType() == ComponentType.RESOURCE)
                 .map(c ->  new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
                 .collect(Collectors.toList());
     }

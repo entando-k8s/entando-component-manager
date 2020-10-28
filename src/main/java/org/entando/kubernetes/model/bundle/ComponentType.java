@@ -15,14 +15,15 @@ public enum ComponentType {
     GROUP("group", 3),
     LANGUAGE("language", 4),
     LABEL("label", 5),
-    ASSET("asset", 6),
+    RESOURCE("asset", 6),
     WIDGET("widget", 7),
     CONTENT_TYPE("contentType", 8),
     CONTENT_TEMPLATE("contentTemplate", 9),
-    CONTENT("content", 10),
-    FRAGMENT("fragment", 11),
-    PAGE_TEMPLATE("pageTemplate", 12),
-    PAGE("page", 13);
+    ASSET("asset", 10),
+    CONTENT("content", 11),
+    FRAGMENT("fragment", 12),
+    PAGE_TEMPLATE("pageTemplate", 13),
+    PAGE("page", 14);
 
     private String typeName;
     private int installPriority;

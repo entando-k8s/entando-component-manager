@@ -31,6 +31,9 @@ components:
   contents:
     - contents/cng102-descriptor.yaml
 
+  assets:
+    - assets/my_asset/my_asset.yaml
+
   groups:
     - groups/my-group.yaml
 
