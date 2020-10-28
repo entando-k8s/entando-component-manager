@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM openjdk:11-jdk-slim
 ENV PORT=8080 \
     CLASSPATH=/opt/lib \
     USER_NAME=root \
