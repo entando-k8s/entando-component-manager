@@ -5,23 +5,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
-import org.entando.kubernetes.model.bundle.descriptor.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
+import org.springframework.util.StringUtils;
 
+@UtilityClass
 public class BundleUtilities {
 
     public static final String OFFICIAL_SEMANTIC_VERSION_REGEX = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-("
             + "(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\"
             + ".[0-9a-zA-Z-]+)*))?$";
 
-    private BundleUtilities() {
-    }
+    public static final int MAX_K8S_POD_NAME_LENGTH = 63;
+    public static final int RESERVED_K8S_POD_NAME_LENGTH = 31;
+    public static final int MAX_ENTANDO_K8S_POD_NAME_LENGTH = MAX_K8S_POD_NAME_LENGTH - RESERVED_K8S_POD_NAME_LENGTH;
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR = "The prefix \"%s\" of the pod that is "
+            + "about to be created is longer than %d. The prefix has been created using %s";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END = "Please specify a shorter value "
+            + "in the \"deploymentBaseName\" plugin descriptor property";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX = "the format "
+            + "[docker-organization]-[docker-image-name]-[docker-image-version]. "
+            + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX = "the descriptor "
+            + "\"deploymentBaseName\" property. " + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
+
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
         String version = versionReference;
@@ -59,7 +74,7 @@ public class BundleUtilities {
     }
 
     public static String extractNameFromDescriptor(PluginDescriptor descriptor) {
-        return composeNameFromDockerImage(descriptor.getDockerImage());
+        return composeDeploymentBaseName(descriptor);
     }
 
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
@@ -69,6 +84,46 @@ public class BundleUtilities {
     public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
         DockerImage dockerImage = descriptor.getDockerImage();
         return getLabelsFromImage(dockerImage);
+    }
+
+    private static String composeDeploymentBaseName(PluginDescriptor descriptor) {
+
+        String deploymentBaseName;
+        String errorSuffix;
+
+        if (!StringUtils.isEmpty(descriptor.getDeploymentBaseName())) {
+            deploymentBaseName = makeKubernetesCompatible(descriptor.getDeploymentBaseName());
+            errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX;
+        } else {
+            deploymentBaseName = composeNameFromDockerImage(descriptor.getDockerImage());
+            errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX;
+        }
+
+        return validateAndReturnDeploymentBaseName(deploymentBaseName, errorSuffix);
+    }
+
+    /**
+     * validate the deploymentBaseName. if the validation fails an EntandoComponentManagerException is thrown
+     *
+     * @param deploymentBaseName the base name to use for the deployments that have to be generated in kubernetes
+     * @param errorSuffix        the suffix to append to the error that specifies which properties was used to generate
+     *                           the deployment base name
+     * @return the validated string
+     */
+    private static String validateAndReturnDeploymentBaseName(String deploymentBaseName, String errorSuffix) {
+
+        // deploymentBaseName has to not be longer than 63 chars
+        if (deploymentBaseName.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
+
+            throw new EntandoComponentManagerException(
+                    String.format(
+                            DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
+                            deploymentBaseName,
+                            MAX_ENTANDO_K8S_POD_NAME_LENGTH,
+                            errorSuffix));
+        }
+
+        return deploymentBaseName;
     }
 
     private static String composeNameFromDockerImage(DockerImage image) {
@@ -93,7 +148,14 @@ public class BundleUtilities {
         return labels;
     }
 
+
     public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
+        return descriptor.isVersion1()
+                ? generatePluginFromDescriptorV1(descriptor) :
+                generatePluginFromDescriptorV2(descriptor);
+    }
+
+    public static EntandoPlugin generatePluginFromDescriptorV2(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
                 .withName(extractNameFromDescriptor(descriptor))
@@ -109,9 +171,33 @@ public class BundleUtilities {
                 .build();
     }
 
+    public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
+        return new EntandoPluginBuilder()
+                .withNewMetadata()
+                .withName(composeNameFromDockerImage(descriptor.getDockerImage()))
+                .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
+                .endMetadata()
+                .withNewSpec()
+                .withDbms(DbmsVendor.valueOf(descriptor.getSpec().getDbms().toUpperCase()))
+                .withImage(descriptor.getDockerImage().toString())
+                .withIngressPath(composeIngressPathFromDockerImage(descriptor.getDockerImage()))
+                .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
+                .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
+                .endSpec()
+                .build();
+    }
+
+
+    public static List<ExpectedRole> extractRolesFromRoleList(List<PluginDescriptorV1Role> roleList) {
+        return roleList.stream()
+                .distinct()
+                .map(role -> new ExpectedRole(role.getCode(), role.getName()))
+                .collect(Collectors.toList());
+    }
+
     private static String makeKubernetesCompatible(String value) {
-        value = value.toLowerCase();
-        value = value.replaceAll("[._]", "-");
-        return value;
+        return value.toLowerCase()
+                .replaceAll("[._]", "-")
+                .replaceAll("[\\/\\.\\:]", "-");
     }
 }

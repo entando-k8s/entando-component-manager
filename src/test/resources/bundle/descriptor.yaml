@@ -2,7 +2,9 @@ code: something
 
 components:
   plugins:
-    - plugins/todomvc.yaml
+    - plugins/todomvcV1.yaml
+    - plugins/todomvcV2.yaml
+    - plugins/todomvcV2_withDeploymentBasePath.yaml
 
   widgets:
     - widgets/my_widget_descriptor.yaml
