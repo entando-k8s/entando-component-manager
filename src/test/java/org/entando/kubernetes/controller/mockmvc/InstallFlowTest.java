@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.jsonpath.JsonPath;
+import groovy.lang.IntRange;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -48,8 +49,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import org.entando.kubernetes.BundleStubHelper;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
+import org.entando.kubernetes.assertionhelper.ContentAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -67,6 +71,8 @@ import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -101,6 +107,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.WebApplicationContext;
 
 @AutoConfigureWireMock(port = 8099)
@@ -197,6 +204,7 @@ public class InstallFlowTest {
         verifyFileRequests(coreClient);
         verifyFragmentRequests(coreClient);
         verifyPageRequests(coreClient);
+        verifyContentRequests(coreClient);
 
         verify(coreClient, times(1)).registerContentType(any());
         verify(coreClient, times(2)).registerContentModel(any());
@@ -253,6 +261,23 @@ public class InstallFlowTest {
 
         assertThat(allPageRequests.get(0).getWidgets().get(0)).matches(wd -> wd.getCode().equals("my-code"));
     }
+
+    private void verifyContentRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<ContentDescriptor> contentDescriptorArgCaptor = ArgumentCaptor.forClass(ContentDescriptor.class);
+        verify(coreClient, times(1)).registerContent(contentDescriptorArgCaptor.capture());
+
+        ContentDescriptor contentDescriptorRequest = contentDescriptorArgCaptor.getValue();
+
+        assertThat(contentDescriptorRequest.getId()).isEqualTo("CNG102");
+        assertThat(contentDescriptorRequest.getTypeCode()).isEqualTo("CNG");
+        assertThat(contentDescriptorRequest.getDescription()).isEqualTo("Interest 3 card title - 2nd banner");
+        assertThat(contentDescriptorRequest.getMainGroup()).isEqualTo("free");
+
+        List<ContentAttribute> expectedContentAttributeList = BundleStubHelper.stubContentAttributeList();
+        assertThat(expectedContentAttributeList).hasSize(contentDescriptorRequest.getAttributes().length);
+        ContentAssertionHelper.assertOnContentAttributesList(Arrays.asList(contentDescriptorRequest.getAttributes()), expectedContentAttributeList);
+    }
+
 
     private void verifyFragmentRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<FragmentDescriptor> fragmentDescArgCapt = ArgumentCaptor.forClass(FragmentDescriptor.class);
@@ -422,6 +447,8 @@ public class InstallFlowTest {
                 // Content-Template
                 "8880003",
                 "8880002",
+                // Content
+                "CNG102",
                 // Fragments
                 "title_fragment",
                 "another_fragment",
