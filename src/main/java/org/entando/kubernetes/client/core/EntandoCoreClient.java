@@ -1,5 +1,7 @@
 package org.entando.kubernetes.client.core;
 
+import java.io.File;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -72,6 +74,10 @@ public interface EntandoCoreClient {
     void registerContent(ContentDescriptor descriptor);
 
     void deleteContent(String code);
+
+    void createAsset(AssetDescriptor descriptor, File file);
+
+    void deleteAsset(String code);
 
     void createFolder(String folder);
 

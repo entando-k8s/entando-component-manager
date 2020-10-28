@@ -1,0 +1,6 @@
+correlationCode: 'my_asset'
+type: image
+name: my_image.jpg
+description: my_image.jpg
+group: free
+categories: [ 'my-category' ]

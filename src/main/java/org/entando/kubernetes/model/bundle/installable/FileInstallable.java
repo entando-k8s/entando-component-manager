@@ -33,7 +33,7 @@ public class FileInstallable extends Installable<FileDescriptor> {
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.ASSET;
+        return ComponentType.RESOURCE;
     }
 
     @Override

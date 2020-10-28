@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.jsonpath.JsonPath;
-import groovy.lang.IntRange;
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -49,7 +50,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.entando.kubernetes.BundleStubHelper;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
@@ -62,6 +62,7 @@ import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
@@ -107,7 +108,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.WebApplicationContext;
 
 @AutoConfigureWireMock(port = 8099)
@@ -204,11 +204,10 @@ public class InstallFlowTest {
         verifyFileRequests(coreClient);
         verifyFragmentRequests(coreClient);
         verifyPageRequests(coreClient);
-        verifyContentRequests(coreClient);
-
-        verify(coreClient, times(1)).registerContentType(any());
-        verify(coreClient, times(2)).registerContentModel(any());
-        verify(coreClient, times(1)).registerLabel(any());
+        verifyContentTypesRequests(coreClient);
+        verifyContentTemplatesRequests(coreClient);
+        verifyContentsRequests(coreClient);
+        verifyAssetsRequests(coreClient);
     }
 
     private void verifyCategoryRequests(EntandoCoreClient coreClient) {
@@ -262,7 +261,7 @@ public class InstallFlowTest {
         assertThat(allPageRequests.get(0).getWidgets().get(0)).matches(wd -> wd.getCode().equals("my-code"));
     }
 
-    private void verifyContentRequests(EntandoCoreClient coreClient) {
+    private void verifyContentsRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<ContentDescriptor> contentDescriptorArgCaptor = ArgumentCaptor.forClass(ContentDescriptor.class);
         verify(coreClient, times(1)).registerContent(contentDescriptorArgCaptor.capture());
 
@@ -277,7 +276,6 @@ public class InstallFlowTest {
         assertThat(expectedContentAttributeList).hasSize(contentDescriptorRequest.getAttributes().length);
         ContentAssertionHelper.assertOnContentAttributesList(Arrays.asList(contentDescriptorRequest.getAttributes()), expectedContentAttributeList);
     }
-
 
     private void verifyFragmentRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<FragmentDescriptor> fragmentDescArgCapt = ArgumentCaptor.forClass(FragmentDescriptor.class);
@@ -341,6 +339,26 @@ public class InstallFlowTest {
         assertThat(labelDescriptor.getTitles()).hasSize(2);
         assertThat(labelDescriptor.getTitles()).containsEntry("it", "Mio Titolo");
         assertThat(labelDescriptor.getTitles()).containsEntry("en", "My Title");
+    }
+
+    private void verifyContentTypesRequests(EntandoCoreClient coreClient) {
+        verify(coreClient, times(1)).registerContentType(any());
+    }
+
+    private void verifyContentTemplatesRequests(EntandoCoreClient coreClient) {
+        verify(coreClient, times(2)).registerContentModel(any());
+    }
+
+    private void verifyAssetsRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<AssetDescriptor> codesArgCaptor = ArgumentCaptor.forClass(AssetDescriptor.class);
+        verify(coreClient, times(1)).createAsset(codesArgCaptor.capture(), isA(File.class));
+
+        List<AssetDescriptor> allPassedAssets = codesArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(AssetDescriptor::getCorrelationCode))
+                .collect(Collectors.toList());
+
+        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("my_asset");
+        assertThat(allPassedAssets.get(0).getName()).isEqualTo("my_image.jpg");
     }
 
     private void verifyDirectoryRequests(EntandoCoreClient coreClient) {
@@ -476,13 +494,14 @@ public class InstallFlowTest {
 
         Map<ComponentType, Integer> expectedComponents = new HashMap<>();
         expectedComponents.put(ComponentType.WIDGET, 2);
-        expectedComponents.put(ComponentType.ASSET, 5);
+        expectedComponents.put(ComponentType.RESOURCE, 5);
         expectedComponents.put(ComponentType.GROUP, 1);
         expectedComponents.put(ComponentType.CATEGORY, 1);
         expectedComponents.put(ComponentType.DIRECTORY, 5);
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
         expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
         expectedComponents.put(ComponentType.CONTENT_TEMPLATE, 2);
+        expectedComponents.put(ComponentType.ASSET, 1);
         expectedComponents.put(ComponentType.LANGUAGE, 2);
         expectedComponents.put(ComponentType.LABEL, 1);
         expectedComponents.put(ComponentType.FRAGMENT, 2);

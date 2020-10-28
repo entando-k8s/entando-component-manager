@@ -85,7 +85,7 @@ public class EntandoBundleControllerTest {
         componentJob.setStatus(JobStatus.INSTALL_COMPLETED);
         componentJob.setParentJob(job);
         componentJob.setComponentId("my-magic-resource");
-        componentJob.setComponentType(ComponentType.ASSET);
+        componentJob.setComponentType(ComponentType.RESOURCE);
 
         EntandoBundle component = getTestEntandoBundle();
 
@@ -106,7 +106,7 @@ public class EntandoBundleControllerTest {
         cjA.setStatus(JobStatus.INSTALL_COMPLETED);
         cjA.setParentJob(job);
         cjA.setComponentId("my-magic-resource");
-        cjA.setComponentType(ComponentType.ASSET);
+        cjA.setComponentType(ComponentType.RESOURCE);
 
         EntandoBundleComponentJobEntity cjB = new EntandoBundleComponentJobEntity();
         cjB.setStatus(JobStatus.INSTALL_COMPLETED);
@@ -158,7 +158,7 @@ public class EntandoBundleControllerTest {
         cjA.setStatus(JobStatus.INSTALL_COMPLETED);
         cjA.setParentJob(job);
         cjA.setComponentId("my-magic-resource");
-        cjA.setComponentType(ComponentType.ASSET);
+        cjA.setComponentType(ComponentType.RESOURCE);
 
         EntandoBundleComponentJobEntity cjB = new EntandoBundleComponentJobEntity();
         cjB.setStatus(JobStatus.INSTALL_COMPLETED);

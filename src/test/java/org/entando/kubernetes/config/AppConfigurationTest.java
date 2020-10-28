@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.processor.CategoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentProcessor;
@@ -52,8 +53,9 @@ class AppConfigurationTest {
         processors.put(ComponentType.CONTENT_TEMPLATE.toString(), new ContentTemplateProcessor(coreClient));
         processors.put(ComponentType.CONTENT_TYPE.toString(), new ContentTypeProcessor(coreClient));
         processors.put(ComponentType.CONTENT.toString(), new ContentProcessor(coreClient));
+        processors.put(ComponentType.ASSET.toString(), new AssetProcessor(coreClient));
         processors.put(ComponentType.DIRECTORY.toString(), new DirectoryProcessor(coreClient));
-        processors.put(ComponentType.ASSET.toString(), new FileProcessor(coreClient));
+        processors.put(ComponentType.RESOURCE.toString(), new FileProcessor(coreClient));
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
         processors.put(ComponentType.LANGUAGE.toString(), new LanguageProcessor(coreClient));
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
