@@ -204,7 +204,7 @@ public class InstallFlowTest {
         verifyFileRequests(coreClient);
         verifyFragmentRequests(coreClient);
         verifyPageRequests(coreClient);
-        verifyContentRequests(coreClient);
+        verifyContentsRequests(coreClient);
 
         verify(coreClient, times(1)).registerContentType(any());
         verify(coreClient, times(2)).registerContentModel(any());
@@ -262,7 +262,7 @@ public class InstallFlowTest {
         assertThat(allPageRequests.get(0).getWidgets().get(0)).matches(wd -> wd.getCode().equals("my-code"));
     }
 
-    private void verifyContentRequests(EntandoCoreClient coreClient) {
+    private void verifyContentsRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<ContentDescriptor> contentDescriptorArgCaptor = ArgumentCaptor.forClass(ContentDescriptor.class);
         verify(coreClient, times(1)).registerContent(contentDescriptorArgCaptor.capture());
 
