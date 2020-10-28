@@ -465,6 +465,8 @@ public class InstallFlowTest {
                 // Content-Template
                 "8880003",
                 "8880002",
+                // Assets
+                "my_asset",
                 // Content
                 "CNG102",
                 // Fragments
