@@ -28,6 +28,9 @@ components:
     - contentmodels/my_content_model_descriptor.yaml
     - contentmodels/another_content_model_descriptor.yaml
 
+  contents:
+    - contents/CNG-descriptor.yaml
+
   groups:
     - groups/my-group.yaml
 

@@ -11,6 +11,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.processor.CategoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.processor.ContentProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
 import org.entando.kubernetes.model.bundle.processor.DirectoryProcessor;
@@ -50,7 +51,7 @@ class AppConfigurationTest {
         Map<String, ComponentProcessor> processors = new HashMap<>();
         processors.put(ComponentType.CONTENT_TEMPLATE.toString(), new ContentTemplateProcessor(coreClient));
         processors.put(ComponentType.CONTENT_TYPE.toString(), new ContentTypeProcessor(coreClient));
-        processors.put(ComponentType.CONTENT.toString(), new ContentTypeProcessor(coreClient));
+        processors.put(ComponentType.CONTENT.toString(), new ContentProcessor(coreClient));
         processors.put(ComponentType.DIRECTORY.toString(), new DirectoryProcessor(coreClient));
         processors.put(ComponentType.ASSET.toString(), new FileProcessor(coreClient));
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));

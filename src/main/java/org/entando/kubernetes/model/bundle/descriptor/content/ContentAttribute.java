@@ -7,16 +7,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class ContentAttribute {
 
     private String code;
-    private Object value;
+    private String value;
     private Map<String, Object> values;
     private List<ContentAttribute> elements;
     private List<ContentAttribute> compositeelements;
