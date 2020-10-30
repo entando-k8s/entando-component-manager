@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -19,13 +20,19 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 public abstract class Installable<T extends Descriptor> {
 
     protected final T representation;
+    protected final InstallAction action;
 
     protected EntandoBundleComponentJobEntity job;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public Installable(T representation) {
+    public Installable(T representation, InstallAction action) {
         this.representation = representation;
+        this.action = action;
+    }
+
+    public Installable(T representation) {
+        this(representation, InstallAction.CREATE);
     }
 
     /**
@@ -80,6 +87,14 @@ public abstract class Installable<T extends Descriptor> {
 
     public void setJob(EntandoBundleComponentJobEntity job) {
         this.job = job;
+    }
+
+    public boolean shouldSkip() {
+        return action == InstallAction.SKIP;
+    }
+
+    public boolean shouldCreate() {
+        return action == InstallAction.CREATE;
     }
 
 }

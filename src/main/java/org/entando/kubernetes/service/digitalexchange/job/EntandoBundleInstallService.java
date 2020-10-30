@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
@@ -49,10 +52,22 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull InstalledEntandoBundleRepository bundleRepository;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
-    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    public AnalysisReport performInstallAnalysis(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+        return AnalysisReport.builder()
+                //TODO ENG-1318 @luca.corsetti perform analysis check against entando-de-app api methods
+                .build();
+    }
+
+    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         EntandoBundleJobEntity job = createInstallJob(bundle, tag);
-        submitInstallAsync(job, bundle, tag);
+        submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report);
         return job;
+    }
+
+    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+        return this.install(bundle, tag, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
     }
 
     private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
@@ -69,7 +84,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return createdJob;
     }
 
-    private void submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    private void submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
@@ -81,7 +97,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
-                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag, bundleDownloader);
+                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag,
+                        bundleDownloader, conflictStrategy, actions, report);
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
                         .map(i -> {
                             EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
@@ -169,9 +186,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            BundleDownloader bundleDownloader) {
+            BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallActionsByComponentType actions,
+            AnalysisReport report) {
         Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-        return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle));
+        return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle), conflictStrategy, actions,
+                report);
     }
 
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity job,
@@ -183,9 +202,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return componentJobTracker;
     }
 
-    private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader) {
+    private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
+            InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         return processorMap.values().stream()
-                .map(processor -> processor.process(bundleReader))
+                .map(processor -> processor.process(bundleReader, conflictStrategy, actions, report))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt(Installable::getPriority))
                 .collect(Collectors.toCollection(ArrayDeque::new));

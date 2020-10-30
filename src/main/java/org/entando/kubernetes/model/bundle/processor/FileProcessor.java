@@ -11,9 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -41,16 +45,23 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor> {
     }
 
     @Override
-    public List<Installable<FileDescriptor>> process(BundleReader npr) {
+    public List<Installable<FileDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<FileDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         try {
-            if (npr.containsResourceFolder()) {
-                final String componentFolder = "/" + npr.getBundleCode();
+            if (bundleReader.containsResourceFolder()) {
+                final String componentFolder = "/" + bundleReader.getBundleCode();
 
-                List<String> resourceFiles = npr.getResourceFiles().stream().sorted().collect(Collectors.toList());
+                List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted().collect(Collectors.toList());
                 for (final String resourceFile : resourceFiles) {
-                    final FileDescriptor fileDescriptor = npr.getResourceFileAsDescriptor(resourceFile);
+                    final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
 
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(fileDescriptor.getFolder()));

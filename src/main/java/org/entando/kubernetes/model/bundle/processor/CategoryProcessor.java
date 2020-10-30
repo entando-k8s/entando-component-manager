@@ -10,8 +10,12 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -37,9 +41,16 @@ public class CategoryProcessor implements ComponentProcessor<CategoryDescriptor>
     }
 
     @Override
-    public List<Installable<CategoryDescriptor>> process(BundleReader npr) {
+    public List<Installable<CategoryDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<CategoryDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
 
             List<String> categoryDescriptorFiles = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getCategories)
@@ -48,7 +59,7 @@ public class CategoryProcessor implements ComponentProcessor<CategoryDescriptor>
             List<Installable<CategoryDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : categoryDescriptorFiles) {
-                List<CategoryDescriptor> categoryDescriptorList = npr.readListOfDescriptorFile(fileName, CategoryDescriptor.class);
+                List<CategoryDescriptor> categoryDescriptorList = bundleReader.readListOfDescriptorFile(fileName, CategoryDescriptor.class);
                 for (CategoryDescriptor cd: categoryDescriptorList) {
                     installables.add(new CategoryInstallable(engineService, cd));
                 }

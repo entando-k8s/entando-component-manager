@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -39,9 +42,16 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     }
 
     @Override
-    public List<Installable<WidgetDescriptor>> process(BundleReader npr) {
+    public List<Installable<WidgetDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<WidgetDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
 
             final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getWidgets);
@@ -49,10 +59,10 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
 
             if (widgetsDescriptor.isPresent()) {
                 for (final String fileName : widgetsDescriptor.get()) {
-                    final WidgetDescriptor widgetDescriptor = npr.readDescriptorFile(fileName, WidgetDescriptor.class);
+                    final WidgetDescriptor widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
                     if (widgetDescriptor.getCustomUiPath() != null) {
                         String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
-                        widgetDescriptor.setCustomUi(npr.readFileAsString(widgetUiPath));
+                        widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
                     }
                     widgetDescriptor.setBundleId(descriptor.getCode());
                     installables.add(new WidgetInstallable(engineService, widgetDescriptor));

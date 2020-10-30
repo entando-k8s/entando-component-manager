@@ -228,11 +228,17 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerContent(ContentDescriptor descriptor) {
+    public void createContent(ContentDescriptor descriptor) {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "plugins", "cms", "contents").build().toUri(),
                         Collections.singletonList(descriptor),
                         Void.class);
+    }
+
+    @Override
+    public void updateContent(ContentDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contents", descriptor.getId()).build().toUri(),
+                Collections.singletonList(descriptor));
     }
 
     @Override

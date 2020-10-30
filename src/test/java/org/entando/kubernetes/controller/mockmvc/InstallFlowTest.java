@@ -263,7 +263,7 @@ public class InstallFlowTest {
 
     private void verifyContentsRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<ContentDescriptor> contentDescriptorArgCaptor = ArgumentCaptor.forClass(ContentDescriptor.class);
-        verify(coreClient, times(1)).registerContent(contentDescriptorArgCaptor.capture());
+        verify(coreClient, times(1)).createContent(contentDescriptorArgCaptor.capture());
 
         ContentDescriptor contentDescriptorRequest = contentDescriptorArgCaptor.getValue();
 

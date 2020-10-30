@@ -3,10 +3,14 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
@@ -36,16 +40,40 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleUninstallService uninstallService;
 
     @Override
+    public ResponseEntity<SimpleRestResponse<AnalysisReport>> analysis(
+            @PathVariable("component") String componentId,
+            @RequestBody(required = false) AnalysisRequest analysisRequest) {
+
+        final AnalysisRequest request = Optional.ofNullable(analysisRequest).orElse(new AnalysisRequest());
+
+        EntandoDeBundle bundle = kubeService.getBundleByName(componentId).orElseThrow(() -> new BundleNotFoundException(componentId));
+        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+
+        AnalysisReport report = installService.performInstallAnalysis(bundle, tag);
+
+        return ResponseEntity.ok(/*getJobLocationURI(installJob)*/) //TODO?
+                .body(new SimpleRestResponse<>(report));
+    }
+
+    @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @PathVariable("component") String componentId,
-            @RequestBody(required = false) InstallRequest request) {
+            @RequestBody(required = false) InstallRequest installRequest) {
 
-        final String version = extractVersionToInstall(request);
+        final InstallRequest request = Optional.ofNullable(installRequest).orElse(new InstallRequest());
+        EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
+                .orElseThrow(() -> new BundleNotFoundException(componentId));
+        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
-        EntandoBundleJobEntity installJob;
-        EntandoDeBundle bundle = kubeService.getBundleByName(componentId).orElseThrow(() -> new BundleNotFoundException(componentId));
-        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, version);
-        installJob = jobService.findCompletedOrConflictingInstallJob(bundle).orElseGet(() -> installService.install(bundle, tag));
+        // Only request analysis report if provided conflict strategy
+        final AnalysisReport report = request.getConflictStrategy() != InstallAction.CREATE
+                ? installService.performInstallAnalysis(bundle, tag)
+                : new AnalysisReport();
+
+        EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
+                .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy(),
+                        request.getActions(), report));
+
         return ResponseEntity.created(
                 getJobLocationURI(installJob))
                 .body(new SimpleRestResponse<>(installJob));
@@ -85,15 +113,6 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .fromMethodCall(on(EntandoBundleJobResourceController.class).getJob(job.getId().toString()))
                 .build().toUri();
     }
-
-    private String extractVersionToInstall(InstallRequest request) {
-        String version = "latest";
-        if (request != null && request.getVersion() != null) {
-            version = request.getVersion();
-        }
-        return version;
-    }
-
 
     private EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String version) {
         String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);

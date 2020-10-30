@@ -9,8 +9,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
@@ -41,16 +45,23 @@ public class PluginProcessor implements ComponentProcessor<PluginDescriptor> {
     }
 
     @Override
-    public List<Installable<PluginDescriptor>> process(BundleReader npr) {
+    public List<Installable<PluginDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<PluginDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
             Optional<List<String>> optionalPlugins = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPlugins);
 
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             if (optionalPlugins.isPresent()) {
                 for (String filename : optionalPlugins.get()) {
-                    PluginDescriptor plugin = npr.readDescriptorFile(filename, PluginDescriptor.class);
+                    PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
                     installableList.add(new PluginInstallable(kubernetesService, plugin));
                 }
             }

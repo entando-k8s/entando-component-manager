@@ -10,8 +10,12 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -38,9 +42,16 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor> {
     }
 
     @Override
-    public List<Installable<GroupDescriptor>> process(BundleReader npr) {
+    public List<Installable<GroupDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<GroupDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
 
             List<String> groupDescriptorFiles = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getGroups)
@@ -49,7 +60,7 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor> {
             List<Installable<GroupDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : groupDescriptorFiles) {
-                List<GroupDescriptor> groupDescriptorList = npr.readListOfDescriptorFile(fileName, GroupDescriptor.class);
+                List<GroupDescriptor> groupDescriptorList = bundleReader.readListOfDescriptorFile(fileName, GroupDescriptor.class);
                 for (GroupDescriptor gd: groupDescriptorList) {
                     installables.add(new GroupInstallable(engineService, gd));
                 }

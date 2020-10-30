@@ -10,8 +10,12 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
@@ -37,9 +41,16 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
     }
 
     @Override
-    public List<Installable<ContentTypeDescriptor>> process(BundleReader npr) {
+    public List<Installable<ContentTypeDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<ContentTypeDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
             List<String> contentTypesDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getContentTypes)
                     .orElse(new ArrayList<>());
@@ -47,7 +58,7 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
             List<Installable<ContentTypeDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : contentTypesDescriptor) {
-                ContentTypeDescriptor contentTypeDescriptor = npr
+                ContentTypeDescriptor contentTypeDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentTypeDescriptor.class);
                 installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor));
             }

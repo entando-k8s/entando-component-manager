@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -37,9 +40,16 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     }
 
     @Override
-    public List<Installable<PageDescriptor>> process(BundleReader npr) {
+    public List<Installable<PageDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<PageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
             List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPages)
                     .orElse(Collections.emptyList());
@@ -47,7 +57,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
             List<Installable<PageDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : pageDescriptorList) {
-                PageDescriptor pageDescriptor = npr.readDescriptorFile(fileName, PageDescriptor.class);
+                PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
                 installables.add(new PageInstallable(engineService, pageDescriptor));
             }
 

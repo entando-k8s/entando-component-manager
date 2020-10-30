@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 
@@ -11,16 +12,28 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public ContentInstallable(EntandoCoreClient service, ContentDescriptor contentDescriptor) {
-        super(contentDescriptor);
+    public ContentInstallable(EntandoCoreClient service, ContentDescriptor contentDescriptor, InstallAction action) {
+        super(contentDescriptor, action);
         this.engineService = service;
+    }
+
+    public ContentInstallable(EntandoCoreClient service, ContentDescriptor contentDescriptor) {
+        this(service, contentDescriptor, InstallAction.CREATE);
     }
 
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
             log.info("Registering Content {}", getName());
-            engineService.registerContent(representation);
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
+            if (shouldCreate()) {
+                engineService.createContent(representation);
+            } else {
+                engineService.updateContent(representation);
+            }
         });
     }
 

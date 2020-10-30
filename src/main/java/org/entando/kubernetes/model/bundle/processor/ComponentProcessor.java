@@ -3,6 +3,9 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
@@ -22,11 +25,26 @@ public interface ComponentProcessor<T extends Descriptor> {
      * that should be installed.
      *
      *
-     * @param bundleReader npm package reader zip file being processed
+     * @param bundleReader bundle reader capable of reading the bundle using it's descriptor
      * @return Should return a list of Installables
      * @throws EntandoComponentManagerException in case of any error while reading any the file from the Zip package
      */
     List<Installable<T>> process(BundleReader bundleReader);
+
+    /**
+     * This method will process the component descriptor and should return an empty list or a list of all components
+     * that should be installed.
+     *
+     *
+     * @param bundleReader bundle reader capable of reading the bundle using it's descriptor
+     * @param conflictStrategy default action in case of a component conflict
+     * @param actions list of user provided actions in case of component conflicts
+     * @param report a bundle analysis conflict report
+     * @return Should return a list of Installables
+     * @throws EntandoComponentManagerException in case of any error while reading any the file from the Zip package
+     */
+    List<Installable<T>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report);
 
     /**
      * This method extracts a list of installable components from a list of {@link org.entando.kubernetes.model.job.EntandoBundleComponentJob}.

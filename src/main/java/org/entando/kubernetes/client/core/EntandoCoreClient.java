@@ -71,7 +71,9 @@ public interface EntandoCoreClient {
 
     EntandoCoreComponentUsage getContentTypeUsage(String code);
 
-    void registerContent(ContentDescriptor descriptor);
+    void createContent(ContentDescriptor descriptor);
+
+    void updateContent(ContentDescriptor descriptor);
 
     void deleteContent(String code);
 

@@ -10,8 +10,13 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
@@ -37,9 +42,16 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
     }
 
     @Override
-    public List<Installable<ContentDescriptor>> process(BundleReader npr) {
+    public List<Installable<ContentDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<ContentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
             List<String> contentDescriptorList = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getContents)
                     .orElse(new ArrayList<>());
@@ -47,9 +59,10 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
             List<Installable<ContentDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : contentDescriptorList) {
-                ContentDescriptor contentDescriptor = npr
+                ContentDescriptor contentDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentDescriptor.class);
-                installables.add(new ContentInstallable(engineService, contentDescriptor));
+                InstallAction action = extractInstallAction(contentDescriptor.getId(), actions, conflictStrategy, report);
+                installables.add(new ContentInstallable(engineService, contentDescriptor, action));
             }
 
             return installables;
@@ -71,5 +84,24 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
         return ContentDescriptor.builder()
                 .id(component.getComponentId())
                 .build();
+    }
+
+    private InstallAction extractInstallAction(String contentId, InstallActionsByComponentType actions,
+            InstallAction conflictStrategy, AnalysisReport report) {
+
+        if (actions.getContents().containsKey(contentId)) {
+            return actions.getContents().get(contentId);
+        }
+
+        if (isConflict(contentId, report)) {
+            return conflictStrategy;
+        }
+
+        return InstallAction.CREATE;
+    }
+
+    private boolean isConflict(String contentId, AnalysisReport report) {
+        return report.getContents().containsKey(contentId)
+                && report.getContents().get(contentId) == Status.CONFLICT;
     }
 }

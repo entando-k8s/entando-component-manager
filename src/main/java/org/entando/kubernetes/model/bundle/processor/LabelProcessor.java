@@ -10,8 +10,12 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
@@ -37,9 +41,16 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
     }
 
     @Override
-    public List<Installable<LabelDescriptor>> process(BundleReader npr) {
+    public List<Installable<LabelDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<LabelDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
 
             final List<String> labelDescriptorFiles = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getLabels)
@@ -48,7 +59,7 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
             final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
 
             for (String ldf : labelDescriptorFiles) {
-                List<LabelDescriptor> labelDescriptorList = npr.readListOfDescriptorFile(ldf, LabelDescriptor.class);
+                List<LabelDescriptor> labelDescriptorList = bundleReader.readListOfDescriptorFile(ldf, LabelDescriptor.class);
                 for (LabelDescriptor ld : labelDescriptorList) {
                     installables.add(new LabelInstallable(engineService, ld));
                 }

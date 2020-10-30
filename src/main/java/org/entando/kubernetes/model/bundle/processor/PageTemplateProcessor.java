@@ -10,8 +10,12 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
@@ -37,9 +41,16 @@ public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDes
     }
 
     @Override
-    public List<Installable<PageTemplateDescriptor>> process(BundleReader npr) {
+    public List<Installable<PageTemplateDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<PageTemplateDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
             List<String> pageTemplatesDescriptor = ofNullable(descriptor.getComponents())
                     .map(ComponentSpecDescriptor::getPageTemplates)
                     .orElse(Collections.emptyList());
@@ -47,10 +58,10 @@ public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDes
             List<Installable<PageTemplateDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : pageTemplatesDescriptor) {
-                PageTemplateDescriptor pageTemplateDescriptor = npr.readDescriptorFile(fileName, PageTemplateDescriptor.class);
+                PageTemplateDescriptor pageTemplateDescriptor = bundleReader.readDescriptorFile(fileName, PageTemplateDescriptor.class);
                 if (pageTemplateDescriptor.getTemplatePath() != null) {
                     String tp = getRelativePath(fileName, pageTemplateDescriptor.getTemplatePath());
-                    pageTemplateDescriptor.setTemplate(npr.readFileAsString(tp));
+                    pageTemplateDescriptor.setTemplate(bundleReader.readFileAsString(tp));
                 }
                 installables.add(new PageTemplateInstallable(engineService, pageTemplateDescriptor));
             }

@@ -9,9 +9,13 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -39,15 +43,22 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
     }
 
     @Override
-    public List<Installable<DirectoryDescriptor>> process(BundleReader npr) {
+    public List<Installable<DirectoryDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<DirectoryDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
         try {
-            if (npr.containsResourceFolder()) {
-                final String componentFolder = "/" + npr.getBundleCode();
+            if (bundleReader.containsResourceFolder()) {
+                final String componentFolder = "/" + bundleReader.getBundleCode();
                 installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true)));
 
-                List<String> resourceFolders = npr.getResourceFolders().stream().sorted().collect(Collectors.toList());
+                List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted().collect(Collectors.toList());
                 for (final String resourceFolder : resourceFolders) {
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(resourceFolder));
