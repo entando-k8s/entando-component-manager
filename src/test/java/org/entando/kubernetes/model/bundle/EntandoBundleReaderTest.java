@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -22,6 +24,8 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -286,6 +290,16 @@ public class EntandoBundleReaderTest {
     private static class DumbComponentProcessor implements ComponentProcessor<DumbDescriptor> {
 
         @Override
+        public Class<DumbDescriptor> getDescriptorClass() {
+            return DumbDescriptor.class;
+        }
+
+        @Override
+        public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+            return Optional.empty();
+        }
+
+        @Override
         public List<Installable<DumbDescriptor>> process(BundleReader bundleReader) {
             return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                     new AnalysisReport());
@@ -315,6 +329,11 @@ public class EntandoBundleReaderTest {
 
     private static class DumbDescriptor implements Descriptor {
 
+
+        @Override
+        public ComponentKey getComponentKey() {
+            return new ComponentKey("dummy");
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.springframework.util.StringUtils;
@@ -82,5 +83,10 @@ public class PluginDescriptor implements Descriptor {
 
     public boolean isVersion1() {
         return StringUtils.isEmpty(image);
+    }
+
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(name);
     }
 }

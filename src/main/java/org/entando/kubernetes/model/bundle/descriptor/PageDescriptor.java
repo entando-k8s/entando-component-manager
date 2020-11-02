@@ -27,4 +27,8 @@ public class PageDescriptor implements Descriptor {
     private String status;
     private List<WidgetConfigurationDescriptor> widgets;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

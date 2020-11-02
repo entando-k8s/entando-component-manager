@@ -1,11 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +20,8 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -32,13 +33,23 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
+public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor>, EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
         return ComponentType.WIDGET;
+    }
+
+    @Override
+    public Class<WidgetDescriptor> getDescriptorClass() {
+        return WidgetDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getWidgets);
     }
 
     @Override
@@ -53,20 +64,18 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
         try {
             BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
 
-            final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getWidgets);
+            final List<String> descriptorList = getDescriptorList(bundleReader);
             final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
 
-            if (widgetsDescriptor.isPresent()) {
-                for (final String fileName : widgetsDescriptor.get()) {
-                    final WidgetDescriptor widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
-                    if (widgetDescriptor.getCustomUiPath() != null) {
-                        String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
-                        widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
-                    }
-                    widgetDescriptor.setBundleId(descriptor.getCode());
-                    installables.add(new WidgetInstallable(engineService, widgetDescriptor));
+            for (final String fileName : descriptorList) {
+                final WidgetDescriptor widgetDescriptor = bundleReader
+                        .readDescriptorFile(fileName, WidgetDescriptor.class);
+                if (widgetDescriptor.getCustomUiPath() != null) {
+                    String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
+                    widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
                 }
+                widgetDescriptor.setBundleId(descriptor.getCode());
+                installables.add(new WidgetInstallable(engineService, widgetDescriptor));
             }
 
             return installables;

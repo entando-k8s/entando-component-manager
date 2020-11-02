@@ -31,4 +31,9 @@ public class PluginDescriptor implements Descriptor {
         return this.dockerImage;
     }
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(name);
+    }
+
 }

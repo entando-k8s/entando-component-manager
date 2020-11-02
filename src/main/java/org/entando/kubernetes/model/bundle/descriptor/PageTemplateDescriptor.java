@@ -21,4 +21,8 @@ public class PageTemplateDescriptor implements Descriptor {
     private String templatePath;
     private PageTemplateConfigurationDescriptor configuration;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

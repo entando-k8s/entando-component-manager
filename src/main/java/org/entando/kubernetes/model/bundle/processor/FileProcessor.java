@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +19,12 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallReques
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -35,13 +38,23 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FileProcessor implements ComponentProcessor<FileDescriptor> {
+public class FileProcessor implements ComponentProcessor<FileDescriptor>, EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
         return ComponentType.RESOURCE;
+    }
+
+    @Override
+    public Class<FileDescriptor> getDescriptorClass() {
+        return FileDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.empty();
     }
 
     @Override

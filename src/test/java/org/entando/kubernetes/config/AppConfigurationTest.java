@@ -33,7 +33,8 @@ class AppConfigurationTest {
 
     @Test
     void testPageProcessor() {
-        AppConfiguration app = new AppConfiguration();
+        // FIXME i'm passing a null value
+        AppConfiguration app = new AppConfiguration(null);
 
         ApplicationContext context = mock(ApplicationContext.class);
         when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());

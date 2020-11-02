@@ -22,4 +22,9 @@ public class LanguageDescriptor implements Descriptor {
     public boolean getIsActive() {
         return isActive;
     }
+
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

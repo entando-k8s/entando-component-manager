@@ -1,14 +1,21 @@
 package org.entando.kubernetes.config;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Setter;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +29,13 @@ public class AppConfiguration {
 
     @Value("${entando.bundle.type:git}")
     public String type;
+
+    private EntandoCoreClient entandoCoreClient;
+
+    @Autowired
+    public AppConfiguration(EntandoCoreClient entandoCoreClient) {
+        this.entandoCoreClient = entandoCoreClient;
+    }
 
     @Bean
     public BundleDownloaderFactory bundleDownloaderFactory() {
@@ -38,5 +52,26 @@ public class AppConfiguration {
     public Map<ComponentType, ComponentProcessor> processorMap(ApplicationContext appContext) {
         return appContext.getBeansOfType(ComponentProcessor.class).values().stream()
                 .collect(Collectors.toMap(ComponentProcessor::getSupportedComponentType, Function.identity()));
+    }
+
+    @Bean
+    public List<ReportableComponentProcessor> reportableProcessorMap(ApplicationContext appContext) {
+        return (List<ReportableComponentProcessor>) appContext.getBeansOfType(ReportableComponentProcessor.class).values();
+    }
+
+    @Bean
+    public Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies() {
+
+        return Map.of(
+                // ENGINE ANALYSIS
+                ReportableRemoteHandler.ENTANDO_ENGINE,
+                entandoCoreClient::getEngineAnalysisReport,
+                // CMS ANALYSIS
+                ReportableRemoteHandler.ENTANDO_CMS,
+                entandoCoreClient::getCMSAnalysisReport,
+                // K8S SERVICE ANALYSIS
+                ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                reportablesByCompType -> new AnalysisReport()
+        );
     }
 }

@@ -24,6 +24,10 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -51,11 +55,34 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository bundleRepository;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
+    private final @NonNull Map<ComponentType, ReportableComponentProcessor> reportableProcessorMap;
+    private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
 
     public AnalysisReport performInstallAnalysis(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        return AnalysisReport.builder()
-                //TODO ENG-1318 @luca.corsetti perform analysis check against entando-de-app api methods
-                .build();
+
+        AnalysisReport analysisReport = null;
+
+        BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
+
+        try {
+            BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+            Map<ReportableRemoteHandler, List<Reportable>> reportableByHandler =
+                    this.getReportableComponents(bundleReader);
+
+            analysisReport = reportableByHandler.keySet().stream()
+                    .map(key -> analysisReportStrategies.get(key).getAnalysisReport(reportableByHandler.get(key)))
+                    .reduce(AnalysisReport::merge)
+                    .orElseGet(() -> {
+                        log.warn("The report analysis for the bundle {} tag {} returned an empty result",
+                                bundle.getMetadata().getName(), tag.getVersion());
+                        return new AnalysisReport();
+                    });
+
+        } finally {
+            bundleDownloader.cleanTargetDirectory();
+        }
+
+        return analysisReport;
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
@@ -185,11 +212,26 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return result;
     }
 
+    /**
+     * download the bundle, create a BundleReader to read it and return it
+     *
+     * @param bundleDownloader
+     * @param bundle
+     * @param tag
+     * @return the created BundleReader ready to read the bundle
+     */
+    private BundleReader downloadBundleAndGetBundleReader(BundleDownloader bundleDownloader, EntandoDeBundle bundle,
+            EntandoDeBundleTag tag) {
+
+        Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
+        return new BundleReader(pathToDownloadedBundle);
+    }
+
     private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallActionsByComponentType actions,
             AnalysisReport report) {
-        Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-        return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle), conflictStrategy, actions,
+        BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+        return getInstallableComponentsByPriority(bundleReader, conflictStrategy, actions,
                 report);
     }
 
@@ -202,6 +244,71 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return componentJobTracker;
     }
 
+
+    /**
+     * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it
+     *
+     * @param bundleReader the BUndleReader to use to read the bundle
+     * @return a List of Reportable extracted from the bundle components descriptors
+     */
+    private Map<ReportableRemoteHandler, List<Reportable>> getReportableComponents(
+            BundleReader bundleReader) {
+
+        // TODO check if the key collector works
+        return reportableProcessorMap.values().stream()
+                .map(processor -> processor.getReportable(bundleReader, (ComponentProcessor<?>) processor))
+                .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
+    }
+
+//    /**
+//     * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it
+//     *
+//     * @param bundleReader the BUndleReader to use to read the bundle
+//     * @return a List of Reportable extracted from the bundle components descriptors
+//     */
+//    private Map<ReportableRemoteHandler, List<ComponentReportables>> getReportableComponents(
+//            BundleReader bundleReader) {
+//
+//        // TODO check if the key collector works
+//        final Map<ReportableRemoteHandler, List<Reportable>> map = reportableProcessorMap.values().stream()
+//                .map(processor -> processor.getReportable(bundleReader, (ComponentProcessor<?>) processor))
+//                .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
+//
+//        return map.keySet().stream()
+//                .map(reportableRemoteHandler -> getComponentReportablesByComponentType(
+//                        reportableRemoteHandler,
+//                        map.get(reportableRemoteHandler)))
+//                .collect(Collectors.toMap(
+//                        componentReportables -> componentReportables.get(0).getReportableRemoteHandler(),
+//                        componentReportables -> componentReportables));
+//    }
+
+//    private List<Reportable> getComponentReportablesByComponentType(
+//            ReportableRemoteHandler reportableRemoteHandler, List<Reportable> reportableList) {
+//
+//        Map<ComponentType, List<Reportable>> mapByComponentType = reportableList.stream()
+//                .collect(Collectors.groupingBy(Reportable::getComponentType));
+//
+//        return mapByComponentType.keySet().stream()
+//                .map(componentType -> new Reportable(componentType,
+//                        mapByComponentType.get(componentType)), reportableRemoteHandler)
+//                .collect(Collectors.toList());
+//    }
+
+
+//    private List<ComponentReportables> getComponentReportablesByComponentType(
+//            ReportableRemoteHandler reportableRemoteHandler, List<Reportable> reportableList) {
+//
+//        Map<ComponentType, List<Reportable>> mapByComponentType = reportableList.stream()
+//                .collect(Collectors.groupingBy(Reportable::getComponentType));
+//
+//        return mapByComponentType.keySet().stream()
+//                .map(componentType -> new ComponentReportables(reportableRemoteHandler, componentType,
+//                        mapByComponentType.get(componentType)))
+//                .collect(Collectors.toList());
+//    }
+
+
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         return processorMap.values().stream()
@@ -210,6 +317,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .sorted(Comparator.comparingInt(Installable::getPriority))
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
+
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job) {
         EntandoBundleEntity installedComponent = bundleService.convertToEntityFromEcr(bundle);

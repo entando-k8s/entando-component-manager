@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import java.nio.file.Paths;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,5 +18,8 @@ public class FragmentDescriptor implements Descriptor {
     private String guiCode;
     private String guiCodePath;
 
-
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

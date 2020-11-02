@@ -1,13 +1,21 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static java.util.Optional.ofNullable;
+
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -16,14 +24,23 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 /**
  * Any classes that is called a Component Processor will be found automatically on the context to process the Zip File
  * with the Component Descriptor.
- *
  */
 public interface ComponentProcessor<T extends Descriptor> {
+
+    /***
+     * @return the class of the descriptor managed by the current processor
+     */
+    Class<T> getDescriptorClass();
+
+    /***
+     * @return the method of the ComponentSpecDescriptor needed to access the component managed bu the current processor
+     */
+    Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn();
+
 
     /**
      * This method will process the component descriptor and should return an empty list or a list of all components
      * that should be installed.
-     *
      *
      * @param bundleReader bundle reader capable of reading the bundle using it's descriptor
      * @return Should return a list of Installables
@@ -68,6 +85,27 @@ public interface ComponentProcessor<T extends Descriptor> {
 
     default String getRelativePath(String referenceFile, String fileName) {
         return Paths.get(referenceFile).resolveSibling(fileName).toString();
+    }
+
+    /**
+     * read the list of the desired component descriptors filenames from the bundle descriptor and return it
+     *
+     * @param bundleReader               the BundleReader to use to read the bundle descriptor
+     * @return the list of the desired component descriptors filenames read from the bundle descriptor
+     * @throws IOException                      if an error occurs during the bundle reading
+     * @throws EntandoComponentManagerException if the param getComponentSelectionFnOpt is empty
+     */
+    default List<String> getDescriptorList(BundleReader bundleReader) throws IOException {
+
+        if (this.getComponentSelectionFn().isEmpty()) {
+            throw new EntandoComponentManagerException(
+                    "Extracting components from BundleDescriptor for null componentSelectionFunctino");
+        }
+
+        BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
+        return ofNullable(descriptor.getComponents())
+                .map(componentSpecDescriptor -> getComponentSelectionFn().get().apply(componentSpecDescriptor))
+                .orElse(new ArrayList<>());
     }
 
 }

@@ -31,4 +31,9 @@ public class WidgetDescriptor implements Descriptor {
         private List<String> resources;
     }
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
+
 }

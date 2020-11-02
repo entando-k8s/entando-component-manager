@@ -1,11 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +14,13 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageTemplateInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -31,13 +30,24 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDescriptor> {
+public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDescriptor>,
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
         return ComponentType.PAGE_TEMPLATE;
+    }
+
+    @Override
+    public Class<PageTemplateDescriptor> getDescriptorClass() {
+        return PageTemplateDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getPageTemplates);
     }
 
     @Override
@@ -50,14 +60,11 @@ public class PageTemplateProcessor implements ComponentProcessor<PageTemplateDes
     public List<Installable<PageTemplateDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
-            List<String> pageTemplatesDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getPageTemplates)
-                    .orElse(Collections.emptyList());
+            final List<String> descriptorList = getDescriptorList(bundleReader);
 
             List<Installable<PageTemplateDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : pageTemplatesDescriptor) {
+            for (String fileName : descriptorList) {
                 PageTemplateDescriptor pageTemplateDescriptor = bundleReader.readDescriptorFile(fileName, PageTemplateDescriptor.class);
                 if (pageTemplateDescriptor.getTemplatePath() != null) {
                     String tp = getRelativePath(fileName, pageTemplateDescriptor.getTemplatePath());
