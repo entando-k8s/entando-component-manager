@@ -50,7 +50,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.entando.kubernetes.BundleStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.assertionhelper.ContentAssertionHelper;

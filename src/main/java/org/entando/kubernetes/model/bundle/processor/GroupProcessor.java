@@ -1,11 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +14,13 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.installable.GroupInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -32,13 +31,23 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GroupProcessor implements ComponentProcessor<GroupDescriptor> {
+public class GroupProcessor implements ComponentProcessor<GroupDescriptor>, EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
         return ComponentType.GROUP;
+    }
+
+    @Override
+    public Class<GroupDescriptor> getDescriptorClass() {
+        return GroupDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getGroups);
     }
 
     @Override
@@ -51,15 +60,11 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor> {
     public List<Installable<GroupDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
-
-            List<String> groupDescriptorFiles = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getGroups)
-                    .orElse(Collections.emptyList());
+            final List<String> descriptorList = getDescriptorList(bundleReader);
 
             List<Installable<GroupDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : groupDescriptorFiles) {
+            for (String fileName : descriptorList) {
                 List<GroupDescriptor> groupDescriptorList = bundleReader.readListOfDescriptorFile(fileName, GroupDescriptor.class);
                 for (GroupDescriptor gd: groupDescriptorList) {
                     installables.add(new GroupInstallable(engineService, gd));

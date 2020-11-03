@@ -17,4 +17,8 @@ public class LabelDescriptor implements Descriptor {
     private String key;
     private Map<String, String> titles;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(key);
+    }
 }

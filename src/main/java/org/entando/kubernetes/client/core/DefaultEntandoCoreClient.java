@@ -4,6 +4,11 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
+import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
+import org.entando.kubernetes.client.request.AnalysisReportClientRequestBuilder;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -19,6 +24,7 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescrip
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
@@ -302,6 +308,30 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public EntandoCoreComponentUsage getCategoryUsage(String code) {
         return this.getComponentUsage(code, new String[]{"api", "categories", code, USAGE_PATH_SEGMENT}, "category");
+    }
+
+    @Override
+    public AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList) {
+
+        AnalysisReportClientRequest analysisReportClientRequest = AnalysisReportClientRequestBuilder
+                .anAnalysisReportClientRequest().reportableList(reportableList).build();
+
+        ResponseEntity<AnalysisReport> reportResponseEntity = restTemplate
+                .postForEntity(resolvePathSegments("api", "analysisReport", "objectExistence").build().toUri(),
+                        analysisReportClientRequest,
+                        AnalysisReport.class);
+
+        if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new ReportAnalysisException("An error occurred fetching the report analysis");
+        } else {
+            return reportResponseEntity.getBody();
+        }
+    }
+
+    @Override
+    public AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList) {
+
+        return new AnalysisReport();
     }
 
     private UriComponentsBuilder resolvePathSegments(String... segments) {

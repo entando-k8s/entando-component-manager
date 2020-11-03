@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -25,6 +26,7 @@ import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.service.KubernetesService;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
@@ -33,7 +35,7 @@ class AppConfigurationTest {
 
     @Test
     void testPageProcessor() {
-        AppConfiguration app = new AppConfiguration();
+        AppConfiguration app = new AppConfiguration(null);
 
         ApplicationContext context = mock(ApplicationContext.class);
         when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
@@ -69,4 +71,49 @@ class AppConfigurationTest {
         return processors;
     }
 
+
+//    @Test
+//    void reportableProcessorMapShouldContainTheRightElements() {
+//
+//        ApplicationContext context = mock(ApplicationContext.class);
+//
+//        AppConfiguration app = new AppConfiguration(null);
+//        when(context.getBeansOfType(ReportableComponentProcessor.class)).thenReturn(allReportableProcessors());
+//
+//        List<ReportableComponentProcessor> reportableComponentProcessors = app
+//                .reportableProcessorMap(context);
+//
+//        List<ReportableComponentProcessor>
+//
+//        assertThat(reportableComponentProcessors).hasSize(expected.length);
+//        assertThat(reportableComponentProcessors).containsExactlyInAnyOrder(expected);
+//    }
+//
+//
+//    // TODO unify with the other method
+//    private Map<String, ReportableComponentProcessor> allReportableProcessors() {
+//        EntandoCoreClient coreClient = mock(EntandoCoreClient.class);
+//        KubernetesService k8sService = mock(KubernetesService.class);
+//
+//        Map<String, ReportableComponentProcessor> processors = new HashMap<>();
+//        processors.put(ComponentType.CONTENT_TEMPLATE.toString(), new ContentTemplateProcessor(coreClient));
+//        processors.put(ComponentType.CONTENT_TYPE.toString(), new ContentTypeProcessor(coreClient));
+//        processors.put(ComponentType.CONTENT.toString(), new ContentProcessor(coreClient));
+//        processors.put(ComponentType.ASSET.toString(), new AssetProcessor(coreClient));
+//        processors.put(ComponentType.DIRECTORY.toString(), new DirectoryProcessor(coreClient));
+//        processors.put(ComponentType.RESOURCE.toString(), new FileProcessor(coreClient));
+//        processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
+//        processors.put(ComponentType.LANGUAGE.toString(), new LanguageProcessor(coreClient));
+//        processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
+//        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient));
+//        processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
+//        processors.put(ComponentType.PLUGIN.toString(), new PluginProcessor(k8sService));
+//        processors.put(ComponentType.WIDGET.toString(), new WidgetProcessor(coreClient));
+//        processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
+//        processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
+//
+//        return processors;
+//    }
+//
+////    analysisReportStrategies
 }

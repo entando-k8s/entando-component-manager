@@ -2,11 +2,14 @@ package org.entando.kubernetes.client.k8ssvc;
 
 import java.util.List;
 import java.util.Optional;
+import org.entando.kubernetes.client.ECMClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
-public interface K8SServiceClient {
+public interface K8SServiceClient extends ECMClient {
 
     List<EntandoAppPluginLink> getAppLinks(String entandoAppName);
 
@@ -32,4 +35,5 @@ public interface K8SServiceClient {
 
     boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName);
 
+    AnalysisReport getAnalysisReport(List<Reportable> reportableList);
 }

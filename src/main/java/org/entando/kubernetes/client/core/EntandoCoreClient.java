@@ -1,6 +1,11 @@
 package org.entando.kubernetes.client.core;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
+import org.entando.kubernetes.client.ECMClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -15,9 +20,10 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescrip
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
-public interface EntandoCoreClient {
+public interface EntandoCoreClient extends ECMClient {
 
     void registerWidget(WidgetDescriptor descriptor);
 
@@ -92,4 +98,8 @@ public interface EntandoCoreClient {
     void deleteCategory(String code);
 
     EntandoCoreComponentUsage getCategoryUsage(String code);
+
+    AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList);
+
+    AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList);
 }

@@ -1,11 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +14,13 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -30,13 +30,23 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageProcessor implements ComponentProcessor<PageDescriptor> {
+public class PageProcessor implements ComponentProcessor<PageDescriptor>, EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
         return ComponentType.PAGE;
+    }
+
+    @Override
+    public Class<PageDescriptor> getDescriptorClass() {
+        return PageDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getPages);
     }
 
     @Override
@@ -49,14 +59,11 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor> {
     public List<Installable<PageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
-            List<String> pageDescriptorList = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getPages)
-                    .orElse(Collections.emptyList());
+            final List<String> descriptorList = getDescriptorList(bundleReader);
 
             List<Installable<PageDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : pageDescriptorList) {
+            for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
                 installables.add(new PageInstallable(engineService, pageDescriptor));
             }

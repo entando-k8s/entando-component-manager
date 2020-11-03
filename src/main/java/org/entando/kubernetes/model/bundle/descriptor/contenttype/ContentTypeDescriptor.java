@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 
 @Getter
@@ -24,5 +25,10 @@ public class ContentTypeDescriptor implements Descriptor {
     private String defaultContentModelList;
 
     private List<ContentTypeAttribute> attributes;
+
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 
 }

@@ -19,4 +19,8 @@ public class ContentTemplateDescriptor implements Descriptor {
     private String contentShape;
     private String contentShapePath;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(id);
+    }
 }

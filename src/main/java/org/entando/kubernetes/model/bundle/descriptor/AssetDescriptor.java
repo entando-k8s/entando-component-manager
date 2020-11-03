@@ -20,4 +20,8 @@ public class AssetDescriptor implements Descriptor {
     private String group;
     private String[] categories;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(correlationCode);
+    }
 }

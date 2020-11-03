@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -26,6 +27,9 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
 import org.entando.kubernetes.model.bundle.processor.FileProcessor;
+import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
@@ -63,6 +67,8 @@ public class InstallServiceTest {
     private EntandoBundleComponentJobRepository compJobRepo;
     private InstalledEntandoBundleRepository installRepo;
     private Map<ComponentType, ComponentProcessor<?>> processorMap;
+    private Map<ComponentType, ReportableComponentProcessor> reportableProcessorMap;
+    private Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
     private EntandoCoreClient coreClient;
     private EntandoBundleComponentUsageService usageService;
 
@@ -70,6 +76,8 @@ public class InstallServiceTest {
     public void init() {
         downloaderFactory = new BundleDownloaderFactory();
         processorMap = new HashMap<>();
+        reportableProcessorMap = new HashMap<>();
+        analysisReportStrategies = new HashMap<>();
 
         bundleService = Mockito.mock(EntandoBundleService.class);
         bundleDownloader = Mockito.mock(BundleDownloader.class);
@@ -82,11 +90,19 @@ public class InstallServiceTest {
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
         installService = new EntandoBundleInstallService(
-                bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap);
+                bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap,
+                reportableProcessorMap, analysisReportStrategies);
 
         uninstallService = new EntandoBundleUninstallService(
                 jobRepository, compJobRepo, installRepo, usageService, processorMap);
     }
+
+
+    @Test
+    void performInstallAnalysis() {
+
+    }
+
 
     @Test
     public void shouldIncrementProgressDuringInstallation() {

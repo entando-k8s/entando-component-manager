@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -18,6 +19,10 @@ import org.springframework.core.io.ClassPathResource;
 @TestConfiguration
 @Profile("test")
 public class TestAppConfiguration extends AppConfiguration {
+
+    public TestAppConfiguration(EntandoCoreClient entandoCoreClient) {
+        super(entandoCoreClient);
+    }
 
     @Bean
     @Override
