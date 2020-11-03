@@ -1,5 +1,6 @@
 package org.entando.kubernetes.config;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -56,7 +57,7 @@ public class AppConfiguration {
 
     @Bean
     public List<ReportableComponentProcessor> reportableProcessorMap(ApplicationContext appContext) {
-        return (List<ReportableComponentProcessor>) appContext.getBeansOfType(ReportableComponentProcessor.class).values();
+        return new ArrayList<>(appContext.getBeansOfType(ReportableComponentProcessor.class).values());
     }
 
     @Bean

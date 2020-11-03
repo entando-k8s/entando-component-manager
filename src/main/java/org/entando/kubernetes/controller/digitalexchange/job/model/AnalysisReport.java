@@ -1,11 +1,14 @@
 package org.entando.kubernetes.controller.digitalexchange.job.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.util.CollectionUtils;
 
 @Data
 @Builder
@@ -13,20 +16,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AnalysisReport {
 
-    @Default private AnalysisReportComponent widgets = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent fragments = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent pages = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent pageTemplates = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent contents = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent contentTemplates = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent contentTypes = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent assets = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent resources = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent plugins = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent categories = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent groups = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent labels = new AnalysisReportComponent();
-    @Default private AnalysisReportComponent languages = new AnalysisReportComponent();
+    @Default private Map<String, Status> widgets = new HashMap<>();
+    @Default private Map<String, Status> fragments = new HashMap<>();
+    @Default private Map<String, Status> pages = new HashMap<>();
+    @Default private Map<String, Status> pageTemplates = new HashMap<>();
+    @Default private Map<String, Status> contents = new HashMap<>();
+    @Default private Map<String, Status> contentTemplates = new HashMap<>();
+    @Default private Map<String, Status> contentTypes = new HashMap<>();
+    @Default private Map<String, Status> assets = new HashMap<>();
+    @Default private Map<String, Status> resources = new HashMap<>();
+    @Default private Map<String, Status> plugins = new HashMap<>();
+    @Default private Map<String, Status> categories = new HashMap<>();
+    @Default private Map<String, Status> groups = new HashMap<>();
+    @Default private Map<String, Status> labels = new HashMap<>();
+    @Default private Map<String, Status> languages = new HashMap<>();
 
 
     /**
@@ -63,10 +66,10 @@ public class AnalysisReport {
      * @param other
      * @return
      */
-    private AnalysisReportComponent getNotNullAnalysisReportComponent(
-            Function<AnalysisReport, AnalysisReportComponent> getAnalysisReportComponentFn, AnalysisReport other) {
+    private Map<String, Status> getNotNullAnalysisReportComponent(
+            Function<AnalysisReport, Map<String, Status>> getAnalysisReportComponentFn, AnalysisReport other) {
 
-        return null != getAnalysisReportComponentFn.apply(this)
+        return ! CollectionUtils.isEmpty(getAnalysisReportComponentFn.apply(this))
                 ? getAnalysisReportComponentFn.apply(this)
                 : getAnalysisReportComponentFn.apply(other);
     }

@@ -97,6 +97,13 @@ public class InstallServiceTest {
                 jobRepository, compJobRepo, installRepo, usageService, processorMap);
     }
 
+
+    @Test
+    void performInstallAnalysis() {
+
+    }
+
+
     @Test
     public void shouldIncrementProgressDuringInstallation() {
         processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));

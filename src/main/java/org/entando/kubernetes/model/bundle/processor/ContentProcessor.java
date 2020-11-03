@@ -21,7 +21,6 @@ import org.entando.kubernetes.model.bundle.installable.ContentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoCMSReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -108,6 +107,7 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor>, 
     }
 
     private boolean isConflict(String contentId, AnalysisReport report) {
-        return report.getContents().getConflict().contains(contentId);
+        return report.getContents().containsKey(contentId)
+                && report.getContents().get(contentId) == Status.CONFLICT;
     }
 }
