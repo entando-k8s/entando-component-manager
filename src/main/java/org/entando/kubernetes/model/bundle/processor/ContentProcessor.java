@@ -108,6 +108,6 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor>, 
 
     private boolean isConflict(String contentId, AnalysisReport report) {
         return report.getContents().containsKey(contentId)
-                && report.getContents().get(contentId) == Status.CONFLICT;
+                && report.getContents().get(contentId) == Status.DIFF;
     }
 }

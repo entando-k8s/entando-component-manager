@@ -51,6 +51,11 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor>, Enta
     }
 
     @Override
+    public boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
+        return true;
+    }
+
+    @Override
     public List<Installable<GroupDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());

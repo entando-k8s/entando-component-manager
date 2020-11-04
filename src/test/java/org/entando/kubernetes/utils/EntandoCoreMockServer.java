@@ -32,6 +32,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     public static final String PAGE_TEMPLATE_ENDPOINT = "/api/pageModels";
     public static final String CONTENT_TEMPLATE_ENDPOINT = "/api/plugins/cms/contentmodels";
     public static final String CONTENT_TYPE_ENDPOINT = "/api/plugins/cms/contentTypes";
+    public static final String ENGINE_ANALYSIS_REPORT_ENDPOINT = "/api/analysisReport/objectExistence";
+    public static final String CMS_ANALYSIS_REPORT_ENDPOINT = "/api/analysisReport/objectExistence";
     public static final String CODE_PATH_PARAM = "/{code}";
 
     public EntandoCoreMockServer() {
@@ -143,6 +145,55 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
         return this;
     }
+
+
+    /**
+     * stub a successful response for the Engine AnalysisReport endpoint
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as response
+     *                               otherwise the default value will be used
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withEngineAnalysisReportSupport(String customStubResourcePath) {
+
+        return this.withGenericAnalysisReportSupport(customStubResourcePath, ENGINE_ANALYSIS_REPORT_ENDPOINT);
+    }
+
+    /**
+     * stub a successful response for the CMS AnalysisReport endpoint
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as response,
+     *                               otherwise the default value will be used
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withCMSAnalysisReportSupport(String customStubResourcePath) {
+
+        return this.withGenericAnalysisReportSupport(customStubResourcePath, CMS_ANALYSIS_REPORT_ENDPOINT);
+    }
+
+    /**
+     * stub a successful response for the AnalysisReport endpoint identified by the received URL
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as response,
+     *      *                        otherwise the default value will be used
+     * @param url the URL to use as AnalysisReport endpoint
+     * @return this instance of the EntandoCoreMockServer
+     */
+    private EntandoCoreMockServer withGenericAnalysisReportSupport(String customStubResourcePath, String url) {
+
+        String defaultStubResourcePath = "/payloads/entando-core/analysis-report/engine-analysis-report.json";
+        String currentStubResourcePath = Optional.ofNullable(customStubResourcePath).orElse(defaultStubResourcePath);
+
+        String stubResponse = readResourceAsString(currentStubResourcePath);
+
+        this.wireMockServer.stubFor(WireMock.post(urlEqualTo(url))
+                .willReturn(
+                        aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(stubResponse)
+                ));
+
+        return this;
+    }
+
 
     @Getter
     private enum ComponentUsageApiEndpoint {

@@ -1,0 +1,15 @@
+{
+  "payload":
+    {
+      "categories": {
+        "CatONE": "CONFLICT",
+        "CatTWO": "NOT_FOUND"
+      },
+      "fragments": {
+        "FragONE": "CONFLICT",
+        "FragTWO": "NOT_FOUND"
+      }
+    },
+  "metaData": {},
+  "errors": []
+}

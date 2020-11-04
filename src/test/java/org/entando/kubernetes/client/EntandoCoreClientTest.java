@@ -6,9 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.util.ArrayList;
 import java.util.Arrays;
+import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -21,6 +24,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -268,14 +272,35 @@ class EntandoCoreClientTest {
     void deleteNotFoundComponent() {
         coreMockServer.getInnerServer()
                 .stubFor(WireMock.delete(urlEqualTo(EntandoCoreMockServer.LABEL_ENDPOINT + CODE))
-                .willReturn(
-                        aResponse()
-                                .withStatus(404)
-                                .withHeader("Content-Type", "application/json")
-                ));
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(404)
+                                        .withHeader("Content-Type", "application/json")
+                        ));
 
         this.client.deleteLabel(CODE);
         coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
 
+    }
+
+    @Test
+    void receivingAValidResponseFromEntandoEngineShouldReturnValidAnalysisReport() {
+
+        coreMockServer.withEngineAnalysisReportSupport(null);
+
+        AnalysisReport engineAnalysisReport = this.client.getEngineAnalysisReport(new ArrayList<>());
+        AnalysisReport expected = AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, engineAnalysisReport);
+    }
+
+
+    @Test
+    void receivingAValidResponseFromCMSEngineShouldReturnValidAnalysisReport() {
+
+        coreMockServer.withCMSAnalysisReportSupport(null);
+
+        AnalysisReport engineAnalysisReport = this.client.getEngineAnalysisReport(new ArrayList<>());
+        AnalysisReport expected = AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, engineAnalysisReport);
     }
 }

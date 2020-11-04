@@ -39,6 +39,10 @@ public class AnalysisReport {
      */
     public AnalysisReport merge(AnalysisReport other) {
 
+        if (null == other) {
+            return this;
+        }
+
         return AnalysisReport.builder()
                 .widgets(this.getNotNullAnalysisReportComponent(AnalysisReport::getWidgets, other))
                 .fragments(this.getNotNullAnalysisReportComponent(AnalysisReport::getFragments, other))
@@ -75,7 +79,8 @@ public class AnalysisReport {
     }
 
     public enum Status {
-        NOT_FOUND,
-        CONFLICT
+        NEW,
+        DIFF,
+        EQUAL;
     }
 }

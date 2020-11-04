@@ -43,7 +43,7 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
 
     @Override
     public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
-        return Optional.empty();
+        return Optional.of(ComponentSpecDescriptor::getFragments);
     }
 
     @Override

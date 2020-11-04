@@ -5,16 +5,19 @@ import static java.util.Optional.ofNullable;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -37,6 +40,9 @@ public interface ComponentProcessor<T extends Descriptor> {
      */
     Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn();
 
+    default boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
+        return false;
+    }
 
     /**
      * This method will process the component descriptor and should return an empty list or a list of all components
@@ -99,7 +105,7 @@ public interface ComponentProcessor<T extends Descriptor> {
 
         if (this.getComponentSelectionFn().isEmpty()) {
             throw new EntandoComponentManagerException(
-                    "Extracting components from BundleDescriptor for null componentSelectionFunctino");
+                    "Extracting components from BundleDescriptor for null componentSelectionFunction");
         }
 
         BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
@@ -108,4 +114,15 @@ public interface ComponentProcessor<T extends Descriptor> {
                 .orElse(new ArrayList<>());
     }
 
+    default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName) throws IOException {
+
+        if (this.doesComponentDscriptorContainMoreThanOneSingleEntity()) {
+            return bundleReader.readListOfDescriptorFile(fileName, this.getDescriptorClass())
+                    .stream().map(descriptor -> descriptor.getComponentKey().getKey())
+                    .collect(Collectors.toList());
+        } else {
+            return Arrays.asList(bundleReader.readDescriptorFile(fileName, this.getDescriptorClass())
+                    .getComponentKey().getKey());
+        }
+    }
 }

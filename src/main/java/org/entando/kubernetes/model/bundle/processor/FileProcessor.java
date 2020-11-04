@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -105,5 +107,34 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor>, Entand
                 .folder(file.getParent())
                 .filename(file.getName())
                 .build();
+    }
+
+
+    @Override
+    public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
+
+        List<String> idList = new ArrayList<>();
+
+        try {
+            if (bundleReader.containsResourceFolder()) {
+                final String componentFolder = "/" + bundleReader.getBundleCode();
+
+                List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted()
+                        .collect(Collectors.toList());
+                for (final String resourceFile : resourceFiles) {
+
+                    Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
+                            .relativize(Paths.get(resourceFile));
+                    String file = Paths.get(componentFolder).resolve(fileFolder).toString();
+                    idList.add(file);
+                }
+            }
+
+            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                    this.getReportableRemoteHandler());
+
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
+        }
     }
 }

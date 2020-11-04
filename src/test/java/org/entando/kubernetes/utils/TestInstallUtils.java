@@ -69,6 +69,8 @@ public class TestInstallUtils {
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
+    public static final UriBuilder ANALYSIS_REPORT_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components", "todomvc", "analysis");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components");
     public static final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()

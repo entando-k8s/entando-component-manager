@@ -17,7 +17,7 @@ public class CategoryDescriptor implements Descriptor {
 
     private String code;
     private String parentCode;
-    Map<String, String> titles;
+    private Map<String, String> titles;
 
     @Override
     public ComponentKey getComponentKey() {

@@ -50,6 +50,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import lombok.NonNull;
+import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
@@ -89,6 +97,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -107,6 +116,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -149,10 +159,17 @@ public class InstallFlowTest {
     private Map<ComponentType, ComponentProcessor> processorMap;
 
     @Autowired
+    private List<ReportableComponentProcessor> reportableComponentProcessorList;
+
+    @Autowired
+    private Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
+
+    @Autowired
     private BundleDownloaderFactory downloaderFactory;
 
     @MockBean
     private EntandoCoreClient coreClient;
+
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
@@ -944,6 +961,25 @@ public class InstallFlowTest {
         List<EntandoBundleComponentJobEntity> componentJobs = componentJobRepository.findAllByParentJob(job);
         assertThat(componentJobs).isEmpty();
     }
+
+
+    @Test
+    void shouldReturnAValidAnalysisReport() throws Exception {
+
+        simulateSuccessfullyCompletedInstall();
+
+        ResultActions resultActions = mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
+                .andExpect(status().is2xxSuccessful())
+                .andDo(print());
+
+        AnalysisReport expected = AnalysisReportStubHelper
+                .stubAnalysisReportWithFragmentsAndCategoriesAndPluginsAndAssetsAndContents();
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReport(expected, resultActions);
+
+        Assertions.fail("not finished");
+    }
+
 
     @Test
     @Disabled("Ignore until rollback is implemented and #fails is tracked")
