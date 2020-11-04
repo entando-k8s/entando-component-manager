@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -103,5 +104,32 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
             isRoot = true;
         }
         return new DirectoryDescriptor(component.getComponentId(), isRoot);
+    }
+
+    @Override
+    public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
+
+        List<String> idList = new ArrayList<>();
+
+        try {
+            final String componentFolder = "/" + bundleReader.getBundleCode();
+            idList.add(componentFolder);
+
+            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted().collect(Collectors.toList());
+            for (final String resourceFolder : resourceFolders) {
+                Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
+                        .relativize(Paths.get(resourceFolder));
+                String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
+                idList.add(folder);
+            }
+
+            // FIXME switch comments when entando-de-app will support directories
+//            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+//                    this.getReportableRemoteHandler());
+            return new Reportable(componentProcessor.getSupportedComponentType(), null, this.getReportableRemoteHandler());
+
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
+        }
     }
 }

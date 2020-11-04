@@ -51,8 +51,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         AnalysisReport report = installService.performInstallAnalysis(bundle, tag);
 
-        return ResponseEntity.ok(/*getJobLocationURI(installJob)*/) //TODO?
-                .body(new SimpleRestResponse<>(report));
+        return ResponseEntity.ok(new SimpleRestResponse<>(report));
     }
 
     @Override

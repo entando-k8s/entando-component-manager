@@ -55,7 +55,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository bundleRepository;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
-    private final @NonNull Map<ComponentType, ReportableComponentProcessor> reportableProcessorMap;
+    private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
 
     public AnalysisReport performInstallAnalysis(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
@@ -254,60 +254,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Map<ReportableRemoteHandler, List<Reportable>> getReportableComponents(
             BundleReader bundleReader) {
 
-        // TODO check if the key collector works
-        return reportableProcessorMap.values().stream()
-                .map(processor -> processor.getReportable(bundleReader, (ComponentProcessor<?>) processor))
+        return reportableComponentProcessorList.stream()
+                .map(reportableProcessor ->
+                        reportableProcessor.getReportable(bundleReader, (ComponentProcessor<?>) reportableProcessor))
                 .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
     }
-
-//    /**
-//     * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it
-//     *
-//     * @param bundleReader the BUndleReader to use to read the bundle
-//     * @return a List of Reportable extracted from the bundle components descriptors
-//     */
-//    private Map<ReportableRemoteHandler, List<ComponentReportables>> getReportableComponents(
-//            BundleReader bundleReader) {
-//
-//        // TODO check if the key collector works
-//        final Map<ReportableRemoteHandler, List<Reportable>> map = reportableProcessorMap.values().stream()
-//                .map(processor -> processor.getReportable(bundleReader, (ComponentProcessor<?>) processor))
-//                .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
-//
-//        return map.keySet().stream()
-//                .map(reportableRemoteHandler -> getComponentReportablesByComponentType(
-//                        reportableRemoteHandler,
-//                        map.get(reportableRemoteHandler)))
-//                .collect(Collectors.toMap(
-//                        componentReportables -> componentReportables.get(0).getReportableRemoteHandler(),
-//                        componentReportables -> componentReportables));
-//    }
-
-//    private List<Reportable> getComponentReportablesByComponentType(
-//            ReportableRemoteHandler reportableRemoteHandler, List<Reportable> reportableList) {
-//
-//        Map<ComponentType, List<Reportable>> mapByComponentType = reportableList.stream()
-//                .collect(Collectors.groupingBy(Reportable::getComponentType));
-//
-//        return mapByComponentType.keySet().stream()
-//                .map(componentType -> new Reportable(componentType,
-//                        mapByComponentType.get(componentType)), reportableRemoteHandler)
-//                .collect(Collectors.toList());
-//    }
-
-
-//    private List<ComponentReportables> getComponentReportablesByComponentType(
-//            ReportableRemoteHandler reportableRemoteHandler, List<Reportable> reportableList) {
-//
-//        Map<ComponentType, List<Reportable>> mapByComponentType = reportableList.stream()
-//                .collect(Collectors.groupingBy(Reportable::getComponentType));
-//
-//        return mapByComponentType.keySet().stream()
-//                .map(componentType -> new ComponentReportables(reportableRemoteHandler, componentType,
-//                        mapByComponentType.get(componentType)))
-//                .collect(Collectors.toList());
-//    }
-
 
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {

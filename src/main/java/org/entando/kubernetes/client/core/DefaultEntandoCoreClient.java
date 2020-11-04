@@ -316,15 +316,15 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         AnalysisReportClientRequest analysisReportClientRequest = AnalysisReportClientRequestBuilder
                 .anAnalysisReportClientRequest().reportableList(reportableList).build();
 
-        ResponseEntity<AnalysisReport> reportResponseEntity = restTemplate
-                .postForEntity(resolvePathSegments("api", "analysisReport", "objectExistence").build().toUri(),
-                        analysisReportClientRequest,
-                        AnalysisReport.class);
+        ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
+                .exchange(resolvePathSegments("api", "analysisReport", "component", "diff").build().toUri(),
+                        HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
+                        new ParameterizedTypeReference<>() {});
 
         if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
             throw new ReportAnalysisException("An error occurred fetching the report analysis");
         } else {
-            return reportResponseEntity.getBody();
+            return reportResponseEntity.getBody().getPayload();
         }
     }
 

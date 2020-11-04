@@ -50,6 +50,11 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor>, Enta
     }
 
     @Override
+    public boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
+        return true;
+    }
+
+    @Override
     public List<Installable<LabelDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());

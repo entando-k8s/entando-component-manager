@@ -2,6 +2,7 @@ package org.entando.kubernetes.client;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
 
@@ -146,8 +148,13 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     @Override
     public AnalysisReport getAnalysisReport(List<Reportable> reportableList) {
-        // FIXME
-        return new AnalysisReport();
+
+        return AnalysisReport.builder()
+                .plugins(Map.ofEntries(
+                        AnalysisReportStubHelper.PLUGIN_1_ENTRY,
+                        AnalysisReportStubHelper.PLUGIN_2_ENTRY))
+                .build();
+
     }
 
 }

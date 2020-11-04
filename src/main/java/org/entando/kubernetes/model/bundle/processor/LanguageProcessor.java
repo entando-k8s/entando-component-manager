@@ -51,6 +51,11 @@ public class LanguageProcessor implements ComponentProcessor<LanguageDescriptor>
     }
 
     @Override
+    public boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
+        return true;
+    }
+
+    @Override
     public List<Installable<LanguageDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());

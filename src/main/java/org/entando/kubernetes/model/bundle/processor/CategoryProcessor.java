@@ -50,6 +50,11 @@ public class CategoryProcessor implements ComponentProcessor<CategoryDescriptor>
     }
 
     @Override
+    public boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
+        return true;
+    }
+
+    @Override
     public List<Installable<CategoryDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());
