@@ -59,14 +59,14 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
             final List<String> descriptorList = getDescriptorList(bundleReader);
             List<Installable<FragmentDescriptor>> installableList = new ArrayList<>();
 
-                for (String fileName : descriptorList) {
-                    FragmentDescriptor frDesc = bundleReader.readDescriptorFile(fileName, FragmentDescriptor.class);
-                    if (frDesc.getGuiCodePath() != null) {
-                        String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
-                        frDesc.setGuiCode(bundleReader.readFileAsString(gcp));
-                    }
-                    installableList.add(new FragmentInstallable(engineService, frDesc));
+            for (String fileName : descriptorList) {
+                FragmentDescriptor frDesc = bundleReader.readDescriptorFile(fileName, FragmentDescriptor.class);
+                if (frDesc.getGuiCodePath() != null) {
+                    String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
+                    frDesc.setGuiCode(bundleReader.readFileAsString(gcp));
                 }
+                installableList.add(new FragmentInstallable(engineService, frDesc));
+            }
             return installableList;
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error reading bundle", e);
