@@ -33,7 +33,8 @@ public class AnalysisReport {
 
 
     /**
-     * merge the current AnalysisReport and the received one
+     * merge the current AnalysisReport and the received one.
+     *
      * @param other the AnalysisReport to merge with the current one
      * @return a new AnalysisReport resulting by the merge
      */
@@ -62,13 +63,13 @@ public class AnalysisReport {
     }
 
     /**
-     * apply the received function to the current AnalysisReport.
-     * if the result is not null, return it.
-     * otherwise apply the function to the other AnalysisReport received and return its result
+     * apply the received function to the current AnalysisReport. if the result is not null, return it. otherwise apply
+     * the function to the other AnalysisReport received and return its result
      *
-     * @param getAnalysisReportComponentFn
-     * @param other
-     * @return
+     * @param getAnalysisReportComponentFn a function that get an AnalysisReport and returns the desired Map object
+     * @param other                        the other AnalysisReport
+     * @return the result of the received function on the current object if the result is not null, otherwise the result
+     *              of the received function on the other object
      */
     private Map<String, Status> getNotNullAnalysisReportComponent(
             Function<AnalysisReport, Map<String, Status>> getAnalysisReportComponentFn, AnalysisReport other) {

@@ -1,5 +1,5 @@
 /**
- * functional interface used to abstract the remote service request function
+ * functional interface used to abstract the remote service request function.
  */
 
 package org.entando.kubernetes.model.bundle.reportable;

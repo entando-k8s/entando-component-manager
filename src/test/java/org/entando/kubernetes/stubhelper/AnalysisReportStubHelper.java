@@ -18,7 +18,7 @@ public class AnalysisReportStubHelper {
     public static final String CONTENT_CODE_1 = "ContentONE";
     public static final String CONTENT_CODE_2 = "ContentTWO";
     public static final Map.Entry<String, Status> CATEGORY_1_ENTRY = new SimpleEntry<>(CATEGORY_CODE_1, Status.DIFF);
-    public static final Map.Entry<String, Status>CATEGORY_2_ENTRY = new SimpleEntry<>(CATEGORY_CODE_2, Status.NEW);
+    public static final Map.Entry<String, Status> CATEGORY_2_ENTRY = new SimpleEntry<>(CATEGORY_CODE_2, Status.NEW);
     public static final Map.Entry<String, Status> FRAGMENT_1_ENTRY = new SimpleEntry<>(FRAGMENT_CODE_1, Status.DIFF);
     public static final Map.Entry<String, Status> FRAGMENT_2_ENTRY = new SimpleEntry<>(FRAGMENT_CODE_2, Status.NEW);
     public static final Map.Entry<String, Status> PLUGIN_1_ENTRY = new SimpleEntry<>(PLUGIN_CODE_1, Status.DIFF);
@@ -61,6 +61,13 @@ public class AnalysisReportStubHelper {
 
     public static AnalysisReport stubAnalysisReportWithContents() {
         return AnalysisReport.builder()
+                .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
+                .build();
+    }
+
+    public static AnalysisReport stubAnalysisReportWithAssetsAndContents() {
+        return AnalysisReport.builder()
+                .assets(Map.ofEntries(ASSET_1_ENTRY, ASSET_2_ENTRY))
                 .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
                 .build();
     }

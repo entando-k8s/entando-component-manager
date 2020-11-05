@@ -30,12 +30,14 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
  */
 public interface ComponentProcessor<T extends Descriptor> {
 
-    /***
+    /**
+     * a method to centralize the current descriptor concrete class managed by the concrete Processor class.
      * @return the class of the descriptor managed by the current processor
      */
     Class<T> getDescriptorClass();
 
-    /***
+    /**
+     * a method to centralize the function to access the components needed by the concrete Processor.
      * @return the method of the ComponentSpecDescriptor needed to access the component managed bu the current processor
      */
     Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn();
@@ -94,7 +96,7 @@ public interface ComponentProcessor<T extends Descriptor> {
     }
 
     /**
-     * read the list of the desired component descriptors filenames from the bundle descriptor and return it
+     * read the list of the desired component descriptors filenames from the bundle descriptor and return it.
      *
      * @param bundleReader               the BundleReader to use to read the bundle descriptor
      * @return the list of the desired component descriptors filenames read from the bundle descriptor

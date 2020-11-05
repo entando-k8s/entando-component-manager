@@ -25,6 +25,7 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
@@ -313,25 +314,43 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList) {
 
-        AnalysisReportClientRequest analysisReportClientRequest = AnalysisReportClientRequestBuilder
-                .anAnalysisReportClientRequest().reportableList(reportableList).build();
-
-        ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
-                .exchange(resolvePathSegments("api", "analysisReport", "component", "diff").build().toUri(),
-                        HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
-                        new ParameterizedTypeReference<>() {});
-
-        if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
-            throw new ReportAnalysisException("An error occurred fetching the report analysis");
-        } else {
-            return reportResponseEntity.getBody().getPayload();
-        }
+        return this.getAnalysisReport(reportableList, ReportableRemoteHandler.ENTANDO_ENGINE,
+                "api", "analysis", "components", "diff");
     }
 
     @Override
     public AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList) {
 
-        return new AnalysisReport();
+        return this.getAnalysisReport(reportableList, ReportableRemoteHandler.ENTANDO_CMS,
+                "api", "analysis", "cms", "components", "diff");
+    }
+
+    /**
+     * request the AnalysisReport to a particular remote service for a list of Reportable.
+     *
+     * @param reportableList the List of Reportable of which get the report
+     * @param reportableRemoteHandler the ReportableRemoteHandler identifying the service to call (useful for error mex)
+     * @param pathSegments the segments composing the path to call
+     * @return the received AnalysisReport
+     */
+    private AnalysisReport getAnalysisReport(List<Reportable> reportableList,
+            ReportableRemoteHandler reportableRemoteHandler, String... pathSegments) {
+
+        AnalysisReportClientRequest analysisReportClientRequest = AnalysisReportClientRequestBuilder
+                .anAnalysisReportClientRequest().reportableList(reportableList).build();
+
+        ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
+                .exchange(resolvePathSegments(pathSegments).build().toUri(),
+                        HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
+                        new ParameterizedTypeReference<>() {
+                        });
+
+        if (!reportResponseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new ReportAnalysisException(String.format(
+                    "An error occurred fetching the %s report analysis", reportableRemoteHandler));
+        } else {
+            return reportResponseEntity.getBody().getPayload();
+        }
     }
 
     private UriComponentsBuilder resolvePathSegments(String... segments) {

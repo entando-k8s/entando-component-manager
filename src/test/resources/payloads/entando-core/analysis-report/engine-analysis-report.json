@@ -2,12 +2,12 @@
   "payload":
     {
       "categories": {
-        "CatONE": "CONFLICT",
-        "CatTWO": "NOT_FOUND"
+        "CatONE": "DIFF",
+        "CatTWO": "NEW"
       },
       "fragments": {
-        "FragONE": "CONFLICT",
-        "FragTWO": "NOT_FOUND"
+        "FragONE": "DIFF",
+        "FragTWO": "NEW"
       }
     },
   "metaData": {},
