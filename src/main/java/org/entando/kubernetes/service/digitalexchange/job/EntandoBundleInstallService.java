@@ -67,9 +67,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         try {
             BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
             Map<ReportableRemoteHandler, List<Reportable>> reportableByHandler =
-                    this.getReportableComponents(bundleReader);
+                    this.getReportableComponentsByRemoteHandler(bundleReader);
 
             analysisReport = reportableByHandler.keySet().stream()
+                    // for each remote handler => get whole analysis report
                     .map(key -> analysisReportStrategies.get(key).getAnalysisReport(reportableByHandler.get(key)))
                     .reduce(AnalysisReport::merge)
                     .orElseGet(() -> {
@@ -251,7 +252,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
      * @param bundleReader the BUndleReader to use to read the bundle
      * @return a List of Reportable extracted from the bundle components descriptors
      */
-    private Map<ReportableRemoteHandler, List<Reportable>> getReportableComponents(
+    private Map<ReportableRemoteHandler, List<Reportable>> getReportableComponentsByRemoteHandler(
             BundleReader bundleReader) {
 
         return reportableComponentProcessorList.stream()

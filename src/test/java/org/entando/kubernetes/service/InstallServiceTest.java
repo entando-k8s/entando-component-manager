@@ -138,6 +138,8 @@ public class InstallServiceTest {
         AnalysisReportAssertionHelper.assertOnAnalysisReports(
                 AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategoriesAndPluginsAndAssets(),
                 analysisReport);
+
+        Assertions.fail("add all processors");
     }
 
 
