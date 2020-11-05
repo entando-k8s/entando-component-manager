@@ -25,5 +25,4 @@ public class AnalysisReportClientRequest {
     List<String> groups;
     List<String> labels;
     List<String> languages;
-    List<String> directories;
 }
