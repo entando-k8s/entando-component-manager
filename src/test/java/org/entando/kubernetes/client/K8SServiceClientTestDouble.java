@@ -149,12 +149,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public AnalysisReport getAnalysisReport(List<Reportable> reportableList) {
 
-        return AnalysisReport.builder()
-                .plugins(Map.ofEntries(
-                        AnalysisReportStubHelper.PLUGIN_1_ENTRY,
-                        AnalysisReportStubHelper.PLUGIN_2_ENTRY))
-                .build();
-
+        return AnalysisReportStubHelper.stubAnalysisReportWithPlugins();
     }
 
 }

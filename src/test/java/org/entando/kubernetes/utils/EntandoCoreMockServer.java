@@ -32,8 +32,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     public static final String PAGE_TEMPLATE_ENDPOINT = "/api/pageModels";
     public static final String CONTENT_TEMPLATE_ENDPOINT = "/api/plugins/cms/contentmodels";
     public static final String CONTENT_TYPE_ENDPOINT = "/api/plugins/cms/contentTypes";
-    public static final String ENGINE_ANALYSIS_REPORT_ENDPOINT = "/api/analysisReport/objectExistence";
-    public static final String CMS_ANALYSIS_REPORT_ENDPOINT = "/api/analysisReport/objectExistence";
+    public static final String ENGINE_ANALYSIS_REPORT_ENDPOINT = "/api/analysis/components/diff";
+    public static final String CMS_ANALYSIS_REPORT_ENDPOINT = "/api/analysis/cms/components/diff";
     public static final String CODE_PATH_PARAM = "/{code}";
 
     public EntandoCoreMockServer() {
@@ -148,7 +148,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
 
     /**
-     * stub a successful response for the Engine AnalysisReport endpoint
+     * stub a successful response for the Engine AnalysisReport endpoint.
+     *
      * @param customStubResourcePath if present the content of the file identified by this param will be used as response
      *                               otherwise the default value will be used
      * @return this instance of the EntandoCoreMockServer
@@ -159,7 +160,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     }
 
     /**
-     * stub a successful response for the CMS AnalysisReport endpoint
+     * stub a successful response for the CMS AnalysisReport endpoint.
+     *
      * @param customStubResourcePath if present the content of the file identified by this param will be used as response,
      *                               otherwise the default value will be used
      * @return this instance of the EntandoCoreMockServer
@@ -170,7 +172,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     }
 
     /**
-     * stub a successful response for the AnalysisReport endpoint identified by the received URL
+     * stub a successful response for the AnalysisReport endpoint identified by the received URL.
+     *
      * @param customStubResourcePath if present the content of the file identified by this param will be used as response,
      *      *                        otherwise the default value will be used
      * @param url the URL to use as AnalysisReport endpoint

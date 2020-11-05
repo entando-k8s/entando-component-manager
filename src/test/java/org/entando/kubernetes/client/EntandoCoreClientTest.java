@@ -299,7 +299,7 @@ class EntandoCoreClientTest {
 
         coreMockServer.withCMSAnalysisReportSupport(null);
 
-        AnalysisReport engineAnalysisReport = this.client.getEngineAnalysisReport(new ArrayList<>());
+        AnalysisReport engineAnalysisReport = this.client.getCMSAnalysisReport(new ArrayList<>());
         AnalysisReport expected = AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
         AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, engineAnalysisReport);
     }

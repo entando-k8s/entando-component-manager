@@ -1,9 +1,10 @@
 /**
  * this interface has to be implemented by those processors we want they create a report in order to manage
- * conflicts
+ * conflicts.
  *
- * TARGETING ENTANDO K8S SERVICE
+ * <p>TARGETING ENTANDO K8S SERVICE</p>
  */
+
 package org.entando.kubernetes.model.bundle.reportable;
 
 public interface EntandoK8SServiceReportableProcessor extends ReportableComponentProcessor {

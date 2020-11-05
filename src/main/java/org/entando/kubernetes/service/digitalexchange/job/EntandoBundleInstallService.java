@@ -213,11 +213,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     /**
-     * download the bundle, create a BundleReader to read it and return it
+     * download the bundle, create a BundleReader to read it and return it.
      *
-     * @param bundleDownloader
-     * @param bundle
-     * @param tag
+     * @param bundleDownloader the BundleDownloader responsible to download the desired bundle
+     * @param bundle the object defining the bundle to download
+     * @param tag the object defining the version of the bundle to download
      * @return the created BundleReader ready to read the bundle
      */
     private BundleReader downloadBundleAndGetBundleReader(BundleDownloader bundleDownloader, EntandoDeBundle bundle,
@@ -246,7 +246,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
 
     /**
-     * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it
+     * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it.
      *
      * @param bundleReader the BUndleReader to use to read the bundle
      * @return a List of Reportable extracted from the bundle components descriptors
