@@ -161,6 +161,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     EntandoBundleComponentJobEntity uninstallCopy = EntandoBundleComponentJobEntity.getNewCopy(cj);
                     uninstallCopy.setParentJob(parentJob);
                     uninstallCopy.setStatus(JobStatus.UNINSTALL_CREATED);
+                    uninstallCopy.setAction(cj.getAction());
                     uninstallCopy.setInstallable(i);
                     return uninstallCopy;
                 })

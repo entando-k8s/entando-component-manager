@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GroupProcessor implements ComponentProcessor<GroupDescriptor>, EntandoEngineReportableProcessor {
+public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -72,7 +72,8 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor>, Enta
             for (String fileName : descriptorList) {
                 List<GroupDescriptor> groupDescriptorList = bundleReader.readListOfDescriptorFile(fileName, GroupDescriptor.class);
                 for (GroupDescriptor gd: groupDescriptorList) {
-                    installables.add(new GroupInstallable(engineService, gd));
+                    InstallAction action = extractInstallAction(gd.getCode(), actions, conflictStrategy, report);
+                    installables.add(new GroupInstallable(engineService, gd, action));
                 }
             }
 
@@ -86,7 +87,7 @@ public class GroupProcessor implements ComponentProcessor<GroupDescriptor>, Enta
     public List<Installable<GroupDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.GROUP)
-                .map(c -> new GroupInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new GroupInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

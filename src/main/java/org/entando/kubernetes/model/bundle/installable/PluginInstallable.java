@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
@@ -15,8 +16,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     private final KubernetesService kubernetesService;
 
-    public PluginInstallable(KubernetesService kubernetesService, PluginDescriptor plugin) {
-        super(plugin);
+    public PluginInstallable(KubernetesService kubernetesService, PluginDescriptor plugin, InstallAction action) {
+        super(plugin, action);
         this.kubernetesService = kubernetesService;
     }
 
@@ -25,6 +26,10 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         return CompletableFuture.runAsync(() -> {
             log.info("Deploying plugin {}", getName());
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
             kubernetesService.linkPluginAndWaitForSuccess(plugin);
         });
     }

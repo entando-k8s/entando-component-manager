@@ -135,6 +135,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             cj.setComponentId(i.getName());
                             cj.setChecksum(i.getChecksum());
                             cj.setInstallable(i);
+                            cj.setAction(i.getAction());
                             return cj;
                         })
                         .collect(Collectors.toCollection(ArrayDeque::new));

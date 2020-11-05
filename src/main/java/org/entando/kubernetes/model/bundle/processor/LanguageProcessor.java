@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LanguageProcessor implements ComponentProcessor<LanguageDescriptor>, EntandoEngineReportableProcessor {
+public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -77,7 +77,8 @@ public class LanguageProcessor implements ComponentProcessor<LanguageDescriptor>
                         throw new EntandoComponentManagerException(
                                 "The bundle has a language with empty code. A code is mandatory for each language.");
                     }
-                    installables.add(new LanguageInstallable(engineService, ld));
+                    InstallAction action = extractInstallAction(ld.getCode(), actions, conflictStrategy, report);
+                    installables.add(new LanguageInstallable(engineService, ld, action));
                 }
             }
 
@@ -91,7 +92,7 @@ public class LanguageProcessor implements ComponentProcessor<LanguageDescriptor>
     public List<Installable<LanguageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.LANGUAGE)
-                .map(c -> new LanguageInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new LanguageInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

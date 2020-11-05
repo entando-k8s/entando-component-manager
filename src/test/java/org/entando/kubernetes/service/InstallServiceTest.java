@@ -16,13 +16,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import lombok.NonNull;
 import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
@@ -181,7 +179,7 @@ public class InstallServiceTest {
 
         when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
         when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
-        doThrow(RuntimeException.class).when(coreClient).registerContentType(any());
+        doThrow(RuntimeException.class).when(coreClient).createContentType(any());
 
         EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0));
 

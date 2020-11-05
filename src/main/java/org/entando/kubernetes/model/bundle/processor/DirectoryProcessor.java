@@ -38,7 +38,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DirectoryProcessor implements ComponentProcessor<DirectoryDescriptor>, EntandoEngineReportableProcessor {
+public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescriptor>
+        implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -71,14 +72,16 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
         try {
             if (bundleReader.containsResourceFolder()) {
                 final String componentFolder = "/" + bundleReader.getBundleCode();
-                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true)));
+                InstallAction rootDirectoryAction = extractInstallAction(componentFolder, actions, conflictStrategy, report);
+                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true), rootDirectoryAction));
 
                 List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted().collect(Collectors.toList());
                 for (final String resourceFolder : resourceFolders) {
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(resourceFolder));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
-                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false)));
+                    InstallAction action = extractInstallAction(folder, actions, conflictStrategy, report);
+                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false), action));
                 }
             }
         } catch (IOException e) {
@@ -92,7 +95,7 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
     public List<Installable<DirectoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.DIRECTORY)
-                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

@@ -320,7 +320,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
-                .when(coreClient).registerPage(any(PageDescriptor.class));
+                .when(coreClient).createPage(any(PageDescriptor.class));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -357,7 +357,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 413, "Error", null, null, null))
-                .when(coreClient).uploadFile(any(FileDescriptor.class));
+                .when(coreClient).createFile(any(FileDescriptor.class));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -437,15 +437,15 @@ public class TestInstallUtils {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPage(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPageModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerWidget(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerFragment(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentType(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerLabel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createPage(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createPageTemplate(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createWidget(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFragment(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createContentType(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createContentTemplate(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createLabel(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFolder(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).uploadFile(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFile(any());
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 

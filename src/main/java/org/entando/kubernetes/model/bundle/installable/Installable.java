@@ -58,6 +58,10 @@ public abstract class Installable<T extends Descriptor> {
 
     public abstract String getName();
 
+    public InstallAction getAction() {
+        return action;
+    }
+
     /**
      * Important to understand if something has changed in case of an updated If the checksum didn't change, we don't need to modify this
      * component.

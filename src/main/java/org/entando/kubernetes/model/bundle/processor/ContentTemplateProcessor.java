@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -30,8 +32,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ContentTemplateProcessor implements ComponentProcessor<ContentTemplateDescriptor>,
-        EntandoCMSReportableProcessor {
+public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemplateDescriptor>
+        implements EntandoCMSReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -72,7 +74,8 @@ public class ContentTemplateProcessor implements ComponentProcessor<ContentTempl
                     contentTemplateDescriptor.setContentShape(bundleReader.readFileAsString(csPath));
                 }
 
-                installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor));
+                InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), actions, conflictStrategy, report);
+                installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor, action));
             }
 
             return installables;
@@ -85,7 +88,7 @@ public class ContentTemplateProcessor implements ComponentProcessor<ContentTempl
     public List<Installable<ContentTemplateDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT_TEMPLATE)
-                .map(c -> new ContentTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new ContentTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

@@ -30,7 +30,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescriptor>, EntandoCMSReportableProcessor {
+public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDescriptor>
+        implements EntandoCMSReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -66,7 +67,8 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
             for (String fileName : descriptorList) {
                 ContentTypeDescriptor contentTypeDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentTypeDescriptor.class);
-                installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor));
+                InstallAction action = extractInstallAction(contentTypeDescriptor.getCode(), actions, conflictStrategy, report);
+                installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor, action));
             }
 
             return installables;
@@ -79,7 +81,7 @@ public class ContentTypeProcessor implements ComponentProcessor<ContentTypeDescr
     public List<Installable<ContentTypeDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT_TYPE)
-                .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

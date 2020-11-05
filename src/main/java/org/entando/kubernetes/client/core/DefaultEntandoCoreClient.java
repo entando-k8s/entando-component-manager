@@ -82,10 +82,16 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerWidget(final WidgetDescriptor descriptor) {
+    public void createWidget(final WidgetDescriptor descriptor) {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "widgets").build().toUri(), new EntandoCoreWidget(descriptor),
                         Void.class);
+    }
+
+    @Override
+    public void updateWidget(WidgetDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "widgets", descriptor.getCode()).build().toUri(),
+                new EntandoCoreWidget(descriptor));
     }
 
     @Override
@@ -99,9 +105,15 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerFragment(FragmentDescriptor descriptor) {
+    public void createFragment(FragmentDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "fragments").build().toUri(),
                 new EntandoCoreFragment(descriptor), Void.class);
+    }
+
+    @Override
+    public void updateFragment(FragmentDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "fragments", descriptor.getCode()).build().toUri(),
+                new EntandoCoreFragment(descriptor));
     }
 
     @Override
@@ -115,8 +127,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerLabel(final LabelDescriptor descriptor) {
+    public void createLabel(final LabelDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "labels").build().toUri(), descriptor, Void.class);
+    }
+
+    @Override
+    public void updateLabel(LabelDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "labels", descriptor.getKey()).build().toUri(), descriptor);
     }
 
     @Override
@@ -141,8 +158,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
 
     @Override
-    public void registerGroup(GroupDescriptor descriptor) {
+    public void createGroup(GroupDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "groups").build().toUri(), descriptor, Void.class);
+    }
+
+    @Override
+    public void updateGroup(GroupDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "groups", descriptor.getCode()).build().toUri(), descriptor);
     }
 
     @Override
@@ -156,14 +178,20 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerPage(PageDescriptor pageDescriptor) {
+    public void createPage(PageDescriptor pageDescriptor) {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "pages").build().toUri(), new EntandoCorePage(pageDescriptor),
                         Void.class);
     }
 
     @Override
-    public void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+    public void updatePage(PageDescriptor pageDescriptor) {
+        restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode()).build().toUri(),
+                new EntandoCorePage(pageDescriptor));
+    }
+
+    @Override
+    public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
         restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode(), "widgets",
                         widgetDescriptor.getPos().toString()).build().toUri(),
                         new EntandoCorePageWidgetConfiguration(widgetDescriptor));
@@ -180,9 +208,15 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerPageModel(final PageTemplateDescriptor descriptor) {
+    public void createPageTemplate(final PageTemplateDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "pageModels").build().toUri(),
                 new EntandoCorePageTemplate(descriptor), Void.class);
+    }
+
+    @Override
+    public void updatePageTemplate(PageTemplateDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "pageModels", descriptor.getCode()).build().toUri(),
+                new EntandoCorePageTemplate(descriptor));
     }
 
     @Override
@@ -202,9 +236,15 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerContentModel(final ContentTemplateDescriptor descriptor) {
+    public void createContentTemplate(final ContentTemplateDescriptor descriptor) {
         restTemplate.postForEntity(resolvePathSegments("api", "plugins", "cms", "contentmodels").build().toUri(),
                 new EntandoCoreContentModel(descriptor), Void.class);
+    }
+
+    @Override
+    public void updateContentTemplate(ContentTemplateDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contentmodels",
+                descriptor.getId()).build().toUri(), new EntandoCoreContentModel(descriptor));
     }
 
     @Override
@@ -215,10 +255,16 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void registerContentType(final ContentTypeDescriptor descriptor) {
+    public void createContentType(final ContentTypeDescriptor descriptor) {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "plugins", "cms", "contentTypes").build().toUri(), descriptor,
                         Void.class);
+    }
+
+    @Override
+    public void updateContentType(ContentTypeDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contentTypes",
+                descriptor.getCode()).build().toUri(), descriptor);
     }
 
     @Override
@@ -269,6 +315,21 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
+    public void updateAsset(AssetDescriptor descriptor, File file) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("metadata", descriptor);
+        body.add("file", new FileSystemResource(file));
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        restTemplate.exchange(resolvePathSegments("api", "plugins", "cms", "assets", descriptor.getCorrelationCode()).build().toUri(),
+                HttpMethod.PUT, requestEntity, String.class);
+    }
+
+    @Override
     public void deleteAsset(String id) {
         notFoundProtectedDelete(resolvePathSegments("api", "plugins", "cms", "assets", id).build().toUri());
     }
@@ -288,16 +349,29 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void uploadFile(final FileDescriptor descriptor) {
+    public void createFile(final FileDescriptor descriptor) {
         final String path = Paths.get(descriptor.getFolder(), descriptor.getFilename()).toString();
         final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
         restTemplate.postForEntity(resolvePathSegments("api", "fileBrowser", "file").build().toUri(), file, Void.class);
     }
 
     @Override
-    public void registerCategory(CategoryDescriptor representation) {
+    public void updateFile(FileDescriptor descriptor) {
+        final String path = Paths.get(descriptor.getFolder(), descriptor.getFilename()).toString();
+        final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
+        restTemplate.put(resolvePathSegments("api", "fileBrowser", "file").build().toUri(), file);
+    }
+
+    @Override
+    public void createCategory(CategoryDescriptor representation) {
         restTemplate
                 .postForEntity(resolvePathSegments("api", "categories").build().toUri(), representation, Void.class);
+    }
+
+    @Override
+    public void updateCategory(CategoryDescriptor representation) {
+        restTemplate.put(resolvePathSegments("api", "categories", representation.getCode()).build().toUri(),
+                representation);
     }
 
     @Override

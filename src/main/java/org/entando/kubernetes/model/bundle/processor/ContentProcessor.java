@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,7 +31,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ContentProcessor implements ComponentProcessor<ContentDescriptor>, EntandoCMSReportableProcessor {
+public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
+        implements EntandoCMSReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -81,7 +83,7 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor>, 
     public List<Installable<ContentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT)
-                .map(c -> new ContentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new ContentInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 
@@ -90,24 +92,5 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor>, 
         return ContentDescriptor.builder()
                 .id(component.getComponentId())
                 .build();
-    }
-
-    private InstallAction extractInstallAction(String contentId, InstallActionsByComponentType actions,
-            InstallAction conflictStrategy, AnalysisReport report) {
-
-        if (actions.getContents().containsKey(contentId)) {
-            return actions.getContents().get(contentId);
-        }
-
-        if (isConflict(contentId, report)) {
-            return conflictStrategy;
-        }
-
-        return InstallAction.CREATE;
-    }
-
-    private boolean isConflict(String contentId, AnalysisReport report) {
-        return report.getContents().containsKey(contentId)
-                && report.getContents().get(contentId) == Status.DIFF;
     }
 }

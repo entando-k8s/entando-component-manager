@@ -22,8 +22,8 @@ public class InstallRequest {
     private final InstallActionsByComponentType actions = new InstallActionsByComponentType();
 
     public enum InstallAction {
-        CREATE,
-        SKIP,
-        OVERRIDE
+        CREATE,  //Always try to create the object
+        SKIP,    //Skip object if conflict
+        OVERRIDE //Update object if conflict
     }
 }

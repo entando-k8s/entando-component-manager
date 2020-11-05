@@ -17,10 +17,6 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
         this.engineService = service;
     }
 
-    public ContentInstallable(EntandoCoreClient service, ContentDescriptor contentDescriptor) {
-        this(service, contentDescriptor, InstallAction.CREATE);
-    }
-
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
@@ -41,7 +37,9 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Content {}", getName());
-            engineService.deleteContent(getName());
+            if (shouldCreate()) {
+                engineService.deleteContent(getName());
+            }
         });
     }
 

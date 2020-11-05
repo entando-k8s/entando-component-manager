@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LabelProcessor implements ComponentProcessor<LabelDescriptor>, EntandoEngineReportableProcessor {
+public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -71,7 +71,8 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor>, Enta
             for (String ldf : descriptorList) {
                 List<LabelDescriptor> labelDescriptorList = bundleReader.readListOfDescriptorFile(ldf, LabelDescriptor.class);
                 for (LabelDescriptor ld : labelDescriptorList) {
-                    installables.add(new LabelInstallable(engineService, ld));
+                    InstallAction action = extractInstallAction(ld.getKey(), actions, conflictStrategy, report);
+                    installables.add(new LabelInstallable(engineService, ld, action));
                 }
             }
 
@@ -85,7 +86,7 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor>, Enta
     public List<Installable<LabelDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.LABEL)
-                .map(c -> new LabelInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new LabelInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PluginProcessor implements ComponentProcessor<PluginDescriptor>, EntandoK8SServiceReportableProcessor {
+public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements EntandoK8SServiceReportableProcessor {
 
     private final KubernetesService kubernetesService;
 
@@ -68,7 +68,8 @@ public class PluginProcessor implements ComponentProcessor<PluginDescriptor>, En
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                installableList.add(new PluginInstallable(kubernetesService, plugin));
+                InstallAction action = extractInstallAction(plugin.getDockerImage().toString(), actions, conflictStrategy, report);
+                installableList.add(new PluginInstallable(kubernetesService, plugin, action));
             }
             return installableList;
         } catch (IOException e) {
@@ -80,7 +81,7 @@ public class PluginProcessor implements ComponentProcessor<PluginDescriptor>, En
     public List<Installable<PluginDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PLUGIN)
-                .map(c -> new PluginInstallable(kubernetesService, buildDescriptorFromComponentJob(c)))
+                .map(c -> new PluginInstallable(kubernetesService, buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

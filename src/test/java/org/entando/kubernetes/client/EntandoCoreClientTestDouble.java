@@ -28,7 +28,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
 
 
     @Override
-    public void registerWidget(WidgetDescriptor descriptor) {
+    public void createWidget(WidgetDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updateWidget(WidgetDescriptor descriptor) {
 
     }
 
@@ -43,7 +48,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerFragment(FragmentDescriptor descriptor) {
+    public void createFragment(FragmentDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updateFragment(FragmentDescriptor descriptor) {
 
     }
 
@@ -58,7 +68,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerLabel(LabelDescriptor descriptor) {
+    public void createLabel(LabelDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updateLabel(LabelDescriptor descriptor) {
 
     }
 
@@ -78,7 +93,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerGroup(GroupDescriptor descriptor) {
+    public void createGroup(GroupDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updateGroup(GroupDescriptor descriptor) {
 
     }
 
@@ -93,12 +113,17 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerPage(PageDescriptor pageDescriptor) {
+    public void createPage(PageDescriptor pageDescriptor) {
 
     }
 
     @Override
-    public void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+    public void updatePage(PageDescriptor pageDescriptor) {
+
+    }
+
+    @Override
+    public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
 
     }
 
@@ -113,7 +138,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerPageModel(PageTemplateDescriptor descriptor) {
+    public void createPageTemplate(PageTemplateDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updatePageTemplate(PageTemplateDescriptor descriptor) {
 
     }
 
@@ -133,7 +163,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerContentModel(ContentTemplateDescriptor descriptor) {
+    public void createContentTemplate(ContentTemplateDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updateContentTemplate(ContentTemplateDescriptor descriptor) {
 
     }
 
@@ -143,7 +178,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void registerContentType(ContentTypeDescriptor descriptor) {
+    public void createContentType(ContentTypeDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void updateContentType(ContentTypeDescriptor descriptor) {
 
     }
 
@@ -178,6 +218,11 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
+    public void updateAsset(AssetDescriptor descriptor, File file) {
+
+    }
+
+    @Override
     public void deleteAsset(String code) {
 
     }
@@ -193,12 +238,22 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void uploadFile(FileDescriptor descriptor) {
+    public void createFile(FileDescriptor descriptor) {
 
     }
 
     @Override
-    public void registerCategory(CategoryDescriptor representation) {
+    public void updateFile(FileDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void createCategory(CategoryDescriptor representation) {
+
+    }
+
+    @Override
+    public void updateCategory(CategoryDescriptor representation) {
 
     }
 

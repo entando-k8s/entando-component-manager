@@ -20,14 +20,13 @@ import org.entando.kubernetes.model.bundle.installable.FragmentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>, EntandoEngineReportableProcessor {
+public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -65,7 +64,8 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
                     String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
                     frDesc.setGuiCode(bundleReader.readFileAsString(gcp));
                 }
-                installableList.add(new FragmentInstallable(engineService, frDesc));
+                InstallAction action = extractInstallAction(frDesc.getCode(), actions, conflictStrategy, report);
+                installableList.add(new FragmentInstallable(engineService, frDesc, action));
             }
             return installableList;
         } catch (IOException e) {
@@ -77,7 +77,7 @@ public class FragmentProcessor implements ComponentProcessor<FragmentDescriptor>
     public List<Installable<FragmentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.FRAGMENT)
-                .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

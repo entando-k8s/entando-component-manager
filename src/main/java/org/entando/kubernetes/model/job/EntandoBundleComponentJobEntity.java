@@ -15,6 +15,7 @@ import javax.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 
@@ -51,6 +52,10 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
     private JobStatus status;
 
     @Column
+    @Enumerated(EnumType.STRING)
+    private InstallAction action;
+
+    @Column
     private LocalDateTime startedAt;
 
     @Column
@@ -74,6 +79,7 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
         newComponent.setStartedAt(o.getStartedAt());
         newComponent.setFinishedAt(o.getFinishedAt());
         newComponent.setStatus(o.getStatus());
+        newComponent.setAction(o.getAction());
         newComponent.setInstallable(o.getInstallable());
         newComponent.setErrorMessage(o.getErrorMessage());
         return newComponent;

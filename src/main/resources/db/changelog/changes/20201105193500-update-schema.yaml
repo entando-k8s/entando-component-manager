@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20201105193500
+      author: ffleandro
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: action
+                  type: TEXT
+                  defaultValue: CREATE
+                  constraints:
+                    nullable: false
+            tableName: entando_bundle_component_jobs

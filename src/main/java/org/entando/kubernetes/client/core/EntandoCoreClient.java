@@ -25,19 +25,25 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
 public interface EntandoCoreClient extends ECMClient {
 
-    void registerWidget(WidgetDescriptor descriptor);
+    void createWidget(WidgetDescriptor descriptor);
+
+    void updateWidget(WidgetDescriptor descriptor);
 
     void deleteWidget(String code);
 
     EntandoCoreComponentUsage getWidgetUsage(String code);
 
-    void registerFragment(FragmentDescriptor descriptor);
+    void createFragment(FragmentDescriptor descriptor);
+
+    void updateFragment(FragmentDescriptor descriptor);
 
     void deleteFragment(String code);
 
     EntandoCoreComponentUsage getFragmentUsage(String code);
 
-    void registerLabel(LabelDescriptor descriptor);
+    void createLabel(LabelDescriptor descriptor);
+
+    void updateLabel(LabelDescriptor descriptor);
 
     void deleteLabel(String code);
 
@@ -45,21 +51,27 @@ public interface EntandoCoreClient extends ECMClient {
 
     void disableLanguage(String code);
 
-    void registerGroup(GroupDescriptor descriptor);
+    void createGroup(GroupDescriptor descriptor);
+
+    void updateGroup(GroupDescriptor descriptor);
 
     void deleteGroup(String code);
 
     EntandoCoreComponentUsage getGroupUsage(String code);
 
-    void registerPage(PageDescriptor pageDescriptor);
+    void createPage(PageDescriptor pageDescriptor);
 
-    void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
+    void updatePage(PageDescriptor pageDescriptor);
+
+    void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
 
     void deletePage(String code);
 
     EntandoCoreComponentUsage getPageUsage(String code);
 
-    void registerPageModel(PageTemplateDescriptor descriptor);
+    void createPageTemplate(PageTemplateDescriptor descriptor);
+
+    void updatePageTemplate(PageTemplateDescriptor descriptor);
 
     void deletePageModel(String code);
 
@@ -67,11 +79,15 @@ public interface EntandoCoreClient extends ECMClient {
 
     void deleteContentModel(String code);
 
-    void registerContentModel(ContentTemplateDescriptor descriptor);
+    void createContentTemplate(ContentTemplateDescriptor descriptor);
+
+    void updateContentTemplate(ContentTemplateDescriptor descriptor);
 
     EntandoCoreComponentUsage getContentModelUsage(String code);
 
-    void registerContentType(ContentTypeDescriptor descriptor);
+    void createContentType(ContentTypeDescriptor descriptor);
+
+    void updateContentType(ContentTypeDescriptor descriptor);
 
     void deleteContentType(String code);
 
@@ -85,15 +101,21 @@ public interface EntandoCoreClient extends ECMClient {
 
     void createAsset(AssetDescriptor descriptor, File file);
 
+    void updateAsset(AssetDescriptor descriptor, File file);
+
     void deleteAsset(String code);
 
     void createFolder(String folder);
 
     void deleteFolder(String code);
 
-    void uploadFile(FileDescriptor descriptor);
+    void createFile(FileDescriptor descriptor);
 
-    void registerCategory(CategoryDescriptor representation);
+    void updateFile(FileDescriptor descriptor);
+
+    void createCategory(CategoryDescriptor representation);
+
+    void updateCategory(CategoryDescriptor representation);
 
     void deleteCategory(String code);
 

@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FileProcessor implements ComponentProcessor<FileDescriptor>, EntandoEngineReportableProcessor {
+public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -82,7 +82,8 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor>, Entand
                             .relativize(Paths.get(fileDescriptor.getFolder()));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
                     fileDescriptor.setFolder(folder);
-                    installables.add(new FileInstallable(engineService, fileDescriptor));
+                    InstallAction action = extractInstallAction(folder, actions, conflictStrategy, report);
+                    installables.add(new FileInstallable(engineService, fileDescriptor, action));
                 }
             }
         } catch (IOException e) {
@@ -96,7 +97,7 @@ public class FileProcessor implements ComponentProcessor<FileDescriptor>, Entand
     public List<Installable<FileDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.RESOURCE)
-                .map(c ->  new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c ->  new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

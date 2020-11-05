@@ -142,7 +142,7 @@ class EntandoCoreClientTest {
     void registerWidget() {
         WidgetDescriptor wd = new WidgetDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::post);
-        this.client.registerWidget(wd);
+        this.client.createWidget(wd);
         coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -159,7 +159,7 @@ class EntandoCoreClientTest {
     void registerFragment() {
         FragmentDescriptor fd = new FragmentDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.FRAGMENT_ENDPOINT, WireMock::post);
-        this.client.registerFragment(fd);
+        this.client.createFragment(fd);
         coreMockServer.verify(EntandoCoreMockServer.FRAGMENT_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -177,7 +177,7 @@ class EntandoCoreClientTest {
     void registerLabel() {
         LabelDescriptor ld = new LabelDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.LABEL_ENDPOINT, WireMock::post);
-        this.client.registerLabel(ld);
+        this.client.createLabel(ld);
         coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -194,7 +194,7 @@ class EntandoCoreClientTest {
     void registerPage() {
         PageDescriptor pd = new PageDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_ENDPOINT, WireMock::post);
-        this.client.registerPage(pd);
+        this.client.createPage(pd);
         coreMockServer.verify(EntandoCoreMockServer.PAGE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -219,7 +219,7 @@ class EntandoCoreClientTest {
 
         coreMockServer = coreMockServer
                 .withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::post);
-        this.client.registerPageModel(ptd);
+        this.client.createPageTemplate(ptd);
         coreMockServer.verify(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -237,7 +237,7 @@ class EntandoCoreClientTest {
         ContentTemplateDescriptor ctd = new ContentTemplateDescriptor();
         coreMockServer = coreMockServer
                 .withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::post);
-        this.client.registerContentModel(ctd);
+        this.client.createContentTemplate(ctd);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -255,7 +255,7 @@ class EntandoCoreClientTest {
     void registerContentType() {
         ContentTypeDescriptor ctd = new ContentTypeDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, WireMock::post);
-        this.client.registerContentType(ctd);
+        this.client.createContentType(ctd);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, WireMock::postRequestedFor);
     }
 

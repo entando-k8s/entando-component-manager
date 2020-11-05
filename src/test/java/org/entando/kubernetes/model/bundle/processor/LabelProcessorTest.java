@@ -64,11 +64,11 @@ public class LabelProcessorTest {
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.LABEL);
         assertThat(installables.get(0).getName()).isEqualTo("HELLO");
 
-        verify(engineService, times(0)).registerLabel(any());
+        verify(engineService, times(0)).createLabel(any());
         installables.get(0).install().get();
 
         final ArgumentCaptor<LabelDescriptor> captor = ArgumentCaptor.forClass(LabelDescriptor.class);
-        verify(engineService, times(1)).registerLabel(captor.capture());
+        verify(engineService, times(1)).createLabel(captor.capture());
         final LabelDescriptor labelDescriptor = captor.getValue();
 
         assertThat(labelDescriptor.getKey()).isEqualTo("HELLO");

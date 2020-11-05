@@ -21,7 +21,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +32,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor>, EntandoEngineReportableProcessor {
+public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -75,7 +74,8 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor>, En
                     widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
                 }
                 widgetDescriptor.setBundleId(descriptor.getCode());
-                installables.add(new WidgetInstallable(engineService, widgetDescriptor));
+                InstallAction action = extractInstallAction(widgetDescriptor.getCode(), actions, conflictStrategy, report);
+                installables.add(new WidgetInstallable(engineService, widgetDescriptor, action));
             }
 
             return installables;
@@ -88,7 +88,7 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor>, En
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.WIDGET)
-                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

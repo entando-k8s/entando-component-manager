@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageProcessor implements ComponentProcessor<PageDescriptor>, EntandoEngineReportableProcessor {
+public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -65,7 +65,8 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor>, Entand
 
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
-                installables.add(new PageInstallable(engineService, pageDescriptor));
+                InstallAction action = extractInstallAction(pageDescriptor.getCode(), actions, conflictStrategy, report);
+                installables.add(new PageInstallable(engineService, pageDescriptor, action));
             }
 
             return installables;
@@ -78,7 +79,7 @@ public class PageProcessor implements ComponentProcessor<PageDescriptor>, Entand
     public List<Installable<PageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PAGE)
-                .map(c -> new PageInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .map(c -> new PageInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

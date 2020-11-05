@@ -23,11 +23,9 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -228,7 +226,7 @@ public class InstallFlowTest {
 
     private void verifyCategoryRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<CategoryDescriptor> categoryDescriptor = ArgumentCaptor.forClass(CategoryDescriptor.class);
-        verify(coreClient, times(1)).registerCategory(categoryDescriptor.capture());
+        verify(coreClient, times(1)).createCategory(categoryDescriptor.capture());
 
         List<CategoryDescriptor> allRequests = categoryDescriptor.getAllValues()
                 .stream().sorted(Comparator.comparing(CategoryDescriptor::getCode))
@@ -245,7 +243,7 @@ public class InstallFlowTest {
 
     private void verifyGroupRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<GroupDescriptor> groupDescriptor = ArgumentCaptor.forClass(GroupDescriptor.class);
-        verify(coreClient, times(1)).registerGroup(groupDescriptor.capture());
+        verify(coreClient, times(1)).createGroup(groupDescriptor.capture());
 
         List<GroupDescriptor> allPageRequests = groupDescriptor.getAllValues()
                 .stream().sorted(Comparator.comparing(GroupDescriptor::getCode))
@@ -257,7 +255,7 @@ public class InstallFlowTest {
 
     private void verifyPageRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<PageDescriptor> pag = ArgumentCaptor.forClass(PageDescriptor.class);
-        verify(coreClient, times(1)).registerPage(pag.capture());
+        verify(coreClient, times(1)).createPage(pag.capture());
 
         List<PageDescriptor> allPageRequests = pag.getAllValues()
                 .stream().sorted(Comparator.comparing(PageDescriptor::getCode))
@@ -295,7 +293,7 @@ public class InstallFlowTest {
 
     private void verifyFragmentRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<FragmentDescriptor> fragmentDescArgCapt = ArgumentCaptor.forClass(FragmentDescriptor.class);
-        verify(coreClient, times(2)).registerFragment(fragmentDescArgCapt.capture());
+        verify(coreClient, times(2)).createFragment(fragmentDescArgCapt.capture());
         List<FragmentDescriptor> allFragmentsRequests = fragmentDescArgCapt.getAllValues()
                 .stream().sorted(Comparator.comparing(FragmentDescriptor::getCode))
                 .collect(Collectors.toList());
@@ -309,7 +307,7 @@ public class InstallFlowTest {
 
     private void verifyFileRequests(EntandoCoreClient coreClient) throws Exception {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(5)).uploadFile(fileArgCaptor.capture());
+        verify(coreClient, times(5)).createFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
@@ -347,7 +345,7 @@ public class InstallFlowTest {
 
     private void verifyLabelsRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<LabelDescriptor> labelArgCaptor = ArgumentCaptor.forClass(LabelDescriptor.class);
-        verify(coreClient, times(1)).registerLabel(labelArgCaptor.capture());
+        verify(coreClient, times(1)).createLabel(labelArgCaptor.capture());
 
         LabelDescriptor labelDescriptor = labelArgCaptor.getValue();
 
@@ -358,11 +356,11 @@ public class InstallFlowTest {
     }
 
     private void verifyContentTypesRequests(EntandoCoreClient coreClient) {
-        verify(coreClient, times(1)).registerContentType(any());
+        verify(coreClient, times(1)).createContentType(any());
     }
 
     private void verifyContentTemplatesRequests(EntandoCoreClient coreClient) {
-        verify(coreClient, times(2)).registerContentModel(any());
+        verify(coreClient, times(2)).createContentTemplate(any());
     }
 
     private void verifyAssetsRequests(EntandoCoreClient coreClient) {
@@ -393,7 +391,7 @@ public class InstallFlowTest {
     private void verifyPageModelsRequests(EntandoCoreClient coreClient) throws Exception {
         ArgumentCaptor<PageTemplateDescriptor> pageModelDescrArgCaptor = ArgumentCaptor
                 .forClass(PageTemplateDescriptor.class);
-        verify(coreClient, times(2)).registerPageModel(pageModelDescrArgCaptor.capture());
+        verify(coreClient, times(2)).createPageTemplate(pageModelDescrArgCaptor.capture());
 
         List<PageTemplateDescriptor> allPassedPageModels = pageModelDescrArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(PageTemplateDescriptor::getCode))
@@ -425,7 +423,7 @@ public class InstallFlowTest {
 
     private void verifyWidgetsRequests(EntandoCoreClient coreClient) throws Exception {
         ArgumentCaptor<WidgetDescriptor> widgetDescArgCaptor = ArgumentCaptor.forClass(WidgetDescriptor.class);
-        verify(coreClient, times(2)).registerWidget(widgetDescArgCaptor.capture());
+        verify(coreClient, times(2)).createWidget(widgetDescArgCaptor.capture());
         List<WidgetDescriptor> allPassedWidgets = widgetDescArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
