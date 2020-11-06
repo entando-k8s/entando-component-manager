@@ -116,15 +116,21 @@ public interface ComponentProcessor<T extends Descriptor> {
                 .orElse(new ArrayList<>());
     }
 
-    default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName) throws IOException {
+    default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName) {
 
-        if (this.doesComponentDscriptorContainMoreThanOneSingleEntity()) {
-            return bundleReader.readListOfDescriptorFile(fileName, this.getDescriptorClass())
-                    .stream().map(descriptor -> descriptor.getComponentKey().getKey())
-                    .collect(Collectors.toList());
-        } else {
-            return Arrays.asList(bundleReader.readDescriptorFile(fileName, this.getDescriptorClass())
-                    .getComponentKey().getKey());
+        try {
+            if (this.doesComponentDscriptorContainMoreThanOneSingleEntity()) {
+                return bundleReader.readListOfDescriptorFile(fileName, this.getDescriptorClass())
+                        .stream().map(descriptor -> descriptor.getComponentKey().getKey())
+                        .collect(Collectors.toList());
+            } else {
+                return Arrays.asList(bundleReader.readDescriptorFile(fileName, this.getDescriptorClass())
+                        .getComponentKey().getKey());
+            }
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException(String.format(
+                    "Error parsing content type %s from descriptor %s",
+                    this.getSupportedComponentType(), fileName), e);
         }
     }
 }
