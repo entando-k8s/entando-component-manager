@@ -38,7 +38,9 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing PageTemplate {}", getName());
-            engineService.deletePageModel(getName());
+            if(shouldCreate()) {
+                engineService.deletePageModel(getName());
+            }
         });
     }
 

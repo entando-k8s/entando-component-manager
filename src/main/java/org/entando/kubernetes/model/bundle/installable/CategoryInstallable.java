@@ -37,7 +37,9 @@ public class CategoryInstallable extends Installable<CategoryDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Label {}", getName());
-            engineService.deleteCategory(getName());
+            if (shouldCreate()) {
+                engineService.deleteCategory(getName());
+            }
         });
     }
 

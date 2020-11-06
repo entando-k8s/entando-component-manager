@@ -38,7 +38,9 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Content Type {}", getName());
-            engineService.deleteContentType(getName());
+            if (shouldCreate()) {
+                engineService.deleteContentType(getName());
+            }
         });
     }
 

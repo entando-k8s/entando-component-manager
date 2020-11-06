@@ -37,7 +37,9 @@ public class GroupInstallable extends Installable<GroupDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Label {}", getName());
-            engineService.deleteGroup(getName());
+            if(shouldCreate()) {
+                engineService.deleteGroup(getName());
+            }
         });
     }
 

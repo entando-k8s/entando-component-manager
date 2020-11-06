@@ -34,7 +34,9 @@ public class LanguageInstallable extends Installable<LanguageDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Disabling Language {}", getName());
-            engineService.disableLanguage(getName());
+            if (shouldCreate()) {
+                engineService.disableLanguage(getName());
+            }
         });
     }
 

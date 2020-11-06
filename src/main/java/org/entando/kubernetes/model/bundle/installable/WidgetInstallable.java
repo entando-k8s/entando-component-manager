@@ -37,7 +37,9 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Widget {}", getName());
-            engineService.deleteWidget(getName());
+            if(shouldCreate()) {
+                engineService.deleteWidget(getName());
+            }
         });
     }
 

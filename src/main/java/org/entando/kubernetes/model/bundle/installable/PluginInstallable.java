@@ -39,6 +39,10 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing link to plugin {}", getName());
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
             kubernetesService.unlinkPlugin(BundleUtilities.extractNameFromDescriptor(representation));
         });
     }

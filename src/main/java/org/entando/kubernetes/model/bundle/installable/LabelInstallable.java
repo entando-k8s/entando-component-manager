@@ -37,7 +37,9 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Label {}", getName());
-            engineService.deleteLabel(getName());
+            if (shouldCreate()) {
+                engineService.deleteLabel(getName());
+            }
         });
     }
 

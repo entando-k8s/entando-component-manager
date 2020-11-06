@@ -32,7 +32,12 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            if (this.representation.isRoot()) {
+            if (this.representation.isRoot() && shouldCreate()) {
+                /* TODO
+                 * uninstall should delete individual folders, because one install
+                 * could have created the root folder and another version
+                 * could have added new folders and files
+                 */
                 engineService.deleteFolder(this.representation.getName());
             }
         });

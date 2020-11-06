@@ -47,7 +47,9 @@ public class PageInstallable extends Installable<PageDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Page {}", getName());
-            engineService.deletePage(getName());
+            if(shouldCreate()) {
+                engineService.deletePage(getName());
+            }
         });
     }
 
