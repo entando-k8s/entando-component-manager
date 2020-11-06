@@ -3,13 +3,12 @@ package org.entando.kubernetes.client.request;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.springframework.util.StringUtils;
 
-public final class AnalysisReportClientRequestBuilder {
+public final class AnalysisReportClientRequestFactory {
 
     private EnumMap<ComponentType, Consumer<List<String>>> strategy;
 
@@ -28,7 +27,7 @@ public final class AnalysisReportClientRequestBuilder {
     List<String> labels = new ArrayList<>();
     List<String> languages = new ArrayList<>();
 
-    private AnalysisReportClientRequestBuilder() {
+    private AnalysisReportClientRequestFactory() {
         strategy = new EnumMap<>(ComponentType.class);
         strategy.put(ComponentType.WIDGET, this::widgets);
         strategy.put(ComponentType.FRAGMENT, this::fragments);
@@ -47,92 +46,104 @@ public final class AnalysisReportClientRequestBuilder {
         strategy.put(ComponentType.DIRECTORY, this::resources);
     }
 
-    public static AnalysisReportClientRequestBuilder anAnalysisReportClientRequest() {
-        return new AnalysisReportClientRequestBuilder();
+    public static AnalysisReportClientRequestFactory anAnalysisReportClientRequest() {
+        return new AnalysisReportClientRequestFactory();
     }
 
-    public AnalysisReportClientRequestBuilder reportableList(List<Reportable> reportableList) {
+    public AnalysisReportClientRequestFactory reportableList(List<Reportable> reportableList) {
 
-        reportableList.forEach(reportable -> {
-            if (! StringUtils.isEmpty(reportable.getCodes())) {
-                strategy.get(reportable.getComponentType()).accept(reportable.getCodes());
-            }
-        });
+        if (null != reportableList) {
+            reportableList.forEach(reportable -> {
+                if (! StringUtils.isEmpty(reportable.getCodes())) {
+                    strategy.get(reportable.getComponentType()).accept(reportable.getCodes());
+                }
+            });
+        }
+
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder widgets(List<String> widgets) {
+    public AnalysisReportClientRequest createEngineAnalysisReportRequest() {
+        return new EngineAnalysisReportClientRequest(widgets, fragments, pages, pageTemplates, resources, categories,
+                groups, labels, languages);
+    }
+
+    public AnalysisReportClientRequest createCMSAnalysisReportRequest() {
+        return new CMSAnalysisReportClientRequest(contents, contentTemplates, contentTypes, assets);
+    }
+
+    public AnalysisReportClientRequest createK8SServiceAnalysisReportRequest() {
+        return new K8SServiceAnalysisReportClientRequest(plugins);
+    }
+
+
+    private AnalysisReportClientRequestFactory widgets(List<String> widgets) {
         this.widgets.addAll(widgets);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder fragments(List<String> fragments) {
+    private AnalysisReportClientRequestFactory fragments(List<String> fragments) {
         this.fragments.addAll(fragments);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder pages(List<String> pages) {
+    private AnalysisReportClientRequestFactory pages(List<String> pages) {
         this.pages.addAll(pages);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder pageTemplates(List<String> pageTemplates) {
+    private AnalysisReportClientRequestFactory pageTemplates(List<String> pageTemplates) {
         this.pageTemplates.addAll(pageTemplates);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder contents(List<String> contents) {
+    private AnalysisReportClientRequestFactory contents(List<String> contents) {
         this.contents.addAll(contents);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder contentTemplates(List<String> contentTemplates) {
+    private AnalysisReportClientRequestFactory contentTemplates(List<String> contentTemplates) {
         this.contentTemplates.addAll(contentTemplates);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder contentTypes(List<String> contentTypes) {
+    private AnalysisReportClientRequestFactory contentTypes(List<String> contentTypes) {
         this.contentTypes.addAll(contentTypes);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder assets(List<String> assets) {
+    private AnalysisReportClientRequestFactory assets(List<String> assets) {
         this.assets.addAll(assets);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder resources(List<String> resources) {
+    private AnalysisReportClientRequestFactory resources(List<String> resources) {
         this.resources.addAll(resources);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder plugins(List<String> plugins) {
+    private AnalysisReportClientRequestFactory plugins(List<String> plugins) {
         this.plugins.addAll(plugins);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder categories(List<String> categories) {
+    private AnalysisReportClientRequestFactory categories(List<String> categories) {
         this.categories.addAll(categories);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder groups(List<String> groups) {
+    private AnalysisReportClientRequestFactory groups(List<String> groups) {
         this.groups.addAll(groups);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder labels(List<String> labels) {
+    private AnalysisReportClientRequestFactory labels(List<String> labels) {
         this.labels.addAll(labels);
         return this;
     }
 
-    private AnalysisReportClientRequestBuilder languages(List<String> languages) {
+    private AnalysisReportClientRequestFactory languages(List<String> languages) {
         this.languages.addAll(languages);
         return this;
-    }
-
-    public AnalysisReportClientRequest build() {
-        return new AnalysisReportClientRequest(widgets, fragments, pages, pageTemplates, contents, contentTemplates,
-                contentTypes, assets, resources, plugins, categories, groups, labels, languages);
     }
 }

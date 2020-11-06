@@ -3,7 +3,9 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
@@ -17,22 +19,33 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import org.apache.commons.codec.language.bm.Lang;
 import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.processor.CategoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.processor.ContentProcessor;
+import org.entando.kubernetes.model.bundle.processor.ContentTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.ContentTypeProcessor;
+import org.entando.kubernetes.model.bundle.processor.DirectoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.FileProcessor;
 import org.entando.kubernetes.model.bundle.processor.FragmentProcessor;
+import org.entando.kubernetes.model.bundle.processor.GroupProcessor;
+import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
+import org.entando.kubernetes.model.bundle.processor.LanguageProcessor;
+import org.entando.kubernetes.model.bundle.processor.PageProcessor;
+import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
+import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
@@ -89,14 +102,14 @@ public class InstallServiceTest {
         reportableComponentProcessorList = new ArrayList<>();
         analysisReportStrategies = new HashMap<>();
 
-        bundleService = Mockito.mock(EntandoBundleService.class);
-        bundleDownloader = Mockito.mock(BundleDownloader.class);
+        bundleService = mock(EntandoBundleService.class);
+        bundleDownloader = mock(BundleDownloader.class);
         jobRepository = Mockito.spy(EntandoBundleJobRepositoryTestDouble.class);
         compJobRepo = Mockito.spy(EntandoBundleComponentJobRepositoryTestDouble.class);
-        installRepo = Mockito.mock(InstalledEntandoBundleRepository.class);
-        coreClient = Mockito.mock(EntandoCoreClient.class);
-        kubernetesService = Mockito.mock(KubernetesService.class);
-        usageService = Mockito.mock(EntandoBundleComponentUsageService.class);
+        installRepo = mock(InstalledEntandoBundleRepository.class);
+        coreClient = mock(EntandoCoreClient.class);
+        kubernetesService = mock(KubernetesService.class);
+        usageService = mock(EntandoBundleComponentUsageService.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
@@ -112,21 +125,32 @@ public class InstallServiceTest {
     @Test
     void receivingDataFromRemoteHandlerWillReturnTheRightAnalysisReport() {
 
-        reportableComponentProcessorList.add(new FragmentProcessor(coreClient));
-        reportableComponentProcessorList.add(new CategoryProcessor(coreClient));
-        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService));
         reportableComponentProcessorList.add(new AssetProcessor(coreClient));
+        reportableComponentProcessorList.add(new CategoryProcessor(coreClient));
+        reportableComponentProcessorList.add(new ContentProcessor(coreClient));
+        reportableComponentProcessorList.add(new ContentTemplateProcessor(coreClient));
+        reportableComponentProcessorList.add(new ContentTypeProcessor(coreClient));
+        reportableComponentProcessorList.add(new DirectoryProcessor(coreClient));
+        reportableComponentProcessorList.add(new FileProcessor(coreClient));
+        reportableComponentProcessorList.add(new FragmentProcessor(coreClient));
+        reportableComponentProcessorList.add(new GroupProcessor(coreClient));
+        reportableComponentProcessorList.add(new LabelProcessor(coreClient));
+        reportableComponentProcessorList.add(new LanguageProcessor(coreClient));
+        reportableComponentProcessorList.add(new PageProcessor(coreClient));
+        reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
+        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService));
+        reportableComponentProcessorList.add(new WidgetProcessor(coreClient));
 
         // instruct the strategy map with stub data
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE,
                 (List<Reportable> reportableList) -> AnalysisReportStubHelper
-                        .stubAnalysisReportWithFragmentsAndCategories());
+                        .stubFullEngineAnalysisReport());
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_CMS,
                 (List<Reportable> reportableList) -> AnalysisReportStubHelper
-                        .stubAnalysisReportWithAssets());
+                        .stubFullCMSAnalysisReport());
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
                 (List<Reportable> reportableList) -> AnalysisReportStubHelper
-                        .stubAnalysisReportWithPlugins());
+                        .stubFullK8SServiceAnalysisReport());
 
         EntandoDeBundle bundle = getTestBundle();
 
@@ -136,10 +160,29 @@ public class InstallServiceTest {
                 .performInstallAnalysis(bundle, bundle.getSpec().getTags().get(0));
 
         AnalysisReportAssertionHelper.assertOnAnalysisReports(
-                AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategoriesAndPluginsAndAssets(),
+                AnalysisReportStubHelper.stubFullAnalysisReport(),
                 analysisReport);
+    }
 
-        Assertions.fail("add all processors");
+
+    @Test
+    void ifAnErrorOccurDuringReportAnalysisFlowItShouldThrowReportAnalysisException() {
+
+        reportableComponentProcessorList.add(new CategoryProcessor(coreClient));
+
+        // instruct the strategy map with stub data
+        analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE, coreClient::getEngineAnalysisReport);
+        analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_CMS,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper
+                        .stubFullCMSAnalysisReport());
+
+        EntandoDeBundle bundle = getTestBundle();
+
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(coreClient.getEngineAnalysisReport(anyList())).thenThrow(ReportAnalysisException.class);
+
+        Assertions.assertThrows(ReportAnalysisException.class,
+                () -> installService.performInstallAnalysis(bundle, bundle.getSpec().getTags().get(0)));
     }
 
 

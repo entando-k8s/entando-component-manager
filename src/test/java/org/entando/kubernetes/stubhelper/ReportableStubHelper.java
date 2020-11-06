@@ -1,10 +1,7 @@
 package org.entando.kubernetes.stubhelper;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
-import java.util.Map;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import java.util.List;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
@@ -39,75 +36,45 @@ public class ReportableStubHelper {
     public static final String LABEL_CODE_2 = "LabelTWO";
     public static final String LANG_CODE_1 = "LangONE";
     public static final String LANG_CODE_2 = "LangTWO";
+    public static final String DIRECTORY_CODE_1 = "DirONE";
+    public static final String DIRECTORY_CODE_2 = "DirTWO";
 
 
-//    public static AnalysisReport stubAllReportableList() {
-//
-//        Arrays.asList(
-//                new Reportable(ComponentType.PLUGIN, Arrays.asList(PLUGIN_CODE_1, PLUGIN_CODE_2),
-//                        ReportableRemoteHandler.ENTANDO_K8S_SERVICE),
-//
-//                new Reportable(ComponentType.DIRECTORY, Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType.CATEGORY, Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType.GROUP, Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType.LANGUAGE, Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType.LABEL, Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//
-//                new Reportable(ComponentType., Arrays.asList(, ),
-//                        ReportableRemoteHandler.ENTANDO_ENGINE),
-//
-//        );
-//
-//
-//
-//        return AnalysisReport.builder()
-//                .categories(Map.ofEntries(CATEGORY_1_ENTRY, CATEGORY_2_ENTRY))
-//                .fragments(Map.ofEntries(FRAGMENT_1_ENTRY, FRAGMENT_2_ENTRY))
-//                .plugins(Map.ofEntries(PLUGIN_1_ENTRY, PLUGIN_2_ENTRY))
-//                .assets(Map.ofEntries(ASSET_1_ENTRY, ASSET_2_ENTRY))
-//                .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
-//                .build();
-//    }
+    public static List<Reportable> stubAllReportableList() {
+
+        return Arrays.asList(
+                new Reportable(ComponentType.ASSET, Arrays.asList(ASSET_CODE_1, ASSET_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_CMS),
+                new Reportable(ComponentType.CATEGORY, Arrays.asList(CATEGORY_CODE_1, CATEGORY_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.CONTENT, Arrays.asList(CONTENT_CODE_1, CONTENT_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_CMS),
+                new Reportable(ComponentType.CONTENT_TEMPLATE,
+                        Arrays.asList(CONTENT_TEMPL_CODE_1, CONTENT_TEMPL_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_CMS),
+                new Reportable(ComponentType.CONTENT_TYPE, Arrays.asList(CONTENT_TYPE_CODE_1, CONTENT_TYPE_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_CMS),
+                new Reportable(ComponentType.DIRECTORY, Arrays.asList(DIRECTORY_CODE_1, DIRECTORY_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.RESOURCE, Arrays.asList(RESOURCE_CODE_1, RESOURCE_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_K8S_SERVICE),
+                new Reportable(ComponentType.FRAGMENT, Arrays.asList(FRAGMENT_CODE_1, FRAGMENT_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_K8S_SERVICE),
+                new Reportable(ComponentType.GROUP, Arrays.asList(GROUP_CODE_1, GROUP_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.LABEL, Arrays.asList(LABEL_CODE_1, LABEL_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.LANGUAGE, Arrays.asList(LANG_CODE_1, LANG_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.PAGE, Arrays.asList(PAGE_CODE_1, PAGE_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.PAGE_TEMPLATE, Arrays.asList(PAGE_TEMPL_CODE_1, PAGE_TEMPL_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE),
+                new Reportable(ComponentType.PLUGIN, Arrays.asList(PLUGIN_CODE_1, PLUGIN_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_K8S_SERVICE),
+                new Reportable(ComponentType.WIDGET, Arrays.asList(WIDGET_CODE_1, WIDGET_CODE_2),
+                        ReportableRemoteHandler.ENTANDO_ENGINE)
+        );
+    }
 
 }

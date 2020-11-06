@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -17,6 +18,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRepor
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
@@ -69,15 +71,30 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             Map<ReportableRemoteHandler, List<Reportable>> reportableByHandler =
                     this.getReportableComponentsByRemoteHandler(bundleReader);
 
-            analysisReport = reportableByHandler.keySet().stream()
-                    // for each remote handler => get whole analysis report
-                    .map(key -> analysisReportStrategies.get(key).getAnalysisReport(reportableByHandler.get(key)))
-                    .reduce(AnalysisReport::merge)
-                    .orElseGet(() -> {
-                        log.warn("The report analysis for the bundle {} tag {} returned an empty result",
-                                bundle.getMetadata().getName(), tag.getVersion());
-                        return new AnalysisReport();
-                    });
+            List<CompletableFuture<AnalysisReport>> futureList = reportableByHandler.keySet().stream()
+                    // for each remote handler => get whole analysis report async
+                    .map(key ->
+                            CompletableFuture.supplyAsync(
+                                    () -> analysisReportStrategies.get(key)
+                                            .getAnalysisReport(reportableByHandler.get(key)))
+                    )
+                    .collect(Collectors.toList());
+
+            // why using separate streams https://stackoverflow.com/questions/58700578/why-is-completablefuture-join-get-faster-in-separate-streams-than-using-one-stre
+
+            try {
+                analysisReport = futureList.stream().map(CompletableFuture::join)
+                        .reduce(AnalysisReport::merge)
+                        .orElseThrow(() -> {
+                            throw new ReportAnalysisException(String.format(
+                                    "An error occurred during the analysis report for the bundle %s with tag %s",
+                                    bundle.getMetadata().getName(), tag.getVersion()));
+                        });
+            } catch (CompletionException e) {
+                throw e.getCause() instanceof ReportAnalysisException
+                        ? (ReportAnalysisException) e.getCause()
+                        : e;
+            }
 
         } finally {
             bundleDownloader.cleanTargetDirectory();

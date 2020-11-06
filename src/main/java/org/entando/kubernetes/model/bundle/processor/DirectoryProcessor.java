@@ -115,7 +115,8 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
             final String componentFolder = "/" + bundleReader.getBundleCode();
             idList.add(componentFolder);
 
-            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted().collect(Collectors.toList());
+            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
+                    .collect(Collectors.toList());
             for (final String resourceFolder : resourceFolders) {
                 Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                         .relativize(Paths.get(resourceFolder));
@@ -123,10 +124,8 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
                 idList.add(folder);
             }
 
-            // FIXME switch comments when entando-de-app will support directories
-            // return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    // this.getReportableRemoteHandler());
-            return new Reportable(componentProcessor.getSupportedComponentType(), null, this.getReportableRemoteHandler());
+            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                    this.getReportableRemoteHandler());
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error reading bundle", e);
