@@ -5,8 +5,9 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
-import org.entando.kubernetes.client.request.AnalysisReportClientRequestBuilder;
+import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.HttpException;
@@ -390,6 +391,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList) {
 
         return this.getAnalysisReport(reportableList, ReportableRemoteHandler.ENTANDO_ENGINE,
+                AnalysisReportClientRequestFactory::createEngineAnalysisReportRequest,
                 "api", "analysis", "components", "diff");
     }
 
@@ -397,23 +399,30 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList) {
 
         return this.getAnalysisReport(reportableList, ReportableRemoteHandler.ENTANDO_CMS,
+                AnalysisReportClientRequestFactory::createCMSAnalysisReportRequest,
                 "api", "analysis", "cms", "components", "diff");
     }
 
     /**
      * request the AnalysisReport to a particular remote service for a list of Reportable.
      *
-     * @param reportableList          the List of Reportable of which get the report
-     * @param reportableRemoteHandler the ReportableRemoteHandler identifying the service to call (useful for error
-     *                                mex)
-     * @param pathSegments            the segments composing the path to call
+     * @param reportableList           the List of Reportable of which get the report
+     * @param reportableRemoteHandler  the ReportableRemoteHandler identifying the service to call (useful for error
+     *                                 mex)
+     * @param factoryRequestCreationFn a function containing the method of the AnalysisReportClientRequestFactory to
+     *                                 call to create the request right for the current scope
+     * @param pathSegments             the segments composing the path to call
      * @return the received AnalysisReport
      */
     private AnalysisReport getAnalysisReport(List<Reportable> reportableList,
-            ReportableRemoteHandler reportableRemoteHandler, String... pathSegments) {
+            ReportableRemoteHandler reportableRemoteHandler,
+            Function<AnalysisReportClientRequestFactory, AnalysisReportClientRequest> factoryRequestCreationFn,
+            String... pathSegments) {
 
-        AnalysisReportClientRequest analysisReportClientRequest = AnalysisReportClientRequestBuilder
-                .anAnalysisReportClientRequest().reportableList(reportableList).build();
+        AnalysisReportClientRequestFactory requestFactory = AnalysisReportClientRequestFactory
+                .anAnalysisReportClientRequest().reportableList(reportableList);
+
+        AnalysisReportClientRequest analysisReportClientRequest = factoryRequestCreationFn.apply(requestFactory);
 
         ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
                 .exchange(resolvePathSegments(pathSegments).build().toUri(),

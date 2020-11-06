@@ -132,10 +132,7 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                 idList.add(folder);
             }
 
-            // FIXME switch comments when entando-de-app will support directories
-            // return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-            // this.getReportableRemoteHandler());
-            return new Reportable(componentProcessor.getSupportedComponentType(), null,
+            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
                     this.getReportableRemoteHandler());
 
         } catch (IOException e) {
