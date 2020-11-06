@@ -116,6 +116,13 @@ public interface ComponentProcessor<T extends Descriptor> {
                 .orElse(new ArrayList<>());
     }
 
+    /**
+     * reads the keys of the components from the descriptor identified by the received filename.
+     *
+     * @param bundleReader the bundler reader to use in order to read the bundle
+     * @param fileName     the filename identifying the descriptor file to read
+     * @return the list of the keys of the components read from the descriptor
+     */
     default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName) {
 
         try {

@@ -430,7 +430,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                         new ParameterizedTypeReference<>() {
                         });
 
-        if (!reportResponseEntity.getStatusCode().is2xxSuccessful()) {
+        if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
             throw new ReportAnalysisException(String.format(
                     "An error occurred fetching the %s report analysis", reportableRemoteHandler));
         } else {

@@ -119,7 +119,7 @@ public class AnalysisReport {
      * @param getAnalysisReportComponentFn a function that get an AnalysisReport and returns the desired Map object
      * @param other                        the other AnalysisReport
      * @return the result of the received function on the current object if the result is not null, otherwise the result
-     * of the received function on the other object
+     *          of the received function on the other object
      */
     private Map<String, Status> getNotNullAnalysisReportComponent(
             Function<AnalysisReport, Map<String, Status>> getAnalysisReportComponentFn, AnalysisReport other) {

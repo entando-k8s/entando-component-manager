@@ -38,6 +38,11 @@ class ContentComponentProcessorTestDouble implements ComponentProcessor<ContentD
     }
 
     @Override
+    public List<Installable> process(List components) {
+        return new ArrayList<>();
+    }
+
+    @Override
     public ContentDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new ContentDescriptor();
     }
@@ -47,8 +52,4 @@ class ContentComponentProcessorTestDouble implements ComponentProcessor<ContentD
         return ComponentType.CONTENT;
     }
 
-    @Override
-    public List<Installable> process(List components) {
-        return new ArrayList<>();
-    }
 }

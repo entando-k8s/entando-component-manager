@@ -18,7 +18,7 @@ import lombok.experimental.Accessors;
 public class ContentAttribute {
 
     private String code;
-    private String value;
+    private Object value;
     private Map<String, Object> values;
     private List<ContentAttribute> elements;
     private List<ContentAttribute> compositeelements;
