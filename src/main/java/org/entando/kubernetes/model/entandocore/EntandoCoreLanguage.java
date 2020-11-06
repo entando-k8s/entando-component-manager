@@ -18,13 +18,13 @@ public class EntandoCoreLanguage {
     @Getter(AccessLevel.NONE)
     private boolean isActive;
 
-    public boolean getIsActive() {
-        return isActive;
-    }
-
     public EntandoCoreLanguage(LanguageDescriptor descriptor) {
         this.code = descriptor.getCode();
         this.description = descriptor.getDescription();
         this.isActive = descriptor.getIsActive();
+    }
+
+    public boolean getIsActive() {
+        return isActive;
     }
 }

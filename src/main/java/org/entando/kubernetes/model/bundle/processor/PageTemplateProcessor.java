@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageTemplateInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +29,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDescriptor> implements EntandoEngineReportableProcessor {
+public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -64,12 +64,14 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
             List<Installable<PageTemplateDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
-                PageTemplateDescriptor pageTemplateDescriptor = bundleReader.readDescriptorFile(fileName, PageTemplateDescriptor.class);
+                PageTemplateDescriptor pageTemplateDescriptor = bundleReader
+                        .readDescriptorFile(fileName, PageTemplateDescriptor.class);
                 if (pageTemplateDescriptor.getTemplatePath() != null) {
                     String tp = getRelativePath(fileName, pageTemplateDescriptor.getTemplatePath());
                     pageTemplateDescriptor.setTemplate(bundleReader.readFileAsString(tp));
                 }
-                InstallAction action = extractInstallAction(pageTemplateDescriptor.getCode(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(pageTemplateDescriptor.getCode(), actions, conflictStrategy,
+                        report);
                 installables.add(new PageTemplateInstallable(engineService, pageTemplateDescriptor, action));
             }
 
@@ -83,7 +85,8 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
     public List<Installable<PageTemplateDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.PAGE_TEMPLATE)
-                .map(c -> new PageTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new PageTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 

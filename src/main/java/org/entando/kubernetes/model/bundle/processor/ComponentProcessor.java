@@ -17,7 +17,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallReques
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -32,12 +31,14 @@ public interface ComponentProcessor<T extends Descriptor> {
 
     /**
      * a method to centralize the current descriptor concrete class managed by the concrete Processor class.
+     *
      * @return the class of the descriptor managed by the current processor
      */
     Class<T> getDescriptorClass();
 
     /**
      * a method to centralize the function to access the components needed by the concrete Processor.
+     *
      * @return the method of the ComponentSpecDescriptor needed to access the component managed bu the current processor
      */
     Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn();
@@ -60,11 +61,10 @@ public interface ComponentProcessor<T extends Descriptor> {
      * This method will process the component descriptor and should return an empty list or a list of all components
      * that should be installed.
      *
-     *
-     * @param bundleReader bundle reader capable of reading the bundle using it's descriptor
+     * @param bundleReader     bundle reader capable of reading the bundle using it's descriptor
      * @param conflictStrategy default action in case of a component conflict
-     * @param actions list of user provided actions in case of component conflicts
-     * @param report a bundle analysis conflict report
+     * @param actions          list of user provided actions in case of component conflicts
+     * @param report           a bundle analysis conflict report
      * @return Should return a list of Installables
      * @throws EntandoComponentManagerException in case of any error while reading any the file from the Zip package
      */
@@ -98,7 +98,7 @@ public interface ComponentProcessor<T extends Descriptor> {
     /**
      * read the list of the desired component descriptors filenames from the bundle descriptor and return it.
      *
-     * @param bundleReader               the BundleReader to use to read the bundle descriptor
+     * @param bundleReader the BundleReader to use to read the bundle descriptor
      * @return the list of the desired component descriptors filenames read from the bundle descriptor
      * @throws IOException                      if an error occurs during the bundle reading
      * @throws EntandoComponentManagerException if the param getComponentSelectionFnOpt is empty

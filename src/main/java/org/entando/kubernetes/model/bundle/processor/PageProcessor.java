@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -65,7 +64,8 @@ public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implem
 
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
-                InstallAction action = extractInstallAction(pageDescriptor.getCode(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(pageDescriptor.getCode(), actions, conflictStrategy,
+                        report);
                 installables.add(new PageInstallable(engineService, pageDescriptor, action));
             }
 

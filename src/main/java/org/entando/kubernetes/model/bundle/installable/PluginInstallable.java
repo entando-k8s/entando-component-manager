@@ -51,7 +51,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     @Override
     public String getName() {
 
-        if (! StringUtils.isEmpty(this.representation.getDeploymentBaseName())) {
+        if (!StringUtils.isEmpty(this.representation.getDeploymentBaseName())) {
             return this.representation.getDeploymentBaseName();
         } else {
             // TODO when we'll introduce a validation step, remove this try catch and move the check

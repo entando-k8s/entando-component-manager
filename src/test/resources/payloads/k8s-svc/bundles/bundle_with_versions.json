@@ -1,11 +1,11 @@
 {
-  "code":"cool-bundle",
-  "title":"Nice bundle",
-  "description":"Great bundle",
-  "thumbnail":null,
-  "componentTypes":null,
-  "installedJob":null,
-  "lastJob":null,
+  "code": "cool-bundle",
+  "title": "Nice bundle",
+  "description": "Great bundle",
+  "thumbnail": null,
+  "componentTypes": null,
+  "installedJob": null,
+  "lastJob": null,
   "versions": [
     {
       "version": "v0.0.1"

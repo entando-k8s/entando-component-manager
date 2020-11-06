@@ -15,10 +15,6 @@ public class RestResponse<T, M> {
     private M metaData;
     private List<RestError> errors = new ArrayList<>();
 
-    public void setMetaData(M metadata) {
-        this.metaData = metadata;
-    }
-
     public RestResponse(final T payload) {
         setPayload(payload);
     }
@@ -31,6 +27,10 @@ public class RestResponse<T, M> {
     public RestResponse(final T payload, final M metaData, final List<RestError> errors) {
         this(payload, metaData);
         setErrors(errors);
+    }
+
+    public void setMetaData(M metadata) {
+        this.metaData = metadata;
     }
 
     public void addError(final RestError error) {

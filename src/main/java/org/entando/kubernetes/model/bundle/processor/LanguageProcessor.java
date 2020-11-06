@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LanguageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -31,7 +30,8 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor> implements EntandoEngineReportableProcessor {
+public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -92,7 +92,8 @@ public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor
     public List<Installable<LanguageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.LANGUAGE)
-                .map(c -> new LanguageInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new LanguageInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 

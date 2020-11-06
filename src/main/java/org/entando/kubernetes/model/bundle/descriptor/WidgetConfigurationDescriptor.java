@@ -13,6 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WidgetConfigurationDescriptor {
+
     private Integer pos;
     private String code;
     private Map<String, Object> config;

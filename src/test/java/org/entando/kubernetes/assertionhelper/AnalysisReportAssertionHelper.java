@@ -1,21 +1,14 @@
 package org.entando.kubernetes.assertionhelper;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static wiremock.org.eclipse.jetty.util.LazyList.hasEntry;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.CollectionUtils;

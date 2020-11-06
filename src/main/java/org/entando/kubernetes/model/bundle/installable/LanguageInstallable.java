@@ -12,7 +12,8 @@ public class LanguageInstallable extends Installable<LanguageDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public LanguageInstallable(EntandoCoreClient engineService, LanguageDescriptor languageDescriptor, InstallAction action) {
+    public LanguageInstallable(EntandoCoreClient engineService, LanguageDescriptor languageDescriptor,
+            InstallAction action) {
         super(languageDescriptor, action);
         this.engineService = engineService;
     }

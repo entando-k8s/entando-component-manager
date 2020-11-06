@@ -4,30 +4,30 @@ build:
   artifacts:
     - image: entando/entando-component-manager
       context: .
-      docker: {}
+      docker: { }
   tagPolicy:
     envTemplate:
       template: '{{.DOCKER_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}'
-  local: {}
+  local: { }
 deploy:
-  kubectl: {}
+  kubectl: { }
 profiles:
   - name: jvm
     build:
       artifacts:
         - image: entando/entando-component-manager
           context: .
-          docker: {}
+          docker: { }
       tagPolicy:
         envTemplate:
           template: '{{.DOCKER_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}'
-      local: {}
+      local: { }
   - name: dev
     build:
       tagPolicy:
         envTemplate:
           template: '{{.DOCKER_REGISTRY}}/{{.IMAGE_NAME}}:{{.DIGEST_HEX}}'
-      local: {}
+      local: { }
     deploy:
       helm:
         releases:

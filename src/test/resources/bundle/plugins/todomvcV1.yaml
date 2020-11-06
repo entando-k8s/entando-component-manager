@@ -6,12 +6,12 @@ spec:
   image: entando/todomvcV1:1.0.0
   replicas: 1
   dbms: mysql
-  parameters: {}
+  parameters: { }
   ingressPath: "/helloWorld"
   healthCheckPath: "/api/v1/todos"
   securityLevel: "strict"
-  connectionConfigNames: []
-  permissions: []
+  connectionConfigNames: [ ]
+  permissions: [ ]
   roles:
     - name: theLucas-admin
       code: "theLucas-admin"

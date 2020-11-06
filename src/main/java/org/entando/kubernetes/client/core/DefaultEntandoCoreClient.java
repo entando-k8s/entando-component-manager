@@ -60,9 +60,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
+    private static final String USAGE_PATH_SEGMENT = "usage";
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
-    private static final String USAGE_PATH_SEGMENT = "usage";
 
     public DefaultEntandoCoreClient(
             @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
@@ -193,8 +193,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
         restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode(), "widgets",
-                        widgetDescriptor.getPos().toString()).build().toUri(),
-                        new EntandoCorePageWidgetConfiguration(widgetDescriptor));
+                widgetDescriptor.getPos().toString()).build().toUri(),
+                new EntandoCorePageWidgetConfiguration(widgetDescriptor));
     }
 
     @Override
@@ -325,7 +325,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        restTemplate.exchange(resolvePathSegments("api", "plugins", "cms", "assets", descriptor.getCorrelationCode()).build().toUri(),
+        restTemplate.exchange(
+                resolvePathSegments("api", "plugins", "cms", "assets", descriptor.getCorrelationCode()).build().toUri(),
                 HttpMethod.PUT, requestEntity, String.class);
     }
 
@@ -402,9 +403,10 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     /**
      * request the AnalysisReport to a particular remote service for a list of Reportable.
      *
-     * @param reportableList the List of Reportable of which get the report
-     * @param reportableRemoteHandler the ReportableRemoteHandler identifying the service to call (useful for error mex)
-     * @param pathSegments the segments composing the path to call
+     * @param reportableList          the List of Reportable of which get the report
+     * @param reportableRemoteHandler the ReportableRemoteHandler identifying the service to call (useful for error
+     *                                mex)
+     * @param pathSegments            the segments composing the path to call
      * @return the received AnalysisReport
      */
     private AnalysisReport getAnalysisReport(List<Reportable> reportableList,

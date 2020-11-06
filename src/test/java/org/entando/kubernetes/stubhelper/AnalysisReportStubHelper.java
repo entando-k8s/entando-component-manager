@@ -7,16 +7,26 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRepor
 
 public class AnalysisReportStubHelper {
 
-    public static final Map.Entry<String, Status> CATEGORY_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.CATEGORY_CODE_1, Status.DIFF);
-    public static final Map.Entry<String, Status> CATEGORY_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.CATEGORY_CODE_2, Status.NEW);
-    public static final Map.Entry<String, Status> FRAGMENT_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.FRAGMENT_CODE_1, Status.DIFF);
-    public static final Map.Entry<String, Status> FRAGMENT_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.FRAGMENT_CODE_2, Status.NEW);
-    public static final Map.Entry<String, Status> PLUGIN_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.PLUGIN_CODE_1, Status.DIFF);
-    public static final Map.Entry<String, Status> PLUGIN_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
-    public static final Map.Entry<String, Status> ASSET_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.ASSET_CODE_1, Status.DIFF);
-    public static final Map.Entry<String, Status> ASSET_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.ASSET_CODE_2, Status.NEW);
-    public static final Map.Entry<String, Status> CONTENT_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.CONTENT_CODE_1, Status.DIFF);
-    public static final Map.Entry<String, Status> CONTENT_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.CONTENT_CODE_2, Status.NEW);
+    public static final Map.Entry<String, Status> CATEGORY_1_ENTRY = new SimpleEntry<>(
+            ReportableStubHelper.CATEGORY_CODE_1, Status.DIFF);
+    public static final Map.Entry<String, Status> CATEGORY_2_ENTRY = new SimpleEntry<>(
+            ReportableStubHelper.CATEGORY_CODE_2, Status.NEW);
+    public static final Map.Entry<String, Status> FRAGMENT_1_ENTRY = new SimpleEntry<>(
+            ReportableStubHelper.FRAGMENT_CODE_1, Status.DIFF);
+    public static final Map.Entry<String, Status> FRAGMENT_2_ENTRY = new SimpleEntry<>(
+            ReportableStubHelper.FRAGMENT_CODE_2, Status.NEW);
+    public static final Map.Entry<String, Status> PLUGIN_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.PLUGIN_CODE_1,
+            Status.DIFF);
+    public static final Map.Entry<String, Status> PLUGIN_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.PLUGIN_CODE_2,
+            Status.NEW);
+    public static final Map.Entry<String, Status> ASSET_1_ENTRY = new SimpleEntry<>(ReportableStubHelper.ASSET_CODE_1,
+            Status.DIFF);
+    public static final Map.Entry<String, Status> ASSET_2_ENTRY = new SimpleEntry<>(ReportableStubHelper.ASSET_CODE_2,
+            Status.NEW);
+    public static final Map.Entry<String, Status> CONTENT_1_ENTRY = new SimpleEntry<>(
+            ReportableStubHelper.CONTENT_CODE_1, Status.DIFF);
+    public static final Map.Entry<String, Status> CONTENT_2_ENTRY = new SimpleEntry<>(
+            ReportableStubHelper.CONTENT_CODE_2, Status.NEW);
 
     public static AnalysisReport stubAnalysisReportWithCategories() {
         return AnalysisReport.builder()

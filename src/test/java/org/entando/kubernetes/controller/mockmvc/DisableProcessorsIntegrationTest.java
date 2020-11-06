@@ -46,26 +46,19 @@ import org.springframework.web.context.WebApplicationContext;
 @WithMockUser
 public class DisableProcessorsIntegrationTest {
 
+    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
     private MockMvc mockMvc;
-
     @Autowired
     private WebApplicationContext context;
-
     @Autowired
     private DatabaseCleaner databaseCleaner;
-
     @Autowired
     private K8SServiceClient k8SServiceClient;
-
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
-
     @MockBean
     private EntandoCoreClient coreClient;
-
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
-
-    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
 
     @BeforeEach
     public void setup() {

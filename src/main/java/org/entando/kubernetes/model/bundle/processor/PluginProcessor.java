@@ -19,7 +19,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
 import org.springframework.stereotype.Service;
@@ -27,14 +26,16 @@ import org.springframework.stereotype.Service;
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
  *
- * <p>Will read the service property on the component descriptor yaml and convert it into a EntandoPlugin custom resource
+ * <p>Will read the service property on the component descriptor yaml and convert it into a EntandoPlugin custom
+ * resource
  *
  * @author Sergio Marcelino
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements EntandoK8SServiceReportableProcessor {
+public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
+        EntandoK8SServiceReportableProcessor {
 
     private final KubernetesService kubernetesService;
 
@@ -68,7 +69,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                InstallAction action = extractInstallAction(plugin.getDockerImage().toString(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(plugin.getDockerImage().toString(), actions,
+                        conflictStrategy, report);
                 installableList.add(new PluginInstallable(kubernetesService, plugin, action));
             }
             return installableList;

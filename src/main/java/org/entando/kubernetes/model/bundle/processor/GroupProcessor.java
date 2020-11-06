@@ -20,18 +20,17 @@ import org.entando.kubernetes.model.bundle.installable.GroupInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
  * Processor to create Groups.
- *
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> implements EntandoEngineReportableProcessor {
+public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -70,8 +69,9 @@ public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> impl
             List<Installable<GroupDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
-                List<GroupDescriptor> groupDescriptorList = bundleReader.readListOfDescriptorFile(fileName, GroupDescriptor.class);
-                for (GroupDescriptor gd: groupDescriptorList) {
+                List<GroupDescriptor> groupDescriptorList = bundleReader
+                        .readListOfDescriptorFile(fileName, GroupDescriptor.class);
+                for (GroupDescriptor gd : groupDescriptorList) {
                     InstallAction action = extractInstallAction(gd.getCode(), actions, conflictStrategy, report);
                     installables.add(new GroupInstallable(engineService, gd, action));
                 }

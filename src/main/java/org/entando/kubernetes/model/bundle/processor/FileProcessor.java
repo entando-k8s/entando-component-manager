@@ -74,7 +74,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
             if (bundleReader.containsResourceFolder()) {
                 final String componentFolder = "/" + bundleReader.getBundleCode();
 
-                List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted().collect(Collectors.toList());
+                List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted()
+                        .collect(Collectors.toList());
                 for (final String resourceFile : resourceFiles) {
                     final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
 
@@ -97,7 +98,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
     public List<Installable<FileDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.RESOURCE)
-                .map(c ->  new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

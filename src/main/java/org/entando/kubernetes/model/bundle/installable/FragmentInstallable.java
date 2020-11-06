@@ -12,7 +12,8 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public FragmentInstallable(EntandoCoreClient engineService, FragmentDescriptor fragmentDescriptor, InstallAction action) {
+    public FragmentInstallable(EntandoCoreClient engineService, FragmentDescriptor fragmentDescriptor,
+            InstallAction action) {
         super(fragmentDescriptor, action);
         this.engineService = engineService;
     }

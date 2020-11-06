@@ -66,9 +66,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
 
-    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
-    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
-
     public static final UriBuilder ANALYSIS_REPORT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", "todomvc", "analysis");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
@@ -79,9 +76,7 @@ public class TestInstallUtils {
             .pathSegment("components", "todomvc", "install");
     public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", "todomvc", "uninstall");
-
     public static final String JOBS_ENDPOINT = "/jobs";
-
     public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas-0-0-1-snapshot";
     public static final String EXPECTED_INGRESS_PATH = "/entando/the-lucas/0-0-1-snapshot";
     public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
@@ -89,6 +84,8 @@ public class TestInstallUtils {
     public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
     public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
     public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
+    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
+    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
     @SneakyThrows
     public static String simulateSuccessfullyCompletedInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
@@ -540,7 +537,6 @@ public class TestInstallUtils {
     public static String requestPath(final LoggedRequest request) {
         return requestProperty(request, "path");
     }
-
 
 
     public static PluginDescriptor getTestDescriptor() {

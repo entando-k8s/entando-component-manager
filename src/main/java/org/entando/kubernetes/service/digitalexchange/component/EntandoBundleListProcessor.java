@@ -62,7 +62,8 @@ public class EntandoBundleListProcessor extends RequestListProcessor<EntandoBund
                 case INSTALLED:
                     return c -> FilterUtils.filterBoolean(filter, c.isInstalled());
                 case VERSION:
-                    return c -> c.getVersions().stream().anyMatch(cv -> FilterUtils.filterString(filter, cv.getVersion()));
+                    return c -> c.getVersions().stream()
+                            .anyMatch(cv -> FilterUtils.filterString(filter, cv.getVersion()));
                 default:
                     return null;
             }

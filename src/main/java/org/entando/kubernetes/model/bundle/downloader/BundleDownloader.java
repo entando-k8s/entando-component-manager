@@ -15,13 +15,22 @@ public abstract class BundleDownloader {
 
     protected Path targetPath;
 
-    public enum Type {
-        NPM,
-        GIT
-    }
-
     public BundleDownloader() {
 
+    }
+
+    public static BundleDownloader getForType(String type) {
+        if (type == null) {
+            return new GitBundleDownloader();
+        }
+
+        switch (type.toLowerCase()) {
+            case "npm":
+                return new NpmBundleDownloader();
+            case "git":
+            default:
+                return new GitBundleDownloader();
+        }
     }
 
     public Path saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
@@ -62,6 +71,11 @@ public abstract class BundleDownloader {
         }
     }
 
+    public enum Type {
+        NPM,
+        GIT
+    }
+
     public static class BundleDownloaderException extends RuntimeException {
 
         public BundleDownloaderException() {
@@ -83,20 +97,6 @@ public abstract class BundleDownloader {
         protected BundleDownloaderException(String message, Throwable cause, boolean enableSuppression,
                 boolean writableStackTrace) {
             super(message, cause, enableSuppression, writableStackTrace);
-        }
-    }
-
-    public static BundleDownloader getForType(String type) {
-        if (type == null) {
-            return new GitBundleDownloader();
-        }
-
-        switch (type.toLowerCase()) {
-            case "npm":
-                return new NpmBundleDownloader();
-            case "git":
-            default:
-                return new GitBundleDownloader();
         }
     }
 }

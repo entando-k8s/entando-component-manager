@@ -26,7 +26,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor> implements EntandoEngineReportableProcessor {
+public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -77,7 +78,8 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
     public List<Installable<FragmentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.FRAGMENT)
-                .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 

@@ -31,10 +31,6 @@ public enum FilterType {
         this.value = value;
     }
 
-    public String getValue() {
-        return this.value;
-    }
-
     public static FilterType parse(String type) {
         final FilterType[] values = values();
         for (FilterType value : values) {
@@ -43,6 +39,10 @@ public enum FilterType {
             }
         }
         throw new IllegalArgumentException(type + " is not a supported filter type");
+    }
+
+    public String getValue() {
+        return this.value;
     }
 
     public abstract Object parseFilterValue(String var1);

@@ -23,17 +23,17 @@ public class WidgetDescriptor implements Descriptor {
     private ConfigUIDescriptor configUi;
     private String bundleId;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
+
     @Getter
     @Setter
     public static class ConfigUIDescriptor {
 
         private String customElement;
         private List<String> resources;
-    }
-
-    @Override
-    public ComponentKey getComponentKey() {
-        return new ComponentKey(code);
     }
 
 }

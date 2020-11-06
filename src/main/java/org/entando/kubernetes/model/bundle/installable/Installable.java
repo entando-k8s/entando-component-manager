@@ -21,10 +21,8 @@ public abstract class Installable<T extends Descriptor> {
 
     protected final T representation;
     protected final InstallAction action;
-
-    protected EntandoBundleComponentJobEntity job;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
+    protected EntandoBundleComponentJobEntity job;
 
     public Installable(T representation, InstallAction action) {
         this.representation = representation;
@@ -63,8 +61,8 @@ public abstract class Installable<T extends Descriptor> {
     }
 
     /**
-     * Important to understand if something has changed in case of an updated If the checksum didn't change, we don't need to modify this
-     * component.
+     * Important to understand if something has changed in case of an updated If the checksum didn't change, we don't
+     * need to modify this component.
      *
      * @return md5 checksum of the component's payload
      */

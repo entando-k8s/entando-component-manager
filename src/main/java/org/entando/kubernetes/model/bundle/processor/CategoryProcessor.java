@@ -3,7 +3,6 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -22,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.CategoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -72,8 +69,9 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
             List<Installable<CategoryDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
-                List<CategoryDescriptor> categoryDescriptorList = bundleReader.readListOfDescriptorFile(fileName, CategoryDescriptor.class);
-                for (CategoryDescriptor cd: categoryDescriptorList) {
+                List<CategoryDescriptor> categoryDescriptorList = bundleReader
+                        .readListOfDescriptorFile(fileName, CategoryDescriptor.class);
+                for (CategoryDescriptor cd : categoryDescriptorList) {
                     InstallAction action = extractInstallAction(cd.getCode(), actions, conflictStrategy, report);
                     installables.add(new CategoryInstallable(engineService, cd, action));
                 }
@@ -89,7 +87,8 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
     public List<Installable<CategoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CATEGORY)
-                .map(c -> new CategoryInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new CategoryInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 

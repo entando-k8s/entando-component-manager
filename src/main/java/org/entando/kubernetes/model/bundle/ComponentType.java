@@ -33,16 +33,16 @@ public enum ComponentType {
         this.installPriority = installPriority;
     }
 
+    public static boolean isValidType(String type) {
+        return Arrays.stream(values()).anyMatch(e -> e.getTypeName().equalsIgnoreCase(type));
+    }
+
     public String getTypeName() {
         return this.typeName;
     }
 
     public int getInstallPriority() {
         return this.installPriority;
-    }
-
-    public static boolean isValidType(String type) {
-        return Arrays.stream(values()).anyMatch(e -> e.getTypeName().equalsIgnoreCase(type));
     }
 
 }

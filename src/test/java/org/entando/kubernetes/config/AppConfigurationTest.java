@@ -132,7 +132,8 @@ class AppConfigurationTest {
     @Test
     void analysisReportStrategiesShouldContainTheRightElements() {
 
-        Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStreategies = appConfig.analysisReportStrategies();
+        Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStreategies = appConfig
+                .analysisReportStrategies();
         Map<ReportableRemoteHandler, AnalysisReportFunction> expected = allAnalysisReportStrategies();
 
         expected.keySet()
@@ -141,7 +142,6 @@ class AppConfigurationTest {
                     assertThat(analysisReportStreategies.get(key)).isNotNull();
                 });
     }
-
 
 
     private Map<ReportableRemoteHandler, AnalysisReportFunction> allAnalysisReportStrategies() {

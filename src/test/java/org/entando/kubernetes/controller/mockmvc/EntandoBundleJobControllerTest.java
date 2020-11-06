@@ -43,14 +43,11 @@ import org.springframework.web.context.WebApplicationContext;
 public class EntandoBundleJobControllerTest {
 
     MockMvc mvc;
-
+    Map<UUID, EntandoBundleJobEntity> jobs;
     @Autowired
     private WebApplicationContext context;
-
     @Autowired
     private EntandoBundleJobRepository jobRepository;
-
-    Map<UUID, EntandoBundleJobEntity> jobs;
 
     @BeforeEach
     public void setup() {

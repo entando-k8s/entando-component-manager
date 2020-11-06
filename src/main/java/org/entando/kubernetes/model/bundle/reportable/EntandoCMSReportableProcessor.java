@@ -1,6 +1,5 @@
 /**
- * this interface has to be implemented by those processors we want they create a report in order to manage
- * conflicts.
+ * this interface has to be implemented by those processors we want they create a report in order to manage conflicts.
  *
  * <p>TARGETING ENTANDO CMS.</p>
  */

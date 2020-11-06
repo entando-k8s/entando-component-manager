@@ -122,7 +122,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             JobScheduler scheduler = new JobScheduler();
             BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
-
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
                 Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag,
@@ -143,7 +142,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
                 JobProgress installProgress = new JobProgress(1.0 / componentJobQueue.size());
 
-
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
                     EntandoBundleComponentJobEntity installJob = optCompJob.get();
@@ -161,7 +159,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 }
                 if (parentJobResult.hasException()) {
                     log.error("An error occurred during component installation", parentJobResult.getException());
-                    log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob.getComponentVersion());
+                    log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
+                            .getComponentVersion());
                     parentJobResult = rollback(scheduler);
                 } else {
 
@@ -192,10 +191,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             while (optCompJob.isPresent()) {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
-                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob, this::executeRollback);
+                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob,
+                            this::executeRollback);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
-                        throw new EntandoComponentManagerException(rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
-                                + " rollback can't proceed due to an error with one of the components");
+                        throw new EntandoComponentManagerException(
+                                rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
+                                        + " rollback can't proceed due to an error with one of the components");
                     }
                     rollbackScheduler.recordProcessedComponentJob(tracker.getJob());
                 }
@@ -218,8 +219,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
      * download the bundle, create a BundleReader to read it and return it.
      *
      * @param bundleDownloader the BundleDownloader responsible to download the desired bundle
-     * @param bundle the object defining the bundle to download
-     * @param tag the object defining the version of the bundle to download
+     * @param bundle           the object defining the bundle to download
+     * @param tag              the object defining the version of the bundle to download
      * @return the created BundleReader ready to read the bundle
      */
     private BundleReader downloadBundleAndGetBundleReader(BundleDownloader bundleDownloader, EntandoDeBundle bundle,
@@ -287,7 +288,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
           Uninstall operations should be idempotent to be able to provide this
          */
         return component.getStatus().equals(JobStatus.INSTALL_COMPLETED)
-                || (component.getStatus().equals(JobStatus.INSTALL_ERROR) && component.getComponentType() == ComponentType.PLUGIN);
+                || (component.getStatus().equals(JobStatus.INSTALL_ERROR)
+                && component.getComponentType() == ComponentType.PLUGIN);
     }
 
     private JobResult executeRollback(Installable<?> installable) {

@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoCMSReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -67,7 +66,8 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
             for (String fileName : descriptorList) {
                 ContentTypeDescriptor contentTypeDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentTypeDescriptor.class);
-                InstallAction action = extractInstallAction(contentTypeDescriptor.getCode(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(contentTypeDescriptor.getCode(), actions, conflictStrategy,
+                        report);
                 installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor, action));
             }
 
@@ -81,7 +81,8 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
     public List<Installable<ContentTypeDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT_TYPE)
-                .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 

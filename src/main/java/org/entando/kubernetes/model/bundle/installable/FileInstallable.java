@@ -9,6 +9,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
 @Slf4j
 public class FileInstallable extends Installable<FileDescriptor> {
+
     private final EntandoCoreClient engineService;
 
     public FileInstallable(EntandoCoreClient engineService, FileDescriptor fileDescriptor, InstallAction action) {

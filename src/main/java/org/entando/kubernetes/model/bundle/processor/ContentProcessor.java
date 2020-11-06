@@ -3,7 +3,6 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -69,7 +67,8 @@ public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
             for (String fileName : descriptorList) {
                 ContentDescriptor contentDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentDescriptor.class);
-                InstallAction action = extractInstallAction(contentDescriptor.getId(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(contentDescriptor.getId(), actions, conflictStrategy,
+                        report);
                 installables.add(new ContentInstallable(engineService, contentDescriptor, action));
             }
 

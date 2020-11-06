@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +29,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> implements EntandoEngineReportableProcessor {
+public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -69,7 +69,8 @@ public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> impl
             final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
 
             for (String ldf : descriptorList) {
-                List<LabelDescriptor> labelDescriptorList = bundleReader.readListOfDescriptorFile(ldf, LabelDescriptor.class);
+                List<LabelDescriptor> labelDescriptorList = bundleReader
+                        .readListOfDescriptorFile(ldf, LabelDescriptor.class);
                 for (LabelDescriptor ld : labelDescriptorList) {
                     InstallAction action = extractInstallAction(ld.getKey(), actions, conflictStrategy, report);
                     installables.add(new LabelInstallable(engineService, ld, action));

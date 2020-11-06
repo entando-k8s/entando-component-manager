@@ -15,20 +15,35 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InstallActionsByComponentType {
-    @Default private Map<String, InstallAction> widgets = new HashMap<>();
-    @Default private Map<String, InstallAction> fragments = new HashMap<>();
-    @Default private Map<String, InstallAction> pages = new HashMap<>();
-    @Default private Map<String, InstallAction> pageTemplates = new HashMap<>();
-    @Default private Map<String, InstallAction> contents = new HashMap<>();
-    @Default private Map<String, InstallAction> contentTemplates = new HashMap<>();
-    @Default private Map<String, InstallAction> contentTypes = new HashMap<>();
-    @Default private Map<String, InstallAction> assets = new HashMap<>();
-    @Default private Map<String, InstallAction> resources = new HashMap<>();
-    @Default private Map<String, InstallAction> plugins = new HashMap<>();
-    @Default private Map<String, InstallAction> categories = new HashMap<>();
-    @Default private Map<String, InstallAction> groups = new HashMap<>();
-    @Default private Map<String, InstallAction> labels = new HashMap<>();
-    @Default private Map<String, InstallAction> languages = new HashMap<>();
+
+    @Default
+    private Map<String, InstallAction> widgets = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> fragments = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> pages = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> pageTemplates = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> contents = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> contentTemplates = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> contentTypes = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> assets = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> resources = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> plugins = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> categories = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> groups = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> labels = new HashMap<>();
+    @Default
+    private Map<String, InstallAction> languages = new HashMap<>();
 
     public Map<String, InstallAction> getActionsByType(ComponentType type) {
         switch (type) {

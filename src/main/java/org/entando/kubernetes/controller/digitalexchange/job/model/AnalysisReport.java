@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.springframework.util.CollectionUtils;
 
@@ -18,20 +17,34 @@ import org.springframework.util.CollectionUtils;
 @AllArgsConstructor
 public class AnalysisReport {
 
-    @Default private Map<String, Status> widgets = new HashMap<>();
-    @Default private Map<String, Status> fragments = new HashMap<>();
-    @Default private Map<String, Status> pages = new HashMap<>();
-    @Default private Map<String, Status> pageTemplates = new HashMap<>();
-    @Default private Map<String, Status> contents = new HashMap<>();
-    @Default private Map<String, Status> contentTemplates = new HashMap<>();
-    @Default private Map<String, Status> contentTypes = new HashMap<>();
-    @Default private Map<String, Status> assets = new HashMap<>();
-    @Default private Map<String, Status> resources = new HashMap<>();
-    @Default private Map<String, Status> plugins = new HashMap<>();
-    @Default private Map<String, Status> categories = new HashMap<>();
-    @Default private Map<String, Status> groups = new HashMap<>();
-    @Default private Map<String, Status> labels = new HashMap<>();
-    @Default private Map<String, Status> languages = new HashMap<>();
+    @Default
+    private Map<String, Status> widgets = new HashMap<>();
+    @Default
+    private Map<String, Status> fragments = new HashMap<>();
+    @Default
+    private Map<String, Status> pages = new HashMap<>();
+    @Default
+    private Map<String, Status> pageTemplates = new HashMap<>();
+    @Default
+    private Map<String, Status> contents = new HashMap<>();
+    @Default
+    private Map<String, Status> contentTemplates = new HashMap<>();
+    @Default
+    private Map<String, Status> contentTypes = new HashMap<>();
+    @Default
+    private Map<String, Status> assets = new HashMap<>();
+    @Default
+    private Map<String, Status> resources = new HashMap<>();
+    @Default
+    private Map<String, Status> plugins = new HashMap<>();
+    @Default
+    private Map<String, Status> categories = new HashMap<>();
+    @Default
+    private Map<String, Status> groups = new HashMap<>();
+    @Default
+    private Map<String, Status> labels = new HashMap<>();
+    @Default
+    private Map<String, Status> languages = new HashMap<>();
 
     public Map<String, Status> getReportByType(ComponentType type) {
         switch (type) {
@@ -106,12 +119,12 @@ public class AnalysisReport {
      * @param getAnalysisReportComponentFn a function that get an AnalysisReport and returns the desired Map object
      * @param other                        the other AnalysisReport
      * @return the result of the received function on the current object if the result is not null, otherwise the result
-     *              of the received function on the other object
+     * of the received function on the other object
      */
     private Map<String, Status> getNotNullAnalysisReportComponent(
             Function<AnalysisReport, Map<String, Status>> getAnalysisReportComponentFn, AnalysisReport other) {
 
-        return ! CollectionUtils.isEmpty(getAnalysisReportComponentFn.apply(this))
+        return !CollectionUtils.isEmpty(getAnalysisReportComponentFn.apply(this))
                 ? getAnalysisReportComponentFn.apply(this)
                 : getAnalysisReportComponentFn.apply(other);
     }

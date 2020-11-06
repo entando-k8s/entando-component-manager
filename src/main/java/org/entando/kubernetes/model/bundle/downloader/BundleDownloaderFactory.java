@@ -25,12 +25,12 @@ public class BundleDownloaderFactory {
         return this.getDefaultSupplier().get();
     }
 
-    public void setDefaultSupplier(Supplier<BundleDownloader> defaultSupplier) {
-        this.defaultSupplier = defaultSupplier;
-    }
-
     public Supplier<BundleDownloader> getDefaultSupplier() {
         return this.defaultSupplier;
+    }
+
+    public void setDefaultSupplier(Supplier<BundleDownloader> defaultSupplier) {
+        this.defaultSupplier = defaultSupplier;
     }
 
 }

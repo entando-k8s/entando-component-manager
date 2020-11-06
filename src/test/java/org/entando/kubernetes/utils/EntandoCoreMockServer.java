@@ -150,8 +150,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     /**
      * stub a successful response for the Engine AnalysisReport endpoint.
      *
-     * @param customStubResourcePath if present the content of the file identified by this param will be used as response
-     *                               otherwise the default value will be used
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as
+     *                               response otherwise the default value will be used
      * @return this instance of the EntandoCoreMockServer
      */
     public EntandoCoreMockServer withEngineAnalysisReportSupport(String customStubResourcePath) {
@@ -162,8 +162,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     /**
      * stub a successful response for the CMS AnalysisReport endpoint.
      *
-     * @param customStubResourcePath if present the content of the file identified by this param will be used as response,
-     *                               otherwise the default value will be used
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as
+     *                               response, otherwise the default value will be used
      * @return this instance of the EntandoCoreMockServer
      */
     public EntandoCoreMockServer withCMSAnalysisReportSupport(String customStubResourcePath) {
@@ -174,9 +174,9 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     /**
      * stub a successful response for the AnalysisReport endpoint identified by the received URL.
      *
-     * @param customStubResourcePath if present the content of the file identified by this param will be used as response,
-     *      *                        otherwise the default value will be used
-     * @param url the URL to use as AnalysisReport endpoint
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as
+     *                               response, *                        otherwise the default value will be used
+     * @param url                    the URL to use as AnalysisReport endpoint
      * @return this instance of the EntandoCoreMockServer
      */
     private EntandoCoreMockServer withGenericAnalysisReportSupport(String customStubResourcePath, String url) {
@@ -223,6 +223,13 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             this.urlTemplate = urlTemplate;
         }
 
+        public static ComponentUsageApiEndpoint getForComponentType(ComponentType type) {
+            return Arrays.stream(values())
+                    .filter(ep -> ep.componentType.equals(type))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("No usage endpoint for type " + type.toString()));
+        }
+
         public String expandUrl() {
             return expandUrlWithCode(this.componentCode);
         }
@@ -231,13 +238,6 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             Map<String, Object> variables = new HashMap<>();
             variables.put("code", code);
             return UriComponentsBuilder.newInstance().path(urlTemplate).buildAndExpand(variables).toUriString();
-        }
-
-        public static ComponentUsageApiEndpoint getForComponentType(ComponentType type) {
-            return Arrays.stream(values())
-                    .filter(ep -> ep.componentType.equals(type))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No usage endpoint for type " + type.toString()));
         }
     }
 }

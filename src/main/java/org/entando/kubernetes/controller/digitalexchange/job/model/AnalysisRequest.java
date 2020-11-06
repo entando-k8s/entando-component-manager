@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AnalysisRequest {
 
-    @Default private final String version = "latest";
+    @Default
+    private final String version = "latest";
 
 }

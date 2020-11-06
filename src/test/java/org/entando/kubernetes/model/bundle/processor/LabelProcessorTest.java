@@ -56,7 +56,6 @@ public class LabelProcessorTest {
         when(bundleReader.readListOfDescriptorFile("labels/labels.yaml", LabelDescriptor.class))
                 .thenReturn(singletonList(new LabelDescriptor("HELLO", singletonMap("en", "Hello"))));
 
-
         final List<? extends Installable> installables = processor.process(bundleReader);
 
         assertThat(installables).hasSize(1);

@@ -2,10 +2,8 @@ package org.entando.kubernetes.client.core;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import org.entando.kubernetes.client.ECMClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;

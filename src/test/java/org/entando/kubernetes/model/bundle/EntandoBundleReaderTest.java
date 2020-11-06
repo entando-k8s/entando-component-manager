@@ -21,7 +21,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRepor
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
-import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
@@ -49,9 +48,9 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class EntandoBundleReaderTest {
 
-    BundleReader bundleReader;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
+    BundleReader bundleReader;
     Path bundleFolder;
 
     @BeforeEach
@@ -185,7 +184,8 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldReadPluginFromBundleV2() throws IOException {
 
-        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
         assertThat(descriptor.getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
         assertThat(descriptor.getImage()).isEqualTo("entando/todomvcV2:1.0.0");

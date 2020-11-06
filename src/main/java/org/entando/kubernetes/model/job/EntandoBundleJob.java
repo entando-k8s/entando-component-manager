@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EntandoBundleJob implements TrackableJob {
+
     private UUID id;
     private String componentId;
     private String componentName;
@@ -45,7 +46,8 @@ public class EntandoBundleJob implements TrackableJob {
         return fromEntity(entity, new ArrayList<>());
     }
 
-    public static EntandoBundleJob fromEntity(EntandoBundleJobEntity entity, List<EntandoBundleComponentJobEntity> componentJobs) {
+    public static EntandoBundleJob fromEntity(EntandoBundleJobEntity entity,
+            List<EntandoBundleComponentJobEntity> componentJobs) {
         return EntandoBundleJob.builder()
                 .id(entity.getId())
                 .componentId(entity.getComponentId())

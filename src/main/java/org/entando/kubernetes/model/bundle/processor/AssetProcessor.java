@@ -3,7 +3,6 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -36,7 +34,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
-        implements EntandoCMSReportableProcessor  {
+        implements EntandoCMSReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -72,7 +70,8 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
 
             for (String fileName : descriptorList) {
                 AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
-                InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(), actions,
+                        conflictStrategy, report);
                 installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
                         assetDescriptor.getCorrelationCode(), assetDescriptor.getName()), action));
             }
@@ -87,7 +86,7 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
     public List<Installable<AssetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.ASSET)
-                .map(c ->  new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

@@ -37,9 +37,9 @@ import org.springframework.web.client.HttpClientErrorException;
 @Tag("unit")
 class EntandoCoreClientTest {
 
+    public static final String CODE = "code";
     private EntandoCoreClient client;
     private EntandoCoreMockServer coreMockServer;
-    public static final String CODE = "code";
 
     @BeforeEach
     public void setup() {

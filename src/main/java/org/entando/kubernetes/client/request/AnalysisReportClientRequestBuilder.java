@@ -3,15 +3,12 @@ package org.entando.kubernetes.client.request;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.springframework.util.StringUtils;
 
 public final class AnalysisReportClientRequestBuilder {
-
-    private EnumMap<ComponentType, Consumer<List<String>>> strategy;
 
     List<String> widgets = new ArrayList<>();
     List<String> fragments = new ArrayList<>();
@@ -27,6 +24,7 @@ public final class AnalysisReportClientRequestBuilder {
     List<String> groups = new ArrayList<>();
     List<String> labels = new ArrayList<>();
     List<String> languages = new ArrayList<>();
+    private EnumMap<ComponentType, Consumer<List<String>>> strategy;
 
     private AnalysisReportClientRequestBuilder() {
         strategy = new EnumMap<>(ComponentType.class);
@@ -54,7 +52,7 @@ public final class AnalysisReportClientRequestBuilder {
     public AnalysisReportClientRequestBuilder reportableList(List<Reportable> reportableList) {
 
         reportableList.forEach(reportable -> {
-            if (! StringUtils.isEmpty(reportable.getCodes())) {
+            if (!StringUtils.isEmpty(reportable.getCodes())) {
                 strategy.get(reportable.getComponentType()).accept(reportable.getCodes());
             }
         });

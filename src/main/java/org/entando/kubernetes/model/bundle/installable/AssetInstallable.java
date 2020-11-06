@@ -18,7 +18,8 @@ public class AssetInstallable extends Installable<AssetDescriptor> {
         this(service, assetDescriptor, null, action);
     }
 
-    public AssetInstallable(EntandoCoreClient service, AssetDescriptor assetDescriptor, File file, InstallAction action) {
+    public AssetInstallable(EntandoCoreClient service, AssetDescriptor assetDescriptor, File file,
+            InstallAction action) {
         super(assetDescriptor, action);
         this.file = file;
         this.engineService = service;

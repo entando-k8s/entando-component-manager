@@ -85,7 +85,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         List<EntandoBundle> allComponents = new ArrayList<>();
         List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAll();
         List<EntandoBundle> availableBundles = listBundlesFromEcr();
-        List<EntandoBundle> installedButNotAvailableOnEcr = filterInstalledButNotAvailableOnEcr(availableBundles, installedBundles);
+        List<EntandoBundle> installedButNotAvailableOnEcr = filterInstalledButNotAvailableOnEcr(availableBundles,
+                installedBundles);
 
         allComponents.addAll(availableBundles);
         allComponents.addAll(installedButNotAvailableOnEcr);
@@ -102,7 +103,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     public List<EntandoBundleComponentJobEntity> getBundleInstalledComponents(String id) {
         EntandoBundle bundle = getInstalledBundle(id)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + id + " is not installed in the system"));
-        if (bundle.getInstalledJob() != null && bundle.getInstalledJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
+        if (bundle.getInstalledJob() != null && bundle.getInstalledJob().getStatus()
+                .equals(JobStatus.INSTALL_COMPLETED)) {
             return jobComponentRepository.findAllByParentJobId(bundle.getInstalledJob().getId());
         } else {
             throw new EntandoComponentManagerException("Bundle " + id + " is not installed correctly");
@@ -140,7 +142,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .orElse(null);
 
         if (installedComponentRepo.existsById(entity.getId())) {
-            installedJob = jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(entity.getId(), JobStatus.INSTALL_COMPLETED)
+            installedJob = jobRepository
+                    .findFirstByComponentIdAndStatusOrderByStartedAtDesc(entity.getId(), JobStatus.INSTALL_COMPLETED)
                     .map(EntandoBundleJob::fromEntity)
                     .orElse(null);
         }
@@ -199,7 +202,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .orElse(null);
 
         if (installedComponentRepo.existsById(code)) {
-            installedJob = jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(code, JobStatus.INSTALL_COMPLETED)
+            installedJob = jobRepository
+                    .findFirstByComponentIdAndStatusOrderByStartedAtDesc(code, JobStatus.INSTALL_COMPLETED)
                     .map(EntandoBundleJob::fromEntity)
                     .orElse(null);
         }

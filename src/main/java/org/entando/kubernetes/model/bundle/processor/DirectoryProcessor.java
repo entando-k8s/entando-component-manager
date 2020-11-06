@@ -72,16 +72,20 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
         try {
             if (bundleReader.containsResourceFolder()) {
                 final String componentFolder = "/" + bundleReader.getBundleCode();
-                InstallAction rootDirectoryAction = extractInstallAction(componentFolder, actions, conflictStrategy, report);
-                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true), rootDirectoryAction));
+                InstallAction rootDirectoryAction = extractInstallAction(componentFolder, actions, conflictStrategy,
+                        report);
+                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true),
+                        rootDirectoryAction));
 
-                List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted().collect(Collectors.toList());
+                List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
+                        .collect(Collectors.toList());
                 for (final String resourceFolder : resourceFolders) {
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(resourceFolder));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
                     InstallAction action = extractInstallAction(folder, actions, conflictStrategy, report);
-                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false), action));
+                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false),
+                            action));
                 }
             }
         } catch (IOException e) {
@@ -95,7 +99,8 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
     public List<Installable<DirectoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.DIRECTORY)
-                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 
@@ -118,7 +123,8 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
             final String componentFolder = "/" + bundleReader.getBundleCode();
             idList.add(componentFolder);
 
-            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted().collect(Collectors.toList());
+            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
+                    .collect(Collectors.toList());
             for (final String resourceFolder : resourceFolders) {
                 Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                         .relativize(Paths.get(resourceFolder));
@@ -128,8 +134,9 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
 
             // FIXME switch comments when entando-de-app will support directories
             // return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    // this.getReportableRemoteHandler());
-            return new Reportable(componentProcessor.getSupportedComponentType(), null, this.getReportableRemoteHandler());
+            // this.getReportableRemoteHandler());
+            return new Reportable(componentProcessor.getSupportedComponentType(), null,
+                    this.getReportableRemoteHandler());
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error reading bundle", e);

@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
-import java.nio.file.Paths;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

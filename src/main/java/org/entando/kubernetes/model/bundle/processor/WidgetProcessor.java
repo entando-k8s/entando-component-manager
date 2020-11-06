@@ -32,7 +32,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> implements EntandoEngineReportableProcessor {
+public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -74,7 +75,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                     widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
                 }
                 widgetDescriptor.setBundleId(descriptor.getCode());
-                InstallAction action = extractInstallAction(widgetDescriptor.getCode(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(widgetDescriptor.getCode(), actions, conflictStrategy,
+                        report);
                 installables.add(new WidgetInstallable(engineService, widgetDescriptor, action));
             }
 

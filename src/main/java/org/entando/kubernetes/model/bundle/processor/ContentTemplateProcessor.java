@@ -3,7 +3,6 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -22,7 +20,6 @@ import org.entando.kubernetes.model.bundle.installable.ContentTemplateInstallabl
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoCMSReportableProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -59,7 +56,8 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
     }
 
     @Override
-    public List<Installable<ContentTemplateDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+    public List<Installable<ContentTemplateDescriptor>> process(BundleReader bundleReader,
+            InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
@@ -74,7 +72,8 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
                     contentTemplateDescriptor.setContentShape(bundleReader.readFileAsString(csPath));
                 }
 
-                InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), actions, conflictStrategy, report);
+                InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), actions,
+                        conflictStrategy, report);
                 installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor, action));
             }
 
@@ -88,7 +87,8 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
     public List<Installable<ContentTemplateDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == ComponentType.CONTENT_TEMPLATE)
-                .map(c -> new ContentTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new ContentTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 

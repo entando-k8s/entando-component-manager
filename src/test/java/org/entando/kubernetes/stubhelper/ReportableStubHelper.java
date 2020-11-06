@@ -1,14 +1,5 @@
 package org.entando.kubernetes.stubhelper;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Arrays;
-import java.util.Map;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
-import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.reportable.Reportable;
-import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
-
 public class ReportableStubHelper {
 
     public static final String WIDGET_CODE_1 = "WidONE";
@@ -39,7 +30,6 @@ public class ReportableStubHelper {
     public static final String LABEL_CODE_2 = "LabelTWO";
     public static final String LANG_CODE_1 = "LangONE";
     public static final String LANG_CODE_2 = "LangTWO";
-
 
 //    public static AnalysisReport stubAllReportableList() {
 //

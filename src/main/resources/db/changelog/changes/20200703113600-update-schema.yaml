@@ -33,10 +33,10 @@ databaseChangeLog:
             tableName: entando_bundle_component_jobs
       changes:
         - renameColumn:
-            columnDataType:  VARCHAR(255 BYTE)
-            newColumnName:  component_id
-            oldColumnName:  name
-            tableName:  entando_bundle_component_jobs
+            columnDataType: VARCHAR(255 BYTE)
+            newColumnName: component_id
+            oldColumnName: name
+            tableName: entando_bundle_component_jobs
   - changeSet:
       id: 1593777772216-4
       author: kerruba (generated)

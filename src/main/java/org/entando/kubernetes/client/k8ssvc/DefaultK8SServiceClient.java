@@ -51,12 +51,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     public static final String APPS_ENDPOINT = "apps";
     public static final String PLUGINS_ENDPOINT = "plugins";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
-
+    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     private final String k8sServiceUrl;
     private final String clientId;
     private final String clientSecret;

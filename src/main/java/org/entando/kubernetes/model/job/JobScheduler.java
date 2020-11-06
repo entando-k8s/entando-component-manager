@@ -51,7 +51,8 @@ public class JobScheduler {
         Iterator<EntandoBundleComponentJobEntity> jobIterator = this.processedJobStack
                 .descendingIterator();
         while (jobIterator.hasNext()) {
-            EntandoBundleComponentJobEntity duplicateJob = EntandoBundleComponentJobEntity.getNewCopy(jobIterator.next());
+            EntandoBundleComponentJobEntity duplicateJob = EntandoBundleComponentJobEntity
+                    .getNewCopy(jobIterator.next());
             duplicateJob.setStartedAt(null);
             duplicateJob.setFinishedAt(null);
             rollbackQueue.addLast(duplicateJob);

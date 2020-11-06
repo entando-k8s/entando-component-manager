@@ -3,7 +3,6 @@ package org.entando.kubernetes.stubhelper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
 
 public class BundleStubHelper {
@@ -11,6 +10,7 @@ public class BundleStubHelper {
 
     /**
      * receives a List of ContentAttribute representing the content of the file bundle/contents/cng102-descriptor.yaml.
+     *
      * @return
      */
     public static List<ContentAttribute> stubContentAttributeList() {

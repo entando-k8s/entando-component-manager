@@ -19,11 +19,12 @@ import java.util.function.Function;
 public abstract class EntandoGenericMockServer {
 
     protected static int port;
-    protected WireMockServer wireMockServer;
 
     static {
         port = findFreePort().orElse(9080);
     }
+
+    protected WireMockServer wireMockServer;
 
     protected EntandoGenericMockServer() {
         wireMockServer = new WireMockServer(options().port(port));
@@ -31,6 +32,20 @@ public abstract class EntandoGenericMockServer {
         if (!wireMockServer.isRunning()) {
             wireMockServer.start();
         }
+    }
+
+    protected static Optional<Integer> findFreePort() {
+        Integer port = null;
+        try {
+            // Get a free port
+            ServerSocket s = new ServerSocket(0);
+            port = s.getLocalPort();
+            s.close();
+
+        } catch (IOException e) {
+            // No OPS
+        }
+        return Optional.ofNullable(port);
     }
 
     protected abstract void init(WireMockServer wireMockServer);
@@ -80,20 +95,6 @@ public abstract class EntandoGenericMockServer {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    protected static Optional<Integer> findFreePort() {
-        Integer port = null;
-        try {
-            // Get a free port
-            ServerSocket s = new ServerSocket(0);
-            port = s.getLocalPort();
-            s.close();
-
-        } catch (IOException e) {
-            // No OPS
-        }
-        return Optional.ofNullable(port);
     }
 
     /**

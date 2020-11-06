@@ -46,7 +46,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         final AnalysisRequest request = Optional.ofNullable(analysisRequest).orElse(new AnalysisRequest());
 
-        EntandoDeBundle bundle = kubeService.getBundleByName(componentId).orElseThrow(() -> new BundleNotFoundException(componentId));
+        EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
+                .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
         AnalysisReport report = installService.performInstallAnalysis(bundle, tag);
@@ -98,7 +99,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     @Override
-    public SimpleRestResponse<EntandoBundleJobEntity> getLastUninstallJob(@PathVariable("component") String componentId) {
+    public SimpleRestResponse<EntandoBundleJobEntity> getLastUninstallJob(
+            @PathVariable("component") String componentId) {
         EntandoBundleJobEntity lastUninstallJob = jobService.getJobs(componentId)
                 .stream()
                 .filter(j -> j.getStatus().isOfType(JobType.UNINSTALL))
