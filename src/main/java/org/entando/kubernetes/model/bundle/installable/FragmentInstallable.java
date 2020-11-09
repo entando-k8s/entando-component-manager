@@ -4,6 +4,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 
@@ -47,6 +48,11 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.FRAGMENT;
+    }
+
+    @Override
+    public ComponentInstallationFlow getComponentInstallationFlow() {
+        return ComponentInstallationFlow.FRAGMENT;
     }
 
     @Override

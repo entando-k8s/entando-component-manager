@@ -9,28 +9,26 @@ import java.util.Arrays;
  */
 public enum ComponentType {
 
-    PLUGIN("plugin", 0),
-    DIRECTORY("directory", 1),
-    CATEGORY("category", 2),
-    GROUP("group", 3),
-    LANGUAGE("language", 4),
-    LABEL("label", 5),
-    RESOURCE("asset", 6),
-    WIDGET("widget", 7),
-    CONTENT_TYPE("contentType", 8),
-    CONTENT_TEMPLATE("contentTemplate", 9),
-    ASSET("asset", 10),
-    CONTENT("content", 11),
-    FRAGMENT("fragment", 12),
-    PAGE_TEMPLATE("pageTemplate", 13),
-    PAGE("page", 14);
+    PLUGIN("plugin"),
+    DIRECTORY("directory"),
+    CATEGORY("category"),
+    GROUP("group"),
+    LANGUAGE("language"),
+    LABEL("label"),
+    RESOURCE("asset"),
+    WIDGET("widget"),
+    CONTENT_TYPE("contentType"),
+    CONTENT_TEMPLATE("contentTemplate"),
+    ASSET("asset"),
+    CONTENT("content"),
+    FRAGMENT("fragment"),
+    PAGE_TEMPLATE("pageTemplate"),
+    PAGE("page");
 
-    private String typeName;
-    private int installPriority;
+    private final String typeName;
 
-    ComponentType(String typeName, int installPriority) {
+    ComponentType(String typeName) {
         this.typeName = typeName;
-        this.installPriority = installPriority;
     }
 
     public static boolean isValidType(String type) {
@@ -40,9 +38,4 @@ public enum ComponentType {
     public String getTypeName() {
         return this.typeName;
     }
-
-    public int getInstallPriority() {
-        return this.installPriority;
-    }
-
 }

@@ -14,7 +14,7 @@ import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.installable.PageInstallable;
+import org.entando.kubernetes.model.bundle.installable.PageInitializationInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,8 +46,8 @@ public class PageProcessorTest {
 
         List<? extends Installable> installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
-        assertThat(installables.get(0)).isInstanceOf(PageInstallable.class);
-        PageInstallable pginst = (PageInstallable) installables.get(0);
+        assertThat(installables.get(0)).isInstanceOf(PageInitializationInstallable.class);
+        PageInitializationInstallable pginst = (PageInitializationInstallable) installables.get(0);
 
         assertThat(pginst.getName()).isEqualTo("my-page");
     }

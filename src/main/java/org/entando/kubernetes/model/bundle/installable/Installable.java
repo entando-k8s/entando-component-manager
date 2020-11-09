@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -54,6 +55,14 @@ public abstract class Installable<T extends Descriptor> {
      */
     public abstract ComponentType getComponentType();
 
+    /**
+     * Should return the ComponentInstallationFlow to understand in which place of the installation flow this installable
+     * has to be managed
+     *
+     * @return {@link ComponentInstallationFlow}
+     */
+    public abstract ComponentInstallationFlow getComponentInstallationFlow();
+
     public abstract String getName();
 
     public InstallAction getAction() {
@@ -80,7 +89,7 @@ public abstract class Installable<T extends Descriptor> {
     }
 
     public int getPriority() {
-        return this.getComponentType().getInstallPriority();
+        return this.getComponentInstallationFlow().getInstallPriority();
     }
 
     public EntandoBundleComponentJobEntity getJob() {
@@ -97,6 +106,10 @@ public abstract class Installable<T extends Descriptor> {
 
     public boolean shouldCreate() {
         return action == InstallAction.CREATE;
+    }
+
+    public boolean shouldOverride() {
+        return action == InstallAction.OVERRIDE;
     }
 
 }
