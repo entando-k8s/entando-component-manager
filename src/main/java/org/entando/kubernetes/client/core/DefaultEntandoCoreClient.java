@@ -264,8 +264,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateContentType(ContentTypeDescriptor descriptor) {
-        restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contentTypes",
-                descriptor.getCode()).build().toUri(), descriptor);
+        restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contentTypes").build().toUri(), descriptor);
     }
 
     @Override
@@ -327,8 +326,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         restTemplate.exchange(
-                resolvePathSegments("api", "plugins", "cms", "assets", descriptor.getCorrelationCode()).build().toUri(),
-                HttpMethod.PUT, requestEntity, String.class);
+                resolvePathSegments("api", "plugins", "cms", "assets", "cc=" + descriptor.getCorrelationCode())
+                        .build().toUri(), HttpMethod.POST, requestEntity, String.class);
     }
 
     @Override
