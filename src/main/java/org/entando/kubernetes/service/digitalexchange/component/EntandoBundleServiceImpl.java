@@ -179,7 +179,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .installed(bundle.isInstalled())
                 .version(bundle.isInstalled() ? bundle.getInstalledJob().getComponentVersion() : null)
                 .lastUpdate(bundle.isInstalled()
-                        ? Date.from(bundle.getLastJob().getFinishedAt().atZone(ZoneOffset.UTC).toInstant()) : null)
+                        ? Date.from(bundle.getInstalledJob().getFinishedAt().atZone(ZoneOffset.UTC).toInstant()) : null)
                 .build();
     }
 
