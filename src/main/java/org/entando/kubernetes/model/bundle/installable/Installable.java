@@ -30,6 +30,7 @@ public abstract class Installable<T extends Descriptor> {
         this.action = action;
     }
 
+    @Deprecated
     public Installable(T representation) {
         this(representation, InstallAction.CREATE);
     }

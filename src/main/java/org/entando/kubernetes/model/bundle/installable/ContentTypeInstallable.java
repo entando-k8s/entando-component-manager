@@ -15,7 +15,7 @@ public class ContentTypeInstallable extends Installable<ContentTypeDescriptor> {
 
     public ContentTypeInstallable(EntandoCoreClient service, ContentTypeDescriptor contentTypeDescriptor,
             InstallAction action) {
-        super(contentTypeDescriptor);
+        super(contentTypeDescriptor, action);
         this.engineService = service;
     }
 
