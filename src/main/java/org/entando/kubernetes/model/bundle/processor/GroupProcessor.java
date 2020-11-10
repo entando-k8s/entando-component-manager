@@ -86,7 +86,7 @@ public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> impl
     @Override
     public List<Installable<GroupDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.GROUP)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new GroupInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }

@@ -82,7 +82,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public List<Installable<PluginDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.PLUGIN)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new PluginInstallable(kubernetesService, buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }

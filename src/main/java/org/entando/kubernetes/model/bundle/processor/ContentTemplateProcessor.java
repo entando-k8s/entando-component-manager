@@ -86,7 +86,7 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
     @Override
     public List<Installable<ContentTemplateDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.CONTENT_TEMPLATE)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new ContentTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

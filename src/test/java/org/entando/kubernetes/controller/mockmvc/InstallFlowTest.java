@@ -70,6 +70,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
@@ -93,6 +94,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.stubhelper.PageStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -197,7 +199,7 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void shouldCallCoreToInstallComponents() throws Exception {
+    void shouldCallCoreToInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
         K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
@@ -218,6 +220,7 @@ public class InstallFlowTest {
         verifyFileRequests(coreClient);
         verifyFragmentRequests(coreClient);
         verifyPageRequests(coreClient);
+        verifyPageConfigurationRequests(coreClient);
         verifyContentTypesRequests(coreClient);
         verifyContentTemplatesRequests(coreClient);
         verifyContentsRequests(coreClient);
@@ -259,6 +262,22 @@ public class InstallFlowTest {
 
         List<PageDescriptor> allPageRequests = pag.getAllValues()
                 .stream().sorted(Comparator.comparing(PageDescriptor::getCode))
+                .collect(Collectors.toList());
+
+        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page")
+                && pd.getParentCode().equals("homepage")
+                && pd.getTitles().get("it").equals("La mia pagina" + PageStubHelper.STUB_SUFFIX)
+                && pd.getTitles().get("en").equals("My page" + PageStubHelper.STUB_SUFFIX)
+                && pd.getPageModel().equals("service")
+                && pd.getOwnerGroup().equals("administrators"));
+    }
+
+    private void verifyPageConfigurationRequests(EntandoCoreClient coreClient) {
+        ArgumentCaptor<PageConfigurationDescriptor> pag = ArgumentCaptor.forClass(PageConfigurationDescriptor.class);
+        verify(coreClient, times(1)).createPageConfiguration(pag.capture());
+
+        List<PageConfigurationDescriptor> allPageRequests = pag.getAllValues()
+                .stream().sorted(Comparator.comparing(PageConfigurationDescriptor::getCode))
                 .collect(Collectors.toList());
 
         assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page")
@@ -490,6 +509,8 @@ public class InstallFlowTest {
                 "todomvc_page_model",
                 "todomvc_another_page_model",
                 // Pages
+                "my-page",
+                // Page Configurations
                 "my-page");
 
         List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository
@@ -500,7 +521,7 @@ public class InstallFlowTest {
         assertThat(jobComponentList).hasSize(expected.size());
         List<String> jobComponentNames = jobComponentList.stream().map(EntandoBundleComponentJobEntity::getComponentId)
                 .collect(Collectors.toList());
-        assertThat(jobComponentNames).isEqualTo(expected);
+        assertThat(jobComponentNames).containsExactlyInAnyOrder(expected.toArray(String[]::new));
 
         Map<ComponentType, Integer> jobComponentTypes = new HashMap<>();
         for (EntandoBundleComponentJobEntity jcomp : jobComponentList) {
@@ -523,6 +544,7 @@ public class InstallFlowTest {
         expectedComponents.put(ComponentType.LABEL, 1);
         expectedComponents.put(ComponentType.FRAGMENT, 2);
         expectedComponents.put(ComponentType.PAGE, 1);
+        expectedComponents.put(ComponentType.PAGE_CONFIGURATION, 1);
         expectedComponents.put(ComponentType.PLUGIN, 3);
 
         assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);

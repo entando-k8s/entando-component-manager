@@ -22,7 +22,9 @@ public class LanguageInstallable extends Installable<LanguageDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Enabling Language {}", getName());
+
+            logConflictStrategyAction();
+
             if (!shouldCreate()) {
                 return; //Do nothing
             }
@@ -44,11 +46,6 @@ public class LanguageInstallable extends Installable<LanguageDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.LANGUAGE;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.LANGUAGE;
     }
 
     @Override

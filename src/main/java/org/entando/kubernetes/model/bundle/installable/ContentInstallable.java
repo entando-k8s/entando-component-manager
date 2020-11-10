@@ -4,7 +4,6 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 
@@ -21,7 +20,9 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Content {}", getName());
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -47,11 +48,6 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.CONTENT;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.CONTENT;
     }
 
     @Override

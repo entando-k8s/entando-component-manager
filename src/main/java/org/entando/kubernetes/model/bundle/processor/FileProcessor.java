@@ -97,7 +97,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
     @Override
     public List<Installable<FileDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.RESOURCE)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }

@@ -15,66 +15,59 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallReques
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
+import org.entando.kubernetes.model.bundle.installable.PageConfigurationInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * Processor to create Labels.
+ * Processor to handle Pages.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> implements
-        EntandoEngineReportableProcessor {
+public class PageConfigurationProcessor extends BaseComponentProcessor<PageConfigurationDescriptor> {
 
     private final EntandoCoreClient engineService;
 
     @Override
     public ComponentType getSupportedComponentType() {
-        return ComponentType.LABEL;
+        return ComponentType.PAGE_CONFIGURATION;
     }
 
     @Override
-    public Class<LabelDescriptor> getDescriptorClass() {
-        return LabelDescriptor.class;
+    public Class<PageConfigurationDescriptor> getDescriptorClass() {
+        return PageConfigurationDescriptor.class;
     }
 
     @Override
     public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
-        return Optional.of(ComponentSpecDescriptor::getLabels);
+        return Optional.of(ComponentSpecDescriptor::getPages);
     }
 
     @Override
-    public boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
-        return true;
-    }
-
-    @Override
-    public List<Installable<LabelDescriptor>> process(BundleReader bundleReader) {
+    public List<Installable<PageConfigurationDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());
     }
 
     @Override
-    public List<Installable<LabelDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+    public List<Installable<PageConfigurationDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
-            final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
+            List<Installable<PageConfigurationDescriptor>> installables = new LinkedList<>();
 
-            for (String ldf : descriptorList) {
-                List<LabelDescriptor> labelDescriptorList = bundleReader
-                        .readListOfDescriptorFile(ldf, LabelDescriptor.class);
-                for (LabelDescriptor ld : labelDescriptorList) {
-                    InstallAction action = extractInstallAction(ld.getKey(), actions, conflictStrategy, report);
-                    installables.add(new LabelInstallable(engineService, ld, action));
-                }
+            for (String fileName : descriptorList) {
+                PageConfigurationDescriptor pageDescriptor = bundleReader
+                        .readDescriptorFile(fileName, this.getDescriptorClass());
+                InstallAction action = extractInstallAction(pageDescriptor.getCode(), actions, conflictStrategy,
+                        report);
+
+                installables.add(new PageConfigurationInstallable(engineService, pageDescriptor, action));
             }
 
             return installables;
@@ -84,18 +77,19 @@ public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> impl
     }
 
     @Override
-    public List<Installable<LabelDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
+    public List<Installable<PageConfigurationDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
+                // we can manage pages in one single flow during uninstall?
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
-                .map(c -> new LabelInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new PageConfigurationInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public LabelDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return LabelDescriptor.builder()
-                .key(component.getComponentId())
+    public PageConfigurationDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return PageConfigurationDescriptor.builder()
+                .code(component.getComponentId())
                 .build();
     }
-
 }

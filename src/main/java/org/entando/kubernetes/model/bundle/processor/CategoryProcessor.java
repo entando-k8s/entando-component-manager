@@ -86,7 +86,7 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
     @Override
     public List<Installable<CategoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.CATEGORY)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new CategoryInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

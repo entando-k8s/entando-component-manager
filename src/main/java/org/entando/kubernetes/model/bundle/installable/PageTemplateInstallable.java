@@ -22,7 +22,9 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Page Model {}", getName());
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -39,7 +41,7 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing PageTemplate {}", getName());
-            if(shouldCreate()) {
+            if (shouldCreate()) {
                 engineService.deletePageModel(getName());
             }
         });
@@ -48,11 +50,6 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
     @Override
     public ComponentType getComponentType() {
         return ComponentType.PAGE_TEMPLATE;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.PAGE_TEMPLATE;
     }
 
     @Override

@@ -98,7 +98,7 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
     @Override
     public List<Installable<DirectoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.DIRECTORY)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

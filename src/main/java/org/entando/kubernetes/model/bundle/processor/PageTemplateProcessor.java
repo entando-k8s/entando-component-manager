@@ -84,7 +84,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
     @Override
     public List<Installable<PageTemplateDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.PAGE_TEMPLATE)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new PageTemplateInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

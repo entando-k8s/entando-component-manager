@@ -24,6 +24,7 @@ import org.entando.kubernetes.model.bundle.processor.FragmentProcessor;
 import org.entando.kubernetes.model.bundle.processor.GroupProcessor;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
 import org.entando.kubernetes.model.bundle.processor.LanguageProcessor;
+import org.entando.kubernetes.model.bundle.processor.PageConfigurationProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
@@ -60,6 +61,8 @@ class AppConfigurationTest {
         assertThat(appConfig.processorMap(context).keySet()).containsExactlyInAnyOrder(expected);
     }
 
+
+
     @SuppressWarnings("rawtypes")
     private Map<String, ComponentProcessor> allProcessors() {
         EntandoCoreClient coreClient = mock(EntandoCoreClient.class);
@@ -81,6 +84,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.WIDGET.toString(), new WidgetProcessor(coreClient));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
+        processors.put(ComponentType.PAGE_CONFIGURATION.toString(), new PageConfigurationProcessor(coreClient));
 
         return processors;
     }

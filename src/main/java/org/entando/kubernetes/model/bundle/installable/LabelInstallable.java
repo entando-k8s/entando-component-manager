@@ -21,7 +21,9 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Label {}", getName());
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -47,11 +49,6 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.LABEL;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.LABEL;
     }
 
     @Override

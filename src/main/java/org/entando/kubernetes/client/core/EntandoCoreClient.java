@@ -12,6 +12,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
@@ -59,9 +60,9 @@ public interface EntandoCoreClient extends ECMClient {
 
     void createPage(PageDescriptor pageDescriptor);
 
-    void updatePage(PageDescriptor pageDescriptor);
+    void createPageConfiguration(PageConfigurationDescriptor pageDescriptor);
 
-    void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
+    void configurePageWidget(PageConfigurationDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
 
     void deletePage(String code);
 

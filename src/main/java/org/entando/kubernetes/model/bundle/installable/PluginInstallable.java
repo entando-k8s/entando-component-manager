@@ -54,11 +54,6 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     }
 
     @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.PLUGIN;
-    }
-
-    @Override
     public String getName() {
 
         if (!StringUtils.isEmpty(this.representation.getDeploymentBaseName())) {

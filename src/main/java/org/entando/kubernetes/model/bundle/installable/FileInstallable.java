@@ -4,7 +4,6 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 
@@ -22,7 +21,9 @@ public class FileInstallable extends Installable<FileDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Uploading file {}", representation.getFilename());
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -45,11 +46,6 @@ public class FileInstallable extends Installable<FileDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.RESOURCE;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.RESOURCE;
     }
 
     @Override

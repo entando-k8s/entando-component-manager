@@ -4,7 +4,6 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 
@@ -21,7 +20,9 @@ public class CategoryInstallable extends Installable<CategoryDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Category {}", getName());
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -47,11 +48,6 @@ public class CategoryInstallable extends Installable<CategoryDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.CATEGORY;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.CATEGORY;
     }
 
     @Override

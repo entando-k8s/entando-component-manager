@@ -30,6 +30,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
@@ -39,6 +40,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.stubhelper.PageStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -107,6 +109,19 @@ public class EntandoBundleReaderTest {
     public void shouldReadPagesFromBundle() throws IOException {
         PageDescriptor pd = bundleReader
                 .readDescriptorFile("pages/my_page_descriptor.yaml", PageDescriptor.class);
+        assertThat(pd).isNotNull();
+        assertThat(pd.getCode()).isEqualTo("my-page");
+        assertThat(pd.getParentCode()).isEqualTo("homepage");
+        assertThat(pd.getTitles()).containsEntry("it", "La mia pagina" + PageStubHelper.STUB_SUFFIX);
+        assertThat(pd.getTitles()).containsEntry("en", "My page" + PageStubHelper.STUB_SUFFIX);
+        assertThat(pd.getPageModel()).isEqualTo("service");
+        assertThat(pd.getOwnerGroup()).isEqualTo("administrators");
+    }
+
+    @Test
+    public void shouldReadPageConfigurationFromBundle() throws IOException {
+        PageConfigurationDescriptor pd = bundleReader
+                .readDescriptorFile("pages/my_page_descriptor.yaml", PageConfigurationDescriptor.class);
         assertThat(pd).isNotNull();
         assertThat(pd.getCode()).isEqualTo("my-page");
         assertThat(pd.getParentCode()).isEqualTo("homepage");

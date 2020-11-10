@@ -80,7 +80,7 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
     @Override
     public List<Installable<ContentTypeDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.CONTENT_TYPE)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new ContentTypeInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

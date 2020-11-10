@@ -1,8 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -19,8 +17,7 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
-import org.entando.kubernetes.model.bundle.installable.PageInitializationInstallable;
-import org.entando.kubernetes.model.bundle.installable.PagePopulationInstallable;
+import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -69,11 +66,7 @@ public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implem
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
                 InstallAction action = extractInstallAction(pageDescriptor.getCode(), actions, conflictStrategy,
                         report);
-
-                // add an installable for the page initialization
-                installables.add(createPageInitializationInstallable(pageDescriptor, action));
-                // add an installable for the page population
-                installables.add(new PagePopulationInstallable(engineService, pageDescriptor, action));
+                installables.add(new PageInstallable(engineService, pageDescriptor, action));
             }
 
             return installables;
@@ -82,31 +75,11 @@ public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implem
         }
     }
 
-
-    private Installable<PageDescriptor> createPageInitializationInstallable(PageDescriptor pageDescriptor,
-            InstallAction action) {
-
-        // create a descriptor containing only a subset of infos about the page
-        PageDescriptor initDescriptor = PageDescriptor.builder()
-                .code(pageDescriptor.getCode())
-                .titles(pageDescriptor.getTitles().entrySet().stream()
-                        // add the text " - STUB" to each title in order to ease the finding process
-                        .map(entry -> new SimpleEntry<>(entry.getKey(),
-                                entry.getValue() + " - STUB"))
-                        .collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)))
-                .build();
-
-        return new PagePopulationInstallable(engineService, initDescriptor, action);
-    }
-
-
     @Override
     public List<Installable<PageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                // we can manage pages in one single flow during uninstall?
-                .filter(c -> c.getComponentType() == ComponentType.PAGE)
-                .map(c -> new PageInitializationInstallable(engineService, this.buildDescriptorFromComponentJob(c),
-                        c.getAction()))
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new PageInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

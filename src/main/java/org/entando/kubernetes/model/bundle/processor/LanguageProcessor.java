@@ -91,7 +91,7 @@ public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor
     @Override
     public List<Installable<LanguageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.LANGUAGE)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new LanguageInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

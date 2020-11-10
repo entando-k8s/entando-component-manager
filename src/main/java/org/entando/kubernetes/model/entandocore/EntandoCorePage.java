@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import org.apache.logging.log4j.util.Strings;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 
 @Data
@@ -24,6 +25,14 @@ public class EntandoCorePage {
     }
 
     public EntandoCorePage(PageDescriptor pd) {
+        this.code = pd.getCode();
+        this.parentCode = valueOrDefault(pd.getParentCode(), "homepage");
+        this.titles = pd.getTitles();
+        this.pageModel = valueOrDefault(pd.getPageModel(), "home");
+        this.ownerGroup = valueOrDefault(pd.getOwnerGroup(), "free");
+    }
+
+    public EntandoCorePage(PageConfigurationDescriptor pd) {
         this.code = pd.getCode();
         this.parentCode = valueOrDefault(pd.getParentCode(), "homepage");
         this.titles = pd.getTitles();

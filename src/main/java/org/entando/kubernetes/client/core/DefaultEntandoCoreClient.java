@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
@@ -186,13 +187,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void updatePage(PageDescriptor pageDescriptor) {
+    public void createPageConfiguration(PageConfigurationDescriptor pageDescriptor) {
         restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode()).build().toUri(),
                 new EntandoCorePage(pageDescriptor));
     }
 
     @Override
-    public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+    public void configurePageWidget(PageConfigurationDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
         restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode(), "widgets",
                 widgetDescriptor.getPos().toString()).build().toUri(),
                 new EntandoCorePageWidgetConfiguration(widgetDescriptor));

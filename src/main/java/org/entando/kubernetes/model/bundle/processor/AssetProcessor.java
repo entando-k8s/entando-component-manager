@@ -85,7 +85,7 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
     @Override
     public List<Installable<AssetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.ASSET)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }

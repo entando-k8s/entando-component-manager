@@ -21,7 +21,9 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Widget {}", getName());
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -38,7 +40,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Widget {}", getName());
-            if(shouldCreate()) {
+            if (shouldCreate()) {
                 engineService.deleteWidget(getName());
             }
         });
@@ -47,11 +49,6 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     @Override
     public ComponentType getComponentType() {
         return ComponentType.WIDGET;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.WIDGET;
     }
 
     @Override

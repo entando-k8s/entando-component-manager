@@ -77,7 +77,7 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
     @Override
     public List<Installable<FragmentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.FRAGMENT)
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new FragmentInstallable(engineService, this.buildDescriptorFromComponentJob(c),
                         c.getAction()))
                 .collect(Collectors.toList());

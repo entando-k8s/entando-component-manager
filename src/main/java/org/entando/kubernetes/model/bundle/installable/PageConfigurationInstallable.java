@@ -1,9 +1,3 @@
-/**
- * page creation process is split it 2 phases:
- * initialization =>    create the page with stub data                              => PageInitializationInstallable
- * population =>        populate page created at previous step with correct data    => PagePopulationInstallable
- */
-
 package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.ArrayList;
@@ -12,16 +6,16 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 
 @Slf4j
-public class PagePopulationInstallable extends Installable<PageDescriptor> {
+public class PageConfigurationInstallable extends Installable<PageConfigurationDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public PagePopulationInstallable(EntandoCoreClient engineService, PageDescriptor pd, InstallAction action) {
+    public PageConfigurationInstallable(EntandoCoreClient engineService, PageConfigurationDescriptor pd,
+            InstallAction action) {
         super(pd, action);
         this.engineService = engineService;
     }
@@ -29,16 +23,15 @@ public class PagePopulationInstallable extends Installable<PageDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Populating Page {}", getName());
+
+            logConflictStrategyAction();
 
             //Create Page
             if (shouldSkip()) {
                 return; //Do nothing
             }
 
-            if (shouldOverride()) {
-                engineService.createPage(representation);
-            }
+            engineService.createPageConfiguration(representation);
 
             //Configure Page Widgets
             Optional.ofNullable(representation.getWidgets())
@@ -51,21 +44,13 @@ public class PagePopulationInstallable extends Installable<PageDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Removing Page {}", getName());
-            if(shouldCreate()) {
-                engineService.deletePage(getName());
-            }
+            // UNINSTALL IN THE PageInstallable
         });
     }
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.PAGE;
-    }
-
-    @Override
-    public ComponentInstallationFlow getComponentInstallationFlow() {
-        return ComponentInstallationFlow.PAGE_POPULATION;
+        return ComponentType.PAGE_CONFIGURATION;
     }
 
     @Override
