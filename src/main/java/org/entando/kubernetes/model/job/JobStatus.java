@@ -14,6 +14,8 @@
 
 package org.entando.kubernetes.model.job;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public enum JobStatus {
@@ -38,5 +40,16 @@ public enum JobStatus {
 
     public boolean isAny(Set<JobStatus> possible) {
         return possible.contains(this);
+    }
+
+    public static List<JobStatus> getCompletedStatuses() {
+        List<JobStatus> statuses = new ArrayList<>();
+        statuses.add(INSTALL_COMPLETED);
+        statuses.add(INSTALL_ERROR);
+        statuses.add(INSTALL_ROLLBACK);
+        statuses.add(INSTALL_ROLLBACK_ERROR);
+        statuses.add(UNINSTALL_COMPLETED);
+        statuses.add(UNINSTALL_ERROR);
+        return statuses;
     }
 }

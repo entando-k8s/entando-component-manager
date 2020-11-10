@@ -170,7 +170,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     public EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle) {
         return EntandoBundleEntity.builder()
                 .id(bundle.getCode())
-                .name(bundle.getTitle())
+                //.name(bundle.getTitle())
                 .name(bundle.getCode())
                 .description(bundle.getDescription())
                 .image(bundle.getThumbnail())

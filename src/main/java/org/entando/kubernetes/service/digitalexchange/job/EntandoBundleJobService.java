@@ -85,8 +85,8 @@ public class EntandoBundleJobService {
         Optional<EntandoBundleJobEntity> lastJobStarted = jobRepository
                 .findFirstByComponentIdOrderByStartedAtDesc(componentId);
         if (lastJobStarted.isPresent()) {
-            // To be an existing job it should be Running or completed
-            if (lastJobStarted.get().getStatus() == JobStatus.UNINSTALL_COMPLETED) {
+            // To be an existing job it should be in a Running state
+            if (JobStatus.getCompletedStatuses().contains(lastJobStarted.get().getStatus())) {
                 return Optional.empty();
             }
             return lastJobStarted;
