@@ -276,6 +276,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             BundleReader bundleReader) {
 
         return reportableComponentProcessorList.stream()
+                .filter(reportableComponentProcessor -> // FIXME
+                    ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() == ComponentType.PLUGIN)
                 .map(reportableProcessor ->
                         reportableProcessor.getReportable(bundleReader, (ComponentProcessor<?>) reportableProcessor))
                 .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
@@ -284,6 +286,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         return processorMap.values().stream()
+                .filter(processor -> processor.getSupportedComponentType() == ComponentType.PLUGIN) // FIXME
                 .map(processor -> processor.process(bundleReader, conflictStrategy, actions, report))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt(Installable::getPriority))

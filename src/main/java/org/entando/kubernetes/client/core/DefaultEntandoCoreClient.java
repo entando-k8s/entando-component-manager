@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
@@ -424,17 +425,22 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
         AnalysisReportClientRequest analysisReportClientRequest = factoryRequestCreationFn.apply(requestFactory);
 
-        ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
-                .exchange(resolvePathSegments(pathSegments).build().toUri(),
-                        HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
-                        new ParameterizedTypeReference<>() {
-                        });
+        try {
+            ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
+                    .exchange(resolvePathSegments(pathSegments).build().toUri(),
+                            HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
+                            new ParameterizedTypeReference<>() {
+                            });
 
-        if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
+            if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
+                throw new ReportAnalysisException(String.format(
+                        "An error occurred fetching the %s report analysis", reportableRemoteHandler));
+            } else {
+                return reportResponseEntity.getBody().getPayload();
+            }
+        } catch (Exception e) {
             throw new ReportAnalysisException(String.format(
                     "An error occurred fetching the %s report analysis", reportableRemoteHandler));
-        } else {
-            return reportResponseEntity.getBody().getPayload();
         }
     }
 

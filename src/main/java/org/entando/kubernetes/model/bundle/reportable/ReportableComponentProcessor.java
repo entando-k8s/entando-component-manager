@@ -6,7 +6,9 @@ package org.entando.kubernetes.model.bundle.reportable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -36,7 +38,7 @@ public interface ReportableComponentProcessor {
         try {
             List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
             for (String fileName : contentDescriptorList) {
-                idList.addAll(componentProcessor.readDescriptorKeys(bundleReader, fileName));
+                idList.addAll(this.readDescriptorKeys(bundleReader, fileName, componentProcessor));
             }
 
             return new Reportable(componentProcessor.getSupportedComponentType(), idList,
@@ -44,6 +46,32 @@ public interface ReportableComponentProcessor {
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error reading bundle", e);
+        }
+    }
+
+    /**
+     * reads the keys of the components from the descriptor identified by the received filename.
+     *
+     * @param bundleReader the bundler reader to use in order to read the bundle
+     * @param fileName     the filename identifying the descriptor file to read
+     * @return the list of the keys of the components read from the descriptor
+     */
+    default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
+            ComponentProcessor<?> componentProcessor) {
+
+        try {
+            if (componentProcessor.doesComponentDscriptorContainMoreThanOneSingleEntity()) {
+                return bundleReader.readListOfDescriptorFile(fileName, componentProcessor.getDescriptorClass())
+                        .stream().map(descriptor -> descriptor.getComponentKey().getKey())
+                        .collect(Collectors.toList());
+            } else {
+                return Arrays.asList(bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
+                        .getComponentKey().getKey());
+            }
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException(String.format(
+                    "Error parsing content type %s from descriptor %s",
+                    componentProcessor.getSupportedComponentType(), fileName), e);
         }
     }
 }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
@@ -194,6 +195,17 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
                                 .withBody(stubResponse)
                 ));
 
+        return this;
+    }
+
+    /**
+     * stub a failing response for the AnalysisReport Engine endpoint
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withFailingEngineAnalysisReportSupport() {
+
+        this.wireMockServer.stubFor(WireMock.post(urlEqualTo(ENGINE_ANALYSIS_REPORT_ENDPOINT))
+                .willReturn(aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
         return this;
     }
 

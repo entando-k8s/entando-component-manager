@@ -27,13 +27,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
+import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -291,6 +300,21 @@ public class K8SServiceClientTest {
         Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "entando-de-bundles");
         assertThat(bundle.isPresent()).isTrue();
         assertThat(bundle.get().getMetadata().getName()).isEqualTo("my-bundle");
+    }
+
+    @Test
+    void shouldGetAnalysisReport() {
+
+        Map<String, Status> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_1, Status.NEW,
+                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+
+        AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
+
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
     }
 
     private RestTemplate noOAuthRestTemplate() {

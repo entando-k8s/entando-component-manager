@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -21,6 +22,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 
 /**
@@ -92,4 +94,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         return PluginDescriptor.builder().deploymentBaseName(component.getComponentId()).build();
     }
 
+
+    @Override
+    public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
+            ComponentProcessor<?> componentProcessor) {
+
+        try {
+            PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(fileName, this.getDescriptorClass());
+            return Arrays.asList(BundleUtilities.extractNameFromDescriptor(pluginDescriptor));
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException(String.format(
+                    "Error parsing content type %s from descriptor %s",
+                    this.getSupportedComponentType(), fileName), e);
+        }
+    }
 }

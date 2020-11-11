@@ -24,6 +24,7 @@ import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -76,10 +77,10 @@ public class EntandoBundleUtilitiesTest {
     @Test
     void shouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars() {
 
-        String imageName = TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
+        String imageName = PluginStubHelper.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
 
-        PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
-        descriptor.setDeploymentBaseName(TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst");
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
+        descriptor.setDeploymentBaseName(PluginStubHelper.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst");
 
         String expectedMex = String.format(BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
                 imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
@@ -93,9 +94,9 @@ public class EntandoBundleUtilitiesTest {
     @Test
     void shouldThrowExceptionIfPodDeploymentBaseNameLengthFromDockerImageExceeds32Chars() {
 
-        String imageName = TestInstallUtils.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
+        String imageName = PluginStubHelper.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
 
-        PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
         descriptor.setImage(imageName);
         descriptor.setDeploymentBaseName(null);
 
@@ -127,12 +128,12 @@ public class EntandoBundleUtilitiesTest {
         String deploymentBaseName = "testDeploymentName";
 
         // descriptor v2
-        PluginDescriptor descriptorV2 = TestInstallUtils.getTestDescriptor();
+        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         descriptorV2.setDeploymentBaseName(deploymentBaseName);
         assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV2)).isEqualTo(deploymentBaseName.toLowerCase());
 
         // descriptor v2
-        PluginDescriptor descriptorV1 = TestInstallUtils.getTestDescriptorVersion1();
+        PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
         descriptorV1.setDeploymentBaseName(deploymentBaseName);
         assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV1)).isEqualTo(deploymentBaseName.toLowerCase());
     }
@@ -143,7 +144,7 @@ public class EntandoBundleUtilitiesTest {
 
         // given a valid docker image in a valid descriptor
         String imageName = "organiz/imagename:1.0.0";
-        PluginDescriptor descriptor = TestInstallUtils.getTestDescriptor();
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
         descriptor.setImage(imageName);
         // without the DeploymentBaseName property
         descriptor.setDeploymentBaseName(null);

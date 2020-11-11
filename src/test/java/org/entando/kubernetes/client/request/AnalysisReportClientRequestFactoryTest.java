@@ -127,38 +127,38 @@ class AnalysisReportClientRequestFactoryTest {
      * K8S SERVICE REQUEST.
      *********************************************************************************************************/
 
-    @Test
-    void createK8SServiceAnalysisReportRequestShouldReturnTheRightBeanProperlyPopulated() {
-
-        K8SServiceAnalysisReportClientRequest k8sServiceAnalysisReportRequest = (K8SServiceAnalysisReportClientRequest) AnalysisReportClientRequestFactory
-                .anAnalysisReportClientRequest()
-                .reportableList(reportableList)
-                .createK8SServiceAnalysisReportRequest();
-
-        assertThat(k8sServiceAnalysisReportRequest.getPlugins()).containsExactly(
-                ReportableStubHelper.PLUGIN_CODE_1, ReportableStubHelper.PLUGIN_CODE_2);
-    }
-
-    @Test
-    void createK8SServiceAnalysisReportRequestWithNullOrEmptyReportableListShouldReturnAnEmptyRequest() {
-
-        K8SServiceAnalysisReportClientRequest k8sAnalysisReportRequestNull = (K8SServiceAnalysisReportClientRequest) AnalysisReportClientRequestFactory
-                .anAnalysisReportClientRequest()
-                .reportableList(null)
-                .createK8SServiceAnalysisReportRequest();
-
-        assertOnEmptyK8SServiceAnalysisReportRequest(k8sAnalysisReportRequestNull);
-
-        K8SServiceAnalysisReportClientRequest k8sAnalysisReportRequestEmpty = (K8SServiceAnalysisReportClientRequest) AnalysisReportClientRequestFactory
-                .anAnalysisReportClientRequest()
-                .reportableList(new ArrayList<>())
-                .createK8SServiceAnalysisReportRequest();
-
-        assertOnEmptyK8SServiceAnalysisReportRequest(k8sAnalysisReportRequestEmpty);
-    }
-
-    private void assertOnEmptyK8SServiceAnalysisReportRequest(
-            K8SServiceAnalysisReportClientRequest reportClientRequest) {
-        assertThat(reportClientRequest.getPlugins()).isEmpty();
-    }
+//    @Test
+//    void createK8SServiceAnalysisReportRequestShouldReturnTheRightBeanProperlyPopulated() {
+//
+//        K8SServiceAnalysisReportClientRequest k8sServiceAnalysisReportRequest = (K8SServiceAnalysisReportClientRequest) AnalysisReportClientRequestFactory
+//                .anAnalysisReportClientRequest()
+//                .reportableList(reportableList)
+//                .createK8SServiceAnalysisReportRequest();
+//
+//        assertThat(k8sServiceAnalysisReportRequest.getPlugins()).containsExactly(
+//                ReportableStubHelper.PLUGIN_CODE_1, ReportableStubHelper.PLUGIN_CODE_2);
+//    }
+//
+//    @Test
+//    void createK8SServiceAnalysisReportRequestWithNullOrEmptyReportableListShouldReturnAnEmptyRequest() {
+//
+//        K8SServiceAnalysisReportClientRequest k8sAnalysisReportRequestNull = (K8SServiceAnalysisReportClientRequest) AnalysisReportClientRequestFactory
+//                .anAnalysisReportClientRequest()
+//                .reportableList(null)
+//                .createK8SServiceAnalysisReportRequest();
+//
+//        assertOnEmptyK8SServiceAnalysisReportRequest(k8sAnalysisReportRequestNull);
+//
+//        K8SServiceAnalysisReportClientRequest k8sAnalysisReportRequestEmpty = (K8SServiceAnalysisReportClientRequest) AnalysisReportClientRequestFactory
+//                .anAnalysisReportClientRequest()
+//                .reportableList(new ArrayList<>())
+//                .createK8SServiceAnalysisReportRequest();
+//
+//        assertOnEmptyK8SServiceAnalysisReportRequest(k8sAnalysisReportRequestEmpty);
+//    }
+//
+//    private void assertOnEmptyK8SServiceAnalysisReportRequest(
+//            K8SServiceAnalysisReportClientRequest reportClientRequest) {
+//        assertThat(reportClientRequest.getPlugins()).isEmpty();
+//    }
 }

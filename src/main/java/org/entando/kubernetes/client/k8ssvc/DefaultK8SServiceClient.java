@@ -6,22 +6,31 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.net.URI;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
+import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -30,6 +39,8 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.Hop;
 import org.springframework.hateoas.client.Traverson;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -290,7 +301,17 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public AnalysisReport getAnalysisReport(List<Reportable> reportableList) {
-        return new AnalysisReport();
+
+        Map<String, Status> pluginStatusMap = reportableList.stream()
+                .filter(reportable -> reportable.getComponentType() == ComponentType.PLUGIN)
+                .flatMap(reportable -> reportable.getCodes().stream())
+                .map(name ->
+                        getPluginByName(name)
+                                .map(plugin -> new SimpleEntry<>(name, Status.DIFF))
+                                .orElseGet(() -> new SimpleEntry<>(name, Status.NEW)))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+        return new AnalysisReport().setPlugins(pluginStatusMap);
     }
 
     private Ingress getAppIngress(String appName) {

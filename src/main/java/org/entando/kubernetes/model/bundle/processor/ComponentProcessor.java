@@ -115,29 +115,4 @@ public interface ComponentProcessor<T extends Descriptor> {
                 .map(componentSpecDescriptor -> getComponentSelectionFn().get().apply(componentSpecDescriptor))
                 .orElse(new ArrayList<>());
     }
-
-    /**
-     * reads the keys of the components from the descriptor identified by the received filename.
-     *
-     * @param bundleReader the bundler reader to use in order to read the bundle
-     * @param fileName     the filename identifying the descriptor file to read
-     * @return the list of the keys of the components read from the descriptor
-     */
-    default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName) {
-
-        try {
-            if (this.doesComponentDscriptorContainMoreThanOneSingleEntity()) {
-                return bundleReader.readListOfDescriptorFile(fileName, this.getDescriptorClass())
-                        .stream().map(descriptor -> descriptor.getComponentKey().getKey())
-                        .collect(Collectors.toList());
-            } else {
-                return Arrays.asList(bundleReader.readDescriptorFile(fileName, this.getDescriptorClass())
-                        .getComponentKey().getKey());
-            }
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException(String.format(
-                    "Error parsing content type %s from descriptor %s",
-                    this.getSupportedComponentType(), fileName), e);
-        }
-    }
 }

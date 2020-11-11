@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.springframework.util.CollectionUtils;
 
@@ -15,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class AnalysisReport {
 
     @Default

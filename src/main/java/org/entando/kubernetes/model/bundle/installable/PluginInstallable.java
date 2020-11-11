@@ -25,13 +25,20 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Deploying plugin {}", getName());
-            EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+
+            logConflictStrategyAction();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
 
-            kubernetesService.linkPluginAndWaitForSuccess(plugin);
+            EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+            if (shouldCreate()) {
+                kubernetesService.linkPluginAndWaitForSuccess(plugin);
+            } else {
+                // TODO do create or replace
+                kubernetesService.linkPluginAndWaitForSuccess(plugin);
+            }
         });
     }
 

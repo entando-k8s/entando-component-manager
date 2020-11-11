@@ -77,13 +77,6 @@ public class TestInstallUtils {
     public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", "todomvc", "uninstall");
     public static final String JOBS_ENDPOINT = "/jobs";
-    public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas-0-0-1-snapshot";
-    public static final String EXPECTED_INGRESS_PATH = "/entando/the-lucas/0-0-1-snapshot";
-    public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
-    public static final String TEST_DESCRIPTOR_ADMIN_ROLE = "thelucas-admin";
-    public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
-    public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
-    public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
@@ -538,34 +531,4 @@ public class TestInstallUtils {
         return requestProperty(request, "path");
     }
 
-
-    public static PluginDescriptor getTestDescriptor() {
-        return PluginDescriptor.builder()
-                .image(TEST_DESCRIPTOR_IMAGE)
-                .roles(Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE))
-                .healthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
-                .dbms(TEST_DESCRIPTOR_DBMS)
-                .deploymentBaseName(TEST_DESCRIPTOR_IMAGE)
-                .build();
-    }
-
-    public static PluginDescriptor getTestDescriptorVersion1() {
-        return PluginDescriptor.builder()
-                .spec(getTestDescriptorV1Spec())
-                .build();
-    }
-
-    public static PluginDescriptorV1Spec getTestDescriptorV1Spec() {
-
-        List<PluginDescriptorV1Role> roleList = Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE)
-                .stream()
-                .map(role -> new PluginDescriptorV1Role(role, role))
-                .collect(Collectors.toList());
-
-        return new PluginDescriptorV1Spec()
-                .setImage(TEST_DESCRIPTOR_IMAGE)
-                .setRoles(roleList)
-                .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
-                .setDbms(TEST_DESCRIPTOR_DBMS);
-    }
 }

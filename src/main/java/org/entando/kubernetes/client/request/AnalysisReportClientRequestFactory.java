@@ -72,9 +72,9 @@ public final class AnalysisReportClientRequestFactory {
         return new CMSAnalysisReportClientRequest(contents, contentTemplates, contentTypes, assets);
     }
 
-    public AnalysisReportClientRequest createK8SServiceAnalysisReportRequest() {
-        return new K8SServiceAnalysisReportClientRequest(plugins);
-    }
+//    public AnalysisReportClientRequest createK8SServiceAnalysisReportRequest() {
+//        return new K8SServiceAnalysisReportClientRequest(plugins);
+//    }
 
 
     private AnalysisReportClientRequestFactory widgets(List<String> widgets) {

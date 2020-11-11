@@ -8,10 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -23,10 +25,12 @@ import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationD
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -302,5 +306,15 @@ class EntandoCoreClientTest {
         AnalysisReport engineAnalysisReport = this.client.getCMSAnalysisReport(new ArrayList<>());
         AnalysisReport expected = AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
         AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, engineAnalysisReport);
+    }
+
+    @Test
+    void shouldThrowAReportAnalysisExceptionIfARequestFails() {
+
+        coreMockServer.withFailingEngineAnalysisReportSupport();
+        List<Reportable> reportableList = new ArrayList<>();
+
+        Assertions.assertThrows(ReportAnalysisException.class,
+                () -> this.client.getEngineAnalysisReport(reportableList));
     }
 }
