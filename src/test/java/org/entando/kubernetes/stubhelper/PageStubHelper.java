@@ -1,15 +1,11 @@
 package org.entando.kubernetes.stubhelper;
 
-import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 
 public class PageStubHelper {
 
@@ -48,8 +44,8 @@ public class PageStubHelper {
                 .build();
     }
 
-    public static PageConfigurationDescriptor stubPageConfigurationDescriptor() {
-        return PageConfigurationDescriptor.builder()
+    public static PageDescriptor stubPageConfigurationDescriptor() {
+        return PageDescriptor.builder()
                 .code(PAGE_CODE)
                 .parentCode(PAGE_PARENT_CODE)
                 .charset(PAGE_CHARSET)

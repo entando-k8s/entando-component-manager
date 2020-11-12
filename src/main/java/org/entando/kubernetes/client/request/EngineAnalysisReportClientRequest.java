@@ -15,6 +15,7 @@ public class EngineAnalysisReportClientRequest implements AnalysisReportClientRe
     List<String> fragments;
     List<String> pages;
     List<String> pageTemplates;
+    List<String> directories;
     List<String> resources;
     List<String> categories;
     List<String> groups;

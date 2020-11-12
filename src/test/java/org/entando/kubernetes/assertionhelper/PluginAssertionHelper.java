@@ -4,12 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.stream.IntStream;
-import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
-import org.springframework.util.CollectionUtils;
 
 public class PluginAssertionHelper {
 

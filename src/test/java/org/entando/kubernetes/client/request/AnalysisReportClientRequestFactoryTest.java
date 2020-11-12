@@ -34,7 +34,8 @@ class AnalysisReportClientRequestFactoryTest {
                 ReportableStubHelper.PAGE_TEMPL_CODE_1, ReportableStubHelper.PAGE_TEMPL_CODE_2);
         // files and directories are both managed as resources by the remote handler
         assertThat(engineAnalysisReportRequest.getResources()).containsExactlyInAnyOrder(
-                ReportableStubHelper.RESOURCE_CODE_1, ReportableStubHelper.RESOURCE_CODE_2,
+                ReportableStubHelper.RESOURCE_CODE_1, ReportableStubHelper.RESOURCE_CODE_2);
+        assertThat(engineAnalysisReportRequest.getDirectories()).containsExactlyInAnyOrder(
                 ReportableStubHelper.DIRECTORY_CODE_1, ReportableStubHelper.DIRECTORY_CODE_2);
         assertThat(engineAnalysisReportRequest.getCategories()).containsExactly(
                 ReportableStubHelper.CATEGORY_CODE_1, ReportableStubHelper.CATEGORY_CODE_2);

@@ -15,7 +15,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallReques
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageConfigurationInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PageConfigurationProcessor extends BaseComponentProcessor<PageConfigurationDescriptor> {
+public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
 
@@ -38,8 +38,8 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageConfi
     }
 
     @Override
-    public Class<PageConfigurationDescriptor> getDescriptorClass() {
-        return PageConfigurationDescriptor.class;
+    public Class<PageDescriptor> getDescriptorClass() {
+        return PageDescriptor.class;
     }
 
     @Override
@@ -48,21 +48,21 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageConfi
     }
 
     @Override
-    public List<Installable<PageConfigurationDescriptor>> process(BundleReader bundleReader) {
+    public List<Installable<PageDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());
     }
 
     @Override
-    public List<Installable<PageConfigurationDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+    public List<Installable<PageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
-            List<Installable<PageConfigurationDescriptor>> installables = new LinkedList<>();
+            List<Installable<PageDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
-                PageConfigurationDescriptor pageDescriptor = bundleReader
+                PageDescriptor pageDescriptor = bundleReader
                         .readDescriptorFile(fileName, this.getDescriptorClass());
                 InstallAction action = extractInstallAction(pageDescriptor.getCode(), actions, conflictStrategy,
                         report);
@@ -77,7 +77,7 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageConfi
     }
 
     @Override
-    public List<Installable<PageConfigurationDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
+    public List<Installable<PageDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 // we can manage pages in one single flow during uninstall?
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
@@ -87,8 +87,8 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageConfi
     }
 
     @Override
-    public PageConfigurationDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return PageConfigurationDescriptor.builder()
+    public PageDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return PageDescriptor.builder()
                 .code(component.getComponentId())
                 .build();
     }

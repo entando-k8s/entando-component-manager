@@ -5,8 +5,8 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletionException;
 import java.util.function.Function;
+import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
@@ -60,6 +59,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Slf4j
 @Service
 public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
@@ -188,16 +188,23 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void createPageConfiguration(PageConfigurationDescriptor pageDescriptor) {
+    public void updatePageConfiguration(PageDescriptor pageDescriptor) {
         restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode()).build().toUri(),
                 new EntandoCorePage(pageDescriptor));
     }
 
     @Override
-    public void configurePageWidget(PageConfigurationDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+    public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
         restTemplate.put(resolvePathSegments("api", "pages", pageDescriptor.getCode(), "widgets",
                 widgetDescriptor.getPos().toString()).build().toUri(),
                 new EntandoCorePageWidgetConfiguration(widgetDescriptor));
+    }
+
+    @Override
+    public void publishPage(PageDescriptor pageDescriptor) {
+        restTemplate
+                .put(resolvePathSegments("api", "pages", pageDescriptor.getCode(), "status").build().toUri(),
+                        Collections.singletonMap("status", "published"));
     }
 
     @Override
@@ -294,6 +301,12 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void updateContent(ContentDescriptor descriptor) {
         restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contents", descriptor.getId()).build().toUri(),
                 Collections.singletonList(descriptor));
+    }
+
+    @Override
+    public void publishContent(ContentDescriptor descriptor) {
+        restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contents", descriptor.getId(), "status")
+                        .build().toUri(), Collections.singletonMap("status", "published"));
     }
 
     @Override
@@ -439,8 +452,10 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 return reportResponseEntity.getBody().getPayload();
             }
         } catch (Exception e) {
-            throw new ReportAnalysisException(String.format(
-                    "An error occurred fetching the %s report analysis", reportableRemoteHandler));
+            String message = String.format("An error occurred fetching the %s report analysis",
+                    reportableRemoteHandler);
+            log.error(message, e);
+            throw new ReportAnalysisException(message);
         }
     }
 

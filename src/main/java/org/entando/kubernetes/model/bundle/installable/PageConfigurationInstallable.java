@@ -7,14 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 
 @Slf4j
-public class PageConfigurationInstallable extends Installable<PageConfigurationDescriptor> {
+public class PageConfigurationInstallable extends Installable<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public PageConfigurationInstallable(EntandoCoreClient engineService, PageConfigurationDescriptor pd,
+    public PageConfigurationInstallable(EntandoCoreClient engineService, PageDescriptor pd,
             InstallAction action) {
         super(pd, action);
         this.engineService = engineService;
@@ -26,18 +26,20 @@ public class PageConfigurationInstallable extends Installable<PageConfigurationD
 
             logConflictStrategyAction();
 
-            //Create Page
             if (shouldSkip()) {
                 return; //Do nothing
             }
 
-            engineService.createPageConfiguration(representation);
+            engineService.updatePageConfiguration(representation);
 
             //Configure Page Widgets
             Optional.ofNullable(representation.getWidgets())
                     .orElse(new ArrayList<>())
                     .parallelStream()
                     .forEach(w -> engineService.configurePageWidget(representation, w));
+
+            //Publish Page
+            engineService.publishPage(representation);
         });
     }
 

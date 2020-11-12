@@ -4,7 +4,6 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.model.bundle.ComponentInstallationFlow;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;

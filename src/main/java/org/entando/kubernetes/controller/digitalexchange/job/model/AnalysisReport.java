@@ -36,6 +36,8 @@ public class AnalysisReport {
     @Default
     private Map<String, Status> assets = new HashMap<>();
     @Default
+    private Map<String, Status> directories = new HashMap<>();
+    @Default
     private Map<String, Status> resources = new HashMap<>();
     @Default
     private Map<String, Status> plugins = new HashMap<>();
@@ -66,6 +68,8 @@ public class AnalysisReport {
                 return contentTypes;
             case ASSET:
                 return assets;
+            case DIRECTORY:
+                return directories;
             case RESOURCE:
                 return resources;
             case PLUGIN:
