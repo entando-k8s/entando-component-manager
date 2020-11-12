@@ -12,7 +12,6 @@ import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
@@ -119,12 +118,17 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void createPageConfiguration(PageConfigurationDescriptor pageDescriptor) {
+    public void updatePageConfiguration(PageDescriptor pageDescriptor) {
 
     }
 
     @Override
-    public void configurePageWidget(PageConfigurationDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+    public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
+
+    }
+
+    @Override
+    public void publishPage(PageDescriptor pageDescriptor) {
 
     }
 
@@ -205,6 +209,11 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
 
     @Override
     public void updateContent(ContentDescriptor descriptor) {
+
+    }
+
+    @Override
+    public void publishContent(ContentDescriptor descriptor) {
 
     }
 

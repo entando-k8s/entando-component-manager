@@ -20,14 +20,7 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-
-            logConflictStrategyAction();
-
-            if (!shouldCreate()) {
-                return; //Do nothing
-            }
-
-            engineService.createFolder(representation.getName());
+            //Do nothing
         });
     }
 
@@ -35,11 +28,6 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             if (this.representation.isRoot() && shouldCreate()) {
-                /* TODO
-                 * uninstall should delete individual folders, because one install
-                 * could have created the root folder and another version
-                 * could have added new folders and files
-                 */
                 engineService.deleteFolder(this.representation.getName());
             }
         });

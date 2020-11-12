@@ -43,27 +43,11 @@ public class DirectoryProcessorTest {
 
         final List<? extends Installable> installables = directoryProcessor.process(bundleReader);
 
-        assertThat(installables).hasSize(5);
+        assertThat(installables).hasSize(1);
 
         assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
         assertThat(installables.get(0).getName()).isEqualTo("/something");
-
-        assertThat(installables.get(1)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(1).getName()).isEqualTo("/something/css");
-
-        assertThat(installables.get(2)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(2).getName()).isEqualTo("/something/js");
-
-        assertThat(installables.get(3)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(3).getName()).isEqualTo("/something/vendor");
-
-        assertThat(installables.get(4)).isInstanceOf(DirectoryInstallable.class);
-        assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery");
     }
 
     @Test

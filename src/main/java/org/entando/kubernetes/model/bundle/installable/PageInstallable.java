@@ -1,7 +1,5 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import java.util.ArrayList;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -25,13 +23,16 @@ public class PageInstallable extends Installable<PageDescriptor> {
 
             logConflictStrategyAction();
 
-            //Create Page
             if (shouldSkip()) {
                 return; //Do nothing
             }
 
             if (shouldCreate()) {
                 engineService.createPage(representation);
+            }
+
+            if (representation.getStatus().equals("published")) {
+                engineService.publishPage(representation);
             }
         });
     }

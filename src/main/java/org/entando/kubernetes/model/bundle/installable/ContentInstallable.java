@@ -32,6 +32,10 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
             } else {
                 engineService.updateContent(representation);
             }
+
+            if(representation.getStatus().equals("PUBLIC")) {
+                engineService.publishContent(representation);
+            }
         });
     }
 

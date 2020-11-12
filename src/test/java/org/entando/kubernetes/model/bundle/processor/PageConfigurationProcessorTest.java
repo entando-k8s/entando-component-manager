@@ -11,7 +11,7 @@ import java.util.Map;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageConfigurationInstallable;
@@ -63,7 +63,7 @@ class PageConfigurationProcessorTest {
         pageTitles.put("it", "La mia pagina");
         pageTitles.put("en", "My page");
 
-        PageConfigurationDescriptor pageConfigurationDescriptor = PageConfigurationDescriptor.builder()
+        PageDescriptor pageConfigurationDescriptor = PageDescriptor.builder()
                 .code("my-page")
                 .parentCode("homepage")
                 .charset("utf-8")
@@ -76,7 +76,7 @@ class PageConfigurationProcessorTest {
                         .pos(0).code("my-code").build()))
                 .build();
 
-        when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageConfigurationDescriptor.class))
+        when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
                 .thenReturn(pageConfigurationDescriptor);
 
         BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);

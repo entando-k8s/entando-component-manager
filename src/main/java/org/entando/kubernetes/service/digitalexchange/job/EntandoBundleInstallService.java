@@ -25,7 +25,6 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
@@ -269,15 +268,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     /**
      * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it.
      *
-     * @param bundleReader the BUndleReader to use to read the bundle
+     * @param bundleReader the BundleReader to use to read the bundle
      * @return a List of Reportable extracted from the bundle components descriptors
      */
     private Map<ReportableRemoteHandler, List<Reportable>> getReportableComponentsByRemoteHandler(
             BundleReader bundleReader) {
 
         return reportableComponentProcessorList.stream()
-                .filter(reportableComponentProcessor -> // FIXME
-                    ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() == ComponentType.PLUGIN)
                 .map(reportableProcessor ->
                         reportableProcessor.getReportable(bundleReader, (ComponentProcessor<?>) reportableProcessor))
                 .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
@@ -286,7 +283,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         return processorMap.values().stream()
-                .filter(processor -> processor.getSupportedComponentType() == ComponentType.PLUGIN) // FIXME
                 .map(processor -> processor.process(bundleReader, conflictStrategy, actions, report))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt(Installable::getPriority))

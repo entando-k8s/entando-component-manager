@@ -2,7 +2,7 @@ package org.entando.kubernetes.client.model.entandocore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.entando.kubernetes.model.bundle.descriptor.PageConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.entandocore.EntandoCorePage;
 import org.entando.kubernetes.model.entandocore.EntandoCorePageWidgetConfiguration;
 import org.entando.kubernetes.stubhelper.PageStubHelper;
@@ -14,7 +14,7 @@ public class EntandoCorePageTest {
 
     @Test
     public void shouldReadDescriptorFile() {
-        PageConfigurationDescriptor pageDescriptor = PageStubHelper.stubPageConfigurationDescriptor();
+        PageDescriptor pageDescriptor = PageStubHelper.stubPageConfigurationDescriptor();
         EntandoCorePage ecp = new EntandoCorePage(pageDescriptor);
         assertThat(ecp.getCharset()).isEqualTo("iso1923-12");
         assertThat(ecp.getCode()).isEqualTo("my-page");
@@ -31,7 +31,7 @@ public class EntandoCorePageTest {
 
     @Test
     public void shouldReadPageConfigurationDescriptor() {
-        PageConfigurationDescriptor pageDescriptor = PageStubHelper.stubPageConfigurationDescriptor();
+        PageDescriptor pageDescriptor = PageStubHelper.stubPageConfigurationDescriptor();
         EntandoCorePageWidgetConfiguration widgetConfiguration = new EntandoCorePageWidgetConfiguration(
                 pageDescriptor.getWidgets().get(0));
 
@@ -40,7 +40,7 @@ public class EntandoCorePageTest {
 
     @Test
     public void shouldUseDefaultsIfMissingField() {
-        PageConfigurationDescriptor pd = PageStubHelper.stubPageConfigurationDescriptor();
+        PageDescriptor pd = PageStubHelper.stubPageConfigurationDescriptor();
         pd.setPageModel("     ");
         pd.setCharset("");
         pd.setOwnerGroup(null);

@@ -20,6 +20,7 @@ public final class AnalysisReportClientRequestFactory {
     List<String> contentTemplates = new ArrayList<>();
     List<String> contentTypes = new ArrayList<>();
     List<String> assets = new ArrayList<>();
+    List<String> directories = new ArrayList<>();
     List<String> resources = new ArrayList<>();
     List<String> plugins = new ArrayList<>();
     List<String> categories = new ArrayList<>();
@@ -37,13 +38,13 @@ public final class AnalysisReportClientRequestFactory {
         strategy.put(ComponentType.CONTENT_TEMPLATE, this::contentTemplates);
         strategy.put(ComponentType.CONTENT_TYPE, this::contentTypes);
         strategy.put(ComponentType.ASSET, this::assets);
+        strategy.put(ComponentType.DIRECTORY, this::directories);
         strategy.put(ComponentType.RESOURCE, this::resources);
         strategy.put(ComponentType.PLUGIN, this::plugins);
         strategy.put(ComponentType.CATEGORY, this::categories);
         strategy.put(ComponentType.GROUP, this::groups);
         strategy.put(ComponentType.LABEL, this::labels);
         strategy.put(ComponentType.LANGUAGE, this::languages);
-        strategy.put(ComponentType.DIRECTORY, this::resources);
     }
 
     public static AnalysisReportClientRequestFactory anAnalysisReportClientRequest() {
@@ -64,8 +65,8 @@ public final class AnalysisReportClientRequestFactory {
     }
 
     public AnalysisReportClientRequest createEngineAnalysisReportRequest() {
-        return new EngineAnalysisReportClientRequest(widgets, fragments, pages, pageTemplates, resources, categories,
-                groups, labels, languages);
+        return new EngineAnalysisReportClientRequest(widgets, fragments, pages, pageTemplates, directories, resources,
+                categories, groups, labels, languages);
     }
 
     public AnalysisReportClientRequest createCMSAnalysisReportRequest() {
@@ -114,6 +115,11 @@ public final class AnalysisReportClientRequestFactory {
 
     private AnalysisReportClientRequestFactory assets(List<String> assets) {
         this.assets.addAll(assets);
+        return this;
+    }
+
+    private AnalysisReportClientRequestFactory directories(List<String> directories) {
+        this.directories.addAll(directories);
         return this;
     }
 
