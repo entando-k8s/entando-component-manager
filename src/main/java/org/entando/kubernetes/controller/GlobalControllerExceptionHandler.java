@@ -26,7 +26,7 @@ public class GlobalControllerExceptionHandler implements ProblemHandling {
         this.messageSource = messageSource;
     }
 
-    @ExceptionHandler(EntandoComponentManagerException.class)
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception exception, Locale locale) {
         log.warn("Exception caught {}", exception.getMessage(), exception);
 

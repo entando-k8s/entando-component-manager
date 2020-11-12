@@ -149,7 +149,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
         String pluginName = plugin.getMetadata().getName();
         URI updateURI = traverson.follow(PLUGINS_ENDPOINT)
-                .follow(Hop.rel("plugin").withParameter("name", pluginName))
+                .follow(Hop.rel("create-or-replace-plugin").withParameter("name", pluginName))
                 .asLink().toUri();
 
         return tryOrThrow(() -> {
@@ -287,7 +287,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
             }
+        } catch (Exception ex) {
+            throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
         }
+
         return Optional.ofNullable(bundle);
     }
 

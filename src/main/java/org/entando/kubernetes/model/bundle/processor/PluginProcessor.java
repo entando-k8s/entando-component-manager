@@ -71,7 +71,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                InstallAction action = extractInstallAction(plugin.getDockerImage().toString(), actions,
+                InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), actions,
                         conflictStrategy, report);
                 installableList.add(new PluginInstallable(kubernetesService, plugin, action));
             }
@@ -95,17 +95,17 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     }
 
 
-    @Override
-    public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
-            ComponentProcessor<?> componentProcessor) {
-
-        try {
-            PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(fileName, this.getDescriptorClass());
-            return Arrays.asList(BundleUtilities.extractNameFromDescriptor(pluginDescriptor));
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException(String.format(
-                    "Error parsing content type %s from descriptor %s",
-                    this.getSupportedComponentType(), fileName), e);
-        }
-    }
+//    @Override
+//    public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
+//            ComponentProcessor<?> componentProcessor) {
+//
+//        try {
+//            PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(fileName, this.getDescriptorClass());
+//            return Arrays.asList(BundleUtilities.extractNameFromDescriptor(pluginDescriptor));
+//        } catch (IOException e) {
+//            throw new EntandoComponentManagerException(String.format(
+//                    "Error parsing content type %s from descriptor %s",
+//                    this.getSupportedComponentType(), fileName), e);
+//        }
+//    }
 }

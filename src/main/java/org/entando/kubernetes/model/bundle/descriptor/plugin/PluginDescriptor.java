@@ -7,9 +7,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.util.StringUtils;
 
 @Getter
@@ -87,6 +89,16 @@ public class PluginDescriptor implements Descriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(name);
+
+        return new ComponentKey(BundleUtilities.extractNameFromDescriptor(this));
+//        if (! StringUtils.isEmpty(deploymentBaseName)) {
+//            return new ComponentKey(deploymentBaseName);
+//        } else if (! StringUtils.isEmpty(image)) {
+//            return new ComponentKey(image);
+//        } else if (null != spec && StringUtils.isEmpty(spec.getImage())) {
+//            return new ComponentKey(spec.getImage());
+//        } else {
+//            throw new EntandoComponentManagerException("Can't identify the key for the plugin");
+//        }
     }
 }

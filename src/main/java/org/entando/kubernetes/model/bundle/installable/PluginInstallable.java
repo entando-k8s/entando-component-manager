@@ -54,7 +54,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 return; //Do nothing
             }
 
-            kubernetesService.unlinkPlugin(BundleUtilities.extractNameFromDescriptor(representation));
+            kubernetesService.unlinkPlugin(representation.getComponentKey().getKey());
         });
     }
 

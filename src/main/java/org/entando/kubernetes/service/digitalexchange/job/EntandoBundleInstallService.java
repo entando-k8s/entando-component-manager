@@ -86,11 +86,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             try {
                 analysisReport = futureList.stream().map(CompletableFuture::join)
                         .reduce(AnalysisReport::merge)
-                        .orElseThrow(() -> {
-                            throw new ReportAnalysisException(String.format(
+                        .orElseThrow(() -> new ReportAnalysisException(String.format(
                                     "An error occurred during the analysis report for the bundle %s with tag %s",
-                                    bundle.getMetadata().getName(), tag.getVersion()));
-                        });
+                                    bundle.getMetadata().getName(), tag.getVersion())));
             } catch (CompletionException e) {
                 throw e.getCause() instanceof ReportAnalysisException
                         ? (ReportAnalysisException) e.getCause()
@@ -276,8 +274,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             BundleReader bundleReader) {
 
         return reportableComponentProcessorList.stream()
-                .filter(reportableComponentProcessor -> // FIXME
-                    ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() == ComponentType.PLUGIN)
+//                .filter(reportableComponentProcessor -> // FIXME
+//                    ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() == ComponentType.PLUGIN)
+                 .filter(reportableComponentProcessor ->
+                    ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() != ComponentType.PAGE
+                 && ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() != ComponentType.PAGE_CONFIGURATION
+                 && ((ComponentProcessor)reportableComponentProcessor).getSupportedComponentType() != ComponentType.CONTENT)
                 .map(reportableProcessor ->
                         reportableProcessor.getReportable(bundleReader, (ComponentProcessor<?>) reportableProcessor))
                 .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
@@ -286,7 +288,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         return processorMap.values().stream()
-                .filter(processor -> processor.getSupportedComponentType() == ComponentType.PLUGIN) // FIXME
+//                .filter(processor -> processor.getSupportedComponentType() == ComponentType.PLUGIN) // FIXME
+                .filter(processor -> processor.getSupportedComponentType() != ComponentType.PAGE
+                        && processor.getSupportedComponentType() != ComponentType.PAGE_CONFIGURATION
+                        && processor.getSupportedComponentType() != ComponentType.CONTENT)
                 .map(processor -> processor.process(bundleReader, conflictStrategy, actions, report))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt(Installable::getPriority))
