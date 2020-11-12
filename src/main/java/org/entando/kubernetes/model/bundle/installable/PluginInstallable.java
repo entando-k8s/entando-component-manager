@@ -28,16 +28,19 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
             logConflictStrategyAction();
 
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
 
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+
             if (shouldCreate()) {
                 kubernetesService.linkPluginAndWaitForSuccess(plugin);
+            } else if (shouldOverride()) {
+                kubernetesService.updatePlugin(plugin);
             } else {
-                // TODO do create or replace
-                kubernetesService.linkPluginAndWaitForSuccess(plugin);
+                throw new EntandoComponentManagerException("Illegal state detected");
             }
         });
     }

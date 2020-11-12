@@ -103,6 +103,21 @@ public class KubernetesService {
 
     }
 
+    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
+        EntandoPlugin updatedPlugin = new EntandoPluginBuilder()
+                .withMetadata(plugin.getMetadata())
+                .withSpec(plugin.getSpec())
+                .build();
+
+        /*
+         * TODO: CHECK: copied from "linkPlugin" but the reason is not clear
+         *  Note that without this probably the above code is not required as well
+         */
+        updatedPlugin.getMetadata().setNamespace(null);
+
+        return k8sServiceClient.updatePlugin(updatedPlugin);
+    }
+
     public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin) {
         boolean result = false;
         Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());

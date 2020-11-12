@@ -14,6 +14,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
@@ -77,6 +78,12 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public void unlink(EntandoAppPluginLink el) {
         //Don't do anything atm
+    }
+
+    @Override
+    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
+        // TODO?
+        return null;
     }
 
     @Override

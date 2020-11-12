@@ -139,6 +139,43 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return Optional.ofNullable(plugin);
     }
 
+    /**
+     * UPDATES A PLUGIN
+     * <pre>
+     * updates a plugin CR given the CR object
+     * </prep>
+     */
+    @Override
+    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
+        String pluginName = plugin.getMetadata().getName();
+        URI updateURI = traverson.follow(PLUGINS_ENDPOINT)
+                .follow(Hop.rel("plugin").withParameter("name", pluginName))
+                .asLink().toUri();
+
+        return tryOrThrow(() -> {
+            //~ PREPARE REQUEST
+            RequestEntity<EntandoPlugin> request = RequestEntity
+                    .put(updateURI)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(plugin);
+
+            //~ SEND REQUEST
+            ResponseEntity<EntityModel<EntandoPlugin>> response = restTemplate
+                    .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                    });
+
+            //~ CHECK RESPONSE
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody().getContent();
+            } else {
+                throw new RestClientResponseException("Update process failed",
+                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                        null, null, null);
+            }
+        }, String.format("while updating plugin %s", pluginName));
+
+    }
+
     @Override
     public void unlink(EntandoAppPluginLink el) {
         String linkName = el.getMetadata().getName();
