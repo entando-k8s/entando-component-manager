@@ -300,7 +300,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void updateContent(ContentDescriptor descriptor) {
         restTemplate.put(resolvePathSegments("api", "plugins", "cms", "contents", descriptor.getId()).build().toUri(),
-                Collections.singletonList(descriptor));
+                descriptor);
     }
 
     @Override
