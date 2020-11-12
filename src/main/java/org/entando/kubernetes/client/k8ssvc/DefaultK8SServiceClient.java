@@ -134,10 +134,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     /**
-     * UPDATES A PLUGIN
-     * <pre>
+     * UPDATES A PLUGIN.
+     * <p>
      * updates a plugin CR given the CR object
-     * </prep>
+     * </p>
      */
     @Override
     public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
@@ -147,18 +147,15 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .asLink().toUri();
 
         return tryOrThrow(() -> {
-            //~ PREPARE REQUEST
             RequestEntity<EntandoPlugin> request = RequestEntity
                     .put(updateURI)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(plugin);
 
-            //~ SEND REQUEST
             ResponseEntity<EntityModel<EntandoPlugin>> response = restTemplate
                     .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
                     });
 
-            //~ CHECK RESPONSE
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody().getContent();
             } else {

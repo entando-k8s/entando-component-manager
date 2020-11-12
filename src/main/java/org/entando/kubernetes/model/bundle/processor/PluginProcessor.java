@@ -93,19 +93,4 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return PluginDescriptor.builder().deploymentBaseName(component.getComponentId()).build();
     }
-
-
-//    @Override
-//    public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
-//            ComponentProcessor<?> componentProcessor) {
-//
-//        try {
-//            PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(fileName, this.getDescriptorClass());
-//            return Arrays.asList(BundleUtilities.extractNameFromDescriptor(pluginDescriptor));
-//        } catch (IOException e) {
-//            throw new EntandoComponentManagerException(String.format(
-//                    "Error parsing content type %s from descriptor %s",
-//                    this.getSupportedComponentType(), fileName), e);
-//        }
-//    }
 }

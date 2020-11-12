@@ -199,7 +199,7 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     }
 
     /**
-     * stub a failing response for the AnalysisReport Engine endpoint
+     * stub a failing response for the AnalysisReport Engine endpoint.
      * @return this instance of the EntandoCoreMockServer
      */
     public EntandoCoreMockServer withFailingEngineAnalysisReportSupport() {

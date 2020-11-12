@@ -6,6 +6,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor.ContentStatus;
 
 @Slf4j
 public class ContentInstallable extends Installable<ContentDescriptor> {
@@ -33,7 +34,7 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
                 engineService.updateContent(representation);
             }
 
-            if(representation.getStatus().equals("PUBLIC")) {
+            if (representation.getStatus().equals(ContentStatus.PUBLIC.toString())) {
                 engineService.publishContent(representation);
             }
         });

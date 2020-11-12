@@ -109,10 +109,6 @@ public class KubernetesService {
                 .withSpec(plugin.getSpec())
                 .build();
 
-        /*
-         * TODO: CHECK: copied from "linkPlugin" but the reason is not clear
-         *  Note that without this probably the above code is not required as well
-         */
         updatedPlugin.getMetadata().setNamespace(null);
 
         return k8sServiceClient.updatePlugin(updatedPlugin);

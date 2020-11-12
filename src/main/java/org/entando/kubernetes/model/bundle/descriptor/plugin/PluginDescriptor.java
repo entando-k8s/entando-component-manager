@@ -91,14 +91,5 @@ public class PluginDescriptor implements Descriptor {
     public ComponentKey getComponentKey() {
 
         return new ComponentKey(BundleUtilities.extractNameFromDescriptor(this));
-//        if (! StringUtils.isEmpty(deploymentBaseName)) {
-//            return new ComponentKey(deploymentBaseName);
-//        } else if (! StringUtils.isEmpty(image)) {
-//            return new ComponentKey(image);
-//        } else if (null != spec && StringUtils.isEmpty(spec.getImage())) {
-//            return new ComponentKey(spec.getImage());
-//        } else {
-//            throw new EntandoComponentManagerException("Can't identify the key for the plugin");
-//        }
     }
 }

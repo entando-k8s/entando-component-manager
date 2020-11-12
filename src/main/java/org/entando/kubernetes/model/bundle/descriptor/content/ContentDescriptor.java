@@ -27,4 +27,13 @@ public class ContentDescriptor implements Descriptor {
     public ComponentKey getComponentKey() {
         return new ComponentKey(id);
     }
+
+
+
+
+    @Getter
+    public enum ContentStatus {
+
+        PUBLIC;
+    }
 }
