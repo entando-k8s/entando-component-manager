@@ -37,12 +37,12 @@ attributes:
     value: null
     values:
       en: Learn about checking and savings accounts sub
-    elements: []
-    compositeelements: []
-    listelements: {}
+    elements: [ ]
+    compositeelements: [ ]
+    listelements: { }
   - code: descr
     value: null
-    values: {}
-    elements: []
-    compositeelements: []
-    listelements: {}
+    values: { }
+    elements: [ ]
+    compositeelements: [ ]
+    listelements: { }

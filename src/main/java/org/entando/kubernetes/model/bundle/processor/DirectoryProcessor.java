@@ -3,19 +3,28 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +38,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DirectoryProcessor implements ComponentProcessor<DirectoryDescriptor> {
+public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescriptor>
+        implements EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -39,21 +49,33 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
     }
 
     @Override
-    public List<Installable<DirectoryDescriptor>> process(BundleReader npr) {
+    public Class<DirectoryDescriptor> getDescriptorClass() {
+        return DirectoryDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Installable<DirectoryDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<DirectoryDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
         try {
-            if (npr.containsResourceFolder()) {
-                final String componentFolder = "/" + npr.getBundleCode();
-                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true)));
-
-                List<String> resourceFolders = npr.getResourceFolders().stream().sorted().collect(Collectors.toList());
-                for (final String resourceFolder : resourceFolders) {
-                    Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
-                            .relativize(Paths.get(resourceFolder));
-                    String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
-                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false)));
-                }
+            if (bundleReader.containsResourceFolder()) {
+                final String componentFolder = "/" + bundleReader.getBundleCode();
+                InstallAction rootDirectoryAction = extractInstallAction(componentFolder, actions, conflictStrategy,
+                        report);
+                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true),
+                        rootDirectoryAction));
             }
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error reading bundle", e);
@@ -65,8 +87,9 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
     @Override
     public List<Installable<DirectoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.DIRECTORY)
-                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c),
+                        c.getAction()))
                 .collect(Collectors.toList());
     }
 
@@ -78,5 +101,31 @@ public class DirectoryProcessor implements ComponentProcessor<DirectoryDescripto
             isRoot = true;
         }
         return new DirectoryDescriptor(component.getComponentId(), isRoot);
+    }
+
+    @Override
+    public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
+
+        List<String> idList = new ArrayList<>();
+
+        try {
+            final String componentFolder = "/" + bundleReader.getBundleCode();
+            idList.add(componentFolder);
+
+            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
+                    .collect(Collectors.toList());
+            for (final String resourceFolder : resourceFolders) {
+                Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
+                        .relativize(Paths.get(resourceFolder));
+                String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
+                idList.add(folder);
+            }
+
+            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                    this.getReportableRemoteHandler());
+
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
+        }
     }
 }

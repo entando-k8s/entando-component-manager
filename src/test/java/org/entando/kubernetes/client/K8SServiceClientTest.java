@@ -27,13 +27,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -52,11 +58,25 @@ import org.springframework.web.client.RestTemplate;
 @Tag("unit")
 public class K8SServiceClientTest {
 
-    private static EntandoK8SServiceMockServer mockServer;
     private static final String CLIENT_ID = "test-entando-de";
     private static final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
     private static final String TOKEN_URI = "http://someurl.com";
+    private static EntandoK8SServiceMockServer mockServer;
     private DefaultK8SServiceClient client;
+
+    private static Optional<Integer> findFreePort() {
+        Integer port = null;
+        try {
+            // Get a free port
+            ServerSocket s = new ServerSocket(0);
+            port = s.getLocalPort();
+            s.close();
+
+        } catch (IOException e) {
+            // No OPS
+        }
+        return Optional.ofNullable(port);
+    }
 
     @BeforeEach
     public void setup() {
@@ -207,7 +227,6 @@ public class K8SServiceClientTest {
 
     }
 
-
     @Test
     public void shouldGetBundlesFromAllObservedNamespaces() {
         List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
@@ -280,6 +299,21 @@ public class K8SServiceClientTest {
         assertThat(bundle.get().getMetadata().getName()).isEqualTo("my-bundle");
     }
 
+    @Test
+    void shouldGetAnalysisReport() {
+
+        Map<String, Status> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_1, Status.NEW,
+                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+
+        AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
+
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
+    }
+
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();
         List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
@@ -288,7 +322,6 @@ public class K8SServiceClientTest {
         template.setMessageConverters(messageConverters);
         return template;
     }
-
 
     private HttpMessageConverter<?> getJsonConverter() {
         final List<MediaType> supportedMediaTypes = Collections.singletonList(MediaType.APPLICATION_JSON);
@@ -337,20 +370,6 @@ public class K8SServiceClientTest {
                 .endSpec()
                 .build();
 
-    }
-
-    private static Optional<Integer> findFreePort() {
-        Integer port = null;
-        try {
-            // Get a free port
-            ServerSocket s = new ServerSocket(0);
-            port = s.getLocalPort();
-            s.close();
-
-        } catch (IOException e) {
-            // No OPS
-        }
-        return Optional.ofNullable(port);
     }
 
     private String readResourceAsString(String resourcePath) {

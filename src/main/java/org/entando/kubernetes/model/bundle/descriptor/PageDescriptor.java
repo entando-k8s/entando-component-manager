@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -13,13 +14,14 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PageDescriptor implements Descriptor {
 
     private String code;
     private String parentCode;
-    private Map<String, String> titles;
-    private String pageModel;
     private String ownerGroup;
+    private String pageModel;
+    private Map<String, String> titles;
     private List<String> joinGroups;
     private boolean displayedInMenu;
     private boolean seo;
@@ -27,4 +29,8 @@ public class PageDescriptor implements Descriptor {
     private String status;
     private List<WidgetConfigurationDescriptor> widgets;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

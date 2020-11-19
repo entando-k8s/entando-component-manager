@@ -10,14 +10,21 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
+import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
@@ -41,9 +48,9 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class EntandoBundleReaderTest {
 
-    BundleReader bundleReader;
     public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
+    BundleReader bundleReader;
     Path bundleFolder;
 
     @BeforeEach
@@ -98,6 +105,19 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadPagesFromBundle() throws IOException {
+        PageDescriptor pd = bundleReader
+                .readDescriptorFile("pages/my_page_descriptor.yaml", PageDescriptor.class);
+        assertThat(pd).isNotNull();
+        assertThat(pd.getCode()).isEqualTo("my-page");
+        assertThat(pd.getParentCode()).isEqualTo("homepage");
+        assertThat(pd.getTitles()).containsEntry("it", "La mia pagina");
+        assertThat(pd.getTitles()).containsEntry("en", "My page");
+        assertThat(pd.getPageModel()).isEqualTo("service");
+        assertThat(pd.getOwnerGroup()).isEqualTo("administrators");
+    }
+
+    @Test
+    void shouldReadPageConfigurationFromBundle() throws IOException {
         PageDescriptor pd = bundleReader
                 .readDescriptorFile("pages/my_page_descriptor.yaml", PageDescriptor.class);
         assertThat(pd).isNotNull();
@@ -163,6 +183,8 @@ public class EntandoBundleReaderTest {
 
     }
 
+
+
     @Test
     void shouldReadPluginFromBundleV1() throws IOException {
         PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
@@ -177,7 +199,8 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldReadPluginFromBundleV2() throws IOException {
 
-        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
         assertThat(descriptor.getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
         assertThat(descriptor.getImage()).isEqualTo("entando/todomvcV2:1.0.0");
@@ -282,7 +305,24 @@ public class EntandoBundleReaderTest {
     private static class DumbComponentProcessor implements ComponentProcessor<DumbDescriptor> {
 
         @Override
+        public Class<DumbDescriptor> getDescriptorClass() {
+            return DumbDescriptor.class;
+        }
+
+        @Override
+        public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+            return Optional.empty();
+        }
+
+        @Override
         public List<Installable<DumbDescriptor>> process(BundleReader bundleReader) {
+            return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                    new AnalysisReport());
+        }
+
+        @Override
+        public List<Installable<DumbDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+                InstallActionsByComponentType actions, AnalysisReport report) {
             return null;
         }
 
@@ -304,6 +344,11 @@ public class EntandoBundleReaderTest {
 
     private static class DumbDescriptor implements Descriptor {
 
+
+        @Override
+        public ComponentKey getComponentKey() {
+            return new ComponentKey("dummy");
+        }
     }
 
 }

@@ -12,13 +12,13 @@ public class BaseMapModel {
     @JsonAnySetter
     protected Map<String, Object> data = new HashMap<>();
 
+    public BaseMapModel(Map<String, Object> map) {
+        data = map == null ? new HashMap<>() : new HashMap<>(map);
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getData() {
         return data;
-    }
-
-    public BaseMapModel(Map<String, Object> map) {
-        data = map == null ? new HashMap<>() : new HashMap<>(map);
     }
 
     public void putAll(Map<String, Object> map) {

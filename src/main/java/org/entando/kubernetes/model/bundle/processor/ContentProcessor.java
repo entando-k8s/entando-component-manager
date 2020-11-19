@@ -1,23 +1,25 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.installable.ContentInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoCMSReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +29,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
+public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
+        implements EntandoCMSReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -36,20 +39,37 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
         return ComponentType.CONTENT;
     }
 
+
     @Override
-    public List<Installable<ContentDescriptor>> process(BundleReader npr) {
+    public Class<ContentDescriptor> getDescriptorClass() {
+        return ContentDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getContents);
+    }
+
+    @Override
+    public List<Installable<ContentDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<ContentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
-            List<String> contentDescriptorList = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getContents)
-                    .orElse(new ArrayList<>());
+            final List<String> descriptorList = getDescriptorList(bundleReader);
 
             List<Installable<ContentDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : contentDescriptorList) {
-                ContentDescriptor contentDescriptor = npr
+            for (String fileName : descriptorList) {
+                ContentDescriptor contentDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentDescriptor.class);
-                installables.add(new ContentInstallable(engineService, contentDescriptor));
+                InstallAction action = extractInstallAction(contentDescriptor.getId(), actions, conflictStrategy,
+                        report);
+                installables.add(new ContentInstallable(engineService, contentDescriptor, action));
             }
 
             return installables;
@@ -61,8 +81,8 @@ public class ContentProcessor implements ComponentProcessor<ContentDescriptor> {
     @Override
     public List<Installable<ContentDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.CONTENT)
-                .map(c -> new ContentInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new ContentInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

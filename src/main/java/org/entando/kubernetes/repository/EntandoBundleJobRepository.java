@@ -24,7 +24,8 @@ public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJ
     Optional<EntandoBundleJobEntity> findFirstByComponentIdAndStatusInOrderByStartedAtDesc(String componentId,
             Set<JobStatus> status);
 
-    Optional<EntandoBundleJobEntity> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId, JobStatus status);
+    Optional<EntandoBundleJobEntity> findFirstByComponentIdAndStatusOrderByStartedAtDesc(String componentId,
+            JobStatus status);
 
     Optional<EntandoBundleJobEntity> findFirstByComponentIdOrderByStartedAtDesc(String componentId);
 

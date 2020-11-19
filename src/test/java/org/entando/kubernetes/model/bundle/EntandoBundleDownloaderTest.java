@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 @Tag("unit")
 public class EntandoBundleDownloaderTest {
 
-    private WireMockServer wireMockServer;
+    public static final String BUNDLE_REMOTE_REPOSITORY = "https://github.com/Kerruba/entando-sample-bundle";
     private static final int port;
 
 
@@ -35,8 +35,22 @@ public class EntandoBundleDownloaderTest {
         port = findFreePort().orElse(9080);
     }
 
-    public static final String BUNDLE_REMOTE_REPOSITORY = "https://github.com/Kerruba/entando-sample-bundle";
     BundleDownloader downloader;
+    private WireMockServer wireMockServer;
+
+    private static Optional<Integer> findFreePort() {
+        Integer port = null;
+        try {
+            // Get a free port
+            ServerSocket s = new ServerSocket(0);
+            port = s.getLocalPort();
+            s.close();
+
+        } catch (IOException e) {
+            // No OPS
+        }
+        return Optional.ofNullable(port);
+    }
 
     @AfterEach
     public void tearDown() throws IOException {
@@ -147,21 +161,6 @@ public class EntandoBundleDownloaderTest {
                                 .withStatus(200)
                                 .withBody(zbBytes)));
         return wireMockServer;
-    }
-
-
-    private static Optional<Integer> findFreePort() {
-        Integer port = null;
-        try {
-            // Get a free port
-            ServerSocket s = new ServerSocket(0);
-            port = s.getLocalPort();
-            s.close();
-
-        } catch (IOException e) {
-            // No OPS
-        }
-        return Optional.ofNullable(port);
     }
 }
 

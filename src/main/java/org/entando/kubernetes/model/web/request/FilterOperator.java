@@ -13,10 +13,6 @@ public enum FilterOperator {
         this.value = value;
     }
 
-    public String getValue() {
-        return this.value;
-    }
-
     public static FilterOperator parse(String op) {
         final FilterOperator[] values = values();
         for (FilterOperator value : values) {
@@ -25,5 +21,9 @@ public enum FilterOperator {
             }
         }
         throw new IllegalArgumentException(op + " is not a supported filter operator");
+    }
+
+    public String getValue() {
+        return this.value;
     }
 }

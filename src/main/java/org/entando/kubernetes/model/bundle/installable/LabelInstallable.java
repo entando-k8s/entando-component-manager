@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 
@@ -11,16 +12,26 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public LabelInstallable(EntandoCoreClient engineService, LabelDescriptor labelDescriptor) {
-        super(labelDescriptor);
+    public LabelInstallable(EntandoCoreClient engineService, LabelDescriptor labelDescriptor, InstallAction action) {
+        super(labelDescriptor, action);
         this.engineService = engineService;
     }
 
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Label {}", getName());
-            engineService.registerLabel(representation);
+
+            logConflictStrategyAction();
+
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
+            if (shouldCreate()) {
+                engineService.createLabel(representation);
+            } else {
+                engineService.updateLabel(representation);
+            }
         });
     }
 
@@ -28,7 +39,9 @@ public class LabelInstallable extends Installable<LabelDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Label {}", getName());
-            engineService.deleteLabel(getName());
+            if (shouldCreate()) {
+                engineService.deleteLabel(getName());
+            }
         });
     }
 

@@ -1,10 +1,9 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import java.util.ArrayList;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 
@@ -13,24 +12,28 @@ public class PageInstallable extends Installable<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public PageInstallable(EntandoCoreClient engineService, PageDescriptor pd) {
-        super(pd);
+    public PageInstallable(EntandoCoreClient engineService, PageDescriptor pd, InstallAction action) {
+        super(pd, action);
         this.engineService = engineService;
     }
 
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Page {}", getName());
 
-            //Create Page
-            engineService.registerPage(representation);
+            logConflictStrategyAction();
 
-            //Configure Page Widgets
-            Optional.ofNullable(representation.getWidgets())
-                    .orElse(new ArrayList<>())
-                    .parallelStream()
-                    .forEach(w -> engineService.registerPageWidget(representation, w));
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
+            if (shouldCreate()) {
+                engineService.createPage(representation);
+            }
+
+            if (representation.getStatus().equals("published")) {
+                engineService.publishPage(representation);
+            }
         });
     }
 
@@ -38,7 +41,9 @@ public class PageInstallable extends Installable<PageDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Page {}", getName());
-            engineService.deletePage(getName());
+            if (shouldCreate()) {
+                engineService.deletePage(getName());
+            }
         });
     }
 

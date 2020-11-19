@@ -8,12 +8,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
@@ -21,6 +26,10 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -48,11 +57,60 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository bundleRepository;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
+    private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
+    private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
+
+    public AnalysisReport performInstallAnalysis(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+
+        AnalysisReport analysisReport = null;
+
+        BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
+
+        try {
+            BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+            Map<ReportableRemoteHandler, List<Reportable>> reportableByHandler =
+                    this.getReportableComponentsByRemoteHandler(bundleReader);
+
+            List<CompletableFuture<AnalysisReport>> futureList = reportableByHandler.keySet().stream()
+                    // for each remote handler => get whole analysis report async
+                    .map(key ->
+                            CompletableFuture.supplyAsync(
+                                    () -> analysisReportStrategies.get(key)
+                                            .getAnalysisReport(reportableByHandler.get(key)))
+                    )
+                    .collect(Collectors.toList());
+
+            // why using separate streams https://stackoverflow.com/questions/58700578/why-is-completablefuture-join-get-faster-in-separate-streams-than-using-one-stre
+
+            try {
+                analysisReport = futureList.stream().map(CompletableFuture::join)
+                        .reduce(AnalysisReport::merge)
+                        .orElseThrow(() -> new ReportAnalysisException(String.format(
+                                    "An error occurred during the analysis report for the bundle %s with tag %s",
+                                    bundle.getMetadata().getName(), tag.getVersion())));
+            } catch (CompletionException e) {
+                throw e.getCause() instanceof ReportAnalysisException
+                        ? (ReportAnalysisException) e.getCause()
+                        : e;
+            }
+
+        } finally {
+            bundleDownloader.cleanTargetDirectory();
+        }
+
+        return analysisReport;
+    }
+
+    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
+        EntandoBundleJobEntity job = createInstallJob(bundle, tag);
+        submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report);
+        return job;
+    }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        EntandoBundleJobEntity job = createInstallJob(bundle, tag);
-        submitInstallAsync(job, bundle, tag);
-        return job;
+        return this.install(bundle, tag, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
     }
 
     private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
@@ -69,7 +127,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return createdJob;
     }
 
-    private void submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    private void submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
@@ -78,10 +137,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             JobScheduler scheduler = new JobScheduler();
             BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
-
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
-                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag, bundleDownloader);
+                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag,
+                        bundleDownloader, conflictStrategy, actions, report);
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
                         .map(i -> {
                             EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
@@ -90,13 +149,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             cj.setComponentId(i.getName());
                             cj.setChecksum(i.getChecksum());
                             cj.setInstallable(i);
+                            cj.setAction(i.getAction());
                             return cj;
                         })
                         .collect(Collectors.toCollection(ArrayDeque::new));
                 scheduler.queueAll(componentJobQueue);
 
                 JobProgress installProgress = new JobProgress(1.0 / componentJobQueue.size());
-
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
@@ -115,7 +174,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 }
                 if (parentJobResult.hasException()) {
                     log.error("An error occurred during component installation", parentJobResult.getException());
-                    log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob.getComponentVersion());
+                    log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
+                            .getComponentVersion());
                     parentJobResult = rollback(scheduler);
                 } else {
 
@@ -146,10 +206,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             while (optCompJob.isPresent()) {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
-                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob, this::executeRollback);
+                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob,
+                            this::executeRollback);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
-                        throw new EntandoComponentManagerException(rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
-                                + " rollback can't proceed due to an error with one of the components");
+                        throw new EntandoComponentManagerException(
+                                rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
+                                        + " rollback can't proceed due to an error with one of the components");
                     }
                     rollbackScheduler.recordProcessedComponentJob(tracker.getJob());
                 }
@@ -168,10 +230,27 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return result;
     }
 
-    private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            BundleDownloader bundleDownloader) {
+    /**
+     * download the bundle, create a BundleReader to read it and return it.
+     *
+     * @param bundleDownloader the BundleDownloader responsible to download the desired bundle
+     * @param bundle           the object defining the bundle to download
+     * @param tag              the object defining the version of the bundle to download
+     * @return the created BundleReader ready to read the bundle
+     */
+    private BundleReader downloadBundleAndGetBundleReader(BundleDownloader bundleDownloader, EntandoDeBundle bundle,
+            EntandoDeBundleTag tag) {
+
         Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-        return getInstallableComponentsByPriority(new BundleReader(pathToDownloadedBundle));
+        return new BundleReader(pathToDownloadedBundle);
+    }
+
+    private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallActionsByComponentType actions,
+            AnalysisReport report) {
+        BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+        return getInstallableComponentsByPriority(bundleReader, conflictStrategy, actions,
+                report);
     }
 
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity job,
@@ -183,13 +262,31 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return componentJobTracker;
     }
 
-    private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader) {
+
+    /**
+     * execute every ReportableProcessor to extract the relative Reportable from the descriptor and return it.
+     *
+     * @param bundleReader the BUndleReader to use to read the bundle
+     * @return a List of Reportable extracted from the bundle components descriptors
+     */
+    private Map<ReportableRemoteHandler, List<Reportable>> getReportableComponentsByRemoteHandler(
+            BundleReader bundleReader) {
+
+        return reportableComponentProcessorList.stream()
+                .map(reportableProcessor ->
+                        reportableProcessor.getReportable(bundleReader, (ComponentProcessor<?>) reportableProcessor))
+                .collect(Collectors.groupingBy(Reportable::getReportableRemoteHandler));
+    }
+
+    private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
+            InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
         return processorMap.values().stream()
-                .map(processor -> processor.process(bundleReader))
+                .map(processor -> processor.process(bundleReader, conflictStrategy, actions, report))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt(Installable::getPriority))
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
+
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job) {
         EntandoBundleEntity installedComponent = bundleService.convertToEntityFromEcr(bundle);
@@ -206,7 +303,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
           Uninstall operations should be idempotent to be able to provide this
          */
         return component.getStatus().equals(JobStatus.INSTALL_COMPLETED)
-                || (component.getStatus().equals(JobStatus.INSTALL_ERROR) && component.getComponentType() == ComponentType.PLUGIN);
+                || (component.getStatus().equals(JobStatus.INSTALL_ERROR)
+                && component.getComponentType() == ComponentType.PLUGIN);
     }
 
     private JobResult executeRollback(Installable<?> installable) {

@@ -28,7 +28,6 @@ import com.jayway.jsonpath.JsonPath;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -42,9 +41,6 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
@@ -66,9 +62,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
 
-    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
-    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
-
+    public static final UriBuilder ANALYSIS_REPORT_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components", "todomvc", "analysis");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components");
     public static final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
@@ -77,16 +72,9 @@ public class TestInstallUtils {
             .pathSegment("components", "todomvc", "install");
     public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", "todomvc", "uninstall");
-
     public static final String JOBS_ENDPOINT = "/jobs";
-
-    public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas-0-0-1-snapshot";
-    public static final String EXPECTED_INGRESS_PATH = "/entando/the-lucas/0-0-1-snapshot";
-    public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
-    public static final String TEST_DESCRIPTOR_ADMIN_ROLE = "thelucas-admin";
-    public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
-    public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
-    public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
+    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
+    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
     @SneakyThrows
     public static String simulateSuccessfullyCompletedInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
@@ -318,7 +306,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
-                .when(coreClient).registerPage(any(PageDescriptor.class));
+                .when(coreClient).createPage(any(PageDescriptor.class));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -355,7 +343,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 413, "Error", null, null, null))
-                .when(coreClient).uploadFile(any(FileDescriptor.class));
+                .when(coreClient).createFile(any(FileDescriptor.class));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -435,15 +423,15 @@ public class TestInstallUtils {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPage(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerPageModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerWidget(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerFragment(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentType(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerContentModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).registerLabel(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createPage(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createPageTemplate(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createWidget(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFragment(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createContentType(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createContentTemplate(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createLabel(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFolder(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).uploadFile(any());
+        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createFile(any());
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
@@ -539,35 +527,4 @@ public class TestInstallUtils {
         return requestProperty(request, "path");
     }
 
-
-
-    public static PluginDescriptor getTestDescriptor() {
-        return PluginDescriptor.builder()
-                .image(TEST_DESCRIPTOR_IMAGE)
-                .roles(Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE))
-                .healthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
-                .dbms(TEST_DESCRIPTOR_DBMS)
-                .deploymentBaseName(TEST_DESCRIPTOR_IMAGE)
-                .build();
-    }
-
-    public static PluginDescriptor getTestDescriptorVersion1() {
-        return PluginDescriptor.builder()
-                .spec(getTestDescriptorV1Spec())
-                .build();
-    }
-
-    public static PluginDescriptorV1Spec getTestDescriptorV1Spec() {
-
-        List<PluginDescriptorV1Role> roleList = Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE)
-                .stream()
-                .map(role -> new PluginDescriptorV1Role(role, role))
-                .collect(Collectors.toList());
-
-        return new PluginDescriptorV1Spec()
-                .setImage(TEST_DESCRIPTOR_IMAGE)
-                .setRoles(roleList)
-                .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
-                .setDbms(TEST_DESCRIPTOR_DBMS);
-    }
 }

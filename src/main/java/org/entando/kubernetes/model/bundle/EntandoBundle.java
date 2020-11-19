@@ -20,6 +20,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 @NoArgsConstructor
 @JsonInclude
 public class EntandoBundle {
+
     private String code;
     //private String organization;
     //private String ecrId; // hash(code + organization) = metadata.name

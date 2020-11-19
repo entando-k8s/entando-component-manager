@@ -1,4 +1,4 @@
-package org.entando.kubernetes;
+package org.entando.kubernetes.stubhelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,6 +10,7 @@ public class BundleStubHelper {
 
     /**
      * receives a List of ContentAttribute representing the content of the file bundle/contents/cng102-descriptor.yaml.
+     *
      * @return
      */
     public static List<ContentAttribute> stubContentAttributeList() {

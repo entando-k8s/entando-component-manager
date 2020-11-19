@@ -106,7 +106,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
             parentJobTracker.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
             try {
-                Queue<EntandoBundleComponentJobEntity> uninstallJobs = createUninstallComponentJobs(parentJob, referenceJob);
+                Queue<EntandoBundleComponentJobEntity> uninstallJobs = createUninstallComponentJobs(parentJob,
+                        referenceJob);
                 scheduler.queueAll(uninstallJobs);
 
                 JobProgress uninstallProgress = new JobProgress(1.0 / uninstallJobs.size());
@@ -114,7 +115,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
                     EntandoBundleComponentJobEntity uninstallJob = optCompJob.get();
-                    JobTracker<EntandoBundleComponentJobEntity> cjt = trackExecution(uninstallJob, this::executeUninstall);
+                    JobTracker<EntandoBundleComponentJobEntity> cjt = trackExecution(uninstallJob,
+                            this::executeUninstall);
                     if (cjt.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
@@ -161,10 +163,13 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     EntandoBundleComponentJobEntity uninstallCopy = EntandoBundleComponentJobEntity.getNewCopy(cj);
                     uninstallCopy.setParentJob(parentJob);
                     uninstallCopy.setStatus(JobStatus.UNINSTALL_CREATED);
+                    uninstallCopy.setAction(cj.getAction());
                     uninstallCopy.setInstallable(i);
                     return uninstallCopy;
                 })
-                .sorted(Comparator.comparingInt(cj -> ((EntandoBundleComponentJobEntity) cj).getInstallable().getPriority()).reversed())
+                .sorted(Comparator
+                        .comparingInt(cj -> ((EntandoBundleComponentJobEntity) cj).getInstallable().getPriority())
+                        .reversed())
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
 

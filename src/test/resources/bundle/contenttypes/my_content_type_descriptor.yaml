@@ -13,7 +13,7 @@ attributes:
     roles:
       - code: jacms:title
         descr: The main title of a Content
-    disablingCodes: []
+    disablingCodes: [ ]
     mandatory: true
     listFilter: false
     indexable: false
@@ -55,8 +55,8 @@ attributes:
     names:
       en: Title
       it: Titolo
-    roles: []
-    disablingCodes: []
+    roles: [ ]
+    disablingCodes: [ ]
     mandatory: false
     listFilter: false
     indexable: false
@@ -92,8 +92,8 @@ attributes:
       names:
         en: Title
         it: Titolo
-      roles: []
-      disablingCodes: []
+      roles: [ ]
+      disablingCodes: [ ]
       mandatory: false
       listFilter: false
       indexable: true

@@ -6,17 +6,24 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.net.URI;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
+import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -49,12 +56,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class DefaultK8SServiceClient implements K8SServiceClient {
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     public static final String APPS_ENDPOINT = "apps";
     public static final String PLUGINS_ENDPOINT = "plugins";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
-
+    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     private final String k8sServiceUrl;
     private final String clientId;
     private final String clientSecret;
@@ -125,6 +131,40 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             }
         }
         return Optional.ofNullable(plugin);
+    }
+
+    /**
+     * UPDATES A PLUGIN.
+     * <p>
+     * updates a plugin CR given the CR object
+     * </p>
+     */
+    @Override
+    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
+        String pluginName = plugin.getMetadata().getName();
+        URI updateURI = traverson.follow(PLUGINS_ENDPOINT)
+                .follow(Hop.rel("create-or-replace-plugin").withParameter("name", pluginName))
+                .asLink().toUri();
+
+        return tryOrThrow(() -> {
+            RequestEntity<EntandoPlugin> request = RequestEntity
+                    .put(updateURI)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(plugin);
+
+            ResponseEntity<EntityModel<EntandoPlugin>> response = restTemplate
+                    .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+                    });
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody().getContent();
+            } else {
+                throw new RestClientResponseException("Update process failed",
+                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                        null, null, null);
+            }
+        }, String.format("while updating plugin %s", pluginName));
+
     }
 
     @Override
@@ -238,7 +278,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
             }
+        } catch (Exception ex) {
+            throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
         }
+
         return Optional.ofNullable(bundle);
     }
 
@@ -285,6 +328,21 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             throw e;
         }
 
+    }
+
+    @Override
+    public AnalysisReport getAnalysisReport(List<Reportable> reportableList) {
+
+        Map<String, Status> pluginStatusMap = reportableList.stream()
+                .filter(reportable -> reportable.getComponentType() == ComponentType.PLUGIN)
+                .flatMap(reportable -> reportable.getCodes().stream())
+                .map(name ->
+                        getPluginByName(name)
+                                .map(plugin -> new SimpleEntry<>(name, Status.DIFF))
+                                .orElseGet(() -> new SimpleEntry<>(name, Status.NEW)))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+        return new AnalysisReport().setPlugins(pluginStatusMap);
     }
 
     private Ingress getAppIngress(String appName) {

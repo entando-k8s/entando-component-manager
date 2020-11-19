@@ -13,6 +13,7 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EntandoBundleComponentJob {
+
     private UUID id;
     private ComponentType type;
     private String componentId;

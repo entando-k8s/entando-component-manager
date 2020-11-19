@@ -103,6 +103,17 @@ public class KubernetesService {
 
     }
 
+    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
+        EntandoPlugin updatedPlugin = new EntandoPluginBuilder()
+                .withMetadata(plugin.getMetadata())
+                .withSpec(plugin.getSpec())
+                .build();
+
+        updatedPlugin.getMetadata().setNamespace(null);
+
+        return k8sServiceClient.updatePlugin(updatedPlugin);
+    }
+
     public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin) {
         boolean result = false;
         Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());

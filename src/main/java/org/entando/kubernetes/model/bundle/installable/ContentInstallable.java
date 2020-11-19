@@ -3,24 +3,40 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor.ContentStatus;
 
 @Slf4j
 public class ContentInstallable extends Installable<ContentDescriptor> {
 
     private final EntandoCoreClient engineService;
 
-    public ContentInstallable(EntandoCoreClient service, ContentDescriptor contentDescriptor) {
-        super(contentDescriptor);
+    public ContentInstallable(EntandoCoreClient service, ContentDescriptor contentDescriptor, InstallAction action) {
+        super(contentDescriptor, action);
         this.engineService = service;
     }
 
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Content {}", getName());
-            engineService.registerContent(representation);
+
+            logConflictStrategyAction();
+
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
+            if (shouldCreate()) {
+                engineService.createContent(representation);
+            } else {
+                engineService.updateContent(representation);
+            }
+
+            if (representation.getStatus().equals(ContentStatus.PUBLIC.toString())) {
+                engineService.publishContent(representation);
+            }
         });
     }
 
@@ -28,7 +44,9 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Content {}", getName());
-            engineService.deleteContent(getName());
+            if (shouldCreate()) {
+                engineService.deleteContent(getName());
+            }
         });
     }
 

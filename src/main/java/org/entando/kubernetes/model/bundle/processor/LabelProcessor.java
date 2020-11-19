@@ -1,23 +1,25 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +29,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
+public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -37,20 +40,40 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
     }
 
     @Override
-    public List<Installable<LabelDescriptor>> process(BundleReader npr) {
-        try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+    public Class<LabelDescriptor> getDescriptorClass() {
+        return LabelDescriptor.class;
+    }
 
-            final List<String> labelDescriptorFiles = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getLabels)
-                    .orElse(Collections.emptyList());
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getLabels);
+    }
+
+    @Override
+    public boolean doesComponentDscriptorContainMoreThanOneSingleEntity() {
+        return true;
+    }
+
+    @Override
+    public List<Installable<LabelDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<LabelDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
+        try {
+            final List<String> descriptorList = getDescriptorList(bundleReader);
 
             final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
 
-            for (String ldf : labelDescriptorFiles) {
-                List<LabelDescriptor> labelDescriptorList = npr.readListOfDescriptorFile(ldf, LabelDescriptor.class);
+            for (String ldf : descriptorList) {
+                List<LabelDescriptor> labelDescriptorList = bundleReader
+                        .readListOfDescriptorFile(ldf, LabelDescriptor.class);
                 for (LabelDescriptor ld : labelDescriptorList) {
-                    installables.add(new LabelInstallable(engineService, ld));
+                    InstallAction action = extractInstallAction(ld.getKey(), actions, conflictStrategy, report);
+                    installables.add(new LabelInstallable(engineService, ld, action));
                 }
             }
 
@@ -63,8 +86,8 @@ public class LabelProcessor implements ComponentProcessor<LabelDescriptor> {
     @Override
     public List<Installable<LabelDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.LABEL)
-                .map(c -> new LabelInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new LabelInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

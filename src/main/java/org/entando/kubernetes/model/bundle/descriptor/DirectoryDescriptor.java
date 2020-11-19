@@ -9,7 +9,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DirectoryDescriptor implements Descriptor  {
+public class DirectoryDescriptor implements Descriptor {
+
     String name;
     boolean isRoot;
+
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(name);
+    }
 }

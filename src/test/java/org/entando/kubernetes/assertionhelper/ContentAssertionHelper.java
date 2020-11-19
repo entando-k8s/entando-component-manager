@@ -10,7 +10,8 @@ import org.springframework.util.CollectionUtils;
 public class ContentAssertionHelper {
 
 
-    public static void assertOnContentAttributesList(List<ContentAttribute> actualList, List<ContentAttribute> expectedContentAttributeList) {
+    public static void assertOnContentAttributesList(List<ContentAttribute> actualList,
+            List<ContentAttribute> expectedContentAttributeList) {
 
         assertThat(expectedContentAttributeList).hasSize(actualList.size());
         IntStream.range(0, actualList.size())

@@ -202,7 +202,6 @@ public class BundleUtilities {
     }
 
 
-
     public static List<ExpectedRole> extractRolesFromRoleList(List<PluginDescriptorV1Role> roleList) {
         return roleList.stream()
                 .distinct()

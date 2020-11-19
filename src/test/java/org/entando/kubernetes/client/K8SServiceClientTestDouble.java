@@ -6,12 +6,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
 
@@ -74,6 +78,12 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public void unlink(EntandoAppPluginLink el) {
         //Don't do anything atm
+    }
+
+    @Override
+    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
+        // TODO?
+        return null;
     }
 
     @Override
@@ -140,6 +150,12 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
         return true;
+    }
+
+    @Override
+    public AnalysisReport getAnalysisReport(List<Reportable> reportableList) {
+
+        return AnalysisReportStubHelper.stubAnalysisReportWithPlugins();
     }
 
 }

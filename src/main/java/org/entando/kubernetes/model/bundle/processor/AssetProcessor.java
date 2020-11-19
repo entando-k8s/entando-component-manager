@@ -1,23 +1,25 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.installable.AssetInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoCMSReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AssetProcessor implements ComponentProcessor<AssetDescriptor> {
+public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
+        implements EntandoCMSReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -41,19 +44,36 @@ public class AssetProcessor implements ComponentProcessor<AssetDescriptor> {
     }
 
     @Override
-    public List<Installable<AssetDescriptor>> process(BundleReader npr) {
+    public Class<AssetDescriptor> getDescriptorClass() {
+        return AssetDescriptor.class;
+    }
+
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getAssets);
+    }
+
+
+    @Override
+    public List<Installable<AssetDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<AssetDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
         try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
-            List<String> assetDescriptors = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getAssets)
-                    .orElse(Collections.emptyList());
+            final List<String> descriptorList = getDescriptorList(bundleReader);
 
             List<Installable<AssetDescriptor>> installables = new LinkedList<>();
 
-            for (String fileName : assetDescriptors) {
-                AssetDescriptor assetDescriptor = npr.readDescriptorFile(fileName, AssetDescriptor.class);
-                installables.add(new AssetInstallable(engineService, assetDescriptor, npr.getAssetFile(
-                        assetDescriptor.getCorrelationCode(), assetDescriptor.getName())));
+            for (String fileName : descriptorList) {
+                AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
+                InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(), actions,
+                        conflictStrategy, report);
+                installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
+                        assetDescriptor.getCorrelationCode(), assetDescriptor.getName()), action));
             }
 
             return installables;
@@ -65,8 +85,8 @@ public class AssetProcessor implements ComponentProcessor<AssetDescriptor> {
     @Override
     public List<Installable<AssetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.ASSET)
-                .map(c ->  new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new AssetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

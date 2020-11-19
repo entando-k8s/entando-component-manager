@@ -1,0 +1,14 @@
+{
+  "payload": {
+    "categories": {
+      "CatONE": "DIFF",
+      "CatTWO": "NEW"
+    },
+    "fragments": {
+      "FragONE": "DIFF",
+      "FragTWO": "NEW"
+    }
+  },
+  "metaData": {},
+  "errors": []
+}

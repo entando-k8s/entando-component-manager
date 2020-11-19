@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
@@ -32,6 +33,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     public static final String PAGE_TEMPLATE_ENDPOINT = "/api/pageModels";
     public static final String CONTENT_TEMPLATE_ENDPOINT = "/api/plugins/cms/contentmodels";
     public static final String CONTENT_TYPE_ENDPOINT = "/api/plugins/cms/contentTypes";
+    public static final String ENGINE_ANALYSIS_REPORT_ENDPOINT = "/api/analysis/components/diff";
+    public static final String CMS_ANALYSIS_REPORT_ENDPOINT = "/api/analysis/cms/components/diff";
     public static final String CODE_PATH_PARAM = "/{code}";
 
     public EntandoCoreMockServer() {
@@ -144,6 +147,69 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         return this;
     }
 
+
+    /**
+     * stub a successful response for the Engine AnalysisReport endpoint.
+     *
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as
+     *                               response otherwise the default value will be used
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withEngineAnalysisReportSupport(String customStubResourcePath) {
+
+        return this.withGenericAnalysisReportSupport(customStubResourcePath, ENGINE_ANALYSIS_REPORT_ENDPOINT);
+    }
+
+    /**
+     * stub a successful response for the CMS AnalysisReport endpoint.
+     *
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as
+     *                               response, otherwise the default value will be used
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withCMSAnalysisReportSupport(String customStubResourcePath) {
+
+        return this.withGenericAnalysisReportSupport(customStubResourcePath, CMS_ANALYSIS_REPORT_ENDPOINT);
+    }
+
+    /**
+     * stub a successful response for the AnalysisReport endpoint identified by the received URL.
+     *
+     * @param customStubResourcePath if present the content of the file identified by this param will be used as
+     *                               response, *                        otherwise the default value will be used
+     * @param url                    the URL to use as AnalysisReport endpoint
+     * @return this instance of the EntandoCoreMockServer
+     */
+    private EntandoCoreMockServer withGenericAnalysisReportSupport(String customStubResourcePath, String url) {
+
+        String defaultStubResourcePath = "/payloads/entando-core/analysis-report/engine-analysis-report.json";
+        String currentStubResourcePath = Optional.ofNullable(customStubResourcePath).orElse(defaultStubResourcePath);
+
+        String stubResponse = readResourceAsString(currentStubResourcePath);
+
+        this.wireMockServer.stubFor(WireMock.post(urlEqualTo(url))
+                .willReturn(
+                        aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(stubResponse)
+                ));
+
+        return this;
+    }
+
+    /**
+     * stub a failing response for the AnalysisReport Engine endpoint.
+     * @return this instance of the EntandoCoreMockServer
+     */
+    public EntandoCoreMockServer withFailingEngineAnalysisReportSupport() {
+
+        this.wireMockServer.stubFor(WireMock.post(urlEqualTo(ENGINE_ANALYSIS_REPORT_ENDPOINT))
+                .willReturn(aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+        return this;
+    }
+
+
     @Getter
     private enum ComponentUsageApiEndpoint {
         PAGE(ComponentType.PAGE, "pages", 3, "/api/pages/{code}/usage"),
@@ -169,6 +235,13 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             this.urlTemplate = urlTemplate;
         }
 
+        public static ComponentUsageApiEndpoint getForComponentType(ComponentType type) {
+            return Arrays.stream(values())
+                    .filter(ep -> ep.componentType.equals(type))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("No usage endpoint for type " + type.toString()));
+        }
+
         public String expandUrl() {
             return expandUrlWithCode(this.componentCode);
         }
@@ -177,13 +250,6 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
             Map<String, Object> variables = new HashMap<>();
             variables.put("code", code);
             return UriComponentsBuilder.newInstance().path(urlTemplate).buildAndExpand(variables).toUriString();
-        }
-
-        public static ComponentUsageApiEndpoint getForComponentType(ComponentType type) {
-            return Arrays.stream(values())
-                    .filter(ep -> ep.componentType.equals(type))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No usage endpoint for type " + type.toString()));
         }
     }
 }

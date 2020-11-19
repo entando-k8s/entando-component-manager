@@ -1,15 +1,17 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import static java.util.Optional.ofNullable;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -18,6 +20,7 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +32,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
+public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> implements
+        EntandoEngineReportableProcessor {
 
     private final EntandoCoreClient engineService;
 
@@ -39,24 +43,41 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     }
 
     @Override
-    public List<Installable<WidgetDescriptor>> process(BundleReader npr) {
-        try {
-            BundleDescriptor descriptor = npr.readBundleDescriptor();
+    public Class<WidgetDescriptor> getDescriptorClass() {
+        return WidgetDescriptor.class;
+    }
 
-            final Optional<List<String>> widgetsDescriptor = ofNullable(descriptor.getComponents())
-                    .map(ComponentSpecDescriptor::getWidgets);
+    @Override
+    public Optional<Function<ComponentSpecDescriptor, List<String>>> getComponentSelectionFn() {
+        return Optional.of(ComponentSpecDescriptor::getWidgets);
+    }
+
+    @Override
+    public List<Installable<WidgetDescriptor>> process(BundleReader bundleReader) {
+        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+                new AnalysisReport());
+    }
+
+    @Override
+    public List<Installable<WidgetDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallActionsByComponentType actions, AnalysisReport report) {
+        try {
+            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
+
+            final List<String> descriptorList = getDescriptorList(bundleReader);
             final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
 
-            if (widgetsDescriptor.isPresent()) {
-                for (final String fileName : widgetsDescriptor.get()) {
-                    final WidgetDescriptor widgetDescriptor = npr.readDescriptorFile(fileName, WidgetDescriptor.class);
-                    if (widgetDescriptor.getCustomUiPath() != null) {
-                        String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
-                        widgetDescriptor.setCustomUi(npr.readFileAsString(widgetUiPath));
-                    }
-                    widgetDescriptor.setBundleId(descriptor.getCode());
-                    installables.add(new WidgetInstallable(engineService, widgetDescriptor));
+            for (final String fileName : descriptorList) {
+                final WidgetDescriptor widgetDescriptor = bundleReader
+                        .readDescriptorFile(fileName, WidgetDescriptor.class);
+                if (widgetDescriptor.getCustomUiPath() != null) {
+                    String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
+                    widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
                 }
+                widgetDescriptor.setBundleId(descriptor.getCode());
+                InstallAction action = extractInstallAction(widgetDescriptor.getCode(), actions, conflictStrategy,
+                        report);
+                installables.add(new WidgetInstallable(engineService, widgetDescriptor, action));
             }
 
             return installables;
@@ -68,8 +89,8 @@ public class WidgetProcessor implements ComponentProcessor<WidgetDescriptor> {
     @Override
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
-                .filter(c -> c.getComponentType() == ComponentType.WIDGET)
-                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c)))
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

@@ -13,6 +13,7 @@ import org.entando.kubernetes.model.bundle.descriptor.DefaultWidgetDescriptor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EntandoCoreFrameDefaultWidget {
+
     String code;
 
     public EntandoCoreFrameDefaultWidget(DefaultWidgetDescriptor defaultWidgetDescriptor) {

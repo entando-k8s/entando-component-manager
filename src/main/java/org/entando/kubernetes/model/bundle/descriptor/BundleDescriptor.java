@@ -18,4 +18,8 @@ public class BundleDescriptor implements Descriptor {
 
     private ComponentSpecDescriptor components;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

@@ -16,4 +16,8 @@ public class GroupDescriptor implements Descriptor {
     private String code;
     private String name;
 
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

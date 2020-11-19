@@ -27,15 +27,12 @@ import org.mockito.MockitoAnnotations;
 @Tag("unit")
 public class ContentTypeProcessorTest {
 
+    private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
     @Mock
     private DefaultEntandoCoreClient entandoCoreClient;
-
     @Mock
     private BundleReader bundleReader;
-
     private ContentTypeProcessor contentTypeProcessor;
-
-    private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
 
     @BeforeEach
     public void setup() {

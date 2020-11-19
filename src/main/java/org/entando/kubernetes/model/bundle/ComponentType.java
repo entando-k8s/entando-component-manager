@@ -11,26 +11,32 @@ public enum ComponentType {
 
     PLUGIN("plugin", 0),
     DIRECTORY("directory", 1),
-    CATEGORY("category", 2),
+    CATEGORY("category",2),
     GROUP("group", 3),
     LANGUAGE("language", 4),
     LABEL("label", 5),
     RESOURCE("asset", 6),
     WIDGET("widget", 7),
-    CONTENT_TYPE("contentType", 8),
-    CONTENT_TEMPLATE("contentTemplate", 9),
-    ASSET("asset", 10),
-    CONTENT("content", 11),
-    FRAGMENT("fragment", 12),
-    PAGE_TEMPLATE("pageTemplate", 13),
-    PAGE("page", 14);
+    FRAGMENT("fragment", 8),
+    CONTENT_TYPE("contentType", 9),
+    CONTENT_TEMPLATE("contentTemplate", 10),
+    ASSET("asset", 11),
+    PAGE_TEMPLATE("pageTemplate", 12),
+    PAGE("page", 13),
+    CONTENT("content", 14),
+    PAGE_CONFIGURATION("pageConfiguration", 15);
 
-    private String typeName;
-    private int installPriority;
+
+    private final String typeName;
+    private final int installPriority;
 
     ComponentType(String typeName, int installPriority) {
         this.typeName = typeName;
         this.installPriority = installPriority;
+    }
+
+    public static boolean isValidType(String type) {
+        return Arrays.stream(values()).anyMatch(e -> e.getTypeName().equalsIgnoreCase(type));
     }
 
     public String getTypeName() {
@@ -38,11 +44,6 @@ public enum ComponentType {
     }
 
     public int getInstallPriority() {
-        return this.installPriority;
+        return installPriority;
     }
-
-    public static boolean isValidType(String type) {
-        return Arrays.stream(values()).anyMatch(e -> e.getTypeName().equalsIgnoreCase(type));
-    }
-
 }

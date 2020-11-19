@@ -5,10 +5,18 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
+import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +26,11 @@ import org.springframework.core.io.ClassPathResource;
 @TestConfiguration
 @Profile("test")
 public class TestAppConfiguration extends AppConfiguration {
+
+    public TestAppConfiguration(EntandoCoreClient entandoCoreClient,
+            K8SServiceClient k8SServiceClient) {
+        super(entandoCoreClient, k8SServiceClient);
+    }
 
     @Bean
     @Override
@@ -37,5 +50,22 @@ public class TestAppConfiguration extends AppConfiguration {
             return git;
         });
         return factory;
+    }
+
+    @Bean
+    public Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies() {
+
+        return Map.of(
+                // ENGINE ANALYSIS
+                ReportableRemoteHandler.ENTANDO_ENGINE,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper
+                        .stubAnalysisReportWithFragmentsAndCategories(),
+                // CMS ANALYSIS
+                ReportableRemoteHandler.ENTANDO_CMS,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper.stubAnalysisReportWithAssetsAndContents(),
+                // K8S SERVICE ANALYSIS
+                ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper.stubAnalysisReportWithPlugins()
+        );
     }
 }

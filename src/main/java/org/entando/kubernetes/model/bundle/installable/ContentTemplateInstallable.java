@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 
@@ -11,16 +12,27 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
 
     private final EntandoCoreClient engineService;
 
-    public ContentTemplateInstallable(EntandoCoreClient service, ContentTemplateDescriptor contentTemplateDescriptor) {
-        super(contentTemplateDescriptor);
+    public ContentTemplateInstallable(EntandoCoreClient service, ContentTemplateDescriptor contentTemplateDescriptor,
+            InstallAction action) {
+        super(contentTemplateDescriptor, action);
         this.engineService = service;
     }
 
     @Override
     public CompletableFuture<Void> install() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Registering Content Template {}", getName());
-            engineService.registerContentModel(representation);
+
+            logConflictStrategyAction();
+
+            if (shouldSkip()) {
+                return; //Do nothing
+            }
+
+            if (shouldCreate()) {
+                engineService.createContentTemplate(representation);
+            } else {
+                engineService.updateContentTemplate(representation);
+            }
         });
     }
 
@@ -28,7 +40,9 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Content Template {}", getName());
-            engineService.deleteContentModel(getName());
+            if (shouldCreate()) {
+                engineService.deleteContentModel(getName());
+            }
         });
     }
 

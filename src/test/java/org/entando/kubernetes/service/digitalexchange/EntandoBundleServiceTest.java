@@ -39,12 +39,11 @@ import org.mockito.Mockito;
 @Tag("unit")
 public class EntandoBundleServiceTest {
 
+    private final List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
     private K8SServiceClientTestDouble k8SServiceClient;
     private EntandoBundleService service;
     private InstalledEntandoBundleRepository installedComponentRepository;
     private EntandoBundleJobRepository jobRepository;
-
-    private final List<String> availableDigitalExchanges = Collections.singletonList(DEFAULT_BUNDLE_NAMESPACE);
 
     @BeforeEach
     public void setup() {

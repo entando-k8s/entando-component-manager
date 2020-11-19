@@ -17,5 +17,8 @@ public class FragmentDescriptor implements Descriptor {
     private String guiCode;
     private String guiCodePath;
 
-
+    @Override
+    public ComponentKey getComponentKey() {
+        return new ComponentKey(code);
+    }
 }

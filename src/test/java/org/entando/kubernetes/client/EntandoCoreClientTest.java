@@ -6,9 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -20,9 +25,12 @@ import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationD
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -33,9 +41,9 @@ import org.springframework.web.client.HttpClientErrorException;
 @Tag("unit")
 class EntandoCoreClientTest {
 
+    public static final String CODE = "code";
     private EntandoCoreClient client;
     private EntandoCoreMockServer coreMockServer;
-    public static final String CODE = "code";
 
     @BeforeEach
     public void setup() {
@@ -138,7 +146,7 @@ class EntandoCoreClientTest {
     void registerWidget() {
         WidgetDescriptor wd = new WidgetDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::post);
-        this.client.registerWidget(wd);
+        this.client.createWidget(wd);
         coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -155,7 +163,7 @@ class EntandoCoreClientTest {
     void registerFragment() {
         FragmentDescriptor fd = new FragmentDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.FRAGMENT_ENDPOINT, WireMock::post);
-        this.client.registerFragment(fd);
+        this.client.createFragment(fd);
         coreMockServer.verify(EntandoCoreMockServer.FRAGMENT_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -173,7 +181,7 @@ class EntandoCoreClientTest {
     void registerLabel() {
         LabelDescriptor ld = new LabelDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.LABEL_ENDPOINT, WireMock::post);
-        this.client.registerLabel(ld);
+        this.client.createLabel(ld);
         coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -190,7 +198,7 @@ class EntandoCoreClientTest {
     void registerPage() {
         PageDescriptor pd = new PageDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_ENDPOINT, WireMock::post);
-        this.client.registerPage(pd);
+        this.client.createPage(pd);
         coreMockServer.verify(EntandoCoreMockServer.PAGE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -215,7 +223,7 @@ class EntandoCoreClientTest {
 
         coreMockServer = coreMockServer
                 .withGenericSupport(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::post);
-        this.client.registerPageModel(ptd);
+        this.client.createPageTemplate(ptd);
         coreMockServer.verify(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -233,7 +241,7 @@ class EntandoCoreClientTest {
         ContentTemplateDescriptor ctd = new ContentTemplateDescriptor();
         coreMockServer = coreMockServer
                 .withGenericSupport(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::post);
-        this.client.registerContentModel(ctd);
+        this.client.createContentTemplate(ctd);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -251,7 +259,7 @@ class EntandoCoreClientTest {
     void registerContentType() {
         ContentTypeDescriptor ctd = new ContentTypeDescriptor();
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, WireMock::post);
-        this.client.registerContentType(ctd);
+        this.client.createContentType(ctd);
         coreMockServer.verify(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, WireMock::postRequestedFor);
     }
 
@@ -268,14 +276,45 @@ class EntandoCoreClientTest {
     void deleteNotFoundComponent() {
         coreMockServer.getInnerServer()
                 .stubFor(WireMock.delete(urlEqualTo(EntandoCoreMockServer.LABEL_ENDPOINT + CODE))
-                .willReturn(
-                        aResponse()
-                                .withStatus(404)
-                                .withHeader("Content-Type", "application/json")
-                ));
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(404)
+                                        .withHeader("Content-Type", "application/json")
+                        ));
 
         this.client.deleteLabel(CODE);
         coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
 
+    }
+
+    @Test
+    void receivingAValidResponseFromEntandoEngineShouldReturnValidAnalysisReport() {
+
+        coreMockServer.withEngineAnalysisReportSupport(null);
+
+        AnalysisReport engineAnalysisReport = this.client.getEngineAnalysisReport(new ArrayList<>());
+        AnalysisReport expected = AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, engineAnalysisReport);
+    }
+
+
+    @Test
+    void receivingAValidResponseFromCMSEngineShouldReturnValidAnalysisReport() {
+
+        coreMockServer.withCMSAnalysisReportSupport(null);
+
+        AnalysisReport engineAnalysisReport = this.client.getCMSAnalysisReport(new ArrayList<>());
+        AnalysisReport expected = AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, engineAnalysisReport);
+    }
+
+    @Test
+    void shouldThrowAReportAnalysisExceptionIfARequestFails() {
+
+        coreMockServer.withFailingEngineAnalysisReportSupport();
+        List<Reportable> reportableList = new ArrayList<>();
+
+        Assertions.assertThrows(ReportAnalysisException.class,
+                () -> this.client.getEngineAnalysisReport(reportableList));
     }
 }

@@ -1,6 +1,9 @@
 package org.entando.kubernetes.client.core;
 
 import java.io.File;
+import java.util.List;
+import org.entando.kubernetes.client.ECMClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -15,23 +18,30 @@ import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescrip
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
-public interface EntandoCoreClient {
+public interface EntandoCoreClient extends ECMClient {
 
-    void registerWidget(WidgetDescriptor descriptor);
+    void createWidget(WidgetDescriptor descriptor);
+
+    void updateWidget(WidgetDescriptor descriptor);
 
     void deleteWidget(String code);
 
     EntandoCoreComponentUsage getWidgetUsage(String code);
 
-    void registerFragment(FragmentDescriptor descriptor);
+    void createFragment(FragmentDescriptor descriptor);
+
+    void updateFragment(FragmentDescriptor descriptor);
 
     void deleteFragment(String code);
 
     EntandoCoreComponentUsage getFragmentUsage(String code);
 
-    void registerLabel(LabelDescriptor descriptor);
+    void createLabel(LabelDescriptor descriptor);
+
+    void updateLabel(LabelDescriptor descriptor);
 
     void deleteLabel(String code);
 
@@ -39,21 +49,29 @@ public interface EntandoCoreClient {
 
     void disableLanguage(String code);
 
-    void registerGroup(GroupDescriptor descriptor);
+    void createGroup(GroupDescriptor descriptor);
+
+    void updateGroup(GroupDescriptor descriptor);
 
     void deleteGroup(String code);
 
     EntandoCoreComponentUsage getGroupUsage(String code);
 
-    void registerPage(PageDescriptor pageDescriptor);
+    void createPage(PageDescriptor pageDescriptor);
 
-    void registerPageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
+    void updatePageConfiguration(PageDescriptor pageDescriptor);
+
+    void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
+
+    void publishPage(PageDescriptor pageDescriptor);
 
     void deletePage(String code);
 
     EntandoCoreComponentUsage getPageUsage(String code);
 
-    void registerPageModel(PageTemplateDescriptor descriptor);
+    void createPageTemplate(PageTemplateDescriptor descriptor);
+
+    void updatePageTemplate(PageTemplateDescriptor descriptor);
 
     void deletePageModel(String code);
 
@@ -61,21 +79,31 @@ public interface EntandoCoreClient {
 
     void deleteContentModel(String code);
 
-    void registerContentModel(ContentTemplateDescriptor descriptor);
+    void createContentTemplate(ContentTemplateDescriptor descriptor);
+
+    void updateContentTemplate(ContentTemplateDescriptor descriptor);
 
     EntandoCoreComponentUsage getContentModelUsage(String code);
 
-    void registerContentType(ContentTypeDescriptor descriptor);
+    void createContentType(ContentTypeDescriptor descriptor);
+
+    void updateContentType(ContentTypeDescriptor descriptor);
 
     void deleteContentType(String code);
 
     EntandoCoreComponentUsage getContentTypeUsage(String code);
 
-    void registerContent(ContentDescriptor descriptor);
+    void createContent(ContentDescriptor descriptor);
+
+    void updateContent(ContentDescriptor descriptor);
+
+    void publishContent(ContentDescriptor descriptor);
 
     void deleteContent(String code);
 
     void createAsset(AssetDescriptor descriptor, File file);
+
+    void updateAsset(AssetDescriptor descriptor, File file);
 
     void deleteAsset(String code);
 
@@ -83,11 +111,19 @@ public interface EntandoCoreClient {
 
     void deleteFolder(String code);
 
-    void uploadFile(FileDescriptor descriptor);
+    void createFile(FileDescriptor descriptor);
 
-    void registerCategory(CategoryDescriptor representation);
+    void updateFile(FileDescriptor descriptor);
+
+    void createCategory(CategoryDescriptor representation);
+
+    void updateCategory(CategoryDescriptor representation);
 
     void deleteCategory(String code);
 
     EntandoCoreComponentUsage getCategoryUsage(String code);
+
+    AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList);
+
+    AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList);
 }
