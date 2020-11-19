@@ -117,7 +117,7 @@ public class EntandoBundleReaderTest {
     }
 
     @Test
-    public void shouldReadPageConfigurationFromBundle() throws IOException {
+    void shouldReadPageConfigurationFromBundle() throws IOException {
         PageDescriptor pd = bundleReader
                 .readDescriptorFile("pages/my_page_descriptor.yaml", PageDescriptor.class);
         assertThat(pd).isNotNull();

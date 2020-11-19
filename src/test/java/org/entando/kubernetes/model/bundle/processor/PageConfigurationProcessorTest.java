@@ -41,7 +41,7 @@ class PageConfigurationProcessorTest {
     }
 
     @Test
-    public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
+    void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
         initBundleReader();
 
         List<? extends Installable> installables = pageConfigurationProcessor.process(bundleReader);

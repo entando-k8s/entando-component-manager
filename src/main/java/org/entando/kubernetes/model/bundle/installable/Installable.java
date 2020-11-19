@@ -29,11 +29,6 @@ public abstract class Installable<T extends Descriptor> {
         this.action = action;
     }
 
-    @Deprecated
-    public Installable(T representation) {
-        this(representation, InstallAction.CREATE);
-    }
-
     /**
      * This method will be called when every component was validated on the Digital Exchange bundle file.
      *

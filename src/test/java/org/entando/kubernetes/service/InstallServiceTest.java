@@ -50,6 +50,7 @@ import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -178,8 +179,10 @@ public class InstallServiceTest {
         when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
         when(coreClient.getEngineAnalysisReport(anyList())).thenThrow(ReportAnalysisException.class);
 
+        EntandoDeBundleTag entandoDeBundleTag = bundle.getSpec().getTags().get(0);
+
         Assertions.assertThrows(ReportAnalysisException.class,
-                () -> installService.performInstallAnalysis(bundle, bundle.getSpec().getTags().get(0)));
+                () -> installService.performInstallAnalysis(bundle, entandoDeBundleTag));
     }
 
 

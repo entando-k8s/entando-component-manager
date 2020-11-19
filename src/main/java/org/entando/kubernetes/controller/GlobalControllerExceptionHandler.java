@@ -2,7 +2,6 @@ package org.entando.kubernetes.controller;
 
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.http.HttpException;
 import org.entando.kubernetes.exception.http.WithArgumentException;
 import org.entando.kubernetes.exception.http.WithPredefinedMessage;

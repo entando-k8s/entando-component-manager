@@ -8,4 +8,8 @@ public class ReportAnalysisException extends EntandoComponentManagerException im
     public ReportAnalysisException(String message) {
         super(message);
     }
+
+    public ReportAnalysisException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

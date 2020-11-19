@@ -76,17 +76,6 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                         report);
                 installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true),
                         rootDirectoryAction));
-
-                /*List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
-                        .collect(Collectors.toList());
-                for (final String resourceFolder : resourceFolders) {
-                    Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
-                            .relativize(Paths.get(resourceFolder));
-                    String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
-                    InstallAction action = extractInstallAction(folder, actions, conflictStrategy, report);
-                    installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(folder, false),
-                            action));
-                }*/
             }
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error reading bundle", e);

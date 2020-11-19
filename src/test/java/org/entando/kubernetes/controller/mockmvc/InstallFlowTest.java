@@ -800,7 +800,7 @@ public class InstallFlowTest {
     }
 
     @Test
-    public void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
+    void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
         // Given I try to update a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();
