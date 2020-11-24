@@ -279,11 +279,11 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
 
     @Override
     public AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList) {
-        return AnalysisReportStubHelper.stubAnalysisReportWithFragmentsAndCategories();
+        return null;
     }
 
     @Override
     public AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList) {
-        return AnalysisReportStubHelper.stubAnalysisReportWithContents();
+        return null;
     }
 }

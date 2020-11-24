@@ -1,4 +1,8 @@
 - key: HELLO
   titles:
-    it: Mio Titolo
-    en: My Title
+    it: Ciao
+    en: Hello
+- key: WORLD
+  titles:
+    it: Mundo
+    en: World

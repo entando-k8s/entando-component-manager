@@ -16,6 +16,7 @@ components:
 
   pages:
     - pages/my_page_descriptor.yaml
+    - pages/another_page_descriptor.yaml
 
   pageModels:
     - pagemodels/my_page_model_descriptor.yaml
@@ -23,6 +24,7 @@ components:
 
   contentTypes:
     - contenttypes/my_content_type_descriptor.yaml
+    - contenttypes/another_content_type_descriptor.yaml
 
   contentModels:
     - contentmodels/my_content_model_descriptor.yaml
@@ -30,15 +32,17 @@ components:
 
   contents:
     - contents/cng102-descriptor.yaml
+    - contents/cnt103-descriptor.yaml
 
   assets:
     - assets/my_asset/my_asset.yaml
+    - assets/another_asset/another_asset.yaml
 
   groups:
-    - groups/my-group.yaml
+    - groups/groups.yaml
 
   categories:
-    - categories/my-category.yaml
+    - categories/categories.yaml
 
   labels:
     - labels/labels.yaml

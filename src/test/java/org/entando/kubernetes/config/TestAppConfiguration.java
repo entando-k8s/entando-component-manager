@@ -51,21 +51,4 @@ public class TestAppConfiguration extends AppConfiguration {
         });
         return factory;
     }
-
-    @Bean
-    public Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies() {
-
-        return Map.of(
-                // ENGINE ANALYSIS
-                ReportableRemoteHandler.ENTANDO_ENGINE,
-                (List<Reportable> reportableList) -> AnalysisReportStubHelper
-                        .stubAnalysisReportWithFragmentsAndCategories(),
-                // CMS ANALYSIS
-                ReportableRemoteHandler.ENTANDO_CMS,
-                (List<Reportable> reportableList) -> AnalysisReportStubHelper.stubAnalysisReportWithAssetsAndContents(),
-                // K8S SERVICE ANALYSIS
-                ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
-                (List<Reportable> reportableList) -> AnalysisReportStubHelper.stubAnalysisReportWithPlugins()
-        );
-    }
 }

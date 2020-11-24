@@ -141,21 +141,27 @@ public class EntandoBundleReaderTest {
     @Test
     public void shouldReadGroupsFromBundle() throws IOException {
         List<GroupDescriptor> gd = bundleReader
-                .readListOfDescriptorFile("groups/my-group.yaml", GroupDescriptor.class);
-        assertThat(gd).hasSize(1);
+                .readListOfDescriptorFile("groups/groups.yaml", GroupDescriptor.class);
+        assertThat(gd).hasSize(2);
         assertThat(gd.get(0).getCode()).isEqualTo("ecr");
         assertThat(gd.get(0).getName()).isEqualTo("Ecr");
+        assertThat(gd.get(1).getCode()).isEqualTo("ps");
+        assertThat(gd.get(1).getName()).isEqualTo("Professional Services");
     }
 
     @Test
     public void shouldReadCategoriesFromBundle() throws IOException {
         List<CategoryDescriptor> cd = bundleReader
-                .readListOfDescriptorFile("categories/my-category.yaml", CategoryDescriptor.class);
-        assertThat(cd).hasSize(1);
+                .readListOfDescriptorFile("categories/categories.yaml", CategoryDescriptor.class);
+        assertThat(cd).hasSize(2);
         assertThat(cd.get(0).getCode()).isEqualTo("my-category");
         assertThat(cd.get(0).getParentCode()).isEqualTo("home");
         assertThat(cd.get(0).getTitles()).containsEntry("it", "La mia categoria");
         assertThat(cd.get(0).getTitles()).containsEntry("en", "My own category");
+        assertThat(cd.get(1).getCode()).isEqualTo("another_category");
+        assertThat(cd.get(1).getParentCode()).isEqualTo("my-category");
+        assertThat(cd.get(1).getTitles()).containsEntry("it", "Altra categoria");
+        assertThat(cd.get(1).getTitles()).containsEntry("en", "Another category");
     }
 
     @Test
@@ -176,11 +182,13 @@ public class EntandoBundleReaderTest {
     public void shouldReadLabelsFromDedicatedFile() throws IOException {
         List<LabelDescriptor> ld = bundleReader
                 .readListOfDescriptorFile("labels/labels.yaml", LabelDescriptor.class);
-        assertThat(ld).hasSize(1);
+        assertThat(ld).hasSize(2);
         assertThat(ld.get(0).getKey()).isEqualTo("HELLO");
-        assertThat(ld.get(0).getTitles()).containsEntry("it", "Mio Titolo");
-        assertThat(ld.get(0).getTitles()).containsEntry("en", "My Title");
-
+        assertThat(ld.get(0).getTitles()).containsEntry("it", "Ciao");
+        assertThat(ld.get(0).getTitles()).containsEntry("en", "Hello");
+        assertThat(ld.get(1).getKey()).isEqualTo("WORLD");
+        assertThat(ld.get(1).getTitles()).containsEntry("it", "Mundo");
+        assertThat(ld.get(1).getTitles()).containsEntry("en", "World");
     }
 
 

@@ -83,7 +83,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                             .relativize(Paths.get(fileDescriptor.getFolder()));
                     String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
                     fileDescriptor.setFolder(folder);
-                    InstallAction action = extractInstallAction(folder, actions, conflictStrategy, report);
+                    String filename = folder + "/" + fileDescriptor.getFilename();
+                    InstallAction action = extractInstallAction(filename, actions, conflictStrategy, report);
                     installables.add(new FileInstallable(engineService, fileDescriptor, action));
                 }
             }

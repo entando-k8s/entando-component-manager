@@ -1,0 +1,18 @@
+code: another-page
+parentCode: homepage
+titles:
+  it: La mia altra pagina
+  en: My other page
+pageModel: todomvc_another_page_model
+ownerGroup: administrators
+joinGroups:
+  - free
+  - customers
+  - developers
+  - ps
+displayedInMenu: true
+status: published
+widgets:
+  - pos: 0
+    code: my-code
+    config: null

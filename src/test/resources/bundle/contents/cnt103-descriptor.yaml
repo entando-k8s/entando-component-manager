@@ -1,0 +1,48 @@
+id: CNT103
+typeCode: CNT
+description: Interest 3 card title - 2nd banner
+mainGroup: free
+status: PUBLIC
+attributes:
+  - code: title
+    value: null
+    values:
+      en: Learn about checking and savings accounts
+    elements:
+      - code: title elements
+        value: test value
+        values:
+          it: Learn about checking and savings accounts in ita
+        elements: [ ]
+        compositeelements: [ ]
+        listelements: { }
+    compositeelements:
+      - code: title composite elements
+        value: test composite
+        values:
+          gb: Learn about checking and savings accounts in gb
+        elements: [ ]
+        compositeelements: [ ]
+        listelements: { }
+    listelements:
+      myel:
+        - code: title list elements
+          value: test value list elements
+          values:
+            fr: Learn about checking and savings accounts in fr
+          elements: [ ]
+          compositeelements: [ ]
+          listelements: { }
+  - code: subtitle
+    value: null
+    values:
+      en: Learn about checking and savings accounts sub
+    elements: [ ]
+    compositeelements: [ ]
+    listelements: { }
+  - code: descr
+    value: null
+    values: { }
+    elements: [ ]
+    compositeelements: [ ]
+    listelements: { }
