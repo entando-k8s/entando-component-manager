@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static net.bytebuddy.matcher.ElementMatchers.is;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
@@ -16,7 +15,6 @@ import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_EN
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.getAnalysisReport;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.getTestBundle;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockBundle;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockPlugins;
@@ -32,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -51,29 +48,22 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
-import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
-import org.entando.kubernetes.assertionhelper.ContentAssertionHelper;
-import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
-import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -85,7 +75,6 @@ import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
@@ -99,14 +88,9 @@ import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
-import org.entando.kubernetes.model.link.EntandoAppPluginLink;
-import org.entando.kubernetes.model.web.response.RestResponse;
-import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
-import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
-import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,7 +111,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -641,19 +624,19 @@ public class InstallFlowTest {
 
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteWidget(ac.capture());
-        assertTrue(ac.getAllValues().containsAll(Arrays.asList("todomvc_widget", "another_todomvc_widget")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("todomvc_widget", "another_todomvc_widget"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePageModel(ac.capture());
-        assertTrue(ac.getAllValues().containsAll(Arrays.asList("todomvc_page_model", "todomvc_another_page_model")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("todomvc_page_model", "todomvc_another_page_model"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).disableLanguage(ac.capture());
-        assertTrue(ac.getAllValues().containsAll(Arrays.asList("it", "en")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("it", "en"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteLabel(ac.capture());
-        assertThat(ac.getAllValues().containsAll(Arrays.asList("HELLO", "WORLD")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("HELLO", "WORLD"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
@@ -661,27 +644,27 @@ public class InstallFlowTest {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteFragment(ac.capture());
-        assertTrue(ac.getAllValues().containsAll(Arrays.asList("title_fragment", "another_fragment")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("title_fragment", "another_fragment"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteContentType(ac.capture());
-        assertThat(ac.getAllValues().containsAll(Arrays.asList("CNG", "CNT")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG", "CNT"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteContent(ac.capture());
-        assertThat(ac.getAllValues().containsAll(Arrays.asList("CNG102", "CNT103")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG102", "CNT103"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteAsset(ac.capture());
-        assertThat(ac.getAllValues().containsAll(Arrays.asList("cc=my_asset", "cc=another_asset")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("cc=my_asset", "cc=another_asset"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteContentType(ac.capture());
-        assertThat(ac.getAllValues().containsAll(Arrays.asList("CNG", "CNT")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG", "CNT"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePage(ac.capture());
-        assertThat(ac.getAllValues().containsAll(Arrays.asList("my-page", "another-page")));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
 
         verify(k8SServiceClient, times(3)).unlink(any());
 
