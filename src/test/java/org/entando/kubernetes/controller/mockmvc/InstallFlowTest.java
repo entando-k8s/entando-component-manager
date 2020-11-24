@@ -6,14 +6,20 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
+import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
+import static org.entando.kubernetes.utils.TestInstallUtils.getAnalysisReport;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
 import static org.entando.kubernetes.utils.TestInstallUtils.getTestBundle;
+import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
+import static org.entando.kubernetes.utils.TestInstallUtils.mockBundle;
+import static org.entando.kubernetes.utils.TestInstallUtils.mockPlugins;
 import static org.entando.kubernetes.utils.TestInstallUtils.readFromDEPackage;
 import static org.entando.kubernetes.utils.TestInstallUtils.verifyJobHasComponentAndStatus;
 import static org.entando.kubernetes.utils.TestInstallUtils.waitForInstallStatus;
@@ -26,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,13 +41,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +72,7 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -88,6 +100,8 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.model.web.response.RestResponse;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
@@ -141,9 +155,6 @@ public class InstallFlowTest {
     private DatabaseCleaner databaseCleaner;
 
     @Autowired
-    private K8SServiceClient k8SServiceClient;
-
-    @Autowired
     private EntandoBundleComponentJobRepository componentJobRepository;
 
     @Autowired
@@ -163,6 +174,9 @@ public class InstallFlowTest {
 
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
+
+    @MockBean
+    private K8SServiceClient k8SServiceClient;
 
     @MockBean
     private EntandoCoreClient coreClient;
@@ -185,8 +199,6 @@ public class InstallFlowTest {
     public void cleanup() {
         WireMock.reset();
         databaseCleaner.cleanup();
-        ((K8SServiceClientTestDouble) k8SServiceClient).cleanInMemoryDatabases();
-        ((K8SServiceClientTestDouble) k8SServiceClient).setDeployedLinkPhase(EntandoDeploymentPhase.SUCCESSFUL);
         downloaderFactory.setDefaultSupplier(defaultBundleDownloaderSupplier);
     }
 
@@ -200,39 +212,41 @@ public class InstallFlowTest {
     void shouldCallCoreToInstallComponents() throws Exception {
         simulateSuccessfullyCompletedInstall();
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        // Verify interaction with mocks
-        Set<EntandoAppPluginLink> createdLinks = k8SServiceClientTestDouble.getInMemoryLinks();
-        Optional<EntandoAppPluginLink> appPluginLinkForTodoMvc = createdLinks.stream()
-                .filter(link -> link.getSpec().getEntandoPluginName().equals("entando-todomvcv2-1-0-0")).findAny();
-
-        assertTrue(appPluginLinkForTodoMvc.isPresent());
-
-        verifyWidgetsRequests(coreClient);
-        verifyCategoryRequests(coreClient);
-        verifyGroupRequests(coreClient);
-        verifyPageModelsRequests(coreClient);
-        verifyLanguagesRequests(coreClient);
-        verifyLabelsRequests(coreClient);
-        verifyFileRequests(coreClient);
-        verifyFragmentRequests(coreClient);
-        verifyPageRequests(coreClient);
-        verifyPageConfigurationRequests(coreClient);
-        verifyContentTypesRequests(coreClient);
-        verifyContentTemplatesRequests(coreClient);
-        verifyContentsRequests(coreClient);
-        verifyAssetsRequests(coreClient);
+        verifyPluginInstallRequests(k8SServiceClient);
+        verifyWidgetsInstallRequests(coreClient);
+        verifyCategoryInstallRequests(coreClient);
+        verifyGroupInstallRequests(coreClient);
+        verifyPageModelsInstallRequests(coreClient);
+        verifyLanguagesInstallRequests(coreClient);
+        verifyLabelsInstallRequests(coreClient);
+        verifyDirectoryInstallRequests(coreClient);
+        verifyFileInstallRequests(coreClient);
+        verifyFragmentInstallRequests(coreClient);
+        verifyPageInstallRequests(coreClient);
+        verifyPageConfigurationInstallRequests(coreClient);
+        verifyContentTypesInstallRequests(coreClient);
+        verifyContentTemplatesInstallRequests(coreClient);
+        verifyContentsInstallRequests(coreClient);
+        verifyAssetsInstallRequests(coreClient);
     }
 
-    private void verifyCategoryRequests(EntandoCoreClient coreClient) {
+    private void verifyCategoryInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<CategoryDescriptor> categoryDescriptor = ArgumentCaptor.forClass(CategoryDescriptor.class);
-        verify(coreClient, times(1)).createCategory(categoryDescriptor.capture());
+        verify(coreClient, times(2)).createCategory(categoryDescriptor.capture());
 
         List<CategoryDescriptor> allRequests = categoryDescriptor.getAllValues()
                 .stream().sorted(Comparator.comparing(CategoryDescriptor::getCode))
                 .collect(Collectors.toList());
 
         assertThat(allRequests.get(0)).matches(d ->
+                d.getCode().equals("another_category")
+                        && d.getParentCode().equals("my-category")
+                        && d.getTitles().containsKey("it")
+                        && d.getTitles().get("it").equals("Altra categoria")
+                        && d.getTitles().containsKey("en")
+                        && d.getTitles().get("en").equals("Another category"));
+
+        assertThat(allRequests.get(1)).matches(d ->
                 d.getCode().equals("my-category")
                         && d.getParentCode().equals("home")
                         && d.getTitles().containsKey("it")
@@ -241,9 +255,9 @@ public class InstallFlowTest {
                         && d.getTitles().get("en").equals("My own category"));
     }
 
-    private void verifyGroupRequests(EntandoCoreClient coreClient) {
+    private void verifyGroupInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<GroupDescriptor> groupDescriptor = ArgumentCaptor.forClass(GroupDescriptor.class);
-        verify(coreClient, times(1)).createGroup(groupDescriptor.capture());
+        verify(coreClient, times(2)).createGroup(groupDescriptor.capture());
 
         List<GroupDescriptor> allPageRequests = groupDescriptor.getAllValues()
                 .stream().sorted(Comparator.comparing(GroupDescriptor::getCode))
@@ -251,36 +265,57 @@ public class InstallFlowTest {
 
         assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("ecr")
                 && pd.getName().equals("Ecr"));
+
+        assertThat(allPageRequests.get(1)).matches(pd -> pd.getCode().equals("ps")
+                && pd.getName().equals("Professional Services"));
     }
 
-    private void verifyPageRequests(EntandoCoreClient coreClient) {
+    private void verifyPageInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<PageDescriptor> pag = ArgumentCaptor.forClass(PageDescriptor.class);
-        verify(coreClient, times(1)).createPage(pag.capture());
+        verify(coreClient, times(2)).createPage(pag.capture());
 
         List<PageDescriptor> allPageRequests = pag.getAllValues()
                 .stream().sorted(Comparator.comparing(PageDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page")
+        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("another-page")
+                && pd.getParentCode().equals("homepage")
+                && pd.getTitles().get("it").equals("La mia altra pagina")
+                && pd.getTitles().get("en").equals("My other page")
+                && pd.getPageModel().equals("todomvc_another_page_model")
+                && pd.getOwnerGroup().equals("administrators"));
+
+        assertThat(allPageRequests.get(1)).matches(pd -> pd.getCode().equals("my-page")
                 && pd.getParentCode().equals("homepage")
                 && pd.getTitles().get("it").equals("La mia pagina")
                 && pd.getTitles().get("en").equals("My page")
                 && pd.getPageModel().equals("service")
                 && pd.getOwnerGroup().equals("administrators"));
 
-        //+1 for the page, +1 after updating the page configuration
-        verify(coreClient, times(2)).publishPage(any());
+        //+1 for each page, +1 after updating each page configuration
+        verify(coreClient, times(4)).publishPage(any());
     }
 
-    private void verifyPageConfigurationRequests(EntandoCoreClient coreClient) {
+    private void verifyPageConfigurationInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<PageDescriptor> pag = ArgumentCaptor.forClass(PageDescriptor.class);
-        verify(coreClient, times(1)).updatePageConfiguration(pag.capture());
+        verify(coreClient, times(2)).updatePageConfiguration(pag.capture());
 
         List<PageDescriptor> allPageRequests = pag.getAllValues()
                 .stream().sorted(Comparator.comparing(PageDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("my-page")
+        assertThat(allPageRequests.get(0)).matches(pd -> pd.getCode().equals("another-page")
+                && pd.getParentCode().equals("homepage")
+                && pd.getTitles().get("it").equals("La mia altra pagina")
+                && pd.getTitles().get("en").equals("My other page")
+                && pd.getPageModel().equals("todomvc_another_page_model")
+                && pd.getOwnerGroup().equals("administrators")
+                && pd.getJoinGroups().containsAll(Arrays.asList("free", "customers", "developers", "ps"))
+                && pd.isDisplayedInMenu()
+                && !pd.isSeo()
+                && pd.getStatus().equals("published"));
+
+        assertThat(allPageRequests.get(1)).matches(pd -> pd.getCode().equals("my-page")
                 && pd.getParentCode().equals("homepage")
                 && pd.getTitles().get("it").equals("La mia pagina")
                 && pd.getTitles().get("en").equals("My page")
@@ -291,28 +326,31 @@ public class InstallFlowTest {
                 && !pd.isSeo()
                 && pd.getStatus().equals("published"));
 
-        assertThat(allPageRequests.get(0).getWidgets().get(0)).matches(wd -> wd.getCode().equals("my-code"));
+        assertThat(allPageRequests.get(1).getWidgets().get(0)).matches(wd -> wd.getCode().equals("my-code"));
     }
 
-    private void verifyContentsRequests(EntandoCoreClient coreClient) {
+    private void verifyContentsInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<ContentDescriptor> contentDescriptorArgCaptor = ArgumentCaptor.forClass(ContentDescriptor.class);
-        verify(coreClient, times(1)).createContent(contentDescriptorArgCaptor.capture());
+        verify(coreClient, times(2)).createContent(contentDescriptorArgCaptor.capture());
 
-        ContentDescriptor contentDescriptorRequest = contentDescriptorArgCaptor.getValue();
+        List<ContentDescriptor> allPassedContents = contentDescriptorArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(ContentDescriptor::getId))
+                .collect(Collectors.toList());
 
-        assertThat(contentDescriptorRequest.getId()).isEqualTo("CNG102");
-        assertThat(contentDescriptorRequest.getTypeCode()).isEqualTo("CNG");
-        assertThat(contentDescriptorRequest.getDescription()).isEqualTo("Interest 3 card title - 2nd banner");
-        assertThat(contentDescriptorRequest.getMainGroup()).isEqualTo("free");
+        assertThat(allPassedContents.get(0).getId()).isEqualTo("CNG102");
+        assertThat(allPassedContents.get(0).getTypeCode()).isEqualTo("CNG");
+        assertThat(allPassedContents.get(0).getDescription()).isEqualTo("Interest 3 card title - 2nd banner");
+        assertThat(allPassedContents.get(0).getMainGroup()).isEqualTo("free");
 
-        List<ContentAttribute> expectedContentAttributeList = BundleStubHelper.stubContentAttributeList();
-        assertThat(expectedContentAttributeList).hasSize(contentDescriptorRequest.getAttributes().length);
-        ContentAssertionHelper.assertOnContentAttributesList(Arrays.asList(contentDescriptorRequest.getAttributes()), expectedContentAttributeList);
+        assertThat(allPassedContents.get(1).getId()).isEqualTo("CNT103");
+        assertThat(allPassedContents.get(1).getTypeCode()).isEqualTo("CNT");
+        assertThat(allPassedContents.get(1).getDescription()).isEqualTo("Interest 3 card title - 2nd banner");
+        assertThat(allPassedContents.get(1).getMainGroup()).isEqualTo("free");
 
-        verify(coreClient, times(1)).publishContent(any());
+        verify(coreClient, times(2)).publishContent(any());
     }
 
-    private void verifyFragmentRequests(EntandoCoreClient coreClient) {
+    private void verifyFragmentInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<FragmentDescriptor> fragmentDescArgCapt = ArgumentCaptor.forClass(FragmentDescriptor.class);
         verify(coreClient, times(2)).createFragment(fragmentDescArgCapt.capture());
         List<FragmentDescriptor> allFragmentsRequests = fragmentDescArgCapt.getAllValues()
@@ -326,7 +364,7 @@ public class InstallFlowTest {
 
     }
 
-    private void verifyFileRequests(EntandoCoreClient coreClient) throws Exception {
+    private void verifyFileInstallRequests(EntandoCoreClient coreClient) throws Exception {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
         verify(coreClient, times(5)).createFile(fileArgCaptor.capture());
 
@@ -349,7 +387,7 @@ public class InstallFlowTest {
     }
 
 
-    private void verifyLanguagesRequests(EntandoCoreClient coreClient) {
+    private void verifyLanguagesInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<LanguageDescriptor> languageArgCaptor = ArgumentCaptor.forClass(LanguageDescriptor.class);
         verify(coreClient, times(2)).enableLanguage(languageArgCaptor.capture());
 
@@ -364,50 +402,57 @@ public class InstallFlowTest {
     }
 
 
-    private void verifyLabelsRequests(EntandoCoreClient coreClient) {
+    private void verifyLabelsInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<LabelDescriptor> labelArgCaptor = ArgumentCaptor.forClass(LabelDescriptor.class);
-        verify(coreClient, times(1)).createLabel(labelArgCaptor.capture());
+        verify(coreClient, times(2)).createLabel(labelArgCaptor.capture());
 
-        LabelDescriptor labelDescriptor = labelArgCaptor.getValue();
+        List<LabelDescriptor> allPassedLabels = labelArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(LabelDescriptor::getKey))
+                .collect(Collectors.toList());
 
-        assertThat(labelDescriptor.getKey()).isEqualTo("HELLO");
-        assertThat(labelDescriptor.getTitles()).hasSize(2);
-        assertThat(labelDescriptor.getTitles()).containsEntry("it", "Mio Titolo");
-        assertThat(labelDescriptor.getTitles()).containsEntry("en", "My Title");
+        assertThat(allPassedLabels.get(0).getKey()).isEqualTo("HELLO");
+        assertThat(allPassedLabels.get(0).getTitles()).hasSize(2);
+        assertThat(allPassedLabels.get(0).getTitles()).containsEntry("it", "Ciao");
+        assertThat(allPassedLabels.get(0).getTitles()).containsEntry("en", "Hello");
+
+        assertThat(allPassedLabels.get(1).getKey()).isEqualTo("WORLD");
+        assertThat(allPassedLabels.get(1).getTitles()).hasSize(2);
+        assertThat(allPassedLabels.get(1).getTitles()).containsEntry("it", "Mundo");
+        assertThat(allPassedLabels.get(1).getTitles()).containsEntry("en", "World");
     }
 
-    private void verifyContentTypesRequests(EntandoCoreClient coreClient) {
-        verify(coreClient, times(1)).createContentType(any());
+    private void verifyContentTypesInstallRequests(EntandoCoreClient coreClient) {
+        verify(coreClient, times(2)).createContentType(any());
     }
 
-    private void verifyContentTemplatesRequests(EntandoCoreClient coreClient) {
+    private void verifyContentTemplatesInstallRequests(EntandoCoreClient coreClient) {
         verify(coreClient, times(2)).createContentTemplate(any());
     }
 
-    private void verifyAssetsRequests(EntandoCoreClient coreClient) {
+    private void verifyAssetsInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<AssetDescriptor> codesArgCaptor = ArgumentCaptor.forClass(AssetDescriptor.class);
-        verify(coreClient, times(1)).createAsset(codesArgCaptor.capture(), isA(File.class));
+        verify(coreClient, times(2)).createAsset(codesArgCaptor.capture(), isA(File.class));
 
         List<AssetDescriptor> allPassedAssets = codesArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(AssetDescriptor::getCorrelationCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("my_asset");
-        assertThat(allPassedAssets.get(0).getName()).isEqualTo("my_image.jpg");
+        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("another_asset");
+        assertThat(allPassedAssets.get(0).getName()).isEqualTo("another_image.jpg");
+
+        assertThat(allPassedAssets.get(1).getCorrelationCode()).isEqualTo("my_asset");
+        assertThat(allPassedAssets.get(1).getName()).isEqualTo("my_image.jpg");
     }
 
-    private void verifyDirectoryRequests(EntandoCoreClient coreClient) {
-        ArgumentCaptor<String> folderArgCaptor = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).createFolder(folderArgCaptor.capture());
-
-        List<String> allPassedFolders = folderArgCaptor.getAllValues()
-                .stream().sorted(Comparator.comparing(String::toLowerCase))
-                .collect(Collectors.toList());
-
-        assertThat(allPassedFolders.get(0)).isEqualTo("/something");
+    private void verifyDirectoryInstallRequests(EntandoCoreClient coreClient) {
+        verify(coreClient, times(0)).createFolder(any());
     }
 
-    private void verifyPageModelsRequests(EntandoCoreClient coreClient) throws Exception {
+    private void verifyPluginInstallRequests(K8SServiceClient k8SServiceClient) {
+        verify(k8SServiceClient, times(3)).linkAppWithPlugin(any(), any(), any());
+    }
+
+    private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) throws Exception {
         ArgumentCaptor<PageTemplateDescriptor> pageModelDescrArgCaptor = ArgumentCaptor
                 .forClass(PageTemplateDescriptor.class);
         verify(coreClient, times(2)).createPageTemplate(pageModelDescrArgCaptor.capture());
@@ -440,7 +485,7 @@ public class InstallFlowTest {
                         && f.getSketch().getY2() == 1);
     }
 
-    private void verifyWidgetsRequests(EntandoCoreClient coreClient) throws Exception {
+    private void verifyWidgetsInstallRequests(EntandoCoreClient coreClient) throws Exception {
         ArgumentCaptor<WidgetDescriptor> widgetDescArgCaptor = ArgumentCaptor.forClass(WidgetDescriptor.class);
         verify(coreClient, times(2)).createWidget(widgetDescArgCaptor.capture());
         List<WidgetDescriptor> allPassedWidgets = widgetDescArgCaptor.getAllValues()
@@ -473,13 +518,16 @@ public class InstallFlowTest {
                 "/something",
                 // Categories
                 "my-category",
+                "another_category",
                 // Groups
                 "ecr",
+                "ps",
                 // Languages
                 "it",
                 "en",
                 // Labels
                 "HELLO",
+                "WORLD",
                 // Files
                 "/something/css/custom.css",
                 "/something/css/style.css",
@@ -491,13 +539,16 @@ public class InstallFlowTest {
                 "another_todomvc_widget",
                 // Content-Type
                 "CNG",
+                "CNT",
                 // Content-Template
                 "8880003",
                 "8880002",
                 // Assets
                 "my_asset",
+                "another_asset",
                 // Content
                 "CNG102",
+                "CNT103",
                 // Fragments
                 "title_fragment",
                 "another_fragment",
@@ -506,8 +557,10 @@ public class InstallFlowTest {
                 "todomvc_another_page_model",
                 // Pages
                 "my-page",
+                "another-page",
                 // Page Configurations
-                "my-page");
+                "my-page",
+                "another-page");
 
         List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository
                 .findAllByParentJob(jobs.get(0))
@@ -528,19 +581,19 @@ public class InstallFlowTest {
         Map<ComponentType, Integer> expectedComponents = new HashMap<>();
         expectedComponents.put(ComponentType.WIDGET, 2);
         expectedComponents.put(ComponentType.RESOURCE, 5);
-        expectedComponents.put(ComponentType.GROUP, 1);
-        expectedComponents.put(ComponentType.CATEGORY, 1);
+        expectedComponents.put(ComponentType.GROUP, 2);
+        expectedComponents.put(ComponentType.CATEGORY, 2);
         expectedComponents.put(ComponentType.DIRECTORY, 1);
         expectedComponents.put(ComponentType.PAGE_TEMPLATE, 2);
-        expectedComponents.put(ComponentType.CONTENT_TYPE, 1);
+        expectedComponents.put(ComponentType.CONTENT_TYPE, 2);
         expectedComponents.put(ComponentType.CONTENT_TEMPLATE, 2);
-        expectedComponents.put(ComponentType.CONTENT, 1);
-        expectedComponents.put(ComponentType.ASSET, 1);
+        expectedComponents.put(ComponentType.CONTENT, 2);
+        expectedComponents.put(ComponentType.ASSET, 2);
         expectedComponents.put(ComponentType.LANGUAGE, 2);
-        expectedComponents.put(ComponentType.LABEL, 1);
+        expectedComponents.put(ComponentType.LABEL, 2);
         expectedComponents.put(ComponentType.FRAGMENT, 2);
-        expectedComponents.put(ComponentType.PAGE, 1);
-        expectedComponents.put(ComponentType.PAGE_CONFIGURATION, 1);
+        expectedComponents.put(ComponentType.PAGE, 2);
+        expectedComponents.put(ComponentType.PAGE_CONFIGURATION, 2);
         expectedComponents.put(ComponentType.PLUGIN, 3);
 
         assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);
@@ -599,8 +652,8 @@ public class InstallFlowTest {
         assertTrue(ac.getAllValues().containsAll(Arrays.asList("it", "en")));
 
         ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteLabel(ac.capture());
-        assertThat(ac.getValue()).isEqualTo("HELLO");
+        verify(coreClient, times(2)).deleteLabel(ac.capture());
+        assertThat(ac.getAllValues().containsAll(Arrays.asList("HELLO", "WORLD")));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
@@ -611,24 +664,26 @@ public class InstallFlowTest {
         assertTrue(ac.getAllValues().containsAll(Arrays.asList("title_fragment", "another_fragment")));
 
         ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteContentType(ac.capture());
-        assertEquals("CNG", ac.getValue());
+        verify(coreClient, times(2)).deleteContentType(ac.capture());
+        assertThat(ac.getAllValues().containsAll(Arrays.asList("CNG", "CNT")));
 
         ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteContent(ac.capture());
-        assertEquals("CNG102", ac.getValue());
+        verify(coreClient, times(2)).deleteContent(ac.capture());
+        assertThat(ac.getAllValues().containsAll(Arrays.asList("CNG102", "CNT103")));
 
         ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteAsset(ac.capture());
-        assertEquals("cc=my_asset", ac.getValue());
+        verify(coreClient, times(2)).deleteAsset(ac.capture());
+        assertThat(ac.getAllValues().containsAll(Arrays.asList("cc=my_asset", "cc=another_asset")));
 
         ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteContentType(ac.capture());
-        assertEquals("CNG", ac.getValue());
+        verify(coreClient, times(2)).deleteContentType(ac.capture());
+        assertThat(ac.getAllValues().containsAll(Arrays.asList("CNG", "CNT")));
 
         ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deletePage(ac.capture());
-        assertEquals("my-page", ac.getValue());
+        verify(coreClient, times(2)).deletePage(ac.capture());
+        assertThat(ac.getAllValues().containsAll(Arrays.asList("my-page", "another-page")));
+
+        verify(k8SServiceClient, times(3)).unlink(any());
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
     }
@@ -831,10 +886,8 @@ public class InstallFlowTest {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
-        k8SServiceClientTestDouble.setDeployedLinkPhase(EntandoDeploymentPhase.FAILED);
+        mockBundle(k8SServiceClient);
+        mockPlugins(k8SServiceClient, FAILED);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
@@ -878,9 +931,8 @@ public class InstallFlowTest {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8SServiceClient);
+        mockPlugins(k8SServiceClient);
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
@@ -955,8 +1007,7 @@ public class InstallFlowTest {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8SServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8SServiceClient);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
@@ -996,16 +1047,22 @@ public class InstallFlowTest {
 
     @Test
     void shouldReturnAValidAnalysisReport() throws Exception {
+        mockAnalysisReport(coreClient, k8SServiceClient);
+        mockBundle(k8SServiceClient);
 
-        simulateSuccessfullyCompletedInstall();
+        AnalysisReport expected = getAnalysisReport();
+        MvcResult response = mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        ResultActions resultActions = mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
-                .andExpect(status().is2xxSuccessful());
+        Configuration conf = Configuration.builder()
+                .jsonProvider(new JacksonJsonProvider(new ObjectMapper()))
+                .build();
 
-        AnalysisReport expected = AnalysisReportStubHelper
-                .stubAnalysisReportWithFragmentsAndCategoriesAndPluginsAndAssetsAndContents();
+        AnalysisReport result = JsonPath.using(conf).parse(response.getResponse().getContentAsString())
+                .read("$.payload", AnalysisReport.class);
 
-        AnalysisReportAssertionHelper.assertOnAnalysisReport(expected, resultActions);
+        assertThat(result).isEqualTo(expected);
     }
 
 

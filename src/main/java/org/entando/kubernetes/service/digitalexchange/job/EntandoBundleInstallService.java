@@ -62,7 +62,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     public AnalysisReport performInstallAnalysis(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
 
-        AnalysisReport analysisReport = null;
+        AnalysisReport analysisReport;
 
         BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
@@ -73,11 +73,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             List<CompletableFuture<AnalysisReport>> futureList = reportableByHandler.keySet().stream()
                     // for each remote handler => get whole analysis report async
-                    .map(key ->
-                            CompletableFuture.supplyAsync(
-                                    () -> analysisReportStrategies.get(key)
-                                            .getAnalysisReport(reportableByHandler.get(key)))
-                    )
+                    .map(key -> CompletableFuture.supplyAsync(() -> analysisReportStrategies.get(key)
+                            .getAnalysisReport(reportableByHandler.get(key))))
                     .collect(Collectors.toList());
 
             // why using separate streams https://stackoverflow.com/questions/58700578/why-is-completablefuture-join-get-faster-in-separate-streams-than-using-one-stre

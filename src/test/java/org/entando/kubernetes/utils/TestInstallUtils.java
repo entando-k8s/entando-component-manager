@@ -6,6 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status.DIFF;
+import static org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status.NEW;
+import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,19 +28,27 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jayway.jsonpath.JsonPath;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.utils.Sets;
 import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.model.EntandoCustomResourceStatus;
+import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
@@ -50,9 +61,12 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.NoUsag
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
+import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.model.link.EntandoAppPluginLinkSpec;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -83,8 +97,8 @@ public class TestInstallUtils {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8sServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8sServiceClient);
+        mockPlugins(k8sServiceClient);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
@@ -97,6 +111,46 @@ public class TestInstallUtils {
         //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
+
+        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
+
+        return jobId;
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedUpdate(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
+        Mockito.reset(coreClient);
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        mockBundle(k8sServiceClient);
+        mockPlugins(k8sServiceClient);
+
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage(bundleName))));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
+
+        mockAnalysisReport(coreClient, k8sServiceClient);
+
+        InstallRequest request = InstallRequest.builder()
+                .conflictStrategy(InstallAction.OVERRIDE)
+                .build();
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -137,6 +191,85 @@ public class TestInstallUtils {
                 .withTarball("http://localhost:8099/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .endTag()
                 .build();
+    }
+
+    public static AnalysisReport getCoreAnalysisReport() {
+        return AnalysisReport.builder()
+                .categories(Map.of("my-category", NEW, "another_category", DIFF))
+                .groups(Map.of("ecr", NEW, "ps", DIFF))
+                .labels(Map.of("HELLO", DIFF, "WORLD", NEW))
+                .languages(Map.of("en", NEW, "it", DIFF))
+                .fragments(Map.of("title_fragment", NEW, "another_fragment", DIFF))
+                .pageTemplates(Map.of("todomvc_page_model", NEW, "todomvc_another_page_model", DIFF))
+                .pages(Map.of("my-page", NEW, "another-page", DIFF))
+                .resources(Map.of("/something/css/custom.css", DIFF, "/something/css/style.css", NEW, "/something/js/configUiScript.js", NEW,
+                        "/something/js/script.js", NEW, "/something/js/vendor/jquery/jquery.js", NEW))
+                .widgets(Map.of("another_todomvc_widget", DIFF, "todomvc_widget", NEW, "widget_with_config_ui", NEW))
+                .build();
+    }
+
+    public static AnalysisReport getCmsAnalysisReport() {
+        return AnalysisReport.builder()
+                .assets(Map.of("my-asset", NEW, "another_asset", DIFF))
+                .contentTypes(Map.of("CNG", DIFF, "CNT", NEW))
+                .contentTemplates(Map.of("8880002", DIFF, "8880003", NEW))
+                .contents(Map.of("CNG102", DIFF, "CNT103", NEW))
+                .build();
+    }
+
+    public static AnalysisReport getPluginAnalysisReport() {
+        return AnalysisReport.builder()
+                .plugins(Map.of("custombasename", DIFF, "entando-todomvcv1-1-0-0", NEW,
+                        "entando-todomvcv2-1-0-0", NEW))
+                .build();
+    }
+
+    public static AnalysisReport getAnalysisReport() {
+        AnalysisReport report = getCoreAnalysisReport();
+        report = report.merge(getCmsAnalysisReport());
+        report = report.merge(getPluginAnalysisReport());
+        return report;
+    }
+
+    public static void mockAnalysisReport(EntandoCoreClient coreClient, K8SServiceClient k8SServiceClient) {
+        AnalysisReport coreAnalysisReport = getCoreAnalysisReport();
+        AnalysisReport cmsAnalysisReport = getCmsAnalysisReport();
+        AnalysisReport pluginAnalysisReport = getPluginAnalysisReport();
+
+        when(coreClient.getEngineAnalysisReport(any())).thenReturn(coreAnalysisReport);
+        when(coreClient.getCMSAnalysisReport(any())).thenReturn(cmsAnalysisReport);
+        when(k8SServiceClient.getAnalysisReport(any())).thenReturn(pluginAnalysisReport);
+    }
+
+    public static void mockBundle(K8SServiceClient k8SServiceClient) {
+        List<EntandoDeBundle> bundles = List.of(getTestBundle());
+        when(k8SServiceClient.getBundlesInObservedNamespaces()).thenReturn(bundles);
+        when(k8SServiceClient.getBundleWithName(any())).thenReturn(Optional.of(bundles.get(0)));
+    }
+
+    public static void mockPlugins(K8SServiceClient k8SServiceClient) {
+        mockPlugins(k8SServiceClient, SUCCESSFUL);
+    }
+
+    public static void mockPlugins(K8SServiceClient k8sServiceClient, EntandoDeploymentPhase status) {
+        EntandoCustomResourceStatus deploymentStatus = new EntandoCustomResourceStatus();
+        deploymentStatus.setEntandoDeploymentPhase(status);
+
+        EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1-1-0-0"),
+                deploymentStatus);
+        EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv2-1-0-0"),
+                deploymentStatus);
+        EntandoAppPluginLink plugin3 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", "custombasename"),
+                deploymentStatus);
+
+        when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
+        when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
+        when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
+        when(k8sServiceClient.updatePlugin(any())).thenReturn(null);
+        when(k8sServiceClient.getAppLinks(any())).thenReturn(List.of(plugin1, plugin2, plugin3));
     }
 
     @SneakyThrows
@@ -234,8 +367,7 @@ public class TestInstallUtils {
         WireMock.setGlobalFixedDelay(0);
 
         factory.setDefaultSupplier(() -> null);
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8sServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8sServiceClient);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(500)));
@@ -286,15 +418,13 @@ public class TestInstallUtils {
 
     @SneakyThrows
     public static String simulateFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
-            K8SServiceClient k8sServiceClient,
-            String bundleName) {
+            K8SServiceClient k8sServiceClient, String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8sServiceClient;
-
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8sServiceClient);
+        mockPlugins(k8sServiceClient);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
@@ -329,9 +459,8 @@ public class TestInstallUtils {
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8sServiceClient;
-
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8sServiceClient);
+        mockPlugins(k8sServiceClient);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
@@ -412,8 +541,8 @@ public class TestInstallUtils {
         UniformDistribution delayDistribution = new UniformDistribution(200, 500);
         WireMock.setGlobalRandomDelay(delayDistribution);
 
-        K8SServiceClientTestDouble k8SServiceClientTestDouble = (K8SServiceClientTestDouble) k8sServiceClient;
-        k8SServiceClientTestDouble.addInMemoryBundle(getTestBundle());
+        mockBundle(k8sServiceClient);
+        mockPlugins(k8sServiceClient);
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")

@@ -234,7 +234,7 @@ public class InstallServiceTest {
 
         List<Double> progress = getJobProgress();
         assertThat(progress.size()).isEqualTo(6);
-        assertThat(progress).containsExactly(0.0, 0.16, 0.32, 0.48, 0.64, 0.8);
+        assertThat(progress).containsExactly(0.0, 0.14, 0.28, 0.42, 0.56, 0.7);
 
     }
 

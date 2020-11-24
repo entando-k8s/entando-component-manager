@@ -1,0 +1,10 @@
+- code: my-category
+  parentCode: home
+  titles:
+    it: "La mia categoria"
+    en: "My own category"
+- code: another_category
+  parentCode: my-category
+  titles:
+    it: "Altra categoria"
+    en: "Another category"
