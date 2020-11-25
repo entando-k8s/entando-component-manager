@@ -5,18 +5,12 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
-import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
-import org.entando.kubernetes.model.bundle.reportable.Reportable;
-import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
-import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

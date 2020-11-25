@@ -20,7 +20,6 @@ import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
-import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.junit.jupiter.api.Tag;
 
 @Tag("unit")

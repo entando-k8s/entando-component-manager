@@ -1,69 +1,32 @@
 package org.entando.kubernetes.controller.mockmvc;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.create;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
-import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
-import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
-import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
-import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.getTestBundle;
-import static org.entando.kubernetes.utils.TestInstallUtils.readFromDEPackage;
 import static org.entando.kubernetes.utils.TestInstallUtils.verifyJobHasComponentAndStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.waitForInstallStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.waitForJobStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.waitForUninstallStatus;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.jayway.jsonpath.JsonPath;
 import java.io.File;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
-import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
-import org.entando.kubernetes.assertionhelper.ContentAssertionHelper;
-import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -75,48 +38,32 @@ import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
-import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
-import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.model.job.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
-import org.entando.kubernetes.model.job.JobType;
-import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
-import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
-import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
-import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -519,31 +466,31 @@ public class UpdateFlowTest {
     private void verifyPagesUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deletePage(ac.capture());
-        assertThat(ac.getAllValues().contains("my-page"));
+        assertThat(ac.getAllValues()).contains("my-page");
     }
 
     private void verifyContentTypesUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteContentType(ac.capture());
-        assertThat(ac.getAllValues().contains("CNT"));
+        assertThat(ac.getAllValues()).contains("CNT");
     }
 
     private void verifyAssetsUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteAsset(ac.capture());
-        assertThat(ac.getAllValues().contains("cc=my_asset"));
+        assertThat(ac.getAllValues()).contains("cc=my_asset");
     }
 
     private void verifyContentsUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteContent(ac.capture());
-        assertThat(ac.getAllValues().contains("CNT103"));
+        assertThat(ac.getAllValues()).contains("CNT103");
     }
 
     private void verifyFragmentsUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFragment(ac.capture());
-        assertTrue(ac.getAllValues().contains("title_fragment"));
+        assertThat(ac.getAllValues()).contains("title_fragment");
     }
 
     private void verifyDirectoriesUninstallRequests() {
@@ -555,25 +502,25 @@ public class UpdateFlowTest {
     private void verifyLabelsUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteLabel(ac.capture());
-        assertThat(ac.getAllValues().contains("WORLD"));
+        assertThat(ac.getAllValues()).contains("WORLD");
     }
 
     private void verifyLanguagesUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).disableLanguage(ac.capture());
-        assertTrue(ac.getAllValues().contains("en"));
+        assertThat(ac.getAllValues()).contains("en");
     }
 
     private void verifyPageTemplatesUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deletePageModel(ac.capture());
-        assertTrue(ac.getAllValues().contains("todomvc_page_model"));
+        assertThat(ac.getAllValues()).contains("todomvc_page_model");
     }
 
     private void verifyWidgetsUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteWidget(ac.capture());
-        assertTrue(ac.getAllValues().contains("todomvc_widget"));
+        assertThat(ac.getAllValues()).contains("todomvc_widget");
     }
 
     private String simulateSuccessfullyCompletedUpdate() {
