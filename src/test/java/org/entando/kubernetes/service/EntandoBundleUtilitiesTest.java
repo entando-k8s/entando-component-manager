@@ -169,6 +169,22 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
+    void withPluginDescriptorV1WithImageNameTooLongShouldTruncateAndCreateACorrectEntandoPlugin() throws IOException {
+
+        // given a plugin descriptor V1
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
+
+        // should generate the right populated EntandoPlugin
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
+
+        assertOnEntandoPlugin(entandoPlugin, "entando-helloworld-plugin-v1-nam", DbmsVendor.MYSQL,
+                "entando/helloworld-plugin-v1-name-too-looong:1.0.0",
+                "/entando/helloworld-plugin-v1-name-too-looong/1-0-0", "/api/v1/todos",
+                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1LongName);
+    }
+
+    @Test
     void withACompletePluginDescriptorV2ShouldCreateACorrectEntandoPlugin() throws IOException {
 
         // given a complete plugin descriptor V2
@@ -277,6 +293,16 @@ public class EntandoBundleUtilitiesTest {
                 labelMap,
                 new AbstractMap.SimpleEntry<>("organization", "entando"),
                 new AbstractMap.SimpleEntry<>("name", "todomvcV1"),
+                new AbstractMap.SimpleEntry<>("version", "1.0.0")
+        );
+    }
+
+    private void assertOnLabelsForTodoMvc1LongName(Map<String, String> labelMap) {
+
+        assertOnLabels(
+                labelMap,
+                new AbstractMap.SimpleEntry<>("organization", "entando"),
+                new AbstractMap.SimpleEntry<>("name", "helloworld-plugin-v1-name-too-looong"),
                 new AbstractMap.SimpleEntry<>("version", "1.0.0")
         );
     }
