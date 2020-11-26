@@ -63,6 +63,7 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkSpec;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
@@ -533,8 +534,7 @@ public class TestInstallUtils {
 
     @SneakyThrows
     public static String simulateInProgressInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
-            K8SServiceClient k8sServiceClient,
-            String bundleName) {
+            K8SServiceClient k8sServiceClient, String bundleName) {
         Mockito.reset(coreClient);
         WireMock.reset();
         UniformDistribution delayDistribution = new UniformDistribution(200, 500);

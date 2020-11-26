@@ -23,6 +23,7 @@ import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDoub
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
@@ -63,6 +64,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
@@ -92,6 +94,7 @@ public class InstallServiceTest {
     private EntandoCoreClient coreClient;
     private KubernetesService kubernetesService;
     private EntandoBundleComponentUsageService usageService;
+    private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
 
     @BeforeEach
     public void init() {
@@ -108,15 +111,18 @@ public class InstallServiceTest {
         coreClient = mock(EntandoCoreClient.class);
         kubernetesService = mock(KubernetesService.class);
         usageService = mock(EntandoBundleComponentUsageService.class);
+        bundleOperationsConcurrencyManager = mock(BundleOperationsConcurrencyManager.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
         installService = new EntandoBundleInstallService(
                 bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap,
-                reportableComponentProcessorList, analysisReportStrategies);
+                reportableComponentProcessorList, analysisReportStrategies, bundleOperationsConcurrencyManager);
 
         uninstallService = new EntandoBundleUninstallService(
                 jobRepository, compJobRepo, installRepo, usageService, processorMap);
+
+        when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(true);
     }
 
 
@@ -277,6 +283,26 @@ public class InstallServiceTest {
         List<Double> progress = getJobProgress();
         assertThat(progress.size()).isEqualTo(3);
         assertThat(progress).containsExactly(0.0, 0.5, 1.0);
+    }
+
+    @Test
+    void shouldThrowBundleOperationConcurrencyExceptionWhenAnalysisRequestedWhileAnotherOperationIsRunning() {
+
+        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
+                .throwIfAnotherOperationIsRunning();
+
+        Assertions.assertThrows(BundleOperationConcurrencyException.class,
+                () -> installService.performInstallAnalysis(null, null));
+    }
+
+    @Test
+    void shouldThrowBundleOperationConcurrencyExceptionWhenInstallRequestedWhileAnotherOperationIsRunning() {
+
+        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
+                .throwIfAnotherOperationIsRunning();
+
+        Assertions.assertThrows(BundleOperationConcurrencyException.class,
+                () -> installService.install(null, null));
     }
 
     private List<Double> getJobProgress() {

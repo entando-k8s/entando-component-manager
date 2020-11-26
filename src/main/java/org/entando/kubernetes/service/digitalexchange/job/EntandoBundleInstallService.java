@@ -44,6 +44,7 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -59,11 +60,20 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
     private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
+    private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
 
+    /**
+     * perform the install analysis if there isn't another running bundle operation.
+     *
+     * @param bundle the bundle to analyze
+     * @param tag    the tag of the bundle to analyze
+     * @return the generated {@link AnalysisReport}
+     */
     public AnalysisReport performInstallAnalysis(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
 
-        AnalysisReport analysisReport;
+        this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunning();
 
+        AnalysisReport analysisReport;
         BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
         try {
@@ -83,8 +93,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 analysisReport = futureList.stream().map(CompletableFuture::join)
                         .reduce(AnalysisReport::merge)
                         .orElseThrow(() -> new ReportAnalysisException(String.format(
-                                    "An error occurred during the analysis report for the bundle %s with tag %s",
-                                    bundle.getMetadata().getName(), tag.getVersion())));
+                                "An error occurred during the analysis report for the bundle %s with tag %s",
+                                bundle.getMetadata().getName(), tag.getVersion())));
             } catch (CompletionException e) {
                 throw e.getCause() instanceof ReportAnalysisException
                         ? (ReportAnalysisException) e.getCause()
@@ -92,16 +102,22 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
         } finally {
+            this.bundleOperationsConcurrencyManager.operationTerminated();
             bundleDownloader.cleanTargetDirectory();
         }
 
         return analysisReport;
     }
 
+
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
+
+        this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunning();
+
         EntandoBundleJobEntity job = createInstallJob(bundle, tag);
-        submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report);
+        submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report)
+                .thenAccept(unused ->  this.bundleOperationsConcurrencyManager.operationTerminated());
         return job;
     }
 
@@ -109,6 +125,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return this.install(bundle, tag, InstallAction.CREATE, new InstallActionsByComponentType(),
                 new AnalysisReport());
     }
+
 
     private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
@@ -124,9 +141,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return createdJob;
     }
 
-    private void submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle, EntandoDeBundleTag tag,
+    private CompletableFuture<Void> submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
+            EntandoDeBundleTag tag,
             InstallAction conflictStrategy, InstallActionsByComponentType actions, AnalysisReport report) {
-        CompletableFuture.runAsync(() -> {
+
+        return CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
@@ -338,6 +357,5 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
         return installResult.join();
     }
-
 }
 
