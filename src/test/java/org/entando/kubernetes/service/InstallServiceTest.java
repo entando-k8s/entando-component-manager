@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
@@ -23,6 +26,7 @@ import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDoub
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
@@ -63,6 +67,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
@@ -92,6 +97,7 @@ public class InstallServiceTest {
     private EntandoCoreClient coreClient;
     private KubernetesService kubernetesService;
     private EntandoBundleComponentUsageService usageService;
+    private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
 
     @BeforeEach
     public void init() {
@@ -108,15 +114,18 @@ public class InstallServiceTest {
         coreClient = mock(EntandoCoreClient.class);
         kubernetesService = mock(KubernetesService.class);
         usageService = mock(EntandoBundleComponentUsageService.class);
+        bundleOperationsConcurrencyManager = mock(BundleOperationsConcurrencyManager.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
         installService = new EntandoBundleInstallService(
                 bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap,
-                reportableComponentProcessorList, analysisReportStrategies);
+                reportableComponentProcessorList, analysisReportStrategies, bundleOperationsConcurrencyManager);
 
         uninstallService = new EntandoBundleUninstallService(
                 jobRepository, compJobRepo, installRepo, usageService, processorMap);
+
+        when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(true);
     }
 
 
@@ -154,8 +163,8 @@ public class InstallServiceTest {
 
         when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
 
-        AnalysisReport analysisReport = installService
-                .performInstallAnalysis(bundle, bundle.getSpec().getTags().get(0));
+        AnalysisReport analysisReport = installService.performInstallAnalysis(bundle, bundle.getSpec().getTags().get(0),
+                true);
 
         AnalysisReportAssertionHelper.assertOnAnalysisReports(
                 AnalysisReportStubHelper.stubFullAnalysisReport(),
@@ -182,7 +191,8 @@ public class InstallServiceTest {
         EntandoDeBundleTag entandoDeBundleTag = bundle.getSpec().getTags().get(0);
 
         Assertions.assertThrows(ReportAnalysisException.class,
-                () -> installService.performInstallAnalysis(bundle, entandoDeBundleTag));
+                () -> installService.performInstallAnalysis(bundle, entandoDeBundleTag,
+                        true));
     }
 
 
@@ -278,6 +288,53 @@ public class InstallServiceTest {
         assertThat(progress.size()).isEqualTo(3);
         assertThat(progress).containsExactly(0.0, 0.5, 1.0);
     }
+
+    @Test
+    void shouldThrowBundleOperationConcurrencyExceptionWhenAnalysisOrInstallRequestedWhileAnotherOperationIsRunning() {
+
+        // analysis
+        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
+                .throwIfAnotherOperationIsRunningOrStartOperation();
+        Assertions.assertThrows(BundleOperationConcurrencyException.class,
+                () -> installService.performInstallAnalysis(null, null, true));
+
+        // install
+        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
+                .throwIfAnotherOperationIsRunningOrStartOperation();
+
+        Assertions.assertThrows(BundleOperationConcurrencyException.class,
+                () -> installService.install(null, null));
+    }
+
+    @Test
+    void shouldDoConcurrencyChecksWhenTrueIsReceived() {
+
+        doNothing().when(bundleOperationsConcurrencyManager).throwIfAnotherOperationIsRunningOrStartOperation();
+        doNothing().when(bundleOperationsConcurrencyManager).operationTerminated();
+        try {
+            installService.performInstallAnalysis(null, null, true);
+        } catch (Exception e) {
+            // catch exception to avoid mocking everything uselessly
+        }
+        verify(bundleOperationsConcurrencyManager, times(1)).throwIfAnotherOperationIsRunningOrStartOperation();
+        verify(bundleOperationsConcurrencyManager, times(1)).operationTerminated();
+    }
+
+    @Test
+    void shouldDontDoConcurrencyChecksWhenTrueIsReceived() {
+
+        doNothing().when(bundleOperationsConcurrencyManager).throwIfAnotherOperationIsRunningOrStartOperation();
+        doNothing().when(bundleOperationsConcurrencyManager).operationTerminated();
+
+        try {
+            installService.performInstallAnalysis(null, null, false);
+        } catch (Exception e) {
+            // catch exception to avoid mocking everything uselessly
+        }
+        verify(bundleOperationsConcurrencyManager, times(0)).throwIfAnotherOperationIsRunningOrStartOperation();
+        verify(bundleOperationsConcurrencyManager, times(0)).operationTerminated();
+    }
+
 
     private List<Double> getJobProgress() {
         List<Double> allProgresses = Mockito.mockingDetails(jobRepository).getInvocations()

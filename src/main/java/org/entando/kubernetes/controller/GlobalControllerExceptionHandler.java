@@ -2,6 +2,7 @@ package org.entando.kubernetes.controller;
 
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.http.HttpException;
 import org.entando.kubernetes.exception.http.WithArgumentException;
 import org.entando.kubernetes.exception.http.WithPredefinedMessage;
@@ -34,6 +35,10 @@ public class GlobalControllerExceptionHandler implements ProblemHandling {
         Object[] args = new Object[]{};
         if (exception instanceof HttpException) {
             status = ((HttpException) exception).getStatus();
+        }
+
+        if (exception instanceof BundleOperationConcurrencyException) {
+            status = HttpStatus.SERVICE_UNAVAILABLE;
         }
 
         if (exception instanceof WithArgumentException) {
