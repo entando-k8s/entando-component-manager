@@ -21,6 +21,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 
 /**
@@ -36,6 +37,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
+
+    public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
+            + "'{}' uses a deprecated format. To have full control over plugin pods names we encourage you to migrate "
+            + "to the new plugin descriptor format.";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED =
+            "The prefix of the pod using the docker image "
+                    + "'{}' is longer than {}. The prefix has been created using the format "
+                    + "[docker-organization]-[docker-image-name]-[docker-image-version]. Plugin pods names will be truncated to '{}'";
 
     private final KubernetesService kubernetesService;
 
@@ -69,6 +78,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                logDescriptorWarnings(plugin);
                 InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), actions,
                         conflictStrategy, report);
                 installableList.add(new PluginInstallable(kubernetesService, plugin, action));
@@ -90,5 +100,22 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return PluginDescriptor.builder().deploymentBaseName(component.getComponentId()).build();
+    }
+
+
+    private void logDescriptorWarnings(PluginDescriptor descriptor) {
+
+        if (descriptor.isVersion1()) {
+            log.warn(DEPRECATED_DESCRIPTOR, descriptor.getSpec().getImage());
+
+            String deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
+            if (deploymentBaseName.length() > BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
+
+                log.warn(DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED,
+                        descriptor.getSpec().getImage(),
+                        BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
+                        BundleUtilities.truncatePodPrefixName(deploymentBaseName));
+            }
+        }
     }
 }

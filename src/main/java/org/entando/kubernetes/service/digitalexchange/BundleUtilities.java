@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
@@ -21,6 +22,7 @@ import org.entando.kubernetes.model.plugin.Permission;
 import org.springframework.util.StringUtils;
 
 @UtilityClass
+@Slf4j
 public class BundleUtilities {
 
     public static final String OFFICIAL_SEMANTIC_VERSION_REGEX = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-("
@@ -39,7 +41,6 @@ public class BundleUtilities {
             + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX = "the descriptor "
             + "\"deploymentBaseName\" property. " + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
-
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
         String version = versionReference;
@@ -109,24 +110,32 @@ public class BundleUtilities {
             errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX;
         } else {
             deploymentBaseName = composeNameFromDockerImage(descriptor.getDockerImage());
+            if (descriptor.isVersion1()) {
+                deploymentBaseName = truncatePodPrefixName(deploymentBaseName);
+            }
             errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX;
         }
 
-        return validateAndReturnDeploymentBaseName(deploymentBaseName, errorSuffix);
+        return validateAndReturnDeploymentBaseName(deploymentBaseName, errorSuffix, descriptor.isVersion1());
     }
 
     /**
      * validate the deploymentBaseName. if the validation fails an EntandoComponentManagerException is thrown
      *
-     * @param deploymentBaseName the base name to use for the deployments that have to be generated in kubernetes
-     * @param errorSuffix        the suffix to append to the error that specifies which properties was used to generate
-     *                           the deployment base name
+     * @param deploymentBaseName         the base name to use for the deployments that have to be generated in
+     *                                   kubernetes
+     * @param errorSuffix                the suffix to append to the error that specifies which properties was used to
+     *                                   generate the deployment base name
+     * @param isPluginDescriptorVersion1 true if the current descriptor version is 1, false otherwise
      * @return the validated string
      */
-    private static String validateAndReturnDeploymentBaseName(String deploymentBaseName, String errorSuffix) {
+    private static String validateAndReturnDeploymentBaseName(
+            String deploymentBaseName,
+            String errorSuffix,
+            boolean isPluginDescriptorVersion1) {
 
         // deploymentBaseName has to not be longer than 63 chars
-        if (deploymentBaseName.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
+        if (!isPluginDescriptorVersion1 && deploymentBaseName.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
 
             throw new EntandoComponentManagerException(
                     String.format(
@@ -139,11 +148,25 @@ public class BundleUtilities {
         return deploymentBaseName;
     }
 
-    private static String composeNameFromDockerImage(DockerImage image) {
+
+    public static String composeNameFromDockerImage(DockerImage image) {
+
         return String.join("-",
                 makeKubernetesCompatible(image.getOrganization()),
                 makeKubernetesCompatible(image.getName()),
                 makeKubernetesCompatible(image.getVersion()));
+    }
+
+    public static String truncatePodPrefixName(String podPrefixName) {
+
+        if (podPrefixName.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
+
+            podPrefixName = podPrefixName
+                    .substring(0, Math.min(MAX_ENTANDO_K8S_POD_NAME_LENGTH, podPrefixName.length()))
+                    .replaceAll("-$", "");        // remove a possible ending hyphen
+        }
+
+        return podPrefixName;
     }
 
     private static String composeIngressPathFromDockerImage(DockerImage image) {
@@ -188,7 +211,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(composeNameFromDockerImage(descriptor.getDockerImage()))
+                .withName(truncatePodPrefixName(composeNameFromDockerImage(descriptor.getDockerImage())))
                 .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()

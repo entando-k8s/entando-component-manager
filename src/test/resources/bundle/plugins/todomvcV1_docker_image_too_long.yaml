@@ -1,0 +1,19 @@
+kind: "EntandoPlugin"
+apiVersion: "entando.org/v1"
+metadata:
+  name: "helloworld-plugin-v1-name-too-long"
+spec:
+  image: entando/helloworld-plugin-v1-name-too-looong:1.0.0
+  replicas: 1
+  dbms: mysql
+  parameters: { }
+  ingressPath: "/helloWorld"
+  healthCheckPath: "/api/v1/todos"
+  securityLevel: "strict"
+  connectionConfigNames: [ ]
+  permissions: [ ]
+  roles:
+    - name: theLucas-admin
+      code: "theLucas-admin"
+    - name: foo-admin
+      code: "foo-admin"
