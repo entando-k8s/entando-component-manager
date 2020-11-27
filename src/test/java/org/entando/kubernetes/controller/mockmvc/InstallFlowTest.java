@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
@@ -28,6 +27,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -64,6 +64,7 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -91,6 +92,7 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -163,6 +165,9 @@ public class InstallFlowTest {
 
     @MockBean
     private EntandoCoreClient coreClient;
+
+    @MockBean
+    private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
 
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
@@ -1101,6 +1106,31 @@ public class InstallFlowTest {
 
         jobId = simulateInProgressUninstall();
         verifyJobProgressesFromStatusToStatus(jobId, JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_COMPLETED);
+    }
+
+    @Test
+    void shouldReturn503OnInstallIfAnotherBundleOperationIsRunning() throws Exception {
+
+        simulateSuccessfullyCompletedInstall();
+
+        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
+                .throwIfAnotherOperationIsRunningOrStartOperation();
+
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
+    void shouldReturn503OnAnalysisIfAnotherBundleOperationIsRunning() throws Exception {
+
+        mockAnalysisReport(coreClient, k8SServiceClient);
+        mockBundle(k8SServiceClient);
+
+        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
+                .throwIfAnotherOperationIsRunningOrStartOperation();
+
+        mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
+                .andExpect(status().isServiceUnavailable());
     }
 
     private void verifyJobProgressesFromStatusToStatus(String jobId, JobStatus startStatus, JobStatus endStatus)

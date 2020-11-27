@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
@@ -53,7 +52,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
-        AnalysisReport report = installService.performInstallAnalysis(bundle, tag);
+        AnalysisReport report = installService
+                .performInstallAnalysis(bundle, tag, EntandoBundleInstallService.PERFORM_CONCURRENT_CHECKS);
 
         return ResponseEntity.ok(new SimpleRestResponse<>(report));
     }
@@ -68,14 +68,9 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
-        // Only request analysis report if provided conflict strategy
-        final AnalysisReport report = request.getConflictStrategy() != InstallAction.CREATE
-                ? installService.performInstallAnalysis(bundle, tag)
-                : new AnalysisReport();
-
         EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
                 .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy(),
-                        request.getActions(), report));
+                        request.getActions()));
 
         return ResponseEntity.created(
                 getJobLocationURI(installJob))
