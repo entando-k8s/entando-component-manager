@@ -3,6 +3,7 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
@@ -12,12 +13,14 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReque
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobType;
+import org.entando.kubernetes.model.web.response.RestError;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -92,10 +95,19 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> uninstall(
             @PathVariable("component") String componentId, HttpServletRequest request) {
-        EntandoBundleJobEntity uninstallJob = uninstallService.uninstall(componentId);
-        return ResponseEntity.created(
-                getJobLocationURI(uninstallJob))
-                .body(new SimpleRestResponse<>(uninstallJob));
+
+        try {
+            EntandoBundleJobEntity uninstallJob = uninstallService.uninstall(componentId);
+            return ResponseEntity.created(
+                    getJobLocationURI(uninstallJob))
+                    .body(new SimpleRestResponse<>(uninstallJob));
+        } catch (JobConflictException e) {
+            SimpleRestResponse<EntandoBundleJobEntity> restResponse = new SimpleRestResponse<>();
+            restResponse.setErrors(Collections.singletonList(new RestError("100", e.getMessage())));
+
+            return ResponseEntity.status(e.getStatus())
+                    .body(restResponse);
+        }
     }
 
     @Override
