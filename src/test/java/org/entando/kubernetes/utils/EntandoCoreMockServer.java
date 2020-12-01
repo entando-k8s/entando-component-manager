@@ -26,11 +26,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
+    public static final String CATEGORY_ENDPOINT = "/api/categories";
+    public static final String GROUPS_ENDPOINT = "/api/groups";
     public static final String WIDGET_ENDPOINT = "/api/widgets";
     public static final String FRAGMENT_ENDPOINT = "/api/fragments";
     public static final String LABEL_ENDPOINT = "/api/labels";
+    public static final String LANGUAGE_ENDPOINT = "/api/languages";
     public static final String PAGE_ENDPOINT = "/api/pages";
     public static final String PAGE_TEMPLATE_ENDPOINT = "/api/pageModels";
+    public static final String CONTENT_ENDPOINT = "/api/plugins/cms/contents";
     public static final String CONTENT_TEMPLATE_ENDPOINT = "/api/plugins/cms/contentmodels";
     public static final String CONTENT_TYPE_ENDPOINT = "/api/plugins/cms/contentTypes";
     public static final String ENGINE_ANALYSIS_REPORT_ENDPOINT = "/api/analysis/components/diff";
