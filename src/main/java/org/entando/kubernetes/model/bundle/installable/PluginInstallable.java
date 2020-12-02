@@ -27,7 +27,6 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
             logConflictStrategyAction();
 
-
             if (shouldSkip()) {
                 return; //Do nothing
             }

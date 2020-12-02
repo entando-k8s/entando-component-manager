@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.Setter;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -30,6 +31,8 @@ public class AppConfiguration {
 
     @Value("${entando.bundle.type:git}")
     public String type;
+    @Getter
+    public static boolean truncatePluginBaseNameIfLonger;   // NOSONAR
 
     private EntandoCoreClient entandoCoreClient;
     private K8SServiceClient kubernetesServiceClient;
@@ -76,5 +79,10 @@ public class AppConfiguration {
                 ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
                 kubernetesServiceClient::getAnalysisReport
         );
+    }
+
+    @Value("${entando.plugin.truncate-if-long:true}")
+    public void setDatabase(boolean truncatePluginBaseName) {
+        truncatePluginBaseNameIfLonger = truncatePluginBaseName;    // NOSONAR
     }
 }
