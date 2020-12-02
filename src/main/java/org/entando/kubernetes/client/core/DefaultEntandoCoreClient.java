@@ -126,7 +126,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteWidget(final String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, code).build().toUri());
     }
 
     @Override
@@ -151,7 +152,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteFragment(String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT, code).build().toUri());
     }
 
     @Override
@@ -177,7 +179,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteLabel(final String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, LABELS_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, LABELS_PATH_SEGMENT, code).build().toUri());
     }
 
     @Override
@@ -193,8 +196,16 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         EntandoCoreLanguage entandoCoreLanguage = new EntandoCoreLanguage()
                 .setCode(code)
                 .setActive(false);
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, code).build().toUri(),
-                entandoCoreLanguage);
+
+        try {
+            restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, code).build().toUri(),
+                    entandoCoreLanguage);
+        } catch (RestClientResponseException e) {
+            HttpStatus s = HttpStatus.resolve(e.getRawStatusCode());
+            if (s == null || (!s.is2xxSuccessful() && !s.equals(HttpStatus.CONFLICT))) {
+                throw e;
+            }
+        }
     }
 
 
@@ -214,7 +225,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteGroup(String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, GROUPS_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, GROUPS_PATH_SEGMENT, code).build().toUri());
     }
 
     @Override
@@ -257,7 +269,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deletePage(final String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, code).build().toUri());
     }
 
     @Override
@@ -282,7 +295,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deletePageModel(final String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT, code).build().toUri());
     }
 
     @Override
@@ -295,7 +309,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteContentModel(final String code) {
-        notFoundProtectedDelete(
+        notFoundOrUnauthorizedProtectedDelete(
                 resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENT_MODELS_PATH_SEGMENT, code).build()
                         .toUri());
@@ -344,7 +358,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteContentType(final String code) {
-        notFoundProtectedDelete(
+        notFoundOrUnauthorizedProtectedDelete(
                 resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENT_TYPES_PATH_SEGMENT, code).build()
                         .toUri());
@@ -390,7 +404,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteContent(String code) {
-        notFoundProtectedDelete(
+        notFoundOrUnauthorizedProtectedDelete(
                 resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENTS_PATH_SEGMENT, code).build().toUri());
     }
@@ -433,7 +447,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteAsset(String id) {
-        notFoundProtectedDelete(
+        notFoundOrUnauthorizedProtectedDelete(
                 resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         ASSETS_PATH_SEGMENT, id).build().toUri());
     }
@@ -452,7 +466,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 DIRECTORY_PATH_SEGMENT);
         builder.queryParam("protectedFolder", "false");
         builder.queryParam("currentPath", code);
-        notFoundProtectedDelete(builder.build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(builder.build().toUri());
     }
 
     @Override
@@ -494,7 +508,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void deleteCategory(String code) {
-        notFoundProtectedDelete(resolvePathSegments(API_PATH_SEGMENT, CATEGORIES_PATH_SEGMENT, code).build().toUri());
+        notFoundOrUnauthorizedProtectedDelete(
+                resolvePathSegments(API_PATH_SEGMENT, CATEGORIES_PATH_SEGMENT, code).build().toUri());
 
     }
 
@@ -598,7 +613,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         }
     }
 
-    private void notFoundProtectedDelete(URI url) {
+    private void notFoundOrUnauthorizedProtectedDelete(URI url) {
         try {
             restTemplate.delete(url);
         } catch (RestClientResponseException e) {
@@ -611,6 +626,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private boolean isSafeDeleteResponseStatus(int status) {
         HttpStatus s = HttpStatus.resolve(status);
-        return s != null && (s.is2xxSuccessful() || s.equals(HttpStatus.NOT_FOUND));
+        return s != null && (s.is2xxSuccessful()
+                || s.equals(HttpStatus.NOT_FOUND)
+                || s.equals(HttpStatus.FORBIDDEN));
     }
 }

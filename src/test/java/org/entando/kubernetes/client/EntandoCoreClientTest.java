@@ -3,12 +3,16 @@ package org.entando.kubernetes.client;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -273,18 +277,41 @@ class EntandoCoreClientTest {
     }
 
     @Test
-    void deleteNotFoundComponent() {
+    void deleteNotFoundComponentShouldSucceed() {
+
+        // TODO check better this test
+
+        this.getTestDeleteEndpointMap().forEach((key, value) -> {
+            stubForDeleteNotFoundComponent(key);
+            assertAll(() -> value.accept(CODE));
+            coreMockServer.verify(key + "/" + CODE, WireMock::deleteRequestedFor);
+        });
+    }
+
+    @Test
+    void deleteForbiddenComponentShouldSucceed() {
+
+        // TODO check better this test
+
+        this.getTestDeleteEndpointMap().forEach((key, value) -> {
+            stubForDeleteForbiddenComponent(key);
+            assertAll(() -> value.accept(CODE));
+            coreMockServer.verify(key + "/" + CODE, WireMock::deleteRequestedFor);
+        });
+    }
+
+    @Test
+    void disablingALanguageThatReturns409TheDisableWillSucceed() {
+
         coreMockServer.getInnerServer()
-                .stubFor(WireMock.delete(urlEqualTo(EntandoCoreMockServer.LABEL_ENDPOINT + CODE))
+                .stubFor(WireMock.put(urlEqualTo(EntandoCoreMockServer.LANGUAGE_ENDPOINT + "/" + CODE))
                         .willReturn(
                                 aResponse()
-                                        .withStatus(404)
+                                        .withStatus(409)
                                         .withHeader("Content-Type", "application/json")
                         ));
 
-        this.client.deleteLabel(CODE);
-        coreMockServer.verify(EntandoCoreMockServer.LABEL_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
-
+        assertAll(() -> client.disableLanguage(CODE));
     }
 
     @Test
@@ -316,5 +343,51 @@ class EntandoCoreClientTest {
 
         Assertions.assertThrows(ReportAnalysisException.class,
                 () -> this.client.getEngineAnalysisReport(reportableList));
+    }
+
+
+
+
+    private Map<String, Consumer<String>> getTestDeleteEndpointMap() {
+        return Map.ofEntries(
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.CATEGORY_ENDPOINT, client::deleteCategory),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.GROUPS_ENDPOINT, client::deleteGroup),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.WIDGET_ENDPOINT, client::deleteWidget),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.FRAGMENT_ENDPOINT, client::deleteFragment),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.LABEL_ENDPOINT, client::deleteLabel),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.PAGE_ENDPOINT, client::deletePage),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, client::deletePageModel),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.CONTENT_ENDPOINT, client::deleteContent),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, client::deleteContentModel),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.CONTENT_TYPE_ENDPOINT, client::deleteContentType)
+        );
+
+    }
+
+    /**
+     * stub a 404 response when invoking the received url.
+     * @param url the url to bind to the 404 response
+     */
+    private void stubForDeleteNotFoundComponent(String url) {
+        stubForDeleteComponent(url, 404);
+    }
+
+    /**
+     * stub a 403 response when invoking the received url.
+     * @param url the url to bind to the 403 response
+     */
+    private void stubForDeleteForbiddenComponent(String url) {
+        stubForDeleteComponent(url, 403);
+    }
+
+    private void stubForDeleteComponent(String url, int statusCode) {
+
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlEqualTo(url + "/" + CODE))
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(statusCode)
+                                        .withHeader("Content-Type", "application/json")
+                        ));
     }
 }
