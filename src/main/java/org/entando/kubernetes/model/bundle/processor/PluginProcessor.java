@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
+import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -37,14 +38,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
-
-    public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
-            + "'{}' uses a deprecated format. To have full control over plugin pods names we encourage you to migrate "
-            + "to the new plugin descriptor format.";
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED =
-            "The prefix of the pod using the docker image "
-                    + "'{}' is longer than {}. The prefix has been created using the format "
-                    + "[docker-organization]-[docker-image-name]-[docker-image-version]. Plugin pods names will be truncated to '{}'";
 
     private final KubernetesService kubernetesService;
 
@@ -102,20 +95,62 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         return PluginDescriptor.builder().deploymentBaseName(component.getComponentId()).build();
     }
 
+    @Override
+    public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
+
+        List<String> idList = new ArrayList<>();
+
+        try {
+            List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
+            for (String fileName : contentDescriptorList) {
+
+                PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
+                        .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+                logDescriptorWarnings(pluginDescriptor);
+                idList.add(pluginDescriptor.getComponentKey().getKey());
+            }
+
+            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                    this.getReportableRemoteHandler());
+
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("Error reading bundle", e);
+        }
+    }
+
 
     private void logDescriptorWarnings(PluginDescriptor descriptor) {
 
+        // deprecated descriptor
         if (descriptor.isVersion1()) {
             log.warn(DEPRECATED_DESCRIPTOR, descriptor.getSpec().getImage());
+        }
 
-            String deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
-            if (deploymentBaseName.length() > BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
+        // plugin base name too long
+        String deploymentBaseName = descriptor.generateDeploymentBaseNameNotTruncated();
+        if (deploymentBaseName.length() > BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
 
-                log.warn(DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED,
-                        descriptor.getSpec().getImage(),
-                        BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                        BundleUtilities.truncatePodPrefixName(deploymentBaseName));
-            }
+            String errMessage = descriptor.isVersion1()
+                    ? DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V1 :
+                    DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V2;
+
+            log.warn(errMessage,
+                    descriptor.getDockerImage(),
+                    BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
+                    BundleUtilities.truncatePodPrefixName(deploymentBaseName));
         }
     }
+
+
+    public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
+            + "'{}' uses a deprecated format. To have full control over plugins we encourage you to migrate "
+            + "to the new plugin descriptor format.";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V1 =
+            "The prefix of the pod using the docker image "
+                    + "'{}' is longer than {}. The prefix has been created using the format "
+                    + "[docker-organization]-[docker-image-name]-[docker-image-version]. "
+                    + "Plugin pods names will be truncated to '{}'";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V2 =
+            "The prefix of the pod using the docker image "
+                    + "'{}' is longer than {}. Plugin pods names will be truncated to '{}'";
 }

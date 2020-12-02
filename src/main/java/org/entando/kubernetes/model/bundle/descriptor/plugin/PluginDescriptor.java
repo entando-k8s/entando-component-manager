@@ -88,7 +88,10 @@ public class PluginDescriptor implements Descriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-
         return new ComponentKey(BundleUtilities.extractNameFromDescriptor(this));
+    }
+
+    public String generateDeploymentBaseNameNotTruncated() {
+        return BundleUtilities.composeDeploymentBaseName(this);
     }
 }
