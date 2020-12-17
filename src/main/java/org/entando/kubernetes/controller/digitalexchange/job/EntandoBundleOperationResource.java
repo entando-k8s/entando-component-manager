@@ -15,10 +15,8 @@
 
 package org.entando.kubernetes.controller.digitalexchange.job;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
@@ -34,7 +32,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@OpenAPIDefinition(tags = {@Tag(name = "digital-exchange"), @Tag(name = "installation")})
 @RequestMapping(value = "/components")
 public interface EntandoBundleOperationResource {
 
