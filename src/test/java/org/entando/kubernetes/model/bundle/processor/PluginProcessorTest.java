@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -61,6 +62,7 @@ class PluginProcessorTest {
     @Test
     void shouldTruncatePluginBaseNameIfNameTooLong() throws IOException, ExecutionException, InterruptedException {
 
+        AppConfiguration.truncatePluginBaseNameIfLonger = true;
         initBundleReaderLongImagesName();
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "entando/helloworld-plugin-v1-name-too-looong:1.0.0");
@@ -77,7 +79,7 @@ class PluginProcessorTest {
 
         assertThat(installables.get(1)).isInstanceOf(PluginInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.PLUGIN);
-        assertThat(installables.get(1).getName()).isEqualTo("entando/the-lucas:0.0.1-SNAPSHOT");
+        assertThat(installables.get(1).getName()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
 
         verify(kubernetesService, times(0)).linkPlugin(any());
 

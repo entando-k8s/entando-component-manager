@@ -152,7 +152,7 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDeploymentBaseName(null);
 
         // shoudl return a compatible k8s format of the image
-        String expectedImageName = "organiz-imagename-1-0-0";
+        String expectedImageName = "organiz-imagename";
         assertThat(BundleUtilities.extractNameFromDescriptor(descriptor)).isEqualTo(expectedImageName.toLowerCase());
     }
 
@@ -166,7 +166,7 @@ public class EntandoBundleUtilitiesTest {
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv1-1-0-0", DbmsVendor.MYSQL,
+        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv1", DbmsVendor.MYSQL,
                 "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1);
     }
@@ -213,7 +213,7 @@ public class EntandoBundleUtilitiesTest {
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv2-1-0-0", DbmsVendor.MYSQL,
+        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv2", DbmsVendor.MYSQL,
                 "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
                 Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2);
     }

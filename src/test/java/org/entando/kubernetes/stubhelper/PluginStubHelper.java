@@ -10,9 +10,11 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1S
 
 public class PluginStubHelper {
 
-    public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas-0-0-1-snapshot";
+    public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas";
+    public static final String EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME = "customdepbasename";
     public static final String EXPECTED_INGRESS_PATH = "/entando/the-lucas/0-0-1-snapshot";
     public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
+    public static final String TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME = "customDepBaseName";
     public static final String TEST_DESCRIPTOR_ADMIN_ROLE = "thelucas-admin";
     public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
     public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
@@ -25,7 +27,7 @@ public class PluginStubHelper {
                 .roles(Arrays.asList(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_USER_ROLE))
                 .healthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
                 .dbms(TEST_DESCRIPTOR_DBMS)
-                .deploymentBaseName(TEST_DESCRIPTOR_IMAGE)
+                .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
                 .build();
     }
 

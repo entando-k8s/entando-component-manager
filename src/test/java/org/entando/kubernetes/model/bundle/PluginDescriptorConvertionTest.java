@@ -43,7 +43,7 @@ public class PluginDescriptorConvertionTest {
     void shouldGenerateKubernetesCompatibleNameFromDescriptor() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
         String name = BundleUtilities.extractNameFromDescriptor(descriptor);
-        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME);
+        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class PluginDescriptorConvertionTest {
         PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV2();
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
-        assertOnConvertedEntandoPlugin(p);
+        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
     }
 
 
@@ -81,11 +81,11 @@ public class PluginDescriptorConvertionTest {
         PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV1();
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
-        assertOnConvertedEntandoPlugin(p);
+        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME);
     }
 
-    private void assertOnConvertedEntandoPlugin(EntandoPlugin p) {
-        assertThat(p.getMetadata().getName()).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME);
+    private void assertOnConvertedEntandoPlugin(EntandoPlugin p, String expectedPluginName) {
+        assertThat(p.getMetadata().getName()).isEqualTo(expectedPluginName);
         assertThat(p.getSpec().getImage()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_IMAGE);
         assertThat(p.getSpec().getIngressPath()).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH);
         assertThat(p.getSpec().getHealthCheckPath()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_HEALTH_PATH);
