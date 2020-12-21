@@ -21,6 +21,9 @@ public class ContentDescriptor implements Descriptor {
     private String[] groups;
     private String mainGroup;
     private String status;
+    private String viewPage;
+    private String listModel;
+    private String defaultModel;
     private ContentAttribute[] attributes;
 
     @Override
