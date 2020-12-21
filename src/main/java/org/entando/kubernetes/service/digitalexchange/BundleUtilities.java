@@ -166,8 +166,7 @@ public class BundleUtilities {
 
         return String.join("-",
                 makeKubernetesCompatible(image.getOrganization()),
-                makeKubernetesCompatible(image.getName()),
-                makeKubernetesCompatible(image.getVersion()));
+                makeKubernetesCompatible(image.getName()));
     }
 
     public static String truncatePodPrefixName(String podPrefixName) {
