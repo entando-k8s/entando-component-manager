@@ -3,6 +3,9 @@ typeCode: CNG
 description: Interest 3 card title - 2nd banner
 mainGroup: free
 status: PUBLIC
+viewPage: news
+listModel: '10022'
+defaultModel: '10003'
 attributes:
   - code: title
     value: null
