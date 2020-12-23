@@ -256,10 +256,10 @@ public class TestInstallUtils {
         deploymentStatus.setEntandoDeploymentPhase(status);
 
         EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1-1-0-0"),
+                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1"),
                 deploymentStatus);
         EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv2-1-0-0"),
+                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv2"),
                 deploymentStatus);
         EntandoAppPluginLink plugin3 = new EntandoAppPluginLink(new ObjectMeta(),
                 new EntandoAppPluginLinkSpec("", "", "", "custombasename"),
