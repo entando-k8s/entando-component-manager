@@ -329,6 +329,9 @@ public class InstallFlowTest {
         assertThat(allPassedContents.get(0).getTypeCode()).isEqualTo("CNG");
         assertThat(allPassedContents.get(0).getDescription()).isEqualTo("Interest 3 card title - 2nd banner");
         assertThat(allPassedContents.get(0).getMainGroup()).isEqualTo("free");
+        assertThat(allPassedContents.get(0).getViewPage()).isEqualTo("news");
+        assertThat(allPassedContents.get(0).getListModel()).isEqualTo("10022");
+        assertThat(allPassedContents.get(0).getDefaultModel()).isEqualTo("10003");
 
         assertThat(allPassedContents.get(1).getId()).isEqualTo("CNT103");
         assertThat(allPassedContents.get(1).getTypeCode()).isEqualTo("CNT");
