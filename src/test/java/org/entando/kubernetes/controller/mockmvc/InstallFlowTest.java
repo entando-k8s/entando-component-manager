@@ -502,8 +502,8 @@ public class InstallFlowTest {
 
         List<String> expected = Arrays.asList(
                 // Plugins
-                "entando/todomvcV1:1.0.0",
-                "entando/todomvcV2:1.0.0",
+                "entando-todomvcv1",
+                "entando-todomvcv2",
                 "customBaseName",
                 // Directories
                 "/something",
@@ -942,8 +942,8 @@ public class InstallFlowTest {
         assertThat(pluginJobs.size()).isEqualTo(3);
 
         // when deploymentBaseName is not present => component id should be the image organization, name and version
-        assertThat(pluginJobs.get(0).getComponentId()).isEqualTo("entando/todomvcV1:1.0.0");
-        assertThat(pluginJobs.get(1).getComponentId()).isEqualTo("entando/todomvcV2:1.0.0");
+        assertThat(pluginJobs.get(0).getComponentId()).isEqualTo("entando-todomvcv1");
+        assertThat(pluginJobs.get(1).getComponentId()).isEqualTo("entando-todomvcv2");
         // when deploymentBaseName is not present => component id should be the deploymentBaseName itself
         assertThat(pluginJobs.get(2).getComponentId()).isEqualTo("customBaseName");
     }

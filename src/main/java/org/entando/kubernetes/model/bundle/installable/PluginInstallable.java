@@ -47,7 +47,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Removing link to plugin {}", getName());
+            log.info("Removing link to plugin {}", representation.getComponentKey().getKey());
             if (shouldSkip()) {
                 return; //Do nothing
             }
@@ -69,7 +69,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         } else {
             // TODO when we'll introduce a validation step, remove this try catch and move the check
             try {
-                return this.representation.getDockerImage().toString();
+                return this.representation.getComponentKey().getKey();
             } catch (Exception e) {
                 throw new EntandoComponentManagerException("There is an error in the build of the docker image. Please "
                         + "check to have supplied a valid docker image in the dedicated descriptor field");

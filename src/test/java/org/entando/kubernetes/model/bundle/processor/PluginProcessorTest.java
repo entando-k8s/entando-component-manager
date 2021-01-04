@@ -55,7 +55,7 @@ class PluginProcessorTest {
 
         initBundleReaderShortImagesName();
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando/the-lucas:0.0.1-SNAPSHOT");
+        assertOnInstallables(installables, "entando-the-lucas");
     }
 
 
@@ -65,7 +65,7 @@ class PluginProcessorTest {
         AppConfiguration.truncatePluginBaseNameIfLonger = true;
         initBundleReaderLongImagesName();
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando/helloworld-plugin-v1-name-too-looong:1.0.0");
+        assertOnInstallables(installables, "entando-helloworld-plugin-v1-nam");
     }
 
 
