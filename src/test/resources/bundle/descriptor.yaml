@@ -36,7 +36,7 @@ components:
 
   assets:
     - assets/my_asset/my_asset.yaml
-    - assets/another_asset/another_asset.yaml
+    - assets/anotherasset/anotherasset.yaml
 
   groups:
     - groups/groups.yaml
