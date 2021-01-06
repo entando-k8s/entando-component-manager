@@ -210,7 +210,7 @@ public class TestInstallUtils {
 
     public static AnalysisReport getCmsAnalysisReport() {
         return AnalysisReport.builder()
-                .assets(Map.of("my-asset", NEW, "another_asset", DIFF))
+                .assets(Map.of("my-asset", NEW, "anotherAsset", DIFF))
                 .contentTypes(Map.of("CNG", DIFF, "CNT", NEW))
                 .contentTemplates(Map.of("8880002", DIFF, "8880003", NEW))
                 .contents(Map.of("CNG102", DIFF, "CNT103", NEW))

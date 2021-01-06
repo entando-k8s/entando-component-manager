@@ -395,7 +395,7 @@ public class UpdateFlowTest {
                 .stream().sorted(Comparator.comparing(AssetDescriptor::getCorrelationCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("another_asset");
+        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("anotherAsset");
         assertThat(allPassedAssets.get(0).getName()).isEqualTo("another_image.jpg");
 
         assertThat(allPassedAssets.get(1).getCorrelationCode()).isEqualTo("my_asset");

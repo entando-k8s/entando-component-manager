@@ -120,8 +120,8 @@ public class BundleReader {
         }
     }
 
-    public File getAssetFile(final String code, final String fileName) {
-        return bundleBasePath.resolve("assets/" + code + "/" + fileName).toFile();
+    public File getAssetFile(final String directory, final String fileName) {
+        return bundleBasePath.resolve(directory + "/" + fileName).toFile();
     }
 
 }

@@ -428,7 +428,7 @@ public class InstallFlowTest {
                 .stream().sorted(Comparator.comparing(AssetDescriptor::getCorrelationCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("another_asset");
+        assertThat(allPassedAssets.get(0).getCorrelationCode()).isEqualTo("anotherAsset");
         assertThat(allPassedAssets.get(0).getName()).isEqualTo("another_image.jpg");
 
         assertThat(allPassedAssets.get(1).getCorrelationCode()).isEqualTo("my_asset");
@@ -536,7 +536,7 @@ public class InstallFlowTest {
                 "8880002",
                 // Assets
                 "my_asset",
-                "another_asset",
+                "anotherAsset",
                 // Content
                 "CNG102",
                 "CNT103",
@@ -664,7 +664,7 @@ public class InstallFlowTest {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteAsset(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("cc=my_asset", "cc=another_asset"));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("cc=my_asset", "cc=anotherAsset"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteContentType(ac.capture());
