@@ -1,4 +1,16 @@
 FROM registry.access.redhat.com/ubi8/openjdk-11
+
+### Required OpenShift Labels
+LABEL name="Entando Component Manager" \
+      maintainer="dev@entando.com" \
+      vendor="Entando Inc." \
+      version="6.3.0" \
+      release="6.3.0" \
+      summary="Entando Component Manager for Entando Component Repository" \
+      description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
+
+COPY target/generated-resources/licenses /licenses
+
 ENV PORT=8080 \
     CLASSPATH=/opt/lib \
     USER_NAME=root \
@@ -6,6 +18,8 @@ ENV PORT=8080 \
     NSS_WRAPPER_GROUP=/tmp/group
 
 COPY passwd.template entrypoint.sh /
+
+
 USER root
 RUN microdnf install -y yum
 
