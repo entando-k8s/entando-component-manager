@@ -1,4 +1,16 @@
-FROM openjdk:11-jdk-slim
+FROM registry.access.redhat.com/ubi8/openjdk-11
+
+### Required OpenShift Labels
+LABEL name="Entando Component Manager" \
+      maintainer="dev@entando.com" \
+      vendor="Entando Inc." \
+      version="6.3.0" \
+      release="6.3.0" \
+      summary="Entando Component Manager for Entando Component Repository" \
+      description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
+
+COPY target/generated-resources/licenses /licenses
+
 ENV PORT=8080 \
     CLASSPATH=/opt/lib \
     USER_NAME=root \
@@ -7,17 +19,24 @@ ENV PORT=8080 \
 
 COPY passwd.template entrypoint.sh /
 
+
+USER root
+RUN microdnf install -y yum
+
 RUN chmod -Rf g+rw /opt && \
     touch ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
     chgrp 0 ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
     chmod g+rw ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
-    apt-get update && apt-get upgrade -y && \
-    apt-get install -y git curl gpg tar gettext-base libnss-wrapper && \
-    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
-    apt-get install -y git-lfs && git lfs install && \
-    rm -rf /var/lib/apt/lists/*
+    yum update -y && yum upgrade -y && \
+    yum install -y git curl gpg tar gettext nss_wrapper && \
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash && \
+    yum install -y git-lfs && git lfs install && \
+    rm -rf /var/cache/yum
+
+USER 185
 
 EXPOSE 8080
+
 
 # copy pom.xml and wildcards to avoid this command failing if there's no target/lib directory
 COPY pom.xml target/lib* /opt/lib/
