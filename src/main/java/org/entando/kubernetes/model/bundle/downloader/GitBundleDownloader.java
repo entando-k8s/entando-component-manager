@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.SystemUtils;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 public class GitBundleDownloader extends BundleDownloader {
@@ -31,8 +32,13 @@ public class GitBundleDownloader extends BundleDownloader {
                 tag.getVersion(),
                 tag.getTarball(),
                 targetPath.toAbsolutePath());
-        commands.add("/bin/sh");
-        commands.add("-c");
+        if (SystemUtils.IS_OS_WINDOWS) {
+            commands.add("CMD");
+            commands.add("/C");
+        } else {
+            commands.add("/bin/sh");
+            commands.add("-c");
+        }
         commands.add(gitCommand);
 
         ProcessBuilder pb = new ProcessBuilder(commands);
