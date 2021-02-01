@@ -11,3 +11,4 @@ permissions:
     role: manage-users
   - clientId: realm-management
     role: view-users
+securityLevel: lenient

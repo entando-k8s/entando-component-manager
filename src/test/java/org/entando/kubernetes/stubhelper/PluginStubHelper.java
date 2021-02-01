@@ -19,6 +19,7 @@ public class PluginStubHelper {
     public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
     public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
     public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
+    public static final String TEST_DESCRIPTOR_SECURITY_LEVEL = "lenient";
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {
@@ -47,6 +48,7 @@ public class PluginStubHelper {
                 .setImage(TEST_DESCRIPTOR_IMAGE)
                 .setRoles(roleList)
                 .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
-                .setDbms(TEST_DESCRIPTOR_DBMS);
+                .setDbms(TEST_DESCRIPTOR_DBMS)
+                .setSecurityLevel(TEST_DESCRIPTOR_SECURITY_LEVEL);
     }
 }

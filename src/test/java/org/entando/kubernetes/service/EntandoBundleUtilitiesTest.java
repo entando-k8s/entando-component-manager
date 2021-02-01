@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
@@ -23,6 +24,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
+import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -168,11 +170,14 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv1", DbmsVendor.MYSQL,
                 "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
-                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1);
+                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1,
+                PluginSecurityLevel.forName("strict"));
     }
 
     @Test
     void withPluginDescriptorV1WithImageNameTooLongShouldTruncateAndCreateACorrectEntandoPlugin() throws IOException {
+
+        AppConfiguration.truncatePluginBaseNameIfLonger = true;
 
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
@@ -184,7 +189,8 @@ public class EntandoBundleUtilitiesTest {
         assertOnEntandoPlugin(entandoPlugin, "entando-helloworld-plugin-v1-nam", DbmsVendor.MYSQL,
                 "entando/helloworld-plugin-v1-name-too-looong:1.0.0",
                 "/entando/helloworld-plugin-v1-name-too-looong/1-0-0", "/api/v1/todos",
-                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1LongName);
+                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1LongName,
+                PluginSecurityLevel.forName("strict"));
     }
 
     @Test
@@ -200,7 +206,7 @@ public class EntandoBundleUtilitiesTest {
         assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
                 "/myhostname.io/entando-plugin", "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2CompleteBundle(),
-                this::assertOnLabelsForTodoMvc2);
+                this::assertOnLabelsForTodoMvc2, PluginSecurityLevel.forName("lenient"));
     }
 
     @Test
@@ -215,13 +221,13 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv2", DbmsVendor.MYSQL,
                 "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
-                Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2);
+                Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
 
 
     private void assertOnEntandoPlugin(EntandoPlugin entandoPlugin, String name, DbmsVendor dbmsVendor, String image,
             String ingressPath, String healthCheckPath, List<ExpectedRole> roleList, List<Permission> permissionList,
-            Consumer<Map<String, String>> labelsAssertionFn) {
+            Consumer<Map<String, String>> labelsAssertionFn, PluginSecurityLevel securityLevel) {
 
         ObjectMeta metadata = entandoPlugin.getMetadata();
         assertThat(metadata.getName()).isEqualTo(name);
@@ -232,6 +238,11 @@ public class EntandoBundleUtilitiesTest {
         assertThat(spec.getImage()).isEqualTo(image);
         assertThat(spec.getIngressPath()).isEqualTo(ingressPath);
         assertThat(spec.getHealthCheckPath()).isEqualTo(healthCheckPath);
+        if (null != securityLevel) {
+            assertThat(spec.getSecurityLevel()).contains(securityLevel);
+        } else {
+            assertThat(spec.getSecurityLevel()).isEmpty();
+        }
         assertOnExpectedRoles(spec.getRoles(), roleList);
         assertOnPermissionsForTodoMvc2CompleteBundle(spec.getPermissions(), permissionList);
         assertOnExpectedRoles(spec.getRoles(), roleList);

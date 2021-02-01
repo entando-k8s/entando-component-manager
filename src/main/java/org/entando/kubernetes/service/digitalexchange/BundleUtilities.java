@@ -20,6 +20,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
+import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.springframework.util.StringUtils;
 
 @UtilityClass
@@ -216,6 +217,7 @@ public class BundleUtilities {
                 .withRoles(extractRolesFromDescriptor(descriptor))
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
                 .withPermissions(extractPermissionsFromDescriptor(descriptor))
+                .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
                 .endSpec()
                 .build();
     }
@@ -232,6 +234,7 @@ public class BundleUtilities {
                 .withIngressPath(composeIngressPathFromDockerImage(descriptor.getDockerImage()))
                 .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
                 .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
+                .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSpec().getSecurityLevel()))
                 .endSpec()
                 .build();
     }

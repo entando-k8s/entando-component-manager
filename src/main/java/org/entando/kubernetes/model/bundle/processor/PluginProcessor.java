@@ -2,16 +2,19 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import liquibase.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
@@ -21,6 +24,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
@@ -71,6 +75,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                validateDescriptorOrThrow(plugin);
                 logDescriptorWarnings(plugin);
                 InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), actions,
                         conflictStrategy, report);
@@ -141,6 +146,21 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
     }
 
+    private void validateDescriptorOrThrow(PluginDescriptor descriptor) {
+
+        // validate securityLevel property
+        if (!StringUtils.isEmpty(descriptor.getSecurityLevel())
+                || (descriptor.isVersion1() && !StringUtils.isEmpty(descriptor.getSpec().getSecurityLevel()))) {
+
+            String securityLevel =
+                    descriptor.isVersion1() ? descriptor.getSpec().getSecurityLevel() : descriptor.getSecurityLevel();
+
+            Arrays.stream(PluginSecurityLevel.values())
+                    .filter(pluginSecurityLevel -> pluginSecurityLevel.toName().equals(securityLevel))
+                    .findFirst()
+                    .orElseThrow(() -> new InvalidBundleException(SECURITY_LEVEL_NOT_RECOGNIZED)); // NOSONAR
+        }
+    }
 
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
             + "'{}' uses a deprecated format. To have full control over plugins we encourage you to migrate "
@@ -153,4 +173,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V2 =
             "The prefix of the pod using the docker image "
                     + "'{}' is longer than {}. Plugin pods names will be truncated to '{}'";
+    public static final String SECURITY_LEVEL_NOT_RECOGNIZED =
+            "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
+                    + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
+                    .collect(Collectors.joining(", "));
 }
