@@ -69,6 +69,10 @@ public class PluginDescriptor implements Descriptor {
      * The ingress path to assign to the current plugin. If not specified it will be composed by the image name
      */
     private String ingressPath;
+    /**
+     * The security level to apply to the current plugin.
+     */
+    private String securityLevel;
 
 
     public DockerImage getDockerImage() {

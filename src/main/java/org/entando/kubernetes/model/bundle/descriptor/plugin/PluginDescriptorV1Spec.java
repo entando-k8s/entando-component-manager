@@ -17,5 +17,6 @@ public class PluginDescriptorV1Spec {
     private String image;
     private String dbms;
     private String healthCheckPath;
+    private String securityLevel;
     private List<PluginDescriptorV1Role> roles;
 }

@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -25,6 +27,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -66,6 +69,32 @@ class PluginProcessorTest {
         initBundleReaderLongImagesName();
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "entando-helloworld-plugin-v1-nam");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPluginSecurityLevelIsUnknown() throws Exception {
+
+        String firstDescriptorFilename = "plugins/plugin-unknown-security-level.yaml";
+
+        // plugin descriptor V1
+        PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
+        descriptorV1.getSpec().setSecurityLevel("unknown");
+
+        // plugin descriptor V1
+        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
+        descriptorV2.setSecurityLevel("unknown");
+
+        List<PluginDescriptor> pluginDescriptorList = Arrays.asList(descriptorV1, descriptorV2);
+
+        for (PluginDescriptor pluginDescriptor : pluginDescriptorList) {
+
+            when(bundleReader.readDescriptorFile(eq(firstDescriptorFilename), any()))
+                    .thenReturn(pluginDescriptor);
+
+            this.initGenericBundleReader(firstDescriptorFilename);
+
+            Assertions.assertThrows(InvalidBundleException.class, () -> processor.process(bundleReader));
+        }
     }
 
 
@@ -114,10 +143,17 @@ class PluginProcessorTest {
         this.initGenericBundleReader(firstDescriptorFilename);
     }
 
-    private void initGenericBundleReader(String longIamgeDescriptorFilename) throws IOException {
+    /**
+     * init the bundle reader mock to return the expected plugins.
+     * a plugin v2 is automatically added to the mocked plugin list
+     * you have to mock other plugins outside of this method
+     * @param longImageDescriptorFilename the filename of the docker image with a name longer than the accepted
+     */
+    @SneakyThrows
+    private void initGenericBundleReader(String longImageDescriptorFilename) {
 
         ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        spec.setPlugins(Arrays.asList(longIamgeDescriptorFilename, "plugins/pluginV2.yaml"));
+        spec.setPlugins(Arrays.asList(longImageDescriptorFilename, "plugins/pluginV2.yaml"));
 
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
