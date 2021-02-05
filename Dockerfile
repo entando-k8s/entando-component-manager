@@ -1,10 +1,10 @@
 FROM registry.access.redhat.com/ubi8/openjdk-11
-
+ARG VERSION
 ### Required OpenShift Labels
 LABEL name="Entando Component Manager" \
       maintainer="dev@entando.com" \
       vendor="Entando Inc." \
-      version="6.3.0" \
+      version="v{VERSION}" \
       release="6.3.0" \
       summary="Entando Component Manager for Entando Component Repository" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
