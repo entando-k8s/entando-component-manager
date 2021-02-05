@@ -129,6 +129,8 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
+//Sonar doesn't pick up MockMVC assertions
+@SuppressWarnings("java:S2699")
 public class InstallFlowTest {
 
     private MockMvc mockMvc;
