@@ -2,6 +2,8 @@ package org.entando.kubernetes.controller.mockmvc;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.function.Supplier;
 import org.entando.kubernetes.DatabaseCleaner;
@@ -18,6 +20,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,6 +65,7 @@ public class DisableProcessorsIntegrationTest {
 
     @BeforeEach
     public void setup() {
+        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
         defaultBundleDownloaderSupplier = downloaderFactory.getDefaultSupplier();
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
