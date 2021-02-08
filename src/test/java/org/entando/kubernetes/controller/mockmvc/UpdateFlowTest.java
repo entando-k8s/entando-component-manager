@@ -6,6 +6,8 @@ import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.TestInstallUtils.verifyJobHasComponentAndStatus;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -181,6 +183,7 @@ public class UpdateFlowTest {
         verifyContentsUninstallRequests();
         verifyAssetsUninstallRequests();
         verifyContentTypesUninstallRequests();
+        verifyPageSetDraftStatus();
         verifyPagesUninstallRequests();
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
@@ -244,7 +247,7 @@ public class UpdateFlowTest {
                 && pd.getOwnerGroup().equals("administrators"));
 
         //+1 for each page, +1 after updating each page configuration
-        verify(coreClient, times(4)).publishPage(any());
+        verify(coreClient, times(4)).setPageStatus(anyString(), eq("published"));
     }
 
     private void verifyPageConfigurationInstallRequests(EntandoCoreClient coreClient) {
@@ -467,6 +470,13 @@ public class UpdateFlowTest {
 
     private void verifyPluginsUninstallRequests() {
         verify(k8SServiceClient, times(3)).unlink(any());
+    }
+
+    public void verifyPageSetDraftStatus() {
+        ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
+        verify(coreClient, times(1)).setPageStatus(ac.capture(), ac.capture());
+        assertThat(ac.getAllValues()).contains("my-page");
+        assertThat(ac.getAllValues()).contains("draft");
     }
 
     private void verifyPagesUninstallRequests() {
