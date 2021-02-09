@@ -26,6 +26,8 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -287,7 +289,7 @@ public class InstallFlowTest {
                 && pd.getOwnerGroup().equals("administrators"));
 
         //+1 for each page, +1 after updating each page configuration
-        verify(coreClient, times(4)).publishPage(any());
+        verify(coreClient, times(4)).setPageStatus(anyString(), eq("published"));
     }
 
     private void verifyPageConfigurationInstallRequests(EntandoCoreClient coreClient) {
@@ -675,6 +677,11 @@ public class InstallFlowTest {
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteContentType(ac.capture());
         assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG", "CNT"));
+
+        ac = ArgumentCaptor.forClass(String.class);
+        verify(coreClient, times(2)).setPageStatus(ac.capture(), ac.capture());
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
+        assertThat(ac.getAllValues()).contains("draft");
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePage(ac.capture());
