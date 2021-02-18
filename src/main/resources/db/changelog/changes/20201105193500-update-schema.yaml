@@ -7,7 +7,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: action
-                  type: TEXT
+                  type: varchar(255)
                   defaultValue: CREATE
                   constraints:
                     nullable: false
