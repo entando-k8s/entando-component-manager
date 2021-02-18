@@ -26,6 +26,8 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -38,6 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.jsonpath.Configuration;
@@ -101,6 +105,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -129,6 +134,8 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
+//Sonar doesn't pick up MockMVC assertions
+@SuppressWarnings("java:S2699")
 public class InstallFlowTest {
 
     private MockMvc mockMvc;
@@ -176,6 +183,7 @@ public class InstallFlowTest {
 
     @BeforeEach
     public void setup() {
+        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
         defaultBundleDownloaderSupplier = downloaderFactory.getDefaultSupplier();
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
@@ -281,7 +289,7 @@ public class InstallFlowTest {
                 && pd.getOwnerGroup().equals("administrators"));
 
         //+1 for each page, +1 after updating each page configuration
-        verify(coreClient, times(4)).publishPage(any());
+        verify(coreClient, times(4)).setPageStatus(anyString(), eq("published"));
     }
 
     private void verifyPageConfigurationInstallRequests(EntandoCoreClient coreClient) {
@@ -669,6 +677,11 @@ public class InstallFlowTest {
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteContentType(ac.capture());
         assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG", "CNT"));
+
+        ac = ArgumentCaptor.forClass(String.class);
+        verify(coreClient, times(2)).setPageStatus(ac.capture(), ac.capture());
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
+        assertThat(ac.getAllValues()).contains("draft");
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePage(ac.capture());

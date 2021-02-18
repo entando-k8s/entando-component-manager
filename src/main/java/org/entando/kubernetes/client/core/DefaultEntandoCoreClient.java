@@ -260,11 +260,11 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     @Override
-    public void publishPage(PageDescriptor pageDescriptor) {
+    public void setPageStatus(String code, String status) {
         restTemplate
-                .put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode(),
+                .put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, code,
                         STATUS_PATH_SEGMENT).build().toUri(),
-                        Collections.singletonMap("status", "published"));   // NOSONAR
+                        Collections.singletonMap("status", status));   // NOSONAR
     }
 
     @Override

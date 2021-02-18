@@ -127,7 +127,7 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     }
 
     @Override
-    public void publishPage(PageDescriptor pageDescriptor) {
+    public void setPageStatus(String code, String status) {
 
     }
 

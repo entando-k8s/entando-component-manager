@@ -118,7 +118,7 @@ public class K8SServiceClientTest {
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/app-plugin-links?app=my-app")));
         assertThat(returnedLink.size()).isEqualTo(1);
         assertThat(returnedLink.get(0).getSpec().getEntandoAppName()).isEqualTo("my-app");
-        assertThat(returnedLink.get(0).getSpec().getEntandoAppNamespace()).isEqualTo("my-namespace");
+        assertThat(returnedLink.get(0).getSpec().getEntandoAppNamespace().get()).isEqualTo("my-namespace");
     }
 
     @Test
@@ -201,10 +201,10 @@ public class K8SServiceClientTest {
         EntandoAppPluginLink appPluginLink = links.get(0);
         assertThat(appPluginLink.getMetadata().getNamespace()).isEqualTo("my-namespace");
         assertThat(appPluginLink.getMetadata().getName()).isEqualTo("my-app-to-plugin-link");
-        assertThat(appPluginLink.getSpec().getEntandoAppNamespace()).isEqualTo("my-namespace");
+        assertThat(appPluginLink.getSpec().getEntandoAppNamespace().get()).isEqualTo("my-namespace");
         assertThat(appPluginLink.getSpec().getEntandoAppName()).isEqualTo("my-app");
         assertThat(appPluginLink.getSpec().getEntandoPluginName()).isEqualTo("plugin");
-        assertThat(appPluginLink.getSpec().getEntandoPluginNamespace()).isEqualTo("plugin-namespace");
+        assertThat(appPluginLink.getSpec().getEntandoPluginNamespace().get()).isEqualTo("plugin-namespace");
 
     }
 
