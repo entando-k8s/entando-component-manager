@@ -39,7 +39,7 @@ public class PageConfigurationInstallable extends Installable<PageDescriptor> {
                     .forEach(w -> engineService.configurePageWidget(representation, w));
 
             //Publish Page
-            engineService.publishPage(representation);
+            engineService.setPageStatus(representation.getCode(), EntandoCoreClient.PUBLISHED);
         });
     }
 

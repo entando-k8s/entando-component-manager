@@ -23,6 +23,9 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 
 public interface EntandoCoreClient extends ECMClient {
 
+    String PUBLISHED = "published";
+    String DRAFT = "draft";
+
     void createWidget(WidgetDescriptor descriptor);
 
     void updateWidget(WidgetDescriptor descriptor);
@@ -63,7 +66,7 @@ public interface EntandoCoreClient extends ECMClient {
 
     void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor);
 
-    void publishPage(PageDescriptor pageDescriptor);
+    void setPageStatus(String code, String status);
 
     void deletePage(String code);
 

@@ -171,7 +171,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public void unlink(EntandoAppPluginLink el) {
         String linkName = el.getMetadata().getName();
         String appName = el.getSpec().getEntandoAppName();
-        String pluginName = el.getSpec().getEntandoAppNamespace();
+        String pluginName = el.getSpec().getEntandoAppNamespace().orElse(el.getMetadata().getNamespace());
         Link unlinkHref = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
                 .asLink();

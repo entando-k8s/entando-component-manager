@@ -98,7 +98,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
                 .withEntandoPlugin(plugin.getMetadata().getNamespace(), plugin.getMetadata().getName())
                 .endSpec()
                 .build();
-        link.getStatus().setEntandoDeploymentPhase(this.deployedLinkPhase);
+        link.getStatus().updateDeploymentPhase(this.deployedLinkPhase, 1L);
         this.addInMemoryLink(link);
         return link;
     }

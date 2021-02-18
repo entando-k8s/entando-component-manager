@@ -253,7 +253,7 @@ public class TestInstallUtils {
 
     public static void mockPlugins(K8SServiceClient k8sServiceClient, EntandoDeploymentPhase status) {
         EntandoCustomResourceStatus deploymentStatus = new EntandoCustomResourceStatus();
-        deploymentStatus.setEntandoDeploymentPhase(status);
+        deploymentStatus.updateDeploymentPhase(status, 1L);
 
         EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
                 new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1"),

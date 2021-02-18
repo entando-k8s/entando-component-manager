@@ -56,10 +56,10 @@ public class KubernetesServiceTest {
     public void shouldReturnTrueIfPluginIsDeployedAndLinkIsDeployedAndPluginIsAccessibleFromApp() {
 
         EntandoPlugin plugin = getTestEntandoPlugin();
-        plugin.getStatus().setEntandoDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL);
+        plugin.getStatus().updateDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL, 1L);
 
         EntandoAppPluginLink link = getTestEntandoAppPluginLink();
-        link.getStatus().setEntandoDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL);
+        link.getStatus().updateDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL, 1L);
 
         getClientDouble().addInMemoryLink(link);
         getClientDouble().addInMemoryLinkedPlugins(plugin);
@@ -71,10 +71,10 @@ public class KubernetesServiceTest {
     public void shouldThrowAnExceptionIfLinkDeploymentFailed() {
         Assertions.assertThrows(EntandoAppPluginLinkingProcessException.class, () -> {
             EntandoPlugin plugin = getTestEntandoPlugin();
-            plugin.getStatus().setEntandoDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL);
+            plugin.getStatus().updateDeploymentPhase(EntandoDeploymentPhase.SUCCESSFUL, 1L);
 
             EntandoAppPluginLink link = getTestEntandoAppPluginLink();
-            link.getStatus().setEntandoDeploymentPhase(EntandoDeploymentPhase.FAILED);
+            link.getStatus().updateDeploymentPhase(EntandoDeploymentPhase.FAILED, 1L);
 
             getClientDouble().addInMemoryLink(link);
             getClientDouble().addInMemoryLinkedPlugins(plugin);

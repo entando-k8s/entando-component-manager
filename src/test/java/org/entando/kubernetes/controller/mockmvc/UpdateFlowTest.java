@@ -1,17 +1,20 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFile;
 import static org.entando.kubernetes.DigitalExchangeTestUtils.readFileAsBase64;
 import static org.entando.kubernetes.utils.TestInstallUtils.verifyJobHasComponentAndStatus;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.io.File;
 import java.util.Arrays;
@@ -55,6 +58,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -123,6 +127,7 @@ public class UpdateFlowTest {
 
     @BeforeEach
     public void setup() {
+        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
         defaultBundleDownloaderSupplier = downloaderFactory.getDefaultSupplier();
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
@@ -178,6 +183,7 @@ public class UpdateFlowTest {
         verifyContentsUninstallRequests();
         verifyAssetsUninstallRequests();
         verifyContentTypesUninstallRequests();
+        verifyPageSetDraftStatus();
         verifyPagesUninstallRequests();
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
@@ -241,7 +247,7 @@ public class UpdateFlowTest {
                 && pd.getOwnerGroup().equals("administrators"));
 
         //+1 for each page, +1 after updating each page configuration
-        verify(coreClient, times(4)).publishPage(any());
+        verify(coreClient, times(4)).setPageStatus(anyString(), eq("published"));
     }
 
     private void verifyPageConfigurationInstallRequests(EntandoCoreClient coreClient) {
@@ -464,6 +470,13 @@ public class UpdateFlowTest {
 
     private void verifyPluginsUninstallRequests() {
         verify(k8SServiceClient, times(3)).unlink(any());
+    }
+
+    public void verifyPageSetDraftStatus() {
+        ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
+        verify(coreClient, times(1)).setPageStatus(ac.capture(), ac.capture());
+        assertThat(ac.getAllValues()).contains("my-page");
+        assertThat(ac.getAllValues()).contains("draft");
     }
 
     private void verifyPagesUninstallRequests() {

@@ -32,7 +32,7 @@ public class PageInstallable extends Installable<PageDescriptor> {
             }
 
             if (representation.getStatus().equals("published")) {
-                engineService.publishPage(representation);
+                engineService.setPageStatus(getName(), EntandoCoreClient.PUBLISHED);
             }
         });
     }
@@ -42,6 +42,9 @@ public class PageInstallable extends Installable<PageDescriptor> {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Page {}", getName());
             if (shouldCreate()) {
+                // unpublish
+                engineService.setPageStatus(getName(), EntandoCoreClient.DRAFT);
+                // delete
                 engineService.deletePage(getName());
             }
         });

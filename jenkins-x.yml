@@ -6,7 +6,7 @@ pipelineConfig:
     - name: TEST_DEPLOYMENT
       value: "false"
     - name: ENTANDO_DOCKER_IMAGE_INFO_CONFIGMAP
-      value: "entando-docker-image-info-v6.1"
+      value: "entando-docker-image-info-v6.3"
     - name: EXECUTABLE_TYPE
       valueFrom:
         secretKeyRef:
@@ -14,8 +14,6 @@ pipelineConfig:
           key: executable.type
     - name: _JAVA_OPTIONS
       value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms1000m -Xmx12000m
-    - name: SKIP_CHECKSTYLE
-      value: "true"
   pipelines:
     release:
       promote:
