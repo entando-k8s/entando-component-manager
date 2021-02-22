@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.installable.Installable;
+import org.hibernate.annotations.Type;
 
 @Getter
 @Setter
@@ -28,8 +29,10 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
 
     @Transient
     Installable installable;
+
     @Id
     @Column
+    @Type(type = "uuid-char")
     private UUID id;
     @ManyToOne
     @JoinColumn(name = "parent_entando_bundle_job_id")
