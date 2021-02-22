@@ -138,9 +138,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             return job;
 
-        } finally {
-            // always release concurrency manager's lock
+        } catch (Exception e) {
+            // release concurrency manager's lock
             this.bundleOperationsConcurrencyManager.operationTerminated();
+            throw e;
         }
     }
 
@@ -160,6 +161,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
         EntandoBundleJobEntity createdJob = jobRepo.save(job);
         log.debug("New installation job created " + job.toString());
+        createdJob.getComponentId();
         return createdJob;
     }
 
