@@ -125,16 +125,23 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
-        // Only request analysis report if provided conflict strategy
-        final AnalysisReport report = conflictStrategy != InstallAction.CREATE
-                ? performInstallAnalysis(bundle, tag, EntandoBundleInstallService.DONT_PERFORM_CONCURRENT_CHECKS)
-                : new AnalysisReport();
+        try {
 
-        EntandoBundleJobEntity job = createInstallJob(bundle, tag);
-        submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report)
-                .thenAccept(unused ->  this.bundleOperationsConcurrencyManager.operationTerminated());
+            // Only request analysis report if provided conflict strategy
+            final AnalysisReport report = conflictStrategy != InstallAction.CREATE
+                    ? performInstallAnalysis(bundle, tag, EntandoBundleInstallService.DONT_PERFORM_CONCURRENT_CHECKS)
+                    : new AnalysisReport();
 
-        return job;
+            EntandoBundleJobEntity job = createInstallJob(bundle, tag);
+            submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report)
+                    .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
+
+            return job;
+
+        } finally {
+            // always release concurrency manager's lock
+            this.bundleOperationsConcurrencyManager.operationTerminated();
+        }
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
