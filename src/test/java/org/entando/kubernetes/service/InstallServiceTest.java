@@ -321,7 +321,7 @@ public class InstallServiceTest {
     }
 
     @Test
-    void shouldNotDoConcurrencyChecksWhenTrueIsReceived() {
+    void shouldNotDoConcurrencyChecksWhenFalseIsReceived() {
 
         doNothing().when(bundleOperationsConcurrencyManager).throwIfAnotherOperationIsRunningOrStartOperation();
         doNothing().when(bundleOperationsConcurrencyManager).operationTerminated();

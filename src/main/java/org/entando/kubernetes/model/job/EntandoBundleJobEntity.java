@@ -27,6 +27,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
 @Data
 @Entity
@@ -38,6 +39,7 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
 
     @Id
     @Column
+    @Type(type = "uuid-char")
     private UUID id;
 
     @Column
