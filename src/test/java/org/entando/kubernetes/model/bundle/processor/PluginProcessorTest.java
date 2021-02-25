@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -162,7 +163,7 @@ class PluginProcessorTest {
         when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
                 .thenReturn(descriptorV2);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
     }

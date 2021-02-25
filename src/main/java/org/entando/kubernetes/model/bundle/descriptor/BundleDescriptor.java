@@ -15,6 +15,7 @@ public class BundleDescriptor implements Descriptor {
 
     private String code;
     private String description;
+    private String bundleType;
 
     private ComponentSpecDescriptor components;
 

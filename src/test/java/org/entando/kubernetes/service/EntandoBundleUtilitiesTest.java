@@ -17,6 +17,7 @@ import java.util.stream.IntStream;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -26,6 +27,7 @@ import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -223,6 +225,33 @@ public class EntandoBundleUtilitiesTest {
                 "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
                 Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
+
+
+    @Test
+    void shouldExtractTheBundleTypeIsPresent() {
+
+        EntandoDeBundle entandoDeBundle = BundleStubHelper.stubEntandoDeBundle();
+        BundleType bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);
+        assertThat(bundleType).isEqualTo(BundleType.SYSTEM_LEVEL_BUNDLE);
+    }
+
+    @Test
+    void shouldReturnStandardBundleTypeIfTheBundleTypeIsNOTPresentOrVarsAreNull() {
+
+        EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
+        BundleType bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);
+        assertThat(bundleType).isEqualTo(BundleType.STANDARD_BUNDLE);
+
+        ObjectMeta metadata = new ObjectMeta();
+        entandoDeBundle.setMetadata(metadata);
+        bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);
+        assertThat(bundleType).isEqualTo(BundleType.STANDARD_BUNDLE);
+
+        metadata.setLabels(Map.of("widgets", "true"));
+        bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);
+        assertThat(bundleType).isEqualTo(BundleType.STANDARD_BUNDLE);
+    }
+
 
 
     private void assertOnEntandoPlugin(EntandoPlugin entandoPlugin, String name, DbmsVendor dbmsVendor, String image,

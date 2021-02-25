@@ -57,6 +57,10 @@ public class EntandoBundleEntity {
     private String name;
 
     @NotNull
+    @Column(name = "bundleType", nullable = false)
+    private String bundleType;
+
+    @NotNull
     @Size(min = 1, max = 255)
     @Column(name = "type")
     @Convert(converter = BundleComponentTypesConverter.class)

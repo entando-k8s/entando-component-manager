@@ -26,6 +26,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -40,6 +41,7 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -186,11 +188,15 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public EntandoBundle convertToBundleFromEcr(EntandoDeBundle bundle) {
         Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
+        BundleType bundleType = BundleType.STANDARD_BUNDLE;
         if (bundle.getMetadata().getLabels() != null) {
+
             bundle.getMetadata().getLabels()
                     .keySet().stream()
                     .filter(ComponentType::isValidType)
                     .forEach(bundleComponentTypes::add);
+
+            bundleType = BundleUtilities.extractBundleTypeFromBundle(bundle);
         }
 
         EntandoDeBundleDetails details = bundle.getSpec().getDetails();
@@ -212,6 +218,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .code(code)
                 .title(details.getName())
                 .description(details.getDescription())
+                .bundleType(bundleType)
                 .componentTypes(bundleComponentTypes)
                 .thumbnail(details.getThumbnail())
                 .installedJob(installedJob)

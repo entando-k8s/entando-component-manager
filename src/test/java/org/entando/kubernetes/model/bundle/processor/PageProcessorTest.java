@@ -16,6 +16,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ public class PageProcessorTest {
         when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
                 .thenReturn(pageDescriptor);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
     }
