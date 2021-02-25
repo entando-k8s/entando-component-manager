@@ -747,6 +747,7 @@ public class InstallFlowTest {
         List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
         assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
+        assertThat(installedComponents.get(0).getBundleType()).isEqualTo("STANDARD_BUNDLE");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
     }
 

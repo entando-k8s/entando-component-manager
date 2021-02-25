@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.bundle.BundleType;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
@@ -43,6 +45,8 @@ public class BundleUtilities {
             + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX = "the descriptor "
             + "\"deploymentBaseName\" property. " + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
+
+    public static final String BUNDLE_TYPE_LABEL_NAME = "bundle-type";
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
         String version = versionReference;
@@ -250,5 +254,31 @@ public class BundleUtilities {
     private static String makeKubernetesCompatible(String value) {
         return value.toLowerCase()
                 .replaceAll("[\\/\\.\\:_]", "-");
+    }
+
+    /**
+     * extract the bundle type from the received EntandoDeBundle.
+     *
+     * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
+     * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
+     *          no type is found
+     */
+    public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
+
+        if (null == entandoDeBundle) {
+            throw new EntandoComponentManagerException("The received EntandoDeBundle is null");
+        }
+
+        if (null == entandoDeBundle.getMetadata() || null == entandoDeBundle.getMetadata().getLabels()) {
+            return BundleType.STANDARD_BUNDLE;
+        }
+
+        return entandoDeBundle.getMetadata().getLabels()
+                .entrySet().stream()
+                .filter(entry -> entry.getKey().equals(BUNDLE_TYPE_LABEL_NAME))
+                .findFirst()
+                .map(bundleTypeEntry -> BundleType
+                        .valueOf(bundleTypeEntry.getValue().toUpperCase().replace("-", "_")))
+                .orElse(BundleType.STANDARD_BUNDLE);
     }
 }

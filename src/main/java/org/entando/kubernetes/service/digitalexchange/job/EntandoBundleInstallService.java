@@ -43,6 +43,7 @@ import org.entando.kubernetes.model.job.JobTracker;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.springframework.stereotype.Service;
@@ -332,6 +333,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         EntandoBundleEntity installedComponent = bundleService.convertToEntityFromEcr(bundle);
         installedComponent.setVersion(job.getComponentVersion());
         installedComponent.setJob(job);
+        installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
         installedComponent.setInstalled(true);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");

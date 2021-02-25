@@ -20,6 +20,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ public class LabelProcessorTest {
         job.setComponentId("my-component-id");
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        final BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         spec.setLabels(singletonList("labels/labels.yaml"));
 
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);

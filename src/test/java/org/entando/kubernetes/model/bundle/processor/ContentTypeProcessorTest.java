@@ -18,6 +18,7 @@ import org.entando.kubernetes.model.bundle.installable.ContentTypeInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ public class ContentTypeProcessorTest {
                 .readDescriptorFile("/contenttypes/my_content_type_descriptor.yaml", ContentTypeDescriptor.class))
                 .thenReturn(contentTypeDescriptor);
 
-        BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
         List<? extends Installable> installables = contentTypeProcessor.process(bundleReader);

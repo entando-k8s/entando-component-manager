@@ -23,6 +23,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.LanguageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,7 @@ class LanguageProcessorTest {
         job.setComponentId("my-component-id");
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        final BundleDescriptor descriptor = new BundleDescriptor("my-component", "desc", spec);
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         spec.setLanguages(singletonList("languages/languages.yaml"));
 
         List<LanguageDescriptor> languageDescriptorList = Arrays.asList(
