@@ -19,6 +19,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
@@ -28,6 +29,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 
 /**
@@ -72,7 +74,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
         try {
             if (bundleReader.containsResourceFolder()) {
-                final String componentFolder = "/" + bundleReader.getBundleCode();
+
+                final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
 
                 List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted()
                         .collect(Collectors.toList());
@@ -81,7 +84,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(fileDescriptor.getFolder()));
-                    String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
+                    String folder = Paths.get(resourceFolder).resolve(fileFolder).toString();
                     fileDescriptor.setFolder(folder);
                     String filename = folder + "/" + fileDescriptor.getFilename();
                     InstallAction action = extractInstallAction(filename, actions, conflictStrategy, report);
@@ -120,7 +123,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
         try {
             if (bundleReader.containsResourceFolder()) {
-                final String componentFolder = "/" + bundleReader.getBundleCode();
+                final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
 
                 List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted()
                         .collect(Collectors.toList());
@@ -128,7 +131,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
                     Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
                             .relativize(Paths.get(resourceFile));
-                    String file = Paths.get(componentFolder).resolve(fileFolder).toString();
+
+                    String file = Paths.get(resourceFolder).resolve(fileFolder).toString();
                     idList.add(file);
                 }
             }

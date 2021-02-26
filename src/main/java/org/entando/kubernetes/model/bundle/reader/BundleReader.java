@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.reader;
 
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -33,6 +34,7 @@ public class BundleReader {
 
     public BundleReader(Path filePath) {
         bundleBasePath = filePath;
+//        mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
     }
 
     public BundleDescriptor readBundleDescriptor() throws IOException {

@@ -1,6 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import io.fabric8.zjsonpatch.internal.guava.Strings;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
+import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
@@ -280,5 +282,24 @@ public class BundleUtilities {
                 .map(bundleTypeEntry -> BundleType
                         .valueOf(bundleTypeEntry.getValue().toUpperCase().replace("-", "_")))
                 .orElse(BundleType.STANDARD_BUNDLE);
+    }
+
+
+    /**
+     * determine and return the resource root folder for the current bundle
+     *  - if the current bundle is a standard bundle => root folder = current_bundle_code + '/resources'
+     *  - otherwise => '/resources'
+     * @param bundleReader the reader of the current bundle
+     * @return the resource root folder for the current bundle
+     * @throws IOException if a read error occurs during the bundle reading
+     */
+    public static String determineBundleResourceRootFolder(BundleReader bundleReader) throws IOException {
+
+        BundleType bundleType = bundleReader.readBundleDescriptor().getBundleType();
+
+        return "/" +
+                (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
+                        ? bundleReader.getBundleCode()
+                        : "");
     }
 }

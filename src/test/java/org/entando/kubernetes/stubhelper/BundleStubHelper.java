@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
@@ -13,11 +14,12 @@ public class BundleStubHelper {
 
     public static final String BUNDLE_CODE = "my-component";
     public static final String BUNDLE_DESCRIPTION = "desc";
-    public static final String BUNDLE_TYPE = "SYSTEM_LEVEL_BUNDLE";
+    public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
+//    public static final String BUNDLE_TYPE = "SYSTEM_LEVEL_BUNDLE";
 
     public static EntandoDeBundle stubEntandoDeBundle() {
         ObjectMeta metadata = new ObjectMeta();
-        metadata.setLabels(Map.of("widgets", "true", "bundle-type", BUNDLE_TYPE));
+        metadata.setLabels(Map.of("widgets", "true", "bundle-type", BUNDLE_TYPE.toString()));
         EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
         entandoDeBundle.setMetadata(metadata);
         return entandoDeBundle;
