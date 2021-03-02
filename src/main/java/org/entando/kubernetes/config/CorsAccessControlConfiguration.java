@@ -29,7 +29,7 @@ public class CorsAccessControlConfiguration implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         if (isCorsEnabled) {
             registry.addMapping("/**")
-                    .allowedOrigins(origins.toArray(new String[0]))
+                    .allowedOriginPatterns(origins.toArray(new String[0]))
                     .allowedHeaders(headers.toArray(new String[0]))
                     .allowedMethods(methods.toArray(new String[0]))
                     .maxAge(maxAge)

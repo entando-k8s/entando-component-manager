@@ -110,7 +110,7 @@ public class BundleUtilities {
 
     public static String composeDeploymentBaseName(PluginDescriptor descriptor) {
 
-        if (!StringUtils.isEmpty(descriptor.getDeploymentBaseName())) {
+        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
             return makeKubernetesCompatible(descriptor.getDeploymentBaseName());
         } else {
             return composeNameFromDockerImage(descriptor.getDockerImage());
@@ -122,7 +122,7 @@ public class BundleUtilities {
         String deploymentBaseName;
         String errorSuffix;
 
-        if (!StringUtils.isEmpty(descriptor.getDeploymentBaseName())) {
+        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
             deploymentBaseName = makeKubernetesCompatible(descriptor.getDeploymentBaseName());
             errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX;
         } else {
@@ -279,8 +279,7 @@ public class BundleUtilities {
                 .entrySet().stream()
                 .filter(entry -> entry.getKey().equals(BUNDLE_TYPE_LABEL_NAME))
                 .findFirst()
-                .map(bundleTypeEntry -> BundleType
-                        .valueOf(bundleTypeEntry.getValue().toUpperCase().replace("-", "_")))
+                .map(bundleTypeEntry -> BundleType.valueOf(bundleTypeEntry.getValue()))
                 .orElse(BundleType.STANDARD_BUNDLE);
     }
 
