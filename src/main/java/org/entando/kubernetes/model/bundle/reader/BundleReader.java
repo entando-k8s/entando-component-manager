@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle.reader;
 
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
