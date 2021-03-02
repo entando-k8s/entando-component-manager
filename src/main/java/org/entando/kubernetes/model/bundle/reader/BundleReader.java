@@ -34,7 +34,6 @@ public class BundleReader {
 
     public BundleReader(Path filePath) {
         bundleBasePath = filePath;
-//        mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
     }
 
     public BundleDescriptor readBundleDescriptor() throws IOException {

@@ -1051,7 +1051,27 @@ public class InstallFlowTest {
 
 
     @Test
-    void shouldReturnAValidAnalysisReport() throws Exception {
+    void shouldReturnAValidAnalysisReportForStandardBundle() throws Exception {
+        mockAnalysisReport(coreClient, k8SServiceClient);
+        mockBundle(k8SServiceClient);
+
+        AnalysisReport expected = getAnalysisReport();
+        MvcResult response = mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Configuration conf = Configuration.builder()
+                .jsonProvider(new JacksonJsonProvider(new ObjectMapper()))
+                .build();
+
+        AnalysisReport result = JsonPath.using(conf).parse(response.getResponse().getContentAsString())
+                .read("$.payload", AnalysisReport.class);
+
+        assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    void shouldReturnAValidAnalysisReportSystemLevelBundle() throws Exception {
         mockAnalysisReport(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 

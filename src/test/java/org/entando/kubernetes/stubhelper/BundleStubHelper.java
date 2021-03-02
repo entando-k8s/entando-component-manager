@@ -15,7 +15,6 @@ public class BundleStubHelper {
     public static final String BUNDLE_CODE = "my-component";
     public static final String BUNDLE_DESCRIPTION = "desc";
     public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
-//    public static final String BUNDLE_TYPE = "SYSTEM_LEVEL_BUNDLE";
 
     public static EntandoDeBundle stubEntandoDeBundle() {
         ObjectMeta metadata = new ObjectMeta();

@@ -236,7 +236,7 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    void shouldReturnStandardBundleTypeIfTheBundleTypeIsNOTPresentOrVarsAreNull() {
+    void shouldReturnStandardBundleTypeIfTheBundleTypeIsNOTPresentOrVariablesAreNull() {
 
         EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
         BundleType bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);

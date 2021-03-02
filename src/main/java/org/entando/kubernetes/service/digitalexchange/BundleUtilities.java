@@ -286,7 +286,7 @@ public class BundleUtilities {
 
 
     /**
-     * determine and return the resource root folder for the current bundle
+     * determine and return the resource root folder for the current bundle.
      *  - if the current bundle is a standard bundle => root folder = current_bundle_code + '/resources'
      *  - otherwise => '/resources'
      * @param bundleReader the reader of the current bundle
@@ -297,8 +297,7 @@ public class BundleUtilities {
 
         BundleType bundleType = bundleReader.readBundleDescriptor().getBundleType();
 
-        return "/" +
-                (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
+        return "/" + (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
                         ? bundleReader.getBundleCode()
                         : "");
     }
