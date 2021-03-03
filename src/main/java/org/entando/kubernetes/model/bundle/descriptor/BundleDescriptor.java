@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.BundleType;
 
 @Getter
 @Setter
@@ -15,7 +16,7 @@ public class BundleDescriptor implements Descriptor {
 
     private String code;
     private String description;
-    private String bundleType;
+    private BundleType bundleType;
 
     private ComponentSpecDescriptor components;
 

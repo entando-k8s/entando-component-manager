@@ -7,6 +7,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum BundleType {
 
-    STANDARD_BUNDLE,
-    SYSTEM_LEVEL_BUNDLE;
+    STANDARD_BUNDLE("standard-bundle"),
+    SYSTEM_LEVEL_BUNDLE("system-level-bundle");
+
+    private final String type;
 }

@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 
 /**
@@ -71,10 +72,10 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
 
         try {
             if (bundleReader.containsResourceFolder()) {
-                final String componentFolder = "/" + bundleReader.getBundleCode();
-                InstallAction rootDirectoryAction = extractInstallAction(componentFolder, actions, conflictStrategy,
+                final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+                InstallAction rootDirectoryAction = extractInstallAction(resourceFolder, actions, conflictStrategy,
                         report);
-                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(componentFolder, true),
+                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(resourceFolder, true),
                         rootDirectoryAction));
             }
         } catch (IOException e) {
@@ -109,15 +110,18 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
         List<String> idList = new ArrayList<>();
 
         try {
-            final String componentFolder = "/" + bundleReader.getBundleCode();
-            idList.add(componentFolder);
+            final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+            if (! resourceFolder.equals("/")) {
+                idList.add(resourceFolder);
+            }
 
             List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
                     .collect(Collectors.toList());
-            for (final String resourceFolder : resourceFolders) {
+            for (final String resourceDir : resourceFolders) {
                 Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
-                        .relativize(Paths.get(resourceFolder));
-                String folder = Paths.get(componentFolder).resolve(fileFolder).toString();
+                        .relativize(Paths.get(resourceDir));
+
+                String folder = Paths.get(resourceFolder).resolve(fileFolder).toString();
                 idList.add(folder);
             }
 
