@@ -54,7 +54,7 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     public void updateJobStatus(UUID id, JobStatus status, String errorMessage) {
         this.database.computeIfPresent(id, (k, v) -> {
             v.setStatus(status);
-            v.setErrorMessage(errorMessage);
+            v.setInstallErrorMessage(errorMessage);
             return v;
         });
     }

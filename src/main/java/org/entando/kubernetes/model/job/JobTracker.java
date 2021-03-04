@@ -31,7 +31,10 @@ public class JobTracker<T extends TrackableJob> {
         this.job.setStatus(result.getStatus());
         this.job.setFinishedAt(LocalDateTime.now());
         if (result.hasException()) {
-            this.job.setErrorMessage(result.getErrorMessage());
+            this.job.setInstallErrorCode(result.getInstallErrorCode());
+            this.job.setInstallErrorMessage(result.getInstallErrorMessage());
+            this.job.setRollbackErrorCode(result.getRollbackErrorCode());
+            this.job.setRollbackErrorMessage(result.getRollbackErrorMessage());
         }
         if (result.getProgress() != null) {
             this.setProgress(result.getProgress());

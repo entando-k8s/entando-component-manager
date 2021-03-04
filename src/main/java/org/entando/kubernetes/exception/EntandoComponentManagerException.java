@@ -1,6 +1,15 @@
 package org.entando.kubernetes.exception;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
 public class EntandoComponentManagerException extends RuntimeException {
+
+    @Getter
+    @Setter
+    @Accessors(chain = true)
+    private int errorCode = EntandoBundleJobErrors.GENERIC.getCode();
 
     public EntandoComponentManagerException() {
         super();

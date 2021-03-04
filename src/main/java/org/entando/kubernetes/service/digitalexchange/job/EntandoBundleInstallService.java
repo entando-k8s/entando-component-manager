@@ -205,8 +205,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             this::executeInstall);
                     scheduler.recordProcessedComponentJob(tracker.getJob());
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ERROR)) {
-                        parentJobResult.setException(new EntandoComponentManagerException(parentJob.getComponentId()
-                                + " install can't proceed due to an error with one of the components"));
+                        parentJobResult.setInstallException(new EntandoComponentManagerException(
+                                tracker.getJob().getInstallErrorMessage()));
                         break;
                     }
                     installProgress.increment();
@@ -214,10 +214,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     optCompJob = scheduler.extractFromQueue();
                 }
                 if (parentJobResult.hasException()) {
-                    log.error("An error occurred during component installation", parentJobResult.getException());
+                    log.error("An error occurred during component installation --- ", parentJobResult.getInstallError());
                     log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
                             .getComponentVersion());
-                    parentJobResult = rollback(scheduler);
+                    parentJobResult = rollback(scheduler, parentJobResult);
                 } else {
 
                     saveAsInstalledBundle(bundle, parentJob);
@@ -231,7 +231,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             } catch (Exception e) {
                 log.error("An error occurred while reading components from the bundle", e);
                 parentJobResult.setStatus(JobStatus.INSTALL_ERROR);
-                parentJobResult.setException(e);
+                parentJobResult.setInstallException(e);
             }
 
             parentJobTracker.finishTracking(parentJobResult);
@@ -239,8 +239,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         });
     }
 
-    private JobResult rollback(JobScheduler scheduler) {
-        JobResult result = JobResult.builder().build();
+    private JobResult rollback(JobScheduler scheduler, JobResult result) {
         JobScheduler rollbackScheduler = scheduler.createRollbackScheduler();
         try {
             Optional<EntandoBundleComponentJobEntity> optCompJob = rollbackScheduler.extractFromQueue();
@@ -260,13 +259,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             log.info("Rollback operation completed successfully");
-            result.clearException();
             result.setStatus(JobStatus.INSTALL_ROLLBACK);
 
         } catch (Exception rollbackException) {
             log.error("An error occurred during component rollback", rollbackException);
-            result.setStatus(JobStatus.INSTALL_ERROR);
-            result.setException(rollbackException);
+            result.setStatus(JobStatus.INSTALL_ERROR); // TODO check if here should be JobStatus.INSTALL_ROLLBACK_ERROR
+            result.setRollbackException(rollbackException);
         }
         return result;
     }
@@ -359,7 +357,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     String message = getMeaningfulErrorMessage(th);
                     return JobResult.builder()
                             .status(JobStatus.INSTALL_ROLLBACK_ERROR)
-                            .exception(new Exception(message))
+                            .rollbackException(new EntandoComponentManagerException(message))
                             .build();
                 })
                 .join();
@@ -377,7 +375,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     log.error("Installable '{}' has errors: {}", installable.getName(), message, th);
                     return JobResult.builder()
                             .status(JobStatus.INSTALL_ERROR)
-                            .exception(new Exception(message))
+                            .installException(new EntandoComponentManagerException(message))
                             .build();
                 });
 

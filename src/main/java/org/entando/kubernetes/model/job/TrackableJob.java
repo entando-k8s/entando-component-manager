@@ -16,8 +16,20 @@ public interface TrackableJob {
 
     void setStatus(JobStatus js);
 
-    String getErrorMessage();
+    Integer getInstallErrorCode();
 
-    void setErrorMessage(String message);
+    void setInstallErrorCode(Integer code);
+
+    String getInstallErrorMessage();
+
+    void setInstallErrorMessage(String message);
+
+    String getRollbackErrorMessage();
+
+    void setRollbackErrorMessage(String message);
+
+    Integer getRollbackErrorCode();
+
+    void setRollbackErrorCode(Integer code);
 
 }

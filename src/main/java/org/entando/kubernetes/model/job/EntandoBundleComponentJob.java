@@ -21,7 +21,10 @@ public class EntandoBundleComponentJob {
     private JobStatus status;
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
-    private String errorMessage;
+    private Integer installErrorCode;
+    private String installErrorMessage;
+    private Integer rollbackErrorCode;
+    private String rollbackErrorMessage;
 
     public static EntandoBundleComponentJob fromEntity(EntandoBundleComponentJobEntity entity) {
         return EntandoBundleComponentJob.builder()
@@ -32,7 +35,10 @@ public class EntandoBundleComponentJob {
                 .type(entity.getComponentType())
                 .startedAt(entity.getStartedAt())
                 .finishedAt(entity.getFinishedAt())
-                .errorMessage(entity.getErrorMessage())
+                .installErrorCode(entity.getInstallErrorCode())
+                .installErrorMessage(entity.getInstallErrorMessage())
+                .rollbackErrorCode(entity.getRollbackErrorCode())
+                .rollbackErrorMessage(entity.getRollbackErrorMessage())
                 .build();
     }
 }
