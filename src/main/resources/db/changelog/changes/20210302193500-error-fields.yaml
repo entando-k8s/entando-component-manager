@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20210302193500
+      author: l.corsetti
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: install_error_code
+                  type: int
+                  defaultValue: null
+              - column:
+                  name: rollback_error_code
+                  type: int
+                  defaultValue: null
+              - column:
+                  name: rollback_error_message
+                  type: TEXT
+                  defaultValue: null
+            tableName: entando_bundle_jobs
+        - renameColumn:
+            newColumnName: install_error_message
+            oldColumnName: error_message
+            tableName: entando_bundle_jobs
+        - addColumn:
+            columns:
+              - column:
+                  name: install_error_code
+                  type: int
+                  defaultValue: null
+              - column:
+                  name: rollback_error_code
+                  type: int
+                  defaultValue: null
+              - column:
+                  name: rollback_error_message
+                  type: TEXT
+                  defaultValue: null
+            tableName: entando_bundle_component_jobs
+        - renameColumn:
+            newColumnName: install_error_message
+            oldColumnName: error_message
+            tableName: entando_bundle_component_jobs

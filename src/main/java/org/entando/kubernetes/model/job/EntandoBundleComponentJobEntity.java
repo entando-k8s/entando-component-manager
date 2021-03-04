@@ -43,7 +43,13 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
     @Column
     private String componentId;
     @Column
-    private String errorMessage;
+    private Integer installErrorCode;
+    @Column
+    private String installErrorMessage;
+    @Column
+    private Integer rollbackErrorCode;
+    @Column
+    private String rollbackErrorMessage;
     @Column
     private String checksum;
     @Column
@@ -69,7 +75,10 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
         newComponent.setStatus(o.getStatus());
         newComponent.setAction(o.getAction());
         newComponent.setInstallable(o.getInstallable());
-        newComponent.setErrorMessage(o.getErrorMessage());
+        newComponent.setInstallErrorMessage(o.getInstallErrorMessage());
+        newComponent.setInstallErrorCode(o.getInstallErrorCode());
+        newComponent.setRollbackErrorMessage(o.getRollbackErrorMessage());
+        newComponent.setRollbackErrorCode(o.getRollbackErrorCode());
         return newComponent;
     }
 
