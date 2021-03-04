@@ -26,7 +26,7 @@ public interface EntandoBundleJobExecutor {
         if (!respBody.isEmpty()) {
             String parsedErrorMessage = parseEntandoCoreError(respBody);
             // object comparison: if the returned string is the same => regex didn't match
-            if (respBody == parsedErrorMessage) {
+            if (respBody == parsedErrorMessage) {   // NOSONAR
                 parsedErrorMessage = parseEntandoK8SServiceError(respBody);
             }
             message = message + " - " + parsedErrorMessage;

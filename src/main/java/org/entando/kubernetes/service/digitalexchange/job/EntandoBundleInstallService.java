@@ -263,7 +263,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
         } catch (Exception rollbackException) {
             log.error("An error occurred during component rollback", rollbackException);
-            result.setStatus(JobStatus.INSTALL_ERROR); // TODO check if here should be JobStatus.INSTALL_ROLLBACK_ERROR
+            result.setStatus(JobStatus.INSTALL_ERROR);
             result.setRollbackException(rollbackException);
         }
         return result;
