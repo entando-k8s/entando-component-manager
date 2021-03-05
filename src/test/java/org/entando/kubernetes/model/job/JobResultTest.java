@@ -1,9 +1,9 @@
 package org.entando.kubernetes.model.job;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.entando.kubernetes.exception.EntandoBundleJobErrors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
