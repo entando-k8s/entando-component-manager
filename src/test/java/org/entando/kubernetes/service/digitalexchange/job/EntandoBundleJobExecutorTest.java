@@ -2,9 +2,11 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClientResponseException;
 
+@Tag("unit")
 class EntandoBundleJobExecutorTest {
 
     private EntandoBundleJobExecutor entandoBundleJobExecutor = new EntandoBundleJobExecutor() {
