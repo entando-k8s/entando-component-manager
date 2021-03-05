@@ -22,6 +22,7 @@ databaseChangeLog:
             newColumnName: install_error_message
             oldColumnName: error_message
             tableName: entando_bundle_jobs
+            columnDataType: TEXT
         - addColumn:
             columns:
               - column:
@@ -41,3 +42,4 @@ databaseChangeLog:
             newColumnName: install_error_message
             oldColumnName: error_message
             tableName: entando_bundle_component_jobs
+            columnDataType: TEXT
