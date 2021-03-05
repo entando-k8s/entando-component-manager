@@ -214,7 +214,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     optCompJob = scheduler.extractFromQueue();
                 }
                 if (parentJobResult.hasException()) {
-                    log.error("An error occurred during component installation --- ", parentJobResult.getInstallError());
+                    log.error("An error occurred during component instEntandoBundleJobEntityallation --- ", parentJobResult.getInstallError());
                     log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
                             .getComponentVersion());
                     parentJobResult = rollback(scheduler, parentJobResult);
