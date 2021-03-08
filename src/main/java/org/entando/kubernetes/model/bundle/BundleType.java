@@ -18,17 +18,17 @@ public enum BundleType {
 
     private final String type;
 
-    private static final Map<String, BundleType> ENUM_MAP;
+    private static final Map<String, BundleType> typeToBundleType;
 
     static {
         Map<String, BundleType> map = new ConcurrentHashMap<>();
         for (BundleType instance : BundleType.values()) {
             map.put(instance.getType().toLowerCase(),instance);
         }
-        ENUM_MAP = Collections.unmodifiableMap(map);
+        typeToBundleType = Collections.unmodifiableMap(map);
     }
 
-    public static BundleType getFromType(String type) {
-        return ENUM_MAP.get(type.toLowerCase());
+    public static BundleType fromType(String type) {
+        return typeToBundleType.get(type.toLowerCase());
     }
 }
