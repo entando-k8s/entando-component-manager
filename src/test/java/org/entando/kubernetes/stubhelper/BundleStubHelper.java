@@ -18,7 +18,7 @@ public class BundleStubHelper {
 
     public static EntandoDeBundle stubEntandoDeBundle() {
         ObjectMeta metadata = new ObjectMeta();
-        metadata.setLabels(Map.of("widgets", "true", "bundle-type", BUNDLE_TYPE.toString()));
+        metadata.setLabels(Map.of("widgets", "true", "bundle-type", BUNDLE_TYPE.getType()));
         EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
         entandoDeBundle.setMetadata(metadata);
         return entandoDeBundle;

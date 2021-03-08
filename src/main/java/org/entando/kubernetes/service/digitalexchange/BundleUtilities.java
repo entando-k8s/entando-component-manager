@@ -279,7 +279,7 @@ public class BundleUtilities {
                 .entrySet().stream()
                 .filter(entry -> entry.getKey().equals(BUNDLE_TYPE_LABEL_NAME))
                 .findFirst()
-                .map(bundleTypeEntry -> BundleType.valueOf(bundleTypeEntry.getValue()))
+                .map(bundleTypeEntry -> BundleType.getFromType(bundleTypeEntry.getValue()))
                 .orElse(BundleType.STANDARD_BUNDLE);
     }
 
