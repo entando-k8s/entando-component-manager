@@ -41,34 +41,31 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     @Column
     @Type(type = "uuid-char")
     private UUID id;
-
     @Column
     private String componentId;
-
     @Column
     private String componentName;
-
     @Column
     private String componentVersion;
-
     @Column
     private LocalDateTime startedAt;
-
     @Column
     private LocalDateTime finishedAt;
-
     @Column
     private String userId;
-
     @Column
     private double progress;
-
     @Column
     @Enumerated(EnumType.STRING)
     private JobStatus status;
-
     @Column
-    private String errorMessage;
+    private Integer installErrorCode;
+    @Column
+    private String installErrorMessage;
+    @Column
+    private Integer rollbackErrorCode;
+    @Column
+    private String rollbackErrorMessage;
 
     @PrePersist
     public void generateId() {
@@ -83,11 +80,13 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
         newEntity.setComponentName(this.componentName);
         newEntity.setComponentId(this.componentId);
         newEntity.setComponentVersion(this.componentVersion);
-        newEntity.setErrorMessage(this.errorMessage);
+        newEntity.setInstallErrorCode(this.installErrorCode);
+        newEntity.setInstallErrorMessage(this.installErrorMessage);
+        newEntity.setRollbackErrorCode(this.rollbackErrorCode);
+        newEntity.setRollbackErrorMessage(this.rollbackErrorMessage);
         newEntity.setStartedAt(this.startedAt);
         newEntity.setFinishedAt(this.finishedAt);
         newEntity.setUserId(this.userId);
         return newEntity;
     }
-
 }

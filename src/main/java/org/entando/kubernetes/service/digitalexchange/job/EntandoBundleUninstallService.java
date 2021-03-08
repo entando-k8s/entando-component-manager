@@ -135,10 +135,9 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 log.info("Component " + parentJob.getComponentId() + " uninstalled successfully");
 
             } catch (Exception ex) {
-
                 log.error("An error occurred while uninstalling component " + parentJob.getComponentId(), ex);
                 parentJobResult.setStatus(JobStatus.UNINSTALL_ERROR);
-                parentJobResult.setException(ex);
+                parentJobResult.setInstallException(ex);
             }
 
             parentJobTracker.finishTracking(parentJobResult);
@@ -185,7 +184,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     String message = getMeaningfulErrorMessage(th);
                     return JobResult.builder()
                             .status(JobStatus.UNINSTALL_ERROR)
-                            .exception(new Exception(message))
+                            .installException(new EntandoComponentManagerException(message))
                             .build();
                 });
 

@@ -38,7 +38,10 @@ public class EntandoBundleJob implements TrackableJob {
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
     private JobStatus status;
-    private String errorMessage;
+    private Integer installErrorCode;
+    private String installErrorMessage;
+    private Integer rollbackErrorCode;
+    private String rollbackErrorMessage;
 
     private List<EntandoBundleComponentJob> componentJobs;
 
@@ -57,7 +60,10 @@ public class EntandoBundleJob implements TrackableJob {
                 .finishedAt(entity.getFinishedAt())
                 .status(entity.getStatus())
                 .progress(entity.getProgress())
-                .errorMessage(entity.getErrorMessage())
+                .installErrorCode(entity.getInstallErrorCode())
+                .installErrorMessage(entity.getInstallErrorMessage())
+                .rollbackErrorCode(entity.getRollbackErrorCode())
+                .rollbackErrorMessage(entity.getRollbackErrorMessage())
                 .componentJobs(componentJobs.stream()
                         .map(EntandoBundleComponentJob::fromEntity).collect(Collectors.toList())
                 )

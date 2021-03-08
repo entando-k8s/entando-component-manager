@@ -28,7 +28,7 @@ public interface EntandoBundleComponentJobRepository extends JpaRepository<Entan
 
     @Modifying
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @Query("UPDATE EntandoBundleComponentJobEntity comp SET comp.status = :status, comp.errorMessage = :errorMessage WHERE comp.id = :id")
+    @Query("UPDATE EntandoBundleComponentJobEntity comp SET comp.status = :status, comp.installErrorMessage = :errorMessage WHERE comp.id = :id")
     void updateJobStatus(@Param("id") UUID id, @Param("status") JobStatus status,
             @Param("errorMessage") String errorMessage);
 

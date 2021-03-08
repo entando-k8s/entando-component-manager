@@ -25,6 +25,7 @@ import static org.entando.kubernetes.utils.TestInstallUtils.waitForUninstallStat
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -765,6 +766,11 @@ public class InstallFlowTest {
 
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
         assertThat(job.isPresent()).isTrue();
+        assertThat(job.get().getInstallErrorCode()).isEqualTo(100);
+        assertThat(job.get().getInstallErrorMessage())
+                .isEqualTo("Rest client exception (status code 500) - Internal Server Error");
+        assertNull(job.get().getRollbackErrorCode());
+        assertNull(job.get().getRollbackErrorMessage());
 
         // And for each installed component job there should be a component job that rollbacked the install
         List<EntandoBundleComponentJobEntity> jobRelatedComponents = componentJobRepository
@@ -809,7 +815,7 @@ public class InstallFlowTest {
 
         assertThat(optErrComponent.isPresent()).isTrue();
         EntandoBundleComponentJobEntity ec = optErrComponent.get();
-        assertThat(ec.getErrorMessage()).contains("status code 413", "Payload Too Large");
+        assertThat(ec.getInstallErrorMessage()).contains("status code 413", "Payload Too Large");
 
     }
 
