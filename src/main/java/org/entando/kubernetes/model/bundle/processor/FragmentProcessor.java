@@ -70,7 +70,8 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
             }
             return installableList;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(
+                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
         }
     }
 
