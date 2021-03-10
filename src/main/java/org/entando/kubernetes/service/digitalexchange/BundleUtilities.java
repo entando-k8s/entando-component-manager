@@ -14,7 +14,6 @@ import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
-import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
@@ -279,7 +278,7 @@ public class BundleUtilities {
                 .entrySet().stream()
                 .filter(entry -> entry.getKey().equals(BUNDLE_TYPE_LABEL_NAME))
                 .findFirst()
-                .map(bundleTypeEntry -> BundleType.valueOf(bundleTypeEntry.getValue()))
+                .map(bundleTypeEntry -> BundleType.fromType(bundleTypeEntry.getValue()))
                 .orElse(BundleType.STANDARD_BUNDLE);
     }
 
