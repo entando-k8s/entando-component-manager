@@ -82,7 +82,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
             return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(
+                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
         }
     }
 

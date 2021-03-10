@@ -83,7 +83,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             }
             return installableList;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(
+                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
         }
     }
 
@@ -119,7 +120,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                     this.getReportableRemoteHandler());
 
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s components",
+                    componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
     }
 

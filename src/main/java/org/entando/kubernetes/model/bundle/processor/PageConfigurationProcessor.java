@@ -72,7 +72,8 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescr
 
             return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(
+                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
         }
     }
 

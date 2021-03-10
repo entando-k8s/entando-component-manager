@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -74,6 +75,8 @@ public class BundleReader {
     public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
         try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile())) {
             return readDescriptorFile(fis, clazz);
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException(String.format("Error reading descriptor file %s", fileName), e);
         }
     }
 

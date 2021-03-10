@@ -91,7 +91,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                 }
             }
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(
+                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
         }
 
         return installables;
@@ -140,7 +141,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                     this.getReportableRemoteHandler());
 
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s type",
+                    componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
     }
 }

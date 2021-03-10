@@ -79,7 +79,8 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                         rootDirectoryAction));
             }
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(
+                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
         }
 
         return installables;
@@ -129,7 +130,8 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                     this.getReportableRemoteHandler());
 
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s type",
+                    componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
     }
 }
