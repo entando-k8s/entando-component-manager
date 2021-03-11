@@ -9,6 +9,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -27,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
-public class PageTemplateProcessorTest {
+class PageTemplateProcessorTest extends BaseProcessorTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
     @Mock
@@ -96,5 +97,12 @@ public class PageTemplateProcessorTest {
 
         assertThat(footerFrame.getDescription()).isEqualTo("Footer");
         assertThat(footerFrame.getDefaultWidget()).isNull();
+    }
+
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new PageTemplateProcessor(new EntandoCoreClientTestDouble()), "pageTemplate");
     }
 }

@@ -91,8 +91,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                 }
             }
         } catch (IOException e) {
-            throw new EntandoComponentManagerException(
-                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
+            throw makeMeaningfulException(e);
         }
 
         return installables;

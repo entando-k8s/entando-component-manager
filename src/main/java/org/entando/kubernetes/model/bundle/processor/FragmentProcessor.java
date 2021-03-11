@@ -12,7 +12,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
@@ -55,9 +54,11 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
     @Override
     public List<Installable<FragmentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        List<Installable<FragmentDescriptor>> installableList = new ArrayList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
-            List<Installable<FragmentDescriptor>> installableList = new ArrayList<>();
 
             for (String fileName : descriptorList) {
                 FragmentDescriptor frDesc = bundleReader.readDescriptorFile(fileName, FragmentDescriptor.class);
@@ -68,11 +69,11 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
                 InstallAction action = extractInstallAction(frDesc.getCode(), actions, conflictStrategy, report);
                 installableList.add(new FragmentInstallable(engineService, frDesc, action));
             }
-            return installableList;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException(
-                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
+            throw makeMeaningfulException(e);
         }
+
+        return installableList;
     }
 
     @Override

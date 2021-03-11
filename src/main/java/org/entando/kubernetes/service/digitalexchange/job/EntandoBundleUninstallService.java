@@ -181,7 +181,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     return JobResult.builder().status(JobStatus.UNINSTALL_COMPLETED).build();
                 }).exceptionally(th -> {
                     log.error("Installable '{}' had errors during uninstall", installable.getName(), th.getCause());
-                    String message = getMeaningfulErrorMessage(th);
+                    String message = getMeaningfulErrorMessage(th, installable);
                     return JobResult.builder()
                             .status(JobStatus.UNINSTALL_ERROR)
                             .installException(new EntandoComponentManagerException(message))

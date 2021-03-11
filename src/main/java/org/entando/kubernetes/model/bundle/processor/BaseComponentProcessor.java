@@ -5,6 +5,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRepor
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 
 public abstract class BaseComponentProcessor<T extends Descriptor> implements ComponentProcessor<T> {
@@ -29,6 +30,11 @@ public abstract class BaseComponentProcessor<T extends Descriptor> implements Co
 
         return reportByType.containsKey(contentId)
                 && reportByType.get(contentId) != Status.NEW;
+    }
+
+    protected EntandoComponentManagerException makeMeaningfulException(Exception e) {
+        return new EntandoComponentManagerException(
+                String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
     }
 
 }

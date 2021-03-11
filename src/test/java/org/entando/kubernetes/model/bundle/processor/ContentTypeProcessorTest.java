@@ -9,6 +9,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -26,7 +27,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
-public class ContentTypeProcessorTest {
+class ContentTypeProcessorTest extends BaseProcessorTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
     @Mock
@@ -87,4 +88,10 @@ public class ContentTypeProcessorTest {
         assertThat(attribute3.getCompositeAttributes().get(0).getType()).isEqualTo("Image");
     }
 
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new ContentTypeProcessor(new EntandoCoreClientTestDouble()), "contentType");
+    }
 }

@@ -12,7 +12,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
@@ -58,10 +57,11 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
     @Override
     public List<Installable<ContentTypeDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        List<Installable<ContentTypeDescriptor>> installables = new LinkedList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
-
-            List<Installable<ContentTypeDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
                 ContentTypeDescriptor contentTypeDescriptor = bundleReader
@@ -71,11 +71,11 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
                 installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor, action));
             }
 
-            return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException(
-                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
+            throw makeMeaningfulException(e);
         }
+
+        return installables;
     }
 
     @Override

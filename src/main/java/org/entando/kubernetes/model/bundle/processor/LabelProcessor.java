@@ -12,7 +12,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
@@ -63,10 +62,11 @@ public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> impl
     @Override
     public List<Installable<LabelDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
-
-            final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
 
             for (String ldf : descriptorList) {
                 List<LabelDescriptor> labelDescriptorList = bundleReader
@@ -77,11 +77,11 @@ public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> impl
                 }
             }
 
-            return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException(
-                    String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
+            throw makeMeaningfulException(e);
         }
+
+        return installables;
     }
 
     @Override

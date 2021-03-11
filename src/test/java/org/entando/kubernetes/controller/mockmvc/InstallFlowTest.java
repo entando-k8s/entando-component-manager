@@ -768,7 +768,8 @@ public class InstallFlowTest {
         assertThat(job.isPresent()).isTrue();
         assertThat(job.get().getInstallErrorCode()).isEqualTo(100);
         assertThat(job.get().getInstallErrorMessage())
-                .isEqualTo("Rest client exception (status code 500) - Internal Server Error");
+                .isEqualTo(
+                        "ComponentType: page - Code: my-page --- Rest client exception (status code 500) - Internal Server Error");
         assertNull(job.get().getRollbackErrorCode());
         assertNull(job.get().getRollbackErrorMessage());
 

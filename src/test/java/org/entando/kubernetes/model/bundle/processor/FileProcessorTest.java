@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -30,7 +31,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
-public class FileProcessorTest {
+class FileProcessorTest extends BaseProcessorTest {
 
     @Mock
     private DefaultEntandoCoreClient engineService;
@@ -138,5 +139,14 @@ public class FileProcessorTest {
 
         assertThat(reportable.getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(reportable.getCodes()).containsAll(expectedCodeList);
+    }
+
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() throws IOException {
+
+        when(baseBundleReader.containsResourceFolder()).thenReturn(true);
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new FileProcessor(new EntandoCoreClientTestDouble()), "asset");
     }
 }
