@@ -12,7 +12,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -61,11 +60,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     @Override
     public List<Installable<WidgetDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
+
         try {
             BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
 
             final List<String> descriptorList = getDescriptorList(bundleReader);
-            final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
 
             for (final String fileName : descriptorList) {
                 final WidgetDescriptor widgetDescriptor = bundleReader
@@ -80,10 +81,11 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 installables.add(new WidgetInstallable(engineService, widgetDescriptor, action));
             }
 
-            return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw makeMeaningfulException(e);
         }
+
+        return installables;
     }
 
     @Override

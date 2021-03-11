@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -32,7 +33,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
-class LanguageProcessorTest {
+class LanguageProcessorTest extends BaseProcessorTest {
 
     @Mock
     private DefaultEntandoCoreClient engineService;
@@ -93,4 +94,10 @@ class LanguageProcessorTest {
         });
     }
 
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new LanguageProcessor(new EntandoCoreClientTestDouble()), "language");
+    }
 }

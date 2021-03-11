@@ -37,7 +37,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
-class PluginProcessorTest {
+class PluginProcessorTest extends BaseProcessorTest {
 
     @Mock
     private KubernetesService kubernetesService;
@@ -58,6 +58,11 @@ class PluginProcessorTest {
     void testCreatePlugin() throws IOException, ExecutionException, InterruptedException {
 
         initBundleReaderShortImagesName();
+
+        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
+        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
+                .thenReturn(descriptorV2);
+
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "entando-the-lucas");
     }
@@ -68,6 +73,11 @@ class PluginProcessorTest {
 
         AppConfiguration.truncatePluginBaseNameIfLonger = true;
         initBundleReaderLongImagesName();
+
+        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
+        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
+                .thenReturn(descriptorV2);
+
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "entando-helloworld-plugin-v1-nam");
     }
@@ -159,12 +169,15 @@ class PluginProcessorTest {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
-        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
-        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
-                .thenReturn(descriptorV2);
-
         BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
+    }
+
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new PluginProcessor(null), "plugin");
     }
 }

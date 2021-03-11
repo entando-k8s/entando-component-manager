@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -25,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
-class PageConfigurationProcessorTest {
+class PageConfigurationProcessorTest extends BaseProcessorTest {
 
     @Mock
     private DefaultEntandoCoreClient entandoCoreClient;
@@ -83,5 +84,12 @@ class PageConfigurationProcessorTest {
         BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
+    }
+
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new PageConfigurationProcessor(new EntandoCoreClientTestDouble()), "pageConfiguration");
     }
 }

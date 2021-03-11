@@ -12,7 +12,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
@@ -56,10 +55,11 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescr
     @Override
     public List<Installable<PageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        List<Installable<PageDescriptor>> installables = new LinkedList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
-
-            List<Installable<PageDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader
@@ -70,10 +70,11 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescr
                 installables.add(new PageConfigurationInstallable(engineService, pageDescriptor, action));
             }
 
-            return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw makeMeaningfulException(e);
         }
+
+        return installables;
     }
 
     @Override

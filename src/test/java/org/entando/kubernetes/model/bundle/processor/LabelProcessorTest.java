@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -29,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
-public class LabelProcessorTest {
+class LabelProcessorTest extends BaseProcessorTest {
 
     @Mock
     private DefaultEntandoCoreClient engineService;
@@ -76,4 +77,10 @@ public class LabelProcessorTest {
         assertThat(labelDescriptor.getTitles().get("en")).isEqualTo("Hello");
     }
 
+    @Test
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+
+        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
+                new LabelProcessor(new EntandoCoreClientTestDouble()), "label");
+    }
 }

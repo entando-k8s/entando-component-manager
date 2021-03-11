@@ -354,7 +354,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     log.error(String.format("Error rolling back %s %s",
                             installable.getComponentType(),
                             installable.getName()), th);
-                    String message = getMeaningfulErrorMessage(th);
+                    String message = getMeaningfulErrorMessage(th, installable);
                     return JobResult.builder()
                             .status(JobStatus.INSTALL_ROLLBACK_ERROR)
                             .rollbackException(new EntandoComponentManagerException(message))
@@ -371,7 +371,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     log.debug("Installable '{}' finished successfully", installable.getName());
                     return JobResult.builder().status(JobStatus.INSTALL_COMPLETED).build();
                 }).exceptionally(th -> {
-                    String message = getMeaningfulErrorMessage(th);
+                    String message = getMeaningfulErrorMessage(th, installable);
                     log.error("Installable '{}' has errors: {}", installable.getName(), message, th);
                     return JobResult.builder()
                             .status(JobStatus.INSTALL_ERROR)

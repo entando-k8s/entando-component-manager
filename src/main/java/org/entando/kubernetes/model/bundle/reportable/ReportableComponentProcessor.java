@@ -45,7 +45,8 @@ public interface ReportableComponentProcessor {
                     this.getReportableRemoteHandler());
 
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s type",
+                    componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
     }
 

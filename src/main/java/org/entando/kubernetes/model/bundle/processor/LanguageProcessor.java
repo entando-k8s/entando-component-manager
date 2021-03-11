@@ -64,10 +64,11 @@ public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor
     @Override
     public List<Installable<LanguageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        final List<Installable<LanguageDescriptor>> installables = new LinkedList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
-
-            final List<Installable<LanguageDescriptor>> installables = new LinkedList<>();
 
             for (String ldf : descriptorList) {
                 List<LanguageDescriptor> languageDescriptorList = bundleReader
@@ -82,10 +83,11 @@ public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor
                 }
             }
 
-            return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw makeMeaningfulException(e);
         }
+
+        return installables;
     }
 
     @Override

@@ -69,10 +69,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public List<Installable<PluginDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
-            List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
                 validateDescriptorOrThrow(plugin);
@@ -81,10 +83,11 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                         conflictStrategy, report);
                 installableList.add(new PluginInstallable(kubernetesService, plugin, action));
             }
-            return installableList;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw makeMeaningfulException(e);
         }
+
+        return installableList;
     }
 
     @Override
@@ -119,7 +122,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                     this.getReportableRemoteHandler());
 
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s components",
+                    componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
     }
 

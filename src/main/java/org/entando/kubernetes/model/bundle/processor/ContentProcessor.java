@@ -12,7 +12,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
@@ -59,10 +58,11 @@ public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
     @Override
     public List<Installable<ContentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallActionsByComponentType actions, AnalysisReport report) {
+
+        List<Installable<ContentDescriptor>> installables = new LinkedList<>();
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
-
-            List<Installable<ContentDescriptor>> installables = new LinkedList<>();
 
             for (String fileName : descriptorList) {
                 ContentDescriptor contentDescriptor = bundleReader
@@ -72,10 +72,11 @@ public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
                 installables.add(new ContentInstallable(engineService, contentDescriptor, action));
             }
 
-            return installables;
         } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error reading bundle", e);
+            throw makeMeaningfulException(e);
         }
+
+        return installables;
     }
 
     @Override

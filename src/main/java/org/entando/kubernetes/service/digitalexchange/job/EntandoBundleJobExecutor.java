@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -10,18 +11,20 @@ public interface EntandoBundleJobExecutor {
     String ENTANDO_CORE_MESSAGE_REGEX = "message\":\"([^\n\r]*)\"";
     String ENTANDO_K8S_SERVICE_MESSAGE_REGEX = "message\\=([^\n\r]*), metadata";
 
-    default String getMeaningfulErrorMessage(Throwable th) {
+    default String getMeaningfulErrorMessage(Throwable th, Installable<?> installable) {
         if (th.getCause() instanceof RestClientResponseException) {
-            return getMeaningfulErrorMessage((RestClientResponseException) th.getCause());
+            return getMeaningfulErrorMessage((RestClientResponseException) th.getCause(), installable);
         }
         return th.getMessage();
     }
 
-    default String getMeaningfulErrorMessage(RestClientResponseException e) {
+    default String getMeaningfulErrorMessage(RestClientResponseException e, Installable<?> installable) {
         HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
 
         String message = String
-                .format("Rest client exception (status code %d) - %s", e.getRawStatusCode(), status.getReasonPhrase());
+                .format("ComponentType: %s - Code: %s --- Rest client exception (status code %d) - %s",
+                        installable.getComponentType().getTypeName(), installable.getName(), e.getRawStatusCode(),
+                        status.getReasonPhrase());
         String respBody = e.getResponseBodyAsString();
         if (!respBody.isEmpty()) {
             String parsedErrorMessage = parseEntandoCoreError(respBody);
