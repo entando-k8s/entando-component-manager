@@ -38,6 +38,7 @@ public class ReportableStubHelper {
     public static final String LANG_CODE_2 = "LangTWO";
     public static final String DIRECTORY_CODE_1 = "DirONE";
     public static final String DIRECTORY_CODE_2 = "DirTWO";
+    public static final String HASH = "";
 
 
     public static List<Reportable> stubAllReportableList() {

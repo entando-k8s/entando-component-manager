@@ -1,5 +1,6 @@
 package org.entando.kubernetes.controller.digitalexchange.job.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -17,40 +18,43 @@ import org.springframework.util.CollectionUtils;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnalysisReport {
 
     @Default
-    private Map<String, Status> widgets = new HashMap<>();
+    private Boolean hasConflicts = null;
     @Default
-    private Map<String, Status> fragments = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> widgets = new HashMap<>();
     @Default
-    private Map<String, Status> pages = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> fragments = new HashMap<>();
     @Default
-    private Map<String, Status> pageTemplates = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> pages = new HashMap<>();
     @Default
-    private Map<String, Status> contents = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> pageTemplates = new HashMap<>();
     @Default
-    private Map<String, Status> contentTemplates = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> contents = new HashMap<>();
     @Default
-    private Map<String, Status> contentTypes = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> contentTemplates = new HashMap<>();
     @Default
-    private Map<String, Status> assets = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> contentTypes = new HashMap<>();
     @Default
-    private Map<String, Status> directories = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> assets = new HashMap<>();
     @Default
-    private Map<String, Status> resources = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> directories = new HashMap<>();
     @Default
-    private Map<String, Status> plugins = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> resources = new HashMap<>();
     @Default
-    private Map<String, Status> categories = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> plugins = new HashMap<>();
     @Default
-    private Map<String, Status> groups = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> categories = new HashMap<>();
     @Default
-    private Map<String, Status> labels = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> groups = new HashMap<>();
     @Default
-    private Map<String, Status> languages = new HashMap<>();
+    private Map<String, AnalysisReportComponentResult> labels = new HashMap<>();
+    @Default
+    private Map<String, AnalysisReportComponentResult> languages = new HashMap<>();
 
-    public Map<String, Status> getReportByType(ComponentType type) {
+    public Map<String, AnalysisReportComponentResult> getReportByType(ComponentType type) {
         switch (type) {
             case WIDGET:
                 return widgets;
@@ -101,6 +105,8 @@ public class AnalysisReport {
         }
 
         return AnalysisReport.builder()
+                .hasConflicts(
+                        Boolean.TRUE.equals(this.hasConflicts) || Boolean.TRUE.equals(other.hasConflicts))
                 .widgets(this.getNotNullAnalysisReportComponent(AnalysisReport::getWidgets, other))
                 .fragments(this.getNotNullAnalysisReportComponent(AnalysisReport::getFragments, other))
                 .pages(this.getNotNullAnalysisReportComponent(AnalysisReport::getPages, other))
@@ -127,17 +133,11 @@ public class AnalysisReport {
      * @return the result of the received function on the current object if the result is not null, otherwise the result
      *          of the received function on the other object
      */
-    private Map<String, Status> getNotNullAnalysisReportComponent(
-            Function<AnalysisReport, Map<String, Status>> getAnalysisReportComponentFn, AnalysisReport other) {
+    private Map<String, AnalysisReportComponentResult> getNotNullAnalysisReportComponent(
+            Function<AnalysisReport, Map<String, AnalysisReportComponentResult>> getAnalysisReportComponentFn, AnalysisReport other) {
 
         return !CollectionUtils.isEmpty(getAnalysisReportComponentFn.apply(this))
                 ? getAnalysisReportComponentFn.apply(this)
                 : getAnalysisReportComponentFn.apply(other);
-    }
-
-    public enum Status {
-        NEW,
-        DIFF,
-        EQUAL;
     }
 }

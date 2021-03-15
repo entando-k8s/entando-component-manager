@@ -32,7 +32,8 @@ import java.util.Optional;
 import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReportComponentResult;
+import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
@@ -302,9 +303,9 @@ public class K8SServiceClientTest {
     @Test
     void shouldGetAnalysisReport() {
 
-        Map<String, Status> pluginMap = Map.of(
-                ReportableStubHelper.PLUGIN_CODE_1, Status.NEW,
-                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+        Map<String, AnalysisReportComponentResult> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_1, new AnalysisReportComponentResult(Status.NEW, null, ""),
+                ReportableStubHelper.PLUGIN_CODE_2, new AnalysisReportComponentResult(Status.NEW, null, ""));
 
         AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
 

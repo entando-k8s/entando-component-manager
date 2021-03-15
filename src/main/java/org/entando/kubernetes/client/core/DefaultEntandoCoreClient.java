@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.model.ClientAnalysisReport;
+import org.entando.kubernetes.client.model.assembler.AnalysisReportAssembler;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
@@ -558,7 +560,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         AnalysisReportClientRequest analysisReportClientRequest = factoryRequestCreationFn.apply(requestFactory);
 
         try {
-            ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
+            ResponseEntity<SimpleRestResponse<ClientAnalysisReport>> reportResponseEntity = restTemplate
                     .exchange(resolvePathSegments(pathSegments).build().toUri(),
                             HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
                             new ParameterizedTypeReference<>() {
@@ -569,7 +571,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                         "An error occurred fetching the %s report analysis", reportableRemoteHandler));
             } else {
                 return Optional.ofNullable(reportResponseEntity.getBody())
-                        .map(RestResponse::getPayload)
+                        .map(response -> AnalysisReportAssembler.toAnalysisReport(response.getPayload()))
                         .orElseThrow(() -> new ReportAnalysisException(
                                 "Empty response received by " + reportableRemoteHandler));
             }

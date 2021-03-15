@@ -6,8 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status.DIFF;
-import static org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status.NEW;
 import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.hasSize;
@@ -46,6 +44,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.model.EntandoCustomResourceStatus;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -63,7 +62,7 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkSpec;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
-import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
@@ -195,32 +194,72 @@ public class TestInstallUtils {
 
     public static AnalysisReport getCoreAnalysisReport() {
         return AnalysisReport.builder()
-                .categories(Map.of("my-category", NEW, "another_category", DIFF))
-                .groups(Map.of("ecr", NEW, "ps", DIFF))
-                .labels(Map.of("HELLO", DIFF, "WORLD", NEW))
-                .languages(Map.of("en", NEW, "it", DIFF))
-                .fragments(Map.of("title_fragment", NEW, "another_fragment", DIFF))
-                .pageTemplates(Map.of("todomvc_page_model", NEW, "todomvc_another_page_model", DIFF))
-                .pages(Map.of("my-page", NEW, "another-page", DIFF))
-                .resources(Map.of("/something/css/custom.css", DIFF, "/something/css/style.css", NEW, "/something/js/configUiScript.js", NEW,
-                        "/something/js/script.js", NEW, "/something/js/vendor/jquery/jquery.js", NEW))
-                .widgets(Map.of("another_todomvc_widget", DIFF, "todomvc_widget", NEW, "widget_with_config_ui", NEW))
+                .hasConflicts(true)
+                .categories(
+                        Map.of("my-category", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                                "another_category",
+                                AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .groups(Map.of("ecr", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW), "ps",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .labels(Map
+                        .of("HELLO", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF), "WORLD",
+                                AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
+                .languages(Map.of("en", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW), "it",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .fragments(
+                        Map.of("title_fragment", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                                "another_fragment",
+                                AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .pageTemplates(Map.of("todomvc_page_model",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "todomvc_another_page_model",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .pages(Map.of("my-page", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "another-page", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .resources(Map.of("/something/css/custom.css",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF),
+                        "/something/css/style.css",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "/something/js/configUiScript.js",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "/something/js/script.js",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "/something/js/vendor/jquery/jquery.js",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
+                .widgets(Map.of("another_todomvc_widget",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF), "todomvc_widget",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW), "widget_with_config_ui",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
                 .build();
     }
+
 
     public static AnalysisReport getCmsAnalysisReport() {
         return AnalysisReport.builder()
-                .assets(Map.of("my-asset", NEW, "anotherAsset", DIFF))
-                .contentTypes(Map.of("CNG", DIFF, "CNT", NEW))
-                .contentTemplates(Map.of("8880002", DIFF, "8880003", NEW))
-                .contents(Map.of("CNG102", DIFF, "CNT103", NEW))
+                .hasConflicts(true)
+                .assets(Map.of("my-asset", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "anotherAsset", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF)))
+                .contentTypes(
+                        Map.of("CNG", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF), "CNT",
+                                AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
+                .contentTemplates(
+                        Map.of("8880002", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF),
+                                "8880003", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
+                .contents(Map.of("CNG102", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF),
+                        "CNT103", AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
                 .build();
     }
 
+
     public static AnalysisReport getPluginAnalysisReport() {
         return AnalysisReport.builder()
-                .plugins(Map.of("custombasename", DIFF, "entando-todomvcv1-1-0-0", NEW,
-                        "entando-todomvcv2-1-0-0", NEW))
+                .hasConflicts(true)
+                .plugins(Map.of("custombasename",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.DIFF),
+                        "entando-todomvcv1-1-0-0",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW),
+                        "entando-todomvcv2-1-0-0",
+                        AnalysisReportStubHelper.stubAnalysisReportComponentResult(Status.NEW)))
                 .build();
     }
 
@@ -230,6 +269,7 @@ public class TestInstallUtils {
         report = report.merge(getPluginAnalysisReport());
         return report;
     }
+
 
     public static void mockAnalysisReport(EntandoCoreClient coreClient, K8SServiceClient k8SServiceClient) {
         AnalysisReport coreAnalysisReport = getCoreAnalysisReport();

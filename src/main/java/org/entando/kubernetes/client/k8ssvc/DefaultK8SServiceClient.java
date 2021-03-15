@@ -20,7 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReportComponentResult;
+import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
@@ -333,13 +334,15 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public AnalysisReport getAnalysisReport(List<Reportable> reportableList) {
 
-        Map<String, Status> pluginStatusMap = reportableList.stream()
+        Map<String, AnalysisReportComponentResult> pluginStatusMap = reportableList.stream()
                 .filter(reportable -> reportable.getComponentType() == ComponentType.PLUGIN)
                 .flatMap(reportable -> reportable.getCodes().stream())
                 .map(name ->
                         getPluginByName(name)
-                                .map(plugin -> new SimpleEntry<>(name, Status.DIFF))
-                                .orElseGet(() -> new SimpleEntry<>(name, Status.NEW)))
+                                .map(plugin -> new SimpleEntry<>(name,
+                                        new AnalysisReportComponentResult(Status.DIFF, null, "")))
+                                .orElseGet(() -> new SimpleEntry<>(name,
+                                        new AnalysisReportComponentResult(Status.NEW, null, ""))))
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
         return new AnalysisReport().setPlugins(pluginStatusMap);
