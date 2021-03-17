@@ -20,10 +20,4 @@ public class InstallRequest {
 
     @Default
     private final InstallActionsByComponentType actions = new InstallActionsByComponentType();
-
-    public enum InstallAction {
-        CREATE,  //Always try to create the object
-        SKIP,    //Skip object if conflict
-        OVERRIDE //Update object if conflict
-    }
 }

@@ -1,10 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.util.Map;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReportComponentResult;
+import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
@@ -12,7 +12,7 @@ import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 public abstract class BaseComponentProcessor<T extends Descriptor> implements ComponentProcessor<T> {
 
     protected InstallAction extractInstallAction(String componentCode, InstallActionsByComponentType actions,
-            InstallAction conflictStrategy, AnalysisReport report) {
+            InstallAction conflictStrategy, InstallPlan report) {
 
         Map<String, InstallAction> actionsByType = actions.getActionsByType(getSupportedComponentType());
         if (actionsByType.containsKey(componentCode)) {
@@ -26,8 +26,8 @@ public abstract class BaseComponentProcessor<T extends Descriptor> implements Co
         return InstallAction.CREATE;
     }
 
-    protected boolean isConflict(String contentId, AnalysisReport report) {
-        Map<String, AnalysisReportComponentResult> reportByType = report.getReportByType(getSupportedComponentType());
+    protected boolean isConflict(String contentId, InstallPlan report) {
+        Map<String, ComponentInstallPlan> reportByType = report.getReportByType(getSupportedComponentType());
 
         return reportByType.containsKey(contentId)
                 && reportByType.get(contentId).getStatus() != Status.NEW;

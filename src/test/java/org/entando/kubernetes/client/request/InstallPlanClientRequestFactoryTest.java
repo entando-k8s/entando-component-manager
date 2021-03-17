@@ -8,7 +8,7 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.junit.jupiter.api.Test;
 
-class AnalysisReportClientRequestFactoryTest {
+class InstallPlanClientRequestFactoryTest {
 
     private final List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
 

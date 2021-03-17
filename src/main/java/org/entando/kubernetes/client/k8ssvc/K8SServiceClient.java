@@ -3,7 +3,7 @@ package org.entando.kubernetes.client.k8ssvc;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.ECMClient;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;

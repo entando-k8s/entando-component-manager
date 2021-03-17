@@ -19,8 +19,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
@@ -35,12 +35,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping(value = "/components")
 public interface EntandoBundleOperationResource {
 
-    @Operation(description = "Performs a conflict analysis on a Bundle and Version to be installed")
+    @Operation(description = "Performs a conflict analysis on a Bundle and Version to be installed. "
+            + "Then returns an install plan containing every analysed component")
     @ApiResponse(responseCode = "200", description = "Ok")
-    @PostMapping(value = "/{component}/analysis", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<AnalysisReport>> analysis(
+    @PostMapping(value = "/{component}/installplans", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<InstallPlan>> installPlans(
             @PathVariable("component") String componentId,
-            @RequestBody AnalysisRequest request);
+            @RequestBody InstallPlansRequest request);
 
     @Operation(description = "Starts component installation job")
     @ApiResponse(responseCode = "201", description = "Created")

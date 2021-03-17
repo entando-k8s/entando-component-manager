@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.client.model.ClientAnalysisReport;
-import org.entando.kubernetes.client.model.assembler.AnalysisReportAssembler;
+import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.HttpException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -560,7 +558,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         AnalysisReportClientRequest analysisReportClientRequest = factoryRequestCreationFn.apply(requestFactory);
 
         try {
-            ResponseEntity<SimpleRestResponse<ClientAnalysisReport>> reportResponseEntity = restTemplate
+            ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
                     .exchange(resolvePathSegments(pathSegments).build().toUri(),
                             HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
                             new ParameterizedTypeReference<>() {
@@ -571,7 +569,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                         "An error occurred fetching the %s report analysis", reportableRemoteHandler));
             } else {
                 return Optional.ofNullable(reportResponseEntity.getBody())
-                        .map(response -> AnalysisReportAssembler.toAnalysisReport(response.getPayload()))
+                        .map(RestResponse::getPayload)
                         .orElseThrow(() -> new ReportAnalysisException(
                                 "Empty response received by " + reportableRemoteHandler));
             }

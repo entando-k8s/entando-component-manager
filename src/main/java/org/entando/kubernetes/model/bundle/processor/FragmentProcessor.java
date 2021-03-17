@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
@@ -48,12 +48,12 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
     @Override
     public List<Installable<FragmentDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new AnalysisReport());
+                new InstallPlan());
     }
 
     @Override
     public List<Installable<FragmentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, AnalysisReport report) {
+            InstallActionsByComponentType actions, InstallPlan report) {
 
         List<Installable<FragmentDescriptor>> installableList = new ArrayList<>();
 
