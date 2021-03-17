@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-spring-boot-parent</artifactId>
-        <version>6.3.5</version>
+        <version>6.3.6</version>
     </parent>
     <url>http://www.entando.com/</url>
     <licenses>
@@ -49,6 +49,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
         <entando-k8s-custom-model.version>6.3.1</entando-k8s-custom-model.version>
+        <liquibase.version>4.3.1</liquibase.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
@@ -142,6 +143,7 @@
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
+            <version>${liquibase.version}</version>
         </dependency>
 
         <dependency>
@@ -239,6 +241,14 @@
         <dependency>
             <groupId>com.github.zafarkhaja</groupId>
             <artifactId>java-semver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-server-mock</artifactId>
         </dependency>
     </dependencies>
 

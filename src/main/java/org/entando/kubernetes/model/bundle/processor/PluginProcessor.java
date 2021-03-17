@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import liquibase.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
@@ -28,6 +27,7 @@ import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
