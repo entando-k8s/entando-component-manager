@@ -2,7 +2,6 @@ package org.entando.kubernetes.client.model;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -10,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
-import org.springframework.util.CollectionUtils;
 
 @Data
 @Builder
