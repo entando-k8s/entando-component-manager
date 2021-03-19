@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
@@ -61,20 +60,18 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
 
     @Override
     public List<Installable<DirectoryDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<DirectoryDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
         final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
         try {
             if (bundleReader.containsResourceFolder()) {
                 final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-                InstallAction rootDirectoryAction = extractInstallAction(resourceFolder, actions, conflictStrategy,
-                        report);
+                InstallAction rootDirectoryAction = extractInstallAction(resourceFolder, conflictStrategy, installPlan);
                 installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(resourceFolder, true),
                         rootDirectoryAction));
             }

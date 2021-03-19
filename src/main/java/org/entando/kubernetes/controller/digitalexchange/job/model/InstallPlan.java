@@ -54,7 +54,7 @@ public class InstallPlan {
     @Default
     private Map<String, ComponentInstallPlan> languages = new HashMap<>();
 
-    public Map<String, ComponentInstallPlan> getReportByType(ComponentType type) {
+    public Map<String, ComponentInstallPlan> getPlanByType(ComponentType type) {
         switch (type) {
             case WIDGET:
                 return widgets;
@@ -133,6 +133,7 @@ public class InstallPlan {
      * @return the result of the received function on the current object if the result is not null, otherwise the result
      *          of the received function on the other object
      */
+    // TODO does it require naming refactor?
     private Map<String, ComponentInstallPlan> getNotNullAnalysisReportComponent(
             Function<InstallPlan, Map<String, ComponentInstallPlan>> getAnalysisReportComponentFn, InstallPlan other) {
 

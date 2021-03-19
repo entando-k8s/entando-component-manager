@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -55,13 +54,12 @@ public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> impl
 
     @Override
     public List<Installable<GroupDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<GroupDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<GroupDescriptor>> installables = new LinkedList<>();
 
@@ -72,7 +70,7 @@ public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> impl
                 List<GroupDescriptor> groupDescriptorList = bundleReader
                         .readListOfDescriptorFile(fileName, GroupDescriptor.class);
                 for (GroupDescriptor gd : groupDescriptorList) {
-                    InstallAction action = extractInstallAction(gd.getCode(), actions, conflictStrategy, report);
+                    InstallAction action = extractInstallAction(gd.getCode(), conflictStrategy, installPlan);
                     installables.add(new GroupInstallable(engineService, gd, action));
                 }
             }

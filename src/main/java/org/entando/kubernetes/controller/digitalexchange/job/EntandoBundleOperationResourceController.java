@@ -6,11 +6,14 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
@@ -59,6 +62,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     @Override
+    @Deprecated
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallRequest installRequest) {
@@ -69,8 +73,25 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
         EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
-                .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy(),
-                        request.getActions()));
+                .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy()));
+
+        return ResponseEntity.created(
+                getJobLocationURI(installJob))
+                .body(new SimpleRestResponse<>(installJob));
+    }
+
+    @Override
+    public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> installWithInstallPlan(
+            @PathVariable("component") String componentId,
+            @RequestBody(required = true) InstallWithPlansRequest installRequest) {
+
+        // TODO check if required is applied
+        EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
+                .orElseThrow(() -> new BundleNotFoundException(componentId));
+        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, installRequest.getVersion());
+
+        EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
+                .orElseGet(() -> installService.installWithInstallPlan(bundle, tag, installRequest));
 
         return ResponseEntity.created(
                 getJobLocationURI(installJob))

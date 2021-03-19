@@ -16,12 +16,20 @@
 package org.entando.kubernetes.controller.digitalexchange.job;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
@@ -29,8 +37,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @RequestMapping(value = "/components")
 public interface EntandoBundleOperationResource {
@@ -49,6 +59,18 @@ public interface EntandoBundleOperationResource {
     ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @PathVariable("component") String componentId,
             @RequestBody InstallRequest request);
+
+    @Operation(summary = "", description = "Starts component installation job using the InstallPlan", security = {
+            @SecurityRequirement(name = "bearerAuth")}, tags = {"entando-bundle-operation-resource-controller"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Created")})
+    @PutMapping(value = "/components/{component}/install",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> installWithInstallPlan(
+            @Parameter(in = ParameterIn.PATH, description = "", required = true, schema = @Schema()) @PathVariable("component") String component,
+            @Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody InstallWithPlansRequest body);
+
 
     @Operation(description = "Starts component remove job ")
     @ApiResponse(responseCode = "201", description = "Created")

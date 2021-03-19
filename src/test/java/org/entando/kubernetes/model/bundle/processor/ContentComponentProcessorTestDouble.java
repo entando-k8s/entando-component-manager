@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -33,7 +32,7 @@ class ContentComponentProcessorTestDouble implements ComponentProcessor<ContentD
 
     @Override
     public List<Installable<ContentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
         return new ArrayList<>();
     }
 

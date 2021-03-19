@@ -3,7 +3,6 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.util.Map;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -11,26 +10,39 @@ import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 
 public abstract class BaseComponentProcessor<T extends Descriptor> implements ComponentProcessor<T> {
 
-    protected InstallAction extractInstallAction(String componentCode, InstallActionsByComponentType actions,
-            InstallAction conflictStrategy, InstallPlan report) {
+    protected InstallAction extractInstallAction(String componentCode,
+            InstallAction conflictStrategy, InstallPlan installPlan) {
 
-        Map<String, InstallAction> actionsByType = actions.getActionsByType(getSupportedComponentType());
-        if (actionsByType.containsKey(componentCode)) {
-            return actionsByType.get(componentCode);
+        Map<String, ComponentInstallPlan> compInstallPlansByType = installPlan
+                .getPlanByType(getSupportedComponentType());
+        if (installActionExistForComponent(compInstallPlansByType, componentCode)) {
+            return compInstallPlansByType.get(componentCode).getAction();
         }
 
-        if (isConflict(componentCode, report)) {
+        if (isConflict(componentCode, installPlan)) {
             return conflictStrategy;
         }
 
         return InstallAction.CREATE;
     }
 
-    protected boolean isConflict(String contentId, InstallPlan report) {
-        Map<String, ComponentInstallPlan> reportByType = report.getReportByType(getSupportedComponentType());
+    /**
+     * @param compInstallPlansByType the map in which search for the InstallAction
+     * @param componentCode the code of the component of which search the InstallAction
+     * @return true if the map contains a ComponentInstallPlan with a valid InstallAction for the desired component code
+     */
+    private boolean installActionExistForComponent(Map<String, ComponentInstallPlan> compInstallPlansByType,
+            String componentCode) {
 
-        return reportByType.containsKey(contentId)
-                && reportByType.get(contentId).getStatus() != Status.NEW;
+        return compInstallPlansByType.containsKey(componentCode)
+                && null != compInstallPlansByType.get(componentCode).getAction();
+    }
+
+    protected boolean isConflict(String contentId, InstallPlan installPlan) {
+        Map<String, ComponentInstallPlan> planByType = installPlan.getPlanByType(getSupportedComponentType());
+
+        return planByType.containsKey(contentId)
+                && planByType.get(contentId).getStatus() != Status.NEW;
     }
 
     protected EntandoComponentManagerException makeMeaningfulException(Exception e) {
