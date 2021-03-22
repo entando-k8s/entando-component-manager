@@ -107,38 +107,37 @@ public class InstallPlan {
         return InstallPlan.builder()
                 .hasConflicts(
                         Boolean.TRUE.equals(this.hasConflicts) || Boolean.TRUE.equals(other.hasConflicts))
-                .widgets(this.getNotNullAnalysisReportComponent(InstallPlan::getWidgets, other))
-                .fragments(this.getNotNullAnalysisReportComponent(InstallPlan::getFragments, other))
-                .pages(this.getNotNullAnalysisReportComponent(InstallPlan::getPages, other))
-                .pageTemplates(this.getNotNullAnalysisReportComponent(InstallPlan::getPageTemplates, other))
-                .contents(this.getNotNullAnalysisReportComponent(InstallPlan::getContents, other))
-                .contentTemplates(this.getNotNullAnalysisReportComponent(InstallPlan::getContentTemplates, other))
-                .contentTypes(this.getNotNullAnalysisReportComponent(InstallPlan::getContentTypes, other))
-                .assets(this.getNotNullAnalysisReportComponent(InstallPlan::getAssets, other))
-                .resources(this.getNotNullAnalysisReportComponent(InstallPlan::getResources, other))
-                .plugins(this.getNotNullAnalysisReportComponent(InstallPlan::getPlugins, other))
-                .categories(this.getNotNullAnalysisReportComponent(InstallPlan::getCategories, other))
-                .groups(this.getNotNullAnalysisReportComponent(InstallPlan::getGroups, other))
-                .labels(this.getNotNullAnalysisReportComponent(InstallPlan::getLabels, other))
-                .languages(this.getNotNullAnalysisReportComponent(InstallPlan::getLanguages, other))
+                .widgets(this.getNotNullInstallPlanComponent(InstallPlan::getWidgets, other))
+                .fragments(this.getNotNullInstallPlanComponent(InstallPlan::getFragments, other))
+                .pages(this.getNotNullInstallPlanComponent(InstallPlan::getPages, other))
+                .pageTemplates(this.getNotNullInstallPlanComponent(InstallPlan::getPageTemplates, other))
+                .contents(this.getNotNullInstallPlanComponent(InstallPlan::getContents, other))
+                .contentTemplates(this.getNotNullInstallPlanComponent(InstallPlan::getContentTemplates, other))
+                .contentTypes(this.getNotNullInstallPlanComponent(InstallPlan::getContentTypes, other))
+                .assets(this.getNotNullInstallPlanComponent(InstallPlan::getAssets, other))
+                .resources(this.getNotNullInstallPlanComponent(InstallPlan::getResources, other))
+                .plugins(this.getNotNullInstallPlanComponent(InstallPlan::getPlugins, other))
+                .categories(this.getNotNullInstallPlanComponent(InstallPlan::getCategories, other))
+                .groups(this.getNotNullInstallPlanComponent(InstallPlan::getGroups, other))
+                .labels(this.getNotNullInstallPlanComponent(InstallPlan::getLabels, other))
+                .languages(this.getNotNullInstallPlanComponent(InstallPlan::getLanguages, other))
                 .build();
     }
 
     /**
-     * apply the received function to the current AnalysisReport. if the result is not null, return it. otherwise apply
-     * the function to the other AnalysisReport received and return its result
+     * apply the received function to the current InstallPlan. if the result is not null, return it. otherwise apply
+     * the function to the other InstallPlan received and return its result
      *
-     * @param getAnalysisReportComponentFn a function that get an AnalysisReport and returns the desired Map object
-     * @param other                        the other AnalysisReport
+     * @param getInstallPlanComponentFn a function that get an InstallPlan and returns the desired Map object
+     * @param other                        the other InstallPlan
      * @return the result of the received function on the current object if the result is not null, otherwise the result
      *          of the received function on the other object
      */
-    // TODO does it require naming refactor?
-    private Map<String, ComponentInstallPlan> getNotNullAnalysisReportComponent(
-            Function<InstallPlan, Map<String, ComponentInstallPlan>> getAnalysisReportComponentFn, InstallPlan other) {
+    private Map<String, ComponentInstallPlan> getNotNullInstallPlanComponent(
+            Function<InstallPlan, Map<String, ComponentInstallPlan>> getInstallPlanComponentFn, InstallPlan other) {
 
-        return !CollectionUtils.isEmpty(getAnalysisReportComponentFn.apply(this))
-                ? getAnalysisReportComponentFn.apply(this)
-                : getAnalysisReportComponentFn.apply(other);
+        return !CollectionUtils.isEmpty(getInstallPlanComponentFn.apply(this))
+                ? getInstallPlanComponentFn.apply(this)
+                : getInstallPlanComponentFn.apply(other);
     }
 }

@@ -27,6 +27,7 @@ public abstract class BaseComponentProcessor<T extends Descriptor> implements Co
     }
 
     /**
+     * check if the received compInstallPlansByType map contains a value for the key represented by componentCode.
      * @param compInstallPlansByType the map in which search for the InstallAction
      * @param componentCode the code of the component of which search the InstallAction
      * @return true if the map contains a ComponentInstallPlan with a valid InstallAction for the desired component code

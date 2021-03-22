@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -93,6 +94,58 @@ public class TestInstallUtils {
     @SneakyThrows
     public static String simulateSuccessfullyCompletedInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
             K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSuccessfullyCompletedInstall(mockMvc, result);
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedInstallWithInstallPlan(MockMvc mockMvc,
+            EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSuccessfullyCompletedInstall(mockMvc, result);
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(MockMvc mockMvc,
+            EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        MvcResult result = mockMvc.perform(
+                put(INSTALL_COMPONENT_ENDPOINT.build())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mockInstallPlanWithActions())))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSuccessfullyCompletedInstall(mockMvc, result);
+    }
+
+    /**
+     * perform mock operations required to simulate a successfully bundle installation.
+     *
+     * @param coreClient the EntandoCoreClient
+     * @param k8sServiceClient the K8SServiceClient
+     * @param bundleName the name of the bundle
+     */
+    private static void mockSuccessfullyCompletedInstall(EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
+
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -108,11 +161,9 @@ public class TestInstallUtils {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
-        //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
+    }
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
+    private static String completeSuccessfullyCompletedInstall(MockMvc mockMvc, MvcResult result) throws Exception {
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
@@ -251,6 +302,48 @@ public class TestInstallUtils {
                 .plugins(Map.of("custombasename", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                         "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .build();
+    }
+
+
+    public static InstallPlan mockInstallPlanWithActions() {
+        return InstallPlan.builder()
+                .hasConflicts(true)
+                .categories(Map.of("my-category", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "another_category", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP)))
+                .groups(Map.of("ecr", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "ps",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .labels(Map.of("HELLO", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP), "WORLD",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .languages(Map.of("en", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "it",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .fragments(Map.of("title_fragment", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "another_fragment", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .pageTemplates(Map.of("todomvc_page_model", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "todomvc_another_page_model", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP)))
+                .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .resources(
+                        Map.of("/something/css/custom.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "/something/css/style.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "/something/js/configUiScript.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "/something/js/script.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                                "/something/vendor/jquery/jquery.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .contentTypes(
+                        Map.of("CNG", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE), "CNT",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .contentTemplates(
+                        Map.of("8880002", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .contents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .plugins(Map.of("custombasename", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .build();
     }
 
@@ -470,6 +563,33 @@ public class TestInstallUtils {
     @SneakyThrows
     public static String simulateFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
             K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockFailingInstall(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSimulateFailingInstall(mockMvc, result);
+    }
+
+    @SneakyThrows
+    public static String simulateFailingInstallWithInstallPlan(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockFailingInstall(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSimulateFailingInstall(mockMvc, result);
+    }
+
+
+    private static void mockFailingInstall(EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+            String bundleName) {
+
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -488,10 +608,9 @@ public class TestInstallUtils {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
                 .when(coreClient).createPage(any(PageDescriptor.class));
+    }
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
+    private static String completeSimulateFailingInstall(MockMvc mockMvc, MvcResult result) throws Exception {
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
@@ -506,6 +625,32 @@ public class TestInstallUtils {
     @SneakyThrows
     public static String simulateHugeAssetFailingInstall(MockMvc mockMvc, EntandoCoreClient coreClient,
             K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeHugeAssetFailingInstall(mockMvc, result);
+    }
+
+    @SneakyThrows
+    public static String simulateHugeAssetFailingInstallWithInstallPlan(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeHugeAssetFailingInstall(mockMvc, result);
+    }
+
+    private static void mockHugeAssetFailingInstall(EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient,
+            String bundleName) {
+
         Mockito.reset(coreClient);
         WireMock.reset();
         WireMock.setGlobalFixedDelay(0);
@@ -524,10 +669,9 @@ public class TestInstallUtils {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 413, "Error", null, null, null))
                 .when(coreClient).createFile(any(FileDescriptor.class));
+    }
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isCreated())
-                .andReturn();
+    private static String completeHugeAssetFailingInstall(MockMvc mockMvc, MvcResult result) throws Exception {
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
         assertThat(result.getResponse().containsHeader("Location")).isTrue();

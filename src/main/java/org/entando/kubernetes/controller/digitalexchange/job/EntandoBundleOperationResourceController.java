@@ -6,10 +6,8 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
@@ -29,6 +27,7 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
+import org.entando.kubernetes.validator.InstallPlanValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,6 +42,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleJobService jobService;
     private final @NonNull EntandoBundleInstallService installService;
     private final @NonNull EntandoBundleUninstallService uninstallService;
+    private final @NonNull InstallPlanValidator installPlanValidator;
 
     @Override
     public ResponseEntity<SimpleRestResponse<InstallPlan>> installPlans(
@@ -61,8 +61,16 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         return ResponseEntity.ok(new SimpleRestResponse<>(installPlan));
     }
 
+
+    /**
+     * execute a bundle installation using an overall conflict strategy.
+     * @param componentId the bundle id to install
+     * @param installRequest the InstallRequest containing the bundle version and the overall conflict strategy to apply
+     * @return the EntandoBundleJobEntity corresponding to the install task
+     * @deprecated use {@link #installWithInstallPlan(String, InstallWithPlansRequest)}
+     */
     @Override
-    @Deprecated
+    @Deprecated(since = "6.3.11")
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallRequest installRequest) {
@@ -83,15 +91,18 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> installWithInstallPlan(
             @PathVariable("component") String componentId,
-            @RequestBody(required = true) InstallWithPlansRequest installRequest) {
+            @RequestBody(required = false) InstallWithPlansRequest installRequest) {
 
-        // TODO check if required is applied
+        final InstallWithPlansRequest request = Optional.ofNullable(installRequest).orElse(new InstallWithPlansRequest());
+
+        installPlanValidator.validateInstallPlanOrThrow(installRequest);
+
         EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
-        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, installRequest.getVersion());
+        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
         EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
-                .orElseGet(() -> installService.installWithInstallPlan(bundle, tag, installRequest));
+                .orElseGet(() -> installService.installWithInstallPlan(bundle, tag, request));
 
         return ResponseEntity.created(
                 getJobLocationURI(installJob))

@@ -3,6 +3,7 @@ package org.entando.kubernetes.stubhelper;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 
@@ -72,6 +73,10 @@ public class InstallPlanStubHelper {
 
     public static ComponentInstallPlan stubComponentInstallPlan(Status status) {
         return ComponentInstallPlan.builder().status(status).build();
+    }
+
+    public static ComponentInstallPlan stubComponentInstallPlan(Status status, InstallAction action) {
+        return ComponentInstallPlan.builder().status(status).action(action).build();
     }
 
     public static InstallPlan stubInstallPlanWithCategories() {

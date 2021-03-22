@@ -16,7 +16,7 @@ public class CorsAccessControlConfiguration implements WebMvcConfigurer {
 
     private List<String> origins = Arrays.asList("*");
     private List<String> headers = Arrays.asList("Content-Type", "Authorization");
-    private List<String> methods = Arrays.asList("GET", "POST", "DELETE", "OPTIONS", "PATCH");
+    private List<String> methods = Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH");
     private boolean credentials = true;
 
     @Value("${cors.access.control.maxAge:3600}")

@@ -18,7 +18,6 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -40,7 +39,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 @RequestMapping(value = "/components")
 public interface EntandoBundleOperationResource {
@@ -64,7 +62,7 @@ public interface EntandoBundleOperationResource {
             @SecurityRequirement(name = "bearerAuth")}, tags = {"entando-bundle-operation-resource-controller"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Created")})
-    @PutMapping(value = "/components/{component}/install",
+    @PutMapping(value = "/{component}/install",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> installWithInstallPlan(
