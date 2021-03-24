@@ -1,7 +1,7 @@
 package org.entando.kubernetes.validator;
 
 import java.util.Map;
-import liquibase.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;

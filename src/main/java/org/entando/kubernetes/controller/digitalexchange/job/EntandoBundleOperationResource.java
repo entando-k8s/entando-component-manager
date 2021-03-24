@@ -62,7 +62,7 @@ public interface EntandoBundleOperationResource {
             @SecurityRequirement(name = "bearerAuth")}, tags = {"entando-bundle-operation-resource-controller"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Created")})
-    @PutMapping(value = "/{component}/install",
+    @PutMapping(value = "/{component}/installplans",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> installWithInstallPlan(
@@ -80,6 +80,11 @@ public interface EntandoBundleOperationResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/install", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJob(@PathVariable("component") String componentId);
+
+    @Operation(description = "Checks installation job status using the InstallPlan")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @GetMapping(value = "/{component}/installplans", produces = MediaType.APPLICATION_JSON_VALUE)
+    SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJobWithInstallPlan(@PathVariable("component") String componentId);
 
     @Operation(description = "Checks removal job status")
     @ApiResponse(responseCode = "200", description = "OK")

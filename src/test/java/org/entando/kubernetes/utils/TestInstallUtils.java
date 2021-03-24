@@ -110,7 +110,7 @@ public class TestInstallUtils {
 
         mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -126,7 +126,7 @@ public class TestInstallUtils {
         ObjectMapper objectMapper = new ObjectMapper();
 
         MvcResult result = mockMvc.perform(
-                put(INSTALL_COMPONENT_ENDPOINT.build())
+                put(INSTALL_PLANS_ENDPOINT.build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mockInstallPlanWithActions())))
                 .andDo(print())
@@ -579,7 +579,7 @@ public class TestInstallUtils {
 
         mockFailingInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -641,7 +641,7 @@ public class TestInstallUtils {
 
         mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isCreated())
                 .andReturn();
 

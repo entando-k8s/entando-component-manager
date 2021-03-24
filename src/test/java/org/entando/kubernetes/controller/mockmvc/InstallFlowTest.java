@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
+import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_PLANS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
@@ -106,6 +107,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.util.UriBuilder;
 
 @AutoConfigureWireMock(port = 8099)
 @AutoConfigureMockMvc
@@ -196,7 +198,7 @@ public class InstallFlowTest {
 
     @Test
     void shouldReturnNotFoundWhenBundleDoesntExistsAndInstallWithPlanIsRequested() throws Exception {
-        mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
                 .andDo(print()).andExpect(status().isNotFound());
     }
 
@@ -434,7 +436,7 @@ public class InstallFlowTest {
     private void verifyAfterErroneousInstallationShouldRollback(String failingJobId) throws Exception {
 
         // Install Job should have been rollback
-        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(get(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
@@ -474,7 +476,8 @@ public class InstallFlowTest {
 
         // Given a failed install happened
         String failingJobId = simulateHugeAssetFailingInstall();
-        verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId);
+        verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId,
+                INSTALL_COMPONENT_ENDPOINT);
     }
 
     @Test
@@ -482,11 +485,11 @@ public class InstallFlowTest {
 
         // Given a failed install happened
         String failingJobId = simulateHugeAssetFailingInstallWithPlan();
-        verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId);
+        verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId, INSTALL_PLANS_ENDPOINT);
     }
 
-    private void verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(String failingJobId)
-            throws Exception {
+    private void verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(String failingJobId,
+            UriBuilder endpointBuilder) throws Exception {
         // Install Job should have been rollback
         mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
@@ -511,17 +514,20 @@ public class InstallFlowTest {
     void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstall();
-        verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId);
+        verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId,
+                INSTALL_COMPONENT_ENDPOINT);
     }
 
     @Test
     void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalledWithInstallPlan() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstallWithInstallPlan();
-        verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId);
+        verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId,
+                INSTALL_PLANS_ENDPOINT);
     }
 
-    private void verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(String failingJobId) throws Exception {
+    private void verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(String failingJobId,
+            UriBuilder endpointUribuilder) throws Exception {
 
         // Components endpoints should still return the component is not installed
         mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
@@ -532,7 +538,7 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
         // Component install status should be rollback
-        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(get(endpointUribuilder.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
@@ -781,7 +787,7 @@ public class InstallFlowTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(put(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -813,7 +819,7 @@ public class InstallFlowTest {
         mockBundle(k8SServiceClient);
 
         InstallPlan expected = TestInstallUtils.mockInstallPlan();
-        MvcResult response = mockMvc.perform(post(TestInstallUtils.INSTALL_PLANS_ENDPOINT.build()))
+        MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -925,7 +931,7 @@ public class InstallFlowTest {
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
 
-        mockMvc.perform(post(TestInstallUtils.INSTALL_PLANS_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isServiceUnavailable());
     }
 

@@ -120,6 +120,16 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     @Override
+    public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJobWithInstallPlan(String componentId) {
+        EntandoBundleJobEntity lastInstallJob = jobService.getJobs(componentId)
+                .stream().filter(j -> j.getStatus().isOfType(JobType.INSTALL))
+                .findFirst()
+                .orElseThrow(JobNotFoundException::new);
+
+        return new SimpleRestResponse<>(lastInstallJob);
+    }
+
+    @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> uninstall(
             @PathVariable("component") String componentId, HttpServletRequest request) {
 
