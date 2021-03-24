@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AnalysisRequest {
+public class InstallPlansRequest {
 
     @Default
     private final String version = "latest";

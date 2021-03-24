@@ -2,8 +2,8 @@ package org.entando.kubernetes.stubhelper;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status;
+import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 
 public class AnalysisReportStubHelper {
 
@@ -69,70 +69,6 @@ public class AnalysisReportStubHelper {
             new SimpleEntry<>(ReportableStubHelper.DIRECTORY_CODE_2, Status.NEW);
 
 
-
-    public static AnalysisReport stubAnalysisReportWithCategories() {
-        return AnalysisReport.builder()
-                .categories(Map.ofEntries(CATEGORY_1_ENTRY, CATEGORY_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithFragments() {
-        return AnalysisReport.builder()
-                .fragments(Map.ofEntries(FRAGMENT_1_ENTRY, FRAGMENT_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithPlugins() {
-        return AnalysisReport.builder()
-                .plugins(Map.ofEntries(PLUGIN_1_ENTRY, PLUGIN_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithAssets() {
-        return AnalysisReport.builder()
-                .assets(Map.ofEntries(ASSET_1_ENTRY, ASSET_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithFragmentsAndCategories() {
-        return AnalysisReport.builder()
-                .categories(Map.ofEntries(CATEGORY_1_ENTRY, CATEGORY_2_ENTRY))
-                .fragments(Map.ofEntries(FRAGMENT_1_ENTRY, FRAGMENT_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithContents() {
-        return AnalysisReport.builder()
-                .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithAssetsAndContents() {
-        return AnalysisReport.builder()
-                .assets(Map.ofEntries(ASSET_1_ENTRY, ASSET_2_ENTRY))
-                .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithFragmentsAndCategoriesAndPluginsAndAssets() {
-        return AnalysisReport.builder()
-                .categories(Map.ofEntries(CATEGORY_1_ENTRY, CATEGORY_2_ENTRY))
-                .fragments(Map.ofEntries(FRAGMENT_1_ENTRY, FRAGMENT_2_ENTRY))
-                .plugins(Map.ofEntries(PLUGIN_1_ENTRY, PLUGIN_2_ENTRY))
-                .assets(Map.ofEntries(ASSET_1_ENTRY, ASSET_2_ENTRY))
-                .build();
-    }
-
-    public static AnalysisReport stubAnalysisReportWithFragmentsAndCategoriesAndPluginsAndAssetsAndContents() {
-        return AnalysisReport.builder()
-                .categories(Map.ofEntries(CATEGORY_1_ENTRY, CATEGORY_2_ENTRY))
-                .fragments(Map.ofEntries(FRAGMENT_1_ENTRY, FRAGMENT_2_ENTRY))
-                .plugins(Map.ofEntries(PLUGIN_1_ENTRY, PLUGIN_2_ENTRY))
-                .assets(Map.ofEntries(ASSET_1_ENTRY, ASSET_2_ENTRY))
-                .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
-                .build();
-    }
-
     public static AnalysisReport stubFullEngineAnalysisReport() {
         return AnalysisReport.builder()
                 .widgets(Map.ofEntries(WIDGET_1_ENTRY, WIDGET_2_ENTRY))
@@ -148,7 +84,22 @@ public class AnalysisReportStubHelper {
                 .build();
     }
 
-    public static AnalysisReport stubFullCMSAnalysisReport() {
+    public static AnalysisReport stubAnalysisReportWithPlugins() {
+        return AnalysisReport.builder()
+                .plugins(Map.ofEntries(PLUGIN_1_ENTRY, PLUGIN_2_ENTRY))
+                .build();
+    }
+
+
+    public static AnalysisReport stubAnalysisReportWithFragmentsAndCategories() {
+        return AnalysisReport.builder()
+                .categories(Map.ofEntries(CATEGORY_1_ENTRY, CATEGORY_2_ENTRY))
+                .fragments(Map.ofEntries(FRAGMENT_1_ENTRY, FRAGMENT_2_ENTRY))
+                .build();
+    }
+
+
+    public static AnalysisReport getCmsAnalysisReport() {
         return AnalysisReport.builder()
                 .contents(Map.ofEntries(CONTENT_1_ENTRY, CONTENT_2_ENTRY))
                 .contentTemplates(Map.ofEntries(CONTENT_TEMPLATE_1_ENTRY, CONTENT_TEMPLATE_2_ENTRY))
@@ -157,11 +108,13 @@ public class AnalysisReportStubHelper {
                 .build();
     }
 
+
     public static AnalysisReport stubFullK8SServiceAnalysisReport() {
         return AnalysisReport.builder()
                 .plugins(Map.ofEntries(PLUGIN_1_ENTRY, PLUGIN_2_ENTRY))
                 .build();
     }
+
 
     public static AnalysisReport stubFullAnalysisReport() {
         return AnalysisReport.builder()
@@ -182,5 +135,4 @@ public class AnalysisReportStubHelper {
                 .languages(Map.ofEntries(LANGUAGE_1_ENTRY, LANGUAGE_2_ENTRY))
                 .build();
     }
-
 }

@@ -6,8 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status.DIFF;
-import static org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport.Status.NEW;
 import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.hasSize;
@@ -43,9 +41,11 @@ import org.apache.commons.compress.utils.Sets;
 import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.model.EntandoCustomResourceStatus;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -63,7 +63,7 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkSpec;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
-import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
@@ -76,8 +76,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
 
-    public static final UriBuilder ANALYSIS_REPORT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc", "analysis");
+    public static final UriBuilder INSTALL_PLANS_ENDPOINT = UriComponentsBuilder.newInstance()
+            .pathSegment("components", "todomvc", "installplans");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components");
     public static final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
@@ -195,40 +195,91 @@ public class TestInstallUtils {
 
     public static AnalysisReport getCoreAnalysisReport() {
         return AnalysisReport.builder()
-                .categories(Map.of("my-category", NEW, "another_category", DIFF))
-                .groups(Map.of("ecr", NEW, "ps", DIFF))
-                .labels(Map.of("HELLO", DIFF, "WORLD", NEW))
-                .languages(Map.of("en", NEW, "it", DIFF))
-                .fragments(Map.of("title_fragment", NEW, "another_fragment", DIFF))
-                .pageTemplates(Map.of("todomvc_page_model", NEW, "todomvc_another_page_model", DIFF))
-                .pages(Map.of("my-page", NEW, "another-page", DIFF))
-                .resources(Map.of("/something/css/custom.css", DIFF, "/something/css/style.css", NEW, "/something/js/configUiScript.js", NEW,
-                        "/something/js/script.js", NEW, "/something/js/vendor/jquery/jquery.js", NEW))
-                .widgets(Map.of("another_todomvc_widget", DIFF, "todomvc_widget", NEW, "widget_with_config_ui", NEW))
+                .categories(Map.of("my-category", Status.NEW, "another_category", Status.DIFF))
+                .groups(Map.of("ecr", Status.NEW, "ps", Status.DIFF))
+                .labels(Map.of("HELLO", Status.DIFF, "WORLD", Status.NEW))
+                .languages(Map.of("en", Status.NEW, "it", Status.DIFF))
+                .fragments(Map.of("title_fragment", Status.NEW, "another_fragment", Status.DIFF))
+                .pageTemplates(Map.of("todomvc_page_model", Status.NEW, "todomvc_another_page_model", Status.DIFF))
+                .pages(Map.of("my-page", Status.NEW, "another-page", Status.DIFF))
+                .resources(Map.of("/something/css/custom.css", Status.DIFF, "/something/css/style.css", Status.NEW,
+                        "/something/js/configUiScript.js", Status.NEW, "/something/js/script.js", Status.NEW,
+                        "/something/js/vendor/jquery/jquery.js", Status.NEW))
+                .widgets(Map.of("another_todomvc_widget", Status.DIFF, "todomvc_widget", Status.NEW,
+                        "widget_with_config_ui", Status.NEW))
                 .build();
     }
+
+    public static InstallPlan mockInstallPlan() {
+        return InstallPlan.builder()
+                .hasConflicts(true)
+                .categories(Map.of("my-category", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "another_category", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .groups(Map.of("ecr", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "ps",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .labels(Map.of("HELLO", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF), "WORLD",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .languages(Map.of("en", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "it",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .fragments(Map.of("title_fragment", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "another_fragment", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .pageTemplates(Map.of("todomvc_page_model", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "todomvc_another_page_model", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "another-page",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .resources(
+                        Map.of("/something/css/custom.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                                "/something/css/style.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                                "/something/js/configUiScript.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "/something/js/script.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                                "/something/js/vendor/jquery/jquery.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "widget_with_config_ui", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .contentTypes(
+                        Map.of("CNG", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF), "CNT",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .contentTemplates(
+                        Map.of("8880002", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                                "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .contents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .plugins(Map.of("custombasename", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .build();
+    }
+
 
     public static AnalysisReport getCmsAnalysisReport() {
         return AnalysisReport.builder()
-                .assets(Map.of("my-asset", NEW, "anotherAsset", DIFF))
-                .contentTypes(Map.of("CNG", DIFF, "CNT", NEW))
-                .contentTemplates(Map.of("8880002", DIFF, "8880003", NEW))
-                .contents(Map.of("CNG102", DIFF, "CNT103", NEW))
+                .assets(Map.of("my-asset", Status.NEW,
+                        "anotherAsset", Status.DIFF))
+                .contentTypes(
+                        Map.of("CNG", Status.DIFF, "CNT",
+                                Status.NEW))
+                .contentTemplates(
+                        Map.of("8880002", Status.DIFF,
+                                "8880003", Status.NEW))
+                .contents(Map.of("CNG102", Status.DIFF,
+                        "CNT103", Status.NEW))
                 .build();
     }
+
 
     public static AnalysisReport getPluginAnalysisReport() {
         return AnalysisReport.builder()
-                .plugins(Map.of("custombasename", DIFF, "entando-todomvcv1-1-0-0", NEW,
-                        "entando-todomvcv2-1-0-0", NEW))
+                .plugins(Map.of("custombasename",
+                        Status.DIFF,
+                        "entando-todomvcv1-1-0-0",
+                        Status.NEW,
+                        "entando-todomvcv2-1-0-0",
+                        Status.NEW))
                 .build();
-    }
-
-    public static AnalysisReport getAnalysisReport() {
-        AnalysisReport report = getCoreAnalysisReport();
-        report = report.merge(getCmsAnalysisReport());
-        report = report.merge(getPluginAnalysisReport());
-        return report;
     }
 
     public static void mockAnalysisReport(EntandoCoreClient coreClient, K8SServiceClient k8SServiceClient) {
@@ -654,5 +705,6 @@ public class TestInstallUtils {
     public static String requestPath(final LoggedRequest request) {
         return requestProperty(request, "path");
     }
+
 
 }

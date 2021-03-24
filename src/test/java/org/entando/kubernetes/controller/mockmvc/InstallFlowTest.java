@@ -12,7 +12,6 @@ import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
-import static org.entando.kubernetes.utils.TestInstallUtils.getAnalysisReport;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockBundle;
@@ -68,7 +67,8 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -1058,12 +1058,12 @@ public class InstallFlowTest {
 
 
     @Test
-    void shouldReturnAValidAnalysisReportForStandardBundle() throws Exception {
+    void shouldReturnAValidInstallPlan() throws Exception {
         mockAnalysisReport(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
-        AnalysisReport expected = getAnalysisReport();
-        MvcResult response = mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
+        InstallPlan expected = TestInstallUtils.mockInstallPlan();
+        MvcResult response = mockMvc.perform(post(TestInstallUtils.INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -1071,30 +1071,32 @@ public class InstallFlowTest {
                 .jsonProvider(new JacksonJsonProvider(new ObjectMapper()))
                 .build();
 
-        AnalysisReport result = JsonPath.using(conf).parse(response.getResponse().getContentAsString())
-                .read("$.payload", AnalysisReport.class);
+        InstallPlan result = JsonPath.using(conf).parse(response.getResponse().getContentAsString())
+                .read("$.payload", InstallPlan.class);
 
-        assertThat(result).isEqualTo(expected);
+        assertOnInstallPlanComponents(result.getFragments(), expected.getFragments());
+        assertOnInstallPlanComponents(result.getAssets(), expected.getAssets());
+        assertOnInstallPlanComponents(result.getCategories(), expected.getCategories());
+        assertOnInstallPlanComponents(result.getContents(), expected.getContents());
+        assertOnInstallPlanComponents(result.getContentTemplates(), expected.getContentTemplates());
+        assertOnInstallPlanComponents(result.getContentTypes(), expected.getContentTypes());
+        assertOnInstallPlanComponents(result.getDirectories(), expected.getDirectories());
+        assertOnInstallPlanComponents(result.getGroups(), expected.getGroups());
+        assertOnInstallPlanComponents(result.getLabels(), expected.getLabels());
+        assertOnInstallPlanComponents(result.getLanguages(), expected.getLanguages());
+        assertOnInstallPlanComponents(result.getPages(), expected.getPages());
+        assertOnInstallPlanComponents(result.getPageTemplates(), expected.getPageTemplates());
+        assertOnInstallPlanComponents(result.getPlugins(), expected.getPlugins());
+        assertOnInstallPlanComponents(result.getResources(), expected.getResources());
+        assertOnInstallPlanComponents(result.getWidgets(), expected.getWidgets());
     }
 
-    @Test
-    void shouldReturnAValidAnalysisReportSystemLevelBundle() throws Exception {
-        mockAnalysisReport(coreClient, k8SServiceClient);
-        mockBundle(k8SServiceClient);
 
-        AnalysisReport expected = getAnalysisReport();
-        MvcResult response = mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
-                .andExpect(status().isOk())
-                .andReturn();
+    private void assertOnInstallPlanComponents(Map<String, ComponentInstallPlan> current,
+            Map<String, ComponentInstallPlan> expected) {
 
-        Configuration conf = Configuration.builder()
-                .jsonProvider(new JacksonJsonProvider(new ObjectMapper()))
-                .build();
-
-        AnalysisReport result = JsonPath.using(conf).parse(response.getResponse().getContentAsString())
-                .read("$.payload", AnalysisReport.class);
-
-        assertThat(result).isEqualTo(expected);
+        assertThat(current).hasSameSizeAs(expected);
+        assertThat(current).containsAllEntriesOf(expected);
     }
 
 
@@ -1173,7 +1175,7 @@ public class InstallFlowTest {
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
 
-        mockMvc.perform(post(TestInstallUtils.ANALYSIS_REPORT_ENDPOINT.build()))
+        mockMvc.perform(post(TestInstallUtils.INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isServiceUnavailable());
     }
 

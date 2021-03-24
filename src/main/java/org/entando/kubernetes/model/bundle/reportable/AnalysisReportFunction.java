@@ -5,7 +5,7 @@
 package org.entando.kubernetes.model.bundle.reportable;
 
 import java.util.List;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.client.model.AnalysisReport;
 
 @FunctionalInterface
 public interface AnalysisReportFunction {

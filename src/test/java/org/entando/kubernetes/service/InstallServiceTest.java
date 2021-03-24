@@ -21,11 +21,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
+import org.entando.kubernetes.assertionhelper.InstallPlanAssertionHelper;
 import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -71,6 +71,7 @@ import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperatio
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
+import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -130,7 +131,7 @@ public class InstallServiceTest {
 
 
     @Test
-    void receivingDataFromRemoteHandlerWillReturnTheRightAnalysisReport() {
+    void receivingDataFromRemoteHandlerWillReturnTheRightInstallPlan() {
 
         reportableComponentProcessorList.add(new AssetProcessor(coreClient));
         reportableComponentProcessorList.add(new CategoryProcessor(coreClient));
@@ -154,7 +155,7 @@ public class InstallServiceTest {
                         .stubFullEngineAnalysisReport());
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_CMS,
                 (List<Reportable> reportableList) -> AnalysisReportStubHelper
-                        .stubFullCMSAnalysisReport());
+                        .getCmsAnalysisReport());
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
                 (List<Reportable> reportableList) -> AnalysisReportStubHelper
                         .stubFullK8SServiceAnalysisReport());
@@ -163,12 +164,12 @@ public class InstallServiceTest {
 
         when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
 
-        AnalysisReport analysisReport = installService.performInstallAnalysis(bundle, bundle.getSpec().getTags().get(0),
+        InstallPlan installPlan = installService.generateInstallPlan(bundle, bundle.getSpec().getTags().get(0),
                 true);
 
-        AnalysisReportAssertionHelper.assertOnAnalysisReports(
-                AnalysisReportStubHelper.stubFullAnalysisReport(),
-                analysisReport);
+        InstallPlanAssertionHelper.assertOnInstallPlan(
+                InstallPlanStubHelper.stubFullInstallPlan(),
+                installPlan);
     }
 
 
@@ -181,7 +182,7 @@ public class InstallServiceTest {
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE, coreClient::getEngineAnalysisReport);
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_CMS,
                 (List<Reportable> reportableList) -> AnalysisReportStubHelper
-                        .stubFullCMSAnalysisReport());
+                        .getCmsAnalysisReport());
 
         EntandoDeBundle bundle = getTestBundle();
 
@@ -191,7 +192,7 @@ public class InstallServiceTest {
         EntandoDeBundleTag entandoDeBundleTag = bundle.getSpec().getTags().get(0);
 
         Assertions.assertThrows(ReportAnalysisException.class,
-                () -> installService.performInstallAnalysis(bundle, entandoDeBundleTag,
+                () -> installService.generateInstallPlan(bundle, entandoDeBundleTag,
                         true));
     }
 
@@ -296,7 +297,7 @@ public class InstallServiceTest {
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
         Assertions.assertThrows(BundleOperationConcurrencyException.class,
-                () -> installService.performInstallAnalysis(null, null, true));
+                () -> installService.generateInstallPlan(null, null, true));
 
         // install
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
@@ -312,7 +313,7 @@ public class InstallServiceTest {
         doNothing().when(bundleOperationsConcurrencyManager).throwIfAnotherOperationIsRunningOrStartOperation();
         doNothing().when(bundleOperationsConcurrencyManager).operationTerminated();
         try {
-            installService.performInstallAnalysis(null, null, true);
+            installService.generateInstallPlan(null, null, true);
         } catch (Exception e) {
             // catch exception to avoid mocking everything uselessly
         }
@@ -327,7 +328,7 @@ public class InstallServiceTest {
         doNothing().when(bundleOperationsConcurrencyManager).operationTerminated();
 
         try {
-            installService.performInstallAnalysis(null, null, false);
+            installService.generateInstallPlan(null, null, false);
         } catch (Exception e) {
             // catch exception to avoid mocking everything uselessly
         }

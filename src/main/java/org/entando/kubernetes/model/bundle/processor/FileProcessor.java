@@ -14,9 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -63,12 +63,12 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
     @Override
     public List<Installable<FileDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new AnalysisReport());
+                new InstallPlan());
     }
 
     @Override
     public List<Installable<FileDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, AnalysisReport report) {
+            InstallActionsByComponentType actions, InstallPlan report) {
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         try {

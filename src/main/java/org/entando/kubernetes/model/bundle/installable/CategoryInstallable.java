@@ -3,7 +3,7 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 
@@ -38,7 +38,7 @@ public class CategoryInstallable extends Installable<CategoryDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Removing Label {}", getName());
+            log.info("Removing Category {}", getName());
             if (shouldCreate()) {
                 engineService.deleteCategory(getName());
             }

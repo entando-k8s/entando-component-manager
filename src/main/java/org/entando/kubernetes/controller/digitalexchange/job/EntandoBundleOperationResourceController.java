@@ -8,8 +8,8 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
@@ -42,20 +42,20 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleUninstallService uninstallService;
 
     @Override
-    public ResponseEntity<SimpleRestResponse<AnalysisReport>> analysis(
+    public ResponseEntity<SimpleRestResponse<InstallPlan>> installPlans(
             @PathVariable("component") String componentId,
-            @RequestBody(required = false) AnalysisRequest analysisRequest) {
+            @RequestBody(required = false) InstallPlansRequest installPlansRequest) {
 
-        final AnalysisRequest request = Optional.ofNullable(analysisRequest).orElse(new AnalysisRequest());
+        final InstallPlansRequest request = Optional.ofNullable(installPlansRequest).orElse(new InstallPlansRequest());
 
         EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
-        AnalysisReport report = installService
-                .performInstallAnalysis(bundle, tag, EntandoBundleInstallService.PERFORM_CONCURRENT_CHECKS);
+        InstallPlan installPlan = installService
+                .generateInstallPlan(bundle, tag, EntandoBundleInstallService.PERFORM_CONCURRENT_CHECKS);
 
-        return ResponseEntity.ok(new SimpleRestResponse<>(report));
+        return ResponseEntity.ok(new SimpleRestResponse<>(installPlan));
     }
 
     @Override

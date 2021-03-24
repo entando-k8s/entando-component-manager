@@ -9,9 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import org.entando.kubernetes.controller.digitalexchange.job.model.AnalysisReport;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -67,7 +67,7 @@ public interface ComponentProcessor<T extends Descriptor> {
      * @throws EntandoComponentManagerException in case of any error while reading any the file from the Zip package
      */
     List<Installable<T>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, AnalysisReport report);
+            InstallActionsByComponentType actions, InstallPlan report);
 
     /**
      * This method extracts a list of installable components from a list of {@link org.entando.kubernetes.model.job.EntandoBundleComponentJob}.
