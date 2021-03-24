@@ -123,27 +123,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return installPlan;
     }
 
-    /**
-     * install a bundle tag using the CREATE overall conflict strategy.
-     * @param bundle the bundle to install
-     * @param tag the tag of the bundle to install
-     * @return the EntandoBundleJobEntity corresponding to the install task
-     * @deprecated use {@link #installWithInstallPlan(EntandoDeBundle, EntandoDeBundleTag, InstallPlan)}
-     */
-    @Deprecated(since = "6.3.11")
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         return this.install(bundle, tag, InstallAction.CREATE);
     }
 
-    /**
-     * install a bundle tag using an overall conflict strategy.
-     * @param bundle the bundle to install
-     * @param tag the tag of the bundle to install
-     * @param conflictStrategy the overall conflict strategy to apply
-     * @return the EntandoBundleJobEntity corresponding to the install task
-     * @deprecated use {@link #installWithInstallPlan(EntandoDeBundle, EntandoDeBundleTag, InstallPlan)}
-     */
-    @Deprecated(since = "6.3.11")
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallAction conflictStrategy) {
 

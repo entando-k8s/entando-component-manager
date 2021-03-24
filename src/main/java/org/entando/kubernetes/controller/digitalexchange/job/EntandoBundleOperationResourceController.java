@@ -62,15 +62,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
 
-    /**
-     * execute a bundle installation using an overall conflict strategy.
-     * @param componentId the bundle id to install
-     * @param installRequest the InstallRequest containing the bundle version and the overall conflict strategy to apply
-     * @return the EntandoBundleJobEntity corresponding to the install task
-     * @deprecated use {@link #installWithInstallPlan(String, InstallWithPlansRequest)}
-     */
     @Override
-    @Deprecated(since = "6.3.11")
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallRequest installRequest) {
@@ -111,22 +103,19 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJob(@PathVariable("component") String componentId) {
-        EntandoBundleJobEntity lastInstallJob = jobService.getJobs(componentId)
-                .stream().filter(j -> j.getStatus().isOfType(JobType.INSTALL))
-                .findFirst()
-                .orElseThrow(JobNotFoundException::new);
-
-        return new SimpleRestResponse<>(lastInstallJob);
+        return new SimpleRestResponse<>(executeGetLastInstallJow(componentId));
     }
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJobWithInstallPlan(String componentId) {
-        EntandoBundleJobEntity lastInstallJob = jobService.getJobs(componentId)
+        return new SimpleRestResponse<>(executeGetLastInstallJow(componentId));
+    }
+
+    private EntandoBundleJobEntity executeGetLastInstallJow(String componentId) {
+        return jobService.getJobs(componentId)
                 .stream().filter(j -> j.getStatus().isOfType(JobType.INSTALL))
                 .findFirst()
                 .orElseThrow(JobNotFoundException::new);
-
-        return new SimpleRestResponse<>(lastInstallJob);
     }
 
     @Override
