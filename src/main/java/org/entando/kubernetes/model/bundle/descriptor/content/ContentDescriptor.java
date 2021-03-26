@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor.content;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,13 +26,12 @@ public class ContentDescriptor implements Descriptor {
     private String listModel;
     private String defaultModel;
     private ContentAttribute[] attributes;
+    private List<String> categories;
 
     @Override
     public ComponentKey getComponentKey() {
         return new ComponentKey(id);
     }
-
-
 
 
     @Getter
