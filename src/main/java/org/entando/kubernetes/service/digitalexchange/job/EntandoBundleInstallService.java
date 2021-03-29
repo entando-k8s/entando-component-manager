@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Comparator;
@@ -66,6 +68,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
     private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     /**
@@ -139,7 +143,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     ? generateInstallPlan(bundle, tag, EntandoBundleInstallService.DONT_PERFORM_CONCURRENT_CHECKS)
                     : new InstallPlan();
 
-            EntandoBundleJobEntity job = createInstallJob(bundle, tag);
+            EntandoBundleJobEntity job = createInstallJob(bundle, tag, installPlan);
             submitInstallAsync(job, bundle, tag, conflictStrategy, installPlan)
                     .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
 
@@ -159,7 +163,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
         try {
-            EntandoBundleJobEntity job = createInstallJob(bundle, tag);
+            EntandoBundleJobEntity job = createInstallJob(bundle, tag, installPlan);
             submitInstallAsync(job, bundle, tag, InstallAction.CREATE, installPlan)
                     .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
 
@@ -172,7 +176,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         }
     }
 
-    private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallPlan installPlan) {
+
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
 
         job.setComponentId(bundle.getMetadata().getName());
@@ -180,6 +186,14 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         job.setComponentVersion(tag.getVersion());
         job.setProgress(0);
         job.setStatus(JobStatus.INSTALL_CREATED);
+
+        try {
+            job.setInstallPlan(null != installPlan ? objectMapper.writeValueAsString(installPlan) : null);
+        } catch (JsonProcessingException e) {
+            log.error("Error converting the received install plan to string");
+            e.printStackTrace();
+            job.setInstallPlan(null);
+        }
 
         EntandoBundleJobEntity createdJob = jobRepo.save(job);
         log.debug("New installation job created " + job.toString());

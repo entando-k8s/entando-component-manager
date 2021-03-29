@@ -46,6 +46,7 @@ import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.model.EntandoCustomResourceStatus;
 import org.entando.kubernetes.model.EntandoDeploymentPhase;
@@ -128,7 +129,7 @@ public class TestInstallUtils {
         MvcResult result = mockMvc.perform(
                 put(INSTALL_PLANS_ENDPOINT.build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(mockInstallPlanWithActions())))
+                        .content(objectMapper.writeValueAsString(mockInstallWithPlansRequestWithActions())))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -345,6 +346,47 @@ public class TestInstallUtils {
                         "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .build();
+    }
+
+    public static InstallWithPlansRequest mockInstallWithPlansRequestWithActions() {
+        return (InstallWithPlansRequest) new InstallWithPlansRequest()
+                .setVersion("0.0.1")
+                .setHasConflicts(true)
+                .setCategories(Map.of("my-category", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "another_category", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP)))
+                .setGroups(Map.of("ecr", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "ps",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setLabels(Map.of("HELLO", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP), "WORLD",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setLanguages(Map.of("en", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "it",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setFragments(Map.of("title_fragment", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "another_fragment", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setPageTemplates(Map.of("todomvc_page_model", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "todomvc_another_page_model", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP)))
+                .setPages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setResources(
+                        Map.of("/something/css/custom.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "/something/css/style.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "/something/js/configUiScript.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "/something/js/script.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                                "/something/vendor/jquery/jquery.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .setWidgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setAssets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setContentTypes(
+                        Map.of("CNG", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE), "CNT",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setContentTemplates(
+                        Map.of("8880002", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setContents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setPlugins(Map.of("custombasename", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
     }
 
 

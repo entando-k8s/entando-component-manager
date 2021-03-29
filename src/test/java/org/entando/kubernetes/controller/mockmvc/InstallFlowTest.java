@@ -40,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.jsonpath.Configuration;
@@ -217,7 +218,7 @@ public class InstallFlowTest {
 
 
     @Test
-    void shouldCallCoreToInstallComponentsWithInstallPlanRequest() {
+    void shouldCallCoreToInstallComponentsWithInstallPlanRequest() throws JsonProcessingException {
         simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest();
 
         installFlowAssertionHelper.verifyPluginInstallRequestsWithInstallPlanRequest(k8SServiceClient);
@@ -238,6 +239,13 @@ public class InstallFlowTest {
         installFlowAssertionHelper.verifyContentTemplatesInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyContentsInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyAssetsInstallRequestsWithInstallPlanRequest(coreClient);
+
+        // check that db install_plan column is correctly populated
+        List<EntandoBundleJobEntity> bundleJobEntityList = jobRepository.findAll();
+        assertThat(bundleJobEntityList).hasSize(1);
+        String stringInstallPlan = new ObjectMapper().writeValueAsString(TestInstallUtils.mockInstallWithPlansRequestWithActions());
+        EntandoBundleJobEntity entandoBundleJobEntity = bundleJobEntityList.get(0);
+        assertThat(entandoBundleJobEntity.getInstallPlan()).isEqualTo(stringInstallPlan);
     }
 
 
