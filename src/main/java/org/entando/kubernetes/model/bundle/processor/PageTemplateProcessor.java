@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -50,13 +49,12 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
 
     @Override
     public List<Installable<PageTemplateDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<PageTemplateDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<PageTemplateDescriptor>> installables = new LinkedList<>();
 
@@ -70,8 +68,8 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                     String tp = getRelativePath(fileName, pageTemplateDescriptor.getTemplatePath());
                     pageTemplateDescriptor.setTemplate(bundleReader.readFileAsString(tp));
                 }
-                InstallAction action = extractInstallAction(pageTemplateDescriptor.getCode(), actions, conflictStrategy,
-                        report);
+                InstallAction action = extractInstallAction(pageTemplateDescriptor.getCode(), conflictStrategy,
+                        installPlan);
                 installables.add(new PageTemplateInstallable(engineService, pageTemplateDescriptor, action));
             }
 

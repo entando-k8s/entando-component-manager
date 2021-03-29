@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -50,14 +49,12 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
 
     @Override
     public List<Installable<ContentTemplateDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<ContentTemplateDescriptor>> process(BundleReader bundleReader,
-            InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallAction conflictStrategy, InstallPlan installPlan) {
 
         List<Installable<ContentTemplateDescriptor>> installables = new LinkedList<>();
 
@@ -73,8 +70,8 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
                     contentTemplateDescriptor.setContentShape(bundleReader.readFileAsString(csPath));
                 }
 
-                InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), actions,
-                        conflictStrategy, report);
+                InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), conflictStrategy,
+                        installPlan);
                 installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor, action));
             }
 

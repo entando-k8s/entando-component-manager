@@ -1,3 +1,8 @@
+/**
+ * request to start the install plans flow.
+ * this request is used to request an install plans from the ECR
+ */
+
 package org.entando.kubernetes.controller.digitalexchange.job.model;
 
 import lombok.AllArgsConstructor;

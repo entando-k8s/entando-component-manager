@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -57,13 +56,12 @@ public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor
 
     @Override
     public List<Installable<LanguageDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<LanguageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         final List<Installable<LanguageDescriptor>> installables = new LinkedList<>();
 
@@ -78,7 +76,7 @@ public class LanguageProcessor extends BaseComponentProcessor<LanguageDescriptor
                         throw new EntandoComponentManagerException(
                                 "The bundle has a language with empty code. A code is mandatory for each language.");
                     }
-                    InstallAction action = extractInstallAction(ld.getCode(), actions, conflictStrategy, report);
+                    InstallAction action = extractInstallAction(ld.getCode(), conflictStrategy, installPlan);
                     installables.add(new LanguageInstallable(engineService, ld, action));
                 }
             }

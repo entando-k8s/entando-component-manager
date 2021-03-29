@@ -29,7 +29,7 @@ class BaseProcessorTest {
 
         EntandoComponentManagerException thrown = assertThrows(
                 EntandoComponentManagerException.class,
-                () -> processor.process(baseBundleReader, null, null, null)
+                () -> processor.process(baseBundleReader, null, null)
         );
 
         assertThat(thrown.getMessage()).isEqualTo("Error processing " + componentTypeName + " components");

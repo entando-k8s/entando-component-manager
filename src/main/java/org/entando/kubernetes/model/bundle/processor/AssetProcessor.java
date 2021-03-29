@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -56,13 +55,13 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
 
     @Override
     public List<Installable<AssetDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
+        return this.process(bundleReader, InstallAction.CREATE,
                 new InstallPlan());
     }
 
     @Override
     public List<Installable<AssetDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<AssetDescriptor>> installables = new LinkedList<>();
 
@@ -72,8 +71,8 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
             for (String fileName : descriptorList) {
                 String assetDirectory = Paths.get(fileName).getParent().toString();
                 AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
-                InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(), actions,
-                        conflictStrategy, report);
+                InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(),
+                        conflictStrategy, installPlan);
                 installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
                         assetDirectory, assetDescriptor.getName()), action));
             }

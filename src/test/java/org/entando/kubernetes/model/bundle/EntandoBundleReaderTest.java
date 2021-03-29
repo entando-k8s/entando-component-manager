@@ -18,7 +18,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -324,13 +323,12 @@ public class EntandoBundleReaderTest {
 
         @Override
         public List<Installable<DumbDescriptor>> process(BundleReader bundleReader) {
-            return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                    new InstallPlan());
+            return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
         }
 
         @Override
         public List<Installable<DumbDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-                InstallActionsByComponentType actions, InstallPlan report) {
+                InstallPlan installPlan) {
             return null;
         }
 
