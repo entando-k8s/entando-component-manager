@@ -190,8 +190,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         try {
             job.setInstallPlan(null != installPlan ? objectMapper.writeValueAsString(installPlan) : null);
         } catch (JsonProcessingException e) {
-            log.error("Error converting the received install plan to string");
-            e.printStackTrace();
+            log.error("Error converting the received install plan to string", e);
             job.setInstallPlan(null);
         }
 
