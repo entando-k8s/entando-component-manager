@@ -6,6 +6,9 @@ status: PUBLIC
 viewPage: news
 listModel: '10022'
 defaultModel: '10003'
+categories:
+  - cat1
+  - cat2
 attributes:
   - code: title
     value: null

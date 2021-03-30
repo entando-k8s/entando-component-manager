@@ -516,6 +516,7 @@ public class InstallFlowTest {
         assertThat(optErrComponent.isPresent()).isTrue();
         EntandoBundleComponentJobEntity ec = optErrComponent.get();
         assertThat(ec.getInstallErrorMessage()).contains("status code 413", "Payload Too Large");
+
     }
 
     @Test
@@ -546,7 +547,7 @@ public class InstallFlowTest {
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
         // Component install status should be rollback
-        mockMvc.perform(get(endpointUribuilder.build()))
+        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
                 .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
@@ -579,7 +580,7 @@ public class InstallFlowTest {
     }
 
     @Test
-    void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() {
+    void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
         // Given I try to update a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();

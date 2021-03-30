@@ -187,6 +187,7 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedContents.get(0).getViewPage()).isEqualTo("news");
         assertThat(allPassedContents.get(0).getListModel()).isEqualTo("10022");
         assertThat(allPassedContents.get(0).getDefaultModel()).isEqualTo("10003");
+        assertThat(allPassedContents.get(0).getCategories()).containsOnly("cat1", "cat2");
 
         assertThat(allPassedContents.get(1).getId()).isEqualTo("CNT103");
         assertThat(allPassedContents.get(1).getTypeCode()).isEqualTo("CNT");
@@ -574,6 +575,7 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedContents.get(0).getViewPage()).isEqualTo("news");
         assertThat(allPassedContents.get(0).getListModel()).isEqualTo("10022");
         assertThat(allPassedContents.get(0).getDefaultModel()).isEqualTo("10003");
+        assertThat(allPassedContents.get(0).getCategories()).containsOnly("cat1", "cat2");
 
         assertThat(allPassedContents.get(1).getId()).isEqualTo("CNT103");
         assertThat(allPassedContents.get(1).getTypeCode()).isEqualTo("CNT");
