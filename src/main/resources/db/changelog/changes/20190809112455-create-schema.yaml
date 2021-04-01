@@ -137,7 +137,7 @@ databaseChangeLog:
                     references: entando_bundle_jobs(id)
               - column:
                   name: last_update
-                  type: TIMESTAMP
+                  type: TIMESTAMP WITHOUT TIME ZONE
               - column:
                   name: metadata
                   type: VARCHAR(255)
