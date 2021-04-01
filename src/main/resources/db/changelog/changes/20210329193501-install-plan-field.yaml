@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20210329193501
+      author: l.corsetti
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: install_plan
+                  type: TEXT
+                  defaultValue: null
+            tableName: entando_bundle_jobs

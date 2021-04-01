@@ -285,8 +285,8 @@ public class BundleUtilities {
 
     /**
      * determine and return the resource root folder for the current bundle.
-     *  - if the current bundle is a standard bundle => root folder = current_bundle_code + '/resources'
-     *  - otherwise => '/resources'
+     *  - if the current bundle is a standard bundle, root folder = current_bundle_code + '/resources'
+     *  - otherwise '/resources'
      * @param bundleReader the reader of the current bundle
      * @return the resource root folder for the current bundle
      * @throws IOException if a read error occurs during the bundle reading

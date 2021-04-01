@@ -66,6 +66,8 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     private Integer rollbackErrorCode;
     @Column
     private String rollbackErrorMessage;
+    @Column
+    private String installPlan;
 
     @PrePersist
     public void generateId() {
@@ -87,6 +89,7 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
         newEntity.setStartedAt(this.startedAt);
         newEntity.setFinishedAt(this.finishedAt);
         newEntity.setUserId(this.userId);
+        newEntity.setInstallPlan(this.installPlan);
         return newEntity;
     }
 }

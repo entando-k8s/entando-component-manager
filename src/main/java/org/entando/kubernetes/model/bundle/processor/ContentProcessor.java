@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -51,13 +50,12 @@ public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
 
     @Override
     public List<Installable<ContentDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<ContentDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<ContentDescriptor>> installables = new LinkedList<>();
 
@@ -67,8 +65,7 @@ public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
             for (String fileName : descriptorList) {
                 ContentDescriptor contentDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentDescriptor.class);
-                InstallAction action = extractInstallAction(contentDescriptor.getId(), actions, conflictStrategy,
-                        report);
+                InstallAction action = extractInstallAction(contentDescriptor.getId(), conflictStrategy, installPlan);
                 installables.add(new ContentInstallable(engineService, contentDescriptor, action));
             }
 

@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -55,13 +54,12 @@ public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> impl
 
     @Override
     public List<Installable<LabelDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<LabelDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         final List<Installable<LabelDescriptor>> installables = new LinkedList<>();
 
@@ -72,7 +70,7 @@ public class LabelProcessor extends BaseComponentProcessor<LabelDescriptor> impl
                 List<LabelDescriptor> labelDescriptorList = bundleReader
                         .readListOfDescriptorFile(ldf, LabelDescriptor.class);
                 for (LabelDescriptor ld : labelDescriptorList) {
-                    InstallAction action = extractInstallAction(ld.getKey(), actions, conflictStrategy, report);
+                    InstallAction action = extractInstallAction(ld.getKey(), conflictStrategy, installPlan);
                     installables.add(new LabelInstallable(engineService, ld, action));
                 }
             }

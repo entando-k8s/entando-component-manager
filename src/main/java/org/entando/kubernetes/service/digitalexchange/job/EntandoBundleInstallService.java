@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Comparator;
@@ -17,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.model.assembler.InstallPlanAssembler;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
@@ -67,6 +68,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
     private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     /**
@@ -124,21 +127,24 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return installPlan;
     }
 
+    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+        return this.install(bundle, tag, InstallAction.CREATE);
+    }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            InstallAction conflictStrategy, InstallActionsByComponentType actions) {
+            InstallAction conflictStrategy) {
 
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
         try {
 
             // Only request analysis report if provided conflict strategy
-            final InstallPlan report = conflictStrategy != InstallAction.CREATE
+            final InstallPlan installPlan = conflictStrategy != InstallAction.CREATE
                     ? generateInstallPlan(bundle, tag, EntandoBundleInstallService.DONT_PERFORM_CONCURRENT_CHECKS)
                     : new InstallPlan();
 
-            EntandoBundleJobEntity job = createInstallJob(bundle, tag);
-            submitInstallAsync(job, bundle, tag, conflictStrategy, actions, report)
+            EntandoBundleJobEntity job = createInstallJob(bundle, tag, installPlan);
+            submitInstallAsync(job, bundle, tag, conflictStrategy, installPlan)
                     .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
 
             return job;
@@ -150,12 +156,29 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         }
     }
 
-    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        return this.install(bundle, tag, InstallAction.CREATE, new InstallActionsByComponentType());
+
+    public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallPlan installPlan) {
+
+        this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
+
+        try {
+            EntandoBundleJobEntity job = createInstallJob(bundle, tag, installPlan);
+            submitInstallAsync(job, bundle, tag, InstallAction.CREATE, installPlan)
+                    .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
+
+            return job;
+
+        } catch (Exception e) {
+            // release concurrency manager's lock
+            this.bundleOperationsConcurrencyManager.operationTerminated();
+            throw e;
+        }
     }
 
+    private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallPlan installPlan) {
 
-    private EntandoBundleJobEntity createInstallJob(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
 
         job.setComponentId(bundle.getMetadata().getName());
@@ -164,6 +187,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         job.setProgress(0);
         job.setStatus(JobStatus.INSTALL_CREATED);
 
+        try {
+            job.setInstallPlan(null != installPlan ? objectMapper.writeValueAsString(installPlan) : null);
+        } catch (JsonProcessingException e) {
+            log.error("Error converting the received install plan to string", e);
+            job.setInstallPlan(null);
+        }
+
         EntandoBundleJobEntity createdJob = jobRepo.save(job);
         log.debug("New installation job created " + job.toString());
         createdJob.getComponentId();
@@ -171,8 +201,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private CompletableFuture<Void> submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
-            EntandoDeBundleTag tag,
-            InstallAction conflictStrategy, InstallActionsByComponentType actions, InstallPlan report) {
+            EntandoDeBundleTag tag, InstallAction conflictStrategy, InstallPlan installPlan) {
 
         return CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
@@ -185,7 +214,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
                 Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag,
-                        bundleDownloader, conflictStrategy, actions, report);
+                        bundleDownloader, conflictStrategy, installPlan);
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
                         .map(i -> {
                             EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
@@ -289,11 +318,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallActionsByComponentType actions,
-            InstallPlan report) {
+            BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallPlan installPlan) {
+
         BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
-        return getInstallableComponentsByPriority(bundleReader, conflictStrategy, actions,
-                report);
+        return getInstallableComponentsByPriority(bundleReader, conflictStrategy, installPlan);
     }
 
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity job,
@@ -322,9 +350,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
-            InstallAction conflictStrategy, InstallActionsByComponentType actions, InstallPlan report) {
+            InstallAction conflictStrategy, InstallPlan installPlan) {
         return processorMap.values().stream()
-                .map(processor -> processor.process(bundleReader, conflictStrategy, actions, report))
+                .map(processor -> processor.process(bundleReader, conflictStrategy, installPlan))
                 .flatMap(List::stream)
                 .sorted(Comparator.comparingInt(Installable::getPriority))
                 .collect(Collectors.toCollection(ArrayDeque::new));

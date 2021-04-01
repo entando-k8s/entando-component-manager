@@ -9,8 +9,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -27,7 +27,6 @@ import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -62,13 +61,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     @Override
     public List<Installable<PluginDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<PluginDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
 
@@ -79,8 +77,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
                 validateDescriptorOrThrow(plugin);
                 logDescriptorWarnings(plugin);
-                InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), actions,
-                        conflictStrategy, report);
+                InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), conflictStrategy,
+                        installPlan);
                 installableList.add(new PluginInstallable(kubernetesService, plugin, action));
             }
         } catch (IOException e) {

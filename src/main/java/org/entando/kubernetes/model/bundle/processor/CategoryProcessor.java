@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -55,13 +54,12 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
 
     @Override
     public List<Installable<CategoryDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<CategoryDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<CategoryDescriptor>> installables = new LinkedList<>();
 
@@ -72,7 +70,7 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
                 List<CategoryDescriptor> categoryDescriptorList = bundleReader
                         .readListOfDescriptorFile(fileName, CategoryDescriptor.class);
                 for (CategoryDescriptor cd : categoryDescriptorList) {
-                    InstallAction action = extractInstallAction(cd.getCode(), actions, conflictStrategy, report);
+                    InstallAction action = extractInstallAction(cd.getCode(), conflictStrategy, installPlan);
                     installables.add(new CategoryInstallable(engineService, cd, action));
                 }
             }

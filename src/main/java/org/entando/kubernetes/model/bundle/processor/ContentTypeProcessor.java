@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
-import org.entando.kubernetes.controller.digitalexchange.job.model.InstallActionsByComponentType;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -50,13 +49,12 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
 
     @Override
     public List<Installable<ContentTypeDescriptor>> process(BundleReader bundleReader) {
-        return this.process(bundleReader, InstallAction.CREATE, new InstallActionsByComponentType(),
-                new InstallPlan());
+        return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
     @Override
     public List<Installable<ContentTypeDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallActionsByComponentType actions, InstallPlan report) {
+            InstallPlan installPlan) {
 
         List<Installable<ContentTypeDescriptor>> installables = new LinkedList<>();
 
@@ -66,8 +64,8 @@ public class ContentTypeProcessor extends BaseComponentProcessor<ContentTypeDesc
             for (String fileName : descriptorList) {
                 ContentTypeDescriptor contentTypeDescriptor = bundleReader
                         .readDescriptorFile(fileName, ContentTypeDescriptor.class);
-                InstallAction action = extractInstallAction(contentTypeDescriptor.getCode(), actions, conflictStrategy,
-                        report);
+                InstallAction action = extractInstallAction(contentTypeDescriptor.getCode(), conflictStrategy,
+                        installPlan);
                 installables.add(new ContentTypeInstallable(engineService, contentTypeDescriptor, action));
             }
 

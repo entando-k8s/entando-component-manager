@@ -18,6 +18,4 @@ public class InstallRequest {
     @Default
     private final InstallAction conflictStrategy = InstallAction.CREATE;
 
-    @Default
-    private final InstallActionsByComponentType actions = new InstallActionsByComponentType();
 }

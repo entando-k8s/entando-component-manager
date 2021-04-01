@@ -1,5 +1,5 @@
-/**
- * assembler pattern to adapt AnalysisReport to InstallPlan.
+/*
+  assembler pattern to adapt AnalysisReport to InstallPlan.
  */
 
 package org.entando.kubernetes.client.model.assembler;
