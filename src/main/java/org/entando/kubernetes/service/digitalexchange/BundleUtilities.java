@@ -190,8 +190,7 @@ public class BundleUtilities {
     private static String composeIngressPathFromDockerImage(DockerImage image) {
         return "/" + String.join("/",
                 makeKubernetesCompatible(image.getOrganization()),
-                makeKubernetesCompatible(image.getName()),
-                makeKubernetesCompatible(image.getVersion()));
+                makeKubernetesCompatible(image.getName()));
     }
 
     public static Map<String, String> getLabelsFromImage(DockerImage dockerImage) {
