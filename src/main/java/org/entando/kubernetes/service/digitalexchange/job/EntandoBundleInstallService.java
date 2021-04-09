@@ -186,13 +186,16 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         job.setComponentVersion(tag.getVersion());
         job.setProgress(0);
         job.setStatus(JobStatus.INSTALL_CREATED);
-        job.setCustomInstallation(installPlan.isCustomInstallation());
 
-        try {
-            job.setInstallPlan(null != installPlan ? objectMapper.writeValueAsString(installPlan) : null);
-        } catch (JsonProcessingException e) {
-            log.error("Error converting the received install plan to string", e);
-            job.setInstallPlan(null);
+        if (installPlan != null) {
+            job.setCustomInstallation(installPlan.isCustomInstallation());
+
+            try {
+                job.setInstallPlan(objectMapper.writeValueAsString(installPlan));
+            } catch (JsonProcessingException e) {
+                log.error("Error converting the received install plan to string", e);
+                job.setInstallPlan(null);
+            }
         }
 
         EntandoBundleJobEntity createdJob = jobRepo.save(job);

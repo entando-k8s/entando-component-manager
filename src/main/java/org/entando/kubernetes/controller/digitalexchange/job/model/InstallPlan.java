@@ -143,7 +143,7 @@ public class InstallPlan {
     }
 
     /**
-     * if there is at least an action different from CREATE the installPlan is custom
+     * if there is at least an action different from CREATE the installPlan is custom.
      * @return true if the install plan is custom, false otherwise
      */
     @JsonIgnore
@@ -165,7 +165,7 @@ public class InstallPlan {
     }
 
     /**
-     * check if at least one of the received ComponentInstallPlan has install action different from CREATE
+     * check if at least one of the received ComponentInstallPlan has install action different from CREATE.
      * @param componentInstallPlanMap the map of ComponentInstallPlan co check
      * @return true if at least one ComponentInstallPlan has install action different from CREATE
      */

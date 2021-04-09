@@ -83,6 +83,12 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public Optional<List<EntandoBundleJobEntity>> findEntandoBundleJobEntityByIdIn(
+            Set<UUID> componentIdList) {
+        return Optional.of(new ArrayList<>(this.database.values()));
+    }
+
+    @Override
     public List<EntandoBundleJobEntity> findAll() {
         return new ArrayList<>(this.database.values());
     }

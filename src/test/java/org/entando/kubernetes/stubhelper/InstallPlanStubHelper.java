@@ -157,6 +157,8 @@ public class InstallPlanStubHelper {
                 .labels(Map.of(ReportableStubHelper.LABEL_CODE_1,
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
                 .languages(Map.of(ReportableStubHelper.LANG_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE),
+                        ReportableStubHelper.LANG_CODE_2,
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
                 .build();
     }

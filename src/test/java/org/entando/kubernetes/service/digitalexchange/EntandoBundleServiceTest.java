@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESPACE;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
@@ -79,6 +81,23 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> components = service.listBundles();
         assertThat(components.getBody().size()).isEqualTo(1);
         assertThat(components.getBody().get(0).getCode()).isEqualTo(bundle.getMetadata().getName());
+        assertThat(components.getTotalItems()).isEqualTo(1);
+
+        verify(installedComponentRepository).findAll();
+    }
+
+    @Test
+    void shouldCorrectlyPopulateCustomInstallationField() {
+        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        EntandoBundleEntity component = getTestComponent();
+
+        when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
+        when(jobRepository.findEntandoBundleJobEntityByIdIn(any(Set.class)))
+                .thenReturn(Optional.of(Collections.singletonList(getTestJobEntity())));
+        PagedMetadata<EntandoBundle> components = service.listBundles();
+        assertThat(components.getBody().size()).isEqualTo(1);
+        assertThat(components.getBody().get(0).getCode()).isEqualTo(bundle.getMetadata().getName());
+        assertThat(components.getBody().get(0).getCustomInstallation()).isTrue();
         assertThat(components.getTotalItems()).isEqualTo(1);
 
         verify(installedComponentRepository).findAll();
