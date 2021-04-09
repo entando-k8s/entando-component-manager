@@ -246,6 +246,9 @@ public class InstallFlowTest {
         String stringInstallPlan = new ObjectMapper().writeValueAsString(TestInstallUtils.mockInstallWithPlansRequestWithActions());
         EntandoBundleJobEntity entandoBundleJobEntity = bundleJobEntityList.get(0);
         assertThat(entandoBundleJobEntity.getInstallPlan()).isEqualTo(stringInstallPlan);
+
+        // check that db custom_install column is correctly populated
+        assertThat(entandoBundleJobEntity.getCustomInstallation()).isTrue();
     }
 
 

@@ -1,5 +1,6 @@
 package org.entando.kubernetes.controller.digitalexchange.job.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
@@ -139,5 +140,44 @@ public class InstallPlan {
         return !CollectionUtils.isEmpty(getInstallPlanComponentFn.apply(this))
                 ? getInstallPlanComponentFn.apply(this)
                 : getInstallPlanComponentFn.apply(other);
+    }
+
+    /**
+     * if there is at least an action different from CREATE the installPlan is custom
+     * @return true if the install plan is custom, false otherwise
+     */
+    @JsonIgnore
+    public boolean isCustomInstallation() {
+        return doComponentsHaveSkipAction(this.getWidgets())
+                || doComponentsHaveSkipAction(this.getFragments())
+                || doComponentsHaveSkipAction(this.getPages())
+                || doComponentsHaveSkipAction(this.getPageTemplates())
+                || doComponentsHaveSkipAction(this.getContents())
+                || doComponentsHaveSkipAction(this.getContentTemplates())
+                || doComponentsHaveSkipAction(this.getContentTypes())
+                || doComponentsHaveSkipAction(this.getAssets())
+                || doComponentsHaveSkipAction(this.getResources())
+                || doComponentsHaveSkipAction(this.getPlugins())
+                || doComponentsHaveSkipAction(this.getCategories())
+                || doComponentsHaveSkipAction(this.getGroups())
+                || doComponentsHaveSkipAction(this.getLabels())
+                || doComponentsHaveSkipAction(this.getLanguages());
+    }
+
+    /**
+     * check if at least one of the received ComponentInstallPlan has install action different from CREATE
+     * @param componentInstallPlanMap the map of ComponentInstallPlan co check
+     * @return true if at least one ComponentInstallPlan has install action different from CREATE
+     */
+    private boolean doComponentsHaveSkipAction(Map<String, ComponentInstallPlan> componentInstallPlanMap) {
+
+        if (CollectionUtils.isEmpty(componentInstallPlanMap)) {
+            return false;
+        }
+
+        return componentInstallPlanMap.values().stream()
+                .map(componentInstallPlan -> componentInstallPlan.getAction() == InstallAction.SKIP)
+                .reduce((customInstallAction1, customInstallAction2) -> customInstallAction1 || customInstallAction2)
+                .orElse(false);
     }
 }

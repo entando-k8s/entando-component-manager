@@ -127,4 +127,37 @@ public class InstallPlanStubHelper {
     }
 
 
+    public static InstallPlan stubFullInstallPlanOnlyCreateAndOverrideInstallAction() {
+        return InstallPlan.builder()
+                .widgets(Map.of(ReportableStubHelper.WIDGET_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .fragments(Map.of(ReportableStubHelper.FRAGMENT_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .pages(Map.of(ReportableStubHelper.PAGE_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .pageTemplates(Map.of(ReportableStubHelper.PAGE_TEMPL_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .contents(Map.of(ReportableStubHelper.CONTENT_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .contentTemplates(Map.of(ReportableStubHelper.CONTENT_TEMPL_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .contentTypes(Map.of(ReportableStubHelper.CONTENT_TYPE_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .assets(Map.of(ReportableStubHelper.ASSET_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                // files and directories are both managed as resources by the remote handler
+                .resources(Map.of(ReportableStubHelper.RESOURCE_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .plugins(Map.of(ReportableStubHelper.PLUGIN_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .categories(Map.of(ReportableStubHelper.CATEGORY_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .groups(Map.of(ReportableStubHelper.GROUP_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .labels(Map.of(ReportableStubHelper.LABEL_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.CREATE)))
+                .languages(Map.of(ReportableStubHelper.LANG_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .build();
+    }
 }

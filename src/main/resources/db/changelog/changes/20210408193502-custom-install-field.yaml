@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20210408193502
+      author: l.corsetti
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: custom_installation
+                  type: boolean
+                  defaultValue: false
+            tableName: entando_bundle_jobs

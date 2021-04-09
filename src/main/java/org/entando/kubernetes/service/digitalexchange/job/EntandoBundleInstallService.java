@@ -186,6 +186,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         job.setComponentVersion(tag.getVersion());
         job.setProgress(0);
         job.setStatus(JobStatus.INSTALL_CREATED);
+        job.setCustomInstallation(installPlan.isCustomInstallation());
 
         try {
             job.setInstallPlan(null != installPlan ? objectMapper.writeValueAsString(installPlan) : null);
