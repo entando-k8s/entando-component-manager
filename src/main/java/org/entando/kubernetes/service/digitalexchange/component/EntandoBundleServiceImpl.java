@@ -18,8 +18,10 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.compress.utils.Sets;
 import org.apache.logging.log4j.util.Strings;
@@ -35,6 +37,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
@@ -86,13 +89,47 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     private List<EntandoBundle> listAllBundles() {
         List<EntandoBundle> allComponents = new ArrayList<>();
         List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAll();
+
         List<EntandoBundle> availableBundles = listBundlesFromEcr();
         List<EntandoBundle> installedButNotAvailableOnEcr = filterInstalledButNotAvailableOnEcr(availableBundles,
                 installedBundles);
 
         allComponents.addAll(availableBundles);
         allComponents.addAll(installedButNotAvailableOnEcr);
-        return allComponents;
+
+        return populateCustomInstallation(allComponents, installedBundles);
+    }
+
+    /**
+     * for each installed bundle, populate the field custom_installation in the allBundles list.
+     * @param allBundles the list representing all the available EntandoBundle
+     * @param installedBundles the list of installed EntandoBundleEntity
+     * @return a new instance of a list of all bundles with customInstallation field populated
+     */
+    private List<EntandoBundle> populateCustomInstallation(List<EntandoBundle> allBundles, List<EntandoBundleEntity> installedBundles) {
+
+        // get installed bundles jobs id
+        Set<UUID> installedBunblesJobIdSet = installedBundles.stream()
+                .map(entandoBundleEntity -> entandoBundleEntity.getJob().getId())
+                .collect(Collectors.toSet());
+
+        // fetch EntandoBundleJobEntitis from DB for installed bundles
+        Map<String, EntandoBundleJobEntity> installedBundleJobEntities =
+                jobRepository.findEntandoBundleJobEntityByIdIn(installedBunblesJobIdSet)
+                        .orElse(new ArrayList<>())
+                        .stream()
+                        .collect(Collectors.toMap(
+                                EntandoBundleJobEntity::getComponentId,
+                                entandoBundleEntity -> entandoBundleEntity));
+
+        // populate and return customInstallation field
+        return allBundles.stream().map(entandoBundle -> {
+            if (installedBundleJobEntities.containsKey(entandoBundle.getCode())) {
+                entandoBundle.setCustomInstallation(
+                        installedBundleJobEntities.get(entandoBundle.getCode()).getCustomInstallation());
+            }
+            return entandoBundle;
+        }).collect(Collectors.toList());
     }
 
     @Override
