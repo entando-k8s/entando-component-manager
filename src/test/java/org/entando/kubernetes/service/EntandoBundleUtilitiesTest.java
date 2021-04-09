@@ -171,7 +171,7 @@ public class EntandoBundleUtilitiesTest {
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv1", DbmsVendor.MYSQL,
-                "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
+                "entando/todomvcV1:1.0.0", "/entando/todomvcv1", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
@@ -190,7 +190,7 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, "entando-helloworld-plugin-v1-nam", DbmsVendor.MYSQL,
                 "entando/helloworld-plugin-v1-name-too-looong:1.0.0",
-                "/entando/helloworld-plugin-v1-name-too-looong/1-0-0", "/api/v1/todos",
+                "/entando/helloworld-plugin-v1-name-too-looong", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1LongName,
                 PluginSecurityLevel.forName("strict"));
     }
@@ -222,7 +222,7 @@ public class EntandoBundleUtilitiesTest {
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv2", DbmsVendor.MYSQL,
-                "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
+                "entando/todomvcV2:1.0.0", "/entando/todomvcv2", "/api/v1/todos",
                 Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
 
