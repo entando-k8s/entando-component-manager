@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20190809112455
       author: l.cherubin@entando.com
+      validCheckSum: 8:6639268899116f73134e8f27fc3997a6
       preConditions:
         - onFail: MARK_RAN
           not:
@@ -137,7 +138,7 @@ databaseChangeLog:
                     references: entando_bundle_jobs(id)
               - column:
                   name: last_update
-                  type: TIMESTAMP WITHOUT TIME ZONE
+                  type: TIMESTAMP
               - column:
                   name: metadata
                   type: VARCHAR(255)
