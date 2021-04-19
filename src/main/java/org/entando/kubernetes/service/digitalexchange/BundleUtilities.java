@@ -3,6 +3,7 @@ package org.entando.kubernetes.service.digitalexchange;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
+import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
@@ -24,6 +26,7 @@ import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 @UtilityClass
@@ -49,9 +52,16 @@ public class BundleUtilities {
 
     public static final String BUNDLE_TYPE_LABEL_NAME = "bundle-type";
 
+    public static final String LATEST_VERSION = "latest";
+
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
         String version = versionReference;
-        if (!isSemanticVersion(versionReference)) {
+
+        if (version.equals(LATEST_VERSION)) {
+            version = getLatestVersion(bundle)
+                    .map(EntandoBundleVersion::getVersion)
+                    .orElse(null);
+        } else if (!isSemanticVersion(versionReference)) {
             version = (String) bundle.getSpec().getDetails().getDistTags().get(versionReference);
         }
 
@@ -76,6 +86,26 @@ public class BundleUtilities {
     public static String getOfficialSemanticVersionRegex() {
         return OFFICIAL_SEMANTIC_VERSION_REGEX;
     }
+
+    /**
+     * define and return the latest version respect to the sem version rules.
+     *
+     * @param entandoDeBundle the EntandoDeBundle of which return the latest version
+     * @return the latest version respect to the sem version rules
+     */
+    public static Optional<EntandoBundleVersion> getLatestVersion(EntandoDeBundle entandoDeBundle) {
+
+        if (entandoDeBundle == null || entandoDeBundle.getSpec() == null
+                || entandoDeBundle.getSpec().getDetails() == null || CollectionUtils
+                .isEmpty(entandoDeBundle.getSpec().getDetails().getVersions())) {
+            return Optional.empty();
+        }
+
+        return entandoDeBundle.getSpec().getDetails().getVersions().stream()
+                .map(version -> new EntandoBundleVersion().setVersion(version))
+                .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
+    }
+
 
     public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
         return descriptor.getRoles().stream()
@@ -103,7 +133,7 @@ public class BundleUtilities {
     }
 
     public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
-        DockerImage dockerImage = descriptor.getDockerImage();
+        var dockerImage = descriptor.getDockerImage();
         return getLabelsFromImage(dockerImage);
     }
 
@@ -283,19 +313,19 @@ public class BundleUtilities {
 
 
     /**
-     * determine and return the resource root folder for the current bundle.
-     *  - if the current bundle is a standard bundle, root folder = current_bundle_code + '/resources'
-     *  - otherwise '/resources'
+     * determine and return the resource root folder for the current bundle. - if the current bundle is a standard
+     * bundle, root folder = current_bundle_code + '/resources' - otherwise '/resources'
+     *
      * @param bundleReader the reader of the current bundle
      * @return the resource root folder for the current bundle
      * @throws IOException if a read error occurs during the bundle reading
      */
     public static String determineBundleResourceRootFolder(BundleReader bundleReader) throws IOException {
 
-        BundleType bundleType = bundleReader.readBundleDescriptor().getBundleType();
+        var bundleType = bundleReader.readBundleDescriptor().getBundleType();
 
         return "/" + (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
-                        ? bundleReader.getBundleCode()
-                        : "");
+                ? bundleReader.getBundleCode()
+                : "");
     }
 }
