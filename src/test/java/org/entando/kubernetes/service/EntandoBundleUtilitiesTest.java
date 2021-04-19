@@ -65,9 +65,11 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    public void shouldReturnLatestVersion() {
-        String version = BundleUtilities.getBundleVersionOrFail(getTestBundle(), "latest");
-        assertThat(version).isEqualTo("0.0.1");
+    void shouldReturnLatestVersionFromDistTags() {
+        EntandoDeBundle testBundle = getTestBundle();
+        testBundle.getSpec().getDetails().getVersions().add("v0.0.6");
+        String version = BundleUtilities.getBundleVersionOrFail(testBundle, "latest");
+        assertThat(version).isEqualTo("v0.0.6");
     }
 
     @Test

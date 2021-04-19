@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -17,5 +18,5 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class InstallWithPlansRequest extends InstallPlan {
 
-    private String version = "latest";
+    private String version = BundleUtilities.LATEST_VERSION;
 }

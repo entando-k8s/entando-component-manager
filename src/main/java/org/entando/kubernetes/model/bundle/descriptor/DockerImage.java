@@ -1,10 +1,10 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Getter
 @Setter
@@ -23,7 +23,7 @@ public class DockerImage {
     private String version;
 
     public static DockerImage fromString(String s) {
-        Matcher m = imagePattern.matcher(s);
+        var m = imagePattern.matcher(s);
         if (!m.find()) {
             throw new MalformedDockerImageException("Impossible to read DockerImage from " + s);
         }
@@ -31,7 +31,7 @@ public class DockerImage {
         String organization = m.group(orgGroup);
         String version = m.group(versGroup);
         if (version == null || version.isEmpty()) {
-            version = "latest";
+            version = BundleUtilities.LATEST_VERSION;
         }
 
         return DockerImage.builder()
