@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,15 +69,28 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private final String clientSecret;
     private final String tokenUri;
     private RestTemplate restTemplate;
+    private RestTemplate serviceAccountTokenRestTemplate;
     private Traverson traverson;
+    private String serviceAccountTokenPath;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
+    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri,
+            String serviceAccountTokenPath) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tokenUri = tokenUri;
         this.k8sServiceUrl = k8sServiceUrl;
-        this.restTemplate = newRestTemplate();
+        this.serviceAccountTokenPath = serviceAccountTokenPath;
+        this.restTemplate = newRestTemplate(() -> UriComponentsBuilder.fromUriString(tokenUri).toUriString());
         this.traverson = newTraverson();
+        this.serviceAccountTokenRestTemplate = newRestTemplate(() -> {
+            try {
+                return Files.readString(Paths.get(this.serviceAccountTokenPath));
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e, () -> String
+                        .format("Issues retrieving service account token from %s", this.serviceAccountTokenPath));
+                return null;
+            }
+        });
     }
 
     public Traverson newTraverson() {
@@ -89,6 +105,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
         this.traverson = newTraverson();
+    }
+
+    public void setServiceAccountTokenRestTemplate(RestTemplate restTemplate) {
+        this.serviceAccountTokenRestTemplate = restTemplate;
     }
 
     @Override
@@ -316,7 +336,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .build();
         try {
-            ResponseEntity<Object> response = this.restTemplate.exchange(request, Object.class);
+            ResponseEntity<Object> response = this.serviceAccountTokenRestTemplate.exchange(request, Object.class);
             return response.getStatusCode().is2xxSuccessful();
         } catch (RestClientResponseException e) {
             HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
@@ -355,8 +375,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
 
-    private RestTemplate newRestTemplate() {
-        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
+    private RestTemplate newRestTemplate(Supplier<String> tokenSupplier) {
+        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails(tokenSupplier);
         if (resourceDetails == null) {
             return null;
         }
@@ -390,14 +410,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
 
-    private OAuth2ProtectedResourceDetails getResourceDetails() {
+    private OAuth2ProtectedResourceDetails getResourceDetails(Supplier<String> tokenSupplier) {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
         resourceDetails.setClientId(clientId);
         resourceDetails.setClientSecret(clientSecret);
         resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
         try {
-            resourceDetails.setAccessTokenUri(UriComponentsBuilder.fromUriString(tokenUri).toUriString());
+            resourceDetails.setAccessTokenUri(tokenSupplier.get());
         } catch (IllegalArgumentException ex) {
             LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using %s as token uri", tokenUri));
             return null;
