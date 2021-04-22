@@ -143,8 +143,10 @@ public class InstallPlan {
     }
 
     /**
-     * if there is at least an action different from CREATE the installPlan is custom.
-     * @return true if the install plan is custom, false otherwise
+     * if there is at least an action different from CREATE, the installation is custom.
+     * a bundle installation becomes custom when the bundle is not installed entirely (one or more components are
+     * skipped or overridden)
+     * @return true if the installation is custom, false otherwise
      */
     @JsonIgnore
     public boolean isCustomInstallation() {
