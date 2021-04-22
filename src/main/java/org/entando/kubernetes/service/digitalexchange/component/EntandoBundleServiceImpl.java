@@ -97,16 +97,16 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         allComponents.addAll(availableBundles);
         allComponents.addAll(installedButNotAvailableOnEcr);
 
-        return populateCustomInstallation(allComponents, installedBundles);
+        return updateCustomInstallationFlag(allComponents, installedBundles);
     }
 
     /**
-     * for each installed bundle, populate the field custom_installation in the allBundles list.
+     * for each installed bundle, update the field custom_installation in the allBundles list.
      * @param allBundles the list representing all the available EntandoBundle
      * @param installedBundles the list of installed EntandoBundleEntity
-     * @return a new instance of a list of all bundles with customInstallation field populated
+     * @return a new instance of a list of all bundles with customInstallation field updated
      */
-    private List<EntandoBundle> populateCustomInstallation(List<EntandoBundle> allBundles, List<EntandoBundleEntity> installedBundles) {
+    private List<EntandoBundle> updateCustomInstallationFlag(List<EntandoBundle> allBundles, List<EntandoBundleEntity> installedBundles) {
 
         // get installed bundles jobs id
         Set<UUID> installedBunblesJobIdSet = installedBundles.stream()
