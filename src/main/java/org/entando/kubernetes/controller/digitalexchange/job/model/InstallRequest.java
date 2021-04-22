@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Data
 @Builder
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class InstallRequest {
 
     @Default
-    private final String version = "latest";
+    private final String version = BundleUtilities.LATEST_VERSION;
 
     @Default
     private final InstallAction conflictStrategy = InstallAction.CREATE;
