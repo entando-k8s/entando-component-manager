@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +77,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                plugin = ensurePluginDescriptorVersionIsSet(plugin);
                 validateDescriptorOrThrow(plugin);
                 logDescriptorWarnings(plugin);
                 InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), conflictStrategy,
@@ -148,7 +151,22 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
     }
 
+    private PluginDescriptor ensurePluginDescriptorVersionIsSet(PluginDescriptor descriptor) {
+        if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
+            Integer intVersion = BundleUtilities.getPluginDescriptorIntegerVersion(descriptor);
+            descriptor.setDescriptorVersion(BundleUtilities.composePluginDescriptorVersion(intVersion));
+        }
+
+        return descriptor;
+    }
+
     private void validateDescriptorOrThrow(PluginDescriptor descriptor) {
+
+        // validate version
+        Matcher matcher = Pattern.compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP).matcher(descriptor.getDescriptorVersion());
+        if (!matcher.matches()) {
+            throw new InvalidBundleException(String.format(VERSION_NOT_VALID, descriptor.getComponentKey()));
+        }
 
         // validate securityLevel property
         if (!StringUtils.isEmpty(descriptor.getSecurityLevel())
@@ -163,6 +181,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                     .orElseThrow(() -> new InvalidBundleException(SECURITY_LEVEL_NOT_RECOGNIZED)); // NOSONAR
         }
     }
+
 
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
             + "'{}' uses a deprecated format. To have full control over plugins we encourage you to migrate "
@@ -179,4 +198,6 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
                     + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
                     .collect(Collectors.joining(", "));
+    public static final String VERSION_NOT_VALID =
+            "The plugin %s descriptor contains an invalid descriptorVersion";
 }
