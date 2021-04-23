@@ -83,7 +83,7 @@ public class K8SServiceClientTest {
         mockServer = new EntandoK8SServiceMockServer();
         client = new DefaultK8SServiceClient(mockServer.getApiRoot(), CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
         client.setRestTemplate(noOAuthRestTemplate());
-        client.setPluginRestTemplate(noOAuthRestTemplate());
+        client.setNoAuthRestTemplate(noOAuthRestTemplate());
     }
 
     @AfterEach

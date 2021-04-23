@@ -66,7 +66,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private final String clientSecret;
     private final String tokenUri;
     private RestTemplate restTemplate;
-    private RestTemplate pluginRestTemplate;
+    private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
 
     public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
@@ -74,9 +74,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         this.clientSecret = clientSecret;
         this.tokenUri = tokenUri;
         this.k8sServiceUrl = k8sServiceUrl;
-        this.restTemplate = newRestTemplate(() -> UriComponentsBuilder.fromUriString(tokenUri).toUriString());
+        this.restTemplate = newRestTemplate();
         this.traverson = newTraverson();
-        this.pluginRestTemplate = newRestTemplate(() -> null);
+        this.noAuthRestTemplate = newNoAuthRestTemplate();
     }
 
     public Traverson newTraverson() {
@@ -93,8 +93,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         this.traverson = newTraverson();
     }
 
-    public void setPluginRestTemplate(RestTemplate restTemplate) {
-        this.pluginRestTemplate = restTemplate;
+    public void setNoAuthRestTemplate(RestTemplate restTemplate) {
+        this.noAuthRestTemplate = restTemplate;
     }
 
     @Override
@@ -322,7 +322,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .build();
         try {
-            ResponseEntity<Object> response = this.pluginRestTemplate.exchange(request, Object.class);
+            ResponseEntity<Object> response = this.noAuthRestTemplate.exchange(request, Object.class);
             return response.getStatusCode().is2xxSuccessful();
         } catch (RestClientResponseException e) {
             HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
@@ -361,8 +361,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
 
-    private RestTemplate newRestTemplate(Supplier<String> tokenSupplier) {
-        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails(tokenSupplier);
+    private RestTemplate newRestTemplate() {
+        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
         if (resourceDetails == null) {
             return null;
         }
@@ -370,15 +370,27 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         template.setRequestFactory(getRequestFactory());
         template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
 
+        return setMessageConverters(template);
+    }
+
+    private RestTemplate newNoAuthRestTemplate() {
+
+        final RestTemplate template = new RestTemplate();
+        template.setRequestFactory(getRequestFactory());
+
+        return setMessageConverters(template);
+    }
+
+    private RestTemplate setMessageConverters(RestTemplate restTemplate) {
         List<HttpMessageConverter<?>> messageConverters = Traverson
                 .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
         if (messageConverters.stream()
                 .noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
             messageConverters.add(0, getJsonConverter());
         }
-        template.setMessageConverters(messageConverters);
+        restTemplate.setMessageConverters(messageConverters);
 
-        return template;
+        return restTemplate;
     }
 
     private HttpMessageConverter<?> getJsonConverter() {
@@ -396,14 +408,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
 
-    private OAuth2ProtectedResourceDetails getResourceDetails(Supplier<String> tokenSupplier) {
+    private OAuth2ProtectedResourceDetails getResourceDetails() {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
         resourceDetails.setClientId(clientId);
         resourceDetails.setClientSecret(clientSecret);
         resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
         try {
-            resourceDetails.setAccessTokenUri(tokenSupplier.get());
+            resourceDetails.setAccessTokenUri(UriComponentsBuilder.fromUriString(tokenUri).toUriString());
         } catch (IllegalArgumentException ex) {
             LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using %s as token uri", tokenUri));
             return null;
