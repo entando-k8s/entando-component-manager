@@ -2,17 +2,22 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -53,6 +58,11 @@ public class BundleUtilities {
     public static final String BUNDLE_TYPE_LABEL_NAME = "bundle-type";
 
     public static final String LATEST_VERSION = "latest";
+
+    private static final String DESCRIPTOR_VERSION_STARTING_CHAR = "v";
+    public static final String PLUGIN_DESCRIPTOR_VERSION_REGEXP = "^(v)(\\d+)";
+    public static final Pattern PLUGIN_DESCRIPTOR_VERSION_PATTERN = Pattern
+            .compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP);
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
         String version = versionReference;
@@ -106,6 +116,15 @@ public class BundleUtilities {
                 .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
     }
 
+    /**
+     * compose the plugin descriptor version by concatenating the received version number to the leading char v.
+     *
+     * @param version the integer version
+     * @return the composed plugin descriptor version
+     */
+    public static String composePluginDescriptorVersion(int version) {
+        return DESCRIPTOR_VERSION_STARTING_CHAR + version;
+    }
 
     public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
         return descriptor.getRoles().stream()
@@ -129,7 +148,7 @@ public class BundleUtilities {
 
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
         return Optional.ofNullable(descriptor.getIngressPath())
-                .orElse(composeIngressPathFromDockerImage(descriptor.getDockerImage()));
+                .orElse(composeIngressPathFromDockerImage(descriptor));
     }
 
     public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
@@ -217,10 +236,41 @@ public class BundleUtilities {
         return podPrefixName;
     }
 
-    private static String composeIngressPathFromDockerImage(DockerImage image) {
-        return "/" + String.join("/",
-                makeKubernetesCompatible(image.getOrganization()),
-                makeKubernetesCompatible(image.getName()));
+    private static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
+
+        DockerImage image = descriptor.getDockerImage();
+
+        List<String> ingressSegmentList = new ArrayList<>(Arrays.asList(image.getOrganization(), image.getName()));
+
+        if (BundleUtilities.getPluginDescriptorIntegerVersion(descriptor) < 3) {
+            ingressSegmentList.add(image.getVersion());
+        }
+
+        List<String> kubeCompatiblesSegmentList = ingressSegmentList.stream()
+                .map(BundleUtilities::makeKubernetesCompatible).collect(Collectors.toList());
+
+        return "/" + String.join("/", kubeCompatiblesSegmentList);
+    }
+
+
+    /**
+     * read a plugin descriptor and return the corresponding plugin descriptor version as integer (without the leading v
+     * char).
+     *
+     * @param pluginDescriptor the plugin descriptor of which return the version number
+     * @return the integer version of the received plugin descriptor
+     */
+    public static Integer getPluginDescriptorIntegerVersion(PluginDescriptor pluginDescriptor) {
+
+        if (!StringUtils.hasLength(pluginDescriptor.getDescriptorVersion())) {
+            return pluginDescriptor.isVersion1() ? 1 : 2;
+        } else {
+            Matcher matcher = PLUGIN_DESCRIPTOR_VERSION_PATTERN.matcher(pluginDescriptor.getDescriptorVersion());
+            if (!matcher.matches()) {
+                throw new InvalidBundleException("The plugin descriptor version does not match the expected format");
+            }
+            return Integer.parseInt(matcher.group(2));
+        }
     }
 
     public static Map<String, String> getLabelsFromImage(DockerImage dockerImage) {
@@ -232,13 +282,25 @@ public class BundleUtilities {
     }
 
 
+    /**
+     * generate the EntandoPlugin CR starting by the received plugin descriptor.
+     *
+     * @param descriptor the plugin descriptor from which get the CR data
+     * @return the EntandoPlugin CR generated starting by the descriptor data
+     */
     public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
         return descriptor.isVersion1()
                 ? generatePluginFromDescriptorV1(descriptor) :
-                generatePluginFromDescriptorV2(descriptor);
+                generatePluginFromDescriptorV2Plus(descriptor);
     }
 
-    public static EntandoPlugin generatePluginFromDescriptorV2(PluginDescriptor descriptor) {
+    /**
+     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal or major than 2.
+     *
+     * @param descriptor the plugin descriptor from which get the CR data
+     * @return the EntandoPlugin CR generated starting by the descriptor data
+     */
+    public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
                 .withName(extractNameFromDescriptor(descriptor))
@@ -256,6 +318,12 @@ public class BundleUtilities {
                 .build();
     }
 
+    /**
+     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal to 1.
+     *
+     * @param descriptor the plugin descriptor from which get the CR data
+     * @return the EntandoPlugin CR generated starting by the descriptor data
+     */
     public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
@@ -265,7 +333,7 @@ public class BundleUtilities {
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getSpec().getDbms().toUpperCase()))
                 .withImage(descriptor.getDockerImage().toString())
-                .withIngressPath(composeIngressPathFromDockerImage(descriptor.getDockerImage()))
+                .withIngressPath(composeIngressPathFromDockerImage(descriptor))
                 .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
                 .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSpec().getSecurityLevel()))
@@ -328,4 +396,5 @@ public class BundleUtilities {
                 ? bundleReader.getBundleCode()
                 : "");
     }
+
 }

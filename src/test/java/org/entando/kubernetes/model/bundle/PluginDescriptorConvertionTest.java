@@ -1,12 +1,14 @@
 package org.entando.kubernetes.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
@@ -18,7 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-public class PluginDescriptorConvertionTest {
+class PluginDescriptorConvertionTest {
 
     @Test
     void shouldGenerateCorrectDockerImageFromVersion1() {
@@ -30,20 +32,25 @@ public class PluginDescriptorConvertionTest {
     }
 
     @Test
-    void shouldGenerateCorrectDockerImage() {
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
-        DockerImage dockerImage = descriptor.getDockerImage();
-        assertThat(dockerImage.getName()).isEqualTo("the-lucas");
-        assertThat(dockerImage.getOrganization()).isEqualTo("entando");
-        assertThat(dockerImage.getVersion()).isEqualTo("0.0.1-SNAPSHOT");
+    void shouldGenerateCorrectDockerImageFromVersionMajorThan1() {
+
+        Stream.of(PluginStubHelper.stubPluginDescriptorV2(), PluginStubHelper.stubPluginDescriptorV3())
+                .forEach(pluginDescriptor -> {
+                    DockerImage dockerImage = pluginDescriptor.getDockerImage();
+                    assertThat(dockerImage.getName()).isEqualTo("the-lucas");
+                    assertThat(dockerImage.getOrganization()).isEqualTo("entando");
+                    assertThat(dockerImage.getVersion()).isEqualTo("0.0.1-SNAPSHOT");
+                });
     }
 
 
     @Test
-    void shouldGenerateKubernetesCompatibleNameFromDescriptor() {
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
-        String name = BundleUtilities.extractNameFromDescriptor(descriptor);
-        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+    void shouldGenerateKubernetesCompatibleNameFromDescriptorVersionMajorThan1() {
+        Stream.of(PluginStubHelper.stubPluginDescriptorV2(), PluginStubHelper.stubPluginDescriptorV3())
+                .forEach(pluginDescriptor -> {
+                    String name = BundleUtilities.extractNameFromDescriptor(pluginDescriptor);
+                    assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+                });
     }
 
     @Test
@@ -53,22 +60,25 @@ public class PluginDescriptorConvertionTest {
         assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME);
     }
 
+
     @Test
-    void shouldGenerateKubernetesCompatibleIngressPathFromDescriptor() {
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
-        String name = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
-        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH);
+    void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersionMinorThan3() {
+        Stream.of(PluginStubHelper.stubPluginDescriptorV1(), PluginStubHelper.stubPluginDescriptorV2())
+                .forEach(pluginDescriptor -> {
+                    String ingress = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor);
+                    assertThat(ingress).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_MINOR_THAN_3);
+                });
     }
 
     @Test
-    void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersion1() {
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
+    void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersion3() {
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV3();
         String name = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
-        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH);
+        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_EQUAL_OR_MAJOR_THAN_3);
     }
 
     @Test
-    void shouldConvertDescriptorToEntandoPlugin() {
+    void shouldConvertDescriptorToEntandoPluginVersionMajorThan1() {
         PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV2();
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
@@ -87,7 +97,7 @@ public class PluginDescriptorConvertionTest {
     private void assertOnConvertedEntandoPlugin(EntandoPlugin p, String expectedPluginName) {
         assertThat(p.getMetadata().getName()).isEqualTo(expectedPluginName);
         assertThat(p.getSpec().getImage()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_IMAGE);
-        assertThat(p.getSpec().getIngressPath()).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH);
+        assertThat(p.getSpec().getIngressPath()).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_MINOR_THAN_3);
         assertThat(p.getSpec().getHealthCheckPath()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_HEALTH_PATH);
 
         Map<String, String> lbls = new HashMap<>();
