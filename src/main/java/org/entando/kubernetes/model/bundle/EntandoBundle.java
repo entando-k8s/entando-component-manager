@@ -31,6 +31,7 @@ public class EntandoBundle {
     private Set<String> componentTypes;
     private EntandoBundleJob installedJob;
     private EntandoBundleJob lastJob;
+    private Boolean customInstallation;
 
     @Default
     private List<EntandoBundleVersion> versions = new ArrayList<>();

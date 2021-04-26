@@ -67,6 +67,7 @@ public class TestEntitiesGenerator {
         component.setId("my-bundle");
         component.setName("My Bundle Title");
         component.setInstalled(true);
+        component.setJob(getTestJobEntity());
         return component;
     }
 
@@ -107,6 +108,7 @@ public class TestEntitiesGenerator {
                 .componentId("my-bundle")
                 .componentName("My Bundle Title")
                 .status(JobStatus.INSTALL_COMPLETED)
+                .customInstallation(true)
                 .build();
     }
 }

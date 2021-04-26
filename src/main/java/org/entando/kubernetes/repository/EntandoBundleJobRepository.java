@@ -34,4 +34,5 @@ public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJ
     @Query("UPDATE EntandoBundleJobEntity job SET job.status = :status WHERE job.id = :id")
     void updateJobStatus(@Param("id") UUID id, @Param("status") JobStatus status);
 
+    Optional<List<EntandoBundleJobEntity>> findEntandoBundleJobEntityByIdIn(Set<UUID> idList);
 }
