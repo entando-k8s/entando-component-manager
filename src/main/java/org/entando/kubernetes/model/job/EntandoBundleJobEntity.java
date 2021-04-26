@@ -68,6 +68,13 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     private String rollbackErrorMessage;
     @Column
     private String installPlan;
+    /**
+     * this field denotes if a bundle installation has been customized by the user.
+     * a bundle installation becomes custom when the bundle is not installed entirely (one or more components are
+     * skipped or overridden)
+     */
+    @Column
+    private Boolean customInstallation;
 
     @PrePersist
     public void generateId() {
@@ -90,6 +97,7 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
         newEntity.setFinishedAt(this.finishedAt);
         newEntity.setUserId(this.userId);
         newEntity.setInstallPlan(this.installPlan);
+        newEntity.setCustomInstallation(this.customInstallation);
         return newEntity;
     }
 }
