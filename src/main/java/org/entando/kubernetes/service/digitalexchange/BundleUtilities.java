@@ -117,7 +117,7 @@ public class BundleUtilities {
     }
 
     /**
-     * compose the plugin descriptor version by concatenating the received version number to the leading char v
+     * compose the plugin descriptor version by concatenating the received version number to the leading char v.
      *
      * @param version the integer version
      * @return the composed plugin descriptor version
@@ -254,7 +254,9 @@ public class BundleUtilities {
 
 
     /**
-     * read a plugin descriptor and return the corresponding plugin descriptor version as integer (without the leading v char)
+     * read a plugin descriptor and return the corresponding plugin descriptor version as integer (without the leading v
+     * char).
+     *
      * @param pluginDescriptor the plugin descriptor of which return the version number
      * @return the integer version of the received plugin descriptor
      */
@@ -281,7 +283,7 @@ public class BundleUtilities {
 
 
     /**
-     * generate the EntandoPlugin CR starting by the received plugin descriptor
+     * generate the EntandoPlugin CR starting by the received plugin descriptor.
      *
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
@@ -293,7 +295,7 @@ public class BundleUtilities {
     }
 
     /**
-     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal or major than 2
+     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal or major than 2.
      *
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
@@ -317,7 +319,7 @@ public class BundleUtilities {
     }
 
     /**
-     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal to 1
+     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal to 1.
      *
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
@@ -357,7 +359,7 @@ public class BundleUtilities {
      *
      * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
      * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
-     * no type is found
+     *          no type is found
      */
     public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
 
