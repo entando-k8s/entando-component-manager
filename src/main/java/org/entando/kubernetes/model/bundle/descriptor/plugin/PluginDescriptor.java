@@ -20,6 +20,10 @@ import org.springframework.util.StringUtils;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PluginDescriptor implements Descriptor {
+    /**
+     * identifies the plugin descriptor version.
+     */
+    private String descriptorVersion;
 
     /**
      * Cache of the processing of the image field.

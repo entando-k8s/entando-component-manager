@@ -1,6 +1,8 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -55,13 +58,26 @@ class PluginProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void testCreatePlugin() throws IOException, ExecutionException, InterruptedException {
+    void testCreatePluginV2() throws IOException, ExecutionException, InterruptedException {
 
         initBundleReaderShortImagesName();
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
                 .thenReturn(descriptorV2);
+
+        final List<? extends Installable> installables = processor.process(bundleReader);
+        assertOnInstallables(installables, "entando-the-lucas");
+    }
+
+    @Test
+    void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
+
+        initBundleReaderShortImagesName();
+
+        PluginDescriptor descriptorV3 = PluginStubHelper.stubPluginDescriptorV3();
+        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
+                .thenReturn(descriptorV3);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "entando-the-lucas");
@@ -83,6 +99,25 @@ class PluginProcessorTest extends BaseProcessorTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenPluginDescriptorVersionNotCompliant() throws Exception {
+
+        initBundleReaderShortImagesName();
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
+        Stream.of("va", "1", "a1", "v").forEach(version -> {
+            descriptor.setDescriptorVersion(version);
+
+            try {
+                when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any())).thenReturn(descriptor);
+            } catch (Exception e) {
+                fail();
+            }
+
+            assertThrows(InvalidBundleException.class, () -> processor.process(bundleReader));
+        });
+    }
+
+    @Test
     void shouldThrowExceptionWhenPluginSecurityLevelIsUnknown() throws Exception {
 
         String firstDescriptorFilename = "plugins/plugin-unknown-security-level.yaml";
@@ -91,7 +126,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
         descriptorV1.getSpec().setSecurityLevel("unknown");
 
-        // plugin descriptor V1
+        // plugin descriptor V2
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         descriptorV2.setSecurityLevel("unknown");
 
