@@ -268,7 +268,7 @@ public class BundleUtilities {
             Matcher matcher = PLUGIN_DESCRIPTOR_VERSION_PATTERN.matcher(pluginDescriptor.getDescriptorVersion());
             if (!matcher.matches()) {
                 String err = "The plugin descriptor version does not match the expected format";
-                log.error(err);
+                log.debug(err);
                 throw new InvalidBundleException(err);
             }
             return Integer.parseInt(matcher.group(2));
