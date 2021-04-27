@@ -165,8 +165,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         // validate version
         Matcher matcher = Pattern.compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP).matcher(descriptor.getDescriptorVersion());
         if (!matcher.matches()) {
-            String error = String.format(VERSION_NOT_VALID, descriptor.getComponentKey());
-            log.error(error);
+            String error = String.format(VERSION_NOT_VALID, descriptor.getComponentKey().getKey());
+            log.debug(error);
             throw new InvalidBundleException(error);
         }
 
