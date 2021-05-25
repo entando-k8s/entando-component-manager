@@ -294,6 +294,20 @@ public class EntandoBundleUtilitiesTest {
     }
 
 
+    @Test
+    void whenReadingARelativeIngressPathItShouldPrefixItWithASlash() throws IOException {
+
+        // given a plugin descriptor V2
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class);
+
+        // should add the leading slash to the ingress path
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
+
+        assertThat(entandoPlugin.getSpec().getIngressPath()).isEqualTo("/myhostname.io/entando-plugin");
+    }
+
+
     private void assertOnEntandoPlugin(EntandoPlugin entandoPlugin, String name, DbmsVendor dbmsVendor, String image,
             String ingressPath, String healthCheckPath, List<ExpectedRole> roleList, List<Permission> permissionList,
             Consumer<Map<String, String>> labelsAssertionFn, PluginSecurityLevel securityLevel) {

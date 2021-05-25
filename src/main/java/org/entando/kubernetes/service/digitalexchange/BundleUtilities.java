@@ -147,7 +147,7 @@ public class BundleUtilities {
     }
 
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
-        return Optional.ofNullable(descriptor.getIngressPath())
+        return Optional.ofNullable(composeIngressPathFromIngressPathProperty(descriptor))
                 .orElse(composeIngressPathFromDockerImage(descriptor));
     }
 
@@ -234,6 +234,26 @@ public class BundleUtilities {
         }
 
         return podPrefixName;
+    }
+
+    /**
+     * read the ingress path property from the plugin descriptor and return its value if present, null otherwise.
+     *
+     * @param descriptor the PluginDescriptor from which get the ingress path
+     * @return the ingress path read from the plugin descriptor property or null if it is not present
+     */
+    private static String composeIngressPathFromIngressPathProperty(PluginDescriptor descriptor) {
+
+        String ingressPath = null;
+
+        if (StringUtils.hasLength(descriptor.getIngressPath())) {
+            ingressPath = descriptor.getIngressPath();
+            if (ingressPath.charAt(0) != '/') {
+                ingressPath = "/" + ingressPath;
+            }
+        }
+
+        return ingressPath;
     }
 
     private static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
