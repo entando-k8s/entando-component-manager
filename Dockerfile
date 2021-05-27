@@ -27,7 +27,7 @@ RUN chmod -Rf g+rw /opt && \
     touch ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
     chgrp 0 ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
     chmod g+rw ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
-    yum update -y && yum upgrade -y && \
+    yum update --nobest -y && yum upgrade --nobest -y && \
     yum install -y git curl gpg tar gettext nss_wrapper && \
     curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash && \
     yum install -y git-lfs && git lfs install && \
