@@ -67,6 +67,7 @@ import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
@@ -219,8 +220,39 @@ public class InstallFlowTest {
 
     @Test
     void shouldCallCoreToInstallComponentsWithInstallPlanRequest() throws JsonProcessingException {
-        simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest();
+        simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(
+                TestInstallUtils.mockInstallWithPlansRequestWithActions());
 
+        assertOnInstallWithPlanRequest();
+    }
+
+    @Test
+    void shouldApplyDefaultCreateInstallStrategyToInstallWithPlanComponentsIfStatusNewAndNoActionIsSpecified()
+            throws JsonProcessingException {
+
+        // get the standard mock request and adapt it to the test case
+        InstallWithPlansRequest installWithPlansRequest = TestInstallUtils.mockInstallWithPlansRequestWithActions();
+        installWithPlansRequest.getCategories().get("my-category").setAction(null);
+        installWithPlansRequest.getGroups().get("ecr").setAction(null);
+        installWithPlansRequest.getLabels().get("WORLD").setAction(null);
+        installWithPlansRequest.getLanguages().get("en").setAction(null);
+        installWithPlansRequest.getFragments().get("title_fragment").setAction(null);
+        installWithPlansRequest.getPageTemplates().get("todomvc_page_model").setAction(null);
+        installWithPlansRequest.getPages().get("my-page").setAction(null);
+        installWithPlansRequest.getResources().get("/something/css/style.css").setAction(null);
+        installWithPlansRequest.getWidgets().get("todomvc_widget").setAction(null);
+        installWithPlansRequest.getAssets().get("my-asset").setAction(null);
+        installWithPlansRequest.getContentTypes().get("CNT").setAction(null);
+        installWithPlansRequest.getContentTemplates().get("8880003").setAction(null);
+        installWithPlansRequest.getContents().get("CNT103").setAction(null);
+        installWithPlansRequest.getPlugins().get("entando-todomvcv1-1-0-0").setAction(null);
+
+        simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(installWithPlansRequest);
+
+        assertOnInstallWithPlanRequest();
+    }
+
+    private void assertOnInstallWithPlanRequest() throws JsonProcessingException {
         installFlowAssertionHelper.verifyPluginInstallRequestsWithInstallPlanRequest(k8SServiceClient);
         installFlowAssertionHelper.verifyWidgetsInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyCategoryInstallRequestsWithInstallPlanRequest(coreClient);
@@ -983,10 +1015,11 @@ public class InstallFlowTest {
                         MOCK_BUNDLE_NAME);
     }
 
-    private String simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest() {
+    private String simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(
+            InstallWithPlansRequest installWithPlansRequest) {
         return TestInstallUtils
-                .simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(mockMvc, coreClient, k8SServiceClient,
-                        MOCK_BUNDLE_NAME);
+                .simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(mockMvc, coreClient,
+                        k8SServiceClient, MOCK_BUNDLE_NAME, installWithPlansRequest);
     }
 
     private String simulateSuccessfullyCompletedUninstall() {

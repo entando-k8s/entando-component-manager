@@ -85,7 +85,9 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallWithPlansRequest installRequest) {
 
-        final InstallWithPlansRequest request = Optional.ofNullable(installRequest).orElse(new InstallWithPlansRequest());
+        final InstallWithPlansRequest request = Optional.ofNullable(installRequest)
+                .map(InstallWithPlansRequest::normalize)
+                .orElse(new InstallWithPlansRequest());
 
         installPlanValidator.validateInstallPlanOrThrow(installRequest);
 

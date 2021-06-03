@@ -5,10 +5,12 @@ import java.util.Map;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 
 public class InstallPlanStubHelper {
 
+    public static final String VERSION = "v1.5.3";
     public static final Map.Entry<String, ComponentInstallPlan> WIDGET_1_COMP_INSTALL_PLAN_ENTRY =
             new SimpleEntry<>(ReportableStubHelper.WIDGET_CODE_1, stubComponentInstallPlan(Status.DIFF));
     public static final Map.Entry<String, ComponentInstallPlan> WIDGET_2_COMP_INSTALL_PLAN_ENTRY =
@@ -77,6 +79,10 @@ public class InstallPlanStubHelper {
 
     public static ComponentInstallPlan stubComponentInstallPlan(Status status, InstallAction action) {
         return ComponentInstallPlan.builder().status(status).action(action).build();
+    }
+
+    public static ComponentInstallPlan stubComponentInstallPlanNewNoAction() {
+        return ComponentInstallPlan.builder().status(Status.NEW).build();
     }
 
     public static InstallPlan stubInstallPlanWithCategories() {
@@ -161,5 +167,66 @@ public class InstallPlanStubHelper {
                         ReportableStubHelper.LANG_CODE_2,
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
                 .build();
+    }
+
+    public static InstallWithPlansRequest stubInstallWithPlanRequestToNormalize() {
+        return (InstallWithPlansRequest) new InstallWithPlansRequest()
+                .setVersion(VERSION)
+                .setWidgets(Map.of(ReportableStubHelper.WIDGET_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.WIDGET_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setFragments(Map.of(ReportableStubHelper.FRAGMENT_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.FRAGMENT_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setPages(Map.of(ReportableStubHelper.PAGE_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.PAGE_CODE_2, InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setPageTemplates(Map.of(ReportableStubHelper.PAGE_TEMPL_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.PAGE_TEMPL_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setContents(Map.of(ReportableStubHelper.CONTENT_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.CONTENT_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setContentTemplates(Map.of(ReportableStubHelper.CONTENT_TEMPL_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.CONTENT_TEMPL_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setContentTypes(Map.of(ReportableStubHelper.CONTENT_TYPE_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.CONTENT_TYPE_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setAssets(Map.of(ReportableStubHelper.ASSET_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.ASSET_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                // files and directories are both managed as resources by the remote handler
+                .setResources(Map.of(ReportableStubHelper.RESOURCE_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.RESOURCE_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setPlugins(Map.of(ReportableStubHelper.PLUGIN_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.PLUGIN_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setCategories(Map.of(ReportableStubHelper.CATEGORY_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.CATEGORY_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setGroups(Map.of(ReportableStubHelper.GROUP_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.GROUP_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setLabels(Map.of(ReportableStubHelper.LABEL_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.LABEL_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()))
+                .setLanguages(Map.of(ReportableStubHelper.LANG_CODE_1,
+                        InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        ReportableStubHelper.LANG_CODE_2,
+                        InstallPlanStubHelper.stubComponentInstallPlanNewNoAction()));
     }
 }

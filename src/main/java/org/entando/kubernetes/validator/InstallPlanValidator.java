@@ -62,6 +62,7 @@ public class InstallPlanValidator {
 
     /**
      * install action must NOT be null.
+     *
      * @param action the action to validate
      * @param componentType the current component type
      * @param key the key of the current component
@@ -69,13 +70,14 @@ public class InstallPlanValidator {
     private void validateActionOrThrow(String key, InstallAction action, ComponentType componentType) {
         if (null == action) {
             throw new EntandoComponentManagerException(
-                    String.format("Null InstallAction found in the InstallPlan for %s %s",
+                    String.format("Null action found in the InstallPlan for %s %s",
                             componentType.getTypeName(), key));
         }
     }
 
     /**
      * if the Status == NEW the action can be only CREATE.
+     * @param status the status of the component to validate
      * @param action the action to validate
      * @param componentType the current component type
      * @param key the key of the current component
@@ -92,6 +94,7 @@ public class InstallPlanValidator {
 
     /**
      * if the Status != NEW the action can be only SKIP or OVERRIDE.
+     * @param status the status of the component to validate
      * @param action the action to validate
      * @param componentType the current component type
      * @param key the key of the current component

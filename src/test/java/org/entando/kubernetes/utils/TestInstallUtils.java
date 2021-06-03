@@ -120,7 +120,8 @@ public class TestInstallUtils {
 
     @SneakyThrows
     public static String simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(MockMvc mockMvc,
-            EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+            EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName,
+            InstallWithPlansRequest installWithPlansRequest) {
 
         mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
 
@@ -129,7 +130,7 @@ public class TestInstallUtils {
         MvcResult result = mockMvc.perform(
                 put(INSTALL_PLANS_ENDPOINT.build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(mockInstallWithPlansRequestWithActions())))
+                        .content(objectMapper.writeValueAsString(installWithPlansRequest)))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
