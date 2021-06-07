@@ -3,6 +3,7 @@ package org.entando.kubernetes.controller.mockmvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -147,6 +148,19 @@ public class EntandoBundleApiTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void apiShouldGetTheLatestVersionFromPropertySpecDistTagsLatest() throws Exception {
+
+        K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
+        kc.addInMemoryBundle(getTestBundle());
+
+        mockMvc.perform(get("/components")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("payload", hasSize(1)))
+                .andExpect(jsonPath("payload[0].latestVersion.version").value(is("0.0.15")));
+    }
+
     private EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
@@ -166,7 +180,7 @@ public class EntandoBundleApiTest {
                 .addNewVersion("0.0.1")
                 .addNewKeyword("entando6")
                 .addNewKeyword("digital-exchange")
-                .addNewDistTag("latest", "0.0.1")
+                .addNewDistTag("latest", "0.0.15")
                 .and()
                 .addNewTag()
                 .withVersion("0.0.1")

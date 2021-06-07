@@ -68,7 +68,7 @@ public class BundleUtilities {
         String version = versionReference;
 
         if (version.equals(LATEST_VERSION)) {
-            version = getLatestVersion(bundle)
+            version = composeLatestVersion(bundle)
                     .map(EntandoBundleVersion::getVersion)
                     .orElse(null);
         } else if (!isSemanticVersion(versionReference)) {
@@ -98,22 +98,38 @@ public class BundleUtilities {
     }
 
     /**
-     * define and return the latest version respect to the sem version rules.
+     * define and return the latest version respect to the sem version rules applied to the available versions list.
      *
      * @param entandoDeBundle the EntandoDeBundle of which return the latest version
      * @return the latest version respect to the sem version rules
      */
-    public static Optional<EntandoBundleVersion> getLatestVersion(EntandoDeBundle entandoDeBundle) {
+    public static Optional<EntandoBundleVersion> composeLatestVersion(EntandoDeBundle entandoDeBundle) {
 
         if (entandoDeBundle == null || entandoDeBundle.getSpec() == null
-                || entandoDeBundle.getSpec().getDetails() == null || CollectionUtils
-                .isEmpty(entandoDeBundle.getSpec().getDetails().getVersions())) {
+                || entandoDeBundle.getSpec().getDetails() == null) {
             return Optional.empty();
         }
 
-        return entandoDeBundle.getSpec().getDetails().getVersions().stream()
-                .map(version -> new EntandoBundleVersion().setVersion(version))
-                .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
+        Optional<EntandoBundleVersion> latestVersionOpt;
+
+        // get the latest from the spec.details.dist-tags.latest property if available
+        if (entandoDeBundle.getSpec().getDetails().getDistTags() != null
+                && entandoDeBundle.getSpec().getDetails().getDistTags().containsKey(LATEST_VERSION)) {
+
+            latestVersionOpt = Optional.of(new EntandoBundleVersion()
+                    .setVersion(entandoDeBundle.getSpec().getDetails().getDistTags().get(LATEST_VERSION).toString()));
+
+        } else if (! CollectionUtils.isEmpty(entandoDeBundle.getSpec().getDetails().getVersions())) {
+
+            // calculate the latest from the versions list
+            latestVersionOpt = entandoDeBundle.getSpec().getDetails().getVersions().stream()
+                    .map(version -> new EntandoBundleVersion().setVersion(version))
+                    .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
+        } else {
+            latestVersionOpt = Optional.empty();
+        }
+
+        return latestVersionOpt;
     }
 
     /**

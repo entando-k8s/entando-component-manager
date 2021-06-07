@@ -223,21 +223,21 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
-    public EntandoBundle convertToBundleFromEcr(EntandoDeBundle bundle) {
+    public EntandoBundle convertToBundleFromEcr(EntandoDeBundle deBundle) {
         Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
         BundleType bundleType = BundleType.STANDARD_BUNDLE;
-        if (bundle.getMetadata().getLabels() != null) {
+        if (deBundle.getMetadata().getLabels() != null) {
 
-            bundle.getMetadata().getLabels()
+            deBundle.getMetadata().getLabels()
                     .keySet().stream()
                     .filter(ComponentType::isValidType)
                     .forEach(bundleComponentTypes::add);
 
-            bundleType = BundleUtilities.extractBundleTypeFromBundle(bundle);
+            bundleType = BundleUtilities.extractBundleTypeFromBundle(deBundle);
         }
 
-        EntandoDeBundleDetails details = bundle.getSpec().getDetails();
-        String code = bundle.getMetadata().getName();
+        EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
+        String code = deBundle.getMetadata().getName();
 
         EntandoBundleJob installedJob = null;
         EntandoBundleJob lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(code)
@@ -251,7 +251,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                     .orElse(null);
         }
 
-        return EntandoBundle.builder()
+        EntandoBundle bundle = EntandoBundle.builder()
                 .code(code)
                 .title(details.getName())
                 .description(details.getDescription())
@@ -260,10 +260,24 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .thumbnail(details.getThumbnail())
                 .installedJob(installedJob)
                 .lastJob(lastJob)
-                .versions(bundle.getSpec().getTags().stream()
+                .versions(deBundle.getSpec().getTags().stream()
                         .map(EntandoBundleVersion::fromEntity) //TODO how to read timestamp from k8s custom model?
                         .collect(Collectors.toList()))
                 .build();
+
+        EntandoBundleVersion latest;
+        if (deBundle.getSpec().getDetails() != null && deBundle.getSpec().getDetails().getDistTags() != null && deBundle
+                .getSpec().getDetails().getDistTags().containsKey(BundleUtilities.LATEST_VERSION)) {
+
+            latest = new EntandoBundleVersion()
+                    .setVersion(deBundle.getSpec().getDetails().getDistTags().get("latest").toString());
+        } else {
+            latest = BundleUtilities.composeLatestVersion(deBundle).orElse(null);
+        }
+
+        bundle.setLatestVersion(latest);
+
+        return bundle;
     }
 
 }
