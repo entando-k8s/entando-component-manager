@@ -69,14 +69,20 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
+    public DefaultK8SServiceClient(String k8sServiceUrl, boolean normalizeK8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tokenUri = tokenUri;
-        this.k8sServiceUrl = k8sServiceUrl;
         this.restTemplate = newRestTemplate();
+
+        if (normalizeK8sServiceUrl && ! k8sServiceUrl.endsWith("/")) {
+            k8sServiceUrl += "/";
+        }
+        this.k8sServiceUrl = k8sServiceUrl;
+
         this.traverson = newTraverson();
         this.noAuthRestTemplate = newNoAuthRestTemplate();
+
     }
 
     public Traverson newTraverson() {
