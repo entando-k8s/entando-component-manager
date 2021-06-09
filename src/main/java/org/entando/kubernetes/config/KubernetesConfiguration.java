@@ -21,6 +21,8 @@ public class KubernetesConfiguration {
 
     @Value("${entando.k8s.service.url}")
     private String k8sServiceUrl;
+    @Value("${entando.k8s.service.url.normalize:true}")
+    private boolean normalizeK8sServiceUrl;
     @Value("${spring.security.oauth2.client.registration.oidc.client-id}")
     private String clientId;
     @Value("${spring.security.oauth2.client.registration.oidc.client-secret}")
@@ -38,7 +40,7 @@ public class KubernetesConfiguration {
 
     @Bean
     public K8SServiceClient k8SServiceClient() {
-        return new DefaultK8SServiceClient(k8sServiceUrl, clientId, clientSecret, tokenUri);
+        return new DefaultK8SServiceClient(k8sServiceUrl, normalizeK8sServiceUrl, clientId, clientSecret, tokenUri);
     }
 
     @Bean
