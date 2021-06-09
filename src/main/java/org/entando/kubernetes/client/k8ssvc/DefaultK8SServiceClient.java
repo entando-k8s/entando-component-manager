@@ -69,14 +69,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
+    public DefaultK8SServiceClient(String k8sServiceUrl, boolean normalizeK8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tokenUri = tokenUri;
         this.restTemplate = newRestTemplate();
 
-        // workaround to address the redirect issue on GKE
-        if (! k8sServiceUrl.endsWith("/")) {
+        if (normalizeK8sServiceUrl && ! k8sServiceUrl.endsWith("/")) {
             k8sServiceUrl += "/";
         }
         this.k8sServiceUrl = k8sServiceUrl;
