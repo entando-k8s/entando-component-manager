@@ -157,7 +157,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
         return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
                 .orElseThrow(
-                        () -> new InvalidBundleException("Version " + version + " not defined in bundle versions"));
+                        () -> new InvalidBundleException("Version " + versionToFind + " not defined in bundle versions"));
     }
 
 }

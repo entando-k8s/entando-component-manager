@@ -373,4 +373,22 @@ public class EntandoBundleServiceTest {
         assertThat(bundles.getBody().get(0).getVersions().size()).isEqualTo(1);
         assertThat(bundles.getBody().get(0).getVersions().get(0).getVersion()).isEqualTo("0.0.1");
     }
+
+    @Test
+    void shouldGetLatestVersionFromPropertySpecDistTagsLatest() {
+
+        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        EntandoBundle entandoBundle = service.convertToBundleFromEcr(bundle);
+        assertThat(entandoBundle.getLatestVersion().get().getVersion()).isEqualTo("0.0.15");
+    }
+
+    @Test
+    void shouldGetLatestVersionFromVersionListIfNotManuallySpecified() {
+
+        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        bundle.getSpec().getDetails().getDistTags().remove("latest");
+        bundle.getSpec().getDetails().getVersions().add("0.0.5");
+        EntandoBundle entandoBundle = service.convertToBundleFromEcr(bundle);
+        assertThat(entandoBundle.getLatestVersion().get().getVersion()).isEqualTo("0.0.5");
+    }
 }

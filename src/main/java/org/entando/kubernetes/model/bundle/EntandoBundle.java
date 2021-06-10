@@ -2,7 +2,6 @@ package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,6 +31,7 @@ public class EntandoBundle {
     private EntandoBundleJob installedJob;
     private EntandoBundleJob lastJob;
     private Boolean customInstallation;
+    private EntandoBundleVersion latestVersion;
 
     @Default
     private List<EntandoBundleVersion> versions = new ArrayList<>();
@@ -41,7 +41,7 @@ public class EntandoBundle {
     }
 
     public Optional<EntandoBundleVersion> getLatestVersion() {
-        return this.versions.stream().max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
+        return Optional.ofNullable(latestVersion);
     }
 
 }

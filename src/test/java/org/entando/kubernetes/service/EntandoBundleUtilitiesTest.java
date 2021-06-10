@@ -72,7 +72,26 @@ public class EntandoBundleUtilitiesTest {
         EntandoDeBundle testBundle = getTestBundle();
         testBundle.getSpec().getDetails().getVersions().add("v0.0.6");
         String version = BundleUtilities.getBundleVersionOrFail(testBundle, "latest");
+        assertThat(version).isEqualTo("0.0.15");
+    }
+
+    @Test
+    void shouldReturnLatestVersionFromTheAvailableVersionListWithSemVersionRulesIfLatestIsNotExplicitlyDefined() {
+        EntandoDeBundle testBundle = getTestBundle();
+        testBundle.getSpec().getDetails().getDistTags().remove("latest");
+        testBundle.getSpec().getDetails().getVersions().add("v0.0.6");
+        String version = BundleUtilities.getBundleVersionOrFail(testBundle, "latest");
         assertThat(version).isEqualTo("v0.0.6");
+    }
+
+    @Test
+    void shouldThrowExceptionIfNoVersionIsElegibleAsLatest() {
+        EntandoDeBundle testBundle = getTestBundle();
+        testBundle.getSpec().getDetails().getDistTags().remove("latest");
+        testBundle.getSpec().getDetails().getVersions().clear();
+
+        assertThrows(EntandoComponentManagerException.class,
+                () -> BundleUtilities.getBundleVersionOrFail(testBundle, "latest"));
     }
 
     @Test

@@ -23,6 +23,12 @@
     },
     "tags": [
       {
+        "version": "0.0.5",
+        "integrity": "sha512-zuprIKqkbNzvokdyWYJ23lCac8WwohRQA1gbrWCglE5dIjzxSirfLEP+33cZcEgNmqVTURSWvf7FA4u2ljGDWQ==",
+        "shasum": "e28b3224224107ef0fa3382d55e05fcb8f90526d",
+        "tarball": "http://nexus.lab.entando.org/repository/npm-entando-demo/tecnici-bundle/-/tecnici-bundle-0.0.5.tgz"
+      },
+      {
         "version": "1.0.0",
         "integrity": "sha512-zuprIKqkbNzvokdyWYJ23lCac8WwohRQA1gbrWCglE5dIjzxSirfLEP+33cZcEgNmqVTURSWvf7FA4u2ljGDWQ==",
         "shasum": "e28b3224224107ef0fa3382d55e05fcb8f90526d",
