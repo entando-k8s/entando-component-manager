@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -92,6 +93,21 @@ public class EntandoBundleUtilitiesTest {
 
         assertThrows(EntandoComponentManagerException.class,
                 () -> BundleUtilities.getBundleVersionOrFail(testBundle, "latest"));
+    }
+
+    @Test
+    void shouldThrowExceptionWithNullOrEmptyVersion() {
+
+        final EntandoDeBundle testBundle = getTestBundle();
+        String expectedMex = "Null or empty version property received";
+
+        EntandoComponentManagerException ex = assertThrows(EntandoComponentManagerException.class,
+                () -> BundleUtilities.getBundleVersionOrFail(testBundle, ""));
+        assertThat(expectedMex).isEqualTo(ex.getMessage());
+
+        ex = assertThrows(EntandoComponentManagerException.class,
+                () -> BundleUtilities.getBundleVersionOrFail(testBundle, null));
+        assertThat(expectedMex).isEqualTo(ex.getMessage());
     }
 
     @Test
