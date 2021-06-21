@@ -65,6 +65,11 @@ public class BundleUtilities {
             .compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP);
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
+
+        if (Strings.isNullOrEmpty(versionReference)) {
+            throw new EntandoComponentManagerException("Null or empty version property received");
+        }
+
         String version = versionReference;
 
         if (version.equals(LATEST_VERSION)) {
