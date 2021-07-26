@@ -96,7 +96,7 @@ public class K8SServiceClientTest {
         String apiRoot = mockServer.getApiRoot();
 
         Assertions.assertThrows(EntandoComponentManagerException.class, () ->
-                new DefaultK8SServiceClient(apiRoot, "not_existing"));
+                new DefaultK8SServiceClient(apiRoot, "not_existing", false));
     }
 
     @Test

@@ -363,14 +363,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
 
     private RestTemplate newRestTemplate() {
-        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
-        if (resourceDetails == null) {
-            return null;
-        }
-        final OAuth2RestTemplate template = new OAuth2RestTemplate(resourceDetails);
+        final OAuth2RestTemplate template = new OAuth2RestTemplate(new ClientCredentialsResourceDetails());
         template.setRequestFactory(getRequestFactory());
-        template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
-
+        template.setAccessTokenProvider(new FromFileTokenProvider(this.tokenFilePath));
         return setMessageConverters(template);
     }
 
@@ -408,21 +403,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return converter;
     }
 
-
-    private OAuth2ProtectedResourceDetails getResourceDetails() {
-        final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
-        resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(clientId);
-        resourceDetails.setClientSecret(clientSecret);
-        resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
-        try {
-            resourceDetails.setAccessTokenUri(UriComponentsBuilder.fromUriString(tokenUri).toUriString());
-        } catch (IllegalArgumentException ex) {
-            LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using %s as token uri", tokenUri));
-            return null;
-        }
-        return resourceDetails;
-    }
 
     private ClientHttpRequestFactory getRequestFactory() {
         final HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
