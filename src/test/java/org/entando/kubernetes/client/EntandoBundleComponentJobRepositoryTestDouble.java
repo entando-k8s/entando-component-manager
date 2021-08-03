@@ -109,6 +109,12 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
+    public <S extends EntandoBundleComponentJobEntity> Optional<S> findOne(Example<S> example) {
+        return Optional.empty();
+    }
+
+
+    @Override
     public List<EntandoBundleComponentJobEntity> findAllById(Iterable<UUID> uuids) {
         List<UUID> ids = StreamSupport.stream(uuids.spliterator(), false).collect(Collectors.toList());
         return database.values().stream().filter(j -> ids.contains(j.getId())).collect(Collectors.toList());
@@ -125,6 +131,11 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
+    public <S extends EntandoBundleComponentJobEntity> boolean exists(Example<S> example) {
+        return false;
+    }
+
+    @Override
     public void deleteById(UUID uuid) {
         this.database.remove(uuid);
     }
@@ -132,6 +143,11 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     @Override
     public void delete(EntandoBundleComponentJobEntity entity) {
         this.deleteById(entity.getId());
+    }
+
+    @Override
+    public void deleteAllById(Iterable<? extends UUID> iterable) {
+
     }
 
     @Override
@@ -187,6 +203,11 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
+    public <S extends EntandoBundleComponentJobEntity> List<S> saveAllAndFlush(Iterable<S> iterable) {
+        return null;
+    }
+
+    @Override
     public void deleteInBatch(Iterable<EntandoBundleComponentJobEntity> entities) {
         for (EntandoBundleComponentJobEntity e : entities) {
             this.delete(e);
@@ -194,8 +215,18 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
+    public void deleteAllInBatch(Iterable<EntandoBundleComponentJobEntity> iterable) {
+
+    }
+
+    @Override
     public void deleteAllInBatch() {
         this.deleteAll();
+    }
+
+    @Override
+    public void deleteAllByIdInBatch(Iterable<UUID> iterable) {
+
     }
 
     @Override
@@ -207,12 +238,7 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
-    public <S extends EntandoBundleComponentJobEntity> Optional<S> findOne(Example<S> example) {
-        return Optional.empty();
-    }
-
-    @Override
-    public <S extends EntandoBundleComponentJobEntity> boolean exists(Example<S> example) {
-        return false;
+    public EntandoBundleComponentJobEntity getById(UUID uuid) {
+        return null;
     }
 }

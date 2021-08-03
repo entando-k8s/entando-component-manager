@@ -152,6 +152,11 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public void deleteAllById(Iterable<? extends UUID> iterable) {
+
+    }
+
+    @Override
     public void deleteAll(Iterable<? extends EntandoBundleJobEntity> entities) {
         for (EntandoBundleJobEntity e : entities) {
             this.delete(e);
@@ -205,10 +210,20 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public <S extends EntandoBundleJobEntity> List<S> saveAllAndFlush(Iterable<S> iterable) {
+        return null;
+    }
+
+    @Override
     public void deleteInBatch(Iterable<EntandoBundleJobEntity> entities) {
         for (EntandoBundleJobEntity e : entities) {
             this.delete(e);
         }
+    }
+
+    @Override
+    public void deleteAllInBatch(Iterable<EntandoBundleJobEntity> iterable) {
+
     }
 
     @Override
@@ -217,11 +232,21 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public void deleteAllByIdInBatch(Iterable<UUID> iterable) {
+
+    }
+
+    @Override
     public EntandoBundleJobEntity getOne(UUID uuid) {
         if (this.database.containsKey(uuid)) {
             return this.database.get(uuid);
         }
         throw new EntityNotFoundException("Entity with uuid " + uuid.toString() + " not found in the database");
+    }
+
+    @Override
+    public EntandoBundleJobEntity getById(UUID uuid) {
+        return null;
     }
 
     @Override
