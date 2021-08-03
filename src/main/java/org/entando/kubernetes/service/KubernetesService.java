@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionFactory;
@@ -23,6 +25,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Component
@@ -35,14 +38,17 @@ public class KubernetesService {
     private final K8SServiceClient k8sServiceClient;
     private final String entandoAppName;
     private final String entandoAppNamespace;
+    private Set<String> digitalExchangesNames;
 
     public KubernetesService(@Value("${entando.app.name}") String entandoAppName,
             @Value("${entando.app.namespace}") String entandoAppNamespace,
+            @Value("${entando.digital-exchanges.names}") Set<String> digitalExchangesNames,
             K8SServiceClient k8SServiceClient,
             ConditionFactory waitingConditionFactory) {
         this.waitingConditionFactory = waitingConditionFactory;
         this.k8sServiceClient = k8SServiceClient;
         this.entandoAppName = entandoAppName;
+        this.digitalExchangesNames = digitalExchangesNames;
         this.entandoAppNamespace = getCurrentKubernetesNamespace().orElse(entandoAppNamespace);
     }
 
@@ -133,12 +139,23 @@ public class KubernetesService {
         return k8sServiceClient.getBundlesInObservedNamespaces();
     }
 
-    public Optional<EntandoDeBundle> getBundleByName(String name) {
+    public Optional<EntandoDeBundle> fetchBundleByName(String name) {
+        if (CollectionUtils.isEmpty(this.digitalExchangesNames)) {
+            return this.getBundleByName(name);
+        }
+
+        return this.digitalExchangesNames.stream()
+                .map(namespace -> this.getBundleByNameAndNamespace(name, namespace).orElse(null))
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
+    protected Optional<EntandoDeBundle> getBundleByName(String name) {
         return k8sServiceClient.getBundleWithName(name);
     }
 
-    public Optional<EntandoDeBundle> getBundleByNameAndDigitalExchange(String name, String deId) {
-        return k8sServiceClient.getBundleWithNameAndNamespace(name, deId);
+    protected Optional<EntandoDeBundle> getBundleByNameAndNamespace(String name, String namespace) {
+        return k8sServiceClient.getBundleWithNameAndNamespace(name, namespace);
     }
 
     private Optional<String> getCurrentKubernetesNamespace() {

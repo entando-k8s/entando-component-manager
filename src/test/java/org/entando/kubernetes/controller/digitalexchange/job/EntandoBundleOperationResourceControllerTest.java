@@ -56,7 +56,7 @@ class EntandoBundleOperationResourceControllerTest {
         }
 
         verify(installPlanValidator, times(1)).validateInstallPlanOrThrow(any());
-        verify(kubernetesService, times(0)).getBundleByName(anyString());
+        verify(kubernetesService, times(0)).fetchBundleByName(anyString());
         verify(jobService, times(0)).findCompletedOrConflictingInstallJob(any());
     }
 }
