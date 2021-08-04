@@ -53,6 +53,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 @Tag("unit")
@@ -282,15 +283,16 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldNotFindBundleWithNameInNamespace() {
-        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlEqualTo("/bundles?namespace=my-namespace"))
+    void shouldNotFindBundleWithNameInNamespace() {
+        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundle-not-found.json");
+        mockServer.addStub(get(urlEqualTo("/bundles/my-bundle"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(stubResponse)
                         .withHeader("Content-Type", HAL_JSON_VALUE)));
-        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "my-namespace");
-        assertThat(bundle.isPresent()).isFalse();
+
+        Assertions.assertThrows(KubernetesClientException.class, () ->
+                client.getBundleWithNameAndNamespace("my-bundle", "my-namespace"));
     }
 
     @Test

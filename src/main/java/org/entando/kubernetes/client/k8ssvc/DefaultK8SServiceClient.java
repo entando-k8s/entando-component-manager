@@ -60,6 +60,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String PLUGINS_ENDPOINT = "plugins";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
+    public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
+
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     private final String k8sServiceUrl;
     private final String clientId;
@@ -288,10 +290,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
-                throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
+                throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
             }
         } catch (Exception ex) {
-            throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
+            throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
         }
 
         return Optional.ofNullable(bundle);
@@ -299,9 +301,27 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
-        return getBundlesInNamespace(namespace).stream()
-                .filter(b -> b.getMetadata().getName().equals(name))
-                .findFirst();
+        EntandoDeBundle bundle = null;
+        try {
+            final EntityModel<EntandoDeBundle> entityModel = traverson.follow(BUNDLES_ENDPOINT)
+                    .follow(Hop.rel("bundle")
+                            .withParameter("name", name)
+                            .withParameter("namespace", namespace))
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    });
+            if (entityModel != null) {
+                bundle = entityModel.getContent();
+            }
+
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
+            }
+        } catch (Exception ex) {
+            throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
+        }
+
+        return Optional.ofNullable(bundle);
     }
 
     @Override
