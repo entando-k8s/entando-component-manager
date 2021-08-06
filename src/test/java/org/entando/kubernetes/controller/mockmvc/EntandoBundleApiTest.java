@@ -50,7 +50,7 @@ public class EntandoBundleApiTest {
 
     private MockMvc mockMvc;
 
-    @Value("${entando.digital-exchanges.names}")
+    @Value("${entando.component.repository.namespaces}")
     private List<String> digitalExchangesNames;
 
     @SpyBean

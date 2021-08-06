@@ -42,7 +42,7 @@ public class KubernetesService {
 
     public KubernetesService(@Value("${entando.app.name}") String entandoAppName,
             @Value("${entando.app.namespace}") String entandoAppNamespace,
-            @Value("${entando.digital-exchanges.names}") Set<String> digitalExchangesNames,
+            @Value("${entando.component.repository.namespaces}") Set<String> digitalExchangesNames,
             K8SServiceClient k8SServiceClient,
             ConditionFactory waitingConditionFactory) {
         this.waitingConditionFactory = waitingConditionFactory;
