@@ -141,11 +141,15 @@ public class KubernetesService {
 
     public Optional<EntandoDeBundle> fetchBundleByName(String name) {
         if (CollectionUtils.isEmpty(this.digitalExchangesNames)) {
+            log.info("Fetching bundle by name {}", name);
             return this.getBundleByName(name);
         }
 
         return this.digitalExchangesNames.stream()
-                .map(namespace -> this.getBundleByNameAndNamespace(name, namespace).orElse(null))
+                .map(namespace -> {
+                    log.info("Fetching bundle by name {} in namespace {}", name, namespace);
+                    return this.getBundleByNameAndNamespace(name, namespace).orElse(null);
+                })
                 .filter(Objects::nonNull)
                 .findFirst();
     }
