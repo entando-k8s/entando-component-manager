@@ -7,7 +7,7 @@
       "href": "http://localhost:9080/plugins"
     },
     "bundles": {
-      "href": "http://localhost:9080/bundles/"
+      "href": "http://localhost:9080/bundles{?namespace}"
     },
     "app-plugin-links": {
       "href": "http://localhost:9080/app-plugin-links"

@@ -236,6 +236,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+
+        LOGGER.info("### fetching bundles from all namespaces");
+
         return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
@@ -246,8 +249,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
-        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
-                .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
+
+        LOGGER.info("### fetching bundles from " + namespace + " namespace");
+
+        return tryOrThrow(() -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()

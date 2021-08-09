@@ -247,6 +247,12 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldGetBundlesFromSingleNamespace() {
+        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
+        mockServer.addStub(get(urlMatching("/bundles?namespace=first"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
         assertThat(bundles).hasSize(1);
@@ -255,17 +261,17 @@ public class K8SServiceClientTest {
     @Test
     public void shouldGetBundlesFromMultipleNamespaces() {
         String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlMatching("/bundles?namespaces=first"))
+        mockServer.addStub(get(urlMatching("/bundles?namespace=first"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        mockServer.addStub(get(urlMatching("/bundles?namespaces=second"))
+        mockServer.addStub(get(urlMatching("/bundles?namespace=second"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        mockServer.addStub(get(urlMatching("/bundles?namespaces=third"))
+        mockServer.addStub(get(urlMatching("/bundles?namespace=third"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
