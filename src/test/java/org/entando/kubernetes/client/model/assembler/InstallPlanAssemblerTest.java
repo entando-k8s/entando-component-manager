@@ -8,7 +8,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInst
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
-import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
