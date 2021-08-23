@@ -51,7 +51,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         final InstallPlansRequest request = Optional.ofNullable(installPlansRequest).orElse(new InstallPlansRequest());
 
-        EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
+        EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
@@ -68,7 +68,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
             @RequestBody(required = false) InstallRequest installRequest) {
 
         final InstallRequest request = Optional.ofNullable(installRequest).orElse(new InstallRequest());
-        EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
+        EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
@@ -89,7 +89,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         installPlanValidator.validateInstallPlanOrThrow(installRequest);
 
-        EntandoDeBundle bundle = kubeService.getBundleByName(componentId)
+        EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 

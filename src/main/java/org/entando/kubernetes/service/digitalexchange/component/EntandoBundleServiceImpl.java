@@ -58,7 +58,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     private final EntandoBundleComponentJobRepository jobComponentRepository;
 
     public EntandoBundleServiceImpl(K8SServiceClient k8SServiceClient,
-            @Value("${entando.digital-exchanges.name:}") List<String> accessibleDigitalExchanges,
+            @Value("${entando.component.repository.namespaces:}") List<String> accessibleDigitalExchanges,
             EntandoBundleJobRepository jobRepository,
             EntandoBundleComponentJobRepository jobComponentRepository,
             InstalledEntandoBundleRepository installedComponentRepo) {

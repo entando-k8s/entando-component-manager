@@ -33,6 +33,7 @@ import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
@@ -53,14 +54,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 @Tag("unit")
 public class K8SServiceClientTest {
 
-    private static final String CLIENT_ID = "test-entando-de";
-    private static final String CLIENT_SECRET = "0fdb9047-e121-4aa4-837d-8d51c1822b8a";
-    private static final String TOKEN_URI = "http://someurl.com";
+    private static final String SERVICE_ACCOUNT_TOKEN_FILEPATH = "src/test/resources/k8s-service-account-token";
     private static EntandoK8SServiceMockServer mockServer;
     private DefaultK8SServiceClient client;
 
@@ -81,7 +81,7 @@ public class K8SServiceClientTest {
     @BeforeEach
     public void setup() {
         mockServer = new EntandoK8SServiceMockServer();
-        client = new DefaultK8SServiceClient(mockServer.getApiRoot(), true, CLIENT_ID, CLIENT_SECRET, TOKEN_URI);
+        client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, true);
         client.setRestTemplate(noOAuthRestTemplate());
         client.setNoAuthRestTemplate(noOAuthRestTemplate());
     }
@@ -89,6 +89,15 @@ public class K8SServiceClientTest {
     @AfterEach
     public void reset() {
         mockServer.tearDown();
+    }
+
+    @Test
+    void shouldThrowExceptionIfServiceAccountTokenDoesNotExist() {
+
+        String apiRoot = mockServer.getApiRoot();
+
+        Assertions.assertThrows(EntandoComponentManagerException.class, () ->
+                new DefaultK8SServiceClient(apiRoot, "not_existing", false));
     }
 
     @Test
@@ -238,6 +247,12 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldGetBundlesFromSingleNamespace() {
+        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
+        mockServer.addStub(get(urlMatching("/bundles?namespace=first"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
         assertThat(bundles).hasSize(1);
@@ -246,17 +261,17 @@ public class K8SServiceClientTest {
     @Test
     public void shouldGetBundlesFromMultipleNamespaces() {
         String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlMatching("/bundles?namespaces=first"))
+        mockServer.addStub(get(urlMatching("/bundles?namespace=first"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        mockServer.addStub(get(urlMatching("/bundles?namespaces=second"))
+        mockServer.addStub(get(urlMatching("/bundles?namespace=second"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        mockServer.addStub(get(urlMatching("/bundles?namespaces=third"))
+        mockServer.addStub(get(urlMatching("/bundles?namespace=third"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
@@ -282,15 +297,16 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldNotFindBundleWithNameInNamespace() {
-        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundles-empty-list.json");
-        mockServer.addStub(get(urlEqualTo("/bundles?namespace=my-namespace"))
+    void shouldNotFindBundleWithNameInNamespace() {
+        String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundle-not-found.json");
+        mockServer.addStub(get(urlEqualTo("/bundles/my-bundle"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(stubResponse)
                         .withHeader("Content-Type", HAL_JSON_VALUE)));
-        Optional<EntandoDeBundle> bundle = client.getBundleWithNameAndNamespace("my-bundle", "my-namespace");
-        assertThat(bundle.isPresent()).isFalse();
+
+        Assertions.assertThrows(KubernetesClientException.class, () ->
+                client.getBundleWithNameAndNamespace("my-bundle", "my-namespace"));
     }
 
     @Test

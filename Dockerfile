@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/openjdk-11
+FROM entando/entando-ubi8-java11-base:6.4.0
 ARG VERSION
 ### Required OpenShift Labels
 LABEL name="Entando Component Manager" \
@@ -18,22 +18,6 @@ ENV PORT=8080 \
     NSS_WRAPPER_GROUP=/tmp/group
 
 COPY passwd.template entrypoint.sh /
-
-
-USER root
-RUN microdnf install -y yum
-
-RUN chmod -Rf g+rw /opt && \
-    touch ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
-    chgrp 0 ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
-    chmod g+rw ${NSS_WRAPPER_PASSWD} ${NSS_WRAPPER_GROUP} && \
-    yum update -y --nobest && \
-    yum install -y git curl gpg tar gettext nss_wrapper && \
-    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash && \
-    yum install -y git-lfs && git lfs install && \
-    rm -rf /var/cache/yum
-
-USER 185
 
 EXPOSE 8080
 

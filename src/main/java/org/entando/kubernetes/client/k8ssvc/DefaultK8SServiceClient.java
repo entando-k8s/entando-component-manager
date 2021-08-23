@@ -6,6 +6,8 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,10 +46,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
-import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -60,19 +59,17 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String PLUGINS_ENDPOINT = "plugins";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
+    public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
+
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     private final String k8sServiceUrl;
-    private final String clientId;
-    private final String clientSecret;
-    private final String tokenUri;
+    private Path tokenFilePath;
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, boolean normalizeK8sServiceUrl, String clientId, String clientSecret, String tokenUri) {
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.tokenUri = tokenUri;
+    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, boolean normalizeK8sServiceUrl) {
+        this.tokenFilePath = Paths.get(tokenFilePath);
         this.restTemplate = newRestTemplate();
 
         if (normalizeK8sServiceUrl && ! k8sServiceUrl.endsWith("/")) {
@@ -239,6 +236,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+
+        LOGGER.info("### fetching bundles from all namespaces");
+
         return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
@@ -249,8 +249,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
-        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
-                .follow(Hop.rel("bundles-in-namespace").withParameter("namespace", namespace))
+
+        LOGGER.info("### fetching bundles from " + namespace + " namespace");
+
+        return tryOrThrow(() -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -288,10 +290,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
-                throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
+                throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
             }
         } catch (Exception ex) {
-            throw new KubernetesClientException("An error occurred while retrieving bundle with name " + name, ex);
+            throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
         }
 
         return Optional.ofNullable(bundle);
@@ -299,9 +301,27 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
-        return getBundlesInNamespace(namespace).stream()
-                .filter(b -> b.getMetadata().getName().equals(name))
-                .findFirst();
+        EntandoDeBundle bundle = null;
+        try {
+            final EntityModel<EntandoDeBundle> entityModel = traverson.follow(BUNDLES_ENDPOINT)
+                    .follow(Hop.rel("bundle")
+                            .withParameter("name", name)
+                            .withParameter("namespace", namespace))
+                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    });
+            if (entityModel != null) {
+                bundle = entityModel.getContent();
+            }
+
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
+            }
+        } catch (Exception ex) {
+            throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
+        }
+
+        return Optional.ofNullable(bundle);
     }
 
     @Override
@@ -368,14 +388,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
 
     private RestTemplate newRestTemplate() {
-        OAuth2ProtectedResourceDetails resourceDetails = getResourceDetails();
-        if (resourceDetails == null) {
-            return null;
-        }
-        final OAuth2RestTemplate template = new OAuth2RestTemplate(resourceDetails);
+        final OAuth2RestTemplate template = new OAuth2RestTemplate(new ClientCredentialsResourceDetails());
         template.setRequestFactory(getRequestFactory());
-        template.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
-
+        template.setAccessTokenProvider(new FromFileTokenProvider(this.tokenFilePath));
         return setMessageConverters(template);
     }
 
@@ -413,21 +428,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return converter;
     }
 
-
-    private OAuth2ProtectedResourceDetails getResourceDetails() {
-        final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
-        resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(clientId);
-        resourceDetails.setClientSecret(clientSecret);
-        resourceDetails.setClientAuthenticationScheme(AuthenticationScheme.form);
-        try {
-            resourceDetails.setAccessTokenUri(UriComponentsBuilder.fromUriString(tokenUri).toUriString());
-        } catch (IllegalArgumentException ex) {
-            LOGGER.log(Level.SEVERE, ex, () -> String.format("Issues when using %s as token uri", tokenUri));
-            return null;
-        }
-        return resourceDetails;
-    }
 
     private ClientHttpRequestFactory getRequestFactory() {
         final HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
