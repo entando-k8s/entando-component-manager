@@ -9,7 +9,7 @@ LABEL name="Entando Component Manager" \
       summary="Entando Component Manager for Entando Component Repository" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
 
-COPY target/generated-resources/licenses /licenses
+#COPY target/generated-resources/licenses /licenses
 
 ENV PORT=8080 \
     CLASSPATH=/opt/lib \
