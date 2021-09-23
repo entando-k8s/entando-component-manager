@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -171,6 +173,7 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
+        descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -189,6 +192,7 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
+        descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -212,7 +216,7 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
                 "/myhostname.io/entando-plugin", "/api/v1/todos",
-                getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2CompleteBundle(),
+                getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc2, PluginSecurityLevel.forName("lenient"));
     }
 
@@ -222,6 +226,7 @@ public class EntandoBundleUtilitiesTest {
         // given a minimum filled plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
+        descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -232,7 +237,7 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    void withACompletePluginDescriptorV3ShouldCreateACorrectEntandoPlugin() throws IOException {
+    void withAMinimumFilledPluginDescriptorV3ShouldCreateACorrectEntandoPlugin() throws IOException {
 
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
@@ -247,25 +252,19 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    void shouldReturnPluginDescriptorIntegerVersion() {
+    void withACompletePluginDescriptorV3ShouldCreateACorrectEntandoPlugin() throws IOException {
 
-        Stream.of(new SimpleEntry<>(PluginDescriptor.builder().descriptorVersion("v1").build(), 1),
-                new SimpleEntry<>(PluginDescriptor.builder().descriptorVersion("v45").build(), 45)).forEach(keyPair -> {
-                    Integer version = BundleUtilities.getPluginDescriptorIntegerVersion(keyPair.getKey());
-                    assertThat(version).isEqualTo(keyPair.getValue());
-                });
-    }
+        // given a complete plugin descriptor V3
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
 
-    @Test
-    void shouldThrowExceptionWhenGettingIntegerVersionOfNonCompliantPluginDescriptorVersion() {
+        // should generate the right populated EntandoPlugin
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        PluginDescriptor pluginDescriptor = new PluginDescriptor();
-
-        Stream.of("va", "1", "a1", "v").forEach(version -> {
-            pluginDescriptor.setDescriptorVersion(version);
-            assertThrows(InvalidBundleException.class,
-                    () -> BundleUtilities.getPluginDescriptorIntegerVersion(pluginDescriptor));
-        });
+        assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV3:1.0.0",
+                "/myhostname.io/entando-plugin", "/api/v1/todos",
+                getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
+                this::assertOnLabelsForTodoMvc3, PluginSecurityLevel.LENIENT);
     }
 
     @Test
@@ -291,6 +290,37 @@ public class EntandoBundleUtilitiesTest {
         metadata.setLabels(Map.of("widgets", "true"));
         bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);
         assertThat(bundleType).isEqualTo(BundleType.STANDARD_BUNDLE);
+    }
+
+
+    @Test
+    void whenReadingARelativeIngressPathItShouldPrefixItWithASlash() throws IOException {
+
+        // given a plugin descriptor V2
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class);
+
+        // should add the leading slash to the ingress path
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
+
+        assertThat(entandoPlugin.getSpec().getIngressPath()).isEqualTo("/myhostname.io/entando-plugin");
+    }
+
+    @Test
+    void receivingAListOfEnvironmentVariableShouldCorrectlyConvertThemToAListOfEnvVar() {
+
+        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables());
+
+        assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_NAME);
+        assertThat(envVars.get(0).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
+        assertThat(envVars.get(0).getValueFrom()).isNull();
+
+        assertThat(envVars.get(1).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_2_NAME);
+        assertThat(envVars.get(1).getValue()).isNull();
+        assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getName()).isEqualTo(
+                PluginStubHelper.TEST_ENV_VAR_2_SECRET_NAME);
+        assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
+                PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
     }
 
 
@@ -349,7 +379,7 @@ public class EntandoBundleUtilitiesTest {
      ****************************************************************************************************/
 
 
-    private List<Permission> getPermissionsForTodoMvc2CompleteBundle() {
+    private List<Permission> getPermissionsForTodoMvc2PlusCompleteBundle() {
 
         return Arrays.asList(
                 new Permission("realm-management", "manage-users"),
@@ -396,6 +426,16 @@ public class EntandoBundleUtilitiesTest {
                 labelMap,
                 new AbstractMap.SimpleEntry("organization", "entando"),
                 new AbstractMap.SimpleEntry("name", "todomvcV2"),
+                new AbstractMap.SimpleEntry("version", "1.0.0")
+        );
+    }
+
+    private void assertOnLabelsForTodoMvc3(Map<String, String> labelMap) {
+
+        assertOnLabels(
+                labelMap,
+                new AbstractMap.SimpleEntry("organization", "entando"),
+                new AbstractMap.SimpleEntry("name", "todomvcV3"),
                 new AbstractMap.SimpleEntry("version", "1.0.0")
         );
     }

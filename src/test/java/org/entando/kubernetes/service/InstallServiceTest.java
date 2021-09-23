@@ -72,6 +72,7 @@ import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallSe
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
+import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,6 +100,7 @@ public class InstallServiceTest {
     private KubernetesService kubernetesService;
     private EntandoBundleComponentUsageService usageService;
     private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
+    private PluginDescriptorValidator pluginDescriptorValidator;
 
     @BeforeEach
     public void init() {
@@ -116,6 +118,7 @@ public class InstallServiceTest {
         kubernetesService = mock(KubernetesService.class);
         usageService = mock(EntandoBundleComponentUsageService.class);
         bundleOperationsConcurrencyManager = mock(BundleOperationsConcurrencyManager.class);
+        pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
@@ -146,7 +149,7 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new LanguageProcessor(coreClient));
         reportableComponentProcessorList.add(new PageProcessor(coreClient));
         reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
-        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService));
+        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator));
         reportableComponentProcessorList.add(new WidgetProcessor(coreClient));
 
         // instruct the strategy map with stub data

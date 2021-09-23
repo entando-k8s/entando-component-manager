@@ -16,27 +16,27 @@ public class InstallPlanValidator {
     public boolean validateInstallPlanOrThrow(InstallPlan installPlan) {
 
         if (null != installPlan) {
-            this.validateComponentMapOfThrow(installPlan.getFragments(), ComponentType.FRAGMENT);
-            this.validateComponentMapOfThrow(installPlan.getAssets(), ComponentType.ASSET);
-            this.validateComponentMapOfThrow(installPlan.getCategories(), ComponentType.CATEGORY);
-            this.validateComponentMapOfThrow(installPlan.getContents(), ComponentType.CONTENT);
-            this.validateComponentMapOfThrow(installPlan.getContentTemplates(), ComponentType.CONTENT_TEMPLATE);
-            this.validateComponentMapOfThrow(installPlan.getContentTypes(), ComponentType.CONTENT_TYPE);
-            this.validateComponentMapOfThrow(installPlan.getDirectories(), ComponentType.DIRECTORY);
-            this.validateComponentMapOfThrow(installPlan.getGroups(), ComponentType.GROUP);
-            this.validateComponentMapOfThrow(installPlan.getLabels(), ComponentType.LABEL);
-            this.validateComponentMapOfThrow(installPlan.getLanguages(), ComponentType.LANGUAGE);
-            this.validateComponentMapOfThrow(installPlan.getPages(), ComponentType.PAGE);
-            this.validateComponentMapOfThrow(installPlan.getPageTemplates(), ComponentType.PAGE_TEMPLATE);
-            this.validateComponentMapOfThrow(installPlan.getPlugins(), ComponentType.PLUGIN);
-            this.validateComponentMapOfThrow(installPlan.getResources(), ComponentType.RESOURCE);
-            this.validateComponentMapOfThrow(installPlan.getWidgets(), ComponentType.WIDGET);
+            this.validateComponentMapOrThrow(installPlan.getFragments(), ComponentType.FRAGMENT);
+            this.validateComponentMapOrThrow(installPlan.getAssets(), ComponentType.ASSET);
+            this.validateComponentMapOrThrow(installPlan.getCategories(), ComponentType.CATEGORY);
+            this.validateComponentMapOrThrow(installPlan.getContents(), ComponentType.CONTENT);
+            this.validateComponentMapOrThrow(installPlan.getContentTemplates(), ComponentType.CONTENT_TEMPLATE);
+            this.validateComponentMapOrThrow(installPlan.getContentTypes(), ComponentType.CONTENT_TYPE);
+            this.validateComponentMapOrThrow(installPlan.getDirectories(), ComponentType.DIRECTORY);
+            this.validateComponentMapOrThrow(installPlan.getGroups(), ComponentType.GROUP);
+            this.validateComponentMapOrThrow(installPlan.getLabels(), ComponentType.LABEL);
+            this.validateComponentMapOrThrow(installPlan.getLanguages(), ComponentType.LANGUAGE);
+            this.validateComponentMapOrThrow(installPlan.getPages(), ComponentType.PAGE);
+            this.validateComponentMapOrThrow(installPlan.getPageTemplates(), ComponentType.PAGE_TEMPLATE);
+            this.validateComponentMapOrThrow(installPlan.getPlugins(), ComponentType.PLUGIN);
+            this.validateComponentMapOrThrow(installPlan.getResources(), ComponentType.RESOURCE);
+            this.validateComponentMapOrThrow(installPlan.getWidgets(), ComponentType.WIDGET);
         }
 
         return true;
     }
 
-    private void validateComponentMapOfThrow(Map<String, ComponentInstallPlan> componentInstallPlanMap,
+    private void validateComponentMapOrThrow(Map<String, ComponentInstallPlan> componentInstallPlanMap,
             ComponentType componentType) {
 
         componentInstallPlanMap.forEach((key, componentInstallPlan) -> {
