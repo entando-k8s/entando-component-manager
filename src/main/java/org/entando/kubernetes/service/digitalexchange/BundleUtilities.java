@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -32,6 +35,7 @@ import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 @UtilityClass
@@ -60,7 +64,7 @@ public class BundleUtilities {
     public static final String LATEST_VERSION = "latest";
 
     private static final String DESCRIPTOR_VERSION_STARTING_CHAR = "v";
-    public static final String PLUGIN_DESCRIPTOR_VERSION_REGEXP = "^(v)(\\d+)";
+    public static final String PLUGIN_DESCRIPTOR_VERSION_REGEXP = "^(v)(\\d+)(\\.\\d+)?$";
     public static final Pattern PLUGIN_DESCRIPTOR_VERSION_PATTERN = Pattern
             .compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP);
 
@@ -124,7 +128,7 @@ public class BundleUtilities {
             latestVersionOpt = Optional.of(new EntandoBundleVersion()
                     .setVersion(entandoDeBundle.getSpec().getDetails().getDistTags().get(LATEST_VERSION).toString()));
 
-        } else if (! CollectionUtils.isEmpty(entandoDeBundle.getSpec().getDetails().getVersions())) {
+        } else if (!CollectionUtils.isEmpty(entandoDeBundle.getSpec().getDetails().getVersions())) {
 
             // calculate the latest from the versions list
             latestVersionOpt = entandoDeBundle.getSpec().getDetails().getVersions().stream()
@@ -283,7 +287,7 @@ public class BundleUtilities {
 
         List<String> ingressSegmentList = new ArrayList<>(Arrays.asList(image.getOrganization(), image.getName()));
 
-        if (BundleUtilities.getPluginDescriptorIntegerVersion(descriptor) < 3) {
+        if (descriptor.isVersionLowerThan3()) {
             ingressSegmentList.add(image.getVersion());
         }
 
@@ -293,28 +297,6 @@ public class BundleUtilities {
         return "/" + String.join("/", kubeCompatiblesSegmentList);
     }
 
-
-    /**
-     * read a plugin descriptor and return the corresponding plugin descriptor version as integer (without the leading v
-     * char).
-     *
-     * @param pluginDescriptor the plugin descriptor of which return the version number
-     * @return the integer version of the received plugin descriptor
-     */
-    public static Integer getPluginDescriptorIntegerVersion(PluginDescriptor pluginDescriptor) {
-
-        if (!StringUtils.hasLength(pluginDescriptor.getDescriptorVersion())) {
-            return pluginDescriptor.isVersion1() ? 1 : 2;
-        } else {
-            Matcher matcher = PLUGIN_DESCRIPTOR_VERSION_PATTERN.matcher(pluginDescriptor.getDescriptorVersion());
-            if (!matcher.matches()) {
-                String err = "The plugin descriptor version does not match the expected format";
-                log.debug(err);
-                throw new InvalidBundleException(err);
-            }
-            return Integer.parseInt(matcher.group(2));
-        }
-    }
 
     public static Map<String, String> getLabelsFromImage(DockerImage dockerImage) {
         Map<String, String> labels = new HashMap<>();
@@ -357,6 +339,7 @@ public class BundleUtilities {
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
                 .withPermissions(extractPermissionsFromDescriptor(descriptor))
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
+                .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables()))
                 .endSpec()
                 .build();
     }
@@ -438,6 +421,36 @@ public class BundleUtilities {
         return "/" + (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
                 ? bundleReader.getBundleCode()
                 : "");
+    }
+
+    /**
+     * receives a list of environment variables and convert them to the K8S env var format.
+     *
+     * @param environmentVariableList the PluginDescriptor from which get the env vars to convert
+     * @return the list of K8S compatible EnvVar
+     */
+    public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList) {
+
+        return Optional.ofNullable(environmentVariableList)
+                .orElseGet(ArrayList::new)
+                .stream().map(envVar -> {
+                    EnvVarBuilder builder = new EnvVarBuilder()
+                            .withName(envVar.getName());
+
+                    if (envVar.getSecretKeyRef() == null) {
+                        builder.withValue(envVar.getValue());
+                    } else {
+                        builder.withNewValueFrom()
+                                .withNewSecretKeyRef()
+                                .withName(envVar.getSecretKeyRef().getName())
+                                .withKey(envVar.getSecretKeyRef().getKey())
+                                .endSecretKeyRef()
+                                .endValueFrom();
+                    }
+
+                    return builder.build();
+                })
+                .collect(Collectors.toList());
     }
 
 }

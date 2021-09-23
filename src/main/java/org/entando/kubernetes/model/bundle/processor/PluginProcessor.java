@@ -19,6 +19,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -28,7 +29,9 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -45,6 +48,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         EntandoK8SServiceReportableProcessor {
 
     private final KubernetesService kubernetesService;
+    private final PluginDescriptorValidator pluginDescriptorValidator;
 
     @Override
     public ComponentType getSupportedComponentType() {
@@ -77,8 +81,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                plugin = ensurePluginDescriptorVersionIsSet(plugin);
-                validateDescriptorOrThrow(plugin);
+                pluginDescriptorValidator.validateOrThrow(plugin);
                 logDescriptorWarnings(plugin);
                 InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), conflictStrategy,
                         installPlan);
@@ -151,40 +154,6 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
     }
 
-    private PluginDescriptor ensurePluginDescriptorVersionIsSet(PluginDescriptor descriptor) {
-        if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
-            Integer intVersion = BundleUtilities.getPluginDescriptorIntegerVersion(descriptor);
-            descriptor.setDescriptorVersion(BundleUtilities.composePluginDescriptorVersion(intVersion));
-        }
-
-        return descriptor;
-    }
-
-    private void validateDescriptorOrThrow(PluginDescriptor descriptor) {
-
-        // validate version
-        Matcher matcher = Pattern.compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP).matcher(descriptor.getDescriptorVersion());
-        if (!matcher.matches()) {
-            String error = String.format(VERSION_NOT_VALID, descriptor.getComponentKey().getKey());
-            log.debug(error);
-            throw new InvalidBundleException(error);
-        }
-
-        // validate securityLevel property
-        if (!StringUtils.isEmpty(descriptor.getSecurityLevel())
-                || (descriptor.isVersion1() && !StringUtils.isEmpty(descriptor.getSpec().getSecurityLevel()))) {
-
-            String securityLevel =
-                    descriptor.isVersion1() ? descriptor.getSpec().getSecurityLevel() : descriptor.getSecurityLevel();
-
-            Arrays.stream(PluginSecurityLevel.values())
-                    .filter(pluginSecurityLevel -> pluginSecurityLevel.toName().equals(securityLevel))
-                    .findFirst()
-                    .orElseThrow(() -> new InvalidBundleException(SECURITY_LEVEL_NOT_RECOGNIZED)); // NOSONAR
-        }
-    }
-
-
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
             + "'{}' uses a deprecated format. To have full control over plugins we encourage you to migrate "
             + "to the new plugin descriptor format.";
@@ -196,10 +165,6 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V2 =
             "The prefix of the pod using the docker image "
                     + "'{}' is longer than {}. Plugin pods names will be truncated to '{}'";
-    public static final String SECURITY_LEVEL_NOT_RECOGNIZED =
-            "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
-                    + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
-                    .collect(Collectors.joining(", "));
-    public static final String VERSION_NOT_VALID =
-            "The plugin %s descriptor contains an invalid descriptorVersion";
+
+
 }
