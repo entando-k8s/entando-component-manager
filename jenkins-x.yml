@@ -1,6 +1,8 @@
 buildPack: entando-maven-docker
 buildPackGitURL: https://github.com/entando-k8s/jenkins-x-kubernetes.git
 pipelineConfig:
+  agent:
+    image: ghcr.io/jenkins-x/builder-maven:2.1.155-778-patch3
   env:
     - name: CHART_REPOSITORY
       value: https://jenkins-x-charts.github.io/repo
@@ -18,9 +20,6 @@ pipelineConfig:
     - name: _JAVA_OPTIONS
       value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms1000m -Xmx12000m
   pipelines:
-    pipeline:
-      agent:
-        container: ghcr.io/jenkins-x/builder-jx:2.1.155-778-patch3
     release:
       promote:
         preSteps:
