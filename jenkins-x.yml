@@ -1,8 +1,6 @@
 buildPack: entando-maven-docker
 buildPackGitURL: https://github.com/entando-k8s/jenkins-x-kubernetes.git
 pipelineConfig:
-  agent:
-    image: docker.io/entando/entando-jx-maven-java11:0.0.83
   env:
     - name: CHART_REPOSITORY
       value: https://jenkins-x-charts.github.io/repo
