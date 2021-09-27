@@ -20,6 +20,10 @@ pipelineConfig:
   pipelines:
     release:
       promote:
+        preSteps:
+        - command: helm init --client only
+          image: ghcr.io/jenkins-x/builder-maven:2.1.155-778-patch3
+          name: helm-init
         replace: true
         steps:
           - sh: jx step changelog --version v\$(cat ../../VERSION)
