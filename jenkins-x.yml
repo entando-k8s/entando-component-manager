@@ -2,6 +2,8 @@ buildPack: entando-maven-docker
 buildPackGitURL: https://github.com/entando-k8s/jenkins-x-kubernetes.git
 pipelineConfig:
   env:
+    - name: CHART_REPOSITORY
+      value: https://jenkins-x-charts.github.io/repo
     - name: PIPELINE_CODE
       value: ecm
     - name: TEST_DEPLOYMENT
@@ -18,6 +20,10 @@ pipelineConfig:
   pipelines:
     release:
       promote:
+        preSteps:
+        - command: helm init --client only
+          image: ghcr.io/jenkins-x/builder-maven:2.1.155-778-patch3
+          name: helm-init
         replace: true
         steps:
           - sh: jx step changelog --version v\$(cat ../../VERSION)
