@@ -1,0 +1,163 @@
+name: PR-CYCLE
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - develop
+
+env:
+  ENTANDO_OPT_USE_PPL_TAG: "v1.0.2"
+  ENTANDO_OPT_FEATURES: "${{ secrets.ENTANDO_OPT_FEATURES }}"
+  ENTANDO_OPT_REPO_BOM_URL: "${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}"
+  GIT_USER_NAME: "${{ secrets.GIT_USER_NAME }}"
+  GIT_USER_EMAIL: "${{ secrets.GIT_USER_EMAIL }}"
+  PPL_CONTEXT: ${{ toJson(github) }}
+  LOCAL_CLONE_DIR: "local-checkout"
+  SNYK_ORG: "entando-ixc"
+
+  #ENTANDO_OPT_LOG_LEVEL: "TRACE"
+
+jobs:
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # PREPARE
+  
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      SCAN_MATRIX: ${{ steps.START.outputs.SCAN_MATRIX }}
+    steps:
+      #~
+      - name: "PR PIPELINE START"
+        id: START
+        run: |
+          ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
+          ~/ppl-run \
+            .. status-report \
+            .. @checkout-branch pr --lcd "$LOCAL_CLONE_DIR" \
+            .. @pr-labels remove "prepared" --id "REMOVE-LABEL-PREPARED" \
+            .. @setup-task-enabling "PR_FORMAT_CHECK" "BOM_CHECK" "BOM" \
+            .. @setup-task-list "SCAN_MATRIX" true SONAR_SCAN OWASP_SCAN SNYK_SCAN \
+            ;
+      - name: "PR format check"
+        if: steps.START.outputs.PR_FORMAT_CHECK != 'false'
+        id: pr-format-check
+        run: |
+          ~/ppl-run check-pr-format --lcd "$LOCAL_CLONE_DIR"
+      # BOM
+      - name: "entando-core-bom check"
+        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM != 'false'
+        id: pr-bom-check
+        run: |
+          ~/ppl-run @pr-labels add "prepared" --id "ADD-LABEL-PREPARED"
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # FULL-BUILD
+  
+  full-build:
+    needs: [ 'prepare' ]
+    runs-on: ubuntu-latest
+    steps:
+      #~ CHECKOUT
+      - name: "CHECKOUT"
+        run: |
+          ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
+          ~/ppl-run checkout-branch pr \
+            --lcd "$LOCAL_CLONE_DIR" \
+            --token "${{ secrets.ENTANDO_BOT_TOKEN }}" \
+          ;
+          
+          # Refines the cache key
+          echo "BUILD_CACHE_KEY=$( sha256sum "$LOCAL_CLONE_DIR/pom.xml" --zero | cut -d' ' -f1 )" >> $GITHUB_ENV
+      #~ JDK
+      - name: "Set up JDK 11"
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      #~ MAVEN CACHE
+      - name: "Cache Maven packages"
+        id: maven-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2
+          restore-keys: ${{ runner.os }}-m2
+      #~ BUILD CACHE
+      - name: "Cache Build Dir"
+        id: build-cache
+        uses: actions/cache@v2
+        with:
+          path: "${{ env.LOCAL_CLONE_DIR}}/target/"
+          key: ${{ runner.os }}-build-${{ env.BUILD_CACHE_KEY }}
+      #~ BUILD
+      - name: "FULL BUILD"
+        run: |
+          ~/ppl-run \
+            .. mvn FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
+            .. release prepare-preview-release --lcd "$LOCAL_CLONE_DIR" \
+          ;
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # SCANS
+  scans:
+    needs: [ 'prepare', 'full-build' ]
+    runs-on: ubuntu-latest
+    if: ${{ needs.prepare.outputs.SCAN_MATRIX != '' }}
+    strategy:
+      max-parallel: 5
+      fail-fast: false
+      matrix:
+        scan-type: ${{fromJson(needs.prepare.outputs.SCAN_MATRIX)}}
+      
+    steps:
+      #~ CHECKOUT
+      - name: "CHECKOUT"
+        run: |
+          ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
+          ~/ppl-run checkout-branch pr --lcd "$LOCAL_CLONE_DIR"
+          
+          echo "BUILD_CACHE_KEY=$( sha256sum "$LOCAL_CLONE_DIR/pom.xml" --zero | cut -d' ' -f1 )" >> $GITHUB_ENV
+      #~ JDK
+      - name: "Set up JDK 11"
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      #~ MAVEN CACHE
+      - name: "Cache Maven packages"
+        id: maven-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2
+          restore-keys: ${{ runner.os }}-m2
+      #~ BUILD CACHE
+      - name: "Cache Build Dir"
+        id: build-cache
+        uses: actions/cache@v2
+        with:
+          path: "${{ env.LOCAL_CLONE_DIR}}/target/"
+          key: ${{ runner.os }}-build-${{ env.BUILD_CACHE_KEY }}
+      #~ SCAN
+      - name: "Run the Scan"
+        run: |
+          SCAN_TYPE="${{ matrix.scan-type }}"
+          
+          case "$SCAN_TYPE" in
+            OWASP_SCAN)
+              ~/ppl-run mvn OWASP-SCAN --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
+              ;;
+            SONAR_SCAN)
+              export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+              ~/ppl-run mvn SONAR-SCAN --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
+              ;;
+            SNYK_SCAN)
+              export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
+              ~/ppl-run scan snyk --org "$SNYK_ORG" --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
+              ;;
+          esac

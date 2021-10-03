@@ -1,0 +1,74 @@
+name: Release to internal Nexus
+
+on:
+  push:
+    tags:
+      - 'p*'
+      - 'v*'
+
+env:
+  ENTANDO_OPT_USE_PPL_TAG: "v1.0.2"
+  ENTANDO_OPT_FEATURES: ${{ secrets.ENTANDO_OPT_FEATURES }}
+  ENTANDO_OPT_LOG_LEVEL: ${{ secrets.ENTANDO_OPT_LOG_LEVEL }}
+  ENTANDO_OPT_REPO_BOM_URL: ${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}
+  ENTANDO_OPT_DOCKER_BUILDS: "${{ secrets.ENTANDO_OPT_DOCKER_BUILDS }}"
+  ENTANDO_OPT_DOCKER_ORG: "${{ secrets.ENTANDO_OPT_DOCKER_ORG }}"
+  GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
+  GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+  PPL_CONTEXT: ${{ toJson(github) }}
+  REPO_FOLDER: "local-checkout"
+
+
+jobs:
+  internal-publication:
+    env:
+      ENTANDO_OPT_MAVEN_REPO_DEVL: ${{ secrets.ENTANDO_OPT_MAVEN_REPO_DEVL }}
+      ENTANDO_OPT_MAVEN_REPO_PROD: ${{ secrets.ENTANDO_OPT_MAVEN_REPO_PROD }}
+      ENTANDO_BOT_TOKEN: ${{ secrets.ENTANDO_BOT_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "PR PIPELINE START"
+        run: |
+          ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
+          ~/ppl-run status-report
+      - name: "Checkout"
+        run: |
+          ~/ppl-run checkout-branch base \
+            --id "CHECKOUT FOR NEXUS PUBLICATION" \
+            --lcd "$REPO_FOLDER"
+      - name: "Cache Maven packages"
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: "Configure Entando Nexus Repository"
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+          server-id: internal-nexus
+          server-username: NEXUS_USERNAME
+          server-password: NEXUS_PASSWORD
+      - name: "Publish package"
+        run: |
+          ~/ppl-run mvn PUBLISH \
+            --id "PUBLICATION" \
+            --lcd "$REPO_FOLDER"
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+      - name: "BOM Update"
+        run: |
+          ~/ppl-run bom update-bom \
+            --id "UPDATE-BOM" \
+            --lcd "$REPO_FOLDER" \
+            --token "$ENTANDO_BOT_TOKEN"
+      - name: "Publish docker"
+        env:
+          ENTANDO_OPT_DOCKER_USERNAME: "${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}"
+          ENTANDO_OPT_DOCKER_PASSWORD: "${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}"
+        run: |
+          ~/ppl-run docker publish "$ENTANDO_OPT_DOCKER_BUILDS"\
+            --id "PUBLISH-DOCKER" \
+            --lcd "$REPO_FOLDER"
+
