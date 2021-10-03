@@ -1,4 +1,4 @@
-[![Build Status](https://img.shields.io/endpoint?url=https%3A%2F%2Fstatusbadge-jx.apps.serv.run%2Fentando-k8s%2Fentando-component-manager)](https://github.com/entando-k8s/devops-results/tree/logs/jenkins-x/logs/entando-k8s/entando-component-manager/master)
+[![Development Status](https://github.com/entando-k8s/entando-component-manager/actions/workflows/pr.yml/badge.svg)](https://github.com/entando-k8s/entando-component-manager/actions/workflows/pr.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=entando-k8s_entando-component-manager&metric=alert_status)](https://sonarcloud.io/dashboard?id=entando-k8s_entando-component-manager)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=entando-k8s_entando-component-manager&metric=coverage)](https://entando-k8s.github.io/devops-results/entando-component-manager/master/jacoco/index.html)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=entando-k8s_entando-component-manager&metric=vulnerabilities)](https://entando-k8s.github.io/devops-results/entando-component-manager/master/dependency-check-report.html)
