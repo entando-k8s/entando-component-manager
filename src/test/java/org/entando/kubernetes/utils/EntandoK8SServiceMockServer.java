@@ -10,7 +10,9 @@ import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 @Slf4j
 public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
@@ -27,6 +29,7 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
         addPluginsResource(wireMockServer);
         addBundlesResource(wireMockServer);
         addNamespacesResource(wireMockServer);
+        addDeployDeBundleSuccess(wireMockServer);
     }
 
     private void addBundlesResource(WireMockServer wireMockServer) {
@@ -167,7 +170,7 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
                 .willReturn(aResponse().withStatus(204)));
     }
 
-    private void addApiRoot(WireMockServer server) {
+    public void addApiRoot(WireMockServer server) {
         String rootResponse = this.readResourceAsString("/payloads/k8s-svc/root.json");
         server.stubFor(
                 get(urlMatching("/?"))
@@ -176,6 +179,22 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
                                 .withHeader("Content-Type", HAL_JSON_VALUE)
                                 .withBody(rootResponse)));
 
+    }
+
+    private void addDeployDeBundleSuccess(WireMockServer server) {
+        addDeployDeBundle(server, HttpStatus.OK.value());
+    }
+
+    public void addDeployDeBundleFail(WireMockServer server) {
+        addDeployDeBundle(server, HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    private void addDeployDeBundle(WireMockServer server, int status) {
+        server.stubFor(post(urlMatching("/bundles"))
+                        .withRequestBody(new AnythingPattern())
+                        .willReturn(aResponse()
+                                .withStatus(status)
+                                .withHeader("Content-Type", HAL_JSON_VALUE)));
     }
 
 }

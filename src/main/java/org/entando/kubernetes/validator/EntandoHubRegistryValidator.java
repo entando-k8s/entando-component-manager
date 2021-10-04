@@ -1,6 +1,7 @@
 package org.entando.kubernetes.validator;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,12 @@ import org.springframework.stereotype.Component;
 public class EntandoHubRegistryValidator {
 
     public static final boolean VALIDATE_ID_TOO = true;
+
+    private UrlValidator urlValidator;
+
+    public EntandoHubRegistryValidator() {
+        this.urlValidator = new UrlValidator();
+    }
 
     /**
      * validate the received EntandoHubRegistry.
@@ -25,6 +32,25 @@ public class EntandoHubRegistryValidator {
             throw new EntandoValidationException("The received Entando Hub registry is null");
         }
 
+        validateIdOrThrow(entandoHubRegistry, idMustNotBeEmpty);
+
+        validateNameOrThrow(entandoHubRegistry);
+
+        ValidationFunctions.validateUrlOrThrow(urlValidator, entandoHubRegistry.getUrl(),
+                "The received Entando Hub registry has an empty url",
+                "The received Entando Hub registry has an invalid url");
+
+        return true;
+    }
+
+    private void validateNameOrThrow(EntandoHubRegistry entandoHubRegistry) {
+        if (ObjectUtils.isEmpty(entandoHubRegistry.getName())) {
+            throw new EntandoValidationException("The received Entando Hub registry has an empty name");
+        }
+    }
+
+
+    private void validateIdOrThrow(EntandoHubRegistry entandoHubRegistry, boolean idMustNotBeEmpty) {
         if (idMustNotBeEmpty) {
             if (ObjectUtils.isEmpty(entandoHubRegistry.getId())) {
                 throw new EntandoValidationException(
@@ -36,14 +62,7 @@ public class EntandoHubRegistryValidator {
                         "The received Entando Hub registry has a populated ID and it needs an empty one");
             }
         }
-        if (ObjectUtils.isEmpty(entandoHubRegistry.getName())) {
-            throw new EntandoValidationException("The received Entando Hub registry has an empty name");
-        }
-        // TODO implement when rebased on the branch with the host validation regex
-//        if (ObjectUtils.isEmpty(entandoHubRegistry.getUrl())) {
-//            throw new EntandoValidationException("The received Entando Hub registry has an empty name");
-//        }
-        return true;
     }
+
 
 }

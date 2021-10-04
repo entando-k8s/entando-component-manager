@@ -157,4 +157,9 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         return AnalysisReportStubHelper.stubAnalysisReportWithPlugins();
     }
 
+    @Override
+    public EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle) {
+        return entandoDeBundle;
+    }
+
 }

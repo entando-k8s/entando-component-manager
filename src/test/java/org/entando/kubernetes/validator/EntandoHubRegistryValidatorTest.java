@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 @Tag("unit")
 class EntandoHubRegistryValidatorTest {
 
-    private EntandoHubRegistryValidator validator = new EntandoHubRegistryValidator();
+    private final EntandoHubRegistryValidator validator = new EntandoHubRegistryValidator();
 
     @Test
     void shouldSuccessfullyValidateACorrectlyPopulatedRegistry() {
@@ -47,8 +47,13 @@ class EntandoHubRegistryValidatorTest {
 
         registry.setName(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
 
-        // null name
+        // null url
         registry.setUrl(null);
+        Assertions.assertThrows(EntandoValidationException.class,
+                () -> validator.validateEntandoHubRegistryOrThrow(registry, false));
+
+        // not compliant url
+        registry.setUrl(new URL("http://.com"));
         Assertions.assertThrows(EntandoValidationException.class,
                 () -> validator.validateEntandoHubRegistryOrThrow(registry, false));
 

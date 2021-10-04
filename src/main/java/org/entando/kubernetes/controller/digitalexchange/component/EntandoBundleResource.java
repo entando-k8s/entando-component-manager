@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
@@ -26,6 +27,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping(value = "/components")
@@ -35,6 +38,11 @@ public interface EntandoBundleResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList);
+
+    @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody EntandoDeBundle entandoDeBundle);
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")

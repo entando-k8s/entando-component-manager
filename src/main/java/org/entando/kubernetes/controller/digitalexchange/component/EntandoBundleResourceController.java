@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -42,6 +43,12 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
         PagedMetadata<EntandoBundle> pagedBundles = bundleService.listBundles(requestList);
         PagedRestResponse<EntandoBundle> response = new PagedRestResponse<>(pagedBundles);
         return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(EntandoDeBundle entandoDeBundle) {
+        final EntandoBundle entandoBundle = bundleService.deployDeBundle(entandoDeBundle);
+        return ResponseEntity.ok(new SimpleRestResponse<>(entandoBundle));
     }
 
     @Override

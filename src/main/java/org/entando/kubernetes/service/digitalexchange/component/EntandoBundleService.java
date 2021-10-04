@@ -41,4 +41,6 @@ public interface EntandoBundleService {
     EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle);
 
     EntandoBundleEntity convertToEntityFromEcr(EntandoDeBundle bundle);
+
+    EntandoBundle deployDeBundle(EntandoDeBundle entandoDeBundle);
 }

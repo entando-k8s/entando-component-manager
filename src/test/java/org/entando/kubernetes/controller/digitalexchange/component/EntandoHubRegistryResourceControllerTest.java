@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
@@ -43,14 +44,14 @@ class EntandoHubRegistryResourceControllerTest {
         when(service.listRegistries()).thenReturn(EntandoHubRegistryStubHelper.stubListOfEntandoHubRegistry());
         final ResponseEntity<SimpleRestResponse<List<EntandoHubRegistry>>> response = controller.getRegistries();
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().getErrors()).hasSize(0);
-        assertThat(response.getBody().getMetaData()).isNull();
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
 
         final List<EntandoHubRegistry> payload = response.getBody().getPayload();
         assertThat(payload).hasSize(2);
-        assertThat(payload.get(0)).isEqualToComparingFieldByField(EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
-        assertThat(payload.get(1)).isEqualToComparingFieldByField(EntandoHubRegistryStubHelper.stubEntandoHubRegistry2());
+        assertThat(payload.get(0)).isEqualToComparingFieldByField(
+                EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
+        assertThat(payload.get(1)).isEqualToComparingFieldByField(
+                EntandoHubRegistryStubHelper.stubEntandoHubRegistry2());
     }
 
     @Test
@@ -70,7 +71,8 @@ class EntandoHubRegistryResourceControllerTest {
         EntandoHubRegistry registryToUpdate = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
 
         when(service.updateRegistry(any())).thenReturn(registryToUpdate);
-        final ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> response = controller.updateRegistry(registryToUpdate);
+        final ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> response = controller.updateRegistry(
+                registryToUpdate);
         assertOnCreateOrUpdateResponse(response, HttpStatus.OK);
     }
 
@@ -82,10 +84,9 @@ class EntandoHubRegistryResourceControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
-    private void assertOnCreateOrUpdateResponse(ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> response, HttpStatus httpStatus) {
-        assertThat(response.getStatusCode()).isEqualTo(httpStatus);
-        assertThat(response.getBody().getErrors()).hasSize(0);
-        assertThat(response.getBody().getMetaData()).isNull();
+    private void assertOnCreateOrUpdateResponse(ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> response,
+            HttpStatus httpStatus) {
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, httpStatus);
 
         final EntandoHubRegistry payload = response.getBody().getPayload();
         assertThat(payload).isEqualToComparingFieldByField(EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());

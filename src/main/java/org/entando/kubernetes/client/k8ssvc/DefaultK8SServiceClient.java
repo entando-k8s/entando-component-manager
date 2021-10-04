@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -72,7 +73,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         this.tokenFilePath = Paths.get(tokenFilePath);
         this.restTemplate = newRestTemplate();
 
-        if (normalizeK8sServiceUrl && ! k8sServiceUrl.endsWith("/")) {
+        if (normalizeK8sServiceUrl && !k8sServiceUrl.endsWith("/")) {
             k8sServiceUrl += "/";
         }
         this.k8sServiceUrl = k8sServiceUrl;
@@ -375,6 +376,35 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
         return new AnalysisReport().setPlugins(pluginStatusMap);
+    }
+
+    @Override
+    public EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle) {
+
+        String logMessage = String.format("### deploy bundle %s",
+                ObjectUtils.isEmpty(entandoDeBundle.getMetadata().getName())
+                        ? entandoDeBundle.getSpec().getDetails().getName()
+                        : entandoDeBundle.getMetadata().getName());
+
+        Link deployBundleHref = traverson.follow(BUNDLES_ENDPOINT).asLink();
+
+        RequestEntity<EntandoDeBundle> request = RequestEntity
+                .post(deployBundleHref.toUri())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(entandoDeBundle);
+
+        return tryOrThrow(() -> {
+
+            ResponseEntity<Void> response = restTemplate
+                    .exchange(request, Void.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return entandoDeBundle;
+            }
+            throw new RestClientResponseException("Deploy EntandoDeBundle process failed",
+                    response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                    null, null, null);
+        }, logMessage);
     }
 
     private Ingress getAppIngress(String appName) {

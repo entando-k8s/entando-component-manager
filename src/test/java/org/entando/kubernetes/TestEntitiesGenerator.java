@@ -14,6 +14,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 public class TestEntitiesGenerator {
 
     public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
+    public static final String LATEST_VERSION = "0.0.15";
 
     public static EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
@@ -33,7 +34,7 @@ public class TestEntitiesGenerator {
                 .addNewVersion("0.0.1")
                 .addNewKeyword("entando6")
                 .addNewKeyword("digital-exchange")
-                .addNewDistTag("latest", "0.0.15")
+                .addNewDistTag("latest", LATEST_VERSION)
                 .and()
                 .addNewTag()
                 .withVersion("0.0.1")
