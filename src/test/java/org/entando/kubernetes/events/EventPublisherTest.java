@@ -27,7 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
                 TestAppConfiguration.class
         })
 @ActiveProfiles({"test"})
-@Tag("component")
+@Tag("in-process")
 class EventPublisherTest {
 
     @Autowired
