@@ -6,20 +6,20 @@ on:
       - opened
       - synchronize
       - reopened
-    branches:
+    branches: 
       - develop
 
 env:
   ENTANDO_OPT_USE_PPL_TAG: "v1.0.2"
   ENTANDO_OPT_FEATURES: "${{ secrets.ENTANDO_OPT_FEATURES }}"
+  ENTANDO_OPT_LOG_LEVEL: "${{ secrets.ENTANDO_OPT_LOG_LEVEL }}"
   ENTANDO_OPT_REPO_BOM_URL: "${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}"
+  PPL_CONTEXT: ${{ toJson(github) }}
   GIT_USER_NAME: "${{ secrets.GIT_USER_NAME }}"
   GIT_USER_EMAIL: "${{ secrets.GIT_USER_EMAIL }}"
-  PPL_CONTEXT: ${{ toJson(github) }}
   LOCAL_CLONE_DIR: "local-checkout"
   SNYK_ORG: "entando-ixc"
 
-  #ENTANDO_OPT_LOG_LEVEL: "TRACE"
 
 jobs:
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,9 +40,9 @@ jobs:
             .. status-report \
             .. @checkout-branch pr --lcd "$LOCAL_CLONE_DIR" \
             .. @pr-labels remove "prepared" --id "REMOVE-LABEL-PREPARED" \
-            .. @setup-task-enabling "PR_FORMAT_CHECK" "BOM_CHECK" "BOM" \
-            .. @setup-task-list "SCAN_MATRIX" true SONAR_SCAN OWASP_SCAN SNYK_SCAN \
-            ;
+            .. @setup-feature-flags "PR_FORMAT_CHECK" "BOM_CHECK" "BOM" \
+            .. @setup-features-list "SCAN_MATRIX" true SONAR_SCAN OWASP_SCAN SNYK_SCAN \
+          ;
       - name: "PR format check"
         if: steps.START.outputs.PR_FORMAT_CHECK != 'false'
         id: pr-format-check
@@ -81,7 +81,6 @@ jobs:
           java-version: 11
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        id: maven-cache
         uses: actions/cache@v2
         with:
           path: ~/.m2
@@ -92,14 +91,14 @@ jobs:
         id: build-cache
         uses: actions/cache@v2
         with:
-          path: "${{ env.LOCAL_CLONE_DIR}}/target/"
+          path: "${{ env.LOCAL_CLONE_DIR }}/target/"
           key: ${{ runner.os }}-build-${{ env.BUILD_CACHE_KEY }}
       #~ BUILD
       - name: "FULL BUILD"
         run: |
           ~/ppl-run \
             .. mvn FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
-            .. release prepare-preview-release --lcd "$LOCAL_CLONE_DIR" \
+            .. release tag-snapshot-release --lcd "$LOCAL_CLONE_DIR" \
           ;
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

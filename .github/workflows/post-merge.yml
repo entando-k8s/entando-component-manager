@@ -4,29 +4,22 @@ on:
   push:
     branches:
       - develop
+
 env:
-  ENTANDO_OPT_USE_PPL_TAG: "v1.0.1"
-  ENTANDO_OPT_FEATURES: ${{ secrets.ENTANDO_OPT_FEATURES }}
-  ENTANDO_OPT_LOG_LEVEL: ${{ secrets.ENTANDO_OPT_LOG_LEVEL }}
-  ENTANDO_OPT_REPO_BOM_URL: ${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}
-  GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
-  GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+  ENTANDO_OPT_USE_PPL_TAG: "v1.0.2"
+  ENTANDO_OPT_FEATURES: "${{ secrets.ENTANDO_OPT_FEATURES }}"
+  ENTANDO_OPT_LOG_LEVEL: "${{ secrets.ENTANDO_OPT_LOG_LEVEL }}"
+  ENTANDO_OPT_REPO_BOM_URL: "${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}"
   PPL_CONTEXT: ${{ toJson(github) }}
-  REPO_FOLDER: "local-checkout"
+  GIT_USER_NAME: "${{ secrets.GIT_USER_NAME }}"
+  GIT_USER_EMAIL: "${{ secrets.GIT_USER_EMAIL }}"
+  LOCAL_CLONE_DIR: "local-checkout"
 
 
 jobs:
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # TAG
   add-release-tag:
-    env:
-      PPL_CONTEXT: ${{ toJson(github) }}
-      ENTANDO_OPT_USE_PPL_TAG: ${{ secrets.ENTANDO_OPT_USE_PPL_TAG }}
-      ENTANDO_OPT_REPO_BOM_URL: ${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}
-      GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
-      GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
-      REPO_FOLDER: "local-checkout"
-      ENTANDO_OPT_LOG_LEVEL: TRACE
     runs-on: ubuntu-latest
     steps:
       - name: "ADD RELEASE TAG"
@@ -36,8 +29,8 @@ jobs:
           ~/ppl-run pr-status-report \
           .. checkout-branch base \
                 --id "CHECKOUT-BASE" \
-                --lcd "$REPO_FOLDER" \
+                --lcd "$LOCAL_CLONE_DIR" \
                 --token "${{ secrets.ENTANDO_BOT_TOKEN }}" \
-          .. release prepare-tag-release \
+          .. release tag-snapshot-release \
                 --id "TAG-RELEASE" \
-                --lcd "$REPO_FOLDER"
+                --lcd "$LOCAL_CLONE_DIR"
