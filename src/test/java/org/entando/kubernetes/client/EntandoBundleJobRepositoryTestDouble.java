@@ -89,6 +89,11 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public void setStatusToInstallErrorWhenStatusIsInstallInProgress() {
+
+    }
+
+    @Override
     public List<EntandoBundleJobEntity> findAll() {
         return new ArrayList<>(this.database.values());
     }

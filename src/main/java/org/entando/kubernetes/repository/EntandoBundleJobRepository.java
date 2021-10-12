@@ -35,4 +35,10 @@ public interface EntandoBundleJobRepository extends JpaRepository<EntandoBundleJ
     void updateJobStatus(@Param("id") UUID id, @Param("status") JobStatus status);
 
     Optional<List<EntandoBundleJobEntity>> findEntandoBundleJobEntityByIdIn(Set<UUID> idList);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE EntandoBundleJobEntity job SET job.status = org.entando.kubernetes.model.job.JobStatus.INSTALL_ERROR"
+            + " WHERE job.status = org.entando.kubernetes.model.job.JobStatus.INSTALL_IN_PROGRESS")
+    void setStatusToInstallErrorWhenStatusIsInstallInProgress();
 }

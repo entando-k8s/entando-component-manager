@@ -16,6 +16,8 @@ import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -25,6 +27,11 @@ public class EntandoBundleJobService {
 
     private final @NonNull EntandoBundleJobRepository jobRepository;
     private final @NonNull EntandoBundleComponentJobRepository componentJobRepository;
+
+    @EventListener
+    public void onContextRefreshEvent(ContextRefreshedEvent event) {
+        jobRepository.setStatusToInstallErrorWhenStatusIsInstallInProgress();
+    }
 
     public PagedMetadata<EntandoBundleJobEntity> getJobs(PagedListRequest request) {
         List<EntandoBundleJobEntity> allJobs = getJobs();
