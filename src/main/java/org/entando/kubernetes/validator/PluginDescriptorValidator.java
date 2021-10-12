@@ -29,8 +29,10 @@ public class PluginDescriptorValidator {
 
     private Map<PluginDescriptorVersion, PluginDescriptorValidatorConfigBean> validationConfigMap;
 
-    public static final String DNS_LABEL_HOST_REGEX = "^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$";
+    public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
     public static final Pattern DNS_LABEL_HOST_REGEX_PATTERN = Pattern.compile(DNS_LABEL_HOST_REGEX);
+
+    public static final String DESC_PROP_ENV_VARS = "environmentVariables";
 
     /**************************************************************************************************************
      * CONFIGURATION START.
@@ -62,7 +64,7 @@ public class PluginDescriptorValidator {
         objectsThatMustBeNull.put("ingressPath", PluginDescriptor::getIngressPath);
         objectsThatMustBeNull.put("permissions", PluginDescriptor::getPermissions);
         objectsThatMustBeNull.put("securityLevel", PluginDescriptor::getSecurityLevel);
-        objectsThatMustBeNull.put("environmentVariables", PluginDescriptor::getEnvironmentVariables);
+        objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
 
         validationConfigMap.put(PluginDescriptorVersion.V1, new PluginDescriptorValidatorConfigBean(
                 PluginDescriptorVersion.V1,
@@ -86,7 +88,7 @@ public class PluginDescriptorValidator {
         setupValidatorConfigurationDescriptorV2AndV3(PluginDescriptorVersion.V4);
         PluginDescriptorValidatorConfigBean configBeanV4 = validationConfigMap.get(
                 PluginDescriptorVersion.V4);
-        configBeanV4.getObjectsThatMustBeNull().remove("environmentVariables");
+        configBeanV4.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
         configBeanV4.getValidationFunctions().add(this::validateEnvVarsOrThrow);
     }
 
@@ -98,7 +100,7 @@ public class PluginDescriptorValidator {
 
         Map<String, Function<PluginDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
         objectsThatMustBeNull.put("spec", PluginDescriptor::getSpec);
-        objectsThatMustBeNull.put("environmentVariables", PluginDescriptor::getEnvironmentVariables);
+        objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
 
         List<PluginDescriptorValidationFunction> validationFunctionList = new ArrayList<>();
         validationFunctionList.add(this::validateDescriptorFormatOrThrow);
@@ -188,7 +190,7 @@ public class PluginDescriptorValidator {
                 descriptor.getDescriptorVersion());
 
         if (pluginDescriptorVersion == null) {
-            String error = String.format(versionNotValid, descriptor.getComponentKey().getKey());
+            String error = String.format(VERSION_NOT_VALID, descriptor.getComponentKey().getKey());
             log.debug(error);
             throw new InvalidBundleException(error);
         }
@@ -212,14 +214,14 @@ public class PluginDescriptorValidator {
 
         objectsThatMustNOTBeNull.forEach((key, value) -> {
             if (value.apply(descriptor) == null) {
-                throw new InvalidBundleException(String.format(expectedNotNullIsNull,
+                throw new InvalidBundleException(String.format(EXPECTED_NOT_NULL_IS_NULL,
                         descriptorVersion.getVersion(), key));
             }
         });
 
         objectsThatMustBeNull.forEach((key, value) -> {
             if (value.apply(descriptor) != null) {
-                throw new InvalidBundleException(String.format(expectedNullIsNOTNull,
+                throw new InvalidBundleException(String.format(EXPECTED_NULL_IS_NOT_NULL,
                         descriptorVersion.getVersion(), key));
             }
         });
@@ -242,7 +244,7 @@ public class PluginDescriptorValidator {
             Arrays.stream(PluginSecurityLevel.values())
                     .filter(pluginSecurityLevel -> pluginSecurityLevel.toName().equals(securityLevel))
                     .findFirst()
-                    .orElseThrow(() -> new InvalidBundleException(securityLevelNotRecognized)); // NOSONAR
+                    .orElseThrow(() -> new InvalidBundleException(SECURITY_LEVEL_NOT_RECOGNIZED)); // NOSONAR
         }
         return descriptor;
     }
@@ -277,7 +279,7 @@ public class PluginDescriptorValidator {
                     }
 
                     if (invalid) {
-                        String error = String.format(envVarsNotValid, descriptor.getComponentKey().getKey(), i + 1);
+                        String error = String.format(ENV_VARS_NOT_VALID, descriptor.getComponentKey().getKey(), i + 1);
                         log.debug(error);
                         throw new InvalidBundleException(error);
                     }
@@ -301,22 +303,22 @@ public class PluginDescriptorValidator {
     }
 
 
-    private final String securityLevelNotRecognized =
+    public static final String SECURITY_LEVEL_NOT_RECOGNIZED =
             "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
                     + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
                     .collect(Collectors.joining(", "));
-    private final String versionNotValid =
+    public static final String VERSION_NOT_VALID =
             "The plugin %s descriptor contains an invalid descriptorVersion. Accepted versions are: "
                     + Arrays.stream(PluginDescriptorVersion.values()).map(PluginDescriptorVersion::getVersion)
                             .collect(Collectors.joining(", "));
-    private final String envVarsNotValid =
+    public static final String ENV_VARS_NOT_VALID =
             "The descriptor of the %s plugin contains an invalid environment variable (number %d). Rules are:\n"
                     + "1) each environment variable must have a name\n"
                     + "2) each environment variable must have a value OR a SecretKeyRef fully populated\n"
                     + "3) the name of a Secret object must be a valid DNS subdomain name";
-    private final String expectedNotNullIsNull =
+    public static final String EXPECTED_NOT_NULL_IS_NULL =
             "PluginDescriptor version detected: %s. With this version the %s property must NOT be null.";
-    private final String expectedNullIsNOTNull =
+    public static final String EXPECTED_NULL_IS_NOT_NULL =
             "PluginDescriptor version detected: %s. With this version the %s property must be null.";
 
 
