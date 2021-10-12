@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -63,5 +65,14 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(new SimpleRestResponse<>(usageList));
+    }
+
+    @Override
+    public ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatus(BundlesStatusQuery bundlesStatusQuery) {
+
+        // TODO add validation
+
+        final BundlesStatusResult bundlesStatus = bundleService.getBundlesStatus(bundlesStatusQuery);
+        return ResponseEntity.ok(new SimpleRestResponse<>(bundlesStatus));
     }
 }

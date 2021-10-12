@@ -1,6 +1,7 @@
 package org.entando.kubernetes.controller.digitalexchange.component;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -58,5 +59,9 @@ class EntandoBundleResourceControllerTest {
         // when the user sends the request
         // then a KubernetesClientException is thrown
         assertThrows(KubernetesClientException.class, () -> controller.deployBundle(entandoDeBundle));
+    }
+
+    void shouldReturnTheExpectedStatus() {
+        fail();
     }
 }

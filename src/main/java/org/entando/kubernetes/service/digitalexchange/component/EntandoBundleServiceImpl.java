@@ -16,25 +16,34 @@ package org.entando.kubernetes.service.digitalexchange.component;
 
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Sets;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.model.bundle.BundleStatus;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
@@ -50,6 +59,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     private final K8SServiceClient k8SServiceClient;
@@ -103,11 +113,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     /**
      * for each installed bundle, update the field custom_installation in the allBundles list.
-     * @param allBundles the list representing all the available EntandoBundle
+     *
+     * @param allBundles       the list representing all the available EntandoBundle
      * @param installedBundles the list of installed EntandoBundleEntity
      * @return a new instance of a list of all bundles with customInstallation field updated
      */
-    private List<EntandoBundle> updateCustomInstallationFlag(List<EntandoBundle> allBundles, List<EntandoBundleEntity> installedBundles) {
+    private List<EntandoBundle> updateCustomInstallationFlag(List<EntandoBundle> allBundles,
+            List<EntandoBundleEntity> installedBundles) {
 
         // get installed bundles jobs id
         Set<UUID> installedBunblesJobIdSet = installedBundles.stream()
@@ -161,6 +173,24 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .collect(Collectors.toList());
     }
 
+//    private List<EntandoBundle> filterInstalledButNotAvailableOnEcrToEntandoBundle(List<EntandoBundle> availableBundles,
+//            List<EntandoBundleEntity> installedBundles) {
+//
+//        return filterInstalledButNotAvailableOnEcr(availableBundles, installedBundles).stream()
+//                .map(this::convertToBundleFromEntity)
+//                .collect(Collectors.toList());
+//    }
+//
+//    private List<EntandoBundleEntity> filterInstalledButNotAvailableOnEcr(List<EntandoBundle> availableBundles,
+//            List<EntandoBundleEntity> installedBundles) {
+//
+//        //TODO could be a problem if available bundles list is too big
+//        Set<String> keySet = availableBundles.stream().map(EntandoBundle::getCode).collect(Collectors.toSet());
+//        return installedBundles.stream()
+//                .filter(b -> !keySet.contains(b.getId()))
+//                .collect(Collectors.toList());
+//    }
+
     private List<EntandoBundle> listBundlesFromEcr() {
         List<EntandoDeBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
@@ -205,6 +235,80 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     public EntandoBundleEntity convertToEntityFromEcr(EntandoDeBundle bundle) {
         return convertToEntityFromBundle(convertToBundleFromEcr(bundle));
     }
+
+    @Override
+    public BundlesStatusResult getBundlesStatus(BundlesStatusQuery bundlesStatusQuery) {
+
+        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByIdIn(
+                bundlesStatusQuery.getIds());
+
+        List<EntandoBundle> deployedBundles = listBundlesFromEcr();
+        List<EntandoBundle> installedButNotDeployed = filterInstalledButNotAvailableOnEcr(deployedBundles,
+                installedBundleEntities);
+        List<EntandoBundle> installedBundles = installedBundleEntities.stream()
+                .map(this::convertToBundleFromEntity)
+                .collect(Collectors.toList());
+
+        final List<BundlesStatusItem> bundleStatusList = bundlesStatusQuery.getIds().stream()
+                .map(id -> composeBundleStatusItem(id, installedBundles, deployedBundles, installedButNotDeployed))
+                .collect(Collectors.toList());
+
+        return new BundlesStatusResult(bundleStatusList);
+    }
+
+    private BundlesStatusItem composeBundleStatusItem(String id, List<EntandoBundle> installedBundles,
+            List<EntandoBundle> deployedBundles, List<EntandoBundle> installedButNotDeployed) {
+
+//        final URL repoUrl;
+//        try {
+//            repoUrl = new URL(id);
+//        } catch (MalformedURLException e) {
+//            log.error("Not parsable url {}. Returning UNKNOWN bundle status", id);
+//            return new BundlesStatusItem(id, BundleStatus.UNKNOWN, null);
+//        }
+
+        composeBundleStatusItem(id, installedButNotAvailableOnEcr, BundleStatus.INSTALLED_NOT_DEPLOYED, EntandoBundle::getVersion);
+
+//        Optional<BundlesStatusItem> installedButNotDeployedOpt = installedButNotAvailableOnEcr.stream()
+//                .filter(bundle -> !ObjectUtils.isEmpty(bundle.getRepoUrl()))
+//                .filter(bundle -> bundle.getRepoUrl().equals(repoUrl))
+//                .findFirst()
+//                .map(bundle -> new BundlesStatusItem(id, BundleStatus.INSTALLED_NOT_DEPLOYED, bundle.getVersion()));
+//        if (installedButNotDeployedOpt.isPresent()) {
+//            return installedButNotDeployedOpt.get();
+//        }
+//
+//        Optional<BundlesStatusItem> installedOpt = installedBundles.stream()
+//                .filter(bundle -> !ObjectUtils.isEmpty(bundle.getRepoUrl()))
+//                .filter(bundle -> bundle.getRepoUrl().equals(repoUrl))
+//                .findFirst()
+//                .map(bundle -> new BundlesStatusItem(id, BundleStatus.INSTALLED, bundle.getVersion()));
+//        if (installedOpt.isPresent()) {
+//            return installedOpt.get();
+//        }
+//
+//        Optional<BundlesStatusItem> deployedOpt = deployedBundles.stream()
+//                .filter(bundle -> !ObjectUtils.isEmpty(bundle.getRepoUrl()))
+//                .filter(bundle -> bundle.getRepoUrl().equals(id))
+//                .findFirst()
+//                .map(bundle -> new BundlesStatusItem(id, BundleStatus.DEPLOYED, null));
+//        if (deployedOpt.isPresent()) {
+//            return deployedOpt.get();
+//        }
+
+        return new BundlesStatusItem(id, BundleStatus.NOT_FOUND, null);
+    }
+
+    private Optional<BundlesStatusItem> composeBundleStatusItem(String repoUrl, List<EntandoBundle> bundleEntityList,
+            BundleStatus bundleStatus, Function<EntandoBundle, String> versionGetFn) {
+
+        return bundleEntityList.stream()
+                .filter(bundle -> !ObjectUtils.isEmpty(bundle.getRepoUrl()))
+                .filter(bundle -> bundle.getRepoUrl().equals(repoUrl))
+                .findFirst()
+                .map(bundle -> new BundlesStatusItem(repoUrl, bundleStatus, versionGetFn.apply(bundle)));
+    }
+
 
     @Override
     public EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle) {
@@ -266,18 +370,68 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                         .collect(Collectors.toList()))
                 .build();
 
-        EntandoBundleVersion latest;
-        if (details.getDistTags() != null && details.getDistTags().containsKey(BundleUtilities.LATEST_VERSION)) {
+        final EntandoBundleVersion latestVersionFromDistTag = findLatestVersionFromDistTag(deBundle);
+        bundle.setLatestVersion(latestVersionFromDistTag);
 
-            latest = new EntandoBundleVersion()
-                    .setVersion(details.getDistTags().get("latest").toString());
-        } else {
-            latest = BundleUtilities.composeLatestVersion(deBundle).orElse(null);
-        }
-
-        bundle.setLatestVersion(latest);
+        bundle.setRepoUrl(getLatestTagRepoUrl(deBundle, latestVersionFromDistTag));
 
         return bundle;
+    }
+
+    /**
+     * identify and return the latest version from distTag property of the received EntandoDeBundle.
+     *
+     * @param deBundle the EntandoDeBundle of which identify and return the latest version
+     * @return the latest version shaped as EntandoBundleVersion
+     */
+    private EntandoBundleVersion findLatestVersionFromDistTag(EntandoDeBundle deBundle) {
+
+        EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
+
+        if (details != null && details.getDistTags() != null && details.getDistTags().containsKey(BundleUtilities.LATEST_VERSION)) {
+
+            return new EntandoBundleVersion()
+                    .setVersion(details.getDistTags().get(BundleUtilities.LATEST_VERSION).toString());
+        } else {
+            return BundleUtilities.composeLatestVersionFromDistTags(deBundle).orElse(null);
+        }
+    }
+
+    /**
+     * identify and return the repo url of the latest tag (semver) from the received EntandoDeBundle.
+     *
+     * @param deBundle                 the EntandoDeBundle of which identify and return the repo url of latest tag
+     * @param latestVersionFromDistTag the latest version taken from distTag property
+     * @return the latest repo url of latest tag
+     */
+    private String getLatestTagRepoUrl(EntandoDeBundle deBundle, EntandoBundleVersion latestVersionFromDistTag) {
+
+        final List<EntandoDeBundleTag> tags = deBundle.getSpec().getTags();
+
+        if (tags == null) {
+            return null;
+        }
+
+        final Map<String, EntandoDeBundleTag> tagsMap = tags.stream()
+                .collect(Collectors.toMap(
+                        EntandoDeBundleTag::getVersion,
+                        tag -> tag));
+
+        // if the latestVersionFromDistTag is availabe, let's use that one
+        if (tagsMap.containsKey(latestVersionFromDistTag.getVersion())) {
+            return tagsMap.get(latestVersionFromDistTag.getVersion()).getTarball();
+        }
+
+        // otherwise let's calculate the latest from the tags list
+        Optional<EntandoBundleVersion> latestVersionOpt = tags.stream()
+                .map(tag -> new EntandoBundleVersion().setVersion(tag.getVersion()))
+                .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
+
+        if (latestVersionOpt.isEmpty()) {
+            return null;
+        }
+
+        return tagsMap.get(latestVersionOpt.get()).getTarball();
     }
 
     @Override

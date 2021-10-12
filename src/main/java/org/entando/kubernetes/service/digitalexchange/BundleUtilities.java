@@ -74,7 +74,7 @@ public class BundleUtilities {
         String version = versionReference;
 
         if (version.equals(LATEST_VERSION)) {
-            version = composeLatestVersion(bundle)
+            version = composeLatestVersionFromDistTags(bundle)
                     .map(EntandoBundleVersion::getVersion)
                     .orElse(null);
         } else if (!isSemanticVersion(versionReference)) {
@@ -109,7 +109,7 @@ public class BundleUtilities {
      * @param entandoDeBundle the EntandoDeBundle of which return the latest version
      * @return the latest version respect to the sem version rules
      */
-    public static Optional<EntandoBundleVersion> composeLatestVersion(EntandoDeBundle entandoDeBundle) {
+    public static Optional<EntandoBundleVersion> composeLatestVersionFromDistTags(EntandoDeBundle entandoDeBundle) {
 
         if (entandoDeBundle == null || entandoDeBundle.getSpec() == null
                 || entandoDeBundle.getSpec().getDetails() == null) {

@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20211014193702
+      author: l.corsetti
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: repo_url
+                  type: varchar(511)
+                  constraints:
+                    nullable: false
+            tableName: installed_entando_bundles

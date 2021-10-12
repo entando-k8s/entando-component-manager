@@ -27,6 +27,7 @@ public class EntandoBundle {
     //private String ecrId; // hash(code + organization) = metadata.name
     private String title;
     private String description;
+    private String repoUrl;
     private BundleType bundleType;
     private String thumbnail;
     private Set<String> componentTypes;

@@ -5,6 +5,7 @@ import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESP
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -408,5 +409,10 @@ public class EntandoBundleServiceTest {
     @Test
     void shouldThrowExceptionWhenTryingToDeployANullDeBundle() {
         assertThrows(InvalidBundleException.class, () -> service.deployDeBundle(null));
+    }
+
+    @Test
+    void shouldReturnTheExpectedStatus() {
+        fail();
     }
 }

@@ -28,10 +28,12 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.springframework.validation.annotation.Validated;
@@ -42,6 +44,7 @@ import org.springframework.validation.annotation.Validated;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 @Table(name = "installed_entando_bundles")
 public class EntandoBundleEntity {
 
@@ -98,4 +101,6 @@ public class EntandoBundleEntity {
     @Column(name = "metadata")
     private Map<String, String> metadata;
 
+    @Column(name = "repo_url")
+    private URL repoUrl;
 }

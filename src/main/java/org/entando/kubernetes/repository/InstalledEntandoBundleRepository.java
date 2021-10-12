@@ -1,5 +1,6 @@
 package org.entando.kubernetes.repository;
 
+import java.util.List;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,4 +12,5 @@ public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoB
     @Transactional
     void deleteById(String id);
 
+    List<EntandoBundleEntity> findAllByIdIn(List<String> ids);
 }
