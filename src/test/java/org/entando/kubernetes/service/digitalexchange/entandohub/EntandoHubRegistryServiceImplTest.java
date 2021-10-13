@@ -54,11 +54,11 @@ class EntandoHubRegistryServiceImplTest {
 
         EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
 
-        when(repository.findByName(eq(registryToSave.getName()))).thenReturn(
+        when(repository.findByName(registryToSave.getName())).thenReturn(
                 Optional.empty());
-        when(repository.findByUrl(eq(registryToSave.getUrl()))).thenReturn(
+        when(repository.findByUrl(registryToSave.getUrl())).thenReturn(
                 Optional.empty());
-        when(repository.save(eq(registryToSave))).thenReturn(registryToSave);
+        when(repository.save(registryToSave)).thenReturn(registryToSave);
 
         final EntandoHubRegistry current = this.service.createRegistry(
                 EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
@@ -84,12 +84,12 @@ class EntandoHubRegistryServiceImplTest {
 
         EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
 
-        when(repository.findByNameAndIdNot(eq(registryToSave.getName()), eq(registryToSave.getId()))).thenReturn(
+        when(repository.findByNameAndIdNot(registryToSave.getName(), registryToSave.getId())).thenReturn(
                 Optional.empty());
-        when(repository.findByUrlAndIdNot(eq(registryToSave.getUrl()), eq(registryToSave.getId()))).thenReturn(
+        when(repository.findByUrlAndIdNot(registryToSave.getUrl(), registryToSave.getId())).thenReturn(
                 Optional.empty());
-        when(repository.findById(eq(registryToSave.getId()))).thenReturn(Optional.of(registryToSave));
-        when(repository.save(eq(registryToSave))).thenReturn(registryToSave);
+        when(repository.findById(registryToSave.getId())).thenReturn(Optional.of(registryToSave));
+        when(repository.save(registryToSave)).thenReturn(registryToSave);
 
         final EntandoHubRegistry current = this.service.updateRegistry(
                 EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
@@ -115,10 +115,10 @@ class EntandoHubRegistryServiceImplTest {
 
         EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
 
-        when(repository.findById(eq(registryToSave.getId()))).thenReturn(Optional.empty());
+        when(repository.findById(registryToSave.getId())).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(NotFoundException.class, () -> this.service.updateRegistry(
-                EntandoHubRegistryStubHelper.stubEntandoHubRegistry1()));
+        final EntandoHubRegistry entandoHubRegistry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
+        Assertions.assertThrows(NotFoundException.class, () -> this.service.updateRegistry(entandoHubRegistry));
     }
 
     @Test

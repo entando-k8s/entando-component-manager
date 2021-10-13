@@ -16,6 +16,12 @@ class EntandoHubRegistryValidatorTest {
     private final EntandoHubRegistryValidator validator = new EntandoHubRegistryValidator();
 
     @Test
+    void shouldThrowExceptionIfRegistryIsNull() {
+        Assertions.assertThrows(EntandoValidationException.class,
+                () -> validator.validateEntandoHubRegistryOrThrow(null, false));
+    }
+
+    @Test
     void shouldSuccessfullyValidateACorrectlyPopulatedRegistry() {
         final EntandoHubRegistry registry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
 
