@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESPACE;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -14,8 +15,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.entando.kubernetes.TestEntitiesGenerator;
+import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -215,7 +220,7 @@ public class EntandoBundleServiceTest {
 
         when(installedComponentRepository.existsById(eq(code))).thenReturn(true);
         Mockito.when(jobRepository
-                .findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
+                        .findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
                 .thenReturn(Optional.of(installedJob));
         Mockito.when(jobRepository.findFirstByComponentIdOrderByStartedAtDesc(eq(code)))
                 .thenReturn(Optional.of(installedJob));
@@ -390,5 +395,18 @@ public class EntandoBundleServiceTest {
         bundle.getSpec().getDetails().getVersions().add("0.0.5");
         EntandoBundle entandoBundle = service.convertToBundleFromEcr(bundle);
         assertThat(entandoBundle.getLatestVersion().get().getVersion()).isEqualTo("0.0.5");
+    }
+
+    @Test
+    void shouldSuccessfullyDeployADeBundle() {
+        EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
+        final EntandoBundle bundle = service.deployDeBundle(deBundle);
+        BundleAssertionHelper.assertOnBundleAndDeBundle(bundle, deBundle, BundleType.STANDARD_BUNDLE, null, null, null,
+                new EntandoBundleVersion().setVersion(TestEntitiesGenerator.LATEST_VERSION));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTryingToDeployANullDeBundle() {
+        assertThrows(InvalidBundleException.class, () -> service.deployDeBundle(null));
     }
 }

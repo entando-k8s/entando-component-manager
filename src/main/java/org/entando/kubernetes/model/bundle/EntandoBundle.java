@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
 
@@ -18,6 +19,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude
+@Accessors(chain = true)
 public class EntandoBundle {
 
     private String code;

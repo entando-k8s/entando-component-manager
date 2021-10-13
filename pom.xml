@@ -50,6 +50,7 @@
         <github.organization>entando-k8s</github.organization>
         <entando-k8s-custom-model.version>6.3.1</entando-k8s-custom-model.version>
         <liquibase.version>4.3.1</liquibase.version>
+        <apache-commons-validator.version>1.7</apache-commons-validator.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
@@ -212,10 +213,6 @@
             <artifactId>javassist</artifactId>
         </dependency>
         <dependency>
-            <groupId>br.com.six2six</groupId>
-            <artifactId>fixture-factory</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
         </dependency>
@@ -250,6 +247,11 @@
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-server-mock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>${apache-commons-validator.version}</version>
         </dependency>
     </dependencies>
 

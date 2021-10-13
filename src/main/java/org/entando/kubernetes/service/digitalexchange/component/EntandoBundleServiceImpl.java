@@ -28,6 +28,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
@@ -266,11 +267,10 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .build();
 
         EntandoBundleVersion latest;
-        if (deBundle.getSpec().getDetails() != null && deBundle.getSpec().getDetails().getDistTags() != null && deBundle
-                .getSpec().getDetails().getDistTags().containsKey(BundleUtilities.LATEST_VERSION)) {
+        if (details.getDistTags() != null && details.getDistTags().containsKey(BundleUtilities.LATEST_VERSION)) {
 
             latest = new EntandoBundleVersion()
-                    .setVersion(deBundle.getSpec().getDetails().getDistTags().get("latest").toString());
+                    .setVersion(details.getDistTags().get("latest").toString());
         } else {
             latest = BundleUtilities.composeLatestVersion(deBundle).orElse(null);
         }
@@ -280,4 +280,14 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         return bundle;
     }
 
+    @Override
+    public EntandoBundle deployDeBundle(EntandoDeBundle entandoDeBundle) {
+
+        if (entandoDeBundle == null) {
+            throw new InvalidBundleException("The received EntandoDeBundle to deploy is null");
+        }
+
+        EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
+        return convertToBundleFromEcr(deployedBundle);
+    }
 }

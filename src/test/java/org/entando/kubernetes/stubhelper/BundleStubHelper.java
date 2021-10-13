@@ -13,12 +13,14 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 public class BundleStubHelper {
 
     public static final String BUNDLE_CODE = "my-component";
+    public static final String BUNDLE_NAME = "my-bundle-name";
     public static final String BUNDLE_DESCRIPTION = "desc";
     public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
 
     public static EntandoDeBundle stubEntandoDeBundle() {
         ObjectMeta metadata = new ObjectMeta();
         metadata.setLabels(Map.of("widgets", "true", "bundle-type", BUNDLE_TYPE.getType()));
+        metadata.setName(BUNDLE_NAME);
         EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
         entandoDeBundle.setMetadata(metadata);
         return entandoDeBundle;

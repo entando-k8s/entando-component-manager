@@ -38,4 +38,6 @@ public interface K8SServiceClient extends ECMClient {
     boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName);
 
     AnalysisReport getAnalysisReport(List<Reportable> reportableList);
+
+    EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle);
 }

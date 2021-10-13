@@ -10,6 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
@@ -40,6 +41,7 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.junit.jupiter.api.AfterEach;
@@ -54,7 +56,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 @Tag("unit")
@@ -329,6 +330,34 @@ public class K8SServiceClientTest {
         AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
 
         AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
+    }
+
+    @Test
+    void shouldSuccessfullyDeployADeBundle() {
+
+        // given that the k8s-service returns 200 when receives a deploy entando de bundle request
+        EntandoDeBundle expected = BundleStubHelper.stubEntandoDeBundle();
+
+        // when the ECR sends the request
+        EntandoDeBundle current = client.deployDeBundle(expected);
+
+        // then the returned EntandoDeBundle object is the same as the one sent
+        assertThat(current).isEqualToComparingFieldByField(expected);
+        mockServer.getInnerServer().verify(1, postRequestedFor(urlMatching("/bundles")));
+    }
+
+    @Test
+    void shouldThrowExceptionIfDeployADeBundleReturnStatus500() {
+
+        // given that the k8s-service returns 500 when receives a deploy entando de bundle request
+        mockServer.resetMappings();
+        mockServer.addDeployDeBundleFail(mockServer.getInnerServer());
+
+        // when the ECR sends the request
+        EntandoDeBundle expected = BundleStubHelper.stubEntandoDeBundle();
+
+        // then an exception is thrown
+        assertThrows(KubernetesClientException.class, () -> client.deployDeBundle(expected));
     }
 
     private RestTemplate noOAuthRestTemplate() {
