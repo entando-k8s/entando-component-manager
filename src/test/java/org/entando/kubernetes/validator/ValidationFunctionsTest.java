@@ -31,9 +31,9 @@ class ValidationFunctionsTest {
     void shouldThrowTheExpectedExceptionIfUrlIsNotCompliant() {
 
         Stream.of("ftp://entando.com", "http://", "https://", "https://my-domain.", "https://my-domain-",
-                        "https://.com", "http://.com", "http://lo&calhost", "https://my-domain/?myparam=value",
-                        "https://my-domain/?myparam=value&seconp=myval", "http://www.enta-ndo.com:092/3-",
-                        "http://www.enta-ndo.com:092/3.", "http://www.enta-ndo.com:123456")
+                        "https://my-domain", "https://localhost", "https://.com", "http://.com", "http://lo&calhost",
+                        "https://www.mydomain.com/?myparam=value", "https://www.mydomain.com?myparam=value&seconp=myval",
+                        "http://www.enta-ndo.com:123456", "http://www.entando.com/my.sec")
                 .forEach(urlString -> {
 
                     try {
@@ -50,10 +50,10 @@ class ValidationFunctionsTest {
     @Test
     void shouldNotThrowExceptionWhenUrlIsCompliant() {
 
-        Stream.of("http://localhost", "https://localhost", "http://www.entando.com", "https://www.entando.com",
-                        "http://my-domain", "https://my-domain", "https://my-domain:80", "http://www.entando.com:80",
-                        "http://my-DDDdomain", "http://my-DDDdomain", "http://www.enta-ndo.com:092/3-4/ci-on.e/asdk-a/",
-                        "http://www.en_ta-ndo.com:092/3_a/")
+        Stream.of("http://www.entando.com", "https://www.entando.com", "http://www.entando.com:80",
+                        "https://www.ENtando.com", "http://www.enta-ndo.com:092/3-4/ci-one/asdk-a/",
+                        "http://www.en_ta-ndo.com:092/3_a/", "http://www.enta-ndo.com:092/3-",
+                        "http://www.en_ta-ndo.com:092/ad-/a/a__SDAda")
                 .forEach(urlString -> {
 
                     try {

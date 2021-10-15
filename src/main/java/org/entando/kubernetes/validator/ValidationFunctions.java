@@ -9,7 +9,7 @@ import org.entando.kubernetes.exception.EntandoValidationException;
 @UtilityClass
 public class ValidationFunctions {
 
-    public static final String URL_REGEX = "^((https?)://)(([a-zA-Z0-9]+[-|\\.|_]?)*[a-zA-Z0-9])(\\:[0-9]{1,5})?(/([a-zA-Z0-9]+([-|\\.|/_][a-zA-Z0-9])?)*)*$";
+    public static final String URL_REGEX = "^((https?)://)(www.)?([\\w-]+\\.)*+(\\w{2,3})(:[\\d]{1,5}/?)?(/[\\w-]+)*+/?$";
     public static final Pattern URL_REGEX_PATTERN = Pattern.compile(URL_REGEX);
 
     /**
