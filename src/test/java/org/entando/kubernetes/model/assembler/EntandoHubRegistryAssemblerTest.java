@@ -31,6 +31,25 @@ class EntandoHubRegistryAssemblerTest {
     }
 
     @Test
+    void shouldCorrectlyConvertADtoToEntityWithAnEmptyOrNullId() {
+
+        EntandoHubRegistry entandoHubRegistry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1()
+                .setId("");
+        EntandoHubRegistryEntity entity = EntandoHubRegistryAssembler.toEntandoHubRegistryEntity(entandoHubRegistry);
+        EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntity(entity,
+                null,
+                EntandoHubRegistryStubHelper.REGISTRY_NAME_1,
+                EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1);
+
+        entandoHubRegistry.setId(null);
+        entity = EntandoHubRegistryAssembler.toEntandoHubRegistryEntity(entandoHubRegistry);
+        EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntity(entity,
+                null,
+                EntandoHubRegistryStubHelper.REGISTRY_NAME_1,
+                EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1);
+    }
+
+    @Test
     void shouldThrowExceptionWhenConvertingANullEntity() {
         Assertions.assertThrows(EntandoComponentManagerException.class,
                 () -> EntandoHubRegistryAssembler.toEntandoHubRegistry(null));

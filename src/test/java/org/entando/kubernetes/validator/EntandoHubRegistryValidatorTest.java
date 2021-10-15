@@ -45,23 +45,28 @@ class EntandoHubRegistryValidatorTest {
         // empty name
         registry.setName("");
         Assertions.assertThrows(EntandoValidationException.class,
-                () -> validator.validateEntandoHubRegistryOrThrow(registry, false));
+                () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
         // null name
         registry.setName(null);
         Assertions.assertThrows(EntandoValidationException.class,
-                () -> validator.validateEntandoHubRegistryOrThrow(registry, false));
+                () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
 
         registry.setName(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
 
         // null url
         registry.setUrl(null);
         Assertions.assertThrows(EntandoValidationException.class,
-                () -> validator.validateEntandoHubRegistryOrThrow(registry, false));
+                () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
 
         // not compliant url
         registry.setUrl(new URL("http://.com"));
         Assertions.assertThrows(EntandoValidationException.class,
-                () -> validator.validateEntandoHubRegistryOrThrow(registry, false));
+                () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
+
+        // ftp url
+        registry.setUrl(new URL("ftp://entando.com"));
+        Assertions.assertThrows(EntandoValidationException.class,
+                () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
 
         registry.setUrl(new URL(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1));
 
