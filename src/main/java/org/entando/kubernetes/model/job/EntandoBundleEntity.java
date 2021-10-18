@@ -15,6 +15,7 @@
 package org.entando.kubernetes.model.job;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.net.URL;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +29,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

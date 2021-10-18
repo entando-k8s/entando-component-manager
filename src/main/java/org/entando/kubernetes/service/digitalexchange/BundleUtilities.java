@@ -27,6 +27,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
@@ -118,17 +119,19 @@ public class BundleUtilities {
 
         Optional<EntandoBundleVersion> latestVersionOpt;
 
+        final EntandoDeBundleDetails details = entandoDeBundle.getSpec().getDetails();
+
         // get the latest from the spec.details.dist-tags.latest property if available
-        if (entandoDeBundle.getSpec().getDetails().getDistTags() != null
-                && entandoDeBundle.getSpec().getDetails().getDistTags().containsKey(LATEST_VERSION)) {
+        if (details.getDistTags() != null
+                && details.getDistTags().containsKey(LATEST_VERSION)) {
 
             latestVersionOpt = Optional.of(new EntandoBundleVersion()
-                    .setVersion(entandoDeBundle.getSpec().getDetails().getDistTags().get(LATEST_VERSION).toString()));
+                    .setVersion(details.getDistTags().get(LATEST_VERSION).toString()));
 
-        } else if (!CollectionUtils.isEmpty(entandoDeBundle.getSpec().getDetails().getVersions())) {
+        } else if (!CollectionUtils.isEmpty(details.getVersions())) {
 
             // calculate the latest from the versions list
-            latestVersionOpt = entandoDeBundle.getSpec().getDetails().getVersions().stream()
+            latestVersionOpt = details.getVersions().stream()
                     .map(version -> new EntandoBundleVersion().setVersion(version))
                     .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
         } else {

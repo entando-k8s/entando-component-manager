@@ -15,6 +15,7 @@ public class TestEntitiesGenerator {
 
     public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
     public static final String LATEST_VERSION = "0.0.15";
+    public static final String BUNDLE_TARBALL_URL = "http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz";
 
     public static EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
@@ -27,6 +28,10 @@ public class TestEntitiesGenerator {
     }
 
     public static EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
+        return getTestEntandoDeBundleSpec(BUNDLE_TARBALL_URL);
+    }
+
+    public static EntandoDeBundleSpec getTestEntandoDeBundleSpec(String tarballUrl) {
         return new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
                 .withDescription("A bundle containing some demo components for Entano6")
@@ -41,7 +46,7 @@ public class TestEntitiesGenerator {
                 .withIntegrity(
                         "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
                 .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
+                .withTarball(tarballUrl)
                 .endTag()
                 .build();
     }
@@ -58,7 +63,7 @@ public class TestEntitiesGenerator {
                 .withIntegrity(
                         "sha512-n4TEroSqg/sZlEGg2xj6RKNtl/t3ZROYdNd99/dl3UrzCUHvBrBxZ1rxQg/sl3kmIYgn3+ogbIFmUZYKWxG3Ag==")
                 .withShasum("4d80130d7d651176953b5ce470c3a6f297a70815")
-                .withTarball("http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz")
+                .withTarball(BUNDLE_TARBALL_URL)
                 .endTag()
                 .build();
     }

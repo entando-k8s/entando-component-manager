@@ -14,7 +14,7 @@ public enum BundleStatus {
     DEPLOYED("DEPLOYED"),
     INSTALLED("INSTALLED"),
     INSTALLED_NOT_DEPLOYED("INSTALLED_NOT_DEPLOYED"),
-    UNKNOWN("UNKNOWN");
+    INVALID_REPO_URL("INVALID_REPO_URL");
 
     private final String status;
 

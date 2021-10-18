@@ -8,6 +8,7 @@ databaseChangeLog:
               - column:
                   name: repo_url
                   type: varchar(511)
+                  defaultValue: ''
                   constraints:
                     nullable: false
             tableName: installed_entando_bundles
