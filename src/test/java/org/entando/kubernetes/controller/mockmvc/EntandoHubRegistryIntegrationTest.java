@@ -34,11 +34,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -113,8 +115,7 @@ class EntandoHubRegistryIntegrationTest {
                 .setName(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
 
         executeFailingPostOrPut(MockMvcRequestBuilders::post, registryWithExistingName,
-                "An Entando Hub registry with this name is already present");
-
+                "An Entando Hub registry with this name is already present", status().is5xxServerError());
 
         // given that the user wants to add a registry with an existing name
         EntandoHubRegistry registryWithExistingUrl = EntandoHubRegistryStubHelper.stubEntandoHubRegistry3()
@@ -122,7 +123,7 @@ class EntandoHubRegistryIntegrationTest {
                 .setUrl(new URL(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1));
 
         executeFailingPostOrPut(MockMvcRequestBuilders::post, registryWithExistingUrl,
-                "An Entando Hub registry with this url is already present");
+                "An Entando Hub registry with this url is already present", status().is5xxServerError());
     }
 
     @Test
@@ -161,7 +162,7 @@ class EntandoHubRegistryIntegrationTest {
         registryToUpdate.setId(UUID.randomUUID().toString());
 
         executeFailingPostOrPut(MockMvcRequestBuilders::put, registryToUpdate,
-                "No registry found for the received ID");
+                "No registry found for the received ID", status().is5xxServerError());
     }
 
     @Test
@@ -183,14 +184,14 @@ class EntandoHubRegistryIntegrationTest {
                 .setName(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
 
         executeFailingPostOrPut(MockMvcRequestBuilders::put, registryWithExistingName,
-                "An Entando Hub registry with this name is already present");
+                "An Entando Hub registry with this name is already present", status().is5xxServerError());
 
         // given that the user wants to add a registry with an existing name
         EntandoHubRegistry registryWithExistingUrl = EntandoHubRegistryStubHelper.stubEntandoHubRegistry3()
                 .setUrl(new URL(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1));
 
         executeFailingPostOrPut(MockMvcRequestBuilders::put, registryWithExistingUrl,
-                "An Entando Hub registry with this url is already present");
+                "An Entando Hub registry with this url is already present", status().is5xxServerError());
 
     }
 
@@ -277,6 +278,23 @@ class EntandoHubRegistryIntegrationTest {
             EntandoHubRegistry registry,
             String error) throws Exception {
 
+        executeFailingPostOrPut(httpMethodFn, registry, error, status().is4xxClientError());
+    }
+
+    /**
+     * execute a failing post or put against the baseUrl, sending a registry and asserting that a 500 is returned with
+     * the proper error.
+     *
+     * @param httpMethodFn         the post or put http method do execute
+     * @param registry             the registry to send in the body
+     * @param error                the expected error
+     * @param httpStatusResMatched the epected status code ResultMatcherˇ
+     */
+    private void executeFailingPostOrPut(Function<String, MockHttpServletRequestBuilder> httpMethodFn,
+            EntandoHubRegistry registry,
+            String error,
+            ResultMatcher httpStatusResMatched) throws Exception {
+
         // when the user sends the request
         ResultActions result = mockMvc.perform(
                 httpMethodFn.apply(baseUrl)
@@ -284,7 +302,7 @@ class EntandoHubRegistryIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON_VALUE));
 
         // then an error is returned
-        result.andExpect(status().is5xxServerError())
+        result.andExpect(httpStatusResMatched)
                 .andExpect(jsonPath("message",
                         is(error)));
     }

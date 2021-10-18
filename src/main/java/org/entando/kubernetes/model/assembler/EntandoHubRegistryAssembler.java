@@ -9,6 +9,7 @@ import lombok.experimental.UtilityClass;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
+import org.springframework.util.ObjectUtils;
 
 @UtilityClass
 public class EntandoHubRegistryAssembler {
@@ -43,7 +44,7 @@ public class EntandoHubRegistryAssembler {
                 .setName(dto.getName())
                 .setUrl(dto.getUrl());
 
-        if (dto.getId() != null) {
+        if (! ObjectUtils.isEmpty(dto.getId())) {
             entandoHubRegistryEntity.setId(UUID.fromString(dto.getId()));
         }
 

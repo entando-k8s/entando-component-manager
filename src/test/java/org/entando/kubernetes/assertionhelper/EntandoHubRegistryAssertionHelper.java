@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.ObjectUtils;
 import org.assertj.core.api.Java6Assertions;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
@@ -45,7 +46,12 @@ public class EntandoHubRegistryAssertionHelper {
 
     public static void assertOnEntandoHubRegistryEntity(EntandoHubRegistryEntity entity, String id, String name,
             String url) {
-        Java6Assertions.assertThat(entity.getId().toString()).isEqualTo(id);
+
+        if (ObjectUtils.isEmpty(id)) {
+            Java6Assertions.assertThat(entity.getId()).isNull();
+        } else {
+            Java6Assertions.assertThat(entity.getId().toString()).isEqualTo(id);
+        }
         Java6Assertions.assertThat(entity.getName()).isEqualTo(name);
         Java6Assertions.assertThat(entity.getUrl().toString()).isEqualTo(url);
     }

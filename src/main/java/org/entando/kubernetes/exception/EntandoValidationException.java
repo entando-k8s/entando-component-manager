@@ -1,6 +1,9 @@
 package org.entando.kubernetes.exception;
 
-public class EntandoValidationException extends EntandoComponentManagerException {
+import org.entando.kubernetes.exception.http.HttpException;
+import org.springframework.http.HttpStatus;
+
+public class EntandoValidationException extends EntandoComponentManagerException implements HttpException {
 
     public EntandoValidationException() {
         super();
@@ -23,4 +26,8 @@ public class EntandoValidationException extends EntandoComponentManagerException
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
+    @Override
+    public HttpStatus getStatus() {
+        return HttpStatus.UNPROCESSABLE_ENTITY;
+    }
 }
