@@ -15,6 +15,7 @@
 package org.entando.kubernetes.service.digitalexchange.entandohub;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.exception.EntandoClientDataException;
 import org.entando.kubernetes.exception.web.NotFoundException;
@@ -81,9 +82,14 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
     }
 
     @Override
-    public void deleteRegistry(String id) {
-        EntandoHubRegistryEntity entity = new EntandoHubRegistryEntity().setId(
-                UUID.fromString(id));
-        repository.delete(entity);
+    public String deleteRegistry(String id) {
+        final UUID uuid = UUID.fromString(id);
+        final Optional<EntandoHubRegistryEntity> registryToDelete = repository.findById(uuid);
+        if (registryToDelete.isPresent()) {
+            repository.delete(registryToDelete.get());
+            return registryToDelete.get().getName();
+        } else {
+            return "";
+        }
     }
 }

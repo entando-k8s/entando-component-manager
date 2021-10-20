@@ -16,6 +16,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import java.util.List;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
 import org.entando.kubernetes.validator.EntandoHubRegistryValidator;
@@ -63,8 +64,8 @@ public class EntandoHubRegistryResourceController implements EntandoHubRegistryR
     }
 
     @Override
-    public ResponseEntity<Void> deleteRegistry(@PathVariable(value = "id") String id) {
+    public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> deleteRegistry(@PathVariable(value = "id") String id) {
         this.service.deleteRegistry(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
