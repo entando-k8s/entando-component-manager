@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -115,15 +113,15 @@ class EntandoHubRegistryIntegrationTest {
                 .setName(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
 
         executeFailingPostOrPut(MockMvcRequestBuilders::post, registryWithExistingName,
-                "An Entando Hub registry with this name is already present", status().is5xxServerError());
+                "An Entando Hub registry with this name is already present", status().is4xxClientError());
 
         // given that the user wants to add a registry with an existing name
         EntandoHubRegistry registryWithExistingUrl = EntandoHubRegistryStubHelper.stubEntandoHubRegistry3()
                 .setId(null)
-                .setUrl(new URL(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1));
+                .setUrl(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1);
 
         executeFailingPostOrPut(MockMvcRequestBuilders::post, registryWithExistingUrl,
-                "An Entando Hub registry with this url is already present", status().is5xxServerError());
+                "An Entando Hub registry with this url is already present", status().is4xxClientError());
     }
 
     @Test
@@ -184,14 +182,14 @@ class EntandoHubRegistryIntegrationTest {
                 .setName(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
 
         executeFailingPostOrPut(MockMvcRequestBuilders::put, registryWithExistingName,
-                "An Entando Hub registry with this name is already present", status().is5xxServerError());
+                "An Entando Hub registry with this name is already present", status().is4xxClientError());
 
         // given that the user wants to add a registry with an existing name
         EntandoHubRegistry registryWithExistingUrl = EntandoHubRegistryStubHelper.stubEntandoHubRegistry3()
-                .setUrl(new URL(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1));
+                .setUrl(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1);
 
         executeFailingPostOrPut(MockMvcRequestBuilders::put, registryWithExistingUrl,
-                "An Entando Hub registry with this url is already present", status().is5xxServerError());
+                "An Entando Hub registry with this url is already present", status().is4xxClientError());
 
     }
 
@@ -209,7 +207,7 @@ class EntandoHubRegistryIntegrationTest {
         EntandoHubRegistry registryToUpdate = new EntandoHubRegistry()
                 .setId(JsonPath.parse(response).read("$.payload.[0].id").toString())
                 .setName(newName)
-                .setUrl(new URL(newUrl));
+                .setUrl(newUrl);
         final ResultActions resultUpdate = mockMvc.perform(
                 put(baseUrl)
                         .content(mapper.writeValueAsString(registryToUpdate))

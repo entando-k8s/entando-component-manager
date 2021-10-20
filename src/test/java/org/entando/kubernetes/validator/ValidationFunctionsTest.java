@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.stream.Stream;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.junit.jupiter.api.Tag;
@@ -34,11 +32,10 @@ class ValidationFunctionsTest {
                         "https://my-domain.", "http:// ", "http://com.", "http://.com")
                 .forEach(urlString -> {
                     try {
-                        URL url = new URL(urlString);
                         assertThrows(EntandoValidationException.class,
-                                () -> ValidationFunctions.validateUrlOrThrow(url, emptyMex, invalidMex),
+                                () -> ValidationFunctions.validateUrlOrThrow(urlString, emptyMex, invalidMex),
                                 urlString);
-                    } catch (MalformedURLException e) {
+                    } catch (Exception e) {
                         fail(e.getMessage());
                     }
                 });
@@ -53,14 +50,13 @@ class ValidationFunctionsTest {
                         "http://www.en_ta-ndo.com:092/3_a/", "http://www.enta-ndo.com:092/3-",
                         "http://www.en_ta-ndo.com:092/ad-/a/a__SDAda", "https://my-domain", "https://localhost",
                         "https://www.mydomain.com/?myparam=value", "https://www.mydomain.com?myparam=value&seconp=myval",
-                        "http://www.enta-ndo.com:123456", "http://www.entando.com/my.sec")
+                        "http://www.enta-ndo.com:123456", "http://www.entando.com/my.sec", "https://localhost/")
                 .forEach(urlString -> {
 
                     try {
-                        URL url = new URL(urlString);
                         assertDoesNotThrow(
-                                () -> ValidationFunctions.validateUrlOrThrow(url, emptyMex, invalidMex));
-                    } catch (MalformedURLException e) {
+                                () -> ValidationFunctions.validateUrlOrThrow(urlString, emptyMex, invalidMex));
+                    } catch (Exception e) {
                         fail(e.getMessage());
                     }
                 });

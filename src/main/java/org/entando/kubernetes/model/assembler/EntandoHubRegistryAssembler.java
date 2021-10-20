@@ -23,7 +23,7 @@ public class EntandoHubRegistryAssembler {
         return new EntandoHubRegistry()
                 .setId(entity.getId().toString())
                 .setName(entity.getName())
-                .setUrl(entity.getUrl());
+                .setUrl(entity.getUrl().toString());
     }
 
     public static List<EntandoHubRegistry> toListOfEntandoHubRegistry(List<EntandoHubRegistryEntity> entityList) {
@@ -42,7 +42,7 @@ public class EntandoHubRegistryAssembler {
 
         EntandoHubRegistryEntity entandoHubRegistryEntity = new EntandoHubRegistryEntity()
                 .setName(dto.getName())
-                .setUrl(dto.getUrl());
+                .setUrl(dto.getUrlAsURL());
 
         if (! ObjectUtils.isEmpty(dto.getId())) {
             entandoHubRegistryEntity.setId(UUID.fromString(dto.getId()));
