@@ -2,7 +2,6 @@ package org.entando.kubernetes.validator;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
-import java.net.URL;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
@@ -59,16 +58,16 @@ class EntandoHubRegistryValidatorTest {
                 () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
 
         // not compliant url
-        registry.setUrl(new URL("http://.com"));
+        registry.setUrl("http://.com");
         Assertions.assertThrows(EntandoValidationException.class,
                 () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
 
         // ftp url
-        registry.setUrl(new URL("ftp://entando.com"));
+        registry.setUrl("ftp://entando.com");
         Assertions.assertThrows(EntandoValidationException.class,
                 () -> validator.validateEntandoHubRegistryOrThrow(registry, true));
 
-        registry.setUrl(new URL(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1));
+        registry.setUrl(EntandoHubRegistryStubHelper.REGISTRY_URL_STRING_1);
 
         // empty id
         registry.setId("");

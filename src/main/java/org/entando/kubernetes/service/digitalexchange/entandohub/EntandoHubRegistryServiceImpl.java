@@ -16,7 +16,7 @@ package org.entando.kubernetes.service.digitalexchange.entandohub;
 
 import java.util.List;
 import java.util.UUID;
-import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoClientDataException;
 import org.entando.kubernetes.exception.web.NotFoundException;
 import org.entando.kubernetes.model.assembler.EntandoHubRegistryAssembler;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
@@ -48,10 +48,10 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
     public EntandoHubRegistry createRegistry(EntandoHubRegistry entandoHubRegistry) {
 
         if (repository.findByName(entandoHubRegistry.getName()).isPresent()) {
-            throw new EntandoComponentManagerException(REGISTRY_NAME_ALREADY_PRESENT);
+            throw new EntandoClientDataException(REGISTRY_NAME_ALREADY_PRESENT);
         }
-        if (repository.findByUrl(entandoHubRegistry.getUrl()).isPresent()) {
-            throw new EntandoComponentManagerException(REGISTRY_URL_ALREADY_PRESENT);
+        if (repository.findByUrl(entandoHubRegistry.getUrlAsURL()).isPresent()) {
+            throw new EntandoClientDataException(REGISTRY_URL_ALREADY_PRESENT);
         }
 
         final EntandoHubRegistryEntity entity = EntandoHubRegistryAssembler.toEntandoHubRegistryEntity(
@@ -65,16 +65,16 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
         UUID uuid = UUID.fromString(entandoHubRegistry.getId());
 
         if (repository.findByNameAndIdNot(entandoHubRegistry.getName(), uuid).isPresent()) {
-            throw new EntandoComponentManagerException(REGISTRY_NAME_ALREADY_PRESENT);
+            throw new EntandoClientDataException(REGISTRY_NAME_ALREADY_PRESENT);
         }
-        if (repository.findByUrlAndIdNot(entandoHubRegistry.getUrl(), uuid).isPresent()) {
-            throw new EntandoComponentManagerException(REGISTRY_URL_ALREADY_PRESENT);
+        if (repository.findByUrlAndIdNot(entandoHubRegistry.getUrlAsURL(), uuid).isPresent()) {
+            throw new EntandoClientDataException(REGISTRY_URL_ALREADY_PRESENT);
         }
 
         return repository.findById(UUID.fromString(entandoHubRegistry.getId()))
                 .map(entity -> {
                     entity.setName(entandoHubRegistry.getName())
-                            .setUrl(entandoHubRegistry.getUrl());
+                            .setUrl(entandoHubRegistry.getUrlAsURL());
                     return EntandoHubRegistryAssembler.toEntandoHubRegistry(repository.save(entity));
                 })
                 .orElseThrow(() -> new NotFoundException("No registry found for the received ID"));

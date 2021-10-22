@@ -14,12 +14,15 @@
 
 package org.entando.kubernetes.model.entandohub;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 
 @Data
 @Builder
@@ -30,5 +33,14 @@ public class EntandoHubRegistry {
 
     private String id;
     private String name;
-    private URL url;
+    private String url;
+
+    @JsonIgnore
+    public URL getUrlAsURL() {
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new EntandoComponentManagerException("Error during URL parsing " + url);
+        }
+    }
 }

@@ -33,7 +33,7 @@ public class EntandoHubRegistryAssertionHelper {
     public static void assertOnEntandoHubRegistry(EntandoHubRegistry registry, String id, String name, String url) {
         Java6Assertions.assertThat(registry.getId()).isEqualTo(id);
         Java6Assertions.assertThat(registry.getName()).isEqualTo(name);
-        Java6Assertions.assertThat(registry.getUrl().toString()).isEqualTo(url);
+        Java6Assertions.assertThat(registry.getUrl()).isEqualTo(url);
     }
 
 
@@ -66,7 +66,7 @@ public class EntandoHubRegistryAssertionHelper {
 
         result.andExpect(jsonPath(baseJsonPath + "id", IsNull.notNullValue()))
                 .andExpect(jsonPath(baseJsonPath + "name", is(registry.getName())))
-                .andExpect(jsonPath(baseJsonPath + "url", is(registry.getUrl().toString())));
+                .andExpect(jsonPath(baseJsonPath + "url", is(registry.getUrl())));
     }
 
 

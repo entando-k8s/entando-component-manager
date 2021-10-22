@@ -25,7 +25,7 @@ public class EntandoHubRegistryStubHelper {
         return new EntandoHubRegistry()
                 .setId(REGISTRY_ID_1)
                 .setName(REGISTRY_NAME_1)
-                .setUrl(new URL(REGISTRY_URL_STRING_1));
+                .setUrl(REGISTRY_URL_STRING_1);
     }
 
     @SneakyThrows
@@ -33,7 +33,7 @@ public class EntandoHubRegistryStubHelper {
         return new EntandoHubRegistry()
                 .setId(REGISTRY_ID_2)
                 .setName(REGISTRY_NAME_2)
-                .setUrl(new URL(REGISTRY_URL_STRING_2));
+                .setUrl(REGISTRY_URL_STRING_2);
     }
 
     @SneakyThrows
@@ -41,7 +41,7 @@ public class EntandoHubRegistryStubHelper {
         return new EntandoHubRegistry()
                 .setId(REGISTRY_ID_3)
                 .setName(REGISTRY_NAME_3)
-                .setUrl(new URL(REGISTRY_URL_STRING_3));
+                .setUrl(REGISTRY_URL_STRING_3);
     }
 
     public static List<EntandoHubRegistry> stubListOfEntandoHubRegistry() {
