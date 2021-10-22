@@ -10,7 +10,7 @@ on:
       - develop
 
 env:
-  ENTANDO_OPT_USE_PPL_TAG: "v1.0.2"
+  ENTANDO_OPT_USE_PPL_TAG: "v1.1.0"
   ENTANDO_OPT_FEATURES: "${{ secrets.ENTANDO_OPT_FEATURES }}"
   ENTANDO_OPT_LOG_LEVEL: "${{ secrets.ENTANDO_OPT_LOG_LEVEL }}"
   ENTANDO_OPT_REPO_BOM_URL: "${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}"
@@ -40,17 +40,17 @@ jobs:
             .. status-report \
             .. @checkout-branch pr --lcd "$LOCAL_CLONE_DIR" \
             .. @pr-labels remove "prepared" --id "REMOVE-LABEL-PREPARED" \
-            .. @setup-feature-flags "PR_FORMAT_CHECK" "BOM_CHECK" "BOM" \
-            .. @setup-features-list "SCAN_MATRIX" true SONAR_SCAN OWASP_SCAN SNYK_SCAN \
+            .. @setup-feature-flags "PR_PREFLIGHT_CHECKS" "BOM_CHECK" "BOM" \
+            .. @setup-features-list "SCAN_MATRIX" true SONAR-SCAN OWASP-SCAN SNYK-SCAN \
           ;
-      - name: "PR format check"
-        if: steps.START.outputs.PR_FORMAT_CHECK != 'false'
-        id: pr-format-check
+      - name: "PR preflight checks"
+        if: steps.START.outputs.PR_PREFLIGHT_CHECKS != 'false'
+        id: pr-preflight-checks
         run: |
-          ~/ppl-run check-pr-format --lcd "$LOCAL_CLONE_DIR"
+          ~/ppl-run pr-preflight-checks --lcd "$LOCAL_CLONE_DIR"
       # BOM
       - name: "entando-core-bom check"
-        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM != 'false'
+        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM == 'true'
         id: pr-bom-check
         run: |
           ~/ppl-run @pr-labels add "prepared" --id "ADD-LABEL-PREPARED"
@@ -97,8 +97,8 @@ jobs:
       - name: "FULL BUILD"
         run: |
           ~/ppl-run \
-            .. mvn FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
-            .. release tag-snapshot-release --lcd "$LOCAL_CLONE_DIR" \
+            .. generic FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
+            .. release tag-snapshot-version --lcd "$LOCAL_CLONE_DIR" \
           ;
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,17 +146,7 @@ jobs:
       - name: "Run the Scan"
         run: |
           SCAN_TYPE="${{ matrix.scan-type }}"
-          
-          case "$SCAN_TYPE" in
-            OWASP_SCAN)
-              ~/ppl-run mvn OWASP-SCAN --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
-              ;;
-            SONAR_SCAN)
-              export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
-              ~/ppl-run mvn SONAR-SCAN --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
-              ;;
-            SNYK_SCAN)
-              export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
-              ~/ppl-run scan snyk --org "$SNYK_ORG" --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
-              ;;
-          esac
+          [[ "$SCAN_TYPE" = "SONAR-SCAN" ]] && export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+          [[ "$SCAN_TYPE" = "SNYK-SCAN" ]] && export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
+          ~/ppl-run generic "$SCAN_TYPE" mvn --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
+
