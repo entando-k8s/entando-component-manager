@@ -95,6 +95,8 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.BUILD_CACHE_KEY }}
       #~ BUILD
       - name: "FULL BUILD"
+        env:
+          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
         run: |
           ~/ppl-run \
             .. generic FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
