@@ -40,7 +40,6 @@ jobs:
           ~/ppl-run \
             .. status-report \
             .. @checkout-branch pr --lcd "$LOCAL_CLONE_DIR" \
-            .. @pr-labels remove "prepared" --id "REMOVE-LABEL-PREPARED" \
             .. @setup-feature-flags "PR_PREFLIGHT_CHECKS" "BOM_CHECK" "BOM" \
             .. @setup-features-list "SCAN_MATRIX" --prefix "SCAN-MVN-" \
           ;
