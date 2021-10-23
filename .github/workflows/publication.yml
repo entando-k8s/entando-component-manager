@@ -8,6 +8,7 @@ on:
 env:
   ENTANDO_OPT_USE_PPL_TAG: "v1.1.0"
   ENTANDO_OPT_FEATURES: "${{ secrets.ENTANDO_OPT_FEATURES }}"
+  ENTANDO_OPT_GLOBAL_FEATURES: "${{ secrets.ENTANDO_OPT_GLOBAL_FEATURES }}"
   ENTANDO_OPT_LOG_LEVEL: "${{ secrets.ENTANDO_OPT_LOG_LEVEL }}"
   ENTANDO_OPT_REPO_BOM_URL: "${{ secrets.ENTANDO_OPT_REPO_BOM_URL }}"
   PPL_CONTEXT: ${{ toJson(github) }}
@@ -80,7 +81,7 @@ jobs:
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
       #~ UPDATE THE BOM (if required)
       - name: "BOM Update"
-        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM != 'false'
+        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM == 'true'
         run: |
           ~/ppl-run bom update-bom \
             --id "UPDATE-BOM" \
