@@ -9,23 +9,23 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
@@ -379,6 +379,21 @@ public class EntandoBundleUtilitiesTest {
         assertOnExpectedRoles(spec.getRoles(), roleList);
         assertOnPermissionsForTodoMvc2CompleteBundle(spec.getPermissions(), permissionList);
         assertOnExpectedRoles(spec.getRoles(), roleList);
+    }
+
+    @Test
+    void shouldReturnAnEmptyOptionalIfInvalidDataAreReceived() {
+
+        EntandoDeBundleDetails deBundleDetails = new EntandoDeBundleDetails();
+        List<EntandoDeBundle> notValidBundles = List.of(
+                new EntandoDeBundle(),
+                new EntandoDeBundleBuilder().withSpec(new EntandoDeBundleSpec(deBundleDetails, null)).build()
+        );
+
+        notValidBundles.forEach(entandoDeBundle -> {
+            assertThat(BundleUtilities.composeLatestVersionFromDistTags(entandoDeBundle).isEmpty());
+        });
+
     }
 
 

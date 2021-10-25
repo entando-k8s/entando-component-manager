@@ -14,9 +14,11 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
@@ -43,4 +45,6 @@ public interface EntandoBundleService {
     EntandoBundleEntity convertToEntityFromEcr(EntandoDeBundle bundle);
 
     EntandoBundle deployDeBundle(EntandoDeBundle entandoDeBundle);
+
+    BundlesStatusResult getBundlesStatus(List<URL> bundlesUrlList);
 }

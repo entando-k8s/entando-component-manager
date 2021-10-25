@@ -10,6 +10,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,8 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
@@ -35,8 +39,10 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.component.BundleStatusHelper;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
+import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -51,6 +57,7 @@ public class EntandoBundleServiceTest {
     private EntandoBundleService service;
     private InstalledEntandoBundleRepository installedComponentRepository;
     private EntandoBundleJobRepository jobRepository;
+    private BundleStatusHelper bundleStatusHelper;
 
     @BeforeEach
     public void setup() {
@@ -59,8 +66,9 @@ public class EntandoBundleServiceTest {
         EntandoBundleComponentJobRepository componentJobRepository = Mockito
                 .mock(EntandoBundleComponentJobRepository.class);
         installedComponentRepository = Mockito.mock(InstalledEntandoBundleRepository.class);
+        bundleStatusHelper = Mockito.mock(BundleStatusHelper.class);
         service = new EntandoBundleServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository,
-                componentJobRepository, installedComponentRepository);
+                componentJobRepository, installedComponentRepository, bundleStatusHelper);
     }
 
     @AfterEach
@@ -408,5 +416,33 @@ public class EntandoBundleServiceTest {
     @Test
     void shouldThrowExceptionWhenTryingToDeployANullDeBundle() {
         assertThrows(InvalidBundleException.class, () -> service.deployDeBundle(null));
+    }
+
+    @Test
+    void shouldReturnTheExpectedBundlesStatusResult() throws MalformedURLException {
+
+        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)),
+                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed());
+        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED)),
+                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
+        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_DEPLOYED)),
+                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
+        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_NOT_FOUND)),
+                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemNotFound());
+
+        // given a list of bundle id (repo url)
+        final List<URL> bundleIds = List.of(new URL(BundleStatusItemStubHelper.ID_INSTALLED),
+                new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED),
+                new URL(BundleStatusItemStubHelper.ID_NOT_FOUND), new URL(BundleStatusItemStubHelper.ID_DEPLOYED));
+
+        // when I ask for their status
+        final BundlesStatusResult bundlesStatusResult = service.getBundlesStatus(bundleIds);
+
+        // then I expect to receive the correct list of bundle status item
+        List<BundlesStatusItem> expectedList = List.of(BundleStatusItemStubHelper.stubBundleStatusItemInstalled(),
+                BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed(),
+                BundleStatusItemStubHelper.stubBundleStatusItemNotFound(),
+                BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
+        assertThat(bundlesStatusResult.getBundlesStatuses()).containsExactlyElementsOf(expectedList);
     }
 }

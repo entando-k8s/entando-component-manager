@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -49,4 +51,10 @@ public interface EntandoBundleResource {
     @GetMapping(value = "/{component}/usage", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(
             @PathVariable("component") String component);
+
+    @Operation(description = "Return the status of the available bundles")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @PostMapping(value = "/status/query", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatus(
+            @RequestBody BundlesStatusQuery bundlesStatusQuery);
 }

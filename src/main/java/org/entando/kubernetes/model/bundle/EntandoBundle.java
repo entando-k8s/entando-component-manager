@@ -1,6 +1,8 @@
 package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +13,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
 
@@ -27,6 +30,7 @@ public class EntandoBundle {
     //private String ecrId; // hash(code + organization) = metadata.name
     private String title;
     private String description;
+    private String repoUrl;
     private BundleType bundleType;
     private String thumbnail;
     private Set<String> componentTypes;
@@ -46,4 +50,15 @@ public class EntandoBundle {
         return Optional.ofNullable(latestVersion);
     }
 
+    public URL getRepoUrlAsURL() {
+        if (ObjectUtils.isEmpty(repoUrl)) {
+            return null;
+        }
+
+        try {
+            return new URL(repoUrl);
+        } catch (MalformedURLException e) {
+            return null;
+        }
+    }
 }

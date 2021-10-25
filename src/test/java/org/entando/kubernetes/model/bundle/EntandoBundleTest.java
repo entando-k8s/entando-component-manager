@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.zafarkhaja.semver.Version;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,5 +37,28 @@ class EntandoBundleTest {
         assertThat(sortedVersions)
                 .startsWith("v0.0.14", "v0.0.14-snapshot", "v0.0.14-rc.2", "v0.0.14-rc.1", "v0.0.14-beta",
                         "v0.0.14-alpha");
+    }
+
+    @Test
+    void shouldReturnNullIfRepoUrlIsEmptyOrNotValid() {
+
+        EntandoBundle entandoBundle = new EntandoBundle();
+        assertThat(entandoBundle.getRepoUrlAsURL()).isNull();
+
+        entandoBundle.setRepoUrl("");
+        assertThat(entandoBundle.getRepoUrlAsURL()).isNull();
+
+        entandoBundle.setRepoUrl("fad://mad&dec.t-");
+        assertThat(entandoBundle.getRepoUrlAsURL()).isNull();
+    }
+
+    @Test
+    void shouldReturnTheExpectedURLIfRepoUrlIsProperlyPopulated() throws MalformedURLException {
+
+        String stringUrl = "http://www.entando.com";
+        URL url = new URL(stringUrl);
+
+        EntandoBundle entandoBundle = new EntandoBundle().setRepoUrl(stringUrl);
+        assertThat(entandoBundle.getRepoUrlAsURL()).isEqualTo(url);
     }
 }
