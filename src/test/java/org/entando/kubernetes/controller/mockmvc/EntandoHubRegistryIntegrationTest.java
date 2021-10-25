@@ -25,6 +25,7 @@ import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
 import org.hamcrest.core.IsNull;
+import org.hamcrest.text.IsEmptyString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -227,7 +228,7 @@ class EntandoHubRegistryIntegrationTest {
 
 
     @Test
-    void shouldDeleteAnExistingRegistry() throws Exception {
+    void shouldDeleteAnExistingRegistryAndReturnItsName() throws Exception {
 
         // given that 2 registries are present in the db
         ResultActions resultList = getAndValidateRegistryListWithTheTwoStartingRegistries();
@@ -235,15 +236,32 @@ class EntandoHubRegistryIntegrationTest {
         // when the user sends a request to delete one of those registries
         String response = resultList.andReturn().getResponse().getContentAsString();
         final String idToDelete = JsonPath.parse(response).read("$.payload.[0].id").toString();
+        final String nameToDelete = JsonPath.parse(response).read("$.payload.[0].name").toString();
 
         // then a successful response is returned
         final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + idToDelete));
-        resultDelete.andExpect(status().isNoContent());
+        resultDelete
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.name", is(nameToDelete)));
 
         // and the new present list of registries does contain only one record
         resultList = mockMvc.perform(get(baseUrl));
         EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntityList(resultList,
                 List.of(savedRegistryList.get(1)));
+    }
+
+    @Test
+    void shouldReturnEmptyStringIfRegistryToDeleteHasNotBeenFound() throws Exception {
+
+        // given that 2 registries are present in the db
+        ResultActions resultList = getAndValidateRegistryListWithTheTwoStartingRegistries();
+
+        // when the user sends a request to delete a registry not present
+        // then a successful response is returned
+        final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + UUID.randomUUID()));
+        resultDelete
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.name", IsEmptyString.emptyString()));
     }
 
 

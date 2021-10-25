@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
@@ -77,11 +78,12 @@ class EntandoHubRegistryResourceControllerTest {
     }
 
     @Test
-    void shouldReturnTheExpectedSimpleRestResponseOnDeleteEntandoHubRegistry() {
+    void shouldReturnTheNameOfTheDeleteRegistryOnRegistryDeletion() {
 
-        doNothing().when(service).deleteRegistry(anyString());
-        final ResponseEntity<Void> response = controller.deleteRegistry("myid");
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        when(service.deleteRegistry(anyString())).thenReturn(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
+        final ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> response = controller.deleteRegistry("myid");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getPayload().getName()).isEqualTo(EntandoHubRegistryStubHelper.REGISTRY_NAME_1);
     }
 
     private void assertOnCreateOrUpdateResponse(ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> response,

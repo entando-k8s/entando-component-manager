@@ -65,7 +65,7 @@ public class EntandoHubRegistryResourceController implements EntandoHubRegistryR
 
     @Override
     public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> deleteRegistry(@PathVariable(value = "id") String id) {
-        this.service.deleteRegistry(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        final String deleteRegistryName = this.service.deleteRegistry(id);
+        return ResponseEntity.ok(new SimpleRestResponse<>(new DeletedObjectResponse(deleteRegistryName)));
     }
 }

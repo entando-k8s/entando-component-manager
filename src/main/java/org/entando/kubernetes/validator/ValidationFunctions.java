@@ -1,6 +1,5 @@
 package org.entando.kubernetes.validator;
 
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -24,20 +23,23 @@ public class ValidationFunctions {
      * EntandoValidationException with nullError message checks that the url is valid. if this fails, throw
      * EntandoValidationException with invalidError message
      *
-     * @param url          the url to validate
+     * @param stringUrl    the string contianing the url to validate
      * @param nullError    the message to add to the EntandoValidationException if the url is empty
      * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
+     * @return the url as java.net.URL
      */
-    public static void validateUrlOrThrow(URL url, String nullError, String invalidError) {
+    public static URL composeUrlOrThrow(String stringUrl, String nullError, String invalidError) {
 
-        if (ObjectUtils.isEmpty(url)) {
+        if (ObjectUtils.isEmpty(stringUrl)) {
             throw new EntandoValidationException(nullError);
         }
 
+        URL url;
         try {
+            url = new URL(stringUrl);
             url.toURI();
-        } catch (URISyntaxException e) {
-            throw new EntandoValidationException(invalidError + ": " + url);
+        } catch (Exception e) {
+            throw new EntandoValidationException(invalidError + ": " + stringUrl);
         }
 
         if (!VALID_PROTOCOLS.contains(url.getProtocol())) {
@@ -49,5 +51,7 @@ public class ValidationFunctions {
             throw new EntandoValidationException(
                     invalidError + ": " + url + " - Hostname must start and finish with an alphanumeric character");
         }
+
+        return url;
     }
 }
