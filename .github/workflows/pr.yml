@@ -6,7 +6,7 @@ on:
       - opened
       - synchronize
       - reopened
-    branches: 
+    branches:
       - develop
 
 env:
@@ -96,7 +96,9 @@ jobs:
       #~ BUILD
       - name: "FULL BUILD"
         env:
+          ENTANDO_OPT_SONAR_PROJECT_KEY: "${{ secrets.ENTANDO_OPT_SONAR_PROJECT_KEY }}"
           SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           ~/ppl-run \
             .. generic FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
@@ -148,7 +150,14 @@ jobs:
       - name: "Run the Scan"
         run: |
           SCAN_TYPE="${{ matrix.scan-type }}"
-          [[ "$SCAN_TYPE" = "SCAN-MVN-SONAR" ]] && export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
-          [[ "$SCAN_TYPE" = "SCAN-MVN-SNYK" ]] && export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
+          case "$SCAN_TYPE" in
+            SCAN-MVN-SONAR)
+              export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+              export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+              export ENTANDO_OPT_SONAR_PROJECT_KEY="${{ secrets.ENTANDO_OPT_SONAR_PROJECT_KEY }}"
+              ;;
+            SCAN-MVN-SNYK)
+              export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
+            ;;
+          esac
           ~/ppl-run generic "$SCAN_TYPE" mvn --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
-
