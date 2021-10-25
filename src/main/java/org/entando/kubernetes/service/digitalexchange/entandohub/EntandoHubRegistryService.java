@@ -25,5 +25,5 @@ public interface EntandoHubRegistryService {
 
     EntandoHubRegistry updateRegistry(EntandoHubRegistry entandoHubRegistry);
 
-    void deleteRegistry(String id);
+    String deleteRegistry(String id);
 }

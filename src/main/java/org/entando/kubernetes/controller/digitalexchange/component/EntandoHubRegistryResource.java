@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,5 +51,5 @@ public interface EntandoHubRegistryResource {
     @Operation(description = "Delete an Entando Hub registry")
     @ApiResponse(responseCode = "200", description = "OK")
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Void> deleteRegistry(@PathVariable("id") String id);
+    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> deleteRegistry(@PathVariable("id") String id);
 }

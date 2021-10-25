@@ -5,11 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.entando.kubernetes.assertionhelper.EntandoHubRegistryAssertionHelper;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.web.NotFoundException;
@@ -122,9 +124,24 @@ class EntandoHubRegistryServiceImplTest {
     }
 
     @Test
-    void shouldDoNothingOnDeleteRegistry() {
+    void shouldReturnTheNameOfTheDeletedRegistryOnRegistryDeletion() {
+        final Optional<EntandoHubRegistryEntity> registryOpt = Optional.of(
+                EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1());
+        when(repository.findById(UUID.fromString(EntandoHubRegistryStubHelper.REGISTRY_ID_1))).thenReturn(registryOpt);
         doNothing().when(repository).delete(any());
-        service.deleteRegistry(EntandoHubRegistryStubHelper.REGISTRY_ID_1);
+
+        final String name = service.deleteRegistry(EntandoHubRegistryStubHelper.REGISTRY_ID_1);
         verify(repository).delete(any());
+        assertThat(name).isEqualTo(registryOpt.get().getName());
+    }
+
+    @Test
+    void shouldReturnEmptyStringOnRegistryDeletionIfRegistryNotFound() {
+        when(repository.findById(UUID.fromString(EntandoHubRegistryStubHelper.REGISTRY_ID_1))).thenReturn(
+                Optional.empty());
+
+        final String name = service.deleteRegistry(EntandoHubRegistryStubHelper.REGISTRY_ID_1);
+        verify(repository, times(0)).delete(any());
+        assertThat(name).isEmpty();
     }
 }
