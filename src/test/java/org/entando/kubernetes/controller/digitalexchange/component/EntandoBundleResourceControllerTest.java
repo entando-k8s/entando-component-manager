@@ -69,12 +69,14 @@ class EntandoBundleResourceControllerTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenReceivingEmptyOrNullParamList() {
+    void shouldReturnEmptyArrayWhenReceivingEmptyOrNullParamList() {
 
-        assertThrows(EntandoValidationException.class, () -> controller.getBundlesStatus(null));
+        ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatus(null);
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
 
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery();
-        assertThrows(EntandoValidationException.class, () -> controller.getBundlesStatus(bundlesStatusQuery));
+        response = controller.getBundlesStatus(bundlesStatusQuery);
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
     }
 
     @Test

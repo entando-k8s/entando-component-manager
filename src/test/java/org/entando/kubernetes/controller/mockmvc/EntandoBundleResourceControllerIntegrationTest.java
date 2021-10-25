@@ -134,7 +134,7 @@ class EntandoBundleResourceControllerIntegrationTest {
     }
 
     @Test
-    void shouldReturnErrorWhenReceivingAnEmptyListOfBundleIds() throws Exception {
+    void shouldReturnEmptyArrayWhenReceivingAnEmptyListOfBundleIds() throws Exception {
 
         // given that the user asks for the status of an empty list of bundle ids
         String payload = mapper.writeValueAsString(new BundlesStatusQuery());
@@ -144,8 +144,8 @@ class EntandoBundleResourceControllerIntegrationTest {
         mockMvc.perform(post(componentsUrl + "/status/query")
                         .content(payload)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is4xxClientError())
-                .andExpect(jsonPath("$.message", is("Empty list of bundles received")));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.bundlesStatuses", hasSize(0)));
     }
 
     @Test

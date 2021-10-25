@@ -13,7 +13,7 @@ public enum BundleStatus {
     NOT_FOUND("NOT_FOUND"),
     DEPLOYED("DEPLOYED"),
     INSTALLED("INSTALLED"),
-    INSTALLED_NOT_DEPLOYED("INSTALLED_NOT_DEPLOYED"),
+    INSTALLED_NOT_DEPLOYED("INSTALLED_NOT_DEPLOYED"), // bundle installed but the CR has been manually deleted
     INVALID_REPO_URL("INVALID_REPO_URL");
 
     private final String status;

@@ -26,8 +26,9 @@ public class ValidationFunctions {
      * @param stringUrl    the string contianing the url to validate
      * @param nullError    the message to add to the EntandoValidationException if the url is empty
      * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
+     * @return the url as java.net.URL
      */
-    public static void validateUrlOrThrow(String stringUrl, String nullError, String invalidError) {
+    public static URL composeUrlOrThrow(String stringUrl, String nullError, String invalidError) {
 
         if (ObjectUtils.isEmpty(stringUrl)) {
             throw new EntandoValidationException(nullError);
@@ -50,5 +51,7 @@ public class ValidationFunctions {
             throw new EntandoValidationException(
                     invalidError + ": " + url + " - Hostname must start and finish with an alphanumeric character");
         }
+
+        return url;
     }
 }

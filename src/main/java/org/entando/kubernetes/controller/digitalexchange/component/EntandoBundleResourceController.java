@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleStatus;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
@@ -37,8 +36,10 @@ import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.validator.ValidationFunctions;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -77,11 +78,12 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
+    @PostMapping(value = "/status/query", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatus(
             BundlesStatusQuery bundlesStatusQuery) {
 
         if (bundlesStatusQuery == null || ObjectUtils.isEmpty(bundlesStatusQuery.getIds())) {
-            throw new EntandoValidationException("Empty list of bundles received");
+            return ResponseEntity.ok(new SimpleRestResponse<>(new BundlesStatusResult()));
         }
 
         List<BundlesStatusItem> invalidBundlesStatusItemList = new ArrayList<>();
@@ -89,8 +91,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
         for (String stringUrl : bundlesStatusQuery.getIds()) {
             try {
-                URL url = new URL(stringUrl);
-                ValidationFunctions.validateUrlOrThrow(url, "The rceived url is empty", "The received url is not valid");
+                URL url = ValidationFunctions.composeUrlOrThrow(stringUrl, "The received url is empty", "The received url is not valid");
                 repoUrlList.add(url);
             } catch (Exception e) {
                 log.error("Invalid URL received: {} - it will be skipped in the search", stringUrl);
