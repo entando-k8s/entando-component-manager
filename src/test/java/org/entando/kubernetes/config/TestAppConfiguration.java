@@ -1,9 +1,10 @@
 package org.entando.kubernetes.config;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -11,6 +12,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -35,9 +37,11 @@ public class TestAppConfiguration extends AppConfiguration {
             GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
             try {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-                when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
+                lenient().when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
                         .thenReturn(bundleFolder);
-                when(git.createTargetDirectory()).thenReturn(bundleFolder);
+                lenient().when(git.saveBundleLocally(any(URL.class))).thenReturn(bundleFolder);
+                lenient().when(git.createTargetDirectory()).thenReturn(bundleFolder);
+                lenient().when(git.fetchRemoteTags(any(URL.class))).thenReturn(BundleStubHelper.TAG_LIST);
             } catch (IOException e) {
                 throw new RuntimeException("Impossible to read the bundle folder from test resources");
             }

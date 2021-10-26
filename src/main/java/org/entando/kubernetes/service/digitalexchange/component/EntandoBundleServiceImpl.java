@@ -31,7 +31,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
@@ -52,6 +52,7 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -65,13 +66,15 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     private final InstalledEntandoBundleRepository installedComponentRepo;
     private final EntandoBundleComponentJobRepository jobComponentRepository;
     private final BundleStatusHelper bundleStatusHelper;
+    private final EntandoDeBundleComposer entandoDeBundleComposer;
 
     public EntandoBundleServiceImpl(K8SServiceClient k8SServiceClient,
             @Value("${entando.component.repository.namespaces:}") List<String> accessibleDigitalExchanges,
             EntandoBundleJobRepository jobRepository,
             EntandoBundleComponentJobRepository jobComponentRepository,
             InstalledEntandoBundleRepository installedComponentRepo,
-            BundleStatusHelper bundleStatusHelper) {
+            BundleStatusHelper bundleStatusHelper,
+            EntandoDeBundleComposer entandoDeBundleComposer) {
 
         this.k8SServiceClient = k8SServiceClient;
         this.accessibleDigitalExchanges = Optional.ofNullable(accessibleDigitalExchanges).orElse(new ArrayList<>())
@@ -80,6 +83,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         this.jobComponentRepository = jobComponentRepository;
         this.installedComponentRepo = installedComponentRepo;
         this.bundleStatusHelper = bundleStatusHelper;
+        this.entandoDeBundleComposer = entandoDeBundleComposer;
     }
 
     @Override
@@ -230,7 +234,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public BundlesStatusResult getBundlesStatus(List<URL> repoUrlList) {
 
-        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlIn(repoUrlList);
+        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlInWithURL(repoUrlList);
 
         List<EntandoBundle> deployedBundles = listBundlesFromEcr();
         List<EntandoBundleEntity> installedButNotDeployed = filterInstalledButNotAvailableOnEcr(deployedBundles,
@@ -259,7 +263,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .version(bundle.isInstalled() ? bundle.getInstalledJob().getComponentVersion() : null)
                 .lastUpdate(bundle.isInstalled()
                         ? Date.from(bundle.getInstalledJob().getFinishedAt().atZone(ZoneOffset.UTC).toInstant()) : null)
-                .repoUrl(bundle.getRepoUrlAsURL())
+                .repoUrl(bundle.getRepoUrl())
                 .build();
     }
 
@@ -372,12 +376,9 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
-    public EntandoBundle deployDeBundle(EntandoDeBundle entandoDeBundle) {
+    public EntandoBundle deployDeBundle(BundleInfo bundleInfo) {
 
-        if (entandoDeBundle == null) {
-            throw new InvalidBundleException("The received EntandoDeBundle to deploy is null");
-        }
-
+        final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo);
         EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
         return convertToBundleFromEcr(deployedBundle);
     }

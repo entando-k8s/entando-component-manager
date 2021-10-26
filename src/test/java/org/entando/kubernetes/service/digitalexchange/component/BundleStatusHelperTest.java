@@ -19,14 +19,14 @@ class BundleStatusHelperTest {
 
     private final List<EntandoBundleEntity> installedButNotDeployed = List.of(
             new EntandoBundleEntity()
-                    .setRepoUrl(new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED))
+                    .setRepoUrl(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)
                     .setVersion(BundleStatusItemStubHelper.INSTALLED_VERSION_INSTALLED_NOT_DEPLOYED),
-            new EntandoBundleEntity().setRepoUrl(new URL("http://www.myfakebundle1.com")).setVersion("v1.0.0")
+            new EntandoBundleEntity().setRepoUrl("http://www.myfakebundle1.com").setVersion("v1.0.0")
     );
     private final List<EntandoBundleEntity> installedBundleEntities = List.of(
-            new EntandoBundleEntity().setRepoUrl(new URL(BundleStatusItemStubHelper.ID_INSTALLED))
+            new EntandoBundleEntity().setRepoUrl(BundleStatusItemStubHelper.ID_INSTALLED)
                     .setVersion(BundleStatusItemStubHelper.INSTALLED_VERSION_INSTALLED),
-            new EntandoBundleEntity().setRepoUrl(new URL("http://www.myfakebundle2.com")).setVersion("v2.0.0")
+            new EntandoBundleEntity().setRepoUrl("http://www.myfakebundle2.com").setVersion("v2.0.0")
     );
     private final List<EntandoBundle> deployedBundles = List.of(
             new EntandoBundle().setRepoUrl(BundleStatusItemStubHelper.ID_DEPLOYED),

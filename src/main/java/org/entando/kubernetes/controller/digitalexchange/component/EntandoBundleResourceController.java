@@ -20,12 +20,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -58,8 +58,8 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(EntandoDeBundle entandoDeBundle) {
-        final EntandoBundle entandoBundle = bundleService.deployDeBundle(entandoDeBundle);
+    public ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(BundleInfo bundleInfo) {
+        final EntandoBundle entandoBundle = bundleService.deployDeBundle(bundleInfo);
         return ResponseEntity.ok(new SimpleRestResponse<>(entandoBundle));
     }
 
