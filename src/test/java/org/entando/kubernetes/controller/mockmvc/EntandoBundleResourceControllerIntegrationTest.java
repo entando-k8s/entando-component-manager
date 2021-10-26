@@ -109,7 +109,7 @@ class EntandoBundleResourceControllerIntegrationTest {
         bundleJobRepository.deleteAll();
     }
 
-    @Test
+    /*@Test
     void shouldCorrectlyDeployAnEntandoDeBundle() throws Exception {
 
         final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
@@ -131,7 +131,7 @@ class EntandoBundleResourceControllerIntegrationTest {
                 .andExpect(jsonPath("$.payload.lastJob", IsNull.nullValue()))
                 .andExpect(jsonPath("$.payload.customInstallation", IsNull.nullValue()))
                 .andExpect(jsonPath("$.payload.latestVersion.version", is("0.0.15")));
-    }
+    }*/
 
     @Test
     void shouldReturnEmptyArrayWhenReceivingAnEmptyListOfBundleIds() throws Exception {

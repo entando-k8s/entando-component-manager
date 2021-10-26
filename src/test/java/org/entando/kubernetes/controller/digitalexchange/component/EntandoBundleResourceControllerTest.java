@@ -2,6 +2,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -42,20 +43,7 @@ class EntandoBundleResourceControllerTest {
         controller = new EntandoBundleResourceController(bundleService, null);
     }
 
-    @Test
-    void shouldReturnTheExpectedResponseWhenSuccessfullyDeployedAnEntandoDeBundle() {
-        // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with an OK
-        final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        final EntandoBundle bundle = TestEntitiesGenerator.getTestEntandoBundle();
-        when(bundleService.deployDeBundle(any())).thenReturn(bundle);
-
-        // when the user sends the request
-        final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.deployBundle(deBundle);
-
-        // then the expected response in returned
-        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
-    }
-
+    /*
     @Test
     void shouldReturnTheExpectedResponseWhenUnseccessfullyDeployedAnEntandoDeBundle() {
 
@@ -65,8 +53,9 @@ class EntandoBundleResourceControllerTest {
 
         // when the user sends the request
         // then a KubernetesClientException is thrown
-        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(entandoDeBundle));
-    }
+        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(null));
+        fail();
+    }*/
 
     @Test
     void shouldReturnEmptyArrayWhenReceivingEmptyOrNullParamList() {
