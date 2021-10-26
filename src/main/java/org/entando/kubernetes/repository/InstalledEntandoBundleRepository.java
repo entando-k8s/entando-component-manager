@@ -18,6 +18,9 @@ public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoB
     List<EntandoBundleEntity> findAllByRepoUrlIn(List<String> repoUrls);
 
     default List<EntandoBundleEntity> findAllByRepoUrlInWithURLs(List<URL> repoUrls) {
+
+        System.out.println("####### CONVERTING LIST URL TYPE TO STRING ######");
+
         final List<String> repoUrlStrings = repoUrls.stream()
                 .map(URL::toString)
                 .collect(Collectors.toList());
@@ -27,6 +30,9 @@ public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoB
     Optional<EntandoBundleEntity> findFirstByRepoUrl(String repoUrl);
 
     default Optional<EntandoBundleEntity> findFirstByRepoUrlWithUrl(URL repoUrl) {
+
+        System.out.println("####### CONVERTING URL TYPE TO STRING ######");
+
         return findFirstByRepoUrl(repoUrl.toString());
     }
 }

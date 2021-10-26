@@ -13,6 +13,7 @@ import org.springframework.context.annotation.ComponentScan;
 public class EntandoKubernetesJavaApplication {
 
     public static void main(final String[] args) {
+        System.out.println("######## ENTANDO HUB VERSION ########");
         SpringApplication.run(EntandoKubernetesJavaApplication.class, args);
     }
 

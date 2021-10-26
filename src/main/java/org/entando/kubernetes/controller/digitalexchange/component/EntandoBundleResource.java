@@ -17,6 +17,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
@@ -50,7 +51,7 @@ public interface EntandoBundleResource {
     @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody EntandoDeBundle entandoDeBundle);
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody BundleInfo bundleInfo);
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")

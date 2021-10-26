@@ -16,6 +16,10 @@ public class BundleStubHelper {
     public static final String BUNDLE_NAME = "my-bundle-name";
     public static final String BUNDLE_DESCRIPTION = "desc";
     public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
+    public static final String V1_0_0 = "v1.0.0";
+    public static final String V1_1_0 = "v1.1.0";
+    public static final String V1_2_0 = "v1.2.0";
+    public static final List<String> TAG_LIST = List.of(V1_0_0, V1_1_0, V1_2_0);
 
     public static EntandoDeBundle stubEntandoDeBundle() {
         ObjectMeta metadata = new ObjectMeta();

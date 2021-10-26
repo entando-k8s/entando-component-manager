@@ -46,22 +46,9 @@ class EntandoBundleResourceControllerTest {
         controller = new EntandoBundleResourceController(bundleService, null);
     }
 
-    @Test
-    void shouldReturnTheExpectedResponseWhenSuccessfullyDeployedAnEntandoDeBundle() {
-        // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with an OK
-        final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        final EntandoBundle bundle = TestEntitiesGenerator.getTestEntandoBundle();
-        when(bundleService.deployDeBundle(any())).thenReturn(bundle);
-
-        // when the user sends the request
-        final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.deployBundle(deBundle);
-
-        // then the expected response in returned
-        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
-    }
 
     @Test
-    void shouldReturnTheExpectedResponseWhenUnseccessfullyDeployedAnEntandoDeBundle() {
+    void shouldReturnTheExpectedResponseWhenUnseccessfullyDeployAnEntandoDeBundle() {
 
         // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with a KO
         when(bundleService.deployDeBundle(any())).thenThrow(new KubernetesClientException("error"));
@@ -69,8 +56,20 @@ class EntandoBundleResourceControllerTest {
 
         // when the user sends the request
         // then a KubernetesClientException is thrown
-        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(entandoDeBundle));
+        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(null));
     }
+
+    /*@Test
+    void shouldReturnTheExpectedResponseWhenUnseccessfullyDeployAnEntandoDeBundle() {
+
+        // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with a KO
+        when(bundleService.deployDeBundle(any())).thenThrow(new KubernetesClientException("error"));
+        final EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
+
+        // when the user sends the request
+        // then a KubernetesClientException is thrown
+        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(null));
+    }*/
 
     @Test
     void shouldReturnEmptyArrayWhenReceivingEmptyOrNullParamList() {

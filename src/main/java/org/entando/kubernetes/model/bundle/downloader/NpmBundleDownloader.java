@@ -8,15 +8,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.job.JobPackageException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.springframework.core.io.Resource;
@@ -38,6 +41,16 @@ public class NpmBundleDownloader extends BundleDownloader {
         } catch (IOException e) {
             throw new BundleDownloaderException(e);
         }
+    }
+
+    @Override
+    protected Path saveBundleStrategy(URL url, Path targetPath) {
+        throw new EntandoComponentManagerException("Not yet implemented");
+    }
+
+    @Override
+    public List<String> fetchRemoteTags(URL repoUrl) {
+        throw new EntandoComponentManagerException("Not yet implemented");
     }
 
     private TarArchiveInputStream getGzipTarInputStream(Path p) {
