@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESPACE;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -17,12 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.entando.kubernetes.TestEntitiesGenerator;
-import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
-import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
-import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -43,6 +40,7 @@ import org.entando.kubernetes.service.digitalexchange.component.BundleStatusHelp
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -444,5 +442,46 @@ public class EntandoBundleServiceTest {
                 BundleStatusItemStubHelper.stubBundleStatusItemNotFound(),
                 BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
         assertThat(bundlesStatusResult.getBundlesStatuses()).containsExactlyElementsOf(expectedList);
+    }
+
+    @Test
+    void getBundleByRepoUrl_withInvalidUrl_shouldThrowException() {
+        assertThrows(IllegalArgumentException.class, () -> service.getBundleByRepoUrl("invalid_url"));
+    }
+
+    @Test
+    void getBundleByRepoUrl_withValidUrlAndInstalledBundle_shouldReturnInstalledBundle() {
+
+        final EntandoBundleEntity bundleEntity = getTestComponent();
+        when(installedComponentRepository.findFirstByRepoUrl(
+                eq(ValidationFunctions.composeUrlOrThrow(TestEntitiesGenerator.REPO_URL, "null URL",
+                        "invalid URL")))).thenReturn(Optional.of(bundleEntity));
+        Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
+                "aHR0cHM6Ly9naXRodWIuY29tL2ZpcmVnbG92ZXMtYnVuZGxlcy94bWFzYnVuZGxlLmdpdA");
+
+        assertThat(entandoBundle.isPresent());
+    }
+
+    @Test
+    void getBundleByRepoUrl_withValidUrlAndAvailableBundle_shouldReturnAvailableBundle() {
+
+        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        k8SServiceClient.addInMemoryBundle(bundle);
+
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.empty());
+        Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
+                "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK");
+
+        assertThat(entandoBundle.isPresent());
+    }
+
+    @Test
+    void getBundleByRepoUrl_withValidUrlAndNoBundles_shouldReturnEmptyBundle() {
+
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.empty());
+        Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
+                "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK");
+
+        assertThat(entandoBundle.isEmpty());
     }
 }

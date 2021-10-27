@@ -2,6 +2,7 @@ package org.entando.kubernetes.repository;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,6 @@ public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoB
     void deleteById(String id);
 
     List<EntandoBundleEntity> findAllByRepoUrlIn(List<URL> repoUrls);
+
+    Optional<EntandoBundleEntity> findFirstByRepoUrl(URL repoUrl);
 }

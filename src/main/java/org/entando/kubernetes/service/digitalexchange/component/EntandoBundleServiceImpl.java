@@ -56,6 +56,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 @Service
@@ -384,24 +385,32 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         return convertToBundleFromEcr(deployedBundle);
     }
 
+    /**
+     * .
+     * <p>
+     * Returns an {@link EntandoBundle} by looking up inside installed and available components, in this order.
+     * </p>
+     *
+     * @param encodedRepoUrl BASE64 encoded repo URL
+     * @return
+     */
     @Override
-    public Optional<EntandoBundle> getBundleByRepoUrl(String repoUrl) {
+    public Optional<EntandoBundle> getBundleByRepoUrl(String encodedRepoUrl) {
+
+        Assert.notNull(encodedRepoUrl, "repoUrl cannot be null");
 
         // repoUrl should be decoded from BASE64
-        final String decodedRepoUrlString = new String(Base64.getDecoder().decode(repoUrl));
-        try {
-            final URL decodedRepoUrl = new URL(decodedRepoUrlString);
-            // Check in installed bundles
-            List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAllByRepoUrlIn(List.of(decodedRepoUrl));
-            if (!CollectionUtils.isEmpty(installedBundles)) {
-                return Optional.of(convertToBundleFromEntity(installedBundles.get(0)));
-            } else {
-                // Check in available bundles
-                List<EntandoBundle> availableBundles = listBundlesFromEcr();
-                return availableBundles.stream().filter(eb -> eb.getRepoUrl().equals(decodedRepoUrlString)).findFirst();
-            }
-        } catch (MalformedURLException e) {
-            throw new EntandoComponentManagerException("Bad repoUrl specified: " + decodedRepoUrlString);
-        }
+        final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedRepoUrl));
+
+        final URL decodedRepoUrl = ValidationFunctions.composeUrlOrThrow(decodedRepoUrlString, "Repo url is empty",
+                "Repo url is not valid");
+
+        // Check in installed bundles
+        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);
+        return installedBundle.map(this::convertToBundleFromEntity).or(() -> {
+            // Check in available bundles
+            List<EntandoBundle> availableBundles = listBundlesFromEcr();
+            return availableBundles.stream().filter(eb -> eb.getRepoUrl().equals(decodedRepoUrlString)).findFirst();
+        });
     }
 }

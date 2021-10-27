@@ -1,5 +1,6 @@
 package org.entando.kubernetes;
 
+import java.net.URL;
 import java.util.UUID;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -10,12 +11,14 @@ import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
+import org.entando.kubernetes.validator.ValidationFunctions;
 
 public class TestEntitiesGenerator {
 
     public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
     public static final String LATEST_VERSION = "0.0.15";
     public static final String BUNDLE_TARBALL_URL = "http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz";
+    public static final String REPO_URL = "https://github.com/firegloves-bundles/xmasbundle.git";
 
     public static EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
@@ -72,6 +75,7 @@ public class TestEntitiesGenerator {
         EntandoBundleEntity component = new EntandoBundleEntity();
         component.setId("my-bundle");
         component.setName("My Bundle Title");
+        component.setRepoUrl(ValidationFunctions.composeUrlOrThrow(REPO_URL, "Null URL", "Not valid URL"));
         component.setInstalled(true);
         component.setJob(getTestJobEntity());
         return component;
