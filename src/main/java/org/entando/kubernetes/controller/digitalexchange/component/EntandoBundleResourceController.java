@@ -121,7 +121,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
                 Problem.valueOf(Status.BAD_REQUEST, "Can't manage a request with id: " + id));
 
         Optional<EntandoBundle> entandoBundle = bundleService.getBundleByRepoUrl(repoUrl);
-        if(entandoBundle.isPresent()) {
+        if (entandoBundle.isPresent()) {
             return ResponseEntity.ok(new SimpleRestResponse<>(entandoBundle.get()));
         } else {
             return new ResponseEntity<>(new SimpleRestResponse<>(new EntandoBundle()), HttpStatus.NOT_FOUND);

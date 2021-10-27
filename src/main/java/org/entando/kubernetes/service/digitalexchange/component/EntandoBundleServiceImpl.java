@@ -393,7 +393,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
             final URL decodedRepoUrl = new URL(decodedRepoUrlString);
             // Check in installed bundles
             List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAllByRepoUrlIn(List.of(decodedRepoUrl));
-            if(!CollectionUtils.isEmpty(installedBundles)) {
+            if (!CollectionUtils.isEmpty(installedBundles)) {
                 return Optional.of(convertToBundleFromEntity(installedBundles.get(0)));
             } else {
                 // Check in available bundles

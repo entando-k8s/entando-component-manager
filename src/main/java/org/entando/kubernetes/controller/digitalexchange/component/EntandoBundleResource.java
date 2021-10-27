@@ -45,7 +45,7 @@ public interface EntandoBundleResource {
     @Operation(description = "Returns a single Digital Exchange component")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(@PathVariable RestNamedId RestNamedId);
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(@PathVariable RestNamedId restNamedId);
 
     @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
     @ApiResponse(responseCode = "200", description = "OK")
