@@ -14,9 +14,11 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -54,6 +56,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @Slf4j
@@ -244,7 +247,6 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         return new BundlesStatusResult(bundleStatusList);
     }
 
-
     @Override
     public EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle) {
         return EntandoBundleEntity.builder()
@@ -380,5 +382,26 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
         EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
         return convertToBundleFromEcr(deployedBundle);
+    }
+
+    @Override
+    public Optional<EntandoBundle> getBundleByRepoUrl(String repoUrl) {
+
+        // repoUrl should be decoded from BASE64
+        final String decodedRepoUrlString = new String(Base64.getDecoder().decode(repoUrl));
+        try {
+            final URL decodedRepoUrl = new URL(decodedRepoUrlString);
+            // Check in installed bundles
+            List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAllByRepoUrlIn(List.of(decodedRepoUrl));
+            if(!CollectionUtils.isEmpty(installedBundles)) {
+                return Optional.of(convertToBundleFromEntity(installedBundles.get(0)));
+            } else {
+                // Check in available bundles
+                List<EntandoBundle> availableBundles = listBundlesFromEcr();
+                return availableBundles.stream().filter(eb -> eb.getRepoUrl().equals(decodedRepoUrlString)).findFirst();
+            }
+        } catch (MalformedURLException e) {
+            throw new EntandoComponentManagerException("Bad repoUrl specified: " + decodedRepoUrlString);
+        }
     }
 }

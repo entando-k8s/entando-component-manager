@@ -10,9 +10,16 @@
 This service serves as an abstraction layer for using Digital-exchange functionalities.
 EntandoDeBundles served in the cluster can be installed in an EntandoApp using this service. This service relies on the Entando K8S service for interaction with the K8S cluster
 
-## Install
+## How to run locally
 
-You'll need a Kubernetes cluster running, configure the environments described down below and execute the project.
+### Prerequisites
+You'll need an Entando cluster already running
+
+### Steps
+
+- Rename `application-dev.properties.template` to `application-dev.properties` and change relevant properties
+- Fetch k8s JWT token from the cluster running instance inside `/var/run/secrets/kubernetes.io/serviceaccount/token` and place it locally in the same path or eventually set the environment variable SERVICE_ACCOUNT_TOKEN_PATH
+- Start Spring application with `dev` profile
 
 ## Environment Variables
 | Env variable                                                  | Description                                                                                                   |

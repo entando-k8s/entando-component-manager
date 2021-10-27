@@ -47,4 +47,6 @@ public interface EntandoBundleService {
     EntandoBundle deployDeBundle(EntandoDeBundle entandoDeBundle);
 
     BundlesStatusResult getBundlesStatus(List<URL> bundlesUrlList);
+
+    Optional<EntandoBundle> getBundleByRepoUrl(String repoUrl);
 }

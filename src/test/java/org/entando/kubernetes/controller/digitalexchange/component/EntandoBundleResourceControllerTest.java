@@ -3,18 +3,20 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
-import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
+import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
@@ -25,8 +27,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.zalando.problem.DefaultProblem;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -118,7 +122,7 @@ class EntandoBundleResourceControllerTest {
     }
 
     @Test
-    void shouldReturnTheExpectedBundleStatusResultMixingValidAndIvalidUrls() {
+    void shouldReturnTheExpectedBundleStatusResultMixingValidAndInvalidUrls() {
 
         // given that the bundle service return a BundlesStatusResult with 2 elements
         final BundlesStatusResult bundlesStatusResult = new BundlesStatusResult().setBundlesStatuses(
@@ -141,5 +145,24 @@ class EntandoBundleResourceControllerTest {
                 BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed(),
                 BundleStatusItemStubHelper.stubBundleStatusItemInvalidRepoUrl()));
         assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    void getBundleByRestNamedId_withRepoUrlNamedParam_shouldReturnABundle() {
+
+        String base64EncodedRepoUrl = "aHR0cHM6Ly9naXRodWIuY29tL2ZpcmVnbG92ZXMtYnVuZGxlcy94bWFzYnVuZGxlLmdpdCc";
+        final RestNamedId id = RestNamedId.of("repoUrl",
+                base64EncodedRepoUrl);
+        final EntandoBundle bundle = TestEntitiesGenerator.getTestEntandoBundle();
+        when(
+                bundleService.getBundleByRepoUrl(eq(base64EncodedRepoUrl))).thenReturn(
+                Optional.ofNullable(bundle));
+        final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.getBundleByRestNamedId(id);
+        assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(bundle);
+    }
+
+    @Test
+    void getBundleByRestNamedId_withInvalidResourceId_shouldThrowException() {
+        assertThrows(DefaultProblem.class, () -> controller.getBundleByRestNamedId(RestNamedId.from("abc")));
     }
 }

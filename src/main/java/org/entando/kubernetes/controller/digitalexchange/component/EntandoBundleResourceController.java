@@ -17,6 +17,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
+import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
@@ -36,11 +38,14 @@ import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.validator.ValidationFunctions;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.zalando.problem.Problem;
+import org.zalando.problem.Status;
 
 @Slf4j
 @RestController
@@ -49,6 +54,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
     private final EntandoBundleService bundleService;
     private final EntandoBundleComponentUsageService usageService;
+    private static final String REPO_URL_PATH_PARAM = "repoUrl";
 
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
@@ -106,5 +112,19 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
         }
 
         return ResponseEntity.ok(new SimpleRestResponse<>(bundlesStatusResult));
+    }
+
+    @Override
+    public ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(RestNamedId id) {
+
+        final String repoUrl = id.getValidValue(REPO_URL_PATH_PARAM).orElseThrow(() ->
+                Problem.valueOf(Status.BAD_REQUEST, "Can't manage a request with id: " + id));
+
+        Optional<EntandoBundle> entandoBundle = bundleService.getBundleByRepoUrl(repoUrl);
+        if(entandoBundle.isPresent()) {
+            return ResponseEntity.ok(new SimpleRestResponse<>(entandoBundle.get()));
+        } else {
+            return new ResponseEntity<>(new SimpleRestResponse<>(new EntandoBundle()), HttpStatus.NOT_FOUND);
+        }
     }
 }
