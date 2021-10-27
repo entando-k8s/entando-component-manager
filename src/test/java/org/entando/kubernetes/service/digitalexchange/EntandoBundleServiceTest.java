@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESPACE;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,8 +17,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.entando.kubernetes.TestEntitiesGenerator;
+import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -453,7 +456,7 @@ public class EntandoBundleServiceTest {
     void getBundleByRepoUrl_withValidUrlAndInstalledBundle_shouldReturnInstalledBundle() {
 
         final EntandoBundleEntity bundleEntity = getTestComponent();
-        when(installedComponentRepository.findFirstByRepoUrl(
+        when(installedComponentRepository.findFirstByRepoUrlWithUrl(
                 eq(ValidationFunctions.composeUrlOrThrow(TestEntitiesGenerator.REPO_URL, "null URL",
                         "invalid URL")))).thenReturn(Optional.of(bundleEntity));
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(

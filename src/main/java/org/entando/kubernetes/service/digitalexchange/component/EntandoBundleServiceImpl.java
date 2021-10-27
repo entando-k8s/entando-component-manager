@@ -14,7 +14,6 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -54,10 +53,11 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
+
 
 @Service
 @Slf4j
@@ -234,7 +234,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public BundlesStatusResult getBundlesStatus(List<URL> repoUrlList) {
 
-        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlIn(repoUrlList);
+        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlInWithURLs(repoUrlList);
 
         List<EntandoBundle> deployedBundles = listBundlesFromEcr();
         List<EntandoBundleEntity> installedButNotDeployed = filterInstalledButNotAvailableOnEcr(deployedBundles,
@@ -262,7 +262,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .version(bundle.isInstalled() ? bundle.getInstalledJob().getComponentVersion() : null)
                 .lastUpdate(bundle.isInstalled()
                         ? Date.from(bundle.getInstalledJob().getFinishedAt().atZone(ZoneOffset.UTC).toInstant()) : null)
-                .repoUrl(bundle.getRepoUrlAsURL())
+                .repoUrl(bundle.getRepoUrl())
                 .build();
     }
 
@@ -406,7 +406,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 "Repo url is not valid");
 
         // Check in installed bundles
-        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);
+        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrlWithUrl(decodedRepoUrl);
         return installedBundle.map(this::convertToBundleFromEntity).or(() -> {
             // Check in available bundles
             List<EntandoBundle> availableBundles = listBundlesFromEcr();

@@ -102,5 +102,5 @@ public class EntandoBundleEntity {
     private Map<String, String> metadata;
 
     @Column(name = "repo_url")
-    private URL repoUrl;
+    private String repoUrl;
 }

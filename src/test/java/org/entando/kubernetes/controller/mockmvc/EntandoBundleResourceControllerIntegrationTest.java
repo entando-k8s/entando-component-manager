@@ -217,7 +217,7 @@ class EntandoBundleResourceControllerIntegrationTest {
         installedBundleEntity.setVersion("v1.2.0");
         installedBundleEntity.setJob(job);
         installedBundleEntity.setType(Set.of("widget", "plugin", "bundle"));
-        installedBundleEntity.setRepoUrl(new URL(TestEntitiesGenerator.BUNDLE_TARBALL_URL));
+        installedBundleEntity.setRepoUrl(TestEntitiesGenerator.BUNDLE_TARBALL_URL);
         // TODO configure installed bundle in db
 
         final EntandoDeBundle deployedBundle = TestEntitiesGenerator.getTestBundle();
@@ -225,13 +225,13 @@ class EntandoBundleResourceControllerIntegrationTest {
         kc.addInMemoryBundle(deployedBundle);
 
         EntandoBundleEntity installedNotDeployedBundleEntity = TestEntitiesGenerator.getTestComponent()
-                .setRepoUrl(new URL(installedNotDeployedRepoUrl));
+                .setRepoUrl(installedNotDeployedRepoUrl);
         installedNotDeployedBundleEntity.setId("inst_not_dep");
         installedNotDeployedBundleEntity.setBundleType(BundleType.STANDARD_BUNDLE.getType());
         installedNotDeployedBundleEntity.setVersion("v1.1.0");
         installedNotDeployedBundleEntity.setJob(job);
         installedNotDeployedBundleEntity.setType(Set.of("widget", "plugin", "bundle"));
-        installedNotDeployedBundleEntity.setRepoUrl(new URL(installedNotDeployedRepoUrl));
+        installedNotDeployedBundleEntity.setRepoUrl(installedNotDeployedRepoUrl);
 
         bundleEntityRepository.saveAll(List.of(installedBundleEntity, installedNotDeployedBundleEntity));
     }

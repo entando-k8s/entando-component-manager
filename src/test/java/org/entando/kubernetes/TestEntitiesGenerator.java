@@ -75,7 +75,7 @@ public class TestEntitiesGenerator {
         EntandoBundleEntity component = new EntandoBundleEntity();
         component.setId("my-bundle");
         component.setName("My Bundle Title");
-        component.setRepoUrl(ValidationFunctions.composeUrlOrThrow(REPO_URL, "Null URL", "Not valid URL"));
+        component.setRepoUrl(REPO_URL);
         component.setInstalled(true);
         component.setJob(getTestJobEntity());
         return component;
