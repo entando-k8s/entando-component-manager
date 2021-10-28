@@ -86,7 +86,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
     @Override
     @PostMapping(value = "/status/query", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatus(
+    public ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatusByRepoUrl(
             BundlesStatusQuery bundlesStatusQuery) {
 
         if (bundlesStatusQuery == null || ObjectUtils.isEmpty(bundlesStatusQuery.getIds())) {
@@ -113,6 +113,18 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
         }
 
         return ResponseEntity.ok(new SimpleRestResponse<>(bundlesStatusResult));
+    }
+
+    @Override
+    public ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(String name) {
+
+        if (ObjectUtils.isEmpty(name)) {
+            return ResponseEntity.ok(new SimpleRestResponse<>(new BundlesStatusItem()));
+        }
+
+        BundlesStatusItem bundlesStatusItem = bundleService.getSingleBundleStatus(name);
+
+        return ResponseEntity.ok(new SimpleRestResponse<>(bundlesStatusItem));
     }
 
     @Override

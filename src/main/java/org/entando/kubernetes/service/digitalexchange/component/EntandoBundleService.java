@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -48,6 +49,8 @@ public interface EntandoBundleService {
     EntandoBundle deployDeBundle(BundleInfo bundleInfo);
 
     BundlesStatusResult getBundlesStatus(List<URL> bundlesUrlList);
+
+    BundlesStatusItem getSingleBundleStatus(String bundleName);
 
     Optional<EntandoBundle> getBundleByRepoUrl(String repoUrl);
 }

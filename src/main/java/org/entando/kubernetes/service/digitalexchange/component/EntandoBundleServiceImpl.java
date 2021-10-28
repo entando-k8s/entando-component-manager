@@ -253,6 +253,19 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
+    public BundlesStatusItem getSingleBundleStatus(String bundleName) {
+
+        final List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByName(bundleName);
+
+        List<EntandoBundle> deployedBundles = listBundlesFromEcr();
+        List<EntandoBundleEntity> installedButNotDeployed = filterInstalledButNotAvailableOnEcr(deployedBundles,
+                installedBundleEntities);
+
+        return bundleStatusHelper.composeBundleStatusItemByName(bundleName, installedBundleEntities, deployedBundles,
+                        installedButNotDeployed);
+    }
+
+    @Override
     public EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle) {
         return EntandoBundleEntity.builder()
                 .id(bundle.getCode())

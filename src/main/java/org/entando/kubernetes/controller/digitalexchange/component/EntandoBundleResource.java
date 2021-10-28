@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
@@ -62,6 +63,11 @@ public interface EntandoBundleResource {
     @Operation(description = "Return the status of the available bundles")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(value = "/status/query", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatus(
+    ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatusByRepoUrl(
             @RequestBody BundlesStatusQuery bundlesStatusQuery);
+
+    @Operation(description = "Return the status of a single bundle")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @GetMapping(value = "/status/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String name);
 }

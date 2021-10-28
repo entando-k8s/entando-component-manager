@@ -74,11 +74,11 @@ class EntandoBundleResourceControllerTest {
     @Test
     void shouldReturnEmptyArrayWhenReceivingEmptyOrNullParamList() {
 
-        ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatus(null);
+        ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatusByRepoUrl(null);
         SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
 
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery();
-        response = controller.getBundlesStatus(bundlesStatusQuery);
+        response = controller.getBundlesStatusByRepoUrl(bundlesStatusQuery);
         SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
     }
 
@@ -91,7 +91,7 @@ class EntandoBundleResourceControllerTest {
         // when that the user requests for an invalid url
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
                 List.of(BundleStatusItemStubHelper.ID_INVALID_REPO_URL));
-        final ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatus(
+        final ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatusByRepoUrl(
                 bundlesStatusQuery);
 
         // then the successful response contains only an invalid url bundle status item
@@ -112,7 +112,7 @@ class EntandoBundleResourceControllerTest {
         // when that the user requests for the relative bundles status
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
                 List.of(BundleStatusItemStubHelper.ID_INSTALLED, BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED));
-        final ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatus(
+        final ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatusByRepoUrl(
                 bundlesStatusQuery);
 
         // then the successful response contains the expected bundle status items
@@ -134,7 +134,7 @@ class EntandoBundleResourceControllerTest {
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
                 List.of(BundleStatusItemStubHelper.ID_INVALID_REPO_URL,
                         BundleStatusItemStubHelper.ID_INSTALLED, BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED));
-        final ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatus(
+        final ResponseEntity<SimpleRestResponse<BundlesStatusResult>> response = controller.getBundlesStatusByRepoUrl(
                 bundlesStatusQuery);
 
         // then the successful response contains the expected bundle status items and the invalid url one

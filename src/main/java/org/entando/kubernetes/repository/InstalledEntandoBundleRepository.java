@@ -31,4 +31,7 @@ public interface InstalledEntandoBundleRepository extends JpaRepository<EntandoB
     default Optional<EntandoBundleEntity> findFirstByRepoUrlWithUrl(URL repoUrl) {
         return findFirstByRepoUrl(repoUrl.toString());
     }
+
+    @Transactional
+    List<EntandoBundleEntity> findAllByName(String name);
 }
