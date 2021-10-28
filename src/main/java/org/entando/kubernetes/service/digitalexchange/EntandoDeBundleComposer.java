@@ -1,5 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange;
 
+import com.github.zafarkhaja.semver.Version;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -7,7 +8,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import liquibase.pro.packaged.E;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -27,6 +31,7 @@ import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class EntandoDeBundleComposer {
 
@@ -92,6 +97,9 @@ public class EntandoDeBundleComposer {
             URL bundleUrl, BundleInfo bundleInfo) {
 
         final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleUrl);
+        final List<String> versionList = deBundleTags.stream()
+                .map(EntandoDeBundleTag::getVersion)
+                .collect(Collectors.toList());
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
@@ -103,7 +111,7 @@ public class EntandoDeBundleComposer {
                 .withName(bundleDescriptor.getCode())
                 .withDescription(bundleDescriptor.getDescription())
                 .addNewDistTag(BundleUtilities.LATEST_VERSION, getLatestSemverVersion(deBundleTags))
-                .withVersions(tagList)
+                .withVersions(versionList)
                 .withThumbnail(bundleInfo.getDescriptionImage())
                 // TODO add thumbnail
                 .endDetails()
@@ -173,8 +181,17 @@ public class EntandoDeBundleComposer {
     private List<EntandoDeBundleTag> createTagsFrom(List<String> tagList, URL bundleUrl) {
 
         return tagList.stream()
-                .map(tag -> new EntandoDeBundleTagBuilder()
-                        .withVersion(tag)
+                .map(tag -> {
+                    try {
+                        return new EntandoBundleVersion().setVersion(tag);
+                    } catch (Exception e) {
+                        log.error("Tag {} is not semver compliant. Ignoring it.", tag);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .map(semver -> new EntandoDeBundleTagBuilder()
+                        .withVersion(semver.getVersion())
                         .withTarball(bundleUrl.toString())
                         .build())
                 .collect(Collectors.toList());
