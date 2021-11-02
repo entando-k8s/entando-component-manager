@@ -28,7 +28,6 @@ public class BundleStatusItemStubHelper {
     public static final String INSTALLED_VERSION_NOT_FOUND = null;
 
     public static final String ID_INVALID_REPO_URL = "http://   invalid_repo_url.git";
-    public static final String NAME_INVALID_REPO_URL = "invalidBundle";
     public static final BundleStatus STATUS_INVALID_REPO_URL = BundleStatus.INVALID_REPO_URL;
     public static final String INSTALLED_VERSION_INVALID_REPO_URL = null;
 
@@ -77,7 +76,6 @@ public class BundleStatusItemStubHelper {
     public static BundlesStatusItem stubBundleStatusItemInvalidRepoUrl() {
         return new BundlesStatusItem()
                 .setId(ID_INVALID_REPO_URL)
-                .setName(NAME_INVALID_REPO_URL)
                 .setStatus(STATUS_INVALID_REPO_URL)
                 .setInstalledVersion(INSTALLED_VERSION_INVALID_REPO_URL);
     }

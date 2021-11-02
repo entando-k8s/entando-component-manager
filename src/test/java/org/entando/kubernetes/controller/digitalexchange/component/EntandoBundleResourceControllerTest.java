@@ -13,14 +13,15 @@ import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -28,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.zalando.problem.DefaultProblem;
@@ -49,28 +49,31 @@ class EntandoBundleResourceControllerTest {
 
 
     @Test
-    void shouldReturnTheExpectedResponseWhenUnseccessfullyDeployAnEntandoDeBundle() {
+    void shouldReturnTheExpectedResponseWhenUnsuccessfullyDeployAnEntandoDeBundle() {
 
         // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with a KO
         when(bundleService.deployDeBundle(any())).thenThrow(new KubernetesClientException("error"));
-        final EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
 
         // when the user sends the request
         // then a KubernetesClientException is thrown
         assertThrows(KubernetesClientException.class, () -> controller.deployBundle(null));
     }
 
-    /*@Test
-    void shouldReturnTheExpectedResponseWhenUnseccessfullyDeployAnEntandoDeBundle() {
+    @Test
+    void shouldReturnTheExpectedResponseWhenSuccessfullyDeployAnEntandoDeBundle() {
 
-        // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with a KO
-        when(bundleService.deployDeBundle(any())).thenThrow(new KubernetesClientException("error"));
-        final EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
+        // given that the user wants to deploy a new EntandoDeBundle and that the k8s service answer with an OK
+        final EntandoBundle expected = TestEntitiesGenerator.getTestEntandoBundle();
+        when(bundleService.deployDeBundle(any())).thenReturn(expected);
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
 
         // when the user sends the request
-        // then a KubernetesClientException is thrown
-        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(null));
-    }*/
+        final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.deployBundle(bundleInfo);
+
+        // then the expected EntandoBundle is returned
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
+        assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(expected);
+    }
 
     @Test
     void shouldReturnEmptyArrayWhenReceivingEmptyOrNullParamList() {
@@ -172,7 +175,7 @@ class EntandoBundleResourceControllerTest {
                 base64EncodedRepoUrl);
         final EntandoBundle bundle = TestEntitiesGenerator.getTestEntandoBundle();
         when(
-                bundleService.getBundleByRepoUrl(eq(base64EncodedRepoUrl))).thenReturn(
+                bundleService.getBundleByRepoUrl(base64EncodedRepoUrl)).thenReturn(
                 Optional.ofNullable(bundle));
         final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.getBundleByRestNamedId(id);
         assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(bundle);
@@ -180,6 +183,7 @@ class EntandoBundleResourceControllerTest {
 
     @Test
     void getBundleByRestNamedId_withInvalidResourceId_shouldThrowException() {
-        assertThrows(DefaultProblem.class, () -> controller.getBundleByRestNamedId(RestNamedId.from("abc")));
+        final RestNamedId id = RestNamedId.from("abc");
+        assertThrows(DefaultProblem.class, () -> controller.getBundleByRestNamedId(id));
     }
 }

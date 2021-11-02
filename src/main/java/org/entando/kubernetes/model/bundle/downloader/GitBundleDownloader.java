@@ -14,7 +14,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 public class GitBundleDownloader extends BundleDownloader {
 
-    private final String errorWhileFetchingTags = "An error occurred while fetching git repo tags";
+    private static final String ERROR_WHILE_CLONING_REPO = "An error occurred while cloning git repo";
+    private static final String ERROR_WHILE_FETCHING_TAGS = "An error occurred while fetching git repo tags";
 
     @Override
     protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
@@ -23,10 +24,10 @@ public class GitBundleDownloader extends BundleDownloader {
             cloneUsingCliImplementation(tag, targetPath);
             return targetPath;
         } catch (IOException e) {
-            throw new BundleDownloaderException("An error occurred while cloning git repo", e);
+            throw new BundleDownloaderException(ERROR_WHILE_CLONING_REPO, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BundleDownloaderException("An error occurred while cloning git repo", e);
+            throw new BundleDownloaderException(ERROR_WHILE_CLONING_REPO, e);
         }
     }
 
@@ -45,10 +46,10 @@ public class GitBundleDownloader extends BundleDownloader {
             }
             return targetPath;
         } catch (IOException e) {
-            throw new BundleDownloaderException("An error occurred while cloning git repo", e);
+            throw new BundleDownloaderException(ERROR_WHILE_CLONING_REPO, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BundleDownloaderException("An error occurred while cloning git repo", e);
+            throw new BundleDownloaderException(ERROR_WHILE_CLONING_REPO, e);
         }
     }
 
@@ -79,13 +80,13 @@ public class GitBundleDownloader extends BundleDownloader {
         try {
             process = execGitCommands(gitCommand, false);
             if (process.waitFor() != 0) {
-                throw new BundleDownloaderException(errorWhileFetchingTags);
+                throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS);
             }
         } catch (IOException e) {
-            throw new BundleDownloaderException(errorWhileFetchingTags, e);
+            throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BundleDownloaderException(errorWhileFetchingTags, e);
+            throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS, e);
         }
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

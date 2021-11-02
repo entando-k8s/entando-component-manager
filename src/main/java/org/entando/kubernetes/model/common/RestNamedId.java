@@ -87,7 +87,7 @@ public class RestNamedId implements Serializable {
      * . Name validation check. Tells if the object name equals the one provided
      */
     @SuppressWarnings("PointlessNullCheck")
-    public boolean hasName(@NotNull String name) {
+    public boolean hasName(String name) {
         return (name != null && this.name.equals(name));
     }
 

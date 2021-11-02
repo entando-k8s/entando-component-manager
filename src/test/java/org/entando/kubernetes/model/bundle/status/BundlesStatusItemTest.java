@@ -12,6 +12,7 @@ class BundlesStatusItemTest {
 
         BundlesStatusItem item = new BundlesStatusItem()
                 .setId(BundleStatusItemStubHelper.ID_INSTALLED)
+                .setName(BundleStatusItemStubHelper.NAME_INSTALLED)
                 .setStatus(BundleStatusItemStubHelper.STATUS_INSTALLED)
                 .setInstalledVersion(BundleStatusItemStubHelper.INSTALLED_VERSION_INSTALLED);
 

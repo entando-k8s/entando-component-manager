@@ -17,8 +17,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.entando.kubernetes.TestEntitiesGenerator;
+import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.BundleInfo;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -38,6 +44,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.BundleStatusHelper;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.AfterEach;
@@ -45,6 +52,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.web.client.RestClientResponseException;
 
 @Tag("unit")
 public class EntandoBundleServiceTest {
@@ -405,19 +413,31 @@ public class EntandoBundleServiceTest {
         assertThat(entandoBundle.getLatestVersion().get().getVersion()).isEqualTo("0.0.5");
     }
 
-    /*@Test
+    @Test
     void shouldSuccessfullyDeployADeBundle() {
-        EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        final EntandoBundle bundle = service.deployDeBundle(null);
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
+        final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenReturn(deBundle);
+
+        final EntandoBundle bundle = service.deployDeBundle(bundleInfo);
         BundleAssertionHelper.assertOnBundleAndDeBundle(bundle, deBundle, BundleType.STANDARD_BUNDLE, null, null, null,
                 new EntandoBundleVersion().setVersion(TestEntitiesGenerator.LATEST_VERSION));
-        fail();
     }
 
     @Test
-    void shouldThrowExceptionWhenTryingToDeployANullDeBundle() {
-        assertThrows(InvalidBundleException.class, () -> service.deployDeBundle(null));
-    }*/
+    void shouldThrowExceptionWhenTheComposerThrowsIt() {
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenThrow(EntandoComponentManagerException.class);
+        assertThrows(EntandoComponentManagerException.class, () -> service.deployDeBundle(null));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTheK8sServiceClientThrowsIt() {
+        K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
+        service = new EntandoBundleServiceImpl(mockK8SServiceClient, availableDigitalExchanges, jobRepository,
+                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
+        when(mockK8SServiceClient.deployDeBundle(any())).thenThrow(RestClientResponseException.class);
+        assertThrows(RestClientResponseException.class, () -> service.deployDeBundle(null));
+    }
 
     @Test
     void shouldReturnTheExpectedBundlesStatusResult() throws MalformedURLException {
@@ -474,8 +494,8 @@ public class EntandoBundleServiceTest {
 
         final EntandoBundleEntity bundleEntity = getTestComponent();
         when(installedComponentRepository.findFirstByRepoUrlWithUrl(
-                eq(ValidationFunctions.composeUrlOrThrow(TestEntitiesGenerator.REPO_URL, "null URL",
-                        "invalid URL")))).thenReturn(Optional.of(bundleEntity));
+                ValidationFunctions.composeUrlOrThrow(TestEntitiesGenerator.REPO_URL, "null URL",
+                        "invalid URL"))).thenReturn(Optional.of(bundleEntity));
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
                 "aHR0cHM6Ly9naXRodWIuY29tL2ZpcmVnbG92ZXMtYnVuZGxlcy94bWFzYnVuZGxlLmdpdA");
 
@@ -490,9 +510,9 @@ public class EntandoBundleServiceTest {
 
         when(installedComponentRepository.findFirstByRepoUrlWithUrl(any())).thenReturn(Optional.empty());
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
-                "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK");
+                "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3o");
 
-        assertThat(entandoBundle.isPresent());
+        assertThat(entandoBundle).isPresent();
     }
 
     @Test
@@ -502,6 +522,6 @@ public class EntandoBundleServiceTest {
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
                 "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK");
 
-        assertThat(entandoBundle.isEmpty());
+        assertThat(entandoBundle).isEmpty();
     }
 }

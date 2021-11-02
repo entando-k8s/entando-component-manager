@@ -65,7 +65,7 @@ class EntandoDeBundleComposerTest {
 
         final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
         assertThat(details.getName()).isEqualTo("something");
-        assertThat(details.getDescription()).isNull();
+        assertThat(details.getDescription()).isEqualTo("bundle description");
 
         assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);
 

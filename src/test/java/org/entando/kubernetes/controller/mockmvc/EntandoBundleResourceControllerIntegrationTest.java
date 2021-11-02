@@ -12,12 +12,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.TestEntitiesGenerator;
+import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.assertionhelper.BundleStatusItemAssertionHelper;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
@@ -25,8 +24,11 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
 import org.entando.kubernetes.model.bundle.BundleType;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -36,7 +38,9 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.EntandoBundleJobStubHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,29 +114,63 @@ class EntandoBundleResourceControllerIntegrationTest {
         ((K8SServiceClientTestDouble) k8sServiceClient).cleanInMemoryDatabases();
     }
 
-    /*@Test
+    @Test
     void shouldCorrectlyDeployAnEntandoDeBundle() throws Exception {
 
-        final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
+        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
 
-        String payload = mapper.writeValueAsString(deBundle);
+        // when the user sends the request
+        String payload = mapper.writeValueAsString(bundleInfo);
+        final ResultActions resultActions = mockMvc.perform(post(componentsUrl)
+                        .content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk());
+
+        // then he receives success and the expected deployed EntandoBundle
+        EntandoBundleVersion latestVersion = new EntandoBundleVersion()
+                .setVersion(BundleStubHelper.V1_2_0);
+        EntandoBundle entandoBundle = new EntandoBundle()
+                .setCode("something")
+                .setTitle("something")
+                .setDescription("bundle description")
+                .setRepoUrl(BundleInfoStubHelper.GIT_REPO_ADDRESS)
+                .setBundleType(BundleType.STANDARD_BUNDLE)
+                .setThumbnail(BundleInfoStubHelper.DESCR_IMAGE)
+                .setComponentTypes(
+                        Set.of("widget", "contentTemplate", "pageTemplate", "language", "label", "content", "fragment",
+                                "plugin", "page", "category", "asset", "bundle", "contentType", "group"))
+                .setLatestVersion(latestVersion);
+
+        BundleAssertionHelper.assertOnEntandoBundle(resultActions, entandoBundle);
+    }
+
+    @Test
+    void shouldReturnErrorWhileDeployingBundleAndReceiveingEmptyOrNullRepoUrl() throws Exception {
+
+        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with an empty repoUrl
+        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
+                .setGitRepoAddress("");
+        // when the user sends the request
+        // then he receives 4xx status code
+        String payload = mapper.writeValueAsString(bundleInfo);
         mockMvc.perform(post(componentsUrl)
-                .content(payload)
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.code", is(deBundle.getMetadata().getName())))
-                .andExpect(jsonPath("$.payload.title", is(details.getName())))
-                .andExpect(jsonPath("$.payload.description", is(details.getDescription())))
-                .andExpect(jsonPath("$.payload.bundleType", is(BundleType.STANDARD_BUNDLE.getType())))
-                .andExpect(jsonPath("$.payload.thumbnail", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.componentTypes", hasSize(1)))
-                .andExpect(jsonPath("$.payload.componentTypes.[0]", is("bundle")))
-                .andExpect(jsonPath("$.payload.installedJob", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.lastJob", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.customInstallation", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.latestVersion.version", is("0.0.15")));
-    }*/
+                        .content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().is4xxClientError());
+
+
+        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with a null repoUrl
+        bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
+                .setGitRepoAddress(null);
+        // when the user sends the request
+        // then he receives 4xx status code
+        payload = mapper.writeValueAsString(bundleInfo);
+        mockMvc.perform(post(componentsUrl)
+                        .content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().is4xxClientError());
+    }
 
     @Test
     void shouldReturnEmptyArrayWhenReceivingAnEmptyListOfBundleIds() throws Exception {

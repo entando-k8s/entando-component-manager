@@ -107,7 +107,7 @@ public class BundleStatusHelper {
      * @param versionGetFn     the function to execute to find the value to assign to the version property of the
      *                         BundlesStatusItem to return if the repoUrl if found in the list
      * @return an Optional containing the BundlesStatusItem corresponding to the received params if the repoUrl is found
-     * in the receive list, an empty one otherwise
+     *          in the receive list, an empty one otherwise
      */
     private Optional<BundlesStatusItem> composeBundleStatusItem(Predicate<EntandoBundleEntity> filterPredicate,
             List<EntandoBundleEntity> bundleEntityList, BundleStatus bundleStatus,
@@ -131,7 +131,7 @@ public class BundleStatusHelper {
      * @param bundleStatus    the status to assign to the BundlesStatusItem to return if the repoUrl if found in the
      *                        list
      * @return an Optional containing the BundlesStatusItem corresponding to the received params if the repoUrl is found
-     * in the receive list, an empty one otherwise
+     *          in the receive list, an empty one otherwise
      */
     private Optional<BundlesStatusItem> composeBundleStatusItem(Predicate<EntandoBundle> filterPredicate,
             List<EntandoBundle> bundleList, BundleStatus bundleStatus) {
