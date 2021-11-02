@@ -1,6 +1,5 @@
 package org.entando.kubernetes;
 
-import java.net.URL;
 import java.util.UUID;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -11,19 +10,19 @@ import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
-import org.entando.kubernetes.validator.ValidationFunctions;
 
 public class TestEntitiesGenerator {
 
     public static final String DEFAULT_BUNDLE_NAMESPACE = "entando-de-bundles";
     public static final String LATEST_VERSION = "0.0.15";
+    public static final String BUNDLE_NAME = "my-bundle";
     public static final String BUNDLE_TARBALL_URL = "http://localhost:8081/repository/npm-internal/my-bundle/-/my-bundle-0.0.1.tgz";
     public static final String REPO_URL = "https://github.com/firegloves-bundles/xmasbundle.git";
 
     public static EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                .withName("my-bundle")
+                .withName(BUNDLE_NAME)
                 .withNamespace(DEFAULT_BUNDLE_NAMESPACE)
                 .endMetadata()
                 .withSpec(TestEntitiesGenerator.getTestEntandoDeBundleSpec()).build();
@@ -35,10 +34,14 @@ public class TestEntitiesGenerator {
     }
 
     public static EntandoDeBundleSpec getTestEntandoDeBundleSpec(String tarballUrl) {
+        return getTestEntandoDeBundleSpec(tarballUrl, BUNDLE_NAME);
+    }
+
+    public static EntandoDeBundleSpec getTestEntandoDeBundleSpec(String tarballUrl, String name) {
         return new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
                 .withDescription("A bundle containing some demo components for Entano6")
-                .withName("my-bundle")
+                .withName(name)
                 .addNewVersion("0.0.1")
                 .addNewKeyword("entando6")
                 .addNewKeyword("digital-exchange")

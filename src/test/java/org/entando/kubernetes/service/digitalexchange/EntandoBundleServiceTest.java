@@ -422,15 +422,15 @@ public class EntandoBundleServiceTest {
     @Test
     void shouldReturnTheExpectedBundlesStatusResult() throws MalformedURLException {
 
-        when(bundleStatusHelper.composeBundleStatusItem(
+        when(bundleStatusHelper.composeBundleStatusItemByURL(
                 eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed());
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED)),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_DEPLOYED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_DEPLOYED)),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_NOT_FOUND)),
-                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemNotFound());
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_NOT_FOUND)),
+                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemNotFoundByUrl());
 
         // given a list of bundle id (repo url)
         final List<URL> bundleIds = List.of(new URL(BundleStatusItemStubHelper.ID_INSTALLED),
@@ -443,9 +443,25 @@ public class EntandoBundleServiceTest {
         // then I expect to receive the correct list of bundle status item
         List<BundlesStatusItem> expectedList = List.of(BundleStatusItemStubHelper.stubBundleStatusItemInstalled(),
                 BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed(),
-                BundleStatusItemStubHelper.stubBundleStatusItemNotFound(),
+                BundleStatusItemStubHelper.stubBundleStatusItemNotFoundByUrl(),
                 BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
         assertThat(bundlesStatusResult.getBundlesStatuses()).containsExactlyElementsOf(expectedList);
+    }
+
+    @Test
+    void shouldReturnTheExpectedBundleItem() {
+
+        // given that the bundle status helper returns the correct bundle status item
+        when(bundleStatusHelper.composeBundleStatusItemByName(
+                eq(BundleStatusItemStubHelper.NAME_INSTALLED), any(), any(), any()))
+                .thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
+
+        // when I ask for their status
+        final BundlesStatusItem bundlesStatusItem = service.getSingleBundleStatus(BundleStatusItemStubHelper.NAME_INSTALLED);
+
+        // then I expect to receive the correct list of bundle status item
+        BundlesStatusItem expected = BundleStatusItemStubHelper.stubBundleStatusItemInstalled();
+        assertThat(bundlesStatusItem).isEqualToComparingFieldByField(expected);
     }
 
     @Test

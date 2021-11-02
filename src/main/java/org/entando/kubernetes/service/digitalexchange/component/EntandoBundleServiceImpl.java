@@ -245,8 +245,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 installedBundleEntities);
 
         final List<BundlesStatusItem> bundleStatusList = repoUrlList.stream()
-                .map(url -> bundleStatusHelper.composeBundleStatusItem(url, installedBundleEntities, deployedBundles,
-                        installedButNotDeployed))
+                .map(url -> bundleStatusHelper.composeBundleStatusItemByURL(url, installedBundleEntities,
+                        deployedBundles, installedButNotDeployed))
                 .collect(Collectors.toList());
 
         return new BundlesStatusResult(bundleStatusList);

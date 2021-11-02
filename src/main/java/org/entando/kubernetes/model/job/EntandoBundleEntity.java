@@ -15,7 +15,6 @@
 package org.entando.kubernetes.model.job;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import java.net.URL;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -101,6 +100,7 @@ public class EntandoBundleEntity {
     @Column(name = "metadata")
     private Map<String, String> metadata;
 
+    @Size(max = 511)
     @Column(name = "repo_url")
     private String repoUrl;
 }

@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
@@ -144,6 +145,23 @@ class EntandoBundleResourceControllerTest {
                 BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed(),
                 BundleStatusItemStubHelper.stubBundleStatusItemInvalidRepoUrl()));
         assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    void getSingleBundleStatusByNameShouldReturnTheExpectedBundle() {
+
+        // given that the bundle service return a BundlesStatusItem
+        final BundlesStatusItem bundlesStatusItem = BundleStatusItemStubHelper.stubBundleStatusItemInstalled();
+        when(bundleService.getSingleBundleStatus(bundlesStatusItem.getName())).thenReturn(bundlesStatusItem);
+
+        // when that the user requests for the relative bundle status
+        final ResponseEntity<SimpleRestResponse<BundlesStatusItem>> response = controller.getSingleBundleStatusByName(
+                BundleStatusItemStubHelper.NAME_INSTALLED);
+
+        // then the successful response contains the expected bundle status item
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
+        assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(
+                BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
     }
 
     @Test

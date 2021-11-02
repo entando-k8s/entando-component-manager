@@ -102,7 +102,8 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
                 repoUrlList.add(url);
             } catch (Exception e) {
                 log.error("Invalid URL received: {} - it will be skipped in the search", stringUrl);
-                invalidBundlesStatusItemList.add(new BundlesStatusItem(stringUrl, BundleStatus.INVALID_REPO_URL, null));
+                invalidBundlesStatusItemList.add(
+                        new BundlesStatusItem(stringUrl, null, BundleStatus.INVALID_REPO_URL, null));
             }
         }
 
