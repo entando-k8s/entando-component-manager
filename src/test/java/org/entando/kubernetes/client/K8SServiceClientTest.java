@@ -9,7 +9,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
@@ -35,12 +37,15 @@ import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
@@ -64,20 +69,6 @@ public class K8SServiceClientTest {
     private static final String SERVICE_ACCOUNT_TOKEN_FILEPATH = "src/test/resources/k8s-service-account-token";
     private static EntandoK8SServiceMockServer mockServer;
     private DefaultK8SServiceClient client;
-
-    private static Optional<Integer> findFreePort() {
-        Integer port = null;
-        try {
-            // Get a free port
-            ServerSocket s = new ServerSocket(0);
-            port = s.getLocalPort();
-            s.close();
-
-        } catch (IOException e) {
-            // No OPS
-        }
-        return Optional.ofNullable(port);
-    }
 
     @BeforeEach
     public void setup() {
@@ -359,6 +350,19 @@ public class K8SServiceClientTest {
         // then an exception is thrown
         assertThrows(KubernetesClientException.class, () -> client.deployDeBundle(expected));
     }
+
+    @Test
+    void shouldSuccessfullyUndeployADeBundle() {
+
+        // given that the k8s-service does not return error
+        mockServer.resetMappings();
+        mockServer.addUndeployDeBundle(mockServer.getInnerServer());
+
+        // when the ECR sends the request
+        // then no exception is throw
+        assertDoesNotThrow(() -> client.undeployDeBundle(BundleInfoStubHelper.NAME));
+    }
+
 
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();

@@ -31,6 +31,7 @@ import org.apache.commons.compress.utils.Sets;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
@@ -58,6 +59,7 @@ import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 
 @Service
@@ -397,6 +399,18 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo);
         EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
         return convertToBundleFromEcr(deployedBundle);
+    }
+
+    @Override
+    public String undeployDeBundle(String bundleName) {
+
+        if (ObjectUtils.isEmpty(bundleName)) {
+            throw new EntandoValidationException("Trying to undeploy a bundle using an empty name");
+        }
+
+        k8SServiceClient.undeployDeBundle(bundleName);
+
+        return bundleName;
     }
 
     /**

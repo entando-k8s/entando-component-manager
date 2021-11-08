@@ -5,22 +5,27 @@ import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESP
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.assertj.core.api.Java6Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
+import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
@@ -37,7 +42,9 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
@@ -52,6 +59,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientResponseException;
 
 @Tag("unit")
@@ -425,18 +434,37 @@ public class EntandoBundleServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenTheComposerThrowsIt() {
+    void shouldThrowExceptionWhileDeployingABundleAndTheComposerThrowsIt() {
         when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenThrow(EntandoComponentManagerException.class);
         assertThrows(EntandoComponentManagerException.class, () -> service.deployDeBundle(null));
     }
 
     @Test
-    void shouldThrowExceptionWhenTheK8sServiceClientThrowsIt() {
+    void shouldThrowExceptionWhileDeployingABundleAndTheK8sServiceClientThrowsIt() {
         K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
         service = new EntandoBundleServiceImpl(mockK8SServiceClient, availableDigitalExchanges, jobRepository,
                 componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
         when(mockK8SServiceClient.deployDeBundle(any())).thenThrow(RestClientResponseException.class);
         assertThrows(RestClientResponseException.class, () -> service.deployDeBundle(null));
+    }
+
+    @Test
+    void shouldSuccessfullyUndeployAnExistingEntandoDeBundleAndReturnItsName() {
+
+        // given that the k8s-service answer with a 200
+        // when trying to undeploy a bundle
+        final String deleteBundleName = service.undeployDeBundle(BundleInfoStubHelper.NAME);
+
+        // then the expected bundle name is returned
+        assertThat(deleteBundleName).isEqualTo(BundleInfoStubHelper.NAME);
+    }
+
+
+    @Test
+    void shouldThrowExceptionWhenEndeployingABundleWithAnEmptyOrNullName() {
+
+        assertThrows(EntandoValidationException.class, () -> service.undeployDeBundle(null));
+        assertThrows(EntandoValidationException.class, () -> service.undeployDeBundle(""));
     }
 
     @Test

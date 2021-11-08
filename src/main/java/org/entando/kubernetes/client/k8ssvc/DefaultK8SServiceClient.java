@@ -407,6 +407,22 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         }, logMessage);
     }
 
+    @Override
+    public void undeployDeBundle(String bundleName) {
+
+        if (ObjectUtils.isEmpty(bundleName)) {
+            throw new KubernetesClientException("Trying to delete an EntandoDeBundle using an empty name");
+        }
+
+        Link bundlesEndpoint = traverson.follow(BUNDLES_ENDPOINT).asLink();
+
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(bundlesEndpoint.toUri())
+                .pathSegment(bundleName)
+                .build();
+
+        restTemplate.delete(uriComponents.toUri());
+    }
+
     private Ingress getAppIngress(String appName) {
         return tryOrThrow(() -> traverson.follow(APPS_ENDPOINT)
                 .follow(Hop.rel("app").withParameter("name", appName))

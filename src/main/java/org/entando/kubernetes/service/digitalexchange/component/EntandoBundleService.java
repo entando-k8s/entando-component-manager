@@ -48,6 +48,8 @@ public interface EntandoBundleService {
 
     EntandoBundle deployDeBundle(BundleInfo bundleInfo);
 
+    String undeployDeBundle(String bundleName);
+
     BundlesStatusResult getBundlesStatus(List<URL> bundlesUrlList);
 
     BundlesStatusItem getSingleBundleStatus(String bundleName);

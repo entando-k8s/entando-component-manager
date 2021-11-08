@@ -2,6 +2,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -19,6 +20,7 @@ import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
@@ -74,6 +76,22 @@ class EntandoBundleResourceControllerTest {
         SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
         assertThat(response.getBody().getPayload()).isEqualToComparingFieldByField(expected);
     }
+
+    @Test
+    void shouldSuccessfullyUndeployAnExistingEntandoDeBundle() {
+
+        // given an existing bundle in the cluster
+        when(bundleService.undeployDeBundle(BundleInfoStubHelper.NAME)).thenReturn(BundleInfoStubHelper.NAME);
+
+        // when the user requests for the undeploy of the bundle
+        final ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> response = controller.undeployBundle(
+                BundleInfoStubHelper.NAME);
+
+        // then the expected successful DeletedObjectResponse is returned
+        SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
+        assertThat(response.getBody().getPayload().getName()).isEqualTo(BundleInfoStubHelper.NAME);
+    }
+
 
     @Test
     void shouldReturnEmptyArrayWhenReceivingEmptyOrNullParamList() {

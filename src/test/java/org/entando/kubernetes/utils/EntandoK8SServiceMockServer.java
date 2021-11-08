@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.springframework.http.HttpStatus;
 
 @Slf4j
@@ -195,6 +196,12 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
                         .willReturn(aResponse()
                                 .withStatus(status)
                                 .withHeader("Content-Type", HAL_JSON_VALUE)));
+    }
+
+    public void addUndeployDeBundle(WireMockServer server) {
+        server.stubFor(delete(urlMatching("/bundles/" + BundleInfoStubHelper.NAME))
+                .willReturn(aResponse()
+                        .withStatus(200)));
     }
 
 }
