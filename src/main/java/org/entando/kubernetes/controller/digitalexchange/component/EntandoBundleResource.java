@@ -15,6 +15,8 @@
 package org.entando.kubernetes.controller.digitalexchange.component;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -46,7 +48,9 @@ public interface EntandoBundleResource {
     @Operation(description = "Returns a single Digital Exchange component")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(@PathVariable RestNamedId restNamedId);
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(
+            @PathVariable @Parameter(description = "Formatted as: `repoUrl=<BASE64_URL>`",
+                    schema = @Schema(implementation = String.class)) RestNamedId restNamedId);
 
     @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
     @ApiResponse(responseCode = "200", description = "OK")
