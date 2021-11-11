@@ -134,7 +134,7 @@ class EntandoBundleResourceControllerIntegrationTest {
         EntandoBundleVersion latestVersion = new EntandoBundleVersion()
                 .setVersion(BundleStubHelper.V1_2_0);
         EntandoBundle entandoBundle = new EntandoBundle()
-                .setCode("something")
+                .setCode("mybundle.entando.www.github.com")
                 .setTitle("something")
                 .setDescription("bundle description")
                 .setRepoUrl(BundleInfoStubHelper.GIT_REPO_ADDRESS)

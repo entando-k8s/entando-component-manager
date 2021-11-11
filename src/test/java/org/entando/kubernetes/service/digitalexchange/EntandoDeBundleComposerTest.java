@@ -60,7 +60,7 @@ class EntandoDeBundleComposerTest {
 
         final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
 
-        assertThat(deBundle.getMetadata().getName()).isEqualTo("something");
+        assertThat(deBundle.getMetadata().getName()).isEqualTo("mybundle.entando.www.github.com");
         assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
         final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();

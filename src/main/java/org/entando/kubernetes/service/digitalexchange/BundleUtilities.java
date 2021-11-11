@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.config.AppConfiguration;
@@ -453,4 +455,26 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * compose the name of a bundle starting by its repository url.
+     * @param bundleUrl the repository url of the bundle
+     * @return the composed name of the bundle
+     */
+    public static String composeBundleIdentifier(URL bundleUrl) {
+        if (bundleUrl == null) {
+            return "";
+        }
+
+        // get the path, remove final .git and split by /
+        final String[] urlTokens = bundleUrl.getPath().replace(".git", "")
+                .split("/");
+
+        // reverse the array and join by . (to ensure k8s compatibility)
+        final String nameAndOrg = IntStream.rangeClosed(1, urlTokens.length)
+                .mapToObj(i -> urlTokens[urlTokens.length - i])
+                .collect(Collectors.joining("."));
+
+        // return concatenation of the reversed tokens and the hostname (protocol is ignored)
+        return nameAndOrg.concat(bundleUrl.getHost());
+    }
 }
