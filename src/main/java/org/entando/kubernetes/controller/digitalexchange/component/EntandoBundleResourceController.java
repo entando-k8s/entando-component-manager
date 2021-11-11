@@ -33,6 +33,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
@@ -68,6 +69,12 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     public ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(BundleInfo bundleInfo) {
         final EntandoBundle entandoBundle = bundleService.deployDeBundle(bundleInfo);
         return ResponseEntity.ok(new SimpleRestResponse<>(entandoBundle));
+    }
+
+    @Override
+    public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(String component) {
+        final String deleteRegistryName = bundleService.undeployDeBundle(component);
+        return ResponseEntity.ok(new SimpleRestResponse<>(new DeletedObjectResponse(deleteRegistryName)));
     }
 
     @Override
@@ -117,13 +124,13 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(String name) {
+    public ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(String component) {
 
-        if (ObjectUtils.isEmpty(name)) {
+        if (ObjectUtils.isEmpty(component)) {
             return ResponseEntity.ok(new SimpleRestResponse<>(new BundlesStatusItem()));
         }
 
-        BundlesStatusItem bundlesStatusItem = bundleService.getSingleBundleStatus(name);
+        BundlesStatusItem bundlesStatusItem = bundleService.getSingleBundleStatus(component);
 
         return ResponseEntity.ok(new SimpleRestResponse<>(bundlesStatusItem));
     }

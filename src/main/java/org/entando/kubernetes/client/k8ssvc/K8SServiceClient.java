@@ -40,4 +40,6 @@ public interface K8SServiceClient extends ECMClient {
     AnalysisReport getAnalysisReport(List<Reportable> reportableList);
 
     EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle);
+
+    void undeployDeBundle(String bundleName);
 }

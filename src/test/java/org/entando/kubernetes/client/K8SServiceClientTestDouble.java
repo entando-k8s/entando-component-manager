@@ -162,4 +162,9 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         return entandoDeBundle;
     }
 
+    @Override
+    public void undeployDeBundle(String bundleName) {
+
+    }
+
 }

@@ -1,7 +1,10 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -170,6 +173,34 @@ class EntandoBundleResourceControllerIntegrationTest {
                         .content(payload)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void shouldSuccessfullyUndeployAnExistingEntandoDeBundle() throws Exception {
+
+        // given an existing bundle in the cluster
+        final EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
+        kc.addInMemoryBundle(bundle);
+
+        // when the user sends the request to undeploy the bundle
+        // then he receives 200 status code and the name of the bundle
+        mockMvc.perform(delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME))
+                .andDo(print())
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.payload.name", is(TestEntitiesGenerator.BUNDLE_NAME)));
+    }
+
+    @Test
+    void shouldSuccessfullyUndeployANonExistingEntandoDeBundle() throws Exception {
+
+        // given that no bundles exist in the cluster
+        // when the user sends the request to undeploy a bundle
+        // then he receives 200 status code and the name of the bundle (even if the bundle does not exist)
+        mockMvc.perform(delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME))
+                .andDo(print())
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.payload.name", is(TestEntitiesGenerator.BUNDLE_NAME)));
     }
 
     @Test

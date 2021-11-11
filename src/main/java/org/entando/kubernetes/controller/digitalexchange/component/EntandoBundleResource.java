@@ -27,10 +27,12 @@ import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
+import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,6 +59,11 @@ public interface EntandoBundleResource {
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody BundleInfo bundleInfo);
 
+    @Operation(description = "Undeploy an EntandoDeBundle from Kubernetes")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @DeleteMapping(value = "/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(@PathVariable String component);
+
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/usage", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -71,6 +78,6 @@ public interface EntandoBundleResource {
 
     @Operation(description = "Return the status of a single bundle")
     @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(value = "/status/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String name);
+    @GetMapping(value = "/status/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String component);
 }
