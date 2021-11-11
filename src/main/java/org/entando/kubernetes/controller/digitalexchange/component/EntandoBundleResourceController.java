@@ -72,8 +72,8 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(String name) {
-        final String deleteRegistryName = bundleService.undeployDeBundle(name);
+    public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(String component) {
+        final String deleteRegistryName = bundleService.undeployDeBundle(component);
         return ResponseEntity.ok(new SimpleRestResponse<>(new DeletedObjectResponse(deleteRegistryName)));
     }
 
@@ -124,13 +124,13 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(String name) {
+    public ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(String component) {
 
-        if (ObjectUtils.isEmpty(name)) {
+        if (ObjectUtils.isEmpty(component)) {
             return ResponseEntity.ok(new SimpleRestResponse<>(new BundlesStatusItem()));
         }
 
-        BundlesStatusItem bundlesStatusItem = bundleService.getSingleBundleStatus(name);
+        BundlesStatusItem bundlesStatusItem = bundleService.getSingleBundleStatus(component);
 
         return ResponseEntity.ok(new SimpleRestResponse<>(bundlesStatusItem));
     }

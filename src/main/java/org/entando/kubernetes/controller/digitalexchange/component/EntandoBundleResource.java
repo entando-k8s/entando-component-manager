@@ -59,10 +59,10 @@ public interface EntandoBundleResource {
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody BundleInfo bundleInfo);
 
-    @Operation(description = "Return the status of a single bundle")
+    @Operation(description = "Undeploy an EntandoDeBundle from Kubernetes")
     @ApiResponse(responseCode = "200", description = "OK")
-    @DeleteMapping(value = "/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(@PathVariable String name);
+    @DeleteMapping(value = "/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(@PathVariable String component);
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
@@ -78,6 +78,6 @@ public interface EntandoBundleResource {
 
     @Operation(description = "Return the status of a single bundle")
     @ApiResponse(responseCode = "200", description = "OK")
-    @GetMapping(value = "/status/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String name);
+    @GetMapping(value = "/status/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String component);
 }
