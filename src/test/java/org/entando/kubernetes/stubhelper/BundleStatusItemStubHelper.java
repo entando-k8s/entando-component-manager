@@ -8,18 +8,22 @@ import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 public class BundleStatusItemStubHelper {
 
     public static final String ID_INSTALLED_NOT_DEPLOYED = "http://www.github.com/entando/installed_not_deployed.git";
+    public static final String NAME_INSTALLED_NOT_DEPLOYED = "coooooolBundle";
     public static final BundleStatus STATUS_INSTALLED_NOT_DEPLOYED = BundleStatus.INSTALLED_NOT_DEPLOYED;
     public static final String INSTALLED_VERSION_INSTALLED_NOT_DEPLOYED = "v1.2.0";
 
     public static final String ID_INSTALLED = "http://www.github.com/entando/installed.git";
+    public static final String NAME_INSTALLED = "niceBundle";
     public static final BundleStatus STATUS_INSTALLED = BundleStatus.INSTALLED;
     public static final String INSTALLED_VERSION_INSTALLED = "v1.2.0";
 
     public static final String ID_DEPLOYED = "http://www.github.com/entando/deployed.git";
+    public static final String NAME_DEPLOYED = "uglyBundle";
     public static final BundleStatus STATUS_DEPLOYED = BundleStatus.DEPLOYED;
     public static final String INSTALLED_VERSION_DEPLOYED = null;
 
     public static final String ID_NOT_FOUND = "http://www.github.com/entando/not_found.git";
+    public static final String NAME_NOT_FOUND = "notFoundBUndle";
     public static final BundleStatus STATUS_NOT_FOUND = BundleStatus.NOT_FOUND;
     public static final String INSTALLED_VERSION_NOT_FOUND = null;
 
@@ -34,6 +38,7 @@ public class BundleStatusItemStubHelper {
     public static BundlesStatusItem stubBundleStatusItemInstalled() {
         return new BundlesStatusItem()
                 .setId(ID_INSTALLED)
+                .setName(NAME_INSTALLED)
                 .setStatus(STATUS_INSTALLED)
                 .setInstalledVersion(INSTALLED_VERSION_INSTALLED);
     }
@@ -41,6 +46,7 @@ public class BundleStatusItemStubHelper {
     public static BundlesStatusItem stubBundleStatusItemInstalledNotDeployed() {
         return new BundlesStatusItem()
                 .setId(ID_INSTALLED_NOT_DEPLOYED)
+                .setName(NAME_INSTALLED_NOT_DEPLOYED)
                 .setStatus(STATUS_INSTALLED_NOT_DEPLOYED)
                 .setInstalledVersion(INSTALLED_VERSION_INSTALLED_NOT_DEPLOYED);
     }
@@ -48,13 +54,21 @@ public class BundleStatusItemStubHelper {
     public static BundlesStatusItem stubBundleStatusItemDeployed() {
         return new BundlesStatusItem()
                 .setId(ID_DEPLOYED)
+                .setName(NAME_DEPLOYED)
                 .setStatus(STATUS_DEPLOYED)
                 .setInstalledVersion(INSTALLED_VERSION_DEPLOYED);
     }
 
-    public static BundlesStatusItem stubBundleStatusItemNotFound() {
+    public static BundlesStatusItem stubBundleStatusItemNotFoundByUrl() {
         return new BundlesStatusItem()
                 .setId(ID_NOT_FOUND)
+                .setStatus(STATUS_NOT_FOUND)
+                .setInstalledVersion(INSTALLED_VERSION_NOT_FOUND);
+    }
+
+    public static BundlesStatusItem stubBundleStatusItemNotFoundByName() {
+        return new BundlesStatusItem()
+                .setName(NAME_NOT_FOUND)
                 .setStatus(STATUS_NOT_FOUND)
                 .setInstalledVersion(INSTALLED_VERSION_NOT_FOUND);
     }

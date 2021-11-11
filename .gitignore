@@ -28,3 +28,4 @@ buildNumber.properties
 # Removes tags
 tags
 databases/
+src/main/resources/application-dev.properties

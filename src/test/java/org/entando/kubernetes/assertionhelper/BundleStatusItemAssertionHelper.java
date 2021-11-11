@@ -11,23 +11,29 @@ import org.springframework.test.web.servlet.ResultActions;
 
 public class BundleStatusItemAssertionHelper {
 
-    public static final String BUNDLE_STATUSES_BASE_JSON_PATH = "$.payload.bundlesStatuses.";
+    public static final String BUNDLE_STATUSES_BASE_JSON_PATH =
+            SimpleRestResponseAssertionHelper.BUNDLE_STATUSES_BASE_JSON_PATH + "bundlesStatuses.";
 
     public static void assertOnBundlesStatusItemList(ResultActions result,
             List<BundlesStatusItem> bundlesStatusItemList) throws Exception {
 
         for (int i = 0; i < bundlesStatusItemList.size(); i++) {
-            assertOnBundlesStatusItem(result, i, bundlesStatusItemList.get(i));
+            assertOnBundlesStatusItem(result, BUNDLE_STATUSES_BASE_JSON_PATH, i, bundlesStatusItemList.get(i));
         }
     }
 
-    public static void assertOnBundlesStatusItem(ResultActions result, Integer index,
+    public static void assertOnBundlesStatusItem(ResultActions result, String startingPath, Integer index,
             BundlesStatusItem bundlesStatusItem)
             throws Exception {
 
-        String baseJsonPath = Optional.ofNullable(index)
-                .map(i -> BUNDLE_STATUSES_BASE_JSON_PATH + "[" + i + "].")
-                .orElse(BUNDLE_STATUSES_BASE_JSON_PATH);
+        String baseJsonPath;
+        if (index == null) {
+            baseJsonPath = startingPath;
+        } else {
+            baseJsonPath = Optional.ofNullable(index)
+                    .map(i -> startingPath + "[" + i + "].")
+                    .orElse(startingPath);
+        }
 
         result.andExpect(jsonPath(baseJsonPath + "id", is(bundlesStatusItem.getId())))
                 .andExpect(jsonPath(baseJsonPath + "status", is(bundlesStatusItem.getStatus().getStatus())));

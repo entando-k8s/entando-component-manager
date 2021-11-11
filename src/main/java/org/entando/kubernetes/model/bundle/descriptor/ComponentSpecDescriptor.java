@@ -3,8 +3,10 @@ package org.entando.kubernetes.model.bundle.descriptor;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import java.util.List;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
+@Accessors(chain = true)
 public class ComponentSpecDescriptor {
 
     private List<String> plugins;

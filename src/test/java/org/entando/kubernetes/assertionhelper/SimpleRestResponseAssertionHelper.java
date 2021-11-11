@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 
 public class SimpleRestResponseAssertionHelper {
 
+    public static final String BUNDLE_STATUSES_BASE_JSON_PATH = "$.payload.";
+
     public static <T> void assertOnSuccessfulResponse(ResponseEntity<SimpleRestResponse<T>> response, HttpStatus httpStatus) {
         Java6Assertions.assertThat(response.getStatusCode()).isEqualTo(httpStatus);
         Java6Assertions.assertThat(response.getBody().getErrors()).hasSize(0);

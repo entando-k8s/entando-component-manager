@@ -1,9 +1,10 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,33 +12,36 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.TestEntitiesGenerator;
+import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.assertionhelper.BundleStatusItemAssertionHelper;
+import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
 import org.entando.kubernetes.model.bundle.BundleType;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.EntandoBundleJobStubHelper;
-import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -107,30 +111,65 @@ class EntandoBundleResourceControllerIntegrationTest {
         WireMock.reset();
         bundleEntityRepository.deleteAll();
         bundleJobRepository.deleteAll();
+        ((K8SServiceClientTestDouble) k8sServiceClient).cleanInMemoryDatabases();
     }
 
     @Test
     void shouldCorrectlyDeployAnEntandoDeBundle() throws Exception {
 
-        final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
+        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
 
-        String payload = mapper.writeValueAsString(deBundle);
+        // when the user sends the request
+        String payload = mapper.writeValueAsString(bundleInfo);
+        final ResultActions resultActions = mockMvc.perform(post(componentsUrl)
+                        .content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk());
+
+        // then he receives success and the expected deployed EntandoBundle
+        EntandoBundleVersion latestVersion = new EntandoBundleVersion()
+                .setVersion(BundleStubHelper.V1_2_0);
+        EntandoBundle entandoBundle = new EntandoBundle()
+                .setCode("something")
+                .setTitle("something")
+                .setDescription("bundle description")
+                .setRepoUrl(BundleInfoStubHelper.GIT_REPO_ADDRESS)
+                .setBundleType(BundleType.STANDARD_BUNDLE)
+                .setThumbnail(BundleInfoStubHelper.DESCR_IMAGE)
+                .setComponentTypes(
+                        Set.of("widget", "contentTemplate", "pageTemplate", "language", "label", "content", "fragment",
+                                "plugin", "page", "category", "asset", "bundle", "contentType", "group"))
+                .setLatestVersion(latestVersion);
+
+        BundleAssertionHelper.assertOnEntandoBundle(resultActions, entandoBundle);
+    }
+
+    @Test
+    void shouldReturnErrorWhileDeployingBundleAndReceiveingEmptyOrNullRepoUrl() throws Exception {
+
+        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with an empty repoUrl
+        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
+                .setGitRepoAddress("");
+        // when the user sends the request
+        // then he receives 4xx status code
+        String payload = mapper.writeValueAsString(bundleInfo);
         mockMvc.perform(post(componentsUrl)
-                .content(payload)
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.code", is(deBundle.getMetadata().getName())))
-                .andExpect(jsonPath("$.payload.title", is(details.getName())))
-                .andExpect(jsonPath("$.payload.description", is(details.getDescription())))
-                .andExpect(jsonPath("$.payload.bundleType", is(BundleType.STANDARD_BUNDLE.getType())))
-                .andExpect(jsonPath("$.payload.thumbnail", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.componentTypes", hasSize(1)))
-                .andExpect(jsonPath("$.payload.componentTypes.[0]", is("bundle")))
-                .andExpect(jsonPath("$.payload.installedJob", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.lastJob", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.customInstallation", IsNull.nullValue()))
-                .andExpect(jsonPath("$.payload.latestVersion.version", is("0.0.15")));
+                        .content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().is4xxClientError());
+
+
+        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with a null repoUrl
+        bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
+                .setGitRepoAddress(null);
+        // when the user sends the request
+        // then he receives 4xx status code
+        payload = mapper.writeValueAsString(bundleInfo);
+        mockMvc.perform(post(componentsUrl)
+                        .content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -167,15 +206,15 @@ class EntandoBundleResourceControllerIntegrationTest {
 
         // then he receives the expected result
         List<BundlesStatusItem> bundlesStatusItemList = List.of(
-                new BundlesStatusItem(notFound1, BundleStatus.NOT_FOUND, null),
-                new BundlesStatusItem(notFound2, BundleStatus.NOT_FOUND, null));
+                new BundlesStatusItem(notFound1, null, BundleStatus.NOT_FOUND, null),
+                new BundlesStatusItem(notFound2, null, BundleStatus.NOT_FOUND, null));
         BundleStatusItemAssertionHelper.assertOnBundlesStatusItemList(resultActions, bundlesStatusItemList);
     }
 
     @Test
-    void shouldReturnTheExpectedBundleStatusItemList() throws Exception {
+    void shouldReceiveTheExpectedBundleStatusItemList() throws Exception {
 
-        // given that the some bundles are deployed in the cluster and some bundles are installed in the database
+        // given that some bundles are deployed in the cluster and some bundles are installed in the database
         prepareInMemoryBundlesAndDbForBundleStatusTests();
 
         // when the user requests for the status of some bundles
@@ -191,18 +230,71 @@ class EntandoBundleResourceControllerIntegrationTest {
 
         // then he receives the expected result
         List<BundlesStatusItem> bundlesStatusItemList = List.of(
-                new BundlesStatusItem(TestEntitiesGenerator.BUNDLE_TARBALL_URL, BundleStatus.INSTALLED, "v1.2.0"),
-                new BundlesStatusItem(deployedRepoUrl, BundleStatus.DEPLOYED, null),
-                new BundlesStatusItem(installedNotDeployedRepoUrl, BundleStatus.INSTALLED_NOT_DEPLOYED, "v1.1.0"),
-                new BundlesStatusItem(BundleStatusItemStubHelper.ID_NOT_FOUND, BundleStatus.NOT_FOUND, null),
-                new BundlesStatusItem(BundleStatusItemStubHelper.ID_INVALID_REPO_URL, BundleStatus.INVALID_REPO_URL,
+                new BundlesStatusItem(TestEntitiesGenerator.BUNDLE_TARBALL_URL, null, BundleStatus.INSTALLED, "v1.2.0"),
+                new BundlesStatusItem(deployedRepoUrl, null, BundleStatus.DEPLOYED, null),
+                new BundlesStatusItem(installedNotDeployedRepoUrl, null, BundleStatus.INSTALLED_NOT_DEPLOYED, "v1.1.0"),
+                new BundlesStatusItem(BundleStatusItemStubHelper.ID_NOT_FOUND, null, BundleStatus.NOT_FOUND, null),
+                new BundlesStatusItem(BundleStatusItemStubHelper.ID_INVALID_REPO_URL, null,
+                        BundleStatus.INVALID_REPO_URL,
                         null));
 
         BundleStatusItemAssertionHelper.assertOnBundlesStatusItemList(resultActions, bundlesStatusItemList);
     }
 
+    @Test
+    void shouldReceiveTheExpectedBundleStatusItemForAnInstalledBundle() throws Exception {
 
-    private void prepareInMemoryBundlesAndDbForBundleStatusTests() throws MalformedURLException {
+        BundlesStatusItem expected = new BundlesStatusItem(TestEntitiesGenerator.BUNDLE_TARBALL_URL,
+                TestEntitiesGenerator.BUNDLE_NAME, BundleStatus.INSTALLED, "v1.2.0");
+
+        execGetBundleStatusItemByNameTest(TestEntitiesGenerator.BUNDLE_NAME, expected);
+    }
+
+    @Test
+    void shouldReceiveTheExpectedBundleStatusItemForAnInstalledButNotDeployedBundle() throws Exception {
+
+        BundlesStatusItem expected = new BundlesStatusItem(installedNotDeployedRepoUrl,
+                BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED, BundleStatus.INSTALLED_NOT_DEPLOYED, "v1.1.0");
+
+        execGetBundleStatusItemByNameTest(BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED, expected);
+    }
+
+    @Test
+    void shouldReceiveTheExpectedBundleStatusItemForADeployedBundle() throws Exception {
+
+        BundlesStatusItem expected = new BundlesStatusItem(deployedRepoUrl,
+                BundleStatusItemStubHelper.NAME_DEPLOYED, BundleStatus.DEPLOYED, null);
+
+        execGetBundleStatusItemByNameTest(BundleStatusItemStubHelper.NAME_DEPLOYED, expected);
+    }
+
+    @Test
+    void shouldReceiveTheExpectedBundleStatusItemForANotFoundBundle() throws Exception {
+
+        BundlesStatusItem expected = new BundlesStatusItem(null, BundleStatusItemStubHelper.NAME_NOT_FOUND,
+                BundleStatus.NOT_FOUND, null);
+
+        execGetBundleStatusItemByNameTest(BundleStatusItemStubHelper.NAME_NOT_FOUND, expected);
+    }
+
+    void execGetBundleStatusItemByNameTest(String bundleName, BundlesStatusItem expected) throws Exception {
+
+        // given that the some bundles are deployed in the cluster and some bundles are installed in the database
+        prepareInMemoryBundlesAndDbForBundleStatusTests();
+
+        // when the user requests for the status of one bundle by name
+        final ResultActions resultActions = mockMvc.perform(get(componentsUrl + "/status/" + bundleName)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        // then he receives the expected result
+        BundleStatusItemAssertionHelper.assertOnBundlesStatusItem(resultActions,
+                SimpleRestResponseAssertionHelper.BUNDLE_STATUSES_BASE_JSON_PATH, null, expected);
+    }
+
+
+    private void prepareInMemoryBundlesAndDbForBundleStatusTests() {
 
         final EntandoBundleJobEntity job = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
                 JobStatus.INSTALL_COMPLETED);
@@ -217,21 +309,24 @@ class EntandoBundleResourceControllerIntegrationTest {
         installedBundleEntity.setVersion("v1.2.0");
         installedBundleEntity.setJob(job);
         installedBundleEntity.setType(Set.of("widget", "plugin", "bundle"));
-        installedBundleEntity.setRepoUrl(new URL(TestEntitiesGenerator.BUNDLE_TARBALL_URL));
+        installedBundleEntity.setRepoUrl(TestEntitiesGenerator.BUNDLE_TARBALL_URL);
         // TODO configure installed bundle in db
 
         final EntandoDeBundle deployedBundle = TestEntitiesGenerator.getTestBundle();
-        deployedBundle.setSpec(TestEntitiesGenerator.getTestEntandoDeBundleSpec(deployedRepoUrl));
+        deployedBundle.setSpec(TestEntitiesGenerator.getTestEntandoDeBundleSpec(deployedRepoUrl,
+                BundleStatusItemStubHelper.NAME_DEPLOYED));
+        deployedBundle.getMetadata().setName(BundleStatusItemStubHelper.NAME_DEPLOYED);
         kc.addInMemoryBundle(deployedBundle);
 
         EntandoBundleEntity installedNotDeployedBundleEntity = TestEntitiesGenerator.getTestComponent()
-                .setRepoUrl(new URL(installedNotDeployedRepoUrl));
-        installedNotDeployedBundleEntity.setId("inst_not_dep");
+                .setRepoUrl(installedNotDeployedRepoUrl);
+        installedNotDeployedBundleEntity.setId(BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED);
+        installedNotDeployedBundleEntity.setName(BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED);
         installedNotDeployedBundleEntity.setBundleType(BundleType.STANDARD_BUNDLE.getType());
         installedNotDeployedBundleEntity.setVersion("v1.1.0");
         installedNotDeployedBundleEntity.setJob(job);
         installedNotDeployedBundleEntity.setType(Set.of("widget", "plugin", "bundle"));
-        installedNotDeployedBundleEntity.setRepoUrl(new URL(installedNotDeployedRepoUrl));
+        installedNotDeployedBundleEntity.setRepoUrl(installedNotDeployedRepoUrl);
 
         bundleEntityRepository.saveAll(List.of(installedBundleEntity, installedNotDeployedBundleEntity));
     }

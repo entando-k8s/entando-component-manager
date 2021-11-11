@@ -19,7 +19,9 @@ import java.util.Set;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -42,12 +44,15 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.BundleStatusHelper;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.web.client.RestClientResponseException;
 
 @Tag("unit")
 public class EntandoBundleServiceTest {
@@ -58,17 +63,20 @@ public class EntandoBundleServiceTest {
     private InstalledEntandoBundleRepository installedComponentRepository;
     private EntandoBundleJobRepository jobRepository;
     private BundleStatusHelper bundleStatusHelper;
+    private EntandoDeBundleComposer entandoDeBundleComposer;
+    private EntandoBundleComponentJobRepository componentJobRepository;
 
     @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
         jobRepository = Mockito.mock(EntandoBundleJobRepository.class);
-        EntandoBundleComponentJobRepository componentJobRepository = Mockito
-                .mock(EntandoBundleComponentJobRepository.class);
+        componentJobRepository = Mockito.mock(EntandoBundleComponentJobRepository.class);
         installedComponentRepository = Mockito.mock(InstalledEntandoBundleRepository.class);
         bundleStatusHelper = Mockito.mock(BundleStatusHelper.class);
+        entandoDeBundleComposer = Mockito.mock(EntandoDeBundleComposer.class);
+
         service = new EntandoBundleServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository,
-                componentJobRepository, installedComponentRepository, bundleStatusHelper);
+                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
     }
 
     @AfterEach
@@ -407,28 +415,42 @@ public class EntandoBundleServiceTest {
 
     @Test
     void shouldSuccessfullyDeployADeBundle() {
-        EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        final EntandoBundle bundle = service.deployDeBundle(deBundle);
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
+        final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenReturn(deBundle);
+
+        final EntandoBundle bundle = service.deployDeBundle(bundleInfo);
         BundleAssertionHelper.assertOnBundleAndDeBundle(bundle, deBundle, BundleType.STANDARD_BUNDLE, null, null, null,
                 new EntandoBundleVersion().setVersion(TestEntitiesGenerator.LATEST_VERSION));
     }
 
     @Test
-    void shouldThrowExceptionWhenTryingToDeployANullDeBundle() {
-        assertThrows(InvalidBundleException.class, () -> service.deployDeBundle(null));
+    void shouldThrowExceptionWhenTheComposerThrowsIt() {
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenThrow(EntandoComponentManagerException.class);
+        assertThrows(EntandoComponentManagerException.class, () -> service.deployDeBundle(null));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTheK8sServiceClientThrowsIt() {
+        K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
+        service = new EntandoBundleServiceImpl(mockK8SServiceClient, availableDigitalExchanges, jobRepository,
+                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
+        when(mockK8SServiceClient.deployDeBundle(any())).thenThrow(RestClientResponseException.class);
+        assertThrows(RestClientResponseException.class, () -> service.deployDeBundle(null));
     }
 
     @Test
     void shouldReturnTheExpectedBundlesStatusResult() throws MalformedURLException {
 
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(
+                eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed());
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED)),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_DEPLOYED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_DEPLOYED)),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
-        when(bundleStatusHelper.composeBundleStatusItem(eq(new URL(BundleStatusItemStubHelper.ID_NOT_FOUND)),
-                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemNotFound());
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_NOT_FOUND)),
+                any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemNotFoundByUrl());
 
         // given a list of bundle id (repo url)
         final List<URL> bundleIds = List.of(new URL(BundleStatusItemStubHelper.ID_INSTALLED),
@@ -441,8 +463,65 @@ public class EntandoBundleServiceTest {
         // then I expect to receive the correct list of bundle status item
         List<BundlesStatusItem> expectedList = List.of(BundleStatusItemStubHelper.stubBundleStatusItemInstalled(),
                 BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed(),
-                BundleStatusItemStubHelper.stubBundleStatusItemNotFound(),
+                BundleStatusItemStubHelper.stubBundleStatusItemNotFoundByUrl(),
                 BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
         assertThat(bundlesStatusResult.getBundlesStatuses()).containsExactlyElementsOf(expectedList);
+    }
+
+    @Test
+    void shouldReturnTheExpectedBundleItem() {
+
+        // given that the bundle status helper returns the correct bundle status item
+        when(bundleStatusHelper.composeBundleStatusItemByName(
+                eq(BundleStatusItemStubHelper.NAME_INSTALLED), any(), any(), any()))
+                .thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
+
+        // when I ask for their status
+        final BundlesStatusItem bundlesStatusItem = service.getSingleBundleStatus(BundleStatusItemStubHelper.NAME_INSTALLED);
+
+        // then I expect to receive the correct list of bundle status item
+        BundlesStatusItem expected = BundleStatusItemStubHelper.stubBundleStatusItemInstalled();
+        assertThat(bundlesStatusItem).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    void getBundleByRepoUrl_withInvalidUrl_shouldThrowException() {
+        assertThrows(IllegalArgumentException.class, () -> service.getBundleByRepoUrl("invalid_url"));
+    }
+
+    @Test
+    void getBundleByRepoUrl_withValidUrlAndInstalledBundle_shouldReturnInstalledBundle() {
+
+        final EntandoBundleEntity bundleEntity = getTestComponent();
+        when(installedComponentRepository.findFirstByRepoUrlWithUrl(
+                ValidationFunctions.composeUrlOrThrow(TestEntitiesGenerator.REPO_URL, "null URL",
+                        "invalid URL"))).thenReturn(Optional.of(bundleEntity));
+        Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
+                "aHR0cHM6Ly9naXRodWIuY29tL2ZpcmVnbG92ZXMtYnVuZGxlcy94bWFzYnVuZGxlLmdpdA");
+
+        assertThat(entandoBundle).isPresent();
+    }
+
+    @Test
+    void getBundleByRepoUrl_withValidUrlAndAvailableBundle_shouldReturnAvailableBundle() {
+
+        EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
+        k8SServiceClient.addInMemoryBundle(bundle);
+
+        when(installedComponentRepository.findFirstByRepoUrlWithUrl(any())).thenReturn(Optional.empty());
+        Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
+                "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3o");
+
+        assertThat(entandoBundle).isPresent();
+    }
+
+    @Test
+    void getBundleByRepoUrl_withValidUrlAndNoBundles_shouldReturnEmptyBundle() {
+
+        when(installedComponentRepository.findFirstByRepoUrlWithUrl(any())).thenReturn(Optional.empty());
+        Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
+                "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK");
+
+        assertThat(entandoBundle).isEmpty();
     }
 }

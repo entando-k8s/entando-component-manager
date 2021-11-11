@@ -15,12 +15,16 @@
 package org.entando.kubernetes.controller.digitalexchange.component;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
@@ -41,10 +45,17 @@ public interface EntandoBundleResource {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList);
 
+    @Operation(description = "Returns a single Digital Exchange component")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(
+            @PathVariable @Parameter(description = "Formatted as: `repoUrl=<BASE64_URL>`",
+                    schema = @Schema(implementation = String.class)) RestNamedId restNamedId);
+
     @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody EntandoDeBundle entandoDeBundle);
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody BundleInfo bundleInfo);
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
@@ -55,6 +66,11 @@ public interface EntandoBundleResource {
     @Operation(description = "Return the status of the available bundles")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(value = "/status/query", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatus(
+    ResponseEntity<SimpleRestResponse<BundlesStatusResult>> getBundlesStatusByRepoUrl(
             @RequestBody BundlesStatusQuery bundlesStatusQuery);
+
+    @Operation(description = "Return the status of a single bundle")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @GetMapping(value = "/status/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String name);
 }

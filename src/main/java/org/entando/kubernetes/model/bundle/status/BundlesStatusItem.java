@@ -15,6 +15,7 @@ import org.entando.kubernetes.model.bundle.BundleStatus;
 public class BundlesStatusItem {
 
     private String id;
+    private String name;
     private BundleStatus status;
     private String installedVersion;
 }
