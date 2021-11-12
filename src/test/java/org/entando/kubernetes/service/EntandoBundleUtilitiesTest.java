@@ -3,10 +3,13 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -38,11 +41,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
 public class EntandoBundleUtilitiesTest {
 
+    private Logger logger = LoggerFactory.getLogger(EntandoBundleUtilitiesTest.class.getName());
     private BundleReader bundleReader;
     private Path bundleFolder;
 
@@ -396,6 +402,31 @@ public class EntandoBundleUtilitiesTest {
 
     }
 
+    @Test
+    void shouldComposeTheExpectedBundleIdentifier() {
+
+        Map<String, String> testCasesMap = Map.of(
+                "http://www.github.com/entando/my-bundle.git", "my-bundle.entando.www.github.com",
+                "http://github.com/entando/my-bundle.git", "my-bundle.entando.github.com",
+                "http://www.github.com/entando/my-bundle", "my-bundle.entando.www.github.com");
+
+        testCasesMap.entrySet()
+                .forEach(entry -> {
+                    try {
+                        URL url = new URL(entry.getKey());
+                        String actual = BundleUtilities.composeBundleIdentifier(url);
+                        assertThat(actual).isEqualTo(entry.getValue());
+                    } catch (MalformedURLException e) {
+                        logger.error(e.getMessage());
+                        fail();
+                    }
+                });
+    }
+
+    @Test
+    void shouldReturnEmptyStringWhenTryingToComposeBundleIdentifierWithANullUrl() {
+        assertThat(BundleUtilities.composeBundleIdentifier(null)).isEmpty();
+    }
 
     /*****************************************************************************************************
      * ROLES ASSERTIONS.

@@ -1,6 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange;
 
-import com.github.zafarkhaja.semver.Version;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import liquibase.pro.packaged.E;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -103,7 +101,7 @@ public class EntandoDeBundleComposer {
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                .withName(bundleDescriptor.getCode())
+                .withName(BundleUtilities.composeBundleIdentifier(bundleUrl))
                 .withLabels(createLabelsFrom(bundleDescriptor))
                 .endMetadata()
                 .withNewSpec()

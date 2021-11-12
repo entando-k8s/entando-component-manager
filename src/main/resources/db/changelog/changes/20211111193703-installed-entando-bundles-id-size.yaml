@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20211111193703
+      author: l.corsetti
+      changes:
+        - modifyDataType:
+            tableName: installed_entando_bundles
+            columnName: id
+            newDataType: varchar(255)
