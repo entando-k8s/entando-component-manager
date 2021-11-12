@@ -19,19 +19,21 @@ env:
 
 jobs:
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  # TAG
-  add-release-tag:
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # SNAPSHOT TAG
+  
+  add-snapshot-tag:
     runs-on: ubuntu-latest
     steps:
-      - name: "ADD RELEASE TAG"
+      - name: "ADD SNAPSOT TAG"
         run: |
           ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
-
+          
           ~/ppl-run pr-status-report \
           .. checkout-branch base \
                 --id "CHECKOUT-BASE" \
                 --lcd "$LOCAL_CLONE_DIR" \
                 --token "${{ secrets.ENTANDO_BOT_TOKEN }}" \
           .. release tag-snapshot-version \
-                --id "TAG-RELEASE" \
+                --id "TAG-SNAPSHOT" \
                 --lcd "$LOCAL_CLONE_DIR"

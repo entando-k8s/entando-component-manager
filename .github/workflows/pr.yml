@@ -1,3 +1,4 @@
+
 name: PR-CYCLE
 
 on:
@@ -6,7 +7,7 @@ on:
       - opened
       - synchronize
       - reopened
-    branches: 
+    branches:
       - develop
 
 env:
@@ -48,12 +49,6 @@ jobs:
         id: pr-preflight-checks
         run: |
           ~/ppl-run pr-preflight-checks --lcd "$LOCAL_CLONE_DIR"
-      # BOM
-      - name: "entando-core-bom check"
-        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM == 'true'
-        id: pr-bom-check
-        run: |
-          ~/ppl-run @pr-labels add "prepared" --id "ADD-LABEL-PREPARED"
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -93,10 +88,19 @@ jobs:
         with:
           path: "${{ env.LOCAL_CLONE_DIR }}/target/"
           key: ${{ runner.os }}-build-${{ env.BUILD_CACHE_KEY }}
+      #~ SONAR CACHE
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
       #~ BUILD
       - name: "FULL BUILD"
         env:
+          ENTANDO_OPT_SONAR_PROJECT_KEY: "${{ secrets.ENTANDO_OPT_SONAR_PROJECT_KEY }}"
           SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           ~/ppl-run \
             .. generic FULL-BUILD --lcd "$LOCAL_CLONE_DIR" \
@@ -148,7 +152,14 @@ jobs:
       - name: "Run the Scan"
         run: |
           SCAN_TYPE="${{ matrix.scan-type }}"
-          [[ "$SCAN_TYPE" = "SCAN-MVN-SONAR" ]] && export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
-          [[ "$SCAN_TYPE" = "SCAN-MVN-SNYK" ]] && export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
+          case "$SCAN_TYPE" in
+            SCAN-MVN-SONAR)
+              export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+              export SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+              export ENTANDO_OPT_SONAR_PROJECT_KEY="${{ secrets.ENTANDO_OPT_SONAR_PROJECT_KEY }}"
+              ;;
+            SCAN-MVN-SNYK)
+              export SNYK_TOKEN="${{ secrets.SNYK_TOKEN }}"
+            ;;
+          esac
           ~/ppl-run generic "$SCAN_TYPE" mvn --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
-

@@ -18,6 +18,10 @@ env:
 
 
 jobs:
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # INTERNAL PUBLICATION
+
   internal-publication:
     env:
       ENTANDO_OPT_MAVEN_REPO_DEVL: ${{ secrets.ENTANDO_OPT_MAVEN_REPO_DEVL }}
@@ -35,10 +39,11 @@ jobs:
           ;
       #~ CHECKOUT
       - name: "Checkout"
+        id: CHECKOUT
         run: |
-          ~/ppl-run checkout-branch base \
-            --id "CHECKOUT FOR NEXUS PUBLICATION" \
-            --lcd "$LOCAL_CLONE_DIR" \
+          ~/ppl-run \
+            .. checkout-branch base --id "CHECKOUT FOR NEXUS PUBLICATION" --lcd "$LOCAL_CLONE_DIR" \
+            .. pr-preflight-checks --only flags --lcd "$LOCAL_CLONE_DIR" \
           ;
           
           # Refines the cache key
@@ -81,7 +86,7 @@ jobs:
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
       #~ UPDATE THE BOM (if required)
       - name: "BOM Update"
-        if: steps.START.outputs.BOM_CHECK != 'false' && steps.START.outputs.BOM == 'true'
+        if: steps.CHECKOUT.outputs.BOM_UPDATE_FLAG == 'true' && steps.START.outputs.BOM == 'true'
         run: |
           ~/ppl-run bom update-bom \
             --id "UPDATE-BOM" \
