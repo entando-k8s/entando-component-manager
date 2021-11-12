@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
@@ -408,7 +409,12 @@ public class EntandoBundleUtilitiesTest {
         Map<String, String> testCasesMap = Map.of(
                 "http://www.github.com/entando/my-bundle.git", "my-bundle.entando.www.github.com",
                 "http://github.com/entando/my-bundle.git", "my-bundle.entando.github.com",
-                "http://www.github.com/entando/my-bundle", "my-bundle.entando.www.github.com");
+                "http://www.github.com/entando/my-bundle", "my-bundle.entando.www.github.com",
+                "http://.github.com/entando/my-bundle", "my-bundle.entando..github.com",
+                "http://www.github.com/entando/my-bundle.", "my-bundle..entando.www.github.com",
+                "http://www.github.com./entando/my-bundle.", "my-bundle..entando.www.github.com",
+                "http://www.github.com/entando/.my-bundle", "my-bundle.entando.www.github.com",
+                "http://github.com/entando/my-bundle/", "my-bundle.entando.github.com");
 
         testCasesMap.entrySet()
                 .forEach(entry -> {
@@ -416,11 +422,21 @@ public class EntandoBundleUtilitiesTest {
                         URL url = new URL(entry.getKey());
                         String actual = BundleUtilities.composeBundleIdentifier(url);
                         assertThat(actual).isEqualTo(entry.getValue());
+                        assertThat(actual.length()).isLessThanOrEqualTo(253);
                     } catch (MalformedURLException e) {
                         logger.error(e.getMessage());
                         fail();
                     }
                 });
+    }
+
+    @Test
+    void shouldThrowEceptionIfBundleIdentifierSizeExceeds253Chars() throws MalformedURLException {
+        URL url = new URL("http://www.github.com/entando/my-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-"
+                + "bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemy-bundlemy-bundlemy-"
+                + "bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundle");
+
+        assertThrows(EntandoValidationException.class, () -> BundleUtilities.composeBundleIdentifier(url));
     }
 
     @Test
