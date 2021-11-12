@@ -20,6 +20,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -474,7 +475,21 @@ public class BundleUtilities {
                 .mapToObj(i -> urlTokens[urlTokens.length - i])
                 .collect(Collectors.joining("."));
 
-        // return concatenation of the reversed tokens and the hostname (protocol is ignored)
-        return nameAndOrg.concat(bundleUrl.getHost());
+        // concatenation of the reversed tokens and the hostname (protocol is ignored)
+        String id = nameAndOrg.concat(bundleUrl.getHost());
+
+        if (id.length() > 253) {
+            throw new EntandoValidationException("The bundle resulting name is \"" + id + "\" but its size exceeds 253 characters");
+        }
+
+        // remove possible leading and final dots
+        if (id.charAt(0) == '.') {
+            id = id.substring(1);
+        }
+        if (id.charAt(id.length() - 1) == '.') {
+            id = id.substring(0, id.length() - 1);
+        }
+
+        return id;
     }
 }
