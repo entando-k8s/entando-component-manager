@@ -48,6 +48,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -420,7 +421,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .pathSegment(bundleName)
                 .build();
 
-        restTemplate.delete(uriComponents.toUri());
+        try {
+            restTemplate.delete(uriComponents.toUri());
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                throw e;
+            }
+        }
     }
 
     private Ingress getAppIngress(String appName) {
