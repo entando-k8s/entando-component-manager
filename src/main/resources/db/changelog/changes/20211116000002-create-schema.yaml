@@ -1,0 +1,232 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20211116000002
+      author: l.corsetti@entando.com
+      changes:
+        # entando_bundle_jobs
+        - createTable:
+            tableName: entando_bundle_jobs
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: PK_ENT_BUN_JOBS_E7
+              - column:
+                  name: component_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_version
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: TIMESTAMP
+              - column:
+                  name: finished_at
+                  type: TIMESTAMP
+              - column:
+                  name: user_id
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(35)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: progress
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: install_error_code
+                  type: INT
+                  defaultValue: null
+              - column:
+                  name: install_error_message
+                  type: TEXT
+                  defaultValue: null
+              - column:
+                  name: rollback_error_code
+                  type: INT
+                  defaultValue: null
+              - column:
+                  name: rollback_error_message
+                  type: TEXT
+                  defaultValue: null
+              - column:
+                  name: install_plan
+                  type: TEXT
+                  defaultValue: null
+              - column:
+                  name: custom_installation
+                  type: BOOLEAN
+                  defaultValue: false
+
+        # entando_bundle_component_jobs
+        - createTable:
+            tableName: entando_bundle_component_jobs
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: PK_ENT_BUN_COM_JOBS_E7
+              - column:
+                  name: parent_entando_bundle_job_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_DE_COMP_JOB_E7
+                    references: entando_bundle_jobs(id)
+              - column:
+                  name: component_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: checksum
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(35)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_type
+                  type: VARCHAR(35)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: TIMESTAMP
+              - column:
+                  name: finished_at
+                  type: TIMESTAMP
+              - column:
+                  name: action
+                  type: VARCHAR(16)
+              - column:
+                  name: install_error_code
+                  type: INT
+                  defaultValue: null
+              - column:
+                  name: install_error_message
+                  type: TEXT
+                  defaultValue: null
+              - column:
+                  name: rollback_error_code
+                  type: INT
+                  defaultValue: null
+              - column:
+                  name: rollback_error_message
+                  type: TEXT
+                  defaultValue: null
+
+        # installed_entando_bundles
+        - createTable:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_INS_ENT_BUN_E7
+                  name: id
+                  type: VARCHAR(255)
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: image
+                  type: LONGVARCHAR(30000)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: installed
+                  type: BOOLEAN
+              - column:
+                  name: job_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_COMPONENT_E7
+                    references: entando_bundle_jobs(id)
+              - column:
+                  name: last_update
+                  type: TIMESTAMP
+              - column:
+                  name: metadata
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rating
+                  type: FLOAT(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: signature
+                  type: VARCHAR(255)
+              - column:
+                  name: type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bundle_type
+                  type: VARCHAR(64)
+                  defaultValue: standard-bundle
+                  constraints:
+                    nullable: false
+              - column:
+                  name: repo_url
+                  type: VARCHAR(511)
+                  constraints:
+                    nullable: false
+
+        # entando_hub_registry
+        - createTable:
+            tableName: entando_hub_registry
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: PK_ENT_HUB_REG_E7
+              - column:
+                  name: name
+                  type: VARCHAR(127)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: url
+                  type: VARCHAR(511)
+                  constraints:
+                    nullable: false
+                    unique: true

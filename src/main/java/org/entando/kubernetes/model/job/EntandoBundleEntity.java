@@ -23,7 +23,6 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -82,9 +81,7 @@ public class EntandoBundleEntity {
     @Column(name = "description")
     private String description;
 
-    @Lob
     @Column(name = "image")
-    @Convert(converter = ImageConverter.class)
     private String image;
 
     @Column(name = "rating")
