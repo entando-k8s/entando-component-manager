@@ -1,0 +1,52 @@
+databaseChangeLog:
+  # entando_bundle_component_jobs
+  - changeSet:
+      id: 20211116000001_entando_bundle_jobs
+      author: l.corsetti@entando.com
+      preConditions:
+        - onFail: MARK_RAN
+          tableExists:
+            tableName: entando_bundle_jobs
+      changes:
+        - renameTable:
+            newTableName: entando_bundle_jobs_E6
+            oldTableName: entando_bundle_jobs
+
+  # entando_bundle_component_jobs
+  - changeSet:
+      id: 20211116000001_entando_bundle_component_jobs
+      author: l.corsetti@entando.com
+      preConditions:
+        - onFail: MARK_RAN
+          tableExists:
+            tableName: entando_bundle_component_jobs
+      changes:
+        - renameTable:
+            newTableName: entando_bundle_component_jobs_E6
+            oldTableName: entando_bundle_component_jobs
+
+  # installed_entando_bundles
+  - changeSet:
+      id: 20211116000001_installed_entando_bundles
+      author: l.corsetti@entando.com
+      preConditions:
+        - onFail: MARK_RAN
+          tableExists:
+            tableName: installed_entando_bundles
+      changes:
+        - renameTable:
+            newTableName: installed_entando_bundles_E6
+            oldTableName: installed_entando_bundles
+
+  # entando_hub_registry
+  - changeSet:
+      id: 20211116000001_entando_hub_registry
+      author: l.corsetti@entando.com
+      preConditions:
+        - onFail: MARK_RAN
+          tableExists:
+            tableName: entando_hub_registry
+      changes:
+        - renameTable:
+            newTableName: entando_hub_registry_E6
+            oldTableName: entando_hub_registry
