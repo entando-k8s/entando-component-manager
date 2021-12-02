@@ -1,17 +1,19 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -33,6 +35,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class EntandoDeBundleComposer {
 
+    public static final String GIT_AND_SSH_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/))";
+    public static final Pattern GIT_AND_SSH_PROTOCOL_REGEX_PATTERN = Pattern.compile(GIT_AND_SSH_PROTOCOL_REGEX);
+    public static final String HTTP_OVER_GIT_REPLACER = ValidationFunctions.HTTP_PROTOCOL + "://";
+
     private final BundleDownloaderFactory downloaderFactory;
 
     @Autowired
@@ -52,23 +58,29 @@ public class EntandoDeBundleComposer {
         if (bundleInfo == null) {
             throw new EntandoComponentManagerException("The received BundleInfo is null");
         }
+        if (ObjectUtils.isEmpty(bundleInfo.getGitRepoAddress())) {
+            throw new EntandoValidationException("The received bundle url is null");
+        }
 
-        final URL bundleUrl = ValidationFunctions.composeUrlOrThrow(bundleInfo.getGitRepoAddress(),
+        String bundleUrlStr = this.gitSshProtocolToHttp(bundleInfo.getGitRepoAddress());
+
+        ValidationFunctions.composeUrlOrThrow(bundleUrlStr,
                 "Bundle url is empty", "Bundle url is not valid");
 
         final BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
-        final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader, bundleUrl);
+        final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader,
+                bundleInfo.getGitRepoAddress());
         if (bundleDescriptor == null) {
             throw new EntandoComponentManagerException("Null bundle descriptor");
         }
 
-        final List<String> tagList = bundleDownloader.fetchRemoteTags(bundleUrl);
+        final List<String> tagList = bundleDownloader.fetchRemoteTags(bundleInfo.getGitRepoAddress());
         if (CollectionUtils.isEmpty(tagList)) {
             throw new EntandoComponentManagerException("No versions available for the received bundle");
         }
 
-        return createEntandoDeBundle(bundleDescriptor, tagList, bundleUrl, bundleInfo);
+        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo.getGitRepoAddress(), bundleInfo);
     }
 
     /**
@@ -76,9 +88,9 @@ public class EntandoDeBundleComposer {
      *
      * @param bundleDownloader the bundledownloader to use for the current operation
      * @param bundleUrl        the url of the bundle of which fetching the descriptor
-     * @return
+     * @return the fetched bundle descriptor
      */
-    private BundleDescriptor fetchBundleDescriptor(BundleDownloader bundleDownloader, URL bundleUrl) {
+    private BundleDescriptor fetchBundleDescriptor(BundleDownloader bundleDownloader, String bundleUrl) {
 
         try {
             Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundleUrl);
@@ -92,7 +104,7 @@ public class EntandoDeBundleComposer {
     }
 
     private EntandoDeBundle createEntandoDeBundle(BundleDescriptor bundleDescriptor, List<String> tagList,
-            URL bundleUrl, BundleInfo bundleInfo) {
+            String bundleUrl, BundleInfo bundleInfo) {
 
         final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleUrl);
         final List<String> versionList = deBundleTags.stream()
@@ -176,7 +188,7 @@ public class EntandoDeBundleComposer {
      * @param bundleUrl the repository URL
      * @return the List of EntandoDeBundleTag corresponding to the repository tags
      */
-    private List<EntandoDeBundleTag> createTagsFrom(List<String> tagList, URL bundleUrl) {
+    private List<EntandoDeBundleTag> createTagsFrom(List<String> tagList, String bundleUrl) {
 
         return tagList.stream()
                 .map(tag -> {
@@ -190,8 +202,18 @@ public class EntandoDeBundleComposer {
                 .filter(Objects::nonNull)
                 .map(semver -> new EntandoDeBundleTagBuilder()
                         .withVersion(semver.getVersion())
-                        .withTarball(bundleUrl.toString())
+                        .withTarball(bundleUrl)
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * if the received url string starts with a git or ssh protocol, it replaces the protocol with a simple http:// .
+     *
+     * @param url the string url to check and possibly replace
+     * @return the url with the replaces protocol or the original string itself
+     */
+    protected String gitSshProtocolToHttp(String url) {
+        return GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
     }
 }

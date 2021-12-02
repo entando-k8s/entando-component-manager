@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -44,12 +43,12 @@ public class NpmBundleDownloader extends BundleDownloader {
     }
 
     @Override
-    protected Path saveBundleStrategy(URL url, Path targetPath) {
+    protected Path saveBundleStrategy(String url, Path targetPath) {
         throw new EntandoComponentManagerException("Not yet implemented");
     }
 
     @Override
-    public List<String> fetchRemoteTags(URL repoUrl) {
+    public List<String> fetchRemoteTags(String repoUrl) {
         throw new EntandoComponentManagerException("Not yet implemented");
     }
 

@@ -4,7 +4,6 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,6 +36,7 @@ import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 @UtilityClass
@@ -68,6 +68,9 @@ public class BundleUtilities {
     public static final String PLUGIN_DESCRIPTOR_VERSION_REGEXP = "^(v)(\\d+)(\\.\\d+)?$";
     public static final Pattern PLUGIN_DESCRIPTOR_VERSION_PATTERN = Pattern
             .compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP);
+
+    public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
+    public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -461,26 +464,22 @@ public class BundleUtilities {
      * @param bundleUrl the repository url of the bundle
      * @return the composed name of the bundle
      */
-    public static String composeBundleIdentifier(URL bundleUrl) {
-        if (bundleUrl == null) {
+    public static String composeBundleIdentifier(String bundleUrl) {
+        if (ObjectUtils.isEmpty(bundleUrl)) {
             return "";
         }
 
-        // get the path, remove final .git and split by /
-        final String[] urlTokens = bundleUrl.getPath().replace(".git", "")
+        // remove the protocol
+        String urlNoProtocol = BUNDLE_PROTOCOL_REGEX_PATTERN.matcher(bundleUrl).replaceFirst("");
+
+        // remove final .git and split by /
+        final String[] urlTokens = urlNoProtocol.replaceAll(".git$", "")
                 .split("/");
 
         // reverse the array and join by . (to ensure k8s compatibility)
-        final String nameAndOrg = IntStream.rangeClosed(1, urlTokens.length)
+        String id = IntStream.rangeClosed(1, urlTokens.length)
                 .mapToObj(i -> urlTokens[urlTokens.length - i])
                 .collect(Collectors.joining("."));
-
-        // concatenation of the reversed tokens and the hostname (protocol is ignored)
-        String id = nameAndOrg.concat(bundleUrl.getHost());
-
-        if (id.length() > 253) {
-            throw new EntandoValidationException("The bundle resulting name is \"" + id + "\" but its size exceeds 253 characters");
-        }
 
         // remove possible leading and final dots
         if (id.charAt(0) == '.') {
@@ -488,6 +487,13 @@ public class BundleUtilities {
         }
         if (id.charAt(id.length() - 1) == '.') {
             id = id.substring(0, id.length() - 1);
+        }
+
+        // remove double points
+        id = id.replaceAll("\\.\\.", "\\.");
+
+        if (id.length() > 253) {
+            throw new EntandoValidationException("The bundle resulting name is \"" + id + "\" but its size exceeds 253 characters");
         }
 
         return id;
