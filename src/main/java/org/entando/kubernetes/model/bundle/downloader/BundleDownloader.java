@@ -2,7 +2,6 @@ package org.entando.kubernetes.model.bundle.downloader;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -48,8 +47,8 @@ public abstract class BundleDownloader {
         return this.targetPath;
     }
 
-    public Path saveBundleLocally(URL url) {
-        log.info("Downloading bundle " + url.toString() + " locally");
+    public Path saveBundleLocally(String url) {
+        log.info("Downloading bundle " + url + " locally");
         try {
             createTargetDirectory();
             saveBundleStrategy(url, targetPath);
@@ -63,9 +62,9 @@ public abstract class BundleDownloader {
 
     protected abstract Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
 
-    protected abstract Path saveBundleStrategy(URL url, Path targetPath);
+    protected abstract Path saveBundleStrategy(String url, Path targetPath);
 
-    public abstract List<String> fetchRemoteTags(URL repoUrl);
+    public abstract List<String> fetchRemoteTags(String repoUrl);
 
     public Path getTargetPath() {
         return this.targetPath;

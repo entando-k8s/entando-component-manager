@@ -2,8 +2,7 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -15,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
@@ -58,18 +59,32 @@ class EntandoDeBundleComposerTest {
     @Test
     void shouldReturnTheExpectedBundleDescriptorWhileComposingIt() {
 
-        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+        Stream.of(
+                        BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                        "git@www.github.com/entando/mybundle.git",
+                        "git://www.github.com/entando/mybundle.git",
+                        "ssh://www.github.com/entando/mybundle.git")
+                .forEach(bundleUrl -> {
 
-        assertThat(deBundle.getMetadata().getName()).isEqualTo("mybundle.entando.www.github.com");
-        assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
+                    BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setGitRepoAddress(bundleUrl);
 
-        final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-        assertThat(details.getName()).isEqualTo("something");
-        assertThat(details.getDescription()).isEqualTo("bundle description");
+                    final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
 
-        assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);
+                    assertThat(deBundle.getMetadata().getName()).isEqualTo("mybundle.entando.www.github.com");
+                    assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
-        assertOnVersionsAndTags(deBundle);
+                    final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
+                    assertThat(details.getName()).isEqualTo("something");
+                    assertThat(details.getDescription()).isEqualTo("bundle description");
+
+                    assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);
+
+                    List<EntandoDeBundleTag> entandoDeBundleTags = BundleStubHelper.TAG_LIST.stream()
+                            .map(tag -> new EntandoDeBundleTag(tag, null, null, bundleUrl))
+                            .collect(Collectors.toList());
+
+                    assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
+                });
     }
 
     @Test
@@ -101,8 +116,8 @@ class EntandoDeBundleComposerTest {
             GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
             try {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-                when(git.saveBundleLocally(any(URL.class))).thenReturn(bundleFolder);
-                when(git.fetchRemoteTags(any(URL.class))).thenReturn(tagList);
+                when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
+                when(git.fetchRemoteTags(anyString())).thenReturn(tagList);
             } catch (IOException e) {
                 throw new RuntimeException("Impossible to read the bundle folder from test resources");
             }
@@ -110,8 +125,37 @@ class EntandoDeBundleComposerTest {
         });
 
         final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
-        assertOnVersionsAndTags(deBundle);
+        assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
     }
+
+    @Test
+    void shouldReplaceGitAndSshProtocolWithHttp() {
+        Map<String, String> testCasesMap = Map.of(
+                "git@github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
+                "git://github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
+                "ssh://github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git");
+
+        testCasesMap.forEach((key, value) -> {
+            String actual = deBundleComposer.gitSshProtocolToHttp(key);
+            Assertions.assertThat(actual).isEqualTo(value);
+        });
+    }
+
+    @Test
+    void shouldReturnTheSameStringWhenProtocolIsNotOneOfTheExpected() {
+        List<String> testCasesList = List.of(
+                "got@github.com/entando/my_bundle.git",
+                "got://github.com/entando/my_bundle.git",
+                "sssh://github.com/entando/my_bundle.git",
+                "https://github.com/entando/my_bundle.git",
+                "ftp://github.com/entando/my_bundle.git");
+
+        testCasesList.forEach(url -> {
+            String actual = deBundleComposer.gitSshProtocolToHttp(url);
+            Assertions.assertThat(actual).isEqualTo(url);
+        });
+    }
+
 
     private void assertOnFullLabelsDeBundleMap(Map<String, String> labelsMap) {
         assertThat(labelsMap.get("plugin")).isEqualTo("true");
@@ -130,7 +174,7 @@ class EntandoDeBundleComposerTest {
         assertThat(labelsMap.get("bundle-type")).isEqualTo("standard-bundle");
     }
 
-    private void assertOnVersionsAndTags(EntandoDeBundle deBundle) {
+    private void assertOnVersionsAndTags(EntandoDeBundle deBundle, List<EntandoDeBundleTag> entandoDeBundleTags) {
 
         final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
 

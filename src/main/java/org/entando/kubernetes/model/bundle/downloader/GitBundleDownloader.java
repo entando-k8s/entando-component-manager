@@ -5,7 +5,6 @@ import static java.util.Optional.ofNullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +31,10 @@ public class GitBundleDownloader extends BundleDownloader {
     }
 
     @Override
-    protected Path saveBundleStrategy(URL url, Path targetPath) {
+    protected Path saveBundleStrategy(String url, Path targetPath) {
         try {
             String gitCommand = String.format("git clone --depth 1 %s %s",
-                    url.toString(),
+                    url,
                     targetPath.toAbsolutePath());
             Process process = execGitCommands(gitCommand);
 
@@ -70,11 +69,11 @@ public class GitBundleDownloader extends BundleDownloader {
     }
 
     @Override
-    public List<String> fetchRemoteTags(URL repoUrl) {
+    public List<String> fetchRemoteTags(String repoUrl) {
 
         List<String> tagList = new ArrayList<>();
 
-        String gitCommand = String.format("git ls-remote --tags %s", repoUrl.toString());
+        String gitCommand = String.format("git ls-remote --tags %s", repoUrl);
 
         Process process;
         try {

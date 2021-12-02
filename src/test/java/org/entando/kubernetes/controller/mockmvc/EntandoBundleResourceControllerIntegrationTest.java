@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
@@ -118,38 +119,53 @@ class EntandoBundleResourceControllerIntegrationTest {
     }
 
     @Test
-    void shouldCorrectlyDeployAnEntandoDeBundle() throws Exception {
+    void shouldCorrectlyDeployAnEntandoDeBundle() {
 
-        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo
-        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
+        Stream.of(
+                        BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                        "git@www.github.com/entando/mybundle.git",
+                        "git://www.github.com/entando/mybundle.git",
+                        "ssh://www.github.com/entando/mybundle.git")
+                .forEach(bundleUrl -> {
+                    try {
 
-        // when the user sends the request
-        String payload = mapper.writeValueAsString(bundleInfo);
-        final ResultActions resultActions = mockMvc.perform(post(componentsUrl)
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk());
+                        // given that the user wants to deploy an EntandoDeBundle using a bundleInfo
+                        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setGitRepoAddress(bundleUrl);
 
-        // then he receives success and the expected deployed EntandoBundle
-        EntandoBundleVersion latestVersion = new EntandoBundleVersion()
-                .setVersion(BundleStubHelper.V1_2_0);
-        EntandoBundle entandoBundle = new EntandoBundle()
-                .setCode("mybundle.entando.www.github.com")
-                .setTitle("something")
-                .setDescription("bundle description")
-                .setRepoUrl(BundleInfoStubHelper.GIT_REPO_ADDRESS)
-                .setBundleType(BundleType.STANDARD_BUNDLE)
-                .setThumbnail(BundleInfoStubHelper.DESCR_IMAGE)
-                .setComponentTypes(
-                        Set.of("widget", "contentTemplate", "pageTemplate", "language", "label", "content", "fragment",
-                                "plugin", "page", "category", "asset", "bundle", "contentType", "group"))
-                .setLatestVersion(latestVersion);
+                        // when the user sends the request
+                        String payload = mapper.writeValueAsString(bundleInfo);
+                        final ResultActions resultActions = mockMvc.perform(post(componentsUrl)
+                                        .content(payload)
+                                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                                .andExpect(status().isOk());
 
-        BundleAssertionHelper.assertOnEntandoBundle(resultActions, entandoBundle);
+                        // then he receives success and the expected deployed EntandoBundle
+                        EntandoBundleVersion latestVersion = new EntandoBundleVersion()
+                                .setVersion(BundleStubHelper.V1_2_0);
+                        EntandoBundle entandoBundle = new EntandoBundle()
+                                .setCode("mybundle.entando.www.github.com")
+                                .setTitle("something")
+                                .setDescription("bundle description")
+                                .setRepoUrl(bundleUrl)
+                                .setBundleType(BundleType.STANDARD_BUNDLE)
+                                .setThumbnail(BundleInfoStubHelper.DESCR_IMAGE)
+                                .setComponentTypes(
+                                        Set.of("widget", "contentTemplate", "pageTemplate", "language", "label",
+                                                "content",
+                                                "fragment",
+                                                "plugin", "page", "category", "asset", "bundle", "contentType",
+                                                "group"))
+                                .setLatestVersion(latestVersion);
+
+                        BundleAssertionHelper.assertOnEntandoBundle(resultActions, entandoBundle);
+                    } catch (Exception e) {
+                        fail(e.getMessage());
+                    }
+                });
     }
 
     @Test
-    void shouldReturnErrorWhileDeployingBundleAndReceiveingEmptyOrNullRepoUrl() throws Exception {
+    void shouldReturnErrorWhileDeployingBundleAndReceivingEmptyOrNullRepoUrl() throws Exception {
 
         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with an empty repoUrl
         BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()

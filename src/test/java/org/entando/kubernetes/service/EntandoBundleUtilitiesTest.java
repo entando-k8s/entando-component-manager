@@ -3,13 +3,11 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -410,31 +408,25 @@ public class EntandoBundleUtilitiesTest {
                 "http://www.github.com/entando/my-bundle.git", "my-bundle.entando.www.github.com",
                 "http://github.com/entando/my-bundle.git", "my-bundle.entando.github.com",
                 "http://www.github.com/entando/my-bundle", "my-bundle.entando.www.github.com",
-                "http://.github.com/entando/my-bundle", "my-bundle.entando..github.com",
-                "http://www.github.com/entando/my-bundle.", "my-bundle..entando.www.github.com",
-                "http://www.github.com./entando/my-bundle.", "my-bundle..entando.www.github.com",
+                "http://.github.com/entando/my-bundle", "my-bundle.entando.github.com",
+                "http://www.github.com/entando/my-bundle.", "my-bundle.entando.www.github.com",
+                "http://www.github.com./entando/my-bundle.", "my-bundle.entando.www.github.com",
                 "http://www.github.com/entando/.my-bundle", "my-bundle.entando.www.github.com",
                 "http://github.com/entando/my-bundle/", "my-bundle.entando.github.com");
 
         testCasesMap.entrySet()
                 .forEach(entry -> {
-                    try {
-                        URL url = new URL(entry.getKey());
-                        String actual = BundleUtilities.composeBundleIdentifier(url);
-                        assertThat(actual).isEqualTo(entry.getValue());
-                        assertThat(actual.length()).isLessThanOrEqualTo(253);
-                    } catch (MalformedURLException e) {
-                        logger.error(e.getMessage());
-                        fail();
-                    }
+                    String actual = BundleUtilities.composeBundleIdentifier(entry.getKey());
+                    assertThat(actual).isEqualTo(entry.getValue());
+                    assertThat(actual.length()).isLessThanOrEqualTo(253);
                 });
     }
 
     @Test
     void shouldThrowEceptionIfBundleIdentifierSizeExceeds253Chars() throws MalformedURLException {
-        URL url = new URL("http://www.github.com/entando/my-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-"
+        String url = "http://www.github.com/entando/my-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-"
                 + "bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemy-bundlemy-bundlemy-"
-                + "bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundle");
+                + "bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundle";
 
         assertThrows(EntandoValidationException.class, () -> BundleUtilities.composeBundleIdentifier(url));
     }
