@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -35,10 +34,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class EntandoDeBundleComposer {
 
-    public static final String GIT_AND_SSH_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/))";
-    public static final Pattern GIT_AND_SSH_PROTOCOL_REGEX_PATTERN = Pattern.compile(GIT_AND_SSH_PROTOCOL_REGEX);
-    public static final String HTTP_OVER_GIT_REPLACER = ValidationFunctions.HTTP_PROTOCOL + "://";
-
     private final BundleDownloaderFactory downloaderFactory;
 
     @Autowired
@@ -62,9 +57,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoValidationException("The received bundle url is null");
         }
 
-        String bundleUrlStr = this.gitSshProtocolToHttp(bundleInfo.getGitRepoAddress());
-
-        ValidationFunctions.composeUrlOrThrow(bundleUrlStr,
+        ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(bundleInfo.getGitRepoAddress(),
                 "Bundle url is empty", "Bundle url is not valid");
 
         final BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
@@ -205,15 +198,5 @@ public class EntandoDeBundleComposer {
                         .withTarball(bundleUrl)
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * if the received url string starts with a git or ssh protocol, it replaces the protocol with a simple http:// .
-     *
-     * @param url the string url to check and possibly replace
-     * @return the url with the replaces protocol or the original string itself
-     */
-    protected String gitSshProtocolToHttp(String url) {
-        return GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
     }
 }

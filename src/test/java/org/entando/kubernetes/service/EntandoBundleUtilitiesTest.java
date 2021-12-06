@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
@@ -412,7 +413,8 @@ public class EntandoBundleUtilitiesTest {
                 "http://www.github.com/entando/my-bundle.", "my-bundle.entando.www.github.com",
                 "http://www.github.com./entando/my-bundle.", "my-bundle.entando.www.github.com",
                 "http://www.github.com/entando/.my-bundle", "my-bundle.entando.www.github.com",
-                "http://github.com/entando/my-bundle/", "my-bundle.entando.github.com");
+                "http://github.com/entando/my-bundle/", "my-bundle.entando.github.com",
+                "git@github.com:entando/my-bundle/", "my-bundle.entando.github.com");
 
         testCasesMap.entrySet()
                 .forEach(entry -> {
@@ -435,6 +437,36 @@ public class EntandoBundleUtilitiesTest {
     void shouldReturnEmptyStringWhenTryingToComposeBundleIdentifierWithANullUrl() {
         assertThat(BundleUtilities.composeBundleIdentifier(null)).isEmpty();
     }
+
+    @Test
+    void shouldReplaceGitAndSshProtocolWithHttp() {
+        Map<String, String> testCasesMap = Map.of(
+                "git@github.com:entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
+                "git://github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
+                "ssh://github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
+                "git@github.com:entando:my_bundle.git", "http://github.com/entando:my_bundle.git");
+
+        testCasesMap.forEach((key, value) -> {
+            String actual = BundleUtilities.gitSshProtocolToHttp(key);
+            Assertions.assertThat(actual).isEqualTo(value);
+        });
+    }
+
+    @Test
+    void shouldReturnTheSameStringWhenProtocolIsNotOneOfTheExpected() {
+        List<String> testCasesList = List.of(
+                "got@github.com/entando/my_bundle.git",
+                "got://github.com/entando/my_bundle.git",
+                "sssh://github.com/entando/my_bundle.git",
+                "https://github.com/entando/my_bundle.git",
+                "ftp://github.com/entando/my_bundle.git");
+
+        testCasesList.forEach(url -> {
+            String actual = BundleUtilities.gitSshProtocolToHttp(url);
+            Assertions.assertThat(actual).isEqualTo(url);
+        });
+    }
+
 
     /*****************************************************************************************************
      * ROLES ASSERTIONS.

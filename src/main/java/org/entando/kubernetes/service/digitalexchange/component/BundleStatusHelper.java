@@ -1,6 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -27,10 +26,10 @@ public class BundleStatusHelper {
      * @param installedButNotDeployed list of installed but not deployed anymore bundles
      * @return the BundlesStatusItem resulting by the search
      */
-    public BundlesStatusItem composeBundleStatusItemByURL(URL url, List<EntandoBundleEntity> installedBundleEntities,
+    public BundlesStatusItem composeBundleStatusItemByURL(String url, List<EntandoBundleEntity> installedBundleEntities,
             List<EntandoBundle> deployedBundles, List<EntandoBundleEntity> installedButNotDeployed) {
 
-        if (url == null) {
+        if (ObjectUtils.isEmpty(url)) {
             throw new EntandoComponentManagerException("The received URL is empty or null");
         }
         bundlesListsNotNullOrThrow(installedBundleEntities, deployedBundles, installedButNotDeployed);
@@ -38,7 +37,7 @@ public class BundleStatusHelper {
         return composeBundleStatusItem(filterBundleEntityByUrl(url), filterBundleByUrl(url),
                     installedBundleEntities, deployedBundles, installedButNotDeployed)
                 // otherwise return NOT FOUND
-                .orElseGet(() -> new BundlesStatusItem(url.toString(), null, BundleStatus.NOT_FOUND, null));
+                .orElseGet(() -> new BundlesStatusItem(url, null, BundleStatus.NOT_FOUND, null));
     }
 
     /**
@@ -166,12 +165,12 @@ public class BundleStatusHelper {
     }
 
 
-    private Predicate<EntandoBundleEntity> filterBundleEntityByUrl(URL repoUrl) {
-        return bundleEntity -> bundleEntity.getRepoUrl().equals(repoUrl.toString());
+    private Predicate<EntandoBundleEntity> filterBundleEntityByUrl(String repoUrl) {
+        return bundleEntity -> bundleEntity.getRepoUrl().equals(repoUrl);
     }
 
-    private Predicate<EntandoBundle> filterBundleByUrl(URL repoUrl) {
-        return bundle -> bundle.getRepoUrl().equals(repoUrl.toString());
+    private Predicate<EntandoBundle> filterBundleByUrl(String repoUrl) {
+        return bundle -> bundle.getRepoUrl().equals(repoUrl);
     }
 
     private Predicate<EntandoBundleEntity> filterBundleEntityByName(String name) {

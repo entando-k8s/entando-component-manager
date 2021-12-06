@@ -128,34 +128,6 @@ class EntandoDeBundleComposerTest {
         assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
     }
 
-    @Test
-    void shouldReplaceGitAndSshProtocolWithHttp() {
-        Map<String, String> testCasesMap = Map.of(
-                "git@github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
-                "git://github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git",
-                "ssh://github.com/entando/my_bundle.git", "http://github.com/entando/my_bundle.git");
-
-        testCasesMap.forEach((key, value) -> {
-            String actual = deBundleComposer.gitSshProtocolToHttp(key);
-            Assertions.assertThat(actual).isEqualTo(value);
-        });
-    }
-
-    @Test
-    void shouldReturnTheSameStringWhenProtocolIsNotOneOfTheExpected() {
-        List<String> testCasesList = List.of(
-                "got@github.com/entando/my_bundle.git",
-                "got://github.com/entando/my_bundle.git",
-                "sssh://github.com/entando/my_bundle.git",
-                "https://github.com/entando/my_bundle.git",
-                "ftp://github.com/entando/my_bundle.git");
-
-        testCasesList.forEach(url -> {
-            String actual = deBundleComposer.gitSshProtocolToHttp(url);
-            Assertions.assertThat(actual).isEqualTo(url);
-        });
-    }
-
 
     private void assertOnFullLabelsDeBundleMap(Map<String, String> labelsMap) {
         assertThat(labelsMap.get("plugin")).isEqualTo("true");

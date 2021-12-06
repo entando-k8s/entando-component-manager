@@ -14,7 +14,6 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.net.URL;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -238,9 +237,9 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     @Override
-    public BundlesStatusResult getBundlesStatus(List<URL> repoUrlList) {
+    public BundlesStatusResult getBundlesStatus(List<String> repoUrlList) {
 
-        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlInWithURLs(repoUrlList);
+        List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlIn(repoUrlList);
 
         List<EntandoBundle> deployedBundles = listBundlesFromEcr();
         List<EntandoBundleEntity> installedButNotDeployed = filterInstalledButNotAvailableOnEcr(deployedBundles,
@@ -430,11 +429,11 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         // repoUrl should be decoded from BASE64
         final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedRepoUrl));
 
-        final URL decodedRepoUrl = ValidationFunctions.composeUrlOrThrow(decodedRepoUrlString, "Repo url is empty",
-                "Repo url is not valid");
+        final String decodedRepoUrl = ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(decodedRepoUrlString,
+                "Repo url is empty","Repo url is not valid");
 
         // Check in installed bundles
-        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrlWithUrl(decodedRepoUrl);
+        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);
         return installedBundle.map(this::convertToBundleFromEntity).or(() -> {
             // Check in available bundles
             List<EntandoBundle> availableBundles = listBundlesFromEcr();

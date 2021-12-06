@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.URL;
+import java.util.List;
 import java.util.stream.Stream;
+import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -55,5 +57,32 @@ class ValidationFunctionsTest {
                     URL url = ValidationFunctions.composeUrlOrThrow(urlString, emptyMex, invalidMex);
                     assertThat(url.toString()).isEqualTo(urlString);
                 });
+    }
+
+    @Test
+    void shouldReplaceGitAndSshProtocolWithHttpAndShouldNotThrowException() {
+        List<String> testCasesList = List.of(
+                "git@github.com:entando/my_bundle.git",
+                "git://github.com/entando/my_bundle.git",
+                "ssh://github.com/entando/my_bundle.git",
+                "git@github.com:entando:my_bundle.git");
+
+        testCasesList.forEach(url -> {
+            String actual = ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(url, "null", "not valid");
+            Assertions.assertThat(actual).isEqualTo(url);
+        });
+    }
+
+    @Test
+    void shouldReturnTheSameStringWhenProtocolIsNotOneOfTheExpected() {
+        List<String> testCasesList = List.of(
+                "got@github.com/entando/my_bundle.git",
+                "got://github.com/entando/my_bundle.git",
+                "sssh://github.com/entando/my_bundle.git",
+                "ftp://github.com/entando/my_bundle.git");
+
+        testCasesList.forEach(url ->
+                assertThrows(EntandoValidationException.class,
+                        () -> ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(url, "null", "not valid")));
     }
 }

@@ -35,6 +35,7 @@ import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -71,6 +72,12 @@ public class BundleUtilities {
 
     public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
     public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
+
+    public static final String GIT_AND_SSH_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/))";
+    public static final Pattern GIT_AND_SSH_PROTOCOL_REGEX_PATTERN = Pattern.compile(GIT_AND_SSH_PROTOCOL_REGEX);
+    public static final String HTTP_OVER_GIT_REPLACER = ValidationFunctions.HTTP_PROTOCOL + "://";
+    public static final String COLONS_REGEX = ":(?!\\/)";
+    public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -474,6 +481,7 @@ public class BundleUtilities {
 
         // remove final .git and split by /
         final String[] urlTokens = urlNoProtocol.replaceAll(".git$", "")
+                .replaceAll(":", "/")
                 .split("/");
 
         // reverse the array and join by . (to ensure k8s compatibility)
@@ -497,5 +505,16 @@ public class BundleUtilities {
         }
 
         return id;
+    }
+
+    /**
+     * if the received url string starts with a git or ssh protocol, it replaces the protocol with a simple http:// .
+     *
+     * @param url the string url to check and possibly replace
+     * @return the url with the replaces protocol or the original string itself
+     */
+    public static String gitSshProtocolToHttp(String url) {
+        String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
+        return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
     }
 }

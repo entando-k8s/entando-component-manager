@@ -5,23 +5,17 @@ import static org.entando.kubernetes.TestEntitiesGenerator.DEFAULT_BUNDLE_NAMESP
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.assertj.core.api.Java6Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
-import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -42,9 +36,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
 import org.entando.kubernetes.model.web.request.FilterOperator;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
-import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
-import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
@@ -53,14 +45,11 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleSer
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
-import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientResponseException;
 
 @Tag("unit")
@@ -468,22 +457,22 @@ public class EntandoBundleServiceTest {
     }
 
     @Test
-    void shouldReturnTheExpectedBundlesStatusResult() throws MalformedURLException {
+    void shouldReturnTheExpectedBundlesStatusResult() {
 
         when(bundleStatusHelper.composeBundleStatusItemByURL(
-                eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)),
+                eq(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed());
-        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_INSTALLED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(BundleStatusItemStubHelper.ID_INSTALLED),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
-        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_DEPLOYED)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(BundleStatusItemStubHelper.ID_DEPLOYED),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemDeployed());
-        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(new URL(BundleStatusItemStubHelper.ID_NOT_FOUND)),
+        when(bundleStatusHelper.composeBundleStatusItemByURL(eq(BundleStatusItemStubHelper.ID_NOT_FOUND),
                 any(), any(), any())).thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemNotFoundByUrl());
 
         // given a list of bundle id (repo url)
-        final List<URL> bundleIds = List.of(new URL(BundleStatusItemStubHelper.ID_INSTALLED),
-                new URL(BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED),
-                new URL(BundleStatusItemStubHelper.ID_NOT_FOUND), new URL(BundleStatusItemStubHelper.ID_DEPLOYED));
+        final List<String> bundleIds = List.of(BundleStatusItemStubHelper.ID_INSTALLED,
+                BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED,
+                BundleStatusItemStubHelper.ID_NOT_FOUND, BundleStatusItemStubHelper.ID_DEPLOYED);
 
         // when I ask for their status
         final BundlesStatusResult bundlesStatusResult = service.getBundlesStatus(bundleIds);
@@ -521,9 +510,8 @@ public class EntandoBundleServiceTest {
     void getBundleByRepoUrl_withValidUrlAndInstalledBundle_shouldReturnInstalledBundle() {
 
         final EntandoBundleEntity bundleEntity = getTestComponent();
-        when(installedComponentRepository.findFirstByRepoUrlWithUrl(
-                ValidationFunctions.composeUrlOrThrow(TestEntitiesGenerator.REPO_URL, "null URL",
-                        "invalid URL"))).thenReturn(Optional.of(bundleEntity));
+        when(installedComponentRepository.findFirstByRepoUrl(TestEntitiesGenerator.REPO_URL)).thenReturn(
+                Optional.of(bundleEntity));
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
                 "aHR0cHM6Ly9naXRodWIuY29tL2ZpcmVnbG92ZXMtYnVuZGxlcy94bWFzYnVuZGxlLmdpdA");
 
@@ -536,7 +524,7 @@ public class EntandoBundleServiceTest {
         EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
         k8SServiceClient.addInMemoryBundle(bundle);
 
-        when(installedComponentRepository.findFirstByRepoUrlWithUrl(any())).thenReturn(Optional.empty());
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.empty());
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
                 "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3o");
 
@@ -546,7 +534,7 @@ public class EntandoBundleServiceTest {
     @Test
     void getBundleByRepoUrl_withValidUrlAndNoBundles_shouldReturnEmptyBundle() {
 
-        when(installedComponentRepository.findFirstByRepoUrlWithUrl(any())).thenReturn(Optional.empty());
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.empty());
         Optional<EntandoBundle> entandoBundle = service.getBundleByRepoUrl(
                 "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK");
 
