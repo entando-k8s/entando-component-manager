@@ -79,8 +79,4 @@ public class BundleStatusItemStubHelper {
                 .setStatus(STATUS_INVALID_REPO_URL)
                 .setInstalledVersion(INSTALLED_VERSION_INVALID_REPO_URL);
     }
-
-    public static URL stubURLInvalidUrl() throws MalformedURLException {
-        return new URL(ID_INVALID_REPO_URL);
-    }
 }

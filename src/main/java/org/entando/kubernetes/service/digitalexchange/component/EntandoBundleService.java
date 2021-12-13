@@ -14,7 +14,6 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -50,7 +49,7 @@ public interface EntandoBundleService {
 
     String undeployDeBundle(String bundleName);
 
-    BundlesStatusResult getBundlesStatus(List<URL> bundlesUrlList);
+    BundlesStatusResult getBundlesStatus(List<String> bundlesUrlList);
 
     BundlesStatusItem getSingleBundleStatus(String bundleName);
 

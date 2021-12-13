@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @UtilityClass
 public class ValidationFunctions {
@@ -17,6 +18,23 @@ public class ValidationFunctions {
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";
     public static final List<String> VALID_PROTOCOLS = List.of(HTTP_PROTOCOL, HTTPS_PROTOCOL);
+
+    /**
+     * if the url uses the git or ssh protocol, replace it with http
+     * validate the received url using url regex. checks that the url is not empty. if this fails, throw
+     * EntandoValidationException with nullError message checks that the url is valid. if this fails, throw
+     * EntandoValidationException with invalidError message
+     *
+     * @param stringUrl    the string contianing the url to validate
+     * @param nullError    the message to add to the EntandoValidationException if the url is empty
+     * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
+     * @return the received url
+     */
+    public static String composeUrlForcingHttpProtocolOrThrow(String stringUrl, String nullError, String invalidError) {
+        final String httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(stringUrl);
+        composeUrlOrThrow(httpProtocolUrl, nullError, invalidError);
+        return stringUrl;
+    }
 
     /**
      * validate the received url using url regex. checks that the url is not empty. if this fails, throw

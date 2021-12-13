@@ -14,7 +14,6 @@
 
 package org.entando.kubernetes.controller.digitalexchange.component;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +27,6 @@ import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -101,12 +99,13 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
         }
 
         List<BundlesStatusItem> invalidBundlesStatusItemList = new ArrayList<>();
-        List<URL> repoUrlList = new ArrayList<>();
+        List<String> repoUrlList = new ArrayList<>();
 
         for (String stringUrl : bundlesStatusQuery.getIds()) {
             try {
-                URL url = ValidationFunctions.composeUrlOrThrow(stringUrl, "The received url is empty", "The received url is not valid");
-                repoUrlList.add(url);
+                ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(stringUrl,
+                        "The received url is empty", "The received url is not valid");
+                repoUrlList.add(stringUrl);
             } catch (Exception e) {
                 log.error("Invalid URL received: {} - it will be skipped in the search", stringUrl);
                 invalidBundlesStatusItemList.add(

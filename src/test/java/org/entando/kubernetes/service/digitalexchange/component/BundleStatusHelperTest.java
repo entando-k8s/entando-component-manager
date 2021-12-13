@@ -82,10 +82,9 @@ class BundleStatusHelperTest {
 
     private void shouldComposeTheExpectedBundleStatusItemByUrl(String repoUrl,
             List<EntandoBundleEntity> installedBundleEntities, List<EntandoBundle> deployedBundles,
-            List<EntandoBundleEntity> installedButNotDeployed, BundlesStatusItem expected)
-            throws MalformedURLException {
+            List<EntandoBundleEntity> installedButNotDeployed, BundlesStatusItem expected) {
 
-        final BundlesStatusItem actual = bundleStatusHelper.composeBundleStatusItemByURL(new URL(repoUrl),
+        final BundlesStatusItem actual = bundleStatusHelper.composeBundleStatusItemByURL(repoUrl,
                 installedBundleEntities, deployedBundles, installedButNotDeployed);
 
         assertThat(actual).isEqualToComparingFieldByField(expected);
@@ -100,32 +99,26 @@ class BundleStatusHelperTest {
     }
 
     @Test
-    void shouldThrowExceptionIfNullInstalledBundleListWhenSearchingByUrl() throws MalformedURLException {
-
-        final URL url = BundleStatusItemStubHelper.stubURLInvalidUrl();
+    void shouldThrowExceptionIfNullInstalledBundleListWhenSearchingByUrl() {
 
         Assertions.assertThrows(EntandoComponentManagerException.class,
-                () -> bundleStatusHelper.composeBundleStatusItemByURL(url, null,
-                        deployedBundles, installedButNotDeployed));
+                () -> bundleStatusHelper.composeBundleStatusItemByURL(BundleStatusItemStubHelper.ID_INVALID_REPO_URL,
+                        null, deployedBundles, installedButNotDeployed));
     }
 
     @Test
-    void shouldThrowExceptionIfNullDeployedBundleListWhenSearchingByUrl() throws MalformedURLException {
-
-        final URL url = BundleStatusItemStubHelper.stubURLInvalidUrl();
+    void shouldThrowExceptionIfNullDeployedBundleListWhenSearchingByUrl() {
 
         Assertions.assertThrows(EntandoComponentManagerException.class,
-                () -> bundleStatusHelper.composeBundleStatusItemByURL(url,
+                () -> bundleStatusHelper.composeBundleStatusItemByURL(BundleStatusItemStubHelper.ID_INVALID_REPO_URL,
                         installedBundleEntities, null, installedButNotDeployed));
     }
 
     @Test
-    void shouldThrowExceptionIfNullInstalledButNotDeployeddBundleListWhenSearchingByUrl() throws MalformedURLException {
-
-        final URL url = BundleStatusItemStubHelper.stubURLInvalidUrl();
+    void shouldThrowExceptionIfNullInstalledButNotDeployeddBundleListWhenSearchingByUrl() {
 
         Assertions.assertThrows(EntandoComponentManagerException.class,
-                () -> bundleStatusHelper.composeBundleStatusItemByURL(url,
+                () -> bundleStatusHelper.composeBundleStatusItemByURL(BundleStatusItemStubHelper.ID_INVALID_REPO_URL,
                         installedBundleEntities, deployedBundles, null));
     }
 
