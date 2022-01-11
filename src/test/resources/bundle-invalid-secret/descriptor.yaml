@@ -1,0 +1,6 @@
+code: wrong-secret-name
+description: bundle description
+
+components:
+  plugins:
+    - plugins/wrong-secret-name.yaml

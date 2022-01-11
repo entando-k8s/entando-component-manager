@@ -25,15 +25,23 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 @Slf4j
 public class BundleReader {
 
     private final YAMLMapper mapper = new YAMLMapper();
     private final Path bundleBasePath;
+    private final EntandoDeBundle entandoDeBundle;
 
     public BundleReader(Path filePath) {
-        bundleBasePath = filePath;
+        this.bundleBasePath = filePath;
+        this.entandoDeBundle = null;
+    }
+
+    public BundleReader(Path filePath, EntandoDeBundle entandoDeBundle) {
+        this.bundleBasePath = filePath;
+        this.entandoDeBundle = entandoDeBundle;
     }
 
     public BundleDescriptor readBundleDescriptor() throws IOException {
@@ -127,4 +135,11 @@ public class BundleReader {
         return bundleBasePath.resolve(directory + "/" + fileName).toFile();
     }
 
+    public String getEntandoDeBundleId() {
+        if (this.entandoDeBundle == null) {
+            throw new EntandoComponentManagerException("Error while reading the bundle ID");
+        }
+
+        return this.entandoDeBundle.getMetadata().getName();
+    }
 }

@@ -305,9 +305,9 @@ public class TestInstallUtils {
                                 "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .contents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
-                .plugins(Map.of("custombasename", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                        "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                        "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .plugins(Map.of("custombasename-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "entando-todomvcv1-1-0-0-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "entando-todomvcv2-1-0-0-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .build();
     }
 
@@ -389,7 +389,7 @@ public class TestInstallUtils {
                                 "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setContents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
-                .setPlugins(Map.of("custombasename", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                .setPlugins(Map.of("custombasename-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
     }
@@ -413,11 +413,11 @@ public class TestInstallUtils {
 
     public static AnalysisReport getPluginAnalysisReport() {
         return AnalysisReport.builder()
-                .plugins(Map.of("custombasename",
+                .plugins(Map.of("custombasename-todomvc",
                         Status.DIFF,
-                        "entando-todomvcv1-1-0-0",
+                        "entando-todomvcv1-1-0-0-todomvc",
                         Status.NEW,
-                        "entando-todomvcv2-1-0-0",
+                        "entando-todomvcv2-1-0-0-todomvc",
                         Status.NEW))
                 .build();
     }
@@ -433,7 +433,20 @@ public class TestInstallUtils {
     }
 
     public static void mockBundle(K8SServiceClient k8SServiceClient) {
-        List<EntandoDeBundle> bundles = List.of(getTestBundle());
+        mockBundle(k8SServiceClient, getTestBundle());
+    }
+
+    /**
+     * mocks the K8SServiceClient responses for:
+     * - get the list of bundles
+     * - get bundle by name
+     * it uses the received bundle.
+     *
+     * @param k8SServiceClient the k8s service client mock
+     * @param deBundle         the bundle to return in the mocked responses
+     */
+    public static void mockBundle(K8SServiceClient k8SServiceClient, EntandoDeBundle deBundle) {
+        List<EntandoDeBundle> bundles = List.of(deBundle);
         when(k8SServiceClient.getBundlesInObservedNamespaces()).thenReturn(bundles);
         when(k8SServiceClient.getBundleWithName(any())).thenReturn(Optional.of(bundles.get(0)));
     }
@@ -447,13 +460,13 @@ public class TestInstallUtils {
         deploymentStatus.updateDeploymentPhase(status, 1L);
 
         EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1"),
+                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1-todomvc"),
                 deploymentStatus);
         EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv2"),
+                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv2-todomvc"),
                 deploymentStatus);
         EntandoAppPluginLink plugin3 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "custombasename"),
+                new EntandoAppPluginLinkSpec("", "", "", "custombasename-todomvc"),
                 deploymentStatus);
 
         when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
@@ -479,7 +492,11 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
-        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.INSTALL.getStatuses()),
+        waitForInstallStatus(mockMvc, "todomvc", expected);
+    }
+
+    public static void waitForInstallStatus(MockMvc mockMvc, String compId, JobStatus... expected) {
+        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, compId, JobType.INSTALL.getStatuses()),
                 expected);
     }
 
@@ -591,7 +608,6 @@ public class TestInstallUtils {
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
-        //        stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))

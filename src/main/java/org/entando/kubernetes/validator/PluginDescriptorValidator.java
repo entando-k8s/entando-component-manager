@@ -15,12 +15,15 @@ import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -31,8 +34,21 @@ public class PluginDescriptorValidator {
 
     public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
     public static final Pattern DNS_LABEL_HOST_REGEX_PATTERN = Pattern.compile(DNS_LABEL_HOST_REGEX);
-
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR = "The prefix \"%s\" of the pod that is "
+            + "about to be created is longer than %d.";
     public static final String DESC_PROP_ENV_VARS = "environmentVariables";
+    public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = 200;
+
+    private final int fullDeploymentNameMaxlength;
+
+    public PluginDescriptorValidator(@Value("${full.deployment.name.maxlength:" + STANDARD_FULL_DEPLOYMENT_NAME_LENGTH
+            + "}") int fullDeploymentNameMaxlength) {
+        this.fullDeploymentNameMaxlength = fullDeploymentNameMaxlength;
+    }
+
+    public int getFullDeploymentNameMaxlength() {
+        return fullDeploymentNameMaxlength;
+    }
 
     /**************************************************************************************************************
      * CONFIGURATION START.
@@ -70,29 +86,30 @@ public class PluginDescriptorValidator {
                 PluginDescriptorVersion.V1,
                 Arrays.asList(
                         this::validateDescriptorFormatOrThrow,
-                        this::validateSecurityLevelOrThrow),
+                        this::validateSecurityLevelOrThrow,
+                        this::validateFullDeploymentNameLength),
                 objectsThatMustNOTBeNull,
                 objectsThatMustBeNull
         ));
     }
 
     private void setupValidatorConfigurationDescriptorV2() {
-        setupValidatorConfigurationDescriptorV2AndV3(PluginDescriptorVersion.V2);
+        setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V2);
     }
 
     private void setupValidatorConfigurationDescriptorV3() {
-        setupValidatorConfigurationDescriptorV2AndV3(PluginDescriptorVersion.V3);
+        setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V3);
     }
 
     private void setupValidatorConfigurationDescriptorV4() {
-        setupValidatorConfigurationDescriptorV2AndV3(PluginDescriptorVersion.V4);
+        setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V4);
         PluginDescriptorValidatorConfigBean configBeanV4 = validationConfigMap.get(
                 PluginDescriptorVersion.V4);
         configBeanV4.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
         configBeanV4.getValidationFunctions().add(this::validateEnvVarsOrThrow);
     }
 
-    private void setupValidatorConfigurationDescriptorV2AndV3(PluginDescriptorVersion descriptorVersion) {
+    private void setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion descriptorVersion) {
         Map<String, Function<PluginDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
         objectsThatMustNOTBeNull.put("image", PluginDescriptor::getImage);
         objectsThatMustNOTBeNull.put("dbms", PluginDescriptor::getDbms);
@@ -105,6 +122,7 @@ public class PluginDescriptorValidator {
         List<PluginDescriptorValidationFunction> validationFunctionList = new ArrayList<>();
         validationFunctionList.add(this::validateDescriptorFormatOrThrow);
         validationFunctionList.add(this::validateSecurityLevelOrThrow);
+        validationFunctionList.add(this::validateFullDeploymentNameLength);
 
         validationConfigMap.put(descriptorVersion, new PluginDescriptorValidatorConfigBean(
                 descriptorVersion,
@@ -267,10 +285,12 @@ public class PluginDescriptorValidator {
                     EnvironmentVariable envVar = environmentVariables.get(i);
                     boolean invalid = false;
 
+                    // env var name empty
                     if (ObjectUtils.isEmpty(envVar.getName())) {
                         invalid = true;
                     }
 
+                    // secret key ref empty or invalid
                     if (!invalid
                             && ((ObjectUtils.isEmpty(envVar.getValue()) && envVar.getSecretKeyRef() == null)
                             ||
@@ -283,9 +303,31 @@ public class PluginDescriptorValidator {
                         log.debug(error);
                         throw new InvalidBundleException(error);
                     }
+
+                    // does secret belong to the bundle?
+                    if (envVar.getSecretKeyRef() != null
+                            && !doesSecretBelongToTheBundle(descriptor.getDescriptorMetadata().getBundleId(),
+                            envVar.getSecretKeyRef())) {
+                        String error = String.format(NON_OWNED_SECRET, descriptor.getComponentKey().getKey(), i + 1,
+                                BundleUtilities.makeKubernetesCompatible(descriptor.getDescriptorMetadata().getBundleId()));
+                        log.debug(error);
+                        throw new InvalidBundleException(error);
+                    }
                 });
 
         return descriptor;
+    }
+
+    /**
+     * receive a SecretKeyRef and check that it belongs to the owner plugin the rule to check is that the secret name
+     * must end with the bundleId of the plugin.
+     *
+     * @param bundleId     the id of the bundle owning the current plugin
+     * @param secretKeyRef the SecretKeyRef to validate
+     * @return the validated SecretKeyRef
+     */
+    private boolean doesSecretBelongToTheBundle(String bundleId, SecretKeyRef secretKeyRef) {
+        return secretKeyRef.getName().endsWith(BundleUtilities.makeKubernetesCompatible(bundleId));
     }
 
     /**
@@ -297,9 +339,29 @@ public class PluginDescriptorValidator {
     private boolean isSecretKeyRefValid(SecretKeyRef secretKeyRef) {
 
         return !ObjectUtils.isEmpty(secretKeyRef.getName())
-                && secretKeyRef.getName().length() <= 253
-                && ! ObjectUtils.isEmpty(secretKeyRef.getKey())
+                && secretKeyRef.getName().length() <= BundleUtilities.GENERIC_K8S_ENTITY_MAX_LENGTH
+                && !ObjectUtils.isEmpty(secretKeyRef.getKey())
                 && DNS_LABEL_HOST_REGEX_PATTERN.matcher(secretKeyRef.getName()).matches();
+    }
+
+
+    /**
+     * validate the fullDeploymentName. if the validation fails an EntandoComponentManagerException is thrown
+     *
+     * @param descriptor the descriptor of which validate the fullDeploymentName length
+     * @return the validated string
+     */
+    private PluginDescriptor validateFullDeploymentNameLength(PluginDescriptor descriptor) {
+        if (descriptor.getDescriptorMetadata().getFullDeploymentName().length() > fullDeploymentNameMaxlength) {
+
+            throw new EntandoComponentManagerException(
+                    String.format(
+                            DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR,
+                            descriptor.getDescriptorMetadata().getFullDeploymentName(),
+                            fullDeploymentNameMaxlength));
+        }
+
+        return descriptor;
     }
 
 
@@ -310,12 +372,15 @@ public class PluginDescriptorValidator {
     public static final String VERSION_NOT_VALID =
             "The plugin %s descriptor contains an invalid descriptorVersion. Accepted versions are: "
                     + Arrays.stream(PluginDescriptorVersion.values()).map(PluginDescriptorVersion::getVersion)
-                            .collect(Collectors.joining(", "));
+                    .collect(Collectors.joining(", "));
     public static final String ENV_VARS_NOT_VALID =
             "The descriptor of the %s plugin contains an invalid environment variable (number %d). Rules are:\n"
                     + "1) each environment variable must have a name\n"
                     + "2) each environment variable must have a value OR a SecretKeyRef fully populated\n"
                     + "3) the name of a Secret object must be a valid DNS subdomain name";
+    public static final String NON_OWNED_SECRET =
+            "The descriptor of the %s plugin contains an invalid environment variable (number %d) that points to a "
+                    + "secret non owned by the plugin. Valid secret names end with the bundle id %s";
     public static final String EXPECTED_NOT_NULL_IS_NULL =
             "PluginDescriptor version detected: %s. With this version the %s property must NOT be null.";
     public static final String EXPECTED_NULL_IS_NOT_NULL =

@@ -5,23 +5,28 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class PluginDescriptor implements Descriptor {
+
+    @AllArgsConstructor
+    @Getter
+    public static class DescriptorMetadata {
+        private final String bundleId;
+        private final String fullDeploymentName;
+    }
+
     /**
      * identifies the plugin descriptor version.
      */
@@ -84,6 +89,35 @@ public class PluginDescriptor implements Descriptor {
      */
     private List<EnvironmentVariable> environmentVariables;
 
+    /******************************************************************
+     * private variables that can't be set from the yaml descriptor.
+     *****************************************************************/
+    private DescriptorMetadata descriptorMetadata;
+
+
+    public PluginDescriptor() {
+    }
+
+    @Builder
+    public PluginDescriptor(String descriptorVersion,
+            DockerImage dockerImage, PluginDescriptorV1Spec spec, String name, String deploymentBaseName,
+            String image, String healthCheckPath, String dbms, List<String> roles,
+            List<PluginPermission> permissions, String ingressPath, String securityLevel,
+            List<EnvironmentVariable> environmentVariables) {
+        this.descriptorVersion = descriptorVersion;
+        this.dockerImage = dockerImage;
+        this.spec = spec;
+        this.name = name;
+        this.deploymentBaseName = deploymentBaseName;
+        this.image = image;
+        this.healthCheckPath = healthCheckPath;
+        this.dbms = dbms;
+        this.roles = roles;
+        this.permissions = permissions;
+        this.ingressPath = ingressPath;
+        this.securityLevel = securityLevel;
+        this.environmentVariables = environmentVariables;
+    }
 
     public DockerImage getDockerImage() {
         if (dockerImage == null) {
@@ -108,10 +142,17 @@ public class PluginDescriptor implements Descriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(BundleUtilities.extractNameFromDescriptor(this));
+        return new ComponentKey(this.getDescriptorMetadata().getFullDeploymentName());
     }
 
-    public String generateDeploymentBaseNameNotTruncated() {
-        return BundleUtilities.composeDeploymentBaseName(this);
+    public PluginDescriptor setDescriptorMetadata(String bundleId, String fullDeploymentName) {
+        if (ObjectUtils.isEmpty(bundleId)) {
+            throw new EntandoComponentManagerException("Empty bundle id received as plugin metadata");
+        }
+        if (ObjectUtils.isEmpty(fullDeploymentName)) {
+            throw new EntandoComponentManagerException("Empty full deployment name received as plugin metadata");
+        }
+        this.descriptorMetadata = new DescriptorMetadata(bundleId, fullDeploymentName);
+        return this;
     }
 }

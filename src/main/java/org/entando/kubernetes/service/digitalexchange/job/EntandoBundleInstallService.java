@@ -251,7 +251,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     optCompJob = scheduler.extractFromQueue();
                 }
                 if (parentJobResult.hasException()) {
-                    log.error("An error occurred during component instEntandoBundleJobEntityallation --- ", parentJobResult.getInstallError());
+                    log.error("An error occurred during component installation --- {}", parentJobResult.getInstallError());
                     log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
                             .getComponentVersion());
                     parentJobResult = rollback(scheduler, parentJobResult);
@@ -318,7 +318,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             EntandoDeBundleTag tag) {
 
         Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-        return new BundleReader(pathToDownloadedBundle);
+        return new BundleReader(pathToDownloadedBundle, bundle);
     }
 
     private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,

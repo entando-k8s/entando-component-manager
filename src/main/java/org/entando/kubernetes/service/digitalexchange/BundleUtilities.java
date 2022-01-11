@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
@@ -50,9 +49,8 @@ public class BundleUtilities {
 
     public static final int MAX_K8S_POD_NAME_LENGTH = 63;
     public static final int RESERVED_K8S_POD_NAME_LENGTH = 31;
+    public static final int GENERIC_K8S_ENTITY_MAX_LENGTH = 253;
     public static final int MAX_ENTANDO_K8S_POD_NAME_LENGTH = MAX_K8S_POD_NAME_LENGTH - RESERVED_K8S_POD_NAME_LENGTH;
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR = "The prefix \"%s\" of the pod that is "
-            + "about to be created is longer than %d. The prefix has been created using %s";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END = "Please specify a shorter value "
             + "in the \"deploymentBaseName\" plugin descriptor property";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX = "the format "
@@ -180,10 +178,6 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
-    public static String extractNameFromDescriptor(PluginDescriptor descriptor) {
-        return composeDeploymentBaseNameAndTruncateIfNeeded(descriptor);
-    }
-
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
         return Optional.ofNullable(composeIngressPathFromIngressPathProperty(descriptor))
                 .orElse(composeIngressPathFromDockerImage(descriptor));
@@ -203,75 +197,11 @@ public class BundleUtilities {
         }
     }
 
-    private static String composeDeploymentBaseNameAndTruncateIfNeeded(PluginDescriptor descriptor) {
-
-        String deploymentBaseName;
-        String errorSuffix;
-
-        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
-            deploymentBaseName = makeKubernetesCompatible(descriptor.getDeploymentBaseName());
-            errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX;
-        } else {
-            deploymentBaseName = composeNameFromDockerImage(descriptor.getDockerImage());
-            errorSuffix = DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX;
-        }
-
-        if (AppConfiguration.isTruncatePluginBaseNameIfLonger()) {
-            deploymentBaseName = truncatePodPrefixName(deploymentBaseName);
-        }
-
-        return validateAndReturnDeploymentBaseName(deploymentBaseName, errorSuffix,
-                AppConfiguration.isTruncatePluginBaseNameIfLonger());
-    }
-
-    /**
-     * validate the deploymentBaseName. if the validation fails an EntandoComponentManagerException is thrown
-     *
-     * @param deploymentBaseName          the base name to use for the deployments that have to be generated in
-     *                                    kubernetes
-     * @param errorSuffix                 the suffix to append to the error that specifies which properties was used to
-     *                                    generate the deployment base name
-     * @param isTruncatePluginBaseEnabled if true the plugin base name should be truncated if it's longer than the
-     *                                    admitted, so no validation is applied here
-     * @return the validated string
-     */
-    private static String validateAndReturnDeploymentBaseName(
-            String deploymentBaseName,
-            String errorSuffix,
-            boolean isTruncatePluginBaseEnabled) {
-
-        // deploymentBaseName has to not be longer than 63 chars
-        if (!isTruncatePluginBaseEnabled && deploymentBaseName.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
-
-            throw new EntandoComponentManagerException(
-                    String.format(
-                            DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
-                            deploymentBaseName,
-                            MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                            errorSuffix));
-        }
-
-        return deploymentBaseName;
-    }
-
-
     public static String composeNameFromDockerImage(DockerImage image) {
 
         return String.join("-",
                 makeKubernetesCompatible(image.getOrganization()),
                 makeKubernetesCompatible(image.getName()));
-    }
-
-    public static String truncatePodPrefixName(String podPrefixName) {
-
-        if (podPrefixName.length() > MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
-
-            podPrefixName = podPrefixName
-                    .substring(0, Math.min(MAX_ENTANDO_K8S_POD_NAME_LENGTH, podPrefixName.length()))
-                    .replaceAll("-$", "");        // remove a possible ending hyphen
-        }
-
-        return podPrefixName;
     }
 
     /**
@@ -341,7 +271,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(extractNameFromDescriptor(descriptor))
+                .withName(descriptor.getDescriptorMetadata().getFullDeploymentName())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
                 .endMetadata()
                 .withNewSpec()
@@ -366,7 +296,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(extractNameFromDescriptor(descriptor))
+                .withName(descriptor.getDescriptorMetadata().getFullDeploymentName())
                 .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()
@@ -388,7 +318,7 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
-    private static String makeKubernetesCompatible(String value) {
+    public static String makeKubernetesCompatible(String value) {
         return value.toLowerCase()
                 .replaceAll("[\\/\\.\\:_]", "-");
     }
@@ -466,6 +396,7 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
+    // About the NOSONAR: replaceAll is the right way because we need to replace all the occurrences
     /**
      * compose the name of a bundle starting by its repository url.
      * @param bundleUrl the repository url of the bundle
@@ -481,7 +412,7 @@ public class BundleUtilities {
 
         // remove final .git and split by /
         final String[] urlTokens = urlNoProtocol.replaceAll(".git$", "")
-                .replaceAll(":", "/")
+                .replaceAll(":", "/")   // NOSONAR
                 .split("/");
 
         // reverse the array and join by . (to ensure k8s compatibility)
@@ -498,10 +429,12 @@ public class BundleUtilities {
         }
 
         // remove double points
-        id = id.replaceAll("\\.\\.", "\\.");
+        id = id.replaceAll("\\.\\.", "\\.");    // NOSONAR
 
-        if (id.length() > 253) {
-            throw new EntandoValidationException("The bundle resulting name is \"" + id + "\" but its size exceeds 253 characters");
+        if (id.length() > GENERIC_K8S_ENTITY_MAX_LENGTH) {
+            throw new EntandoValidationException(
+                    "The bundle resulting name is \"" + id + "\" but its size exceeds " + GENERIC_K8S_ENTITY_MAX_LENGTH
+                            + " characters");
         }
 
         return id;

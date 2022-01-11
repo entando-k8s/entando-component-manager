@@ -2,36 +2,31 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -80,12 +75,14 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
             for (String filename : descriptorList) {
-                PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                pluginDescriptorValidator.validateOrThrow(plugin);
-                logDescriptorWarnings(plugin);
-                InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), conflictStrategy,
+                PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                setPluginMetadata(pluginDescriptor, bundleReader);
+                pluginDescriptorValidator.validateOrThrow(pluginDescriptor);
+                logDescriptorWarnings(pluginDescriptor);
+                InstallAction action = extractInstallAction(pluginDescriptor.getComponentKey().getKey(),
+                        conflictStrategy,
                         installPlan);
-                installableList.add(new PluginInstallable(kubernetesService, plugin, action));
+                installableList.add(new PluginInstallable(kubernetesService, pluginDescriptor, action));
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -104,7 +101,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     @Override
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return PluginDescriptor.builder().deploymentBaseName(component.getComponentId()).build();
+        return new PluginDescriptor()
+                .setDescriptorMetadata(new DescriptorMetadata(null, component.getComponentId()));
     }
 
     @Override
@@ -118,6 +116,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
                 PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
                         .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+                setPluginMetadata(pluginDescriptor, bundleReader);
                 logDescriptorWarnings(pluginDescriptor);
                 idList.add(pluginDescriptor.getComponentKey().getKey());
             }
@@ -131,6 +130,11 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
     }
 
+    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+        pluginDescriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
+                generateFullDeploymentName(pluginDescriptor, bundleReader.getEntandoDeBundleId()));
+    }
+
 
     private void logDescriptorWarnings(PluginDescriptor descriptor) {
 
@@ -140,7 +144,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
 
         // plugin base name too long
-        String deploymentBaseName = descriptor.generateDeploymentBaseNameNotTruncated();
+        String deploymentBaseName = descriptor.getComponentKey().getKey();
         if (deploymentBaseName.length() > BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
 
             String errMessage = descriptor.isVersion1()
@@ -150,8 +154,47 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             log.warn(errMessage,
                     descriptor.getDockerImage(),
                     BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                    BundleUtilities.truncatePodPrefixName(deploymentBaseName));
+                    this.truncateFullDeploymentName(deploymentBaseName));
         }
+    }
+
+    /**
+     * generate the full deployment name (deployment-name + bundleId) the deployment name is generated starting by the.
+     * deployment base name or by the docker image apply a truncation if required
+     *
+     * @param descriptor the PluginDescriptor from which read data
+     * @param bundleId   the bundle identifier to concatenate to the deployment name
+     * @return the generated full deployment name
+     */
+    public String generateFullDeploymentName(PluginDescriptor descriptor, String bundleId) {
+
+        String deploymentBaseName;
+
+        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
+            deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
+        } else {
+            deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
+        }
+
+        String fullDeploymentName = deploymentBaseName + "-" + BundleUtilities.makeKubernetesCompatible(bundleId);
+
+        if (AppConfiguration.isTruncatePluginBaseNameIfLonger()) {
+            fullDeploymentName = this.truncateFullDeploymentName(fullDeploymentName);
+        }
+
+        return fullDeploymentName;
+    }
+
+    // TODO rinomina
+    protected String truncateFullDeploymentName(String fullDeploymentName) {
+        if (fullDeploymentName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {
+
+            fullDeploymentName = fullDeploymentName
+                    .substring(0, pluginDescriptorValidator.getFullDeploymentNameMaxlength())
+                    .replaceAll("-$", "");        // remove a possible ending hyphen
+        }
+
+        return fullDeploymentName;
     }
 
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "

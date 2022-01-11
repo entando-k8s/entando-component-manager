@@ -45,23 +45,6 @@ class PluginDescriptorConvertionTest {
 
 
     @Test
-    void shouldGenerateKubernetesCompatibleNameFromDescriptorVersionMajorThan1() {
-        Stream.of(PluginStubHelper.stubPluginDescriptorV2(), PluginStubHelper.stubPluginDescriptorV3())
-                .forEach(pluginDescriptor -> {
-                    String name = BundleUtilities.extractNameFromDescriptor(pluginDescriptor);
-                    assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
-                });
-    }
-
-    @Test
-    void shouldGenerateKubernetesCompatibleNameFromDescriptorVersion1() {
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
-        String name = BundleUtilities.extractNameFromDescriptor(descriptor);
-        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_PLUGIN_NAME);
-    }
-
-
-    @Test
     void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersionMinorThan3() {
         Stream.of(
                         PluginStubHelper.stubPluginDescriptorV1().setDescriptorVersion(PluginDescriptorVersion.V1.getVersion()),
@@ -81,8 +64,9 @@ class PluginDescriptorConvertionTest {
 
     @Test
     void shouldConvertDescriptorToEntandoPluginVersionMajorThan1() {
-        PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV2();
-        d.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+        PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV2()
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
+                .setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
         assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
@@ -91,8 +75,9 @@ class PluginDescriptorConvertionTest {
 
     @Test
     void shouldConvertDescriptorToEntandoPluginVersion1() {
-        PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV1();
-        d.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+        PluginDescriptor d = PluginStubHelper.stubPluginDescriptorV1()
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME)
+                .setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
         assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME);
@@ -113,7 +98,7 @@ class PluginDescriptorConvertionTest {
         List<ExpectedRole> expectedRoles = p.getSpec().getRoles();
         List<String> expectedRolesCodes = Arrays
                 .asList(PluginStubHelper.TEST_DESCRIPTOR_ADMIN_ROLE, PluginStubHelper.TEST_DESCRIPTOR_USER_ROLE);
-        assertThat(expectedRoles.size()).isEqualTo(2);
+        assertThat(expectedRoles).hasSize(2);
         assertThat(expectedRoles).allMatch(role ->
                 expectedRolesCodes.contains(role.getCode()) && role.getCode().equals(role.getName()));
         assertThat(p.getSpec().getRoles().stream()

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import org.assertj.core.api.Assertions;
+import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
@@ -38,7 +39,6 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class EntandoBundleUtilitiesTest {
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder);
+        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
     }
 
     @Test
@@ -124,89 +124,6 @@ public class EntandoBundleUtilitiesTest {
         assertThat(BundleUtilities.isSemanticVersion("my-great-version")).isFalse();
     }
 
-
-    @Test
-    @Disabled("Adapt and enable when we will manage this situation")
-    void shouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars() {
-
-        String imageName = PluginStubHelper.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
-
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
-        descriptor.setDeploymentBaseName(PluginStubHelper.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst");
-
-        String expectedMex = String.format(BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
-                imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
-                BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX);
-
-        genericShouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars(descriptor, expectedMex);
-    }
-
-
-    @Test
-    @Disabled("Adapt and enable when we will manage this situation")
-    void shouldThrowExceptionIfPodDeploymentBaseNameLengthFromDockerImageExceeds32Chars() {
-
-        String imageName = PluginStubHelper.TEST_DESCRIPTOR_IMAGE + "abcdefghilmnopqrst";
-
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
-        descriptor.setImage(imageName);
-        descriptor.setDeploymentBaseName(null);
-
-        String expectedMex = String.format(BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_EXCEEDED_ERROR,
-                imageName.toLowerCase().replaceAll("[\\/\\.\\:]", "-"),
-                BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                BundleUtilities.DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX);
-
-        genericShouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars(descriptor, expectedMex);
-    }
-
-
-    private void genericShouldThrowExceptionIfPodDeploymentBaseNameLengthExceeds32Chars(PluginDescriptor descriptor,
-            String expectedMex) {
-
-        EntandoComponentManagerException exception = assertThrows(
-                EntandoComponentManagerException.class,
-                () -> BundleUtilities.extractNameFromDescriptor(descriptor),
-                "Expected extractNameFromDescriptor() to throw, but it didn't"
-        );
-
-        assertThat(exception.getMessage()).isEqualTo(expectedMex);
-    }
-
-
-    @Test
-    void ifPresentShouldUseDeploymentBaseNameOverDockerImage() {
-
-        String deploymentBaseName = "testDeploymentName";
-
-        // descriptor v2
-        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
-        descriptorV2.setDeploymentBaseName(deploymentBaseName);
-        assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV2)).isEqualTo(deploymentBaseName.toLowerCase());
-
-        // descriptor v2
-        PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
-        descriptorV1.setDeploymentBaseName(deploymentBaseName);
-        assertThat(BundleUtilities.extractNameFromDescriptor(descriptorV1)).isEqualTo(deploymentBaseName.toLowerCase());
-    }
-
-
-    @Test
-    void startingFromAValidDockerImageShouldReturnTheK8SCompatibleFormat() {
-
-        // given a valid docker image in a valid descriptor
-        String imageName = "organiz/imagename:1.0.0";
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
-        descriptor.setImage(imageName);
-        // without the DeploymentBaseName property
-        descriptor.setDeploymentBaseName(null);
-
-        // shoudl return a compatible k8s format of the image
-        String expectedImageName = "organiz-imagename";
-        assertThat(BundleUtilities.extractNameFromDescriptor(descriptor)).isEqualTo(expectedImageName.toLowerCase());
-    }
-
     @Test
     void withPluginDescriptorV1ShouldCreateACorrectEntandoPlugin() throws IOException {
 
@@ -214,11 +131,12 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "entando-todomvcv1");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv1", DbmsVendor.MYSQL,
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
@@ -233,15 +151,22 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorMetadata("entando", "loooong-entando");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "entando-helloworld-plugin-v1-nam", DbmsVendor.MYSQL,
-                "entando/helloworld-plugin-v1-name-too-looong:1.0.0",
-                "/entando/helloworld-plugin-v1-name-too-looong/1-0-0", "/api/v1/todos",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
+                "entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugi"
+                        + "n-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong"
+                        + "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong:1.0.0",
+                "/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
+                        + "d-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-to"
+                        + "o-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong/1-0-0",
+                "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1LongName,
                 PluginSecurityLevel.forName("strict"));
+        assertThat(entandoPlugin.getMetadata().getName()).isEqualTo("loooong-entando");
     }
 
     @Test
@@ -250,14 +175,16 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
+        descriptor.setDescriptorMetadata("entando", "loooong-entando");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
                 "/myhostname.io/entando-plugin", "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc2, PluginSecurityLevel.forName("lenient"));
+        assertThat(entandoPlugin.getMetadata().getName()).isEqualTo("loooong-entando");
     }
 
     @Test
@@ -267,11 +194,13 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getEntandoDeBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "entando-todomvcv2", DbmsVendor.MYSQL,
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
                 Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
@@ -282,11 +211,13 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3.yaml", PluginDescriptor.class);
+        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getEntandoDeBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
                 "/entando/todomvcv2", "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
@@ -297,11 +228,13 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
+        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
+                "entando-todomvcV3-1-0-0-" + bundleReader.getEntandoDeBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, "custombasename", DbmsVendor.MYSQL, "entando/todomvcV3:1.0.0",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV3:1.0.0",
                 "/myhostname.io/entando-plugin", "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc3, PluginSecurityLevel.LENIENT);
@@ -338,7 +271,9 @@ public class EntandoBundleUtilitiesTest {
 
         // given a plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
-                .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class);
+                .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class)
+                .setDescriptorMetadata(TestEntitiesGenerator.BUNDLE_NAME,
+                        "custombasename-" + TestEntitiesGenerator.BUNDLE_NAME);
 
         // should add the leading slash to the ingress path
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -364,12 +299,11 @@ public class EntandoBundleUtilitiesTest {
     }
 
 
-    private void assertOnEntandoPlugin(EntandoPlugin entandoPlugin, String name, DbmsVendor dbmsVendor, String image,
+    private void assertOnEntandoPlugin(EntandoPlugin entandoPlugin, DbmsVendor dbmsVendor, String image,
             String ingressPath, String healthCheckPath, List<ExpectedRole> roleList, List<Permission> permissionList,
             Consumer<Map<String, String>> labelsAssertionFn, PluginSecurityLevel securityLevel) {
 
         ObjectMeta metadata = entandoPlugin.getMetadata();
-        assertThat(metadata.getName()).isEqualTo(name);
         labelsAssertionFn.accept(metadata.getLabels());
 
         EntandoPluginSpec spec = entandoPlugin.getSpec();
@@ -535,7 +469,10 @@ public class EntandoBundleUtilitiesTest {
         assertOnLabels(
                 labelMap,
                 new AbstractMap.SimpleEntry<>("organization", "entando"),
-                new AbstractMap.SimpleEntry<>("name", "helloworld-plugin-v1-name-too-looong"),
+                new AbstractMap.SimpleEntry<>("name",
+                        "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-n"
+                                + "ame-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looo"
+                                + "nghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong"),
                 new AbstractMap.SimpleEntry<>("version", "1.0.0")
         );
     }

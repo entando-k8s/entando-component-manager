@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +20,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -40,7 +42,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.junit.jupiter.api.Assertions;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -58,6 +60,18 @@ public class EntandoBundleReaderTest {
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
         bundleReader = new BundleReader(bundleFolder);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNoEntandoBundleIsPassedToTheConstructor() {
+        bundleReader = new BundleReader(bundleFolder);
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getEntandoDeBundleId());
+    }
+
+    @Test
+    void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
+        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        assertThat(bundleReader.getEntandoDeBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
     }
 
     @Test
@@ -251,7 +265,7 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
                 .setSecretKeyRef(
-                        new SecretKeyRef("env-2-configmap-secretkey-ref-name", "env2ConfigMapSecretKeyRefKey"));
+                        new SecretKeyRef("env-2-configmap-secretkey-ref-name-custombasename-todomvc", "env2ConfigMapSecretKeyRefKey"));
         assertThat(envVar2).isEqualTo(expected2);
     }
 
@@ -301,14 +315,14 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldThrowAnExceptionWhenDescriptorNotFound() throws IOException {
-        Assertions.assertThrows(InvalidBundleException.class, () -> {
+        assertThrows(InvalidBundleException.class, () -> {
             bundleReader.getResourceFileAsDescriptor("widgets/pinco-pallo.yaml");
         });
     }
 
     @Test
     public void shouldThrowAnExceptionWhenFileNotFound() throws IOException {
-        Assertions.assertThrows(InvalidBundleException.class, () -> {
+        assertThrows(InvalidBundleException.class, () -> {
             bundleReader.getResourceFileAsDescriptor("widgets/pinco-pallo-template.ftl");
         });
     }
