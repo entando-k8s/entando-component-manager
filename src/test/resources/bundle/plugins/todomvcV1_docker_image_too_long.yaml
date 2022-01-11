@@ -3,7 +3,7 @@ apiVersion: "entando.org/v1"
 metadata:
   name: "helloworld-plugin-v1-name-too-long"
 spec:
-  image: entando/helloworld-plugin-v1-name-too-looong:1.0.0
+  image: entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong:1.0.0
   replicas: 1
   dbms: mysql
   parameters: { }

@@ -318,7 +318,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             EntandoDeBundleTag tag) {
 
         Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-        return new BundleReader(pathToDownloadedBundle);
+        return new BundleReader(pathToDownloadedBundle, bundle);
     }
 
     private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,

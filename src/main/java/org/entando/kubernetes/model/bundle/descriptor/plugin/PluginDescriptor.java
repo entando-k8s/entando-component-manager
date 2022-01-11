@@ -2,10 +2,8 @@ package org.entando.kubernetes.model.bundle.descriptor.plugin;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
@@ -17,8 +15,6 @@ import org.springframework.util.StringUtils;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class PluginDescriptor implements Descriptor {
@@ -84,6 +80,41 @@ public class PluginDescriptor implements Descriptor {
      */
     private List<EnvironmentVariable> environmentVariables;
 
+    /******************************************************************
+     * private variables that can't be set from the yaml descriptor.
+     *****************************************************************/
+    private String bundleId;
+    private String fullDeploymentName;
+
+
+    public PluginDescriptor() {
+    }
+
+    // About the NOSONAR:
+    // a constructor with more than 7 parameters is discouraged, but we require it to fulfill lombok builder requests
+    // and for the same reason we can't remove the 2 unused parameters fullDeploymentName and bundleId
+    public PluginDescriptor(String descriptorVersion,
+            DockerImage dockerImage, PluginDescriptorV1Spec spec, String name, String deploymentBaseName,
+            String image, String healthCheckPath, String dbms, List<String> roles,
+            List<PluginPermission> permissions, String ingressPath, String securityLevel,
+            List<EnvironmentVariable> environmentVariables,
+            String fullDeploymentName, String bundleId) { // NOSONAR
+        this.descriptorVersion = descriptorVersion;
+        this.dockerImage = dockerImage;
+        this.spec = spec;
+        this.name = name;
+        this.deploymentBaseName = deploymentBaseName;
+        this.image = image;
+        this.healthCheckPath = healthCheckPath;
+        this.dbms = dbms;
+        this.roles = roles;
+        this.permissions = permissions;
+        this.ingressPath = ingressPath;
+        this.securityLevel = securityLevel;
+        this.environmentVariables = environmentVariables;
+        this.fullDeploymentName = null; // force the private variable to be null when the descriptor is read
+        this.bundleId = null; // force the private variable to be null when the descriptor is read
+    }
 
     public DockerImage getDockerImage() {
         if (dockerImage == null) {
@@ -108,10 +139,6 @@ public class PluginDescriptor implements Descriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(BundleUtilities.extractNameFromDescriptor(this));
-    }
-
-    public String generateDeploymentBaseNameNotTruncated() {
-        return BundleUtilities.composeDeploymentBaseName(this);
+        return new ComponentKey(BundleUtilities.composeDeploymentBaseName(this));
     }
 }

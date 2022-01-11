@@ -76,6 +76,7 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
@@ -109,6 +110,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @AutoConfigureWireMock(port = 8099)
 @AutoConfigureMockMvc
@@ -476,9 +478,9 @@ public class InstallFlowTest {
                     .collect(Collectors.toList());
 
             if (c.getComponentId().equals("customBaseName")) {
-                assertThat(jobs.size()).isEqualTo(8);
+                assertThat(jobs).hasSize(8);
             } else {
-                assertThat(jobs.size()).isEqualTo(2);
+                assertThat(jobs).hasSize(2);
             }
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
         }
@@ -595,7 +597,7 @@ public class InstallFlowTest {
 
         // two successfull jobs are created
         assertThat(firstSuccessfulJobId).isNotEqualTo(secondSuccessfulJobId);
-        assertThat(jobRepository.findAll().size()).isEqualTo(2);
+        assertThat(jobRepository.findAll()).hasSize(2);
     }
 
     @Test
@@ -606,7 +608,7 @@ public class InstallFlowTest {
 
         // two successfull jobs are created
         assertThat(firstSuccessfulJobId).isNotEqualTo(secondSuccessfulJobId);
-        assertThat(jobRepository.findAll().size()).isEqualTo(2);
+        assertThat(jobRepository.findAll()).hasSize(2);
     }
 
     @Test
@@ -658,7 +660,7 @@ public class InstallFlowTest {
         List<EntandoBundleComponentJobEntity> pluginJobs = jobComponentList.stream()
                 .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());
-        assertThat(pluginJobs.size()).isEqualTo(2);
+        assertThat(pluginJobs).hasSize(2);
         assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList()))
                 .containsOnly(
                         JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
@@ -692,7 +694,7 @@ public class InstallFlowTest {
                 .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());;
 
-        assertThat(pluginJobs.size()).isEqualTo(6);
+        assertThat(pluginJobs).hasSize(6);
 
         // when deploymentBaseName is not present => component id should be the image organization, name and version
         assertThat(pluginJobs.get(0).getComponentId()).isEqualTo("entando-todomvcv1");
@@ -915,7 +917,6 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andReturn();
         waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_ERROR);
-        assertThat(true).isTrue();
     }
 
     @Test
@@ -950,6 +951,28 @@ public class InstallFlowTest {
 
         mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isServiceUnavailable());
+    }
+
+
+    @Test
+    void shouldPreventTheInstallationOfABundleWithAPluginWithInvalidSecretNames() throws Exception {
+
+        String compId = "wrong-secret-name";
+
+        final EntandoDeBundle testBundle = TestInstallUtils.getTestBundle();
+        testBundle.getMetadata().setName(compId);
+
+        mockBundle(k8SServiceClient, testBundle);
+
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage("bundle-invalid-secret.tgz"))));
+
+        final UriBuilder uriBuilder = UriComponentsBuilder.newInstance()
+                .pathSegment("components", compId, "install");
+        mockMvc.perform(post(uriBuilder.build())).andExpect(status().isCreated());
+
+        waitForInstallStatus(mockMvc, compId, JobStatus.INSTALL_ERROR);
     }
 
     private void verifyJobProgressesFromStatusToStatus(String jobId, JobStatus startStatus, JobStatus endStatus)

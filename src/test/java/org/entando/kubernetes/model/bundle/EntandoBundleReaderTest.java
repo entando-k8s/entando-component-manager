@@ -40,6 +40,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -58,6 +59,18 @@ public class EntandoBundleReaderTest {
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
         bundleReader = new BundleReader(bundleFolder);
+    }
+
+    @Test
+    void shouldReturnEmptyStringWhenNoEntandoBundleIsPassedToTheConstructor() {
+        bundleReader = new BundleReader(bundleFolder);
+        assertThat(bundleReader.getEntandoDeBundleId()).isEmpty();
+    }
+
+    @Test
+    void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
+        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        assertThat(bundleReader.getEntandoDeBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
     }
 
     @Test
@@ -251,7 +264,7 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
                 .setSecretKeyRef(
-                        new SecretKeyRef("env-2-configmap-secretkey-ref-name", "env2ConfigMapSecretKeyRefKey"));
+                        new SecretKeyRef("env-2-configmap-secretkey-ref-name-custombasename-todomvc", "env2ConfigMapSecretKeyRefKey"));
         assertThat(envVar2).isEqualTo(expected2);
     }
 

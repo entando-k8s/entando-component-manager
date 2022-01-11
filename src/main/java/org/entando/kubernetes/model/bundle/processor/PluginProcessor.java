@@ -2,36 +2,30 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -81,6 +75,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
             for (String filename : descriptorList) {
                 PluginDescriptor plugin = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                plugin.setBundleId(bundleReader.getEntandoDeBundleId());
+                plugin.setFullDeploymentName(
+                        composeFullDeploymentNameAndTruncateIfNeeded(plugin, plugin.getBundleId()));
                 pluginDescriptorValidator.validateOrThrow(plugin);
                 logDescriptorWarnings(plugin);
                 InstallAction action = extractInstallAction(plugin.getComponentKey().getKey(), conflictStrategy,
@@ -118,6 +115,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
                 PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
                         .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+                pluginDescriptor.setBundleId(bundleReader.getEntandoDeBundleId());
+                pluginDescriptor.setFullDeploymentName(composeFullDeploymentNameAndTruncateIfNeeded(pluginDescriptor,
+                        pluginDescriptor.getBundleId()));
                 logDescriptorWarnings(pluginDescriptor);
                 idList.add(pluginDescriptor.getComponentKey().getKey());
             }
@@ -140,7 +140,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
 
         // plugin base name too long
-        String deploymentBaseName = descriptor.generateDeploymentBaseNameNotTruncated();
+        String deploymentBaseName = descriptor.getComponentKey().getKey();
         if (deploymentBaseName.length() > BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
 
             String errMessage = descriptor.isVersion1()
@@ -150,8 +150,38 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             log.warn(errMessage,
                     descriptor.getDockerImage(),
                     BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                    BundleUtilities.truncatePodPrefixName(deploymentBaseName));
+                    this.truncatePodPrefixName(deploymentBaseName));
         }
+    }
+
+    public String composeFullDeploymentNameAndTruncateIfNeeded(PluginDescriptor descriptor, String bundleId) {
+
+        String deploymentBaseName;
+
+        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
+            deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
+        } else {
+            deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
+        }
+
+        String fullDeploymentName = deploymentBaseName + "-" + BundleUtilities.makeKubernetesCompatible(bundleId);
+
+        if (AppConfiguration.isTruncatePluginBaseNameIfLonger()) {
+            fullDeploymentName = this.truncatePodPrefixName(fullDeploymentName);
+        }
+
+        return fullDeploymentName;
+    }
+
+    protected String truncatePodPrefixName(String podPrefixName) {
+        if (podPrefixName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {
+
+            podPrefixName = podPrefixName
+                    .substring(0, Math.min(pluginDescriptorValidator.getFullDeploymentNameMaxlength(), podPrefixName.length()))
+                    .replaceAll("-$", "");        // remove a possible ending hyphen
+        }
+
+        return podPrefixName;
     }
 
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "

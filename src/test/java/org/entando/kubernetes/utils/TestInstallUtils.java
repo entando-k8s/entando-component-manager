@@ -433,7 +433,20 @@ public class TestInstallUtils {
     }
 
     public static void mockBundle(K8SServiceClient k8SServiceClient) {
-        List<EntandoDeBundle> bundles = List.of(getTestBundle());
+        mockBundle(k8SServiceClient, getTestBundle());
+    }
+
+    /**
+     * mocks the K8SServiceClient responses for:
+     * - get the list of bundles
+     * - get bundle by name
+     * it uses the received bundle.
+     *
+     * @param k8SServiceClient the k8s service client mock
+     * @param deBundle         the bundle to return in the mocked responses
+     */
+    public static void mockBundle(K8SServiceClient k8SServiceClient, EntandoDeBundle deBundle) {
+        List<EntandoDeBundle> bundles = List.of(deBundle);
         when(k8SServiceClient.getBundlesInObservedNamespaces()).thenReturn(bundles);
         when(k8SServiceClient.getBundleWithName(any())).thenReturn(Optional.of(bundles.get(0)));
     }
@@ -479,7 +492,11 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
-        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.INSTALL.getStatuses()),
+        waitForInstallStatus(mockMvc, "todomvc", expected);
+    }
+
+    public static void waitForInstallStatus(MockMvc mockMvc, String compId, JobStatus... expected) {
+        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, compId, JobType.INSTALL.getStatuses()),
                 expected);
     }
 
