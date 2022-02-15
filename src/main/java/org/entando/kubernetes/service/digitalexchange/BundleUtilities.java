@@ -396,7 +396,6 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
-    // About the NOSONAR: replaceAll is the right way because we need to replace all the occurrences
     /**
      * compose the name of a bundle starting by its repository url.
      * @param bundleUrl the repository url of the bundle
@@ -412,7 +411,7 @@ public class BundleUtilities {
 
         // remove final .git and split by /
         final String[] urlTokens = urlNoProtocol.replaceAll(".git$", "")
-                .replaceAll(":", "/")   // NOSONAR
+                .replace(":", "/")
                 .split("/");
 
         // reverse the array and join by . (to ensure k8s compatibility)

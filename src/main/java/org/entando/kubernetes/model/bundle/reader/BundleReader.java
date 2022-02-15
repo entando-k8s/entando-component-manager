@@ -137,7 +137,7 @@ public class BundleReader {
 
     public String getEntandoDeBundleId() {
         if (this.entandoDeBundle == null) {
-            throw new EntandoComponentManagerException("Error while reading the bundle ID");
+            throw new EntandoComponentManagerException("null entandoDeBundle detected while determining the bundle ID");
         }
 
         return this.entandoDeBundle.getMetadata().getName();
