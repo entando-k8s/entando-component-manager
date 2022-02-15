@@ -357,12 +357,12 @@ public class InstallFlowAssertionHelper {
 
         List<String> expected = Arrays.asList(
                 // Plugins
-                "entando-todomvcv1",
-                "entando-todomvcv2",
-                "customBaseName",
-                "customBaseName",
-                "customBaseName",
-                "customBaseName",
+                "entando-todomvcv1-todomvc",
+                "entando-todomvcv2-todomvc",
+                "custombasename-todomvc",
+                "custombasename-todomvc",
+                "custombasename-todomvc",
+                "custombasename-todomvc",
                 // Directories
                 "/something",
                 // Categories

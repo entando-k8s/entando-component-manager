@@ -34,11 +34,19 @@ public class TestAppConfiguration extends AppConfiguration {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(() -> {
             Path bundleFolder;
+            Path bundleFolderInvalidSecret;
             GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
             try {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+                bundleFolderInvalidSecret = new ClassPathResource("bundle-invalid-secret").getFile().toPath();
                 lenient().when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
-                        .thenReturn(bundleFolder);
+                                .thenAnswer(invocation -> {
+                                    if (invocation.getArgument(0, EntandoDeBundle.class).getMetadata().getName().equals("todomvc")) {
+                                        return bundleFolder;
+                                    } else {
+                                        return bundleFolderInvalidSecret;
+                                    }
+                                });
                 lenient().when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
                 lenient().when(git.createTargetDirectory()).thenReturn(bundleFolder);
                 lenient().when(git.fetchRemoteTags(anyString())).thenReturn(BundleStubHelper.TAG_LIST);

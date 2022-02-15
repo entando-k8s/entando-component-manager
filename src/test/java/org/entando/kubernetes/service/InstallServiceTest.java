@@ -119,6 +119,7 @@ public class InstallServiceTest {
         usageService = mock(EntandoBundleComponentUsageService.class);
         bundleOperationsConcurrencyManager = mock(BundleOperationsConcurrencyManager.class);
         pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 

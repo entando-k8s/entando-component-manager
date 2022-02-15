@@ -60,6 +60,9 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Test
     void testCreatePluginV2() throws IOException, ExecutionException, InterruptedException {
 
+        when(bundleReader.getEntandoDeBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+
         initBundleReaderShortImagesName();
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
@@ -67,11 +70,14 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV2);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando-the-lucas");
+        assertOnInstallables(installables, "entando-the-lucas-" + BundleStubHelper.BUNDLE_NAME);
     }
 
     @Test
     void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
+
+        when(bundleReader.getEntandoDeBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
 
         initBundleReaderShortImagesName();
 
@@ -80,12 +86,15 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV3);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando-the-lucas");
+        assertOnInstallables(installables, "entando-the-lucas-my-bundle-name");
     }
 
 
     @Test
     void shouldTruncatePluginBaseNameIfNameTooLong() throws IOException, ExecutionException, InterruptedException {
+
+        when(bundleReader.getEntandoDeBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
 
         AppConfiguration.truncatePluginBaseNameIfLonger = true;
         initBundleReaderLongImagesName();
@@ -95,7 +104,10 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV2);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando-helloworld-plugin-v1-nam");
+        assertOnInstallables(installables,
+                "entando-helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-pl"
+                        + "ugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-lo"
+                        + "oonghelloworld-p");
     }
 
     private void assertOnInstallables(List<? extends Installable> installables, String firstName)
@@ -108,7 +120,7 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(1)).isInstanceOf(PluginInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.PLUGIN);
-        assertThat(installables.get(1).getName()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
+        assertThat(installables.get(1).getName()).isEqualTo("customdepbasename-my-bundle-name");
 
         verify(kubernetesService, times(0)).linkPlugin(any());
 
@@ -166,5 +178,46 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new PluginProcessor(null, null), "plugin");
+    }
+
+    @Test
+    void shouldUseDockerImageToComposeFullDeploymentNameIfDeploymentBaseNameIsNotPresent() {
+
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2()
+                .setDeploymentBaseName(null);
+        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
+                BundleStubHelper.BUNDLE_NAME);
+        assertThat(fullDepName).isEqualTo("entando-the-lucas-" + BundleStubHelper.BUNDLE_NAME);
+    }
+
+    @Test
+    void shouldUseDeploymentBaseNameOverDockerImageToComposeFullDeploymentName() {
+
+        String deploymentBaseName = "testDeploymentName";
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+
+        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
+        descriptorV2.setDeploymentBaseName(deploymentBaseName);
+        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
+                BundleStubHelper.BUNDLE_NAME);
+        assertThat(fullDepName).isEqualTo(deploymentBaseName.toLowerCase() + "-" + BundleStubHelper.BUNDLE_NAME);
+    }
+
+    @Test
+    void shouldTruncatePodPrefixIfItExceedsMaximumLength() {
+        int maxLength = 20;
+        String podPrefix = "string-longer-than-20-chars";
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(maxLength);
+        final String actual = processor.truncateFullDeploymentName(podPrefix);
+        assertThat(actual).isEqualTo(podPrefix.substring(0, maxLength));
+    }
+
+    @Test
+    void shouldNotTruncatePodPrefixIfItDoesNOTExceedMaximumLength() {
+        String podPrefix = "pod-prefix";
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        final String actual = processor.truncateFullDeploymentName(podPrefix);
+        assertThat(actual).isEqualTo(podPrefix);
     }
 }
