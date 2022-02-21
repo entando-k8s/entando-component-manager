@@ -49,7 +49,6 @@ import org.springframework.web.context.WebApplicationContext;
 @WithMockUser
 public class DisableProcessorsIntegrationTest {
 
-    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
     private MockMvc mockMvc;
     @Autowired
     private WebApplicationContext context;

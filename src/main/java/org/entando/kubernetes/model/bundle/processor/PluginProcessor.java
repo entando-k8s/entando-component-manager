@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -41,6 +42,8 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
+
+    public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn-";
 
     private final KubernetesService kubernetesService;
     private final PluginDescriptorValidator pluginDescriptorValidator;
@@ -131,7 +134,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     }
 
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
-        pluginDescriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
+        pluginDescriptor.setDescriptorMetadata(
+                bundleReader.getEntandoDeBundleId(),
                 generateFullDeploymentName(pluginDescriptor, bundleReader.getEntandoDeBundleId()));
     }
 
@@ -141,20 +145,6 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         // deprecated descriptor
         if (descriptor.isVersion1()) {
             log.warn(DEPRECATED_DESCRIPTOR, descriptor.getSpec().getImage());
-        }
-
-        // plugin base name too long
-        String deploymentBaseName = descriptor.getComponentKey().getKey();
-        if (deploymentBaseName.length() > BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH) {
-
-            String errMessage = descriptor.isVersion1()
-                    ? DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V1 :
-                    DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V2;
-
-            log.warn(errMessage,
-                    descriptor.getDockerImage(),
-                    BundleUtilities.MAX_ENTANDO_K8S_POD_NAME_LENGTH,
-                    this.truncateFullDeploymentName(deploymentBaseName));
         }
     }
 
@@ -176,22 +166,15 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
         }
 
-        String fullDeploymentName = deploymentBaseName + "-" + BundleUtilities.makeKubernetesCompatible(bundleId);
+        String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
+                DigestUtils.sha256Hex(deploymentBaseName).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                BundleUtilities.makeKubernetesCompatible(bundleId), deploymentBaseName);
 
-        if (AppConfiguration.isTruncatePluginBaseNameIfLonger()) {
-            fullDeploymentName = this.truncateFullDeploymentName(fullDeploymentName);
-        }
-
-        return fullDeploymentName;
-    }
-
-    // TODO rinomina
-    protected String truncateFullDeploymentName(String fullDeploymentName) {
         if (fullDeploymentName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {
-
-            fullDeploymentName = fullDeploymentName
-                    .substring(0, pluginDescriptorValidator.getFullDeploymentNameMaxlength())
-                    .replaceAll("-$", "");        // remove a possible ending hyphen
+            throw new EntandoComponentManagerException("The resulting plugin full deployment name \""
+                    + fullDeploymentName + "\" exceeds the max allowed length "
+                    + pluginDescriptorValidator.getFullDeploymentNameMaxlength() + ". You can configure the max length "
+                    + "by setting the desired value of the environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH");
         }
 
         return fullDeploymentName;
@@ -200,14 +183,4 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
             + "'{}' uses a deprecated format. To have full control over plugins we encourage you to migrate "
             + "to the new plugin descriptor format.";
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V1 =
-            "The prefix of the pod using the docker image "
-                    + "'{}' is longer than {}. The prefix has been created using the format "
-                    + "[docker-organization]-[docker-image-name]-[docker-image-version]. "
-                    + "Plugin pods names will be truncated to '{}'";
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_TRUNCATED_V2 =
-            "The prefix of the pod using the docker image "
-                    + "'{}' is longer than {}. Plugin pods names will be truncated to '{}'";
-
-
 }

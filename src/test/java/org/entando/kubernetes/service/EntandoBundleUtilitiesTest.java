@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.config.AppConfiguration;
@@ -36,19 +37,17 @@ import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
 public class EntandoBundleUtilitiesTest {
 
-    private Logger logger = LoggerFactory.getLogger(EntandoBundleUtilitiesTest.class.getName());
     private BundleReader bundleReader;
     private Path bundleFolder;
 
@@ -167,6 +166,8 @@ public class EntandoBundleUtilitiesTest {
                 getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1LongName,
                 PluginSecurityLevel.forName("strict"));
         assertThat(entandoPlugin.getMetadata().getName()).isEqualTo("loooong-entando");
+
+        AppConfiguration.truncatePluginBaseNameIfLonger = false;
     }
 
     @Test
@@ -353,7 +354,7 @@ public class EntandoBundleUtilitiesTest {
         testCasesMap.entrySet()
                 .forEach(entry -> {
                     String actual = BundleUtilities.composeBundleIdentifier(entry.getKey());
-                    assertThat(actual).isEqualTo(entry.getValue());
+                    assertThat(actual).isEqualTo(DigestUtils.sha256Hex(entry.getKey()).substring(0, 8) + "." + entry.getValue());
                     assertThat(actual.length()).isLessThanOrEqualTo(253);
                 });
     }

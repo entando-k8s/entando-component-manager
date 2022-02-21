@@ -27,6 +27,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -70,7 +71,10 @@ class EntandoDeBundleComposerTest {
 
                     final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
 
-                    assertThat(deBundle.getMetadata().getName()).isEqualTo("mybundle.entando.www.github.com");
+                    String name = deBundle.getMetadata().getName();
+                    assertThat(TestInstallUtils.isHex(name.substring(0, 8))).isTrue();
+                    assertThat(name.charAt(8)).isEqualTo('.');
+                    assertThat(name.substring(9)).isEqualTo("mybundle.entando.www.github.com");
                     assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
                     final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();

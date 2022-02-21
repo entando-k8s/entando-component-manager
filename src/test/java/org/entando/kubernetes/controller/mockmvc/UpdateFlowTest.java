@@ -123,8 +123,6 @@ public class UpdateFlowTest {
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
-    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
-
     @BeforeEach
     public void setup() {
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
@@ -541,7 +539,7 @@ public class UpdateFlowTest {
 
     private String simulateSuccessfullyCompletedUpdate() {
         return TestInstallUtils.simulateSuccessfullyCompletedUpdate(mockMvc, coreClient,
-                k8SServiceClient, MOCK_BUNDLE_NAME);
+                k8SServiceClient, TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateSuccessfullyCompletedUninstall() {

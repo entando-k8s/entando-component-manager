@@ -129,13 +129,21 @@ class PluginDescriptorValidatorTest {
     void shouldThrowExceptionIfEnvironmentVariablesAreNOTValid() {
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars();
-        descriptor.setEnvironmentVariables(Arrays.asList(
-                new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_1_NAME, PluginStubHelper.TEST_ENV_VAR_1_VALUE,
-                        null),
-                new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_2_NAME, null,
-                        new SecretKeyRef(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME + "-"
-                                + PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY))));
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+
+        EnvironmentVariable varWithValue = new EnvironmentVariable(
+                PluginStubHelper.TEST_ENV_VAR_1_NAME,
+                PluginStubHelper.TEST_ENV_VAR_1_VALUE,
+                null);
+
+        EnvironmentVariable varWithRef = new EnvironmentVariable(
+                PluginStubHelper.TEST_ENV_VAR_2_NAME,
+                null,
+                new SecretKeyRef(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME + "-"
+                        + PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY));
+
+        descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
         assertThat(validator.validateOrThrow(descriptor)).isTrue();
 
         // with empty name should fail
@@ -185,10 +193,42 @@ class PluginDescriptorValidatorTest {
                 });
     }
 
+
+    @Test
+    void shouldOnlyAcceptSecretsBelongingToTheBundle() {
+        var secretsNames = new String[]{
+                "env-2-secret-lcorsettientando-xmasbundle-" + PluginStubHelper.BUNDLE_ID,
+                "env-2-secret-lcorsettientando-xmasbundle-7485af32-xmasbundle-firegloves-github-org"
+        };
+
+        for (var secretName : secretsNames) {
+            PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars();
+            EnvironmentVariable varWithValue = new EnvironmentVariable(
+                    PluginStubHelper.TEST_ENV_VAR_1_NAME,
+                    PluginStubHelper.TEST_ENV_VAR_1_VALUE,
+                    null);
+            EnvironmentVariable varWithRef = new EnvironmentVariable(
+                    "ENV_2_NAME", null,
+                    new SecretKeyRef(secretName, "env-2secret-key"));
+            descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
+            descriptor.setDescriptorMetadata(
+                    PluginStubHelper.BUNDLE_ID,
+                    PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+
+            if (secretName.contains("github-org")) {
+                Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+            } else {
+                assertThat(validator.validateOrThrow(descriptor)).isTrue();
+            }
+
+        }
+    }
+
     @Test
     void shouldThrowExceptionWhenValidatingAPluginDescriptorWithNonProprietarySecrets() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars()
-                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
         Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 

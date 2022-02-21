@@ -42,7 +42,9 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -51,7 +53,6 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class EntandoBundleReaderTest {
 
-    public static final String DEFAULT_TEST_BUNDLE_NAME = "bundle.tgz";
     public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
     BundleReader bundleReader;
     Path bundleFolder;
@@ -265,7 +266,7 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
                 .setSecretKeyRef(
-                        new SecretKeyRef("env-2-configmap-secretkey-ref-name-custombasename-todomvc", "env2ConfigMapSecretKeyRefKey"));
+                        new SecretKeyRef("env-2-configmap-secretkey-ref-name-custombasename-1664d60e-todomvc", "env2ConfigMapSecretKeyRefKey"));
         assertThat(envVar2).isEqualTo(expected2);
     }
 
@@ -356,7 +357,7 @@ public class EntandoBundleReaderTest {
     }
 
     private Path getTestDefaultBundlePath() throws IOException {
-        return getBundlePath(DEFAULT_TEST_BUNDLE_NAME);
+        return getBundlePath(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private Path getBundlePath(String bundleName) throws IOException {

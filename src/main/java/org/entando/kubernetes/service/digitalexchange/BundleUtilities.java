@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
@@ -47,10 +48,7 @@ public class BundleUtilities {
             + "(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\"
             + ".[0-9a-zA-Z-]+)*))?$";
 
-    public static final int MAX_K8S_POD_NAME_LENGTH = 63;
-    public static final int RESERVED_K8S_POD_NAME_LENGTH = 31;
     public static final int GENERIC_K8S_ENTITY_MAX_LENGTH = 253;
-    public static final int MAX_ENTANDO_K8S_POD_NAME_LENGTH = MAX_K8S_POD_NAME_LENGTH - RESERVED_K8S_POD_NAME_LENGTH;
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END = "Please specify a shorter value "
             + "in the \"deploymentBaseName\" plugin descriptor property";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX = "the format "
@@ -76,6 +74,7 @@ public class BundleUtilities {
     public static final String HTTP_OVER_GIT_REPLACER = ValidationFunctions.HTTP_PROTOCOL + "://";
     public static final String COLONS_REGEX = ":(?!\\/)";
     public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
+    public static final int PLUGIN_HASH_LENGTH = 8;
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -419,6 +418,10 @@ public class BundleUtilities {
                 .mapToObj(i -> urlTokens[urlTokens.length - i])
                 .collect(Collectors.joining("."));
 
+        // prepend the first 8 chars of the bundle url hash
+        id = String.join(".",
+                DigestUtils.sha256Hex(bundleUrl).substring(0, PLUGIN_HASH_LENGTH), id);
+
         // remove possible leading and final dots
         if (id.charAt(0) == '.') {
             id = id.substring(1);
@@ -428,7 +431,7 @@ public class BundleUtilities {
         }
 
         // remove double points
-        id = id.replaceAll("\\.\\.", "\\.");    // NOSONAR
+        id = id.replace("..", ".");
 
         if (id.length() > GENERIC_K8S_ENTITY_MAX_LENGTH) {
             throw new EntandoValidationException(
