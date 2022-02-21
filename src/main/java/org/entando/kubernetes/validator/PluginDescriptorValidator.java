@@ -34,16 +34,29 @@ public class PluginDescriptorValidator {
 
     public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
     public static final Pattern DNS_LABEL_HOST_REGEX_PATTERN = Pattern.compile(DNS_LABEL_HOST_REGEX);
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR = "The plugin full deployment name \"%s\" "
-            + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
-            + "environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR =
+            "The plugin full deployment name \"%s\" "
+                    + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
+                    + "environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH";
     public static final String DESC_PROP_ENV_VARS = "environmentVariables";
-    public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = 200;
+    public static final int MIN_FULL_DEPLOYMENT_NAME_LENGTH = 50;
+    public static final int MAX_FULL_DEPLOYMENT_NAME_LENGTH = 200;
+    public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = MAX_FULL_DEPLOYMENT_NAME_LENGTH;
 
     private final int fullDeploymentNameMaxlength;
 
     public PluginDescriptorValidator(@Value("${full.deployment.name.maxlength:" + STANDARD_FULL_DEPLOYMENT_NAME_LENGTH
             + "}") int fullDeploymentNameMaxlength) {
+
+        if (fullDeploymentNameMaxlength < MIN_FULL_DEPLOYMENT_NAME_LENGTH
+                || fullDeploymentNameMaxlength > MAX_FULL_DEPLOYMENT_NAME_LENGTH) {
+
+            throw new EntandoComponentManagerException(String.format(
+                    "Wrong value received for the environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH. "
+                            + "Allowed value must be >= %d <= %d",
+                    MIN_FULL_DEPLOYMENT_NAME_LENGTH, MAX_FULL_DEPLOYMENT_NAME_LENGTH));
+        }
+
         this.fullDeploymentNameMaxlength = fullDeploymentNameMaxlength;
     }
 

@@ -49,13 +49,6 @@ public class BundleUtilities {
             + ".[0-9a-zA-Z-]+)*))?$";
 
     public static final int GENERIC_K8S_ENTITY_MAX_LENGTH = 253;
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END = "Please specify a shorter value "
-            + "in the \"deploymentBaseName\" plugin descriptor property";
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DOCKER_IMAGE_SUFFIX = "the format "
-            + "[docker-organization]-[docker-image-name]-[docker-image-version]. "
-            + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_SUFFIX = "the descriptor "
-            + "\"deploymentBaseName\" property. " + DEPLOYMENT_BASE_NAME_MAX_LENGHT_ERROR_DEPLOYMENT_END;
 
     public static final String BUNDLE_TYPE_LABEL_NAME = "bundle-type";
 
