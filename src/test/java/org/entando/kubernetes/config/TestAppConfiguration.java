@@ -13,6 +13,7 @@ import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +42,8 @@ public class TestAppConfiguration extends AppConfiguration {
                 bundleFolderInvalidSecret = new ClassPathResource("bundle-invalid-secret").getFile().toPath();
                 lenient().when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
                                 .thenAnswer(invocation -> {
-                                    if (invocation.getArgument(0, EntandoDeBundle.class).getMetadata().getName().equals("todomvc")) {
+                                    if (invocation.getArgument(0, EntandoDeBundle.class).getMetadata().getName()
+                                            .equals(TestInstallUtils.MOCK_BUNDLE_NAME)) {
                                         return bundleFolder;
                                     } else {
                                         return bundleFolderInvalidSecret;

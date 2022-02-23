@@ -1,6 +1,8 @@
 package org.entando.kubernetes.validator;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
@@ -84,7 +86,7 @@ class PluginDescriptorValidatorTest {
                 .setDescriptorMetadata(BundleStubHelper.BUNDLE_NAME, "entando-todomvcV2-1-0-0");
         descriptor.setDescriptorVersion("v2.5");
 
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
     @Test
@@ -103,7 +105,7 @@ class PluginDescriptorValidatorTest {
                             PluginDescriptor.class);
             descriptor.setDescriptorVersion(keyValue.getValue().getVersion());
 
-            Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
         }
     }
 
@@ -121,7 +123,7 @@ class PluginDescriptorValidatorTest {
         List<PluginDescriptor> pluginDescriptorList = Arrays.asList(descriptorV1, descriptorV2);
 
         for (PluginDescriptor pluginDescriptor : pluginDescriptorList) {
-            Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(pluginDescriptor));
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(pluginDescriptor));
         }
     }
 
@@ -129,67 +131,107 @@ class PluginDescriptorValidatorTest {
     void shouldThrowExceptionIfEnvironmentVariablesAreNOTValid() {
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars();
-        descriptor.setEnvironmentVariables(Arrays.asList(
-                new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_1_NAME, PluginStubHelper.TEST_ENV_VAR_1_VALUE,
-                        null),
-                new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_2_NAME, null,
-                        new SecretKeyRef(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME + "-"
-                                + PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY))));
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+
+        EnvironmentVariable varWithValue = new EnvironmentVariable(
+                PluginStubHelper.TEST_ENV_VAR_1_NAME,
+                PluginStubHelper.TEST_ENV_VAR_1_VALUE,
+                null);
+
+        EnvironmentVariable varWithRef = new EnvironmentVariable(
+                PluginStubHelper.TEST_ENV_VAR_2_NAME,
+                null,
+                new SecretKeyRef(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME + "-"
+                        + PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY));
+
+        descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
         assertThat(validator.validateOrThrow(descriptor)).isTrue();
 
         // with empty name should fail
         descriptor.getEnvironmentVariables().get(0).setName("");
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // with null name should fail
         descriptor.getEnvironmentVariables().get(0).setName(null);
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.getEnvironmentVariables().get(0).setName(PluginStubHelper.TEST_ENV_VAR_1_NAME);
 
         // with empty value and null secret should fail
         descriptor.getEnvironmentVariables().get(0).setValue("");
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // with null value and null secret should fail
         descriptor.getEnvironmentVariables().get(0).setValue(null);
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.getEnvironmentVariables().get(0).setValue(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
 
         // with empty value and empty secretKeyRefName should fail
         descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setKey("");
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // with null value and empty secretKeyRefName should fail
         descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setKey(null);
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.getEnvironmentVariables().get(1).getSecretKeyRef()
                 .setKey(PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
 
         // with empty value and empty secretKeyRefName should fail
         descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setName("");
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // with null value and empty secretKeyRefName should fail
         descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setName(null);
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // violating RFC 1123
         Stream.of("ENV", "env_1", "-env-1", "env-1-", "env?1", StringUtils.repeat("a", 254))
                 .forEach(name -> {
                     descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setName(name);
-                    Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+                    assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
                 });
+    }
+
+
+    @Test
+    void shouldOnlyAcceptSecretsBelongingToTheBundle() {
+        var secretsNames = new String[]{
+                "env-2-secret-lcorsettientando-xmasbundle-" + PluginStubHelper.BUNDLE_ID,
+                "env-2-secret-lcorsettientando-xmasbundle-7485af32-xmasbundle-firegloves-github-org"
+        };
+
+        for (var secretName : secretsNames) {
+            PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars();
+            EnvironmentVariable varWithValue = new EnvironmentVariable(
+                    PluginStubHelper.TEST_ENV_VAR_1_NAME,
+                    PluginStubHelper.TEST_ENV_VAR_1_VALUE,
+                    null);
+            EnvironmentVariable varWithRef = new EnvironmentVariable(
+                    "ENV_2_NAME", null,
+                    new SecretKeyRef(secretName, "env-2secret-key"));
+            descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
+            descriptor.setDescriptorMetadata(
+                    PluginStubHelper.BUNDLE_ID,
+                    PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+
+            if (secretName.contains("github-org")) {
+                assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+            } else {
+                assertThat(validator.validateOrThrow(descriptor)).isTrue();
+            }
+
+        }
     }
 
     @Test
     void shouldThrowExceptionWhenValidatingAPluginDescriptorWithNonProprietarySecrets() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars()
-                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
-        Assertions.assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
     @Test
@@ -212,12 +254,30 @@ class PluginDescriptorValidatorTest {
     @Test
     void shouldCorrectlyValidatePluginNameLength() {
 
-        PluginDescriptorValidator validator = new PluginDescriptorValidator(10);
+        PluginDescriptorValidator validator = new PluginDescriptorValidator(50);
         validator.setupValidatorConfiguration();
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
-                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name");
 
-        Assertions.assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
+        assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenReceivingAnInvalidValueForFullDeploymentNameMaxlength() {
+
+        assertThrows(EntandoComponentManagerException.class, () -> new PluginDescriptorValidator(49));
+        assertThrows(EntandoComponentManagerException.class, () -> new PluginDescriptorValidator(201));
+    }
+
+    @Test
+    void shouldAllowValidValueForFullDeploymentNameMaxlength() {
+
+        assertDoesNotThrow(() -> new PluginDescriptorValidator(50));
+        assertDoesNotThrow(() -> new PluginDescriptorValidator(51));
+        assertDoesNotThrow(() -> new PluginDescriptorValidator(100));
+        assertDoesNotThrow(() -> new PluginDescriptorValidator(199));
+        assertDoesNotThrow(() -> new PluginDescriptorValidator(200));
     }
 }

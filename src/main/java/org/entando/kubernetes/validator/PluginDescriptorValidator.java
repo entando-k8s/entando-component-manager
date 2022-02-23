@@ -34,15 +34,29 @@ public class PluginDescriptorValidator {
 
     public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
     public static final Pattern DNS_LABEL_HOST_REGEX_PATTERN = Pattern.compile(DNS_LABEL_HOST_REGEX);
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR = "The prefix \"%s\" of the pod that is "
-            + "about to be created is longer than %d.";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR =
+            "The plugin full deployment name \"%s\" "
+                    + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
+                    + "environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH";
     public static final String DESC_PROP_ENV_VARS = "environmentVariables";
-    public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = 200;
+    public static final int MIN_FULL_DEPLOYMENT_NAME_LENGTH = 50;
+    public static final int MAX_FULL_DEPLOYMENT_NAME_LENGTH = 200;
+    public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = MAX_FULL_DEPLOYMENT_NAME_LENGTH;
 
     private final int fullDeploymentNameMaxlength;
 
     public PluginDescriptorValidator(@Value("${full.deployment.name.maxlength:" + STANDARD_FULL_DEPLOYMENT_NAME_LENGTH
             + "}") int fullDeploymentNameMaxlength) {
+
+        if (fullDeploymentNameMaxlength < MIN_FULL_DEPLOYMENT_NAME_LENGTH
+                || fullDeploymentNameMaxlength > MAX_FULL_DEPLOYMENT_NAME_LENGTH) {
+
+            throw new EntandoComponentManagerException(String.format(
+                    "Wrong value received for the environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH. "
+                            + "Allowed value must be >= %d <= %d",
+                    MIN_FULL_DEPLOYMENT_NAME_LENGTH, MAX_FULL_DEPLOYMENT_NAME_LENGTH));
+        }
+
         this.fullDeploymentNameMaxlength = fullDeploymentNameMaxlength;
     }
 
@@ -279,41 +293,48 @@ public class PluginDescriptorValidator {
                 Optional.ofNullable(descriptor.getEnvironmentVariables())
                         .orElseGet(ArrayList::new);
 
-        IntStream.range(0, environmentVariables.size())
-                .forEach(i -> {
+        IntStream.range(0, environmentVariables.size()).forEach(i -> {
+            final var envVar = environmentVariables.get(i);
+            final var componentKey = descriptor.getComponentKey().getKey();
+            final var varSecretRefKey = envVar.getSecretKeyRef();
+            final var varName = envVar.getName();
+            final var bundleId = descriptor.getDescriptorMetadata().getBundleId();
 
-                    EnvironmentVariable envVar = environmentVariables.get(i);
-                    boolean invalid = false;
+            // env var name empty
+            if (ObjectUtils.isEmpty(varName)) {
+                throw new InvalidBundleException(
+                        String.format("In descriptor of plugin \"%s\" the environment var #%d has empty name",
+                                componentKey, i + 1)
+                );
+            }
 
-                    // env var name empty
-                    if (ObjectUtils.isEmpty(envVar.getName())) {
-                        invalid = true;
-                    }
+            if (varSecretRefKey == null) {
+                // WITH NO SECRET REF
 
-                    // secret key ref empty or invalid
-                    if (!invalid
-                            && ((ObjectUtils.isEmpty(envVar.getValue()) && envVar.getSecretKeyRef() == null)
-                            ||
-                            (envVar.getSecretKeyRef() != null && !isSecretKeyRefValid(envVar.getSecretKeyRef())))) {
-                        invalid = true;
-                    }
+                // .. but the value is empty
+                if (ObjectUtils.isEmpty(envVar.getValue())) {
+                    throw new InvalidBundleException(
+                            String.format("Unable to find a value for the environment var \"%s\" of plugin \"%s\"",
+                                    varName, componentKey)
+                    );
+                }
+            } else {
+                // WITH SECRET REF
 
-                    if (invalid) {
-                        String error = String.format(ENV_VARS_NOT_VALID, descriptor.getComponentKey().getKey(), i + 1);
-                        log.debug(error);
-                        throw new InvalidBundleException(error);
-                    }
+                // .. but the secret ref key is not valid
+                if (!isSecretKeyRefValid(varSecretRefKey)) {
+                    throw new InvalidBundleException(
+                            String.format("Environment var \"%s\" of plugin \"%s\" contains an invalid reference",
+                                    varName, componentKey)
+                    );
+                }
 
-                    // does secret belong to the bundle?
-                    if (envVar.getSecretKeyRef() != null
-                            && !doesSecretBelongToTheBundle(descriptor.getDescriptorMetadata().getBundleId(),
-                            envVar.getSecretKeyRef())) {
-                        String error = String.format(NON_OWNED_SECRET, descriptor.getComponentKey().getKey(), i + 1,
-                                BundleUtilities.makeKubernetesCompatible(descriptor.getDescriptorMetadata().getBundleId()));
-                        log.debug(error);
-                        throw new InvalidBundleException(error);
-                    }
-                });
+                // does secret belong to the bundle?
+                if (!doesSecretBelongToTheBundle(bundleId, varSecretRefKey)) {
+                    throw new InvalidBundleException(String.format(NON_OWNED_SECRET, componentKey, bundleId, varName));
+                }
+            }
+        });
 
         return descriptor;
     }
@@ -327,7 +348,8 @@ public class PluginDescriptorValidator {
      * @return the validated SecretKeyRef
      */
     private boolean doesSecretBelongToTheBundle(String bundleId, SecretKeyRef secretKeyRef) {
-        return secretKeyRef.getName().endsWith(BundleUtilities.makeKubernetesCompatible(bundleId));
+        return secretKeyRef != null
+                && secretKeyRef.getName().endsWith(BundleUtilities.makeKubernetesCompatible(bundleId));
     }
 
     /**
@@ -373,14 +395,10 @@ public class PluginDescriptorValidator {
             "The plugin %s descriptor contains an invalid descriptorVersion. Accepted versions are: "
                     + Arrays.stream(PluginDescriptorVersion.values()).map(PluginDescriptorVersion::getVersion)
                     .collect(Collectors.joining(", "));
-    public static final String ENV_VARS_NOT_VALID =
-            "The descriptor of the %s plugin contains an invalid environment variable (number %d). Rules are:\n"
-                    + "1) each environment variable must have a name\n"
-                    + "2) each environment variable must have a value OR a SecretKeyRef fully populated\n"
-                    + "3) the name of a Secret object must be a valid DNS subdomain name";
-    public static final String NON_OWNED_SECRET =
-            "The descriptor of the %s plugin contains an invalid environment variable (number %d) that points to a "
-                    + "secret non owned by the plugin. Valid secret names end with the bundle id %s";
+    public static final String NON_OWNED_SECRET = ""
+            + "The descriptor of the plugin \"%s\" of the bundle \"%s\" contains an invalid environment variable \"%s\""
+            + " that points to a secret that doesn't belong to the plugin. Check documentation for details about "
+            + "bundles secrets.";
     public static final String EXPECTED_NOT_NULL_IS_NULL =
             "PluginDescriptor version detected: %s. With this version the %s property must NOT be null.";
     public static final String EXPECTED_NULL_IS_NOT_NULL =

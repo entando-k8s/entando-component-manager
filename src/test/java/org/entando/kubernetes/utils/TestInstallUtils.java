@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,16 +79,21 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
 
+    public static final String MOCK_BUNDLE_NAME = "1664d60e.todomvc";
+    public static final String MOCK_BUNDLE_NAME_TGZ = "bundle.tgz";
+    public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-e169f6f5-1664d60e-todomvc-custombasename";
+    public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-f4019d52-1664d60e-todomvc-entando-todomvcv1";
+    public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-8a3b17af-1664d60e-todomvc-entando-todomvcv2";
     public static final UriBuilder INSTALL_PLANS_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc", "installplans");
+            .pathSegment("components", MOCK_BUNDLE_NAME, "installplans");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components");
     public static final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc");
+            .pathSegment("components", MOCK_BUNDLE_NAME);
     public static final UriBuilder INSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc", "install");
+            .pathSegment("components", MOCK_BUNDLE_NAME, "install");
     public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
-            .pathSegment("components", "todomvc", "uninstall");
+            .pathSegment("components", MOCK_BUNDLE_NAME, "uninstall");
     public static final String JOBS_ENDPOINT = "/jobs";
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
@@ -218,7 +224,7 @@ public class TestInstallUtils {
     public static EntandoDeBundle getTestBundle() {
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                .withName("todomvc")
+                .withName(MOCK_BUNDLE_NAME)
                 .withNamespace("entando-de-bundles")
                 .endMetadata()
                 .withSpec(getTestEntandoDeBundleSpec()).build();
@@ -305,9 +311,9 @@ public class TestInstallUtils {
                                 "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .contents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
-                .plugins(Map.of("custombasename-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                        "entando-todomvcv1-1-0-0-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                        "entando-todomvcv2-1-0-0-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        PLUGIN_TODOMVC_TODOMVC_1, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        PLUGIN_TODOMVC_TODOMVC_2, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .build();
     }
 
@@ -389,9 +395,9 @@ public class TestInstallUtils {
                                 "8880003", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setContents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
-                .setPlugins(Map.of("custombasename-todomvc", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                        "entando-todomvcv1-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                        "entando-todomvcv2-1-0-0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
+                .setPlugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        PLUGIN_TODOMVC_TODOMVC_1, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                        PLUGIN_TODOMVC_TODOMVC_2, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
     }
 
 
@@ -413,12 +419,9 @@ public class TestInstallUtils {
 
     public static AnalysisReport getPluginAnalysisReport() {
         return AnalysisReport.builder()
-                .plugins(Map.of("custombasename-todomvc",
-                        Status.DIFF,
-                        "entando-todomvcv1-1-0-0-todomvc",
-                        Status.NEW,
-                        "entando-todomvcv2-1-0-0-todomvc",
-                        Status.NEW))
+                .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, Status.DIFF,
+                        PLUGIN_TODOMVC_TODOMVC_1, Status.NEW,
+                        PLUGIN_TODOMVC_TODOMVC_2, Status.NEW))
                 .build();
     }
 
@@ -460,13 +463,13 @@ public class TestInstallUtils {
         deploymentStatus.updateDeploymentPhase(status, 1L);
 
         EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv1-todomvc"),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_TODOMVC_1),
                 deploymentStatus);
         EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "entando-todomvcv2-todomvc"),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_TODOMVC_2),
                 deploymentStatus);
         EntandoAppPluginLink plugin3 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", "custombasename-todomvc"),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE),
                 deploymentStatus);
 
         when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
@@ -492,7 +495,7 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
-        waitForInstallStatus(mockMvc, "todomvc", expected);
+        waitForInstallStatus(mockMvc, "1664d60e.todomvc", expected);
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, String compId, JobStatus... expected) {
@@ -501,8 +504,8 @@ public class TestInstallUtils {
     }
 
     public static void waitForUninstallStatus(MockMvc mockMvc, JobStatus expected) {
-        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, "todomvc", JobType.UNINSTALL.getStatuses()),
-                expected);
+        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, MOCK_BUNDLE_NAME,
+                        JobType.UNINSTALL.getStatuses()), expected);
     }
 
     public static void waitForJobStatus(Supplier<JobStatus> jobStatus, JobStatus... expected) {
@@ -562,7 +565,7 @@ public class TestInstallUtils {
             throws Exception {
         mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
                 .andDo(print()).andExpect(status().isOk())
-                .andExpect(jsonPath("payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
     }
 
@@ -913,5 +916,7 @@ public class TestInstallUtils {
         return requestProperty(request, "path");
     }
 
-
+    public static boolean isHex(String str) {
+        return str.matches("^[0-9a-fA-F]+$");
+    }
 }

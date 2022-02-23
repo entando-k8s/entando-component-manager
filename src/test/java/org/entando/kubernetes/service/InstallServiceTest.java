@@ -71,6 +71,7 @@ import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperatio
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
@@ -221,7 +222,6 @@ public class InstallServiceTest {
                 .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
 
         List<Double> progress = getJobProgress();
-        assertThat(progress.size()).isEqualTo(6);
         assertThat(progress).containsExactly(0.0, 0.2, 0.4, 0.6, 0.8, 1.0);
     }
 
@@ -248,7 +248,6 @@ public class InstallServiceTest {
                 .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
 
         List<Double> progress = getJobProgress();
-        assertThat(progress.size()).isEqualTo(6);
         assertThat(progress).containsExactly(0.0, 0.14, 0.28, 0.42, 0.56, 0.7);
 
     }
@@ -290,7 +289,6 @@ public class InstallServiceTest {
                 .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
 
         List<Double> progress = getJobProgress();
-        assertThat(progress.size()).isEqualTo(3);
         assertThat(progress).containsExactly(0.0, 0.5, 1.0);
     }
 
@@ -372,7 +370,8 @@ public class InstallServiceTest {
                 .withName(BUNDLE_TITLE)
                 .endDetails()
                 .withTags(
-                        Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(BUNDLE_VERSION).build()))
+                        Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(BUNDLE_VERSION)
+                                .withTarball(BundleStatusItemStubHelper.ID_DEPLOYED).build()))
                 .build();
         bundle.setSpec(bundleSpec);
         return bundle;

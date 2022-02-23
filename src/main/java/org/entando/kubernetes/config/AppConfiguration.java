@@ -80,9 +80,4 @@ public class AppConfiguration {
                 kubernetesServiceClient::getAnalysisReport
         );
     }
-
-    @Value("${entando.plugin.truncate-if-long:true}")
-    public void setDatabase(boolean truncatePluginBaseName) {
-        truncatePluginBaseNameIfLonger = truncatePluginBaseName;    // NOSONAR
-    }
 }

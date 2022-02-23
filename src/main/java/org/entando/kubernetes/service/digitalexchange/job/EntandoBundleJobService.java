@@ -88,7 +88,7 @@ public class EntandoBundleJobService {
     }
 
     private Optional<EntandoBundleJobEntity> getExistingJob(EntandoDeBundle bundle) {
-        String componentId = bundle.getSpec().getDetails().getName();
+        String componentId = bundle.getMetadata().getName();
         Optional<EntandoBundleJobEntity> lastJobStarted = jobRepository
                 .findFirstByComponentIdOrderByStartedAtDesc(componentId);
         if (lastJobStarted.isPresent()) {

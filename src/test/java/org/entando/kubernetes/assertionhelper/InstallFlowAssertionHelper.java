@@ -37,6 +37,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.mockito.ArgumentCaptor;
 
 public class InstallFlowAssertionHelper {
@@ -357,12 +358,12 @@ public class InstallFlowAssertionHelper {
 
         List<String> expected = Arrays.asList(
                 // Plugins
-                "entando-todomvcv1-todomvc",
-                "entando-todomvcv2-todomvc",
-                "custombasename-todomvc",
-                "custombasename-todomvc",
-                "custombasename-todomvc",
-                "custombasename-todomvc",
+                TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_1,
+                TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_2,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
                 // Directories
                 "/something",
                 // Categories

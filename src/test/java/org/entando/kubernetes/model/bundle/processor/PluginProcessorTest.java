@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -28,6 +29,7 @@ import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -59,9 +61,8 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     @Test
     void testCreatePluginV2() throws IOException, ExecutionException, InterruptedException {
-
-        when(bundleReader.getEntandoDeBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        when(bundleReader.getEntandoDeBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
 
         initBundleReaderShortImagesName();
 
@@ -70,7 +71,7 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV2);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando-the-lucas-" + BundleStubHelper.BUNDLE_NAME);
+        assertOnInstallables(installables, "pn-17f3be97-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
     }
 
     @Test
@@ -86,12 +87,12 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV3);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "entando-the-lucas-my-bundle-name");
+        assertOnInstallables(installables, "pn-17f3be97-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
     }
 
 
     @Test
-    void shouldTruncatePluginBaseNameIfNameTooLong() throws IOException, ExecutionException, InterruptedException {
+    void shouldThrowExceptionIfNameTooLong() throws IOException {
 
         when(bundleReader.getEntandoDeBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
@@ -99,15 +100,9 @@ class PluginProcessorTest extends BaseProcessorTest {
         AppConfiguration.truncatePluginBaseNameIfLonger = true;
         initBundleReaderLongImagesName();
 
-        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
-        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
-                .thenReturn(descriptorV2);
+        Assertions.assertThrows(EntandoComponentManagerException.class, () -> processor.process(bundleReader));
 
-        final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables,
-                "entando-helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-pl"
-                        + "ugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-lo"
-                        + "oonghelloworld-p");
+        AppConfiguration.truncatePluginBaseNameIfLonger = false;
     }
 
     private void assertOnInstallables(List<? extends Installable> installables, String firstName)
@@ -120,7 +115,7 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(1)).isInstanceOf(PluginInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.PLUGIN);
-        assertThat(installables.get(1).getName()).isEqualTo("customdepbasename-my-bundle-name");
+        assertThat(installables.get(1).getName()).isEqualTo("pn-c2c051cd-1664d60e-my-bundle-name-customdepbasename");
 
         verify(kubernetesService, times(0)).linkPlugin(any());
 
@@ -182,42 +177,23 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldUseDockerImageToComposeFullDeploymentNameIfDeploymentBaseNameIsNotPresent() {
-
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2()
                 .setDeploymentBaseName(null);
-        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
-                BundleStubHelper.BUNDLE_NAME);
-        assertThat(fullDepName).isEqualTo("entando-the-lucas-" + BundleStubHelper.BUNDLE_NAME);
+        final String fullDepName = processor.generateFullDeploymentName(descriptorV2, BundleStubHelper.BUNDLE_NAME);
+        assertThat(fullDepName).isEqualTo(
+                "pn-17f3be97-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
     }
 
     @Test
     void shouldUseDeploymentBaseNameOverDockerImageToComposeFullDeploymentName() {
-
-        String deploymentBaseName = "testDeploymentName";
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        String deploymentBaseName = "testDeploymentName";
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         descriptorV2.setDeploymentBaseName(deploymentBaseName);
-        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
-                BundleStubHelper.BUNDLE_NAME);
-        assertThat(fullDepName).isEqualTo(deploymentBaseName.toLowerCase() + "-" + BundleStubHelper.BUNDLE_NAME);
-    }
-
-    @Test
-    void shouldTruncatePodPrefixIfItExceedsMaximumLength() {
-        int maxLength = 20;
-        String podPrefix = "string-longer-than-20-chars";
-        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(maxLength);
-        final String actual = processor.truncateFullDeploymentName(podPrefix);
-        assertThat(actual).isEqualTo(podPrefix.substring(0, maxLength));
-    }
-
-    @Test
-    void shouldNotTruncatePodPrefixIfItDoesNOTExceedMaximumLength() {
-        String podPrefix = "pod-prefix";
-        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
-        final String actual = processor.truncateFullDeploymentName(podPrefix);
-        assertThat(actual).isEqualTo(podPrefix);
+        final String fullDepName = processor.generateFullDeploymentName(descriptorV2, BundleStubHelper.BUNDLE_NAME);
+        assertThat(fullDepName)
+                .isEqualTo("pn-c2500115-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-" + deploymentBaseName.toLowerCase());
     }
 }

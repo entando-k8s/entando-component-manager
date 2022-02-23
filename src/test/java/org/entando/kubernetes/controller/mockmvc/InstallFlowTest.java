@@ -171,8 +171,6 @@ public class InstallFlowTest {
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
-    private static final String MOCK_BUNDLE_NAME = "bundle.tgz";
-
     @BeforeEach
     public void setup() {
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
@@ -422,12 +420,12 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].code").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].code").value(TestInstallUtils.MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
         List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
-        assertThat(installedComponents.get(0).getId()).isEqualTo("todomvc");
+        assertThat(installedComponents.get(0).getId()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME);
         assertThat(installedComponents.get(0).getBundleType()).isEqualTo("STANDARD_BUNDLE");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
     }
@@ -452,7 +450,7 @@ public class InstallFlowTest {
         mockMvc.perform(get(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
-                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
@@ -477,7 +475,7 @@ public class InstallFlowTest {
                             .equals(c.getComponentId()))
                     .collect(Collectors.toList());
 
-            if (c.getComponentId().equals("custombasename-todomvc")) {
+            if (c.getComponentId().equals(TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE)) {
                 assertThat(jobs).hasSize(8);
             } else {
                 assertThat(jobs).hasSize(2);
@@ -551,16 +549,17 @@ public class InstallFlowTest {
         // Components endpoints should still return the component is not installed
         mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andDo(print())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].code").value("todomvc"))
+                .andExpect(jsonPath("$.payload[0].code").value(TestInstallUtils.MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
         // Component install status should be rollback
         mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
-                .andExpect(jsonPath("$.payload.componentId").value("todomvc"))
+                .andExpect(jsonPath("$.payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
         // And component should not be installed
@@ -580,7 +579,8 @@ public class InstallFlowTest {
         assertThat(successfulUninstallId).isNotEqualTo(failingInstallId);
 
         // All jobs should be available via the API
-        mockMvc.perform(get("/jobs?filters[0].attribute=componentId&filters[0].operator=eq&filters[0].value=todomvc"))
+        mockMvc.perform(get("/jobs?filters[0].attribute=componentId&filters[0].operator=eq&filters[0].value="
+                        + TestInstallUtils.MOCK_BUNDLE_NAME))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -637,7 +637,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage(MOCK_BUNDLE_NAME))));
+                        .withBody(readFromDEPackage(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ))));
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -697,10 +697,10 @@ public class InstallFlowTest {
         assertThat(pluginJobs).hasSize(6);
 
         // when deploymentBaseName is not present => component id should be the image organization, name and version
-        assertThat(pluginJobs.get(0).getComponentId()).isEqualTo("entando-todomvcv1-todomvc");
-        assertThat(pluginJobs.get(1).getComponentId()).isEqualTo("entando-todomvcv2-todomvc");
+        assertThat(pluginJobs.get(0).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_1);
+        assertThat(pluginJobs.get(1).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_2);
         // when deploymentBaseName is not present => component id should be the deploymentBaseName itself
-        assertThat(pluginJobs.get(2).getComponentId()).isEqualTo("custombasename-todomvc");
+        assertThat(pluginJobs.get(2).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE);
     }
 
 
@@ -741,6 +741,7 @@ public class InstallFlowTest {
 
         // I should get a conflict error when trying to install/uninstall the same component
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+                .andDo(print())
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict());
@@ -771,7 +772,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage(MOCK_BUNDLE_NAME))));
+                        .withBody(readFromDEPackage(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ))));
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -799,7 +800,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage(MOCK_BUNDLE_NAME))));
+                        .withBody(readFromDEPackage(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ))));
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -1002,19 +1003,21 @@ public class InstallFlowTest {
 
     private String simulateSuccessfullyCompletedInstall() {
         return TestInstallUtils
-                .simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+                .simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient,
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateSuccessfullyCompletedInstallWithInstallPlan() {
         return TestInstallUtils
                 .simulateSuccessfullyCompletedInstallWithInstallPlan(mockMvc, coreClient, k8SServiceClient,
-                        MOCK_BUNDLE_NAME);
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest() {
         return TestInstallUtils
-                .simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(mockMvc, coreClient, k8SServiceClient,
-                        MOCK_BUNDLE_NAME);
+                .simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest(mockMvc, coreClient,
+                        k8SServiceClient,
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateSuccessfullyCompletedUninstall() {
@@ -1022,7 +1025,8 @@ public class InstallFlowTest {
     }
 
     private String simulateInProgressInstall() {
-        return TestInstallUtils.simulateInProgressInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+        return TestInstallUtils.simulateInProgressInstall(mockMvc, coreClient, k8SServiceClient,
+                TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateInProgressUninstall() {
@@ -1030,23 +1034,26 @@ public class InstallFlowTest {
     }
 
     private String simulateFailingInstall() {
-        return TestInstallUtils.simulateFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+        return TestInstallUtils.simulateFailingInstall(mockMvc, coreClient, k8SServiceClient,
+                TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateFailingInstallWithInstallPlan() {
         return TestInstallUtils
-                .simulateFailingInstallWithInstallPlan(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+                .simulateFailingInstallWithInstallPlan(mockMvc, coreClient, k8SServiceClient,
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateHugeAssetFailingInstall() {
         return TestInstallUtils
-                .simulateHugeAssetFailingInstall(mockMvc, coreClient, k8SServiceClient, MOCK_BUNDLE_NAME);
+                .simulateHugeAssetFailingInstall(mockMvc, coreClient, k8SServiceClient,
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateHugeAssetFailingInstallWithPlan() {
         return TestInstallUtils
                 .simulateHugeAssetFailingInstallWithInstallPlan(mockMvc, coreClient, k8SServiceClient,
-                        MOCK_BUNDLE_NAME);
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
     private String simulateFailingUninstall() {
