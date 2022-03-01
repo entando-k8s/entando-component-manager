@@ -166,15 +166,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public String generateFullDeploymentName(PluginDescriptor descriptor, String bundleId) {
 
         String deploymentBaseName;
+        String shaStartingValue;
 
         if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
             deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
+            shaStartingValue = descriptor.getDeploymentBaseName();
         } else {
             deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
+            shaStartingValue = descriptor.getDockerImage().toString();
         }
 
         String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
-                DigestUtils.sha256Hex(deploymentBaseName).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                DigestUtils.sha256Hex(shaStartingValue).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
                 BundleUtilities.makeKubernetesCompatible(bundleId), deploymentBaseName);
 
         if (fullDeploymentName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {
