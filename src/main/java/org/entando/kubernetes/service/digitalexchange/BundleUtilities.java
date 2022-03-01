@@ -411,10 +411,6 @@ public class BundleUtilities {
                 .mapToObj(i -> urlTokens[urlTokens.length - i])
                 .collect(Collectors.joining("."));
 
-        // prepend the first 8 chars of the bundle url hash
-        id = String.join(".",
-                DigestUtils.sha256Hex(bundleUrl).substring(0, PLUGIN_HASH_LENGTH), id);
-
         // remove possible leading and final dots
         if (id.charAt(0) == '.') {
             id = id.substring(1);

@@ -72,9 +72,7 @@ class EntandoDeBundleComposerTest {
                     final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
 
                     String name = deBundle.getMetadata().getName();
-                    assertThat(TestInstallUtils.isHex(name.substring(0, 8))).isTrue();
-                    assertThat(name.charAt(8)).isEqualTo('.');
-                    assertThat(name.substring(9)).isEqualTo("mybundle.entando.www.github.com");
+                    assertThat(name).isEqualTo("mybundle.entando.www.github.com");
                     assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
                     final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();

@@ -79,7 +79,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
 
-    public static final String MOCK_BUNDLE_NAME = "1664d60e.todomvc";
+    public static final String MOCK_BUNDLE_NAME = "todomvc";
     public static final String MOCK_BUNDLE_NAME_TGZ = "bundle.tgz";
     public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-e169f6f5-1664d60e-todomvc-custombasename";
     public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-f4019d52-1664d60e-todomvc-entando-todomvcv1";
@@ -495,7 +495,7 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
-        waitForInstallStatus(mockMvc, "1664d60e.todomvc", expected);
+        waitForInstallStatus(mockMvc, TestInstallUtils.MOCK_BUNDLE_NAME, expected);
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, String compId, JobStatus... expected) {
@@ -543,6 +543,7 @@ public class TestInstallUtils {
                 + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component)
                 .with(user("user")))
                 .andExpect(status().isOk())
+                .andDo(print())
                 .andExpect(jsonPath("$.payload").value(hasSize(1)))
                 .andExpect(jsonPath("$.payload.[0].componentId").value(component))
                 .andReturn().getResponse();

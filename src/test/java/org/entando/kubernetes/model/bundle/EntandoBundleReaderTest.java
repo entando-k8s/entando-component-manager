@@ -41,7 +41,12 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
@@ -66,13 +71,27 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldThrowExceptionWhenNoEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder);
-        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getEntandoDeBundleId());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleId());
     }
 
     @Test
     void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
-        assertThat(bundleReader.getEntandoDeBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+        assertThat(bundleReader.getBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+    }
+
+    @Test
+    void shouldReturnAValidBundleUrlWhenEntandoBundleIsPassedToTheConstructor() {
+        final EntandoDeBundle deBundle = new EntandoDeBundleBuilder().withNewSpec().addNewTag()
+                .withTarball(BundleInfoStubHelper.GIT_REPO_ADDRESS).endTag().endSpec().build();
+        bundleReader = new BundleReader(bundleFolder, deBundle);
+        assertThat(bundleReader.getBundleUrl()).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+    }
+
+    @Test
+    void shouldThrowExceptionWhileReadingABundleUrlIfTheBunbleUrlIsNotSet() {
+        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
     }
 
     @Test

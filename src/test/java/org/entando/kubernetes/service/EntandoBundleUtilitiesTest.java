@@ -195,8 +195,8 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
-        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
-                "entando-todomvcV2-1-0-0-" + bundleReader.getEntandoDeBundleId());
+        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -212,8 +212,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
-                "entando-todomvcV2-1-0-0-" + bundleReader.getEntandoDeBundleId());
+        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -229,8 +229,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
-                "entando-todomvcV3-1-0-0-" + bundleReader.getEntandoDeBundleId());
+        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+                "entando-todomvcV3-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -354,7 +354,7 @@ public class EntandoBundleUtilitiesTest {
         testCasesMap.entrySet()
                 .forEach(entry -> {
                     String actual = BundleUtilities.composeBundleIdentifier(entry.getKey());
-                    assertThat(actual).isEqualTo(DigestUtils.sha256Hex(entry.getKey()).substring(0, 8) + "." + entry.getValue());
+                    assertThat(actual).isEqualTo(entry.getValue());
                     assertThat(actual.length()).isLessThanOrEqualTo(253);
                 });
     }

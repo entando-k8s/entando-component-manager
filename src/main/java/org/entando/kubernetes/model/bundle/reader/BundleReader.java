@@ -136,11 +136,21 @@ public class BundleReader {
         return bundleBasePath.resolve(directory + "/" + fileName).toFile();
     }
 
-    public String getEntandoDeBundleId() {
+    public String getBundleId() {
         if (this.entandoDeBundle == null) {
             throw new EntandoComponentManagerException("null entandoDeBundle detected while determining the bundle ID");
         }
 
+
         return this.entandoDeBundle.getMetadata().getName();
+    }
+
+    public String getBundleUrl() {
+        if (this.entandoDeBundle == null || this.entandoDeBundle.getSpec() == null
+        || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec())) {
+            throw new EntandoComponentManagerException("cannot determine the bundle URL");
+        }
+
+        return this.entandoDeBundle.getSpec().getTags().get(0).getTarball();
     }
 }

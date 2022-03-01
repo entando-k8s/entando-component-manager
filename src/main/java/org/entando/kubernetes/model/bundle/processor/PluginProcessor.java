@@ -134,9 +134,16 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     }
 
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+
+        String bundleUrl = bundleReader.getBundleUrl();
+
+        final String bundleId = String.join(".",
+                DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                bundleReader.getBundleId());
+
         pluginDescriptor.setDescriptorMetadata(
-                bundleReader.getEntandoDeBundleId(),
-                generateFullDeploymentName(pluginDescriptor, bundleReader.getEntandoDeBundleId()));
+                bundleId,
+                generateFullDeploymentName(pluginDescriptor, bundleId));
     }
 
 
