@@ -38,6 +38,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -288,8 +289,10 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable envVar2 = environmentVariables.get(1);
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
+                .setValueFrom(new ValueFrom()
                 .setSecretKeyRef(
-                        new SecretKeyRef("1664d60e-todomvc-env-2-configmap-secretkey-ref-name-custombasename", "env2ConfigMapSecretKeyRefKey"));
+                        new SecretKeyRef("1664d60e-todomvc-env-2-configmap-secretkey-ref-name-custombasename",
+                                "env2ConfigMapSecretKeyRefKey")));
         assertThat(envVar2).isEqualTo(expected2);
     }
 

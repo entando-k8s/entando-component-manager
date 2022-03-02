@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Assertions;
@@ -140,9 +141,10 @@ class PluginDescriptorValidatorTest {
         EnvironmentVariable varWithRef = new EnvironmentVariable(
                 PluginStubHelper.TEST_ENV_VAR_2_NAME,
                 null,
-                new SecretKeyRef(PluginStubHelper.BUNDLE_ID + "-"
-                        + PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
-                        PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY));
+                new ValueFrom().setSecretKeyRef(
+                        new SecretKeyRef(PluginStubHelper.BUNDLE_ID + "-"
+                                + PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                                PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY)));
 
         descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
@@ -170,28 +172,28 @@ class PluginDescriptorValidatorTest {
         descriptor.getEnvironmentVariables().get(0).setValue(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
 
         // with empty value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setKey("");
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setKey("");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // with null value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setKey(null);
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setKey(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
-        descriptor.getEnvironmentVariables().get(1).getSecretKeyRef()
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef()
                 .setKey(PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
 
         // with empty value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setName("");
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName("");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // with null value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setName(null);
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // violating RFC 1123
         Stream.of("ENV", "env_1", "-env-1", "env-1-", "env?1", StringUtils.repeat("a", 254))
                 .forEach(name -> {
-                    descriptor.getEnvironmentVariables().get(1).getSecretKeyRef().setName(name);
+                    descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName(name);
                     assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
                 });
     }
@@ -212,7 +214,8 @@ class PluginDescriptorValidatorTest {
                     null);
             EnvironmentVariable varWithRef = new EnvironmentVariable(
                     "ENV_2_NAME", null,
-                    new SecretKeyRef(secretName, "env-2secret-key"));
+                    new ValueFrom().setSecretKeyRef(
+                            new SecretKeyRef(secretName, "env-2secret-key")));
             descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
             descriptor.setDescriptorMetadata(
                     PluginStubHelper.BUNDLE_ID,
@@ -242,12 +245,14 @@ class PluginDescriptorValidatorTest {
                 new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_1_NAME, PluginStubHelper.TEST_ENV_VAR_1_VALUE,
                         null),
                 new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_2_NAME, null,
-                        new SecretKeyRef(PluginStubHelper.BUNDLE_ID + "-"
-                                + PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
-                                PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY)));
+                        new ValueFrom().setSecretKeyRef(
+                                new SecretKeyRef(PluginStubHelper.BUNDLE_ID + "-"
+                                        + PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                                        PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY))));
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
-                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
                 .setEnvironmentVariables(environmentVariables);
 
         Assertions.assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));

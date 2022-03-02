@@ -11,14 +11,6 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class EnvironmentVariable {
-
-    private String name;
-    private String value;
-    private ValueFrom valueFrom;
-
-    public ValueFrom safeGetValueFrom() {
-        var res = getValueFrom();
-        return (res != null) ? res : new ValueFrom();
-    }
+public class ValueFrom {
+    private SecretKeyRef secretKeyRef;
 }

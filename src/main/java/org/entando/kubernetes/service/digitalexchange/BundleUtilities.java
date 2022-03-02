@@ -369,13 +369,13 @@ public class BundleUtilities {
                     EnvVarBuilder builder = new EnvVarBuilder()
                             .withName(envVar.getName());
 
-                    if (envVar.getSecretKeyRef() == null) {
+                    if (envVar.safeGetValueFrom().getSecretKeyRef() == null) {
                         builder.withValue(envVar.getValue());
                     } else {
                         builder.withNewValueFrom()
                                 .withNewSecretKeyRef()
-                                .withName(envVar.getSecretKeyRef().getName())
-                                .withKey(envVar.getSecretKeyRef().getKey())
+                                .withName(envVar.safeGetValueFrom().getSecretKeyRef().getName())
+                                .withKey(envVar.safeGetValueFrom().getSecretKeyRef().getKey())
                                 .endSecretKeyRef()
                                 .endValueFrom();
                     }
@@ -429,7 +429,7 @@ public class BundleUtilities {
     }
 
     /**
-     * sign the bundle id prepending the first 8 chars of the bundle url
+     * sign the bundle id prepending the first 8 chars of the bundle url.
      * @param bundleId the identifier of the bundle
      * @param bundleUrl the url of the repository of the bundle
      * @return the signed bundle id

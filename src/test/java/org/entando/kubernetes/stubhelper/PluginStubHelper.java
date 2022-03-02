@@ -10,6 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1R
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 
 public class PluginStubHelper {
 
@@ -64,7 +65,9 @@ public class PluginStubHelper {
         return Arrays.asList(
                 new EnvironmentVariable(TEST_ENV_VAR_1_NAME, TEST_ENV_VAR_1_VALUE, null),
                 new EnvironmentVariable(TEST_ENV_VAR_2_NAME, null,
-                        new SecretKeyRef(TEST_ENV_VAR_2_SECRET_NAME, TEST_ENV_VAR_2_SECRET_KEY))
+                        new ValueFrom(
+                                new SecretKeyRef(TEST_ENV_VAR_2_SECRET_NAME, TEST_ENV_VAR_2_SECRET_KEY))
+                )
         );
     }
 

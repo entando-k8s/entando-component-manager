@@ -47,7 +47,6 @@ public class PluginDescriptorValidator {
 
     public PluginDescriptorValidator(@Value("${full.deployment.name.maxlength:" + STANDARD_FULL_DEPLOYMENT_NAME_LENGTH
             + "}") int fullDeploymentNameMaxlength) {
-
         if (fullDeploymentNameMaxlength < MIN_FULL_DEPLOYMENT_NAME_LENGTH
                 || fullDeploymentNameMaxlength > MAX_FULL_DEPLOYMENT_NAME_LENGTH) {
 
@@ -56,7 +55,6 @@ public class PluginDescriptorValidator {
                             + "Allowed value must be >= %d <= %d",
                     MIN_FULL_DEPLOYMENT_NAME_LENGTH, MAX_FULL_DEPLOYMENT_NAME_LENGTH));
         }
-
         this.fullDeploymentNameMaxlength = fullDeploymentNameMaxlength;
     }
 
@@ -296,7 +294,7 @@ public class PluginDescriptorValidator {
         IntStream.range(0, environmentVariables.size()).forEach(i -> {
             final var envVar = environmentVariables.get(i);
             final var componentKey = descriptor.getComponentKey().getKey();
-            final var varSecretRefKey = envVar.getSecretKeyRef();
+            final var varSecretRefKey = envVar.safeGetValueFrom().getSecretKeyRef();
             final var varName = envVar.getName();
             final var bundleId = descriptor.getDescriptorMetadata().getBundleId();
 
