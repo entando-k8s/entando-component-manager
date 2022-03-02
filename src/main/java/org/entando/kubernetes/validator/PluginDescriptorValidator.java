@@ -349,7 +349,7 @@ public class PluginDescriptorValidator {
      */
     private boolean doesSecretBelongToTheBundle(String bundleId, SecretKeyRef secretKeyRef) {
         return secretKeyRef != null
-                && secretKeyRef.getName().endsWith(BundleUtilities.makeKubernetesCompatible(bundleId));
+                && secretKeyRef.getName().startsWith(BundleUtilities.makeKubernetesCompatible(bundleId));
     }
 
     /**

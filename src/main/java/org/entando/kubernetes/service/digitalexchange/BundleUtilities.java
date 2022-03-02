@@ -55,9 +55,6 @@ public class BundleUtilities {
     public static final String LATEST_VERSION = "latest";
 
     private static final String DESCRIPTOR_VERSION_STARTING_CHAR = "v";
-    public static final String PLUGIN_DESCRIPTOR_VERSION_REGEXP = "^(v)(\\d+)(\\.\\d+)?$";
-    public static final Pattern PLUGIN_DESCRIPTOR_VERSION_PATTERN = Pattern
-            .compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP);
 
     public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
     public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
@@ -429,6 +426,17 @@ public class BundleUtilities {
         }
 
         return id;
+    }
+
+    /**
+     * sign the bundle id prepending the first 8 chars of the bundle url
+     * @param bundleId the identifier of the bundle
+     * @param bundleUrl the url of the repository of the bundle
+     * @return the signed bundle id
+     */
+    public static String signBunldeId(String bundleId, String bundleUrl) {
+        return String.join("-",
+                DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH), bundleId);
     }
 
     /**

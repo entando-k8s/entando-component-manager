@@ -135,17 +135,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
 
-        String bundleUrl = bundleReader.getBundleUrl();
-
-        final String bundleId = String.join(".",
-                DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
-                bundleReader.getBundleId());
+        final String bundleId = BundleUtilities.signBunldeId(bundleReader.getBundleId(), bundleReader.getBundleUrl());
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
                 generateFullDeploymentName(pluginDescriptor, bundleId));
     }
-
 
     private void logDescriptorWarnings(PluginDescriptor descriptor) {
 
@@ -166,18 +161,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public String generateFullDeploymentName(PluginDescriptor descriptor, String bundleId) {
 
         String deploymentBaseName;
-        String shaStartingValue;
+        String inputValueForSha;
 
         if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
             deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
-            shaStartingValue = descriptor.getDeploymentBaseName();
+            inputValueForSha = descriptor.getDeploymentBaseName();
         } else {
             deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
-            shaStartingValue = descriptor.getDockerImage().toString();
+            inputValueForSha = descriptor.getDockerImage().toString();
         }
 
         String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
-                DigestUtils.sha256Hex(shaStartingValue).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
                 BundleUtilities.makeKubernetesCompatible(bundleId), deploymentBaseName);
 
         if (fullDeploymentName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {

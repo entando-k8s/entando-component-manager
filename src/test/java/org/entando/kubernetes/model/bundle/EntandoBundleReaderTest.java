@@ -43,11 +43,8 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
-import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +88,13 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldThrowExceptionWhileReadingABundleUrlIfTheBunbleUrlIsNotSet() {
         bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
+
+        bundleReader = new BundleReader(bundleFolder, new EntandoDeBundleBuilder().withNewSpec().endSpec().build());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
+
+        bundleReader = new BundleReader(bundleFolder, new EntandoDeBundleBuilder().withNewSpec()
+                .addNewTag().endTag().endSpec().build());
         assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
     }
 
@@ -285,7 +289,7 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
                 .setSecretKeyRef(
-                        new SecretKeyRef("env-2-configmap-secretkey-ref-name-custombasename-1664d60e-todomvc", "env2ConfigMapSecretKeyRefKey"));
+                        new SecretKeyRef("1664d60e-todomvc-env-2-configmap-secretkey-ref-name-custombasename", "env2ConfigMapSecretKeyRefKey"));
         assertThat(envVar2).isEqualTo(expected2);
     }
 

@@ -3,6 +3,7 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -37,6 +38,7 @@ import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
@@ -372,6 +374,16 @@ public class EntandoBundleUtilitiesTest {
     void shouldReturnEmptyStringWhenTryingToComposeBundleIdentifierWithANullUrl() {
         assertThat(BundleUtilities.composeBundleIdentifier(null)).isEmpty();
     }
+
+    @Test
+    void shouldSignTheBundleId() {
+        final var bundleId = BundleUtilities.signBunldeId(BundleStubHelper.BUNDLE_NAME,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        final var expected = BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
+                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-");
+        assertThat(bundleId).isEqualTo(expected);
+    }
+
 
     @Test
     void shouldReplaceGitAndSshProtocolWithHttp() {

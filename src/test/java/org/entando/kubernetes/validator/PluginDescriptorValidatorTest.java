@@ -140,8 +140,9 @@ class PluginDescriptorValidatorTest {
         EnvironmentVariable varWithRef = new EnvironmentVariable(
                 PluginStubHelper.TEST_ENV_VAR_2_NAME,
                 null,
-                new SecretKeyRef(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME + "-"
-                        + PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY));
+                new SecretKeyRef(PluginStubHelper.BUNDLE_ID + "-"
+                        + PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                        PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY));
 
         descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
@@ -199,7 +200,7 @@ class PluginDescriptorValidatorTest {
     @Test
     void shouldOnlyAcceptSecretsBelongingToTheBundle() {
         var secretsNames = new String[]{
-                "env-2-secret-lcorsettientando-xmasbundle-" + PluginStubHelper.BUNDLE_ID,
+                PluginStubHelper.BUNDLE_ID + "-env-2-secret-lcorsettientando-xmasbundle",
                 "env-2-secret-lcorsettientando-xmasbundle-7485af32-xmasbundle-firegloves-github-org"
         };
 
@@ -241,8 +242,9 @@ class PluginDescriptorValidatorTest {
                 new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_1_NAME, PluginStubHelper.TEST_ENV_VAR_1_VALUE,
                         null),
                 new EnvironmentVariable(PluginStubHelper.TEST_ENV_VAR_2_NAME, null,
-                        new SecretKeyRef(PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME + "-"
-                                + PluginStubHelper.BUNDLE_ID, PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY)));
+                        new SecretKeyRef(PluginStubHelper.BUNDLE_ID + "-"
+                                + PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                                PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY)));
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)

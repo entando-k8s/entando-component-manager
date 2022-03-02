@@ -140,14 +140,15 @@ public class BundleReader {
         if (this.entandoDeBundle == null) {
             throw new EntandoComponentManagerException("null entandoDeBundle detected while determining the bundle ID");
         }
-
-
+        
         return this.entandoDeBundle.getMetadata().getName();
     }
 
     public String getBundleUrl() {
         if (this.entandoDeBundle == null || this.entandoDeBundle.getSpec() == null
-        || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec())) {
+                || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec().getTags())
+                || this.entandoDeBundle.getSpec().getTags().get(0) == null
+                || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec().getTags().get(0).getTarball())) {
             throw new EntandoComponentManagerException("cannot determine the bundle URL");
         }
 

@@ -91,8 +91,8 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV3);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables,
-                "pn-b46d10b1-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
+        assertOnInstallables(installables, "pn-b46d10b1-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
+                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
     }
 
 
