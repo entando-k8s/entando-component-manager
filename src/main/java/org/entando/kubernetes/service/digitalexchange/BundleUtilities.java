@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -426,6 +427,19 @@ public class BundleUtilities {
         }
 
         return id;
+    }
+
+    /**
+     * return the received url without the protocol.
+     * @param url the url to manipulate to remove the protocol
+     * @return the received url without the protocol
+     */
+    public static String removeProtocolFromUrl(String url) {
+        URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
+                "The repository URL of the bundle is null",
+                "The repository URL of the bundle is invalid");
+        final int index = bundleUrl.toString().indexOf(bundleUrl.getHost());
+        return bundleUrl.toString().substring(index);
     }
 
     /**

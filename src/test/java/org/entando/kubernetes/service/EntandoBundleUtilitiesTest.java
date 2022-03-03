@@ -3,6 +3,7 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
@@ -42,6 +44,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -376,9 +379,32 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
+    void shouldReturnTheReceivedUrlWithoutTheProtocol() {
+        String url = BundleUtilities.removeProtocolFromUrl("http://www.github.com/entando/mybundle.git");
+        assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
+
+        url = BundleUtilities.removeProtocolFromUrl("https://www.github.com/entando/mybundle.git");
+        assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
+    }
+
+    @Test
+    void shouldThrowExceptionWhileReturningTheReceivedUrlWithoutTheProtocolWhenTheUrlIsNotValid() {
+        Stream.of("", "ftp://entando.com", "http://", "https://", "https://.com", "http://.com", "https://my-domain-",
+                        "https://my-domain.", "http:// ", "http://com.", "http://.com")
+                .forEach(urlString -> {
+                    try {
+                        assertThrows(EntandoValidationException.class,
+                                () -> BundleUtilities.removeProtocolFromUrl(urlString));
+                    } catch (Exception e) {
+                        fail(e.getMessage());
+                    }
+                });
+    }
+
+    @Test
     void shouldSignTheBundleId() {
         final var bundleId = BundleUtilities.signBunldeId(BundleStubHelper.BUNDLE_NAME,
-                BundleInfoStubHelper.GIT_REPO_ADDRESS);
+                BundleInfoStubHelper.GIT_REPO_ADDRESS.replace("http://", ""));
         final var expected = BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
                 + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-");
         assertThat(bundleId).isEqualTo(expected);

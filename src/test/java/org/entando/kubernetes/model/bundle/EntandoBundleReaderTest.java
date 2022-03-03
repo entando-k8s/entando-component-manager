@@ -291,7 +291,7 @@ public class EntandoBundleReaderTest {
                 .setName("env2Name")
                 .setValueFrom(new ValueFrom()
                 .setSecretKeyRef(
-                        new SecretKeyRef("1664d60e-todomvc-env-2-configmap-secretkey-ref-name-custombasename",
+                        new SecretKeyRef("ece8f6f0-todomvc-env-2-configmap-secretkey-ref-name-custombasename",
                                 "env2ConfigMapSecretKeyRefKey")));
         assertThat(envVar2).isEqualTo(expected2);
     }
