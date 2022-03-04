@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,9 +56,6 @@ public class BundleUtilities {
     public static final String LATEST_VERSION = "latest";
 
     private static final String DESCRIPTOR_VERSION_STARTING_CHAR = "v";
-    public static final String PLUGIN_DESCRIPTOR_VERSION_REGEXP = "^(v)(\\d+)(\\.\\d+)?$";
-    public static final Pattern PLUGIN_DESCRIPTOR_VERSION_PATTERN = Pattern
-            .compile(BundleUtilities.PLUGIN_DESCRIPTOR_VERSION_REGEXP);
 
     public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
     public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
@@ -372,13 +370,13 @@ public class BundleUtilities {
                     EnvVarBuilder builder = new EnvVarBuilder()
                             .withName(envVar.getName());
 
-                    if (envVar.getSecretKeyRef() == null) {
+                    if (envVar.safeGetValueFrom().getSecretKeyRef() == null) {
                         builder.withValue(envVar.getValue());
                     } else {
                         builder.withNewValueFrom()
                                 .withNewSecretKeyRef()
-                                .withName(envVar.getSecretKeyRef().getName())
-                                .withKey(envVar.getSecretKeyRef().getKey())
+                                .withName(envVar.safeGetValueFrom().getSecretKeyRef().getName())
+                                .withKey(envVar.safeGetValueFrom().getSecretKeyRef().getKey())
                                 .endSecretKeyRef()
                                 .endValueFrom();
                     }
@@ -411,10 +409,6 @@ public class BundleUtilities {
                 .mapToObj(i -> urlTokens[urlTokens.length - i])
                 .collect(Collectors.joining("."));
 
-        // prepend the first 8 chars of the bundle url hash
-        id = String.join(".",
-                DigestUtils.sha256Hex(bundleUrl).substring(0, PLUGIN_HASH_LENGTH), id);
-
         // remove possible leading and final dots
         if (id.charAt(0) == '.') {
             id = id.substring(1);
@@ -433,6 +427,30 @@ public class BundleUtilities {
         }
 
         return id;
+    }
+
+    /**
+     * return the received url without the protocol.
+     * @param url the url to manipulate to remove the protocol
+     * @return the received url without the protocol
+     */
+    public static String removeProtocolFromUrl(String url) {
+        URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
+                "The repository URL of the bundle is null",
+                "The repository URL of the bundle is invalid");
+        final int index = bundleUrl.toString().indexOf(bundleUrl.getHost());
+        return bundleUrl.toString().substring(index);
+    }
+
+    /**
+     * sign the bundle id prepending the first 8 chars of the bundle url.
+     * @param bundleId the identifier of the bundle
+     * @param bundleUrl the url of the repository of the bundle
+     * @return the signed bundle id
+     */
+    public static String signBunldeId(String bundleId, String bundleUrl) {
+        return String.join("-",
+                DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH), bundleId);
     }
 
     /**

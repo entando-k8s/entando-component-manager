@@ -38,11 +38,14 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,13 +69,34 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldThrowExceptionWhenNoEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder);
-        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getEntandoDeBundleId());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleId());
     }
 
     @Test
     void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
-        assertThat(bundleReader.getEntandoDeBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+        assertThat(bundleReader.getBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+    }
+
+    @Test
+    void shouldReturnAValidBundleUrlWhenEntandoBundleIsPassedToTheConstructor() {
+        final EntandoDeBundle deBundle = new EntandoDeBundleBuilder().withNewSpec().addNewTag()
+                .withTarball(BundleInfoStubHelper.GIT_REPO_ADDRESS).endTag().endSpec().build();
+        bundleReader = new BundleReader(bundleFolder, deBundle);
+        assertThat(bundleReader.getBundleUrl()).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+    }
+
+    @Test
+    void shouldThrowExceptionWhileReadingABundleUrlIfTheBunbleUrlIsNotSet() {
+        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
+
+        bundleReader = new BundleReader(bundleFolder, new EntandoDeBundleBuilder().withNewSpec().endSpec().build());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
+
+        bundleReader = new BundleReader(bundleFolder, new EntandoDeBundleBuilder().withNewSpec()
+                .addNewTag().endTag().endSpec().build());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
     }
 
     @Test
@@ -265,8 +289,10 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable envVar2 = environmentVariables.get(1);
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
+                .setValueFrom(new ValueFrom()
                 .setSecretKeyRef(
-                        new SecretKeyRef("env-2-configmap-secretkey-ref-name-custombasename-1664d60e-todomvc", "env2ConfigMapSecretKeyRefKey"));
+                        new SecretKeyRef("ece8f6f0-todomvc-env-2-configmap-secretkey-ref-name-custombasename",
+                                "env2ConfigMapSecretKeyRefKey")));
         assertThat(envVar2).isEqualTo(expected2);
     }
 

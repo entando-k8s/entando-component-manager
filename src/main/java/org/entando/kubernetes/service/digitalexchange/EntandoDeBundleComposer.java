@@ -106,7 +106,7 @@ public class EntandoDeBundleComposer {
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                .withName(BundleUtilities.composeBundleIdentifier(bundleUrl))
+                .withName(BundleUtilities.composeBundleIdentifier(bundleInfo.getName()))
                 .withLabels(createLabelsFrom(bundleDescriptor))
                 .endMetadata()
                 .withNewSpec()

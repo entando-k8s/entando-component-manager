@@ -3,6 +3,8 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
@@ -37,9 +40,11 @@ import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -195,8 +200,8 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
-        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
-                "entando-todomvcV2-1-0-0-" + bundleReader.getEntandoDeBundleId());
+        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -212,8 +217,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
-                "entando-todomvcV2-1-0-0-" + bundleReader.getEntandoDeBundleId());
+        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -229,8 +234,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getEntandoDeBundleId(),
-                "entando-todomvcV3-1-0-0-" + bundleReader.getEntandoDeBundleId());
+        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+                "entando-todomvcV3-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -354,7 +359,7 @@ public class EntandoBundleUtilitiesTest {
         testCasesMap.entrySet()
                 .forEach(entry -> {
                     String actual = BundleUtilities.composeBundleIdentifier(entry.getKey());
-                    assertThat(actual).isEqualTo(DigestUtils.sha256Hex(entry.getKey()).substring(0, 8) + "." + entry.getValue());
+                    assertThat(actual).isEqualTo(entry.getValue());
                     assertThat(actual.length()).isLessThanOrEqualTo(253);
                 });
     }
@@ -372,6 +377,39 @@ public class EntandoBundleUtilitiesTest {
     void shouldReturnEmptyStringWhenTryingToComposeBundleIdentifierWithANullUrl() {
         assertThat(BundleUtilities.composeBundleIdentifier(null)).isEmpty();
     }
+
+    @Test
+    void shouldReturnTheReceivedUrlWithoutTheProtocol() {
+        String url = BundleUtilities.removeProtocolFromUrl("http://www.github.com/entando/mybundle.git");
+        assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
+
+        url = BundleUtilities.removeProtocolFromUrl("https://www.github.com/entando/mybundle.git");
+        assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
+    }
+
+    @Test
+    void shouldThrowExceptionWhileReturningTheReceivedUrlWithoutTheProtocolWhenTheUrlIsNotValid() {
+        Stream.of("", "ftp://entando.com", "http://", "https://", "https://.com", "http://.com", "https://my-domain-",
+                        "https://my-domain.", "http:// ", "http://com.", "http://.com")
+                .forEach(urlString -> {
+                    try {
+                        assertThrows(EntandoValidationException.class,
+                                () -> BundleUtilities.removeProtocolFromUrl(urlString));
+                    } catch (Exception e) {
+                        fail(e.getMessage());
+                    }
+                });
+    }
+
+    @Test
+    void shouldSignTheBundleId() {
+        final var bundleId = BundleUtilities.signBunldeId(BundleStubHelper.BUNDLE_NAME,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS.replace("http://", ""));
+        final var expected = BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
+                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-");
+        assertThat(bundleId).isEqualTo(expected);
+    }
+
 
     @Test
     void shouldReplaceGitAndSshProtocolWithHttp() {

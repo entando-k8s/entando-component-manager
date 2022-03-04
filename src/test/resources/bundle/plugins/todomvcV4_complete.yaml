@@ -17,6 +17,7 @@ environmentVariables:
   - name: env1Name
     value: env1value
   - name: env2Name
-    secretKeyRef:
-      name: env-2-configmap-secretkey-ref-name-custombasename-1664d60e-todomvc
-      key: env2ConfigMapSecretKeyRefKey
+    valueFrom:
+      secretKeyRef:
+        name: ece8f6f0-todomvc-env-2-configmap-secretkey-ref-name-custombasename
+        key: env2ConfigMapSecretKeyRefKey

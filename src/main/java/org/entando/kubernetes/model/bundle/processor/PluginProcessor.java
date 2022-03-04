@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -134,10 +136,15 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     }
 
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+
+        final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
+        final String bundleId = BundleUtilities.signBunldeId(bundleReader.getBundleId(), url);
+
         pluginDescriptor.setDescriptorMetadata(
-                bundleReader.getEntandoDeBundleId(),
-                generateFullDeploymentName(pluginDescriptor, bundleReader.getEntandoDeBundleId()));
+                bundleId,
+                generateFullDeploymentName(pluginDescriptor, bundleId));
     }
+
 
 
     private void logDescriptorWarnings(PluginDescriptor descriptor) {
@@ -159,15 +166,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public String generateFullDeploymentName(PluginDescriptor descriptor, String bundleId) {
 
         String deploymentBaseName;
+        String inputValueForSha;
 
         if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
             deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
+            inputValueForSha = descriptor.getDeploymentBaseName();
         } else {
             deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
+            inputValueForSha = descriptor.getDockerImage().toString();
         }
 
         String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
-                DigestUtils.sha256Hex(deploymentBaseName).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
                 BundleUtilities.makeKubernetesCompatible(bundleId), deploymentBaseName);
 
         if (fullDeploymentName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {

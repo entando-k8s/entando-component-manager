@@ -67,8 +67,7 @@ public class BundleAssertionHelper {
 
     public static void assertOnEntandoBundle(ResultActions result, EntandoBundle bundle) throws Exception {
 
-        result.andExpect(jsonPath("$.payload.code",
-                        is(DigestUtils.sha256Hex(bundle.getRepoUrl()).substring(0, 8) + "." + bundle.getCode())))
+        result.andExpect(jsonPath("$.payload.code", is(bundle.getCode())))
                 .andExpect(jsonPath("$.payload.title", is(bundle.getTitle())))
                 .andExpect(jsonPath("$.payload.description", is(bundle.getDescription())))
                 .andExpect(jsonPath("$.payload.repoUrl", is(bundle.getRepoUrl())))

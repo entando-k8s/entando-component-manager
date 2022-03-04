@@ -79,11 +79,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class TestInstallUtils {
 
-    public static final String MOCK_BUNDLE_NAME = "1664d60e.todomvc";
+    public static final String MOCK_BUNDLE_NAME = "todomvc";
     public static final String MOCK_BUNDLE_NAME_TGZ = "bundle.tgz";
-    public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-e169f6f5-1664d60e-todomvc-custombasename";
-    public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-f4019d52-1664d60e-todomvc-entando-todomvcv1";
-    public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-8a3b17af-1664d60e-todomvc-entando-todomvcv2";
+    public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-cbece4f7-ece8f6f0-todomvc-custombasename";
+    public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-91cd365a-ece8f6f0-todomvc-entando-todomvcv1";
+    public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-3c1ce722-ece8f6f0-todomvc-entando-todomvcv2";
     public static final UriBuilder INSTALL_PLANS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME, "installplans");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
@@ -495,7 +495,7 @@ public class TestInstallUtils {
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, JobStatus... expected) {
-        waitForInstallStatus(mockMvc, "1664d60e.todomvc", expected);
+        waitForInstallStatus(mockMvc, TestInstallUtils.MOCK_BUNDLE_NAME, expected);
     }
 
     public static void waitForInstallStatus(MockMvc mockMvc, String compId, JobStatus... expected) {
@@ -543,6 +543,7 @@ public class TestInstallUtils {
                 + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component)
                 .with(user("user")))
                 .andExpect(status().isOk())
+                .andDo(print())
                 .andExpect(jsonPath("$.payload").value(hasSize(1)))
                 .andExpect(jsonPath("$.payload.[0].componentId").value(component))
                 .andReturn().getResponse();
