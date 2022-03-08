@@ -290,8 +290,8 @@ public class EntandoBundleReaderTest {
         final EnvironmentVariable expected2 = new EnvironmentVariable()
                 .setName("env2Name")
                 .setValueFrom(new ValueFrom()
-                .setSecretKeyRef(
-                        new SecretKeyRef("ece8f6f0-todomvc-env-2-configmap-secretkey-ref-name-custombasename",
+                        .setSecretKeyRef(new SecretKeyRef(
+                                "ece8f6f0-todomvc-env-2-configmap-secretkey-ref-name-custombasename",
                                 "env2ConfigMapSecretKeyRefKey")));
         assertThat(envVar2).isEqualTo(expected2);
     }
