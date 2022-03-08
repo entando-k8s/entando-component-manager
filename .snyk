@@ -14,3 +14,9 @@ ignore:
   SNYK-JAVA-ORGAPACHETOMCATEMBED-2414084:
     - '*':
         reason: '.'
+  SNYK-JAVA-MYSQL-2386864:
+    - '*':
+        reason: '.'
+  SNYK-JAVA-ORGLIQUIBASE-2419059:
+    - '*':
+        reason: '.'
