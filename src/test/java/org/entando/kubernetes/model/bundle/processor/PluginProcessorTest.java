@@ -63,7 +63,6 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Test
     void testCreatePluginV2() throws IOException, ExecutionException, InterruptedException {
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
-        when(bundleReader.getBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
 
         initBundleReaderShortImagesName();
 
@@ -74,13 +73,12 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "pn-b46d10b1-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
+                + "-entando-the-lucas");
     }
 
     @Test
     void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
 
-        when(bundleReader.getBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
@@ -92,14 +90,13 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, "pn-b46d10b1-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
+                + "-entando-the-lucas");
     }
 
 
     @Test
     void shouldThrowExceptionIfNameTooLong() throws IOException {
 
-        when(bundleReader.getBundleId()).thenReturn(BundleStubHelper.BUNDLE_NAME);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
 
@@ -122,7 +119,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         assertThat(installables.get(1)).isInstanceOf(PluginInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.PLUGIN);
         assertThat(installables.get(1).getName()).isEqualTo("pn-b9cd65aa-"
-                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-my-bundle-name-customdepbasename");
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-customdepbasename");
 
         verify(kubernetesService, times(0)).linkPlugin(any());
 

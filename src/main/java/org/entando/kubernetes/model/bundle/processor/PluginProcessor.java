@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -27,7 +25,6 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
-import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -138,7 +135,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
 
         final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
-        final String bundleId = BundleUtilities.signBunldeId(bundleReader.getBundleId(), url);
+        final String bundleId = BundleUtilities.signBundleId(url);
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,

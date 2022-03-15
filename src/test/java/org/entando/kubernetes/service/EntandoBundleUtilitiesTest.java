@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -19,7 +18,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.config.AppConfiguration;
@@ -41,10 +39,8 @@ import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
-import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
-import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -403,11 +399,9 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void shouldSignTheBundleId() {
-        final var bundleId = BundleUtilities.signBunldeId(BundleStubHelper.BUNDLE_NAME,
+        final var bundleId = BundleUtilities.signBundleId(
                 BundleInfoStubHelper.GIT_REPO_ADDRESS.replace("http://", ""));
-        final var expected = BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-");
-        assertThat(bundleId).isEqualTo(expected);
+        assertThat(bundleId).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }
 
 

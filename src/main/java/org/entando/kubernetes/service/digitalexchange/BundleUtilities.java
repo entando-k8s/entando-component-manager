@@ -444,13 +444,11 @@ public class BundleUtilities {
 
     /**
      * sign the bundle id prepending the first 8 chars of the bundle url.
-     * @param bundleId the identifier of the bundle
      * @param bundleUrl the url of the repository of the bundle
      * @return the signed bundle id
      */
-    public static String signBunldeId(String bundleId, String bundleUrl) {
-        return String.join("-",
-                DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH), bundleId);
+    public static String signBundleId(String bundleUrl) {
+        return DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH);
     }
 
     /**
