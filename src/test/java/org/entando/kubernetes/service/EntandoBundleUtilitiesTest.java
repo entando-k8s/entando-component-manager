@@ -403,11 +403,9 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void shouldSignTheBundleId() {
-        final var bundleId = BundleUtilities.signBunldeId(BundleStubHelper.BUNDLE_NAME,
+        final var bundleId = BundleUtilities.signBunldeId(
                 BundleInfoStubHelper.GIT_REPO_ADDRESS.replace("http://", ""));
-        final var expected = BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-");
-        assertThat(bundleId).isEqualTo(expected);
+        assertThat(bundleId).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }
 
 
