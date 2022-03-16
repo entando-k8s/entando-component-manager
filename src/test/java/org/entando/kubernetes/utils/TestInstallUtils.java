@@ -81,9 +81,9 @@ public class TestInstallUtils {
 
     public static final String MOCK_BUNDLE_NAME = "todomvc";
     public static final String MOCK_BUNDLE_NAME_TGZ = "bundle.tgz";
-    public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-cbece4f7-ece8f6f0-todomvc-custombasename";
-    public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-91cd365a-ece8f6f0-todomvc-entando-todomvcv1";
-    public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-3c1ce722-ece8f6f0-todomvc-entando-todomvcv2";
+    public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-cbece4f7-ece8f6f0-custombasename";
+    public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-91cd365a-ece8f6f0-entando-todomvcv1";
+    public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-3c1ce722-ece8f6f0-entando-todomvcv2";
     public static final UriBuilder INSTALL_PLANS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME, "installplans");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
