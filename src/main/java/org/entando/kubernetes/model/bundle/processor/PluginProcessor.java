@@ -173,9 +173,10 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             inputValueForSha = descriptor.getDockerImage().toString();
         }
 
-        String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
-                DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
-                BundleUtilities.makeKubernetesCompatible(bundleId), deploymentBaseName);
+        String fullDeploymentName =
+                PLUGIN_DEPLOYMENT_PREFIX + String.join("-", BundleUtilities.makeKubernetesCompatible(bundleId),
+                        DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                        deploymentBaseName);
 
         if (fullDeploymentName.length() > pluginDescriptorValidator.getFullDeploymentNameMaxlength()) {
             throw new EntandoComponentManagerException("The resulting plugin full deployment name \""

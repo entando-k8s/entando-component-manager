@@ -306,17 +306,8 @@ public class PluginDescriptorValidator {
                 );
             }
 
-            if (varSecretRefKey == null) {
-                // WITH NO SECRET REF
-
-                // .. but the value is empty
-                if (ObjectUtils.isEmpty(envVar.getValue())) {
-                    throw new InvalidBundleException(
-                            String.format("Unable to find a value for the environment var \"%s\" of plugin \"%s\"",
-                                    varName, componentKey)
-                    );
-                }
-            } else {
+            if (varSecretRefKey != null) {
+             
                 // WITH SECRET REF
 
                 // .. but the secret ref key is not valid
