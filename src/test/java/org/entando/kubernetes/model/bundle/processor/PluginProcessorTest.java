@@ -72,8 +72,8 @@ class PluginProcessorTest extends BaseProcessorTest {
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "pn-b46d10b1-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-entando-the-lucas");
+        assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
     }
 
     @Test
@@ -89,8 +89,8 @@ class PluginProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptorV3);
 
         final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, "pn-b46d10b1-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-entando-the-lucas");
+        assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
     }
 
 
@@ -118,8 +118,8 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(1)).isInstanceOf(PluginInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.PLUGIN);
-        assertThat(installables.get(1).getName()).isEqualTo("pn-b9cd65aa-"
-                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-customdepbasename");
+        assertThat(installables.get(1).getName()).isEqualTo("pn-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
+                + "-b9cd65aa-customdepbasename");
 
         verify(kubernetesService, times(0)).linkPlugin(any());
 
@@ -184,9 +184,10 @@ class PluginProcessorTest extends BaseProcessorTest {
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2()
                 .setDeploymentBaseName(null);
-        final String fullDepName = processor.generateFullDeploymentName(descriptorV2, BundleStubHelper.BUNDLE_NAME);
-        assertThat(fullDepName).isEqualTo(
-                "pn-b46d10b1-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-entando-the-lucas");
+        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
     }
 
     @Test
@@ -196,8 +197,9 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         descriptorV2.setDeploymentBaseName(deploymentBaseName);
-        final String fullDepName = processor.generateFullDeploymentName(descriptorV2, BundleStubHelper.BUNDLE_NAME);
-        assertThat(fullDepName)
-                .isEqualTo("pn-50fe6023-" + BundleStubHelper.BUNDLE_NAME.replace(".", "-") + "-" + deploymentBaseName.toLowerCase());
+        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-%s",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "50fe6023", deploymentBaseName.toLowerCase()));
     }
 }

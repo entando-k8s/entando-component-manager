@@ -20,6 +20,7 @@ public class PluginStubHelper {
     public static final String EXPECTED_INGRESS_PATH_V_MINOR_THAN_3 = "/entando/the-lucas/0-0-1-snapshot";
     public static final String EXPECTED_INGRESS_PATH_V_EQUAL_OR_MAJOR_THAN_3 = "/entando/the-lucas";
     public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
+    public static final String TEST_DESCRIPTOR_IMAGE_SHA = "24f085aa";
     public static final String TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME = "customDepBaseName";
     public static final String TEST_DESCRIPTOR_ADMIN_ROLE = "thelucas-admin";
     public static final String TEST_DESCRIPTOR_USER_ROLE = "thelucas-user";
@@ -29,7 +30,8 @@ public class PluginStubHelper {
     public static final String TEST_ENV_VAR_1_NAME = "env1Name";
     public static final String TEST_ENV_VAR_1_VALUE = "env1Value";
     public static final String TEST_ENV_VAR_2_NAME = "env2Name";
-    public static final String TEST_ENV_VAR_2_SECRET_NAME = "env-2-secret-name";
+    public static final String TEST_ENV_VAR_2_SECRET_NAME =
+            BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-env-2-secret-name";
     public static final String TEST_ENV_VAR_2_SECRET_KEY = "env2SecretKey";
 
 
@@ -40,7 +42,8 @@ public class PluginStubHelper {
                 .healthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
                 .dbms(TEST_DESCRIPTOR_DBMS)
                 .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
-                .build();
+                .build()
+                .setDescriptorMetadata(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, TEST_DESCRIPTOR_IMAGE_SHA);
     }
 
     public static PluginDescriptor stubPluginDescriptorV3() {

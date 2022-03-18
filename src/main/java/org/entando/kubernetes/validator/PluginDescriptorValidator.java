@@ -307,7 +307,7 @@ public class PluginDescriptorValidator {
             }
 
             if (varSecretRefKey != null) {
-             
+
                 // WITH SECRET REF
 
                 // .. but the secret ref key is not valid
@@ -338,7 +338,9 @@ public class PluginDescriptorValidator {
      */
     private boolean doesSecretBelongToTheBundle(String bundleId, SecretKeyRef secretKeyRef) {
         return secretKeyRef != null
-                && secretKeyRef.getName().startsWith(BundleUtilities.makeKubernetesCompatible(bundleId));
+                && (secretKeyRef.getName() == null
+                        || secretKeyRef.getName().isEmpty()
+                        || secretKeyRef.getName().startsWith(BundleUtilities.makeKubernetesCompatible(bundleId)));
     }
 
     /**
@@ -349,10 +351,9 @@ public class PluginDescriptorValidator {
      */
     private boolean isSecretKeyRefValid(SecretKeyRef secretKeyRef) {
 
-        return !ObjectUtils.isEmpty(secretKeyRef.getName())
-                && secretKeyRef.getName().length() <= BundleUtilities.GENERIC_K8S_ENTITY_MAX_LENGTH
-                && !ObjectUtils.isEmpty(secretKeyRef.getKey())
-                && DNS_LABEL_HOST_REGEX_PATTERN.matcher(secretKeyRef.getName()).matches();
+        return ObjectUtils.isEmpty(secretKeyRef.getName())
+                || (secretKeyRef.getName().length() <= BundleUtilities.GENERIC_K8S_ENTITY_MAX_LENGTH
+                && DNS_LABEL_HOST_REGEX_PATTERN.matcher(secretKeyRef.getName()).matches());
     }
 
 

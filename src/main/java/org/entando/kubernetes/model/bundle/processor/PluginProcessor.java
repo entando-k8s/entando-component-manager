@@ -170,7 +170,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             inputValueForSha = descriptor.getDeploymentBaseName();
         } else {
             deploymentBaseName = BundleUtilities.composeNameFromDockerImage(descriptor.getDockerImage());
-            inputValueForSha = descriptor.getDockerImage().toString();
+            inputValueForSha = String.format("%s/%s", descriptor.getDockerImage().getOrganization(),
+                    descriptor.getDockerImage().getName());
         }
 
         String fullDeploymentName =
