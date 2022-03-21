@@ -103,11 +103,6 @@ public class KubernetesService {
 
     }
 
-    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
-        EntandoPlugin updatedPlugin = createNewPlugin(plugin);
-        return k8sServiceClient.updatePlugin(updatedPlugin);
-    }
-
     private EntandoPlugin createNewPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = new EntandoPluginBuilder()
                 .withMetadata(plugin.getMetadata())

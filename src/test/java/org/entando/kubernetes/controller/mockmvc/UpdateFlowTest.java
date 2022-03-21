@@ -411,8 +411,7 @@ public class UpdateFlowTest {
     }
 
     private void verifyPluginInstallRequests(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
-        verify(k8SServiceClient, times(4)).updatePlugin(any());
+        verify(k8SServiceClient, times(6)).linkAppWithPlugin(any(), any(), any());
     }
 
     private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) throws Exception {

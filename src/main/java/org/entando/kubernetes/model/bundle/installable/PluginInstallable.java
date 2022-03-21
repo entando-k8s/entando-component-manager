@@ -32,10 +32,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
 
-            if (shouldCreate()) {
+            if (shouldCreate() || shouldOverride()) {
                 kubernetesService.linkPluginAndWaitForSuccess(plugin);
-            } else if (shouldOverride()) {
-                kubernetesService.updatePlugin(plugin);
             } else {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
