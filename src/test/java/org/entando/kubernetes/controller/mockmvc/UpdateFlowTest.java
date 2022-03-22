@@ -412,6 +412,7 @@ public class UpdateFlowTest {
 
     private void verifyPluginInstallRequests(K8SServiceClient k8SServiceClient) {
         verify(k8SServiceClient, times(6)).linkAppWithPlugin(any(), any(), any());
+        verify(k8SServiceClient, times(4)).unlink(any());
     }
 
     private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) throws Exception {
@@ -466,7 +467,7 @@ public class UpdateFlowTest {
     }
 
     private void verifyPluginsUninstallRequests() {
-        verify(k8SServiceClient, times(6)).unlink(any());
+        verify(k8SServiceClient, times(6)).unlinkAndScaleDown(any());
     }
 
     public void verifyPageSetDraftStatus() {

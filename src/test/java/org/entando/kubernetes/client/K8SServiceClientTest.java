@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,8 +36,6 @@ import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.EntandoValidationException;
-import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
@@ -118,7 +115,7 @@ public class K8SServiceClientTest {
         mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/?")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlMatching("/app-plugin-links/?")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/app-plugin-links?app=my-app")));
-        assertThat(returnedLink.size()).isEqualTo(1);
+        assertThat(returnedLink).hasSize(1);
         assertThat(returnedLink.get(0).getSpec().getEntandoAppName()).isEqualTo("my-app");
         assertThat(returnedLink.get(0).getSpec().getEntandoAppNamespace().get()).isEqualTo("my-namespace");
     }
@@ -158,9 +155,9 @@ public class K8SServiceClientTest {
     @Test
     public void shouldUnlinkThePlugin() {
         EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
-        client.unlink(getTestEntandoAppPluginLink());
+        client.unlinkAndScaleDown(getTestEntandoAppPluginLink());
         String name = testLink.getMetadata().getName();
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/" + name)));
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/delete-and-scale-down/" + name)));
 
     }
 
@@ -191,7 +188,7 @@ public class K8SServiceClientTest {
         mockServer
                 .addStub(delete(anyUrl()).willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
         Assertions.assertThrows(KubernetesClientException.class, () -> {
-            client.unlink(link);
+            client.unlinkAndScaleDown(link);
         });
     }
 

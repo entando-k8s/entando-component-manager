@@ -44,6 +44,10 @@
       "href": "http://localhost:9080/app-plugin-links/{name}",
       "templated": true
     },
+    "delete-and-scale-down": {
+      "href": "http://localhost:9080/app-plugin-links/delete-and-scale-down/{name}",
+      "templated": true
+    },
     "app-links": {
       "href": "http://localhost:9080/app-plugin-links?app={app}",
       "templated": true

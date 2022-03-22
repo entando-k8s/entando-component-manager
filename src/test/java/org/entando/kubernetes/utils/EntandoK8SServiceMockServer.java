@@ -169,6 +169,9 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
         wireMockServer.stubFor(delete(urlMatching("/app-plugin-links/[a-zA-Z\\-]+/?"))
                 .withRequestBody(new AnythingPattern())
                 .willReturn(aResponse().withStatus(204)));
+        wireMockServer.stubFor(delete(urlMatching("/app-plugin-links/delete-and-scale-down/[a-zA-Z\\-]+/?"))
+                .withRequestBody(new AnythingPattern())
+                .willReturn(aResponse().withStatus(204)));
     }
 
     public void addApiRoot(WireMockServer server) {

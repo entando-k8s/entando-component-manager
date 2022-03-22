@@ -191,6 +191,18 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
+    public void unlinkAndScaleDown(EntandoAppPluginLink el) {
+        String linkName = el.getMetadata().getName();
+        String appName = el.getSpec().getEntandoAppName();
+        String pluginName = el.getSpec().getEntandoAppNamespace().orElse(el.getMetadata().getNamespace());
+        Link unlinkHref = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
+                .follow(Hop.rel("delete-and-scale-down").withParameter("name", linkName))
+                .asLink();
+        tryOrThrow(() -> restTemplate.delete(unlinkHref.toUri()),
+                String.format("unlink app %s and plugin %s and scale down plugin", appName, pluginName));
+    }
+
+    @Override
     public EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
         URI linkToCall = tryOrThrow(() -> {
             Link linkToApp = traverson.follow("apps")
