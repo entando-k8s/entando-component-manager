@@ -76,15 +76,19 @@ public class KubernetesService {
         return k8sServiceClient.getAppLinks(entandoAppName);
     }
 
-    private Optional<EntandoAppPluginLink> getCurrentAppLinkToPlugin(String pluginId) {
+    public Optional<EntandoAppPluginLink> getCurrentAppLinkToPlugin(String pluginId) {
         return getCurrentAppLinks()
                 .stream()
                 .filter(el -> el.getSpec().getEntandoPluginName().equals(pluginId))
                 .findFirst();
     }
 
-    public void unlinkPlugin(String pluginId) {
+    public void unlink(String pluginId) {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
+    }
+
+    public void unlinkAndScaleDownPlugin(String pluginId) {
+        getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlinkAndScaleDown);
     }
 
 
@@ -101,11 +105,6 @@ public class KubernetesService {
             throw new PluginNotReadyException(plugin.getMetadata().getName());
         }
 
-    }
-
-    public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
-        EntandoPlugin updatedPlugin = createNewPlugin(plugin);
-        return k8sServiceClient.updatePlugin(updatedPlugin);
     }
 
     private EntandoPlugin createNewPlugin(EntandoPlugin plugin) {

@@ -19,6 +19,8 @@ public interface K8SServiceClient extends ECMClient {
 
     void unlink(EntandoAppPluginLink el);
 
+    void unlinkAndScaleDown(EntandoAppPluginLink el);
+
     EntandoPlugin updatePlugin(EntandoPlugin plugin);
 
     EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);

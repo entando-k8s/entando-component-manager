@@ -366,7 +366,7 @@ public class InstallFlowTest {
         verify(coreClient, times(2)).deletePage(ac.capture());
         assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
 
-        verify(k8SServiceClient, times(6)).unlink(any());
+        verify(k8SServiceClient, times(6)).unlinkAndScaleDown(any());
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
     }

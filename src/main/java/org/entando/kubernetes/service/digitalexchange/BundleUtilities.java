@@ -178,14 +178,6 @@ public class BundleUtilities {
         return getLabelsFromImage(dockerImage);
     }
 
-    public static String composeDeploymentBaseName(PluginDescriptor descriptor) {
-
-        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
-            return makeKubernetesCompatible(descriptor.getDeploymentBaseName());
-        } else {
-            return composeNameFromDockerImage(descriptor.getDockerImage());
-        }
-    }
 
     public static String composeNameFromDockerImage(DockerImage image) {
 

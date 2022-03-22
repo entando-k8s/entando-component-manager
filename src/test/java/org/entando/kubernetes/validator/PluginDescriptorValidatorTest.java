@@ -161,34 +161,8 @@ class PluginDescriptorValidatorTest {
 
         descriptor.getEnvironmentVariables().get(0).setName(PluginStubHelper.TEST_ENV_VAR_1_NAME);
 
-        // with empty value and null secret should fail
-        descriptor.getEnvironmentVariables().get(0).setValue("");
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        // with null value and null secret should fail
-        descriptor.getEnvironmentVariables().get(0).setValue(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        descriptor.getEnvironmentVariables().get(0).setValue(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
-
-        // with empty value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setKey("");
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        // with null value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setKey(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
         descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef()
                 .setKey(PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
-
-        // with empty value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName("");
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        // with null value and empty secretKeyRefName should fail
-        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // violating RFC 1123
         Stream.of("ENV", "env_1", "-env-1", "env-1-", "env?1", StringUtils.repeat("a", 254))
@@ -196,6 +170,41 @@ class PluginDescriptorValidatorTest {
                     descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName(name);
                     assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
                 });
+    }
+
+    @Test
+    void shouldAllowEmptyOrNullValuesForEnvironmentVariables() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars();
+
+        // with empty value and null secret
+        descriptor.getEnvironmentVariables().get(0).setValue("");
+        assertThat(validator.validateOrThrow(descriptor)).isTrue();
+
+        // with null value and null secret
+        descriptor.getEnvironmentVariables().get(0).setValue(null);
+        assertThat(validator.validateOrThrow(descriptor)).isTrue();
+
+        descriptor.getEnvironmentVariables().get(0).setValue(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
+
+        // with empty value and empty secretKeyRefName key
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setKey("");
+        assertThat(validator.validateOrThrow(descriptor)).isTrue();
+
+        // with null value and null  secretKeyRefName key
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setKey(null);
+        assertThat(validator.validateOrThrow(descriptor)).isTrue();
+
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef()
+                .setKey(PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
+
+        // with empty value and empty secretKeyRefName name
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName("");
+        assertThat(validator.validateOrThrow(descriptor)).isTrue();
+
+        // with null value and null  secretKeyRefName name
+        descriptor.getEnvironmentVariables().get(1).safeGetValueFrom().getSecretKeyRef().setName(null);
+        assertThat(validator.validateOrThrow(descriptor)).isTrue();
     }
 
 

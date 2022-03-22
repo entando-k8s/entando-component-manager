@@ -35,7 +35,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             if (shouldCreate()) {
                 kubernetesService.linkPluginAndWaitForSuccess(plugin);
             } else if (shouldOverride()) {
-                kubernetesService.updatePlugin(plugin);
+                kubernetesService.unlink(plugin.getMetadata().getName());
+                kubernetesService.linkPluginAndWaitForSuccess(plugin);
             } else {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
@@ -51,7 +52,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 return; //Do nothing
             }
 
-            kubernetesService.unlinkPlugin(representation.getComponentKey().getKey());
+            kubernetesService.unlinkAndScaleDownPlugin(representation.getComponentKey().getKey());
         });
     }
 

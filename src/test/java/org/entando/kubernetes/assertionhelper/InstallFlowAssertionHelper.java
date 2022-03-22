@@ -455,8 +455,7 @@ public class InstallFlowAssertionHelper {
     //##############################################################################
 
     public void verifyPluginInstallRequestsWithInstallPlanRequest(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
-        verify(k8SServiceClient, times(4)).updatePlugin(any());
+        verify(k8SServiceClient, times(6)).linkAppWithPlugin(any(), any(), any());
     }
 
     public void verifyWidgetsInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {

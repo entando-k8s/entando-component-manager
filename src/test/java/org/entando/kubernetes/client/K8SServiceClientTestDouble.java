@@ -76,6 +76,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     @Override
     public void unlink(EntandoAppPluginLink el) {
+
+    }
+
+    @Override
+    public void unlinkAndScaleDown(EntandoAppPluginLink el) {
         //Don't do anything atm
     }
 
