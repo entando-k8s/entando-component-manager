@@ -1,8 +1,8 @@
 # Description
 
-This script automates component-manager's data upgrade from Entando 6.3.2 to Entando 7.0.0.
-It must be run after the upgrade of the Entando app to v7.0.0.
-It copies data from Entando 6.3.2 tables to Entando 7.0.0 tables.
+This script automates component-manager's data upgrade from Entando 6.3.2 to Entando 7.0.
+It must be run after the upgrade of the Entando app to v7.0.
+It copies data from Entando 6.3.2 tables to Entando 7.0 tables.
 It fetches, where possible, every bundle repository URL from the cluster and copies it inside the relative database field.
 
 ### Supported DBMS
