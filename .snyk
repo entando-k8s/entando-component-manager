@@ -20,3 +20,15 @@ ignore:
   SNYK-JAVA-ORGLIQUIBASE-2419059:
     - '*':
         reason: '.'
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-2421244:
+    - '*':
+        reason: '.'    
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-2436751:
+    - '*':
+        reason: '.'
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-2434828:
+    - '*':
+        reason: '.'
+  SNYK-JAVA-ORGPOSTGRESQL-2401816:
+    - '*':
+        reason: '.'
