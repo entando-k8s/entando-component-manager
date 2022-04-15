@@ -4,6 +4,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -14,17 +15,20 @@ import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
+import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -43,10 +47,12 @@ class EntandoBundleResourceControllerTest {
 
     @Mock
     private EntandoBundleService bundleService;
+    @Mock
+    private BundleRepositoryUrlValidator repoUrlValidator;
 
     @BeforeEach
     public void setup() {
-        controller = new EntandoBundleResourceController(bundleService, null);
+        controller = new EntandoBundleResourceController(bundleService, null, repoUrlValidator);
     }
 
 
@@ -109,6 +115,9 @@ class EntandoBundleResourceControllerTest {
 
         // given that the bundle service return an empty BundlesStatusResult
         when(bundleService.getBundlesStatus(any())).thenReturn(new BundlesStatusResult());
+        // and that the url validation throws an exception
+        when(repoUrlValidator.composeUrlForcingHttpProtocolOrThrow(anyString())).thenThrow(
+                new EntandoValidationException());
 
         // when that the user requests for an invalid url
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
@@ -151,6 +160,15 @@ class EntandoBundleResourceControllerTest {
                         BundleStatusItemStubHelper.stubBundleStatusItemInstalled(),
                         BundleStatusItemStubHelper.stubBundleStatusItemInstalledNotDeployed())));
         when(bundleService.getBundlesStatus(any())).thenReturn(bundlesStatusResult);
+
+        // and the url validation returns results according to the receveid urls
+        when(repoUrlValidator.composeUrlForcingHttpProtocolOrThrow(
+                BundleStatusItemStubHelper.ID_INVALID_REPO_URL)).thenThrow(new EntandoValidationException());
+        when(repoUrlValidator.composeUrlForcingHttpProtocolOrThrow(BundleStatusItemStubHelper.ID_INSTALLED)).thenReturn(
+                BundleStatusItemStubHelper.ID_INSTALLED);
+        when(repoUrlValidator.composeUrlForcingHttpProtocolOrThrow(
+                BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED)).thenReturn(
+                BundleStatusItemStubHelper.ID_INSTALLED_NOT_DEPLOYED);
 
         // when that the user requests for the relative bundles status and for an invalid url
         BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
@@ -203,5 +221,12 @@ class EntandoBundleResourceControllerTest {
     void getBundleByRestNamedId_withInvalidResourceId_shouldThrowException() {
         final RestNamedId id = RestNamedId.from("abc");
         assertThrows(DefaultProblem.class, () -> controller.getBundleByRestNamedId(id));
+    }
+
+    @Test
+    void shouldThrowExceptionWhileReceivingABundleWithAnInvalidRepoUrlToDeploy() {
+        when(bundleService.deployDeBundle(any())).thenThrow(EntandoValidationException.class);
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
+        assertThrows(EntandoValidationException.class, () -> controller.deployBundle(bundleInfo));
     }
 }

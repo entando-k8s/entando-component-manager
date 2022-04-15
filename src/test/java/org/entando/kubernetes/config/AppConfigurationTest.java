@@ -33,6 +33,7 @@ import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ class AppConfigurationTest {
     private EntandoCoreClientTestDouble entandoCoreClientTestDouble;
     private K8SServiceClientTestDouble k8SServiceClientTestDouble;
     private AppConfiguration appConfig;
+    private BundleRepositoryUrlValidator bundleRepoUrlValidator = new BundleRepositoryUrlValidator(
+            BundleRepositoryUrlValidator.STANDARD_REPO_URL_MAX_LENGTH,
+            BundleRepositoryUrlValidator.STANDARD_REPO_URL_MAX_SUBPATHS);
 
     @BeforeEach
     void setup() {
@@ -82,7 +86,8 @@ class AppConfigurationTest {
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
         processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
-        processors.put(ComponentType.PLUGIN.toString(), new PluginProcessor(k8sService, pluginDescriptorValidator));
+        processors.put(ComponentType.PLUGIN.toString(),
+                new PluginProcessor(k8sService, pluginDescriptorValidator, bundleRepoUrlValidator));
         processors.put(ComponentType.WIDGET.toString(), new WidgetProcessor(coreClient));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
@@ -128,7 +133,8 @@ class AppConfigurationTest {
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
         processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
-        processors.put(ComponentType.PLUGIN.toString(), new PluginProcessor(k8sService, pluginDescriptorValidator));
+        processors.put(ComponentType.PLUGIN.toString(),
+                new PluginProcessor(k8sService, pluginDescriptorValidator, bundleRepoUrlValidator));
         processors.put(ComponentType.WIDGET.toString(), new WidgetProcessor(coreClient));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));

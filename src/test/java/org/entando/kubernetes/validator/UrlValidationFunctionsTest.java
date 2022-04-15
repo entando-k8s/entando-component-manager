@@ -13,18 +13,13 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-class ValidationFunctionsTest {
-
-    private final String emptyMex = "empty";
-    private final String invalidMex = "not valid";
+class UrlValidationFunctionsTest {
 
     @Test
     void shouldThrowTheExpectedExceptionIfUrlIsEmpty() {
 
-        final EntandoValidationException entandoValidationException = assertThrows(EntandoValidationException.class,
-                () -> ValidationFunctions.composeUrlOrThrow(null, emptyMex, invalidMex));
-
-        assertThat(entandoValidationException.getMessage()).isEqualTo(emptyMex);
+        assertThrows(EntandoValidationException.class,
+                () -> UrlValidationFunctions.composeUrlOrThrow(null));
     }
 
     @Test
@@ -35,7 +30,7 @@ class ValidationFunctionsTest {
                 .forEach(urlString -> {
                     try {
                         assertThrows(EntandoValidationException.class,
-                                () -> ValidationFunctions.composeUrlOrThrow(urlString, emptyMex, invalidMex),
+                                () -> UrlValidationFunctions.composeUrlOrThrow(urlString),
                                 urlString);
                     } catch (Exception e) {
                         fail(e.getMessage());
@@ -54,35 +49,8 @@ class ValidationFunctionsTest {
                         "https://www.mydomain.com/?myparam=value", "https://www.mydomain.com?myparam=value&seconp=myval",
                         "http://www.enta-ndo.com:123456", "http://www.entando.com/my.sec", "https://localhost/")
                 .forEach(urlString -> {
-                    URL url = ValidationFunctions.composeUrlOrThrow(urlString, emptyMex, invalidMex);
+                    URL url = UrlValidationFunctions.composeUrlOrThrow(urlString);
                     assertThat(url.toString()).isEqualTo(urlString);
                 });
-    }
-
-    @Test
-    void shouldReplaceGitAndSshProtocolWithHttpAndShouldNotThrowException() {
-        List<String> testCasesList = List.of(
-                "git@github.com:entando/my_bundle.git",
-                "git://github.com/entando/my_bundle.git",
-                "ssh://github.com/entando/my_bundle.git",
-                "git@github.com:entando:my_bundle.git");
-
-        testCasesList.forEach(url -> {
-            String actual = ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(url, "null", "not valid");
-            Assertions.assertThat(actual).isEqualTo(url);
-        });
-    }
-
-    @Test
-    void shouldReturnTheSameStringWhenProtocolIsNotOneOfTheExpected() {
-        List<String> testCasesList = List.of(
-                "got@github.com/entando/my_bundle.git",
-                "got://github.com/entando/my_bundle.git",
-                "sssh://github.com/entando/my_bundle.git",
-                "ftp://github.com/entando/my_bundle.git");
-
-        testCasesList.forEach(url ->
-                assertThrows(EntandoValidationException.class,
-                        () -> ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(url, "null", "not valid")));
     }
 }

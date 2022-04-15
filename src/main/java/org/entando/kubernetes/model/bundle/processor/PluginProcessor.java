@@ -1,6 +1,8 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +26,9 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.UrlValidationFunctions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -46,6 +50,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     private final KubernetesService kubernetesService;
     private final PluginDescriptorValidator pluginDescriptorValidator;
+    private final BundleRepositoryUrlValidator bundleRepoUrlValidator;
 
     @Override
     public ComponentType getSupportedComponentType() {
@@ -132,9 +137,13 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
     }
 
-    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader)
+            throws MalformedURLException {
 
-        final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
+        bundleRepoUrlValidator.validateOrThrow(bundleReader.getBundleUrl());
+        URL bundleUrl = new URL(bundleReader.getBundleUrl());
+        final String url = BundleUtilities.removeProtocolFromUrl(bundleUrl);
+
         final String bundleId = BundleUtilities.signBundleId(url);
 
         pluginDescriptor.setDescriptorMetadata(
@@ -193,3 +202,4 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             + "'{}' uses a deprecated format. To have full control over plugins we encourage you to migrate "
             + "to the new plugin descriptor format.";
 }
+

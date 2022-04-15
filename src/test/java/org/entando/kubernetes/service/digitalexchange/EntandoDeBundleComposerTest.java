@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,9 @@ class EntandoDeBundleComposerTest {
     private final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
     private final BundleDownloaderFactory bundleDownloaderFactory = new TestAppConfiguration(null,
             null).bundleDownloaderFactory();
+    private final BundleRepositoryUrlValidator repoUrlValidator = new BundleRepositoryUrlValidator(
+            BundleRepositoryUrlValidator.STANDARD_REPO_URL_MAX_LENGTH,
+            BundleRepositoryUrlValidator.STANDARD_REPO_URL_MAX_SUBPATHS);
     private EntandoDeBundleComposer deBundleComposer;
 
     EntandoDeBundleComposerTest() throws MalformedURLException {
@@ -52,7 +56,7 @@ class EntandoDeBundleComposerTest {
 
     @BeforeEach
     public void setup() {
-        deBundleComposer = new EntandoDeBundleComposer(bundleDownloaderFactory);
+        deBundleComposer = new EntandoDeBundleComposer(bundleDownloaderFactory, repoUrlValidator);
     }
 
     @Test

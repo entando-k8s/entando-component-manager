@@ -3,12 +3,12 @@ package org.entando.kubernetes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.config.AppConfiguration;
@@ -375,26 +374,12 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    void shouldReturnTheReceivedUrlWithoutTheProtocol() {
-        String url = BundleUtilities.removeProtocolFromUrl("http://www.github.com/entando/mybundle.git");
+    void shouldReturnTheReceivedUrlWithoutTheProtocol() throws MalformedURLException {
+        String url = BundleUtilities.removeProtocolFromUrl(new URL("http://www.github.com/entando/mybundle.git"));
         assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
 
-        url = BundleUtilities.removeProtocolFromUrl("https://www.github.com/entando/mybundle.git");
+        url = BundleUtilities.removeProtocolFromUrl(new URL("https://www.github.com/entando/mybundle.git"));
         assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
-    }
-
-    @Test
-    void shouldThrowExceptionWhileReturningTheReceivedUrlWithoutTheProtocolWhenTheUrlIsNotValid() {
-        Stream.of("", "ftp://entando.com", "http://", "https://", "https://.com", "http://.com", "https://my-domain-",
-                        "https://my-domain.", "http:// ", "http://com.", "http://.com")
-                .forEach(urlString -> {
-                    try {
-                        assertThrows(EntandoValidationException.class,
-                                () -> BundleUtilities.removeProtocolFromUrl(urlString));
-                    } catch (Exception e) {
-                        fail(e.getMessage());
-                    }
-                });
     }
 
     @Test

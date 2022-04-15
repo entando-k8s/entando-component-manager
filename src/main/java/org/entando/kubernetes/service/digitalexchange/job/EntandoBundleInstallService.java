@@ -49,6 +49,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.springframework.stereotype.Service;
 
 @Slf4j

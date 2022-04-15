@@ -37,7 +37,7 @@ import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
-import org.entando.kubernetes.validator.ValidationFunctions;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,9 +52,11 @@ import org.zalando.problem.Status;
 @RequiredArgsConstructor
 public class EntandoBundleResourceController implements EntandoBundleResource {
 
+    private static final String REPO_URL_PATH_PARAM = "repoUrl";
+
     private final EntandoBundleService bundleService;
     private final EntandoBundleComponentUsageService usageService;
-    private static final String REPO_URL_PATH_PARAM = "repoUrl";
+    private final BundleRepositoryUrlValidator bundleRepoUrlValidator;
 
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
@@ -103,8 +105,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
         for (String stringUrl : bundlesStatusQuery.getIds()) {
             try {
-                ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(stringUrl,
-                        "The received url is empty", "The received url is not valid");
+                bundleRepoUrlValidator.composeUrlForcingHttpProtocolOrThrow(stringUrl);
                 repoUrlList.add(stringUrl);
             } catch (Exception e) {
                 log.error("Invalid URL received: {} - it will be skipped in the search", stringUrl);

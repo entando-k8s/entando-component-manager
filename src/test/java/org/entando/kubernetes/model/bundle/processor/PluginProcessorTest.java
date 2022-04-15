@@ -1,6 +1,8 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
@@ -13,9 +15,13 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
@@ -27,8 +33,10 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.entando.kubernetes.validator.PluginDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +57,8 @@ class PluginProcessorTest extends BaseProcessorTest {
     private PluginDescriptorValidator pluginDescriptorValidator;
     @Mock
     private BundleReader bundleReader;
+    @Mock
+    private BundleRepositoryUrlValidator bundleRepoUrlValidator;
 
     private PluginProcessor processor;
 
@@ -57,7 +67,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, bundleRepoUrlValidator);
     }
 
     @Test
@@ -103,7 +113,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         AppConfiguration.truncatePluginBaseNameIfLonger = true;
         initBundleReaderLongImagesName();
 
-        Assertions.assertThrows(EntandoComponentManagerException.class, () -> processor.process(bundleReader));
+        assertThrows(EntandoComponentManagerException.class, () -> processor.process(bundleReader));
 
         AppConfiguration.truncatePluginBaseNameIfLonger = false;
     }
@@ -176,7 +186,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PluginProcessor(null, null), "plugin");
+                new PluginProcessor(null, null, bundleRepoUrlValidator), "plugin");
     }
 
     @Test
@@ -201,5 +211,16 @@ class PluginProcessorTest extends BaseProcessorTest {
                 BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-%s",
                 BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "50fe6023", deploymentBaseName.toLowerCase()));
+    }
+
+    @Test
+    void shouldThrowExceptionWhileSigningABundleIdStartingByAnInvalidRepoUrl() throws Exception {
+
+        initBundleReaderShortImagesName();
+
+        when(bundleReader.getBundleUrl()).thenReturn(BundleStatusItemStubHelper.ID_INSTALLED);
+        when(bundleRepoUrlValidator.validateOrThrow(anyString())).thenThrow(new EntandoValidationException());
+
+        assertThrows(EntandoValidationException.class, () -> processor.process(bundleReader));
     }
 }
