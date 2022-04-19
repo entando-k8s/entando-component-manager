@@ -32,3 +32,6 @@ ignore:
   SNYK-JAVA-ORGLIQUIBASE-2419059:
     - '*':
         reason: '.'
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-2689634:
+    - '*':
+        reason: '.'
