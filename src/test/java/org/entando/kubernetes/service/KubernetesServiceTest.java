@@ -5,12 +5,10 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -25,12 +23,14 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.hateoas.EntityModel;
 
 @Tag("unit")
 public class KubernetesServiceTest {
@@ -145,6 +145,21 @@ public class KubernetesServiceTest {
                 .fetchBundleByName(bundle.getSpec().getDetails().getName());
 
         assertThat(entandoDeBundleOpt.isPresent()).isTrue();
+    }
+
+    @Test
+    void shouldReturnAllTheAvailablePlugins() {
+        final K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
+        when(mockK8SServiceClient.getAllPlugins()).thenReturn(client.getAllPlugins());
+
+        KubernetesService kubernetesService = new KubernetesService(APP_NAME, APP_NAMESPACE, Set.of("test"),
+                mockK8SServiceClient, composeCf());
+        final Collection<EntityModel<EntandoPlugin>> pluginList = kubernetesService.getAllPlugins();
+        assertThat(pluginList).hasSize(1);
+
+        final EntandoPlugin actual = (EntandoPlugin) ((EntityModel) pluginList.toArray()[0]).getContent();
+        final EntandoPlugin expected = PluginStubHelper.stubEntandoPlugin();
+        assertThat(actual).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
     private EntandoAppPluginLink getTestEntandoAppPluginLink() {

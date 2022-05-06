@@ -9,6 +9,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -115,6 +116,15 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     .map(EntityModel::getContent)
                     .collect(Collectors.toList());
         });
+    }
+
+    @Override
+    public Collection<EntityModel<EntandoPlugin>> getAllPlugins() {
+        return tryOrThrow(() -> {
+            final CollectionModel<EntityModel<EntandoPlugin>> entityModels = traverson.follow(PLUGINS_ENDPOINT)
+                    .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoPlugin>>>() {});
+            return Optional.ofNullable(entityModels).map(CollectionModel::getContent).orElse(new ArrayList<>());
+        }, "get all plugins");
     }
 
     @Override

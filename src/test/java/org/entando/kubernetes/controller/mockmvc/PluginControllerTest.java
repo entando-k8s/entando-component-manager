@@ -16,9 +16,11 @@ import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
+import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -149,6 +152,31 @@ public class PluginControllerTest {
                 .andExpect(jsonPath("payload[0].id", nullValue()))
                 .andExpect(jsonPath("payload[0].name", nullValue()))
                 .andExpect(jsonPath("payload[0].description", is("plugin-info-description")));
+    }
+
+    @Test
+    void shouldReturnTheExpectedEntandoPlugin() throws Exception {
+        final List<EntityModel<EntandoPlugin>> expected = Collections.singletonList(
+                EntityModel.of(PluginStubHelper.stubEntandoPlugin()));
+
+        when(kubernetesService.getAllPlugins()).thenReturn(expected);
+        mockMvc.perform(get(String.format("%s/%s", URL, "all")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("_embedded.entandoPlugins", hasSize(1)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].kind", is("EntandoPlugin")))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].metadata.name", is(PluginStubHelper.EXPECTED_PLUGIN_NAME)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.image", is(PluginStubHelper.TEST_DESCRIPTOR_IMAGE)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.dbms", is(DbmsVendor.POSTGRESQL.toValue())))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.ingressPath", is(PluginStubHelper.EXPECTED_INGRESS_PATH_V_EQUAL_OR_MAJOR_THAN_3)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.healthCheckPath", is(PluginStubHelper.TEST_DESCRIPTOR_HEALTH_PATH)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.roles", hasSize(2)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.roles[0].code", is(PluginStubHelper.TEST_DESCRIPTOR_USER_ROLE)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.roles[0].name", is(PluginStubHelper.TEST_DESCRIPTOR_USER_ROLE)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.roles[1].code", is(PluginStubHelper.TEST_DESCRIPTOR_ADMIN_ROLE)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.roles[1].name", is(PluginStubHelper.TEST_DESCRIPTOR_ADMIN_ROLE)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.permissions", hasSize(1)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.permissions[0].clientId", is(PluginStubHelper.TEST_PERMISSION_CLIENT_ID)))
+                .andExpect(jsonPath("_embedded.entandoPlugins[0].spec.permissions[0].role", is(PluginStubHelper.TEST_PERMISSION_ROLE)));
     }
 
     private EntandoPlugin getTestEntandoPlugin() {

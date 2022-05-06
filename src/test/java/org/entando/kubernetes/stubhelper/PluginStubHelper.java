@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
@@ -11,6 +12,8 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1S
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
+import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 
 public class PluginStubHelper {
 
@@ -27,6 +30,8 @@ public class PluginStubHelper {
     public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
     public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
     public static final String TEST_DESCRIPTOR_SECURITY_LEVEL = "lenient";
+    public static final String TEST_PERMISSION_CLIENT_ID = "realm-management";
+    public static final String TEST_PERMISSION_ROLE = "manage-users";
     public static final String TEST_ENV_VAR_1_NAME = "env1Name";
     public static final String TEST_ENV_VAR_1_VALUE = "env1Value";
     public static final String TEST_ENV_VAR_2_NAME = "env2Name";
@@ -92,5 +97,24 @@ public class PluginStubHelper {
                 .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
                 .setDbms(TEST_DESCRIPTOR_DBMS)
                 .setSecurityLevel(TEST_DESCRIPTOR_SECURITY_LEVEL);
+    }
+
+
+    public static EntandoPlugin stubEntandoPlugin() {
+        return new EntandoPluginBuilder()
+                .withNewSpec()
+                .withReplicas(1)
+                .withImage(TEST_DESCRIPTOR_IMAGE)
+                .withDbms(DbmsVendor.POSTGRESQL)
+                .withHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
+                .withIngressPath(EXPECTED_INGRESS_PATH_V_EQUAL_OR_MAJOR_THAN_3)
+                .addNewRole(TEST_DESCRIPTOR_USER_ROLE, TEST_DESCRIPTOR_USER_ROLE)
+                .addNewRole(TEST_DESCRIPTOR_ADMIN_ROLE, TEST_DESCRIPTOR_ADMIN_ROLE)
+                .addNewPermission(TEST_PERMISSION_CLIENT_ID, TEST_PERMISSION_ROLE)
+                .endSpec()
+                .withNewMetadata()
+                .withName(EXPECTED_PLUGIN_NAME)
+                .endMetadata()
+                .build();
     }
 }

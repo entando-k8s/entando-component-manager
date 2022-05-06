@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -62,6 +64,10 @@ public class KubernetesService {
         return getCurrentAppLinkToPlugin(pluginId)
                 .map(k8sServiceClient::getPluginForLink)
                 .orElseThrow(PluginNotFoundException::new);
+    }
+
+    public Collection<EntityModel<EntandoPlugin>> getAllPlugins() {
+        return k8sServiceClient.getAllPlugins();
     }
 
     public boolean isLinkedPlugin(String pluginId) {

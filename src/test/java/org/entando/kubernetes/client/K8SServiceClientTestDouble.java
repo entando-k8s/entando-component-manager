@@ -1,5 +1,7 @@
 package org.entando.kubernetes.client;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +17,8 @@ import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.springframework.hateoas.EntityModel;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
 
@@ -60,6 +64,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
                 link.getSpec().getEntandoAppName().equals(entandoAppName))
                 .collect(Collectors.toList());
 
+    }
+
+    @Override
+    public Collection<EntityModel<EntandoPlugin>> getAllPlugins() {
+        return Collections.singletonList(EntityModel.of(PluginStubHelper.stubEntandoPlugin()));
     }
 
     @Override

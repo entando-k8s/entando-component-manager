@@ -1,5 +1,7 @@
 package org.entando.kubernetes.controller.plugin;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -7,8 +9,12 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginInfo;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.service.KubernetesService;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.function.EntityResponse;
 
 @Slf4j
 @RestController
@@ -27,6 +33,14 @@ public class PluginController implements PluginResource {
         final SimpleRestResponse<List<EntandoPlugin>> entity = new SimpleRestResponse<>();
         entity.setPayload(list);
         return entity;
+    }
+
+    @Override
+    public ResponseEntity<CollectionModel<EntityModel<EntandoPlugin>>> listPlugin() {
+        log.info("Listing all available plugins");
+        final Collection<EntityModel<EntandoPlugin>> list = kubernetesService.getAllPlugins();
+        final CollectionModel<EntityModel<EntandoPlugin>> collection = CollectionModel.of(new ArrayList<>(list));
+        return ResponseEntity.ok(collection);
     }
 
     @Override

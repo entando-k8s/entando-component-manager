@@ -20,10 +20,14 @@ import java.util.List;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginInfo;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.function.EntityResponse;
 
 @RequestMapping(value = "/plugins")
 public interface PluginResource {
@@ -32,6 +36,11 @@ public interface PluginResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<List<EntandoPlugin>> listLinkedPlugin();
+
+    @Operation(description = "Returns list of all available plugins")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @GetMapping(path = "all", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<CollectionModel<EntityModel<EntandoPlugin>>> listPlugin();
 
     @Operation(description = "Returns info about linked plugins")
     @ApiResponse(responseCode = "200", description = "OK")

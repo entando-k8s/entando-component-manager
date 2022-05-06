@@ -1,5 +1,6 @@
 package org.entando.kubernetes.client.k8ssvc;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.client.ECMClient;
@@ -8,10 +9,13 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.springframework.hateoas.EntityModel;
 
 public interface K8SServiceClient extends ECMClient {
 
     List<EntandoAppPluginLink> getAppLinks(String entandoAppName);
+
+    Collection<EntityModel<EntandoPlugin>> getAllPlugins();
 
     EntandoPlugin getPluginForLink(EntandoAppPluginLink el);
 
