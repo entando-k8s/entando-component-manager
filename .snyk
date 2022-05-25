@@ -23,12 +23,12 @@ ignore:
   SNYK-JAVA-ORGLIQUIBASE-2419059:
     - '*':
         reason: '.'
-    SNYK-JAVA-ORGSPRINGFRAMEWORKSECURITYOAUTH-2772728:
-      - '*':
-          reason: '.'
-    SNYK-JAVA-ORGSPRINGFRAMEWORK-2689634:
-      - '*':
-          reason: '.'
+  SNYK-JAVA-ORGSPRINGFRAMEWORKSECURITYOAUTH-2772728:
+    - '*':
+        reason: '.'
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-2689634:
+    - '*':
+        reason: '.'
   SNYK-JAVA-MYSQL-2386864:
     - '*':
         reason: '.'
