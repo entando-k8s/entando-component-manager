@@ -18,7 +18,6 @@ function vendorNotRecognized() {
 # EXECUTE THE RECEIVED QUERY
 function executeQuery() {
   query=$1
-#  printf "query: ###$1###"
 
   case $dbVendor in
     mysql)
@@ -154,7 +153,6 @@ echo "kubeNamespace ${kubeNamespace}\n"
 
 case $dbVendor in
   mysql)
-#    MYSQL_PWD="${dbPwd}"
     ;;
 
   postgresql)
