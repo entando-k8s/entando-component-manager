@@ -52,8 +52,13 @@
         <liquibase.version>4.3.1</liquibase.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <spring-boot.version>2.5.10</spring-boot.version>
-        <!--<spring-security-oauth2.version>2.5.2.RELEASE</spring-security-oauth2.version>-->
+        <spring-core.version>5.3.14</spring-core.version>
+        <spring-boot.version>2.5.7</spring-boot.version>
+        <spring-security-oauth2-autoconfigure.version>2.5.7</spring-security-oauth2-autoconfigure.version>
+        <spring-security-oauth2.version>2.5.2.RELEASE</spring-security-oauth2.version>
+        <spring-security-test.version>5.2.1.RELEASE</spring-security-test.version>
+        <spring-cloud-starter-contract-stub-runner.version>2.2.1.RELEASE</spring-cloud-starter-contract-stub-runner.version>
+        <spring-cloud-dependencies.version>Finchley.SR1</spring-cloud-dependencies.version>
     </properties>
 
     <dependencies>
