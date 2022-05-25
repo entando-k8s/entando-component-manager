@@ -32,6 +32,3 @@ ignore:
   SNYK-JAVA-MYSQL-2386864:
     - '*':
         reason: '.'
-  SNYK-JAVA-ORGLIQUIBASE-2419059:
-    - '*':
-        reason: '.'
