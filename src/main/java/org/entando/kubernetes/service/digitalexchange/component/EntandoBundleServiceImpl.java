@@ -54,7 +54,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
-import org.entando.kubernetes.validator.ValidationFunctions;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -72,6 +72,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     private final EntandoBundleComponentJobRepository jobComponentRepository;
     private final BundleStatusHelper bundleStatusHelper;
     private final EntandoDeBundleComposer entandoDeBundleComposer;
+    private final BundleRepositoryUrlValidator bundleRepoUrlValidator;
 
     public EntandoBundleServiceImpl(K8SServiceClient k8SServiceClient,
             @Value("${entando.component.repository.namespaces:}") List<String> accessibleDigitalExchanges,
@@ -79,7 +80,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
             EntandoBundleComponentJobRepository jobComponentRepository,
             InstalledEntandoBundleRepository installedComponentRepo,
             BundleStatusHelper bundleStatusHelper,
-            EntandoDeBundleComposer entandoDeBundleComposer) {
+            EntandoDeBundleComposer entandoDeBundleComposer,
+            BundleRepositoryUrlValidator bundleRepoUrlValidator) {
 
         this.k8SServiceClient = k8SServiceClient;
         this.accessibleDigitalExchanges = Optional.ofNullable(accessibleDigitalExchanges).orElse(new ArrayList<>())
@@ -89,6 +91,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         this.installedComponentRepo = installedComponentRepo;
         this.bundleStatusHelper = bundleStatusHelper;
         this.entandoDeBundleComposer = entandoDeBundleComposer;
+        this.bundleRepoUrlValidator = bundleRepoUrlValidator;
     }
 
     @Override
@@ -429,8 +432,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         // repoUrl should be decoded from BASE64
         final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedRepoUrl));
 
-        final String decodedRepoUrl = ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(decodedRepoUrlString,
-                "Repo url is empty","Repo url is not valid");
+        final String decodedRepoUrl = bundleRepoUrlValidator.composeUrlForcingHttpProtocolOrThrow(decodedRepoUrlString);
 
         // Check in installed bundles
         Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);

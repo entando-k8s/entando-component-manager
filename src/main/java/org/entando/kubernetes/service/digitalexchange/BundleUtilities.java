@@ -36,7 +36,7 @@ import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
-import org.entando.kubernetes.validator.ValidationFunctions;
+import org.entando.kubernetes.validator.UrlValidationFunctions;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -62,7 +62,7 @@ public class BundleUtilities {
 
     public static final String GIT_AND_SSH_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/))";
     public static final Pattern GIT_AND_SSH_PROTOCOL_REGEX_PATTERN = Pattern.compile(GIT_AND_SSH_PROTOCOL_REGEX);
-    public static final String HTTP_OVER_GIT_REPLACER = ValidationFunctions.HTTP_PROTOCOL + "://";
+    public static final String HTTP_OVER_GIT_REPLACER = UrlValidationFunctions.HTTP_PROTOCOL + "://";
     public static final String COLONS_REGEX = ":(?!\\/)";
     public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
     public static final int PLUGIN_HASH_LENGTH = 8;
@@ -426,12 +426,9 @@ public class BundleUtilities {
      * @param url the url to manipulate to remove the protocol
      * @return the received url without the protocol
      */
-    public static String removeProtocolFromUrl(String url) {
-        URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
-                "The repository URL of the bundle is null",
-                "The repository URL of the bundle is invalid");
-        final int index = bundleUrl.toString().indexOf(bundleUrl.getHost());
-        return bundleUrl.toString().substring(index);
+    public static String removeProtocolFromUrl(URL url) {
+        final int index = url.toString().indexOf(url.getHost());
+        return url.toString().substring(index);
     }
 
     /**

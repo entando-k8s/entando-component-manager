@@ -26,7 +26,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
-import org.entando.kubernetes.validator.ValidationFunctions;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,10 +35,12 @@ import org.springframework.stereotype.Component;
 public class EntandoDeBundleComposer {
 
     private final BundleDownloaderFactory downloaderFactory;
+    private final BundleRepositoryUrlValidator validator;
 
     @Autowired
-    public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory) {
+    public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory, BundleRepositoryUrlValidator validator) {
         this.downloaderFactory = downloaderFactory;
+        this.validator = validator;
     }
 
     /**
@@ -57,8 +59,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoValidationException("The received bundle url is null");
         }
 
-        ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(bundleInfo.getGitRepoAddress(),
-                "Bundle url is empty", "Bundle url is not valid");
+        validator.validateOrThrow(bundleInfo.getGitRepoAddress());
 
         final BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 

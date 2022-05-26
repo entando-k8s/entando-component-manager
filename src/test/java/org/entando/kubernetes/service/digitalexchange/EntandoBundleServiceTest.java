@@ -45,6 +45,7 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleSer
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -63,6 +64,7 @@ public class EntandoBundleServiceTest {
     private BundleStatusHelper bundleStatusHelper;
     private EntandoDeBundleComposer entandoDeBundleComposer;
     private EntandoBundleComponentJobRepository componentJobRepository;
+    private BundleRepositoryUrlValidator repoUrlValidator;
 
     @BeforeEach
     public void setup() {
@@ -72,9 +74,14 @@ public class EntandoBundleServiceTest {
         installedComponentRepository = Mockito.mock(InstalledEntandoBundleRepository.class);
         bundleStatusHelper = Mockito.mock(BundleStatusHelper.class);
         entandoDeBundleComposer = Mockito.mock(EntandoDeBundleComposer.class);
+        repoUrlValidator = new BundleRepositoryUrlValidator(
+                BundleRepositoryUrlValidator.STANDARD_REPO_URL_MAX_LENGTH,
+                BundleRepositoryUrlValidator.STANDARD_REPO_URL_MAX_SUBPATHS);
+
 
         service = new EntandoBundleServiceImpl(k8SServiceClient, availableDigitalExchanges, jobRepository,
-                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
+                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer,
+                repoUrlValidator);
     }
 
     @AfterEach
@@ -432,7 +439,8 @@ public class EntandoBundleServiceTest {
     void shouldThrowExceptionWhileDeployingABundleAndTheK8sServiceClientThrowsIt() {
         K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
         service = new EntandoBundleServiceImpl(mockK8SServiceClient, availableDigitalExchanges, jobRepository,
-                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
+                componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer,
+                repoUrlValidator);
         when(mockK8SServiceClient.deployDeBundle(any())).thenThrow(RestClientResponseException.class);
         assertThrows(RestClientResponseException.class, () -> service.deployDeBundle(null));
     }

@@ -29,9 +29,7 @@ public class EntandoHubRegistryValidator {
 
         validateNameOrThrow(entandoHubRegistry);
 
-        ValidationFunctions.composeUrlOrThrow(entandoHubRegistry.getUrl(),
-                "The received Entando Hub registry has an empty url",
-                "The received Entando Hub registry has an invalid url");
+        UrlValidationFunctions.composeUrlOrThrow(entandoHubRegistry.getUrl());
 
         return true;
     }

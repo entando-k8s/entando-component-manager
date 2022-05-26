@@ -27,6 +27,7 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
+import org.entando.kubernetes.validator.BundleRepositoryUrlValidator;
 import org.entando.kubernetes.validator.InstallPlanValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +44,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleInstallService installService;
     private final @NonNull EntandoBundleUninstallService uninstallService;
     private final @NonNull InstallPlanValidator installPlanValidator;
+    private final @NonNull BundleRepositoryUrlValidator bundleRepoUrlValidator;
 
     @Override
     public ResponseEntity<SimpleRestResponse<InstallPlan>> installPlans(
@@ -54,6 +56,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+
+        bundleRepoUrlValidator.validateOrThrow(tag.getTarball());
 
         InstallPlan installPlan = installService
                 .generateInstallPlan(bundle, tag, EntandoBundleInstallService.PERFORM_CONCURRENT_CHECKS);
@@ -71,6 +75,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+
+        bundleRepoUrlValidator.validateOrThrow(tag.getTarball());
 
         EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
                 .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy()));
@@ -92,6 +98,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
         EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+
+        bundleRepoUrlValidator.validateOrThrow(tag.getTarball());
 
         EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
                 .orElseGet(() -> installService.installWithInstallPlan(bundle, tag, request));
