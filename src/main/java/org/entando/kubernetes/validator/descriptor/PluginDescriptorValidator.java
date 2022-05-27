@@ -1,4 +1,4 @@
-package org.entando.kubernetes.validator;
+package org.entando.kubernetes.validator.descriptor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,21 +23,17 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVer
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.descriptor.DescriptorValidatorConfigBean.DescriptorValidationFunction;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class PluginDescriptorValidator {
+public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDescriptor, PluginDescriptorVersion> {
 
-    private Map<PluginDescriptorVersion, PluginDescriptorValidatorConfigBean> validationConfigMap;
 
     public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
     public static final Pattern DNS_LABEL_HOST_REGEX_PATTERN = Pattern.compile(DNS_LABEL_HOST_REGEX);
-    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR =
-            "The plugin full deployment name \"%s\" "
-                    + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
-                    + "environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH";
     public static final String DESC_PROP_ENV_VARS = "environmentVariables";
     public static final int MIN_FULL_DEPLOYMENT_NAME_LENGTH = 50;
     public static final int MAX_FULL_DEPLOYMENT_NAME_LENGTH = 200;
@@ -47,6 +43,10 @@ public class PluginDescriptorValidator {
 
     public PluginDescriptorValidator(@Value("${full.deployment.name.maxlength:" + STANDARD_FULL_DEPLOYMENT_NAME_LENGTH
             + "}") int fullDeploymentNameMaxlength) {
+
+        super(PluginDescriptorVersion.class);
+        super.validationConfigMap = new EnumMap<>(PluginDescriptorVersion.class);
+
         if (fullDeploymentNameMaxlength < MIN_FULL_DEPLOYMENT_NAME_LENGTH
                 || fullDeploymentNameMaxlength > MAX_FULL_DEPLOYMENT_NAME_LENGTH) {
 
@@ -62,13 +62,17 @@ public class PluginDescriptorValidator {
         return fullDeploymentNameMaxlength;
     }
 
+    @Override
+    protected PluginDescriptorVersion readDescriptorVersion(PluginDescriptor descriptor) {
+        return PluginDescriptorVersion.fromVersion(descriptor.getDescriptorVersion());
+    }
+
     /**************************************************************************************************************
      * CONFIGURATION START.
      *************************************************************************************************************/
 
     @PostConstruct
     public void setupValidatorConfiguration() {
-        validationConfigMap = new EnumMap<>(PluginDescriptorVersion.class);
         setupValidatorConfigurationDescriptorV1();
         setupValidatorConfigurationDescriptorV2();
         setupValidatorConfigurationDescriptorV3();
@@ -94,15 +98,12 @@ public class PluginDescriptorValidator {
         objectsThatMustBeNull.put("securityLevel", PluginDescriptor::getSecurityLevel);
         objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
 
-        validationConfigMap.put(PluginDescriptorVersion.V1, new PluginDescriptorValidatorConfigBean(
-                PluginDescriptorVersion.V1,
+        configureValidationConfigMap(PluginDescriptorVersion.V1,
                 Arrays.asList(
-                        this::validateDescriptorFormatOrThrow,
+                        super::validateDescriptorFormatOrThrow,
                         this::validateSecurityLevelOrThrow,
                         this::validateFullDeploymentNameLength),
-                objectsThatMustNOTBeNull,
-                objectsThatMustBeNull
-        ));
+                objectsThatMustNOTBeNull, objectsThatMustBeNull);
     }
 
     private void setupValidatorConfigurationDescriptorV2() {
@@ -115,7 +116,7 @@ public class PluginDescriptorValidator {
 
     private void setupValidatorConfigurationDescriptorV4() {
         setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V4);
-        PluginDescriptorValidatorConfigBean configBeanV4 = validationConfigMap.get(
+        DescriptorValidatorConfigBean<PluginDescriptor, PluginDescriptorVersion> configBeanV4 = validationConfigMap.get(
                 PluginDescriptorVersion.V4);
         configBeanV4.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
         configBeanV4.getValidationFunctions().add(this::validateEnvVarsOrThrow);
@@ -131,17 +132,13 @@ public class PluginDescriptorValidator {
         objectsThatMustBeNull.put("spec", PluginDescriptor::getSpec);
         objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
 
-        List<PluginDescriptorValidationFunction> validationFunctionList = new ArrayList<>();
+        List<DescriptorValidationFunction<PluginDescriptor>> validationFunctionList = new ArrayList<>();
         validationFunctionList.add(this::validateDescriptorFormatOrThrow);
         validationFunctionList.add(this::validateSecurityLevelOrThrow);
         validationFunctionList.add(this::validateFullDeploymentNameLength);
 
-        validationConfigMap.put(descriptorVersion, new PluginDescriptorValidatorConfigBean(
-                descriptorVersion,
-                validationFunctionList,
-                objectsThatMustNOTBeNull,
-                objectsThatMustBeNull
-        ));
+        configureValidationConfigMap(descriptorVersion, validationFunctionList, objectsThatMustNOTBeNull,
+                objectsThatMustBeNull);
     }
 
     /**************************************************************************************************************
@@ -155,7 +152,8 @@ public class PluginDescriptorValidator {
      * @return the received PluginDescriptor
      * @throws InvalidBundleException if the one of the values is not the expected one
      */
-    private PluginDescriptor ensurePluginDescriptorVersionIsSet(PluginDescriptor descriptor) {
+    @Override
+    protected PluginDescriptor ensureDescriptorVersionIsSet(PluginDescriptor descriptor) {
         if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
             if (descriptor.isVersion1()) {
                 descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
@@ -167,95 +165,6 @@ public class PluginDescriptorValidator {
         return descriptor;
     }
 
-    /**
-     * validate the received PluginDescriptor.
-     *
-     * @param descriptor the plugin descriptor to validate
-     * @return true if the validation succeeds
-     * @throws InvalidBundleException if the one of the values is not the expected one
-     */
-    public boolean validateOrThrow(PluginDescriptor descriptor) {
-
-        if (null != descriptor) {
-            ensurePluginDescriptorVersionIsSet(descriptor);
-            final PluginDescriptorVersion pluginDescriptorVersion = getDescriptorVersionOrThrow(descriptor);
-            validationConfigMap.get(pluginDescriptorVersion).getValidationFunctions()
-                    .forEach(validationFunction -> validationFunction.validateOrThrow(descriptor));
-        }
-
-        return true;
-    }
-
-    /**
-     * validate the version of the plugin descriptor.
-     *
-     * @param descriptor the plugin descriptor to validate
-     * @return the validated PluginDescriptor
-     * @throws InvalidBundleException if the one of the values is not the expected one
-     */
-    private PluginDescriptor validateDescriptorFormatOrThrow(PluginDescriptor descriptor) {
-
-        final PluginDescriptorVersion pluginDescriptorVersion = PluginDescriptorVersion.fromVersion(
-                descriptor.getDescriptorVersion());
-
-        validateNullAndNonNullObjects(
-                pluginDescriptorVersion,
-                descriptor,
-                validationConfigMap.get(pluginDescriptorVersion).getObjectsThatMustNOTBeNull(),
-                validationConfigMap.get(pluginDescriptorVersion).getObjectsThatMustBeNull());
-
-        return descriptor;
-    }
-
-
-    /**
-     * check if the version of the plugin descriptor is one of the expected ones.
-     *
-     * @param descriptor the plugin descriptor to validate
-     * @return the PluginDescriptorVersion detected by reading the plugin
-     * @throws InvalidBundleException if the one of the values is not the expected one
-     */
-    private PluginDescriptorVersion getDescriptorVersionOrThrow(PluginDescriptor descriptor) {
-        final PluginDescriptorVersion pluginDescriptorVersion = PluginDescriptorVersion.fromVersion(
-                descriptor.getDescriptorVersion());
-
-        if (pluginDescriptorVersion == null) {
-            String error = String.format(VERSION_NOT_VALID, descriptor.getComponentKey().getKey());
-            log.debug(error);
-            throw new InvalidBundleException(error);
-        }
-        return pluginDescriptorVersion;
-    }
-
-
-    /**
-     * check that the received maps of values are the expected ones.
-     *
-     * @param descriptorVersion        the PluginDescriptorVersion read by the descriptor
-     * @param descriptor               the PluginDescriptor to validate
-     * @param objectsThatMustNOTBeNull the map of supplier that must return a non null object
-     * @param objectsThatMustBeNull    the map of supplier that must return a null object
-     * @throws InvalidBundleException if the one of the values is not the expected one
-     */
-    private void validateNullAndNonNullObjects(PluginDescriptorVersion descriptorVersion,
-            PluginDescriptor descriptor,
-            Map<String, Function<PluginDescriptor, Object>> objectsThatMustNOTBeNull,
-            Map<String, Function<PluginDescriptor, Object>> objectsThatMustBeNull) {
-
-        objectsThatMustNOTBeNull.forEach((key, value) -> {
-            if (value.apply(descriptor) == null) {
-                throw new InvalidBundleException(String.format(EXPECTED_NOT_NULL_IS_NULL,
-                        descriptorVersion.getVersion(), key));
-            }
-        });
-
-        objectsThatMustBeNull.forEach((key, value) -> {
-            if (value.apply(descriptor) != null) {
-                throw new InvalidBundleException(String.format(EXPECTED_NULL_IS_NOT_NULL,
-                        descriptorVersion.getVersion(), key));
-            }
-        });
-    }
 
     /**
      * validate the securityLevel of the plugin descriptor.
@@ -381,30 +290,13 @@ public class PluginDescriptorValidator {
             "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
                     + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
                     .collect(Collectors.joining(", "));
-    public static final String VERSION_NOT_VALID =
-            "The plugin %s descriptor contains an invalid descriptorVersion. Accepted versions are: "
-                    + Arrays.stream(PluginDescriptorVersion.values()).map(PluginDescriptorVersion::getVersion)
-                    .collect(Collectors.joining(", "));
     public static final String NON_OWNED_SECRET = ""
             + "The descriptor of the plugin \"%s\" of the bundle \"%s\" contains an invalid environment variable \"%s\""
             + " that points to a secret that doesn't belong to the plugin. Check documentation for details about "
             + "bundles secrets.";
-    public static final String EXPECTED_NOT_NULL_IS_NULL =
-            "PluginDescriptor version detected: %s. With this version the %s property must NOT be null.";
-    public static final String EXPECTED_NULL_IS_NOT_NULL =
-            "PluginDescriptor version detected: %s. With this version the %s property must be null.";
+    public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR =
+            "The plugin full deployment name \"%s\" "
+                    + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
+                    + "environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH";
 
-
-    @FunctionalInterface
-    interface PluginDescriptorValidationFunction {
-
-        /**
-         * apply a validation to the received PluginDescriptor.
-         *
-         * @param descriptor the PluginDescriptor to validate
-         * @return the received and validated PluginDescriptor
-         * @throws InvalidBundleException if the PluginDescriptor has not been successfully validated
-         */
-        PluginDescriptor validateOrThrow(PluginDescriptor descriptor) throws InvalidBundleException;
-    }
 }

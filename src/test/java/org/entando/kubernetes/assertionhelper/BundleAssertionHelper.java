@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.util.Set;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.utils.Sets;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;

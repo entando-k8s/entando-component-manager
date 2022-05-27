@@ -2,7 +2,7 @@ package org.entando.kubernetes.model.entandocore;
 
 import java.util.Map;
 import lombok.Data;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetConfigurationDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 
 @Data
 public class EntandoCorePageWidgetConfiguration {

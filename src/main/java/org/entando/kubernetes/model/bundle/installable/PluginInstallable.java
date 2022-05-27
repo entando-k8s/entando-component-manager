@@ -6,7 +6,9 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.job.PluginAPIDataEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.repository.PluginAPIDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
@@ -14,10 +16,13 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 public class PluginInstallable extends Installable<PluginDescriptor> {
 
     private final KubernetesService kubernetesService;
+    private final PluginAPIDataRepository pluginAPIPathRepository;
 
-    public PluginInstallable(KubernetesService kubernetesService, PluginDescriptor plugin, InstallAction action) {
+    public PluginInstallable(KubernetesService kubernetesService, PluginDescriptor plugin, InstallAction action,
+            PluginAPIDataRepository pluginAPIPathRepository) {
         super(plugin, action);
         this.kubernetesService = kubernetesService;
+        this.pluginAPIPathRepository = pluginAPIPathRepository;
     }
 
     @Override
@@ -40,6 +45,13 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             } else {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
+
+            PluginAPIDataEntity apiPathEntity = new PluginAPIDataEntity()
+                    .setBundleId(representation.getDescriptorMetadata().getBundleId())
+                    .setServiceId(representation.getDescriptorMetadata().getPluginId())
+                    .setIngressPath(BundleUtilities.composeIngressPathFromDockerImage(representation));
+            pluginAPIPathRepository.save(apiPathEntity);
+            // TODO prevent the custom ingress creation or create both? does it already work in this way?
         });
     }
 
@@ -47,12 +59,17 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            log.info("Removing link to plugin {}", representation.getComponentKey().getKey());
+
+            String pluginId = representation.getComponentKey().getKey();
+
             if (shouldSkip()) {
                 return; //Do nothing
             }
 
-            kubernetesService.unlinkAndScaleDownPlugin(representation.getComponentKey().getKey());
+            log.info("Removing link to plugin {}", pluginId);
+            kubernetesService.unlinkAndScaleDownPlugin(pluginId);
+            pluginAPIPathRepository.deleteByBundleIdAndServiceId(representation.getDescriptorMetadata().getBundleId(),
+                    pluginId);
         });
     }
 

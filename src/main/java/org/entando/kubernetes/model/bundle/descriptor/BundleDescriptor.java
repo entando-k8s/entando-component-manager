@@ -13,7 +13,7 @@ import org.entando.kubernetes.model.bundle.BundleType;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BundleDescriptor implements Descriptor {
+public class BundleDescriptor extends VersionedDescriptor {
 
     private String code;
     private String description;

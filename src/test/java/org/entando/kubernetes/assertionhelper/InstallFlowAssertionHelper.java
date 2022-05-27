@@ -30,8 +30,9 @@ import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -72,6 +73,13 @@ public class InstallFlowAssertionHelper {
         verifyContentTemplatesInstallRequests(coreClient);
         verifyContentsInstallRequests(coreClient);
         verifyAssetsInstallRequests(coreClient);
+    }
+
+    public void verifyCoreCallsV5() {
+        verifyPluginInstallRequestsV5(k8SServiceClient);
+        verifyWidgetsInstallRequestsV5(coreClient);
+        verifyDirectoryInstallRequests(coreClient);
+        verifyFileInstallRequestsV5(coreClient);
     }
 
     private void verifyCategoryInstallRequests(EntandoCoreClient coreClient) {
@@ -221,17 +229,38 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css")
-                && fd.getFolder().equals("/something/css")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("/something/css")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("/something/js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("/something/js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
+    }
+
+    private void verifyFileInstallRequestsV5(EntandoCoreClient coreClient) {
+        ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
+        verify(coreClient, times(3)).createFile(fileArgCaptor.capture());
+
+        List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
+                .collect(Collectors.toList());
+
+        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("css-res.css")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets")
+                && fd.getBase64().equals(readFileAsBase64(
+                "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css")));
+        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-2.js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js")
+                && fd.getBase64().equals(readFileAsBase64(
+                "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
+        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-1.js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5")
+                && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
 
 
@@ -300,6 +329,10 @@ public class InstallFlowAssertionHelper {
         verify(k8SServiceClient, times(6)).linkAppWithPlugin(any(), any(), any());
     }
 
+    private void verifyPluginInstallRequestsV5(K8SServiceClient k8SServiceClient) {
+        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
+    }
+
     private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) {
         ArgumentCaptor<PageTemplateDescriptor> pageModelDescrArgCaptor = ArgumentCaptor
                 .forClass(PageTemplateDescriptor.class);
@@ -349,6 +382,24 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedWidgets.get(1).getCustomUi()).isEqualTo("<h2>Bundle 1 Widget</h2>");
     }
 
+    public void verifyWidgetsInstallRequestsV5(EntandoCoreClient coreClient) {
+        ArgumentCaptor<WidgetDescriptor> widgetDescArgCaptor = ArgumentCaptor.forClass(WidgetDescriptor.class);
+        verify(coreClient, times(1)).createWidget(widgetDescArgCaptor.capture());
+        List<WidgetDescriptor> allPassedWidgets = widgetDescArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
+                .collect(Collectors.toList());
+
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("todomvc_widget");
+        assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
+        assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/my_widget_descriptor_v5.ftl").trim());
+        assertThat(allPassedWidgets.get(0).getCustomElement()).isEqualTo("my-widget");
+
+        ApiClaim apiClaim1 = new ApiClaim("ext-api", "external", "ms1", "anotherbundle");
+        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "bb1e1949-custombasenamev3c", null);
+        assertThat(allPassedWidgets.get(0).getApiClaims().get(0)).isEqualToComparingFieldByField(apiClaim1);
+        assertThat(allPassedWidgets.get(0).getApiClaims().get(1)).isEqualToComparingFieldByField(apiClaim2);
+    }
+
 
     public void verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() {
 
@@ -361,11 +412,11 @@ public class InstallFlowAssertionHelper {
                 TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_1,
                 TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_2,
                 TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
-                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
-                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
-                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V3,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V3C,
+                TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V4,
                 // Directories
-                "/something",
+                "/bundles/something-ece8f6f0",
                 // Categories
                 "my-category",
                 "another_category",
@@ -379,11 +430,11 @@ public class InstallFlowAssertionHelper {
                 "HELLO",
                 "WORLD",
                 // Files
-                "/something/css/custom.css",
-                "/something/css/style.css",
-                "/something/js/configUiScript.js",
-                "/something/js/script.js",
-                "/something/vendor/jquery/jquery.js",
+                "/bundles/something-ece8f6f0/resources/css/custom.css",
+                "/bundles/something-ece8f6f0/resources/css/style.css",
+                "/bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                "/bundles/something-ece8f6f0/resources/js/script.js",
+                "/bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
                 //Widgets
                 "todomvc_widget",
                 "another_todomvc_widget",
@@ -456,6 +507,10 @@ public class InstallFlowAssertionHelper {
 
     public void verifyPluginInstallRequestsWithInstallPlanRequest(K8SServiceClient k8SServiceClient) {
         verify(k8SServiceClient, times(6)).linkAppWithPlugin(any(), any(), any());
+    }
+
+    public void verifyPluginInstallRequestsWithInstallPlanRequestV5(K8SServiceClient k8SServiceClient) {
+        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
     }
 
     public void verifyWidgetsInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {
@@ -613,14 +668,32 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("/something/css")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("/something/js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("/something/js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
+    }
+
+    public void verifyFileInstallRequestsWithInstallPlanRequestV5(EntandoCoreClient coreClient) {
+        ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
+        verify(coreClient, times(2)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(0)).updateFile(fileArgCaptor.capture());
+
+        List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
+                .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
+                .collect(Collectors.toList());
+
+        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("js-res-2.js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js")
+                && fd.getBase64().equals(readFileAsBase64(
+                "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
+        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-1.js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5")
+                && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
 
 

@@ -1,7 +1,7 @@
 descriptorVersion: v3
 image: entando/todomvcV2:1.0.0
 dbms: mysql
-deploymentBaseName: "customBaseName"
+deploymentBaseName: "customBaseNameV3"
 healthCheckPath: /api/v1/todos
 roles:
   - user

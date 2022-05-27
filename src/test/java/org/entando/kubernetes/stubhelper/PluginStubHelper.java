@@ -43,7 +43,8 @@ public class PluginStubHelper {
                 .dbms(TEST_DESCRIPTOR_DBMS)
                 .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
                 .build()
-                .setDescriptorMetadata(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, TEST_DESCRIPTOR_IMAGE_SHA);
+                .setDescriptorMetadata(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, EXPECTED_PLUGIN_NAME,
+                        TEST_DESCRIPTOR_IMAGE_SHA);
     }
 
     public static PluginDescriptor stubPluginDescriptorV3() {

@@ -28,6 +28,7 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             if (this.representation.isRoot() && shouldCreate()) {
+                log.info("Removing directory {}", this.representation.getName());
                 engineService.deleteFolder(this.representation.getName());
             }
         });

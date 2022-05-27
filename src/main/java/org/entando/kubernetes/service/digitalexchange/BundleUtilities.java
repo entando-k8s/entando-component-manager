@@ -5,6 +5,8 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
@@ -67,6 +70,8 @@ public class BundleUtilities {
     public static final String COLONS_REGEX = ":(?!\\/)";
     public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
     public static final int PLUGIN_HASH_LENGTH = 8;
+
+    public static final String BUNDLES_FOLDER = "/bundles";
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -207,7 +212,7 @@ public class BundleUtilities {
         return ingressPath;
     }
 
-    private static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
+    public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
 
         DockerImage image = descriptor.getDockerImage();
 
@@ -350,6 +355,22 @@ public class BundleUtilities {
     }
 
     /**
+     * return the bundle folder name full of the signing hash.
+     *
+     * @param bundleReader the BundleReader to use to compose the signed bundle folder name
+     * @return the composed signed bundle folder name
+     * @throws IOException if an error occurrs during the reading of the bundle
+     */
+    public static String composeSignedBundleFolder(BundleReader bundleReader) throws IOException {
+        final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+        if (! resourceFolder.equals("/")) {
+            return BundleUtilities.appendHashToBundleId(bundleReader, resourceFolder);
+        } else {
+            return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
+        }
+    }
+
+    /**
      * receives a list of environment variables and convert them to the K8S env var format.
      *
      * @param environmentVariableList the PluginDescriptor from which get the env vars to convert
@@ -461,5 +482,31 @@ public class BundleUtilities {
     public static String gitSshProtocolToHttp(String url) {
         String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
         return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
+    }
+
+
+    /**
+     * build the full path of a resource inside a bundle.
+     *
+     * @param bundleReader         the bundle reader responsible for reading the bundle
+     * @param folderProp           the BundleProperty indicating the root folder of the file
+     * @param fileDescriptorFolder the folder containing the current file
+     * @param bundleNameFolder     the name of the bundle root folder
+     * @return the built full path of a resource
+     */
+    public static String buildFullBundleResourcePath(BundleReader bundleReader, BundleProperty folderProp,
+            String fileDescriptorFolder, String bundleNameFolder) {
+
+        final String signedBundleFolder = appendHashToBundleId(bundleReader, bundleNameFolder);
+        final Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
+
+        return Paths.get(signedBundleFolder, folderProp.getValue())
+                .resolve(fileFolder).toString();
+    }
+
+    public static String appendHashToBundleId(BundleReader bundleReader, String bundleFolder) {
+        final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
+        final String bundleId = BundleUtilities.signBundleId(url);
+        return Paths.get(BUNDLES_FOLDER, bundleFolder + "-" + bundleId).toString();
     }
 }

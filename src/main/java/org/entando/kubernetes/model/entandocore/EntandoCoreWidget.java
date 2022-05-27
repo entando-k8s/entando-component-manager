@@ -3,7 +3,7 @@ package org.entando.kubernetes.model.entandocore;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 
 @Data
 public class EntandoCoreWidget {

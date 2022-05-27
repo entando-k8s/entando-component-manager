@@ -25,11 +25,12 @@ import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.repository.PluginAPIDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
-import org.entando.kubernetes.validator.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -48,6 +49,8 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Mock
     private PluginDescriptorValidator pluginDescriptorValidator;
     @Mock
+    private PluginAPIDataRepository pluginAPIDataRepository;
+    @Mock
     private BundleReader bundleReader;
 
     private PluginProcessor processor;
@@ -57,7 +60,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginAPIDataRepository);
     }
 
     @Test
@@ -176,30 +179,33 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PluginProcessor(null, null), "plugin");
+                new PluginProcessor(null, null, null), "plugin");
     }
 
     @Test
-    void shouldUseDockerImageToComposeFullDeploymentNameIfDeploymentBaseNameIsNotPresent() {
-        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+    void shouldUseDockerImageToComposePluginIdIfDeploymentBaseNameIsNotPresent() {
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2()
                 .setDeploymentBaseName(null);
-        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+        final String pluginId = processor.generatePluginId(descriptorV2);
+        assertThat(pluginId).isEqualTo("24f085aa-entando-the-lucas");
     }
 
     @Test
-    void shouldUseDeploymentBaseNameOverDockerImageToComposeFullDeploymentName() {
-        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+    void shouldUseDeploymentBaseNameOverDockerImageToComposePluginId() {
         String deploymentBaseName = "testDeploymentName";
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         descriptorV2.setDeploymentBaseName(deploymentBaseName);
-        final String fullDepName = processor.generateFullDeploymentName(descriptorV2,
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-%s",
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "50fe6023", deploymentBaseName.toLowerCase()));
+        final String fullDepName = processor.generatePluginId(descriptorV2);
+        assertThat(fullDepName).isEqualTo(String.format("%s-%s", "50fe6023", deploymentBaseName.toLowerCase()));
+    }
+
+    @Test
+    void shouldComposeTheExpectedFullDeploymentName() {
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        final String fullDepName = processor.generateFullDeploymentName(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                "24f085aa-entando-the-lucas");
+        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
     }
 }

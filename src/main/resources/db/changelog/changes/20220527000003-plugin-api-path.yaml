@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220527000003
+      author: l.corsetti@entando.com
+      changes:
+        # plugin_api_data
+        - createTable:
+            tableName: plugin_api_data
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: PK_ENT_PLU_API_E7
+              - column:
+                  name: bundle_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ingress_path
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false

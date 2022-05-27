@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 
 @Getter
 @Setter

@@ -69,11 +69,10 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
         final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
         try {
-            if (bundleReader.containsResourceFolder()) {
-                final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-                InstallAction rootDirectoryAction = extractInstallAction(resourceFolder, conflictStrategy, installPlan);
-                installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(resourceFolder, true),
-                        rootDirectoryAction));
+            if ((bundleReader.isBundleV1() && bundleReader.containsResourceFolder())
+                    || bundleReader.containsWidgetFolder()) {
+
+                processBundle(bundleReader, conflictStrategy, installPlan, installables);
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -91,35 +90,34 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                 .collect(Collectors.toList());
     }
 
+    private void processBundle(BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan,
+            List<Installable<DirectoryDescriptor>> installables) throws IOException {
+
+        String signedBundleFolder = BundleUtilities.composeSignedBundleFolder(bundleReader);
+        InstallAction rootDirectoryAction = extractInstallAction(signedBundleFolder, conflictStrategy, installPlan);
+        installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(signedBundleFolder, true),
+                rootDirectoryAction));
+    }
+
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         Path dirPath = Paths.get(component.getComponentId());
-        boolean isRoot = false;
-        if (dirPath.getParent().equals(dirPath.getRoot())) {
-            isRoot = true;
-        }
+        boolean isRoot = dirPath.getParent().toString().equals(BundleUtilities.BUNDLES_FOLDER);
         return new DirectoryDescriptor(component.getComponentId(), isRoot);
     }
 
     @Override
     public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
 
-        List<String> idList = new ArrayList<>();
+        List<String> idList;
 
         try {
-            final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-            if (! resourceFolder.equals("/")) {
-                idList.add(resourceFolder);
-            }
-
-            List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
-                    .collect(Collectors.toList());
-            for (final String resourceDir : resourceFolders) {
-                Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
-                        .relativize(Paths.get(resourceDir));
-
-                String folder = Paths.get(resourceFolder).resolve(fileFolder).toString();
-                idList.add(folder);
+            if (bundleReader.isBundleV1()) {
+                idList = getReportableBundle(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH,
+                        bundleReader.getResourceFolders());
+            } else {
+                idList = getReportableBundle(bundleReader, BundleProperty.WIDGET_FOLDER_PATH,
+                        bundleReader.getWidgetsFolders());
             }
 
             return new Reportable(componentProcessor.getSupportedComponentType(), idList,
@@ -129,5 +127,19 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
             throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s type",
                     componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
+    }
+
+    private List<String> getReportableBundle(BundleReader bundleReader, BundleProperty bundleProperty,
+            List<String> folderList) throws IOException {
+
+        String signedBundleFolder = BundleUtilities.composeSignedBundleFolder(bundleReader);
+        String basePath = Paths.get(signedBundleFolder, bundleProperty.getValue()).toString();
+
+        return folderList.stream().sorted()
+                .map(resDir -> {
+                    Path fileFolder = Paths.get(bundleProperty.getValue()).relativize(Paths.get(resDir));
+                    return Paths.get(basePath).resolve(fileFolder).toString();
+                })
+                .collect(Collectors.toList());
     }
 }

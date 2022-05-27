@@ -65,18 +65,22 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.PluginAPIDataRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
-import org.entando.kubernetes.validator.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 public class InstallServiceTest {
@@ -102,6 +106,9 @@ public class InstallServiceTest {
     private EntandoBundleComponentUsageService usageService;
     private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
     private PluginDescriptorValidator pluginDescriptorValidator;
+    private PluginAPIDataRepository pluginAPIDataRepository;
+    private WidgetTemplateGeneratorService templateGeneratorService;
+    private WidgetDescriptorValidator widgetDescriptorValidator;
 
     @BeforeEach
     public void init() {
@@ -121,6 +128,9 @@ public class InstallServiceTest {
         bundleOperationsConcurrencyManager = mock(BundleOperationsConcurrencyManager.class);
         pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        pluginAPIDataRepository = mock(PluginAPIDataRepository.class);
+        templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
+        widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
@@ -151,8 +161,8 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new LanguageProcessor(coreClient));
         reportableComponentProcessorList.add(new PageProcessor(coreClient));
         reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
-        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator));
-        reportableComponentProcessorList.add(new WidgetProcessor(coreClient));
+        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginAPIDataRepository));
+        reportableComponentProcessorList.add(new WidgetProcessor(coreClient, templateGeneratorService, widgetDescriptorValidator));
 
         // instruct the strategy map with stub data
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE,

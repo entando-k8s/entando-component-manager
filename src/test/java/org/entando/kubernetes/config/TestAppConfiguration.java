@@ -35,16 +35,21 @@ public class TestAppConfiguration extends AppConfiguration {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(() -> {
             Path bundleFolder;
+            Path bundleFolderV5;
             Path bundleFolderInvalidSecret;
             GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
             try {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+                bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
                 bundleFolderInvalidSecret = new ClassPathResource("bundle-invalid-secret").getFile().toPath();
                 lenient().when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
                                 .thenAnswer(invocation -> {
-                                    if (invocation.getArgument(0, EntandoDeBundle.class).getMetadata().getName()
-                                            .equals(TestInstallUtils.MOCK_BUNDLE_NAME)) {
+                                    final String bundleName = invocation.getArgument(0, EntandoDeBundle.class).getMetadata()
+                                            .getName();
+                                    if (bundleName.equals(TestInstallUtils.MOCK_BUNDLE_NAME)) {
                                         return bundleFolder;
+                                    } else if (bundleName.equals(TestInstallUtils.MOCK_BUNDLE_NAME_V5)) {
+                                        return bundleFolderV5;
                                     } else {
                                         return bundleFolderInvalidSecret;
                                     }
