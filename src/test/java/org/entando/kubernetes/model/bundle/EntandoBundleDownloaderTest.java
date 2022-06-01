@@ -12,8 +12,9 @@ import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloader.Type;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType;
+import org.entando.kubernetes.model.bundle.downloader.DockerBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -88,7 +89,7 @@ public class EntandoBundleDownloaderTest {
                 .withName("my-name")
                 .endMetadata()
                 .build();
-        downloader = BundleDownloader.getForType("git");
+        downloader = BundleDownloaderFactory.getForType("git", 300, 3, 600);
         Path target = downloader.saveBundleLocally(bundle, tag);
         Path unexpectedFile = target.resolve("package.json");
         assertThat(unexpectedFile.toFile().exists()).isFalse();
@@ -108,7 +109,7 @@ public class EntandoBundleDownloaderTest {
                 .build();
         WireMockServer npmRegistry = getMockedNpmRegistry();
         npmRegistry.start();
-        downloader = BundleDownloader.getForType("npm");
+        downloader = BundleDownloaderFactory.getForType("npm", 300, 3, 600);
         Path target = downloader.saveBundleLocally(bundle, tag);
         assertThat(target.toFile().exists()).isTrue();
 
@@ -119,16 +120,16 @@ public class EntandoBundleDownloaderTest {
 
     @Test
     public void shouldGetInstanceBasedOnType() {
-        downloader = BundleDownloader.getForType("NPM");
+        downloader = BundleDownloaderFactory.getForType("NPM", 300, 3, 600);
         assertThat(downloader instanceof NpmBundleDownloader).isTrue();
 
-        downloader = BundleDownloader.getForType("GIT");
+        downloader = BundleDownloaderFactory.getForType("GIT", 300, 3, 600);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
-        downloader = BundleDownloader.getForType("ANYTHING");
+        downloader = BundleDownloaderFactory.getForType("ANYTHING", 300, 3, 600);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
-        downloader = BundleDownloader.getForType(null);
+        downloader = BundleDownloaderFactory.getForType(null, 300, 3, 600);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
     }
 
@@ -137,17 +138,22 @@ public class EntandoBundleDownloaderTest {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
 
-        factory.registerSupplier(Type.NPM, NpmBundleDownloader::new);
-        factory.registerSupplier(Type.GIT, GitBundleDownloader::new);
+        factory.registerSupplier(BundleDownloaderType.NPM, NpmBundleDownloader::new);
+        factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
+        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
 
         downloader = factory.newDownloader();
         assertThat(downloader).isInstanceOf(GitBundleDownloader.class);
 
-        downloader = factory.newDownloader(Type.GIT);
+        downloader = factory.newDownloader(BundleDownloaderType.GIT);
         assertThat(downloader).isInstanceOf(GitBundleDownloader.class);
 
-        downloader = factory.newDownloader(Type.NPM);
+        downloader = factory.newDownloader(BundleDownloaderType.NPM);
         assertThat(downloader).isInstanceOf(NpmBundleDownloader.class);
+
+        downloader = factory.newDownloader(BundleDownloaderType.DOCKER);
+        assertThat(downloader).isInstanceOf(DockerBundleDownloader.class);
+
     }
 
     private WireMockServer getMockedNpmRegistry() throws IOException {

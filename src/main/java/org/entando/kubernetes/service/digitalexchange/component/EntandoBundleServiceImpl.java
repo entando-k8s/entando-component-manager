@@ -263,7 +263,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 installedBundleEntities);
 
         return bundleStatusHelper.composeBundleStatusItemByName(bundleName, installedBundleEntities, deployedBundles,
-                        installedButNotDeployed);
+                installedButNotDeployed);
     }
 
     @Override
@@ -429,8 +429,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         // repoUrl should be decoded from BASE64
         final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedRepoUrl));
 
-        final String decodedRepoUrl = ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(decodedRepoUrlString,
-                "Repo url is empty","Repo url is not valid");
+        final String decodedRepoUrl = ValidationFunctions.composeCommonUrlOrThrow(decodedRepoUrlString,
+                "Repo url is empty", "Repo url is not valid");
 
         // Check in installed bundles
         Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);

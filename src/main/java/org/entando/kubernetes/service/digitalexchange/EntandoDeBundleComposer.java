@@ -57,7 +57,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoValidationException("The received bundle url is null");
         }
 
-        ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(bundleInfo.getGitRepoAddress(),
+        ValidationFunctions.composeCommonUrlOrThrow(bundleInfo.getGitRepoAddress(),
                 "Bundle url is empty", "Bundle url is not valid");
 
         final BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
@@ -169,7 +169,7 @@ public class EntandoDeBundleComposer {
      * @param labelName     the name of the label
      */
     private void putLabelIntoMap(Map<String, String> labelsMap, List<String> componentList, String labelName) {
-        if (! CollectionUtils.isEmpty(componentList)) {
+        if (!CollectionUtils.isEmpty(componentList)) {
             labelsMap.put(labelName, "true");
         }
     }
