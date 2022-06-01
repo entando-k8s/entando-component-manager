@@ -5,6 +5,11 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=entando-k8s_entando-component-manager&metric=code_smells)](https://sonarcloud.io/dashboard?id=entando-k8s_entando-component-manager)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=entando-k8s_entando-component-manager&metric=security_rating)](https://sonarcloud.io/dashboard?id=entando-k8s_entando-component-manager)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=entando-k8s_entando-component-manager&metric=sqale_index)](https://sonarcloud.io/dashboard?id=entando-k8s_entando-component-manager)
+# NOTE
+
+This branch implements the env variables in the plugin descriptor that was developed (here)[https://github.com/entando-k8s/entando-component-manager/tree/22015270f11cfdc75500f15f61d046db6e7181f4]
+
+You need to compile the project with `mvn -U clean package` and then run `docker build --tag entandodemo/entando-component-manager:6.3.26-ps.backport.1 -f Dockerfile .`
 
 # Entando Component Manager
 This service serves as an abstraction layer for using Digital-exchange functionalities.
