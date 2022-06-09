@@ -1,8 +1,13 @@
 package org.entando.kubernetes.model.entandocore;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 
 @Data
@@ -14,9 +19,9 @@ public class EntandoCoreWidget {
     private String bundleId;
     private String customUi;
     private Map<String, Object> configUi;
-    private List<WidgetParameter> parameters;
-    private String parentType;
-    private Map<String, String> config;
+    private List<WidgetParameter> params;
+    private String parentCode;
+    private Map<String, String> paramsDefaults;
 
     public EntandoCoreWidget(final WidgetDescriptor descriptor) {
         this.code = descriptor.getCode();
@@ -29,23 +34,24 @@ public class EntandoCoreWidget {
             this.configUi.put("resources", descriptor.getConfigUi().getResources());
         }
         this.bundleId = descriptor.getDescriptorMetadata().getBundleCode();
-        if (null != descriptor.getParameters()) {
-            this.parameters = new ArrayList<>();
-            descriptor.getParameters().entrySet().stream()
-                    .forEach(e -> this.parameters.add(new WidgetParameter(e.getKey(), e.getValue())));
+        if (null != descriptor.getParams()) {
+            this.params = descriptor.getParams().stream().map(p ->
+                    new WidgetParameter(p.getName(), p.getDescription())
+            ).collect(Collectors.toList());
         }
-        this.parentType = descriptor.getParentType();
-        this.config = descriptor.getConfig();
+        this.parentCode = descriptor.getParentCode();
+        this.paramsDefaults = descriptor.getParamsDefaults();
     }
 
+    @Getter
     public static class WidgetParameter {
 
-        public WidgetParameter(String code, String description) {
-            this.code = code;
+        public WidgetParameter(String name, String description) {
+            this.name = name;
             this.description = description;
         }
 
-        private String code;
+        private String name;
         private String description;
 
     }

@@ -22,9 +22,9 @@ public class WidgetDescriptor implements Descriptor {
     private String customUiPath;
     private ConfigUIDescriptor configUi;
     private String bundleId;
-    private Map<String, String> parameters;
-    private String parentType;
-    private Map<String, String> config;
+    private Map<String, String> params;
+    private String parentCode;
+    private Map<String, String> paramsDefaults;
 
     @Override
     public ComponentKey getComponentKey() {
