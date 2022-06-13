@@ -132,14 +132,14 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
     private List<String> getReportableBundle(BundleReader bundleReader, BundleProperty bundleProperty,
             List<String> folderList) throws IOException {
 
-        String signedBundleFolder = BundleUtilities.composeSignedBundleFolder(bundleReader);
-        String basePath = Paths.get(signedBundleFolder, bundleProperty.getValue()).toString();
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
-        return folderList.stream().sorted()
-                .map(resDir -> {
-                    Path fileFolder = Paths.get(bundleProperty.getValue()).relativize(Paths.get(resDir));
-                    return Paths.get(basePath).resolve(fileFolder).toString();
-                })
-                .collect(Collectors.toList());
+        List<String> list = new ArrayList<>();
+        for (String resDir : folderList) {
+            String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, bundleProperty, resDir, bundleId);
+            list.add(path);
+        }
+        list.sort(null);
+        return list;
     }
 }

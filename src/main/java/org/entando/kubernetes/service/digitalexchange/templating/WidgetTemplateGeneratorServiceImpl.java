@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -56,28 +57,32 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         }
     }
 
-    protected String createResourceTags(String descriptorFileName, BundleReader bundleReader) throws IOException {
+    protected String createResourceTags(String descriptorFileName, BundleReader bundleReader) {
 
         final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
-
-        final String bundleNameFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-        final String signedBundleFolder = BundleUtilities.appendHashToBundleFolder(bundleReader, bundleNameFolder);
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         String ftl = bundleReader.getWidgetResourcesOfType(widgetFolder, JS_TYPE).stream()
-                .map(file -> formatTagFilePath(SCRIPT_TAG, signedBundleFolder, file))
+                .map(file -> formatTagFilePath(bundleReader, SCRIPT_TAG, file, bundleId))
                 .collect(Collectors.joining("\n"));
 
         ftl += "\n\n";
 
         ftl += bundleReader.getWidgetResourcesOfType(widgetFolder, CSS_TYPE).stream()
-                .map(file -> formatTagFilePath(CSS_TAG, signedBundleFolder, file))
+                .map(file -> formatTagFilePath(bundleReader, CSS_TAG, file, bundleId))
                 .collect(Collectors.joining("\n"));
 
         return ftl;
     }
 
-    private String formatTagFilePath(String tag, String signedBundleFolder, String file) {
-        return String.format(tag, Paths.get(signedBundleFolder, file));
+    private String formatTagFilePath(BundleReader bundleReader, String tag, String file, String bundleId) {
+        try {
+            final String fullFile = BundleUtilities.buildFullBundleResourcePath(bundleReader,
+                    BundleProperty.WIDGET_FOLDER_PATH, file, bundleId);
+            return String.format(tag, fullFile);
+        } catch (Exception e) {
+            throw new EntandoComponentManagerException(e);
+        }
     }
 
     protected String createAssignTag(WidgetDescriptor descriptor) throws JsonProcessingException {
@@ -94,10 +99,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
         String ingressPath;
         if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)) {
-            ingressPath = pluginIngressPathMap.get(apiClaim.getServiceId());
+            ingressPath = pluginIngressPathMap.get(apiClaim.getPluginCode());
         } else {
-            ingressPath = apiPathRepository.findByBundleIdAndServiceId(apiClaim.getBundleId(), apiClaim.getServiceId())
-                    .map(PluginAPIDataEntity::getIngressPath)
+            ingressPath = apiPathRepository.findByBundleCodeAndPluginCode(apiClaim.getBundleCode(), apiClaim.getPluginCode())
+                    .map(PluginAPIDataEntity::getEndpoint)
                     .orElse(null);
         }
 

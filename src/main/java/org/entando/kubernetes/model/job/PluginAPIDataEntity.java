@@ -45,16 +45,16 @@ public class PluginAPIDataEntity {
     private UUID id;
 
     @NotNull
-    @Column(name = "bundle_id", nullable = false)
-    private String bundleId;
+    @Column(name = "bundle_code", nullable = false)
+    private String bundleCode;
 
     @NotNull
-    @Column(name = "service_id", nullable = false)
-    private String serviceId;
+    @Column(name = "plugin_code", nullable = false)
+    private String pluginCode;
 
     @NotNull
-    @Column(name = "ingress_path", nullable = false)
-    private String ingressPath;
+    @Column(name = "endpoint", nullable = false)
+    private String endpoint;
 
     @PrePersist
     public void generateId() {

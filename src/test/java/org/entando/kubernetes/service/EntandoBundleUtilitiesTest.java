@@ -131,7 +131,7 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -151,7 +151,7 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
-        descriptor.setDescriptorMetadata("entando", PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -177,7 +177,7 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata("entando", PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -196,7 +196,7 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
-        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
@@ -214,7 +214,7 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
@@ -232,7 +232,7 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV3-1-0-0-" + bundleReader.getBundleId());
 
@@ -277,7 +277,7 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class)
-                .setDescriptorMetadata(TestEntitiesGenerator.BUNDLE_NAME,
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         "custombasename-" + TestEntitiesGenerator.BUNDLE_NAME);
 

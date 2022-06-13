@@ -14,7 +14,9 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 
 public class PluginStubHelper {
 
-    public static final String BUNDLE_ID = "my-bundle";
+    public static final String BUNDLE_NAME = "my-bundle";
+    public static final String BUNDLE_ID = "a1b2c3d4";
+    public static final String BUNDLE_CODE = BUNDLE_NAME + "-" + BUNDLE_ID;
     public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas";
     public static final String EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME = "customdepbasename";
     public static final String EXPECTED_INGRESS_PATH_V_MINOR_THAN_3 = "/entando/the-lucas/0-0-1-snapshot";
@@ -30,8 +32,7 @@ public class PluginStubHelper {
     public static final String TEST_ENV_VAR_1_NAME = "env1Name";
     public static final String TEST_ENV_VAR_1_VALUE = "env1Value";
     public static final String TEST_ENV_VAR_2_NAME = "env2Name";
-    public static final String TEST_ENV_VAR_2_SECRET_NAME =
-            BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-env-2-secret-name";
+    public static final String TEST_ENV_VAR_2_SECRET_NAME = BUNDLE_ID + "-env-2-secret-name";
     public static final String TEST_ENV_VAR_2_SECRET_KEY = "env2SecretKey";
 
 
@@ -43,8 +44,7 @@ public class PluginStubHelper {
                 .dbms(TEST_DESCRIPTOR_DBMS)
                 .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
                 .build()
-                .setDescriptorMetadata(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, EXPECTED_PLUGIN_NAME,
-                        TEST_DESCRIPTOR_IMAGE_SHA);
+                .setDescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, EXPECTED_PLUGIN_NAME, TEST_DESCRIPTOR_IMAGE_SHA);
     }
 
     public static PluginDescriptor stubPluginDescriptorV3() {

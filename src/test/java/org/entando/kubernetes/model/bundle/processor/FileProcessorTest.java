@@ -1,7 +1,9 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -70,7 +72,7 @@ class FileProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void testCreateFilesBundleV1() {
+    void testCreateFilesBundleV1() {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
@@ -168,11 +170,11 @@ class FileProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(isV1);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
-        when(mockBundleReader.getResourceFileAsDescriptor(eq(bundleProperty.getValue() + "ootb-widgets/static/css/main.css")))
+        when(mockBundleReader.getResourceFileAsDescriptor(bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
                 .thenReturn(fileDescriptor1);
         when(mockBundleReader.getResourceFileAsDescriptor(
-                eq(bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css"))).thenReturn(fileDescriptor2);
-        when(mockBundleReader.getResourceFileAsDescriptor(eq(bundleProperty.getValue() + "ootb-widgets/static/js/main.js")))
+                bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css")).thenReturn(fileDescriptor2);
+        when(mockBundleReader.getResourceFileAsDescriptor(bundleProperty.getValue() + "ootb-widgets/static/js/main.js"))
                 .thenReturn(fileDescriptor3);
 
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
@@ -291,12 +293,5 @@ class FileProcessorTest extends BaseProcessorTest {
 
         assertThat(reportable.getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(reportable.getCodes()).containsAll(expectedCodeList);
-    }
-
-    @Test
-    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() throws IOException {
-
-        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new FileProcessor(new EntandoCoreClientTestDouble()), "asset");
     }
 }

@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
+import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -60,7 +61,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void testCreateFoldersV1() {
+    void testCreateFoldersV1() {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
@@ -74,7 +75,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void testCreateFoldersV5() {
+    void testCreateFoldersV5() {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
@@ -113,6 +114,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                         "/bundles/resources/ootb-widgets/static/css");
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
+        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
@@ -126,11 +128,14 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV5() throws IOException {
 
         List<String> expectedCodeList = Stream
-                .of("widgets/my-widget", "widgets/my-widget/static",
-                        "widgets/my-widget/static/css", "widgets/my-widget/static/js")
+                .of("widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                        "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static",
+                        "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/css",
+                        "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/js")
                 .map(s -> "/bundles/" + s)
                 .collect(Collectors.toList());
 
+        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 
@@ -174,8 +179,10 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         // prefix each expected file path with the bundle code
         List<String> expectedCodeList = Stream
-                .of("widgets/my-widget", "widgets/my-widget/static",
-                        "widgets/my-widget/static/css", "widgets/my-widget/static/js")
+                .of("widgets/my-widget-"  + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                        "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static",
+                        "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/css",
+                        "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/js")
                 .map(s -> "/bundles/" + bundleDescriptor.getCode() + "-"
                         + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/" + s)
                 .collect(Collectors.toList());
@@ -212,7 +219,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         final DirectoryDescriptor descriptor = directoryProcessor.buildDescriptorFromComponentJob(entity);
         assertThat(descriptor.getName()).isEqualTo(compId);
-        assertThat(descriptor.isRoot()).isEqualTo(false);
+        assertThat(descriptor.isRoot()).isFalse();
     }
 
     @Test
@@ -225,6 +232,6 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         final DirectoryDescriptor descriptor = directoryProcessor.buildDescriptorFromComponentJob(entity);
         assertThat(descriptor.getName()).isEqualTo(compId);
-        assertThat(descriptor.isRoot()).isEqualTo(true);
+        assertThat(descriptor.isRoot()).isTrue();
     }
 }

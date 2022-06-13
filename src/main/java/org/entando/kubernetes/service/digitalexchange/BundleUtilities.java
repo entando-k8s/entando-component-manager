@@ -502,12 +502,11 @@ public class BundleUtilities {
      * @param bundleReader         the bundle reader responsible for reading the bundle
      * @param folderProp           the BundleProperty indicating the root folder of the file
      * @param fileDescriptorFolder  the folder containing the current file
-     * @param bundleNameFolder     the name of the bundle root folder
      * @param bundleId             the id of the current bundle
      * @return the built full path of a resource
      */
     public static String buildFullBundleResourcePath(BundleReader bundleReader, BundleProperty folderProp,
-            String fileDescriptorFolder, String bundleNameFolder, String bundleId) throws IOException {
+            String fileDescriptorFolder, String bundleId) throws IOException {
 
         final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
         Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
@@ -517,8 +516,7 @@ public class BundleUtilities {
             fileFolder = Paths.get(fileFolder.toString().replace(fileFolder.subpath(0, 1).toString(), signedFolder));
         }
 
-        return Paths.get(signedBundleFolder, folderProp.getValue())
-                .resolve(fileFolder).toString();
+        return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
     }
 
     public static String appendHashToBundleFolder(BundleReader bundleReader, String bundleFolder) {

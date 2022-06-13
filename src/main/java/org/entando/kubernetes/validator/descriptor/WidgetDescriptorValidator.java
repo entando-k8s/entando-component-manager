@@ -90,12 +90,12 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         Optional.ofNullable(descriptor.getApiClaims()).orElseGet(ArrayList::new)
                 .forEach(apiClaim -> {
                     if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)
-                            && !ObjectUtils.isEmpty(apiClaim.getBundleId())) {
+                            && !ObjectUtils.isEmpty(apiClaim.getBundleCode())) {
                         throw new InvalidBundleException(
                                 String.format(INTERNAL_API_CLAIM_WITH_BUNDLE_ID, descriptor.getCode()));
                     }
                     if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.EXTERNAL_API)
-                            && ObjectUtils.isEmpty(apiClaim.getBundleId())) {
+                            && ObjectUtils.isEmpty(apiClaim.getBundleCode())) {
                         throw new InvalidBundleException(
                                 String.format(EXTERNAL_API_CLAIM_WITHOUT_BUNDLE_ID, descriptor.getCode()));
                     }

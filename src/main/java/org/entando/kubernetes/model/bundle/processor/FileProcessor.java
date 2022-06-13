@@ -70,16 +70,14 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         try {
-            final String bundleNameFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-
             if (bundleReader.isBundleV1() && bundleReader.containsResourceFolder()) {
                 installables.addAll(
-                        processFiles(bundleReader, bundleReader.getResourceFiles(), bundleNameFolder,
-                            BundleProperty.RESOURCES_FOLDER_PATH, conflictStrategy, installPlan));
+                        processFiles(bundleReader, bundleReader.getResourceFiles(),
+                                BundleProperty.RESOURCES_FOLDER_PATH, conflictStrategy, installPlan));
             } else if (bundleReader.containsWidgetFolder()) {
                 installables.addAll(
-                        processFiles(bundleReader, bundleReader.getWidgetsFiles(), bundleNameFolder,
-                                BundleProperty.WIDGET_FOLDER_PATH, conflictStrategy, installPlan));
+                        processFiles(bundleReader, bundleReader.getWidgetsFiles(), BundleProperty.WIDGET_FOLDER_PATH,
+                                conflictStrategy, installPlan));
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -101,7 +99,6 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
      *
      * @param bundleReader     the BundleReader to use to parse the descriptors
      * @param resourceFilelist the list of files to process
-     * @param bundleNameFolder the bundle name folder (used to build the path to which save the resource)
      * @param folderProp       the BundleProperty identifying files type
      * @param conflictStrategy the Conflict Strategy to apply
      * @param installPlan      the Install Plan to use against the received conflict strategy
@@ -109,7 +106,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
      * @throws IOException in case of read error
      */
     private List<Installable<FileDescriptor>> processFiles(BundleReader bundleReader, List<String> resourceFilelist,
-            String bundleNameFolder, BundleProperty folderProp, InstallAction conflictStrategy, InstallPlan installPlan)
+            BundleProperty folderProp, InstallAction conflictStrategy, InstallPlan installPlan)
             throws IOException {
 
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
@@ -121,7 +118,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
             final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
 
             String folder = BundleUtilities.buildFullBundleResourcePath(bundleReader, folderProp,
-                    fileDescriptor.getFolder(), bundleNameFolder, bundleId);
+                    fileDescriptor.getFolder(), bundleId);
             fileDescriptor.setFolder(folder);
 
             String filename = Paths.get(folder, fileDescriptor.getFilename()).toString();
@@ -158,12 +155,10 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                     ? bundleReader.getResourceFiles()
                     : bundleReader.getWidgetsFiles();
 
-            final String bundleNameFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-
             List<String> idList = fileList.stream().sorted().collect(Collectors.toList());
             for (String file : idList) {
                 final String fileId = BundleUtilities.buildFullBundleResourcePath(bundleReader, bundleProp, file,
-                        bundleNameFolder, bundleId);
+                        bundleId);
                 reportableIdList.add(fileId);
             }
 

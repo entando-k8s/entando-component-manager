@@ -108,7 +108,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new PluginDescriptor()
-                .setDescriptorMetadata(new DescriptorMetadata(null, null, component.getComponentId()));
+                .setDescriptorMetadata(new DescriptorMetadata(null, null, null, component.getComponentId()));
     }
 
     @Override
@@ -136,16 +136,17 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
     }
 
-    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) throws IOException {
 
         final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
         final String bundleId = BundleUtilities.getBundleId(url);
-        final String pluginId = this.generatePluginId(pluginDescriptor);
+        final String pluginCode = this.generatePluginCode(pluginDescriptor);
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
-                pluginId,
-                generateFullDeploymentName(bundleId, pluginId));
+                bundleReader.getBundleCode() + "-" + bundleId,
+                pluginCode,
+                generateFullDeploymentName(bundleId, pluginCode));
     }
 
 
@@ -163,7 +164,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * @param descriptor the PluginDescriptor from which read data
      * @return the generated plugin id
      */
-    public String generatePluginId(PluginDescriptor descriptor) {
+    public String generatePluginCode(PluginDescriptor descriptor) {
 
         String deploymentBaseName;
         String inputValueForSha;

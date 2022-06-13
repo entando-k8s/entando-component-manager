@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor.widget;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -7,14 +8,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
+import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class WidgetDescriptor extends VersionedDescriptor {
 
     private String code;
@@ -63,8 +68,10 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
         private String name;
         private String type;
-        private String serviceId;
-        private String bundleId;
+        @JsonProperty("serviceId")
+        private String pluginCode;
+        @JsonProperty("bundleId")
+        private String bundleCode;
     }
 
     @Getter
@@ -78,4 +85,26 @@ public class WidgetDescriptor extends VersionedDescriptor {
         private final Map<String, String> pluginIngressPathMap;
     }
 
+    public WidgetDescriptor setCode(String code) {
+        this.code = code;
+        return this;
+    }
+
+    /**
+     * set the widget code depending on the widget descriptor version. ensure that the widget code is signed with the
+     * bundle id hash
+     *
+     * @param bundleReader     the bundle reader to use to read the bundle id
+     */
+    public void setCode(BundleReader bundleReader) {
+        String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
+        if (this.isVersion1()) {
+            if (!code.endsWith(bundleIdHash)) {
+                code += "-" + bundleIdHash;
+            }
+        } else {
+            code = name + "-" + bundleIdHash;
+        }
+    }
 }

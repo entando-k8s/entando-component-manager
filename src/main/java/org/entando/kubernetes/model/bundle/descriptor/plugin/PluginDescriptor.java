@@ -23,7 +23,8 @@ public class PluginDescriptor extends VersionedDescriptor {
     @Getter
     public static class DescriptorMetadata {
         private final String bundleId;
-        private final String pluginId;
+        private final String bundleCode;
+        private final String pluginCode;
         private final String fullDeploymentName;
     }
 
@@ -142,17 +143,20 @@ public class PluginDescriptor extends VersionedDescriptor {
         return new ComponentKey(this.getDescriptorMetadata().getFullDeploymentName());
     }
 
-    public PluginDescriptor setDescriptorMetadata(String bundleId, String pluginId, String fullDeploymentName) {
+    public PluginDescriptor setDescriptorMetadata(String bundleId, String bundleCode, String pluginCode, String fullDeploymentName) {
         if (ObjectUtils.isEmpty(bundleId)) {
             throw new EntandoComponentManagerException("Empty bundle id received as plugin metadata");
         }
-        if (ObjectUtils.isEmpty(pluginId)) {
-            throw new EntandoComponentManagerException("Empty plugin id received as plugin metadata");
+        if (ObjectUtils.isEmpty(bundleCode)) {
+            throw new EntandoComponentManagerException("Empty bundle code received as plugin metadata");
+        }
+        if (ObjectUtils.isEmpty(pluginCode)) {
+            throw new EntandoComponentManagerException("Empty plugin code received as plugin metadata");
         }
         if (ObjectUtils.isEmpty(fullDeploymentName)) {
             throw new EntandoComponentManagerException("Empty full deployment name received as plugin metadata");
         }
-        this.descriptorMetadata = new DescriptorMetadata(bundleId, pluginId, fullDeploymentName);
+        this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginCode, fullDeploymentName);
         return this;
     }
 }

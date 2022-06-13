@@ -8,8 +8,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptorVersion;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
@@ -53,7 +55,7 @@ class WidgetDescriptorValidatorTest {
                         WidgetDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
 
-        descriptor.setCode(null);
+        descriptor.setCode("");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setCode("code");
@@ -72,7 +74,7 @@ class WidgetDescriptorValidatorTest {
                         WidgetDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
 
-        descriptor.setApiClaims(new ArrayList<>());
+        descriptor.setApiClaims(List.of(new ApiClaim()));
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setApiClaims(null);
@@ -142,12 +144,12 @@ class WidgetDescriptorValidatorTest {
     void shouldThrowExceptionWhileValidatingAWidgetDescriptorWithInvalidApiClaims() {
         // internal api with bundle id
         WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        descriptor.getApiClaims().get(0).setBundleId("id");
+        descriptor.getApiClaims().get(0).setBundleCode("id");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // external api without bundle id
-        descriptor.getApiClaims().get(0).setBundleId(null);
-        descriptor.getApiClaims().get(1).setBundleId(null);
+        descriptor.getApiClaims().get(0).setBundleCode(null);
+        descriptor.getApiClaims().get(1).setBundleCode(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 }

@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -82,7 +85,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 widgetDescriptor.setDescriptorMetadata(new DescriptorMetadata(pluginIngressPathMap));
                 descriptorValidator.validateOrThrow(widgetDescriptor);
 
-                setWidgetCode(bundleReader, widgetDescriptor);
+                widgetDescriptor.setCode(bundleReader);
                 setCustomUi(widgetDescriptor, fileName, bundleReader);
 
                 widgetDescriptor.setBundleId(descriptor.getCode());
@@ -127,28 +130,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         }
     }
 
-    /**
-     * set the widget code depending on the widget descriptor version. ensure that the widget code is signed with the
-     * bundle id hash
-     *
-     * @param bundleReader     the bundle reader to use to read the bundle id
-     * @param widgetDescriptor the widget descriptor to get widget info
-     */
-    protected void setWidgetCode(BundleReader bundleReader, WidgetDescriptor widgetDescriptor) {
-        String code = widgetDescriptor.getCode();
-        String name = widgetDescriptor.getName();
-        String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-
-        if (widgetDescriptor.isVersion1()) {
-            if (!code.endsWith(bundleIdHash)) {
-                code = BundleUtilities.appendBundleUrlHash(bundleReader, code);
-            }
-        } else {
-            code = BundleUtilities.appendBundleUrlHash(bundleReader, name);
-        }
-        widgetDescriptor.setCode(code);
-    }
-
     @Override
     public WidgetDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return WidgetDescriptor.builder()
@@ -156,4 +137,26 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 .build();
     }
 
+    /**
+     * reads the keys of the components from the descriptor identified by the received filename.
+     *
+     * @param bundleReader the bundler reader to use in order to read the bundle
+     * @param fileName     the filename identifying the descriptor file to read
+     * @return the list of the keys of the components read from the descriptor
+     */
+    @Override
+    public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
+            ComponentProcessor<?> componentProcessor) {
+
+        try {
+            WidgetDescriptor widgetDescriptor =
+                    (WidgetDescriptor) bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+            widgetDescriptor.setCode(bundleReader);
+            return List.of(widgetDescriptor.getComponentKey().getKey());
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException(String.format(
+                    "Error parsing content type %s from widget descriptor %s",
+                    componentProcessor.getSupportedComponentType(), fileName), e);
+        }
+    }
 }

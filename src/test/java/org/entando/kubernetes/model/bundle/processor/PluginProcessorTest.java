@@ -186,7 +186,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldUseDockerImageToComposePluginIdIfDeploymentBaseNameIsNotPresent() {
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2()
                 .setDeploymentBaseName(null);
-        final String pluginId = processor.generatePluginId(descriptorV2);
+        final String pluginId = processor.generatePluginCode(descriptorV2);
         assertThat(pluginId).isEqualTo("24f085aa-entando-the-lucas");
     }
 
@@ -196,7 +196,7 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
         descriptorV2.setDeploymentBaseName(deploymentBaseName);
-        final String fullDepName = processor.generatePluginId(descriptorV2);
+        final String fullDepName = processor.generatePluginCode(descriptorV2);
         assertThat(fullDepName).isEqualTo(String.format("%s-%s", "50fe6023", deploymentBaseName.toLowerCase()));
     }
 

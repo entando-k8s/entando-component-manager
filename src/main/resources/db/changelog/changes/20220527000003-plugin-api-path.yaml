@@ -15,17 +15,17 @@ databaseChangeLog:
                     nullable: false
                     primaryKeyName: PK_ENT_PLU_API_E7
               - column:
-                  name: bundle_id
+                  name: bundle_code
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
               - column:
-                  name: service_id
+                  name: plugin_code
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
               - column:
-                  name: ingress_path
+                  name: endpoint
                   type: VARCHAR(255)
                   constraints:
                     nullable: false

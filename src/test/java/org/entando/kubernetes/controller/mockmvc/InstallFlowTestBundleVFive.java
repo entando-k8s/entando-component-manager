@@ -78,7 +78,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WithMockUser
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
-class InstallFlowTestBundleV5 {
+class InstallFlowTestBundleVFive {
 
     private MockMvc mockMvc;
 
@@ -123,9 +123,9 @@ class InstallFlowTestBundleV5 {
                 new InstallFlowAssertionHelper(k8SServiceClient, coreClient, jobRepository, componentJobRepository);
 
         PluginAPIDataEntity pluginAPIData = new PluginAPIDataEntity()
-                .setBundleId("anotherbundle")
-                .setServiceId("ms1")
-                .setIngressPath("my-path");
+                .setBundleCode("anotherbundle")
+                .setPluginCode("ms1")
+                .setEndpoint("my-path");
         pluginApiDataRepository.save(pluginAPIData);
     }
 
@@ -172,7 +172,7 @@ class InstallFlowTestBundleV5 {
 
 
     @Test
-    public void shouldCallCoreToUninstallComponents() throws Exception {
+    void shouldCallCoreToUninstallComponents() throws Exception {
         String jobId = simulateSuccessfullyCompletedInstall();
 
         verifyJobHasComponentAndStatusV5(mockMvc, jobId, JobStatus.INSTALL_COMPLETED);

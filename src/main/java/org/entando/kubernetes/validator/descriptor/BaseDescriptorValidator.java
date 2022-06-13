@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
@@ -39,9 +40,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      */
     protected D ensureDescriptorVersionIsSet(D descriptor) {
         if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
-            if (descriptor.isVersion1()) {
-                descriptor.setDescriptorVersion(DescriptorVersion.V1);
-            }
+            descriptor.setDescriptorVersion(DescriptorVersion.V1);
         }
 
         return descriptor;
@@ -150,14 +149,14 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
             Map<String, Function<D, Object>> objectsThatMustBeNull) {
 
         objectsThatMustNOTBeNull.forEach((key, fn) -> {
-            if (fn.apply(descriptor) == null) {
+            if (ObjectUtils.isEmpty(fn.apply(descriptor))) {
                 throw new InvalidBundleException(String.format(EXPECTED_NOT_NULL_IS_NULL,
                         descriptorVersion.getVersion(), key));
             }
         });
 
         objectsThatMustBeNull.forEach((key, fn) -> {
-            if (fn.apply(descriptor) != null) {
+            if (ObjectUtils.isNotEmpty(fn.apply(descriptor))) {
                 throw new InvalidBundleException(String.format(EXPECTED_NULL_IS_NOT_NULL,
                         descriptorVersion.getVersion(), key));
             }
