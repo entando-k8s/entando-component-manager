@@ -5,7 +5,8 @@ RUN echo "$(go version)"
 
 COPY build-skopeo.sh /tmp/
 RUN chmod a+x /tmp/build-skopeo.sh; \
-    /tmp/build-skopeo.sh;
+    mkdir /tmp/skopeo; \
+    /tmp/build-skopeo.sh "/tmp/skopeo" "$ENTANDO_SKOPEO_VERSION";
 
 FROM entando/entando-ubi8-java11-base:6.4.0
 ARG VERSION
@@ -21,9 +22,9 @@ LABEL name="Entando Component Manager" \
 #COPY target/generated-resources/licenses /licenses
 ### start Skopeo section -- copy and install
 COPY --from=build \
-     /root/skopeo/src/github.com/containers/skopeo/bin/skopeo \
-     /root/skopeo/src/github.com/containers/skopeo/default-policy.json \
-     /root/skopeo/src/github.com/containers/skopeo/default.yaml \
+     /tmp/skopeo/src/github.com/containers/skopeo/bin/skopeo \
+     /tmp/skopeo/src/github.com/containers/skopeo/default-policy.json \
+     /tmp/skopeo/src/github.com/containers/skopeo/default.yaml \
      /tmp/
 
 USER 0

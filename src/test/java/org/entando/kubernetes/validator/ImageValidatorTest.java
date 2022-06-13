@@ -36,9 +36,7 @@ class ImageValidatorTest {
     @Test
     void validationShouldBeOk() {
         Stream.of(okImageUrl).forEach(t -> {
-            System.out.println("test image url: " + t);
             assertThat(ImageValidator.parse(t).isValidOrThrow(invalidMex)).isTrue();
-
         });
     }
 

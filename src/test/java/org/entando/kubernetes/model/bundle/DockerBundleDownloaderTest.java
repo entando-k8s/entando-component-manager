@@ -21,7 +21,6 @@ class DockerBundleDownloaderTest {
 
     @Test
     void shouldCreateBundleDownloaderFromTag() {
-        System.out.println("start test shouldCreateBundleDownloaderFromTag");
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
@@ -41,18 +40,14 @@ class DockerBundleDownloaderTest {
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
         assertThat(dockerDownloader).isInstanceOf(DockerBundleDownloader.class);
 
-        System.out.println("created downloader shouldCreateBundleDownloaderFromTag");
         Path target = dockerDownloader.saveBundleLocally(bundle, tag);
 
-        System.out.println("created target shouldCreateBundleDownloaderFromTag");
         Path expectedFile = target.resolve("descriptor.yaml");
         assertThat(expectedFile.toFile()).exists();
     }
 
     @Test
     void shouldRetrieveTagsFromFullyQualifiedUrl() {
-        System.out.println("start test shouldCreateBundleDownloaderFromTag");
-
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
@@ -67,7 +62,6 @@ class DockerBundleDownloaderTest {
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
         assertThat(dockerDownloader).isInstanceOf(DockerBundleDownloader.class);
 
-        System.out.println("created downloader shouldCreateBundleDownloaderFromTag");
         List<String> tags = dockerDownloader.fetchRemoteTags(url);
         int sizeList = tags.size();
         assertThat(sizeList).isGreaterThan(10);

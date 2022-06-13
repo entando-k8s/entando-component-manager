@@ -111,9 +111,7 @@ public final class ProcessHandlerBuilder {
     private static ProcessBuilder composeShellCommand(String command, boolean inheritIO) {
         ProcessBuilder pb = null;
         if (SystemUtils.IS_OS_WINDOWS) {
-            pb = new ProcessBuilder("CMD");
-            pb.command().add("/C");
-
+            throw new UnsupportedOperationException("Unsupported operation on this platform");
         } else {
             pb = new ProcessBuilder("/bin/sh");
             pb.command().add("-c");
@@ -124,5 +122,4 @@ public final class ProcessHandlerBuilder {
         }
         return pb;
     }
-
 }

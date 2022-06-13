@@ -60,7 +60,7 @@ public abstract class BundleDownloader {
     public Path createTargetDirectory() throws IOException {
         log.debug("creating temp dir");
         targetPath = Files.createTempDirectory(null);
-        log.info("created temp dir {}", targetPath.toString());
+        log.debug("created temp dir {}", targetPath.toString());
         return targetPath;
     }
 
