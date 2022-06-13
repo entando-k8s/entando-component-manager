@@ -364,7 +364,7 @@ public class BundleUtilities {
     public static String composeSignedBundleFolder(BundleReader bundleReader) throws IOException {
         final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
         if (! resourceFolder.equals("/")) {
-            return BundleUtilities.appendHashToBundleId(bundleReader, resourceFolder);
+            return BundleUtilities.appendHashToBundleFolder(bundleReader, resourceFolder);
         } else {
             return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
         }
@@ -464,13 +464,24 @@ public class BundleUtilities {
     }
 
     /**
-     * sign the bundle id prepending the first 8 chars of the bundle url.
+     * get the bundle id returning the first 8 chars of the bundle url.
      *
      * @param bundleUrl the url of the repository of the bundle
      * @return the signed bundle id
      */
-    public static String signBundleId(String bundleUrl) {
+    public static String getBundleId(String bundleUrl) {
         return DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH);
+    }
+
+    /**
+     * get the bundle id returning the first 8 chars of the bundle url.
+     *
+     * @param bundleUrl the url of the repository of the bundle
+     * @return the signed bundle id
+     */
+    public static String removeProtocolAndGetBundleId(String bundleUrl) {
+        final String url = BundleUtilities.removeProtocolFromUrl(bundleUrl);
+        return getBundleId(url);
     }
 
     /**
@@ -490,23 +501,33 @@ public class BundleUtilities {
      *
      * @param bundleReader         the bundle reader responsible for reading the bundle
      * @param folderProp           the BundleProperty indicating the root folder of the file
-     * @param fileDescriptorFolder the folder containing the current file
+     * @param fileDescriptorFolder  the folder containing the current file
      * @param bundleNameFolder     the name of the bundle root folder
+     * @param bundleId             the id of the current bundle
      * @return the built full path of a resource
      */
     public static String buildFullBundleResourcePath(BundleReader bundleReader, BundleProperty folderProp,
-            String fileDescriptorFolder, String bundleNameFolder) {
+            String fileDescriptorFolder, String bundleNameFolder, String bundleId) throws IOException {
 
-        final String signedBundleFolder = appendHashToBundleId(bundleReader, bundleNameFolder);
-        final Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
+        final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
+        Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
+
+        if (! bundleReader.isBundleV1()) {
+            final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
+            fileFolder = Paths.get(fileFolder.toString().replace(fileFolder.subpath(0, 1).toString(), signedFolder));
+        }
 
         return Paths.get(signedBundleFolder, folderProp.getValue())
                 .resolve(fileFolder).toString();
     }
 
-    public static String appendHashToBundleId(BundleReader bundleReader, String bundleFolder) {
-        final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
-        final String bundleId = BundleUtilities.signBundleId(url);
-        return Paths.get(BUNDLES_FOLDER, bundleFolder + "-" + bundleId).toString();
+    public static String appendHashToBundleFolder(BundleReader bundleReader, String bundleFolder) {
+        String signedBundleFolder = appendBundleUrlHash(bundleReader, bundleFolder);
+        return Paths.get(BUNDLES_FOLDER, signedBundleFolder).toString();
+    }
+
+    public static String appendBundleUrlHash(BundleReader bundleReader, String firstToken) {
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+        return firstToken + "-" + bundleId;
     }
 }

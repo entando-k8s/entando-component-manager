@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.service.templating.WidgetTemplateGeneratorServiceDouble;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
@@ -51,6 +52,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
     @Test
     void canProcessDescriptorV1() throws IOException {
 
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
 
         final List<Installable<WidgetDescriptor>> installableList = execWidgetProcessor(widgDescrFile);
@@ -59,6 +61,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         WidgetDescriptor actual = installableList.get(0).getRepresentation();
         WidgetDescriptor expected = yamlMapper.readValue(new File(widgDescrFile), WidgetDescriptor.class);
+        expected.setCode("todomvc_widget-77b2b10e");
 
         assertOnWidgetDescriptors(actual, expected);
 
@@ -69,6 +72,8 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
     @Test
     void canProcessDescriptorV5() throws IOException {
+
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
 
         final List<Installable<WidgetDescriptor>> installableList = execWidgetProcessor(widgDescrFile);
@@ -76,8 +81,8 @@ class WidgetProcessorTest extends BaseProcessorTest {
         assertThat(installableList).hasSize(1);
 
         WidgetDescriptor actual = installableList.get(0).getRepresentation();
-        WidgetDescriptor expected = yamlMapper.readValue(new File(widgDescrFile),
-                WidgetDescriptor.class);
+        WidgetDescriptor expected = yamlMapper.readValue(new File(widgDescrFile), WidgetDescriptor.class);
+        expected.setCode("todomvc_widget-77b2b10e");
 
         assertOnWidgetDescriptors(actual, expected);
 
@@ -112,4 +117,66 @@ class WidgetProcessorTest extends BaseProcessorTest {
         assertThat(actual.getBundleId()).isEqualTo(BundleStubHelper.BUNDLE_CODE);
         assertThat(actual.getDescriptorMetadata().getPluginIngressPathMap()).isEqualTo(pluginIngressPathMap);
     }
+
+    @Test
+    void shouldSetTheExpectedWidgetCodeWithWidgetDescriptorV1AndCodeWithoutTheHash() {
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        final WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+
+        widgetProcessor.setWidgetCode(bundleReader, widgetDescriptor);
+
+        assertThat(widgetDescriptor.getCode()).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldSetTheExpectedWidgetCodeWithWidgetDescriptorV1AndCodeWithTheCorrectHash() {
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+
+        widgetProcessor.setWidgetCode(bundleReader, widgetDescriptor);
+
+        assertThat(widgetDescriptor.getCode()).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldSetTheExpectedWidgetCodeWithWidgetDescriptorV1AndCodeWithAnIncorrectHash() {
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        String wrongHash = "abcd1234";
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash);
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+
+        widgetProcessor.setWidgetCode(bundleReader, widgetDescriptor);
+
+        assertThat(widgetDescriptor.getCode()).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash
+                + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldSetTheExpectedWidgetCodeWithWidgetDescriptorV5() {
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5();
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+
+        widgetProcessor.setWidgetCode(bundleReader, widgetDescriptor);
+
+        assertThat(widgetDescriptor.getCode()).isEqualTo(WidgetStubHelper.WIDGET_1_NAME
+                + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
 }
+

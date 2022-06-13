@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -24,6 +23,7 @@ import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
@@ -82,6 +82,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 widgetDescriptor.setDescriptorMetadata(new DescriptorMetadata(pluginIngressPathMap));
                 descriptorValidator.validateOrThrow(widgetDescriptor);
 
+                setWidgetCode(bundleReader, widgetDescriptor);
                 setCustomUi(widgetDescriptor, fileName, bundleReader);
 
                 widgetDescriptor.setBundleId(descriptor.getCode());
@@ -124,6 +125,28 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             String ftl = templateGeneratorService.generateWidgetTemplate(fileName, widgetDescriptor, bundleReader);
             widgetDescriptor.setCustomUi(ftl);
         }
+    }
+
+    /**
+     * set the widget code depending on the widget descriptor version. ensure that the widget code is signed with the
+     * bundle id hash
+     *
+     * @param bundleReader     the bundle reader to use to read the bundle id
+     * @param widgetDescriptor the widget descriptor to get widget info
+     */
+    protected void setWidgetCode(BundleReader bundleReader, WidgetDescriptor widgetDescriptor) {
+        String code = widgetDescriptor.getCode();
+        String name = widgetDescriptor.getName();
+        String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
+        if (widgetDescriptor.isVersion1()) {
+            if (!code.endsWith(bundleIdHash)) {
+                code = BundleUtilities.appendBundleUrlHash(bundleReader, code);
+            }
+        } else {
+            code = BundleUtilities.appendBundleUrlHash(bundleReader, name);
+        }
+        widgetDescriptor.setCode(code);
     }
 
     @Override

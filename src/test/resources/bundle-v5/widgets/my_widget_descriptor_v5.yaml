@@ -1,5 +1,5 @@
 descriptorVersion: v5
-code: todomvc_widget
+name: todomvc_widget
 titles:
   en: TODO MVC Widget
   it: TODO MVC Widget

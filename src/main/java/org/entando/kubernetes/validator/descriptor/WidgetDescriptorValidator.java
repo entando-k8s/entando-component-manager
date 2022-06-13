@@ -45,31 +45,37 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         objectsThatMustBeNull.put("apiClaims", WidgetDescriptor::getApiClaims);
         objectsThatMustBeNull.put("configWidget", WidgetDescriptor::getConfigWidget);
         objectsThatMustBeNull.put("customElement", WidgetDescriptor::getCustomElement);
+        objectsThatMustBeNull.put("name", WidgetDescriptor::getName);
+
+        final Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNotBeNull
+                = getObjectsThatMustNotBeNullForEveryVersion();
+        objectsThatMustNotBeNull.put("code", WidgetDescriptor::getCode);
 
         configureValidationConfigMap(WidgetDescriptorVersion.V1,
                 Collections.singletonList(super::validateDescriptorFormatOrThrow),
-                getObjectsThatMustNotBeNullForEveryVersion(), objectsThatMustBeNull);
+                objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
 
     private void setupValidatorConfigurationDescriptorV2() {
 
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
+        objectsThatMustBeNull.put("code", WidgetDescriptor::getCode);
         objectsThatMustBeNull.put("configUi", WidgetDescriptor::getConfigUi);
         objectsThatMustBeNull.put("customUi", WidgetDescriptor::getCustomUi);
         objectsThatMustBeNull.put("customUiPath", WidgetDescriptor::getCustomUiPath);
 
-        Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNotBeNullForEveryVersion
+        Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNotBeNull
                 = getObjectsThatMustNotBeNullForEveryVersion();
-        objectsThatMustNotBeNullForEveryVersion.put("customElement", WidgetDescriptor::getCustomElement);
+        objectsThatMustNotBeNull.put("customElement", WidgetDescriptor::getCustomElement);
+        objectsThatMustNotBeNull.put("name", WidgetDescriptor::getName);
 
         configureValidationConfigMap(WidgetDescriptorVersion.V5,
                 Arrays.asList(super::validateDescriptorFormatOrThrow, this::validateApiClaims),
-                objectsThatMustNotBeNullForEveryVersion, objectsThatMustBeNull);
+                objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
 
     private Map<String, Function<WidgetDescriptor, Object>> getObjectsThatMustNotBeNullForEveryVersion() {
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
-        objectsThatMustNOTBeNull.put("code", WidgetDescriptor::getCode);
         objectsThatMustNOTBeNull.put("titles", WidgetDescriptor::getTitles);
         objectsThatMustNOTBeNull.put("group", WidgetDescriptor::getGroup);
         return objectsThatMustNOTBeNull;

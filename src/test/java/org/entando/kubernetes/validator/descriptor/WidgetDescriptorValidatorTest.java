@@ -82,6 +82,10 @@ class WidgetDescriptorValidatorTest {
         descriptor.setConfigWidget(null);
         descriptor.setCustomElement("x-elem");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+
+        descriptor.setCustomElement(null);
+        descriptor.setName("name");
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
     @Test
@@ -99,10 +103,10 @@ class WidgetDescriptorValidatorTest {
                         WidgetDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
 
-        descriptor.setCode(null);
+        descriptor.setName(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
-        descriptor.setCode("code");
+        descriptor.setName("name");
         descriptor.setTitles(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 

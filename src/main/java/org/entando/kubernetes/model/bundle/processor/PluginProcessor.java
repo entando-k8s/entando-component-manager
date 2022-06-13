@@ -139,7 +139,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
 
         final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
-        final String bundleId = BundleUtilities.signBundleId(url);
+        final String bundleId = BundleUtilities.getBundleId(url);
         final String pluginId = this.generatePluginId(pluginDescriptor);
 
         pluginDescriptor.setDescriptorMetadata(

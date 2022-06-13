@@ -1,6 +1,5 @@
 package org.entando.kubernetes.controller.mockmvc;
 
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_PLANS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.getTestBundleV5;
@@ -36,21 +35,14 @@ import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
-import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
-import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.PluginAPIDataEntity;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
-import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.PluginAPIDataRepository;
-import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +63,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-@AutoConfigureWireMock(port = 8099)
+@AutoConfigureWireMock(port = 8091)
 @AutoConfigureMockMvc
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
@@ -189,7 +181,7 @@ class InstallFlowTestBundleV5 {
 
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteWidget(ac.capture());
-        assertThat(ac.getValue()).isEqualTo("todomvc_widget");
+        assertThat(ac.getValue()).isEqualTo("todomvc_widget-ece8f6f0");
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(0)).deletePageModel(ac.capture());

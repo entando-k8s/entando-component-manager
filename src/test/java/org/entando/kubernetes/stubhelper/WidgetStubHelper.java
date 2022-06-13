@@ -15,6 +15,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptorVer
 public class WidgetStubHelper {
 
     public static final int WIDGET_1_POS = 0;
+    public static final String WIDGET_1_NAME = "my-name";
     public static final String WIDGET_1_CODE = "my-code";
     public static final String LANG_1 = "it";
     public static final String LANG_2 = "en";
@@ -62,6 +63,7 @@ public class WidgetStubHelper {
 
     public static WidgetDescriptor stubWidgetDescriptorV5() {
         WidgetDescriptor widgetDescriptor = stubWidgetDescriptor()
+                .name(WIDGET_1_NAME)
                 .customElement(WIDGET_1_CODE)
                 .configWidget(CONFIG_WIDGET)
                 .apiClaims(stubApiClaims())

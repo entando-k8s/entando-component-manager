@@ -61,7 +61,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
 
         final String bundleNameFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-        final String signedBundleFolder = BundleUtilities.appendHashToBundleId(bundleReader, bundleNameFolder);
+        final String signedBundleFolder = BundleUtilities.appendHashToBundleFolder(bundleReader, bundleNameFolder);
 
         String ftl = bundleReader.getWidgetResourcesOfType(widgetFolder, JS_TYPE).stream()
                 .map(file -> formatTagFilePath(SCRIPT_TAG, signedBundleFolder, file))

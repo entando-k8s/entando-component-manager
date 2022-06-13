@@ -251,15 +251,15 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("css-res.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-1.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
                 && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
 
@@ -373,11 +373,11 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget");
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget-ece8f6f0");
         assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/bundle/widgets/widget.ftl"));
 
-        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget");
+        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget-ece8f6f0");
         assertThat(allPassedWidgets.get(1).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(1).getCustomUi()).isEqualTo("<h2>Bundle 1 Widget</h2>");
     }
@@ -389,7 +389,7 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("todomvc_widget");
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("todomvc_widget-ece8f6f0");
         assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/my_widget_descriptor_v5.ftl").trim());
         assertThat(allPassedWidgets.get(0).getCustomElement()).isEqualTo("my-widget");
@@ -436,8 +436,8 @@ public class InstallFlowAssertionHelper {
                 "/bundles/something-ece8f6f0/resources/js/script.js",
                 "/bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
                 //Widgets
-                "todomvc_widget",
-                "another_todomvc_widget",
+                "todomvc_widget-ece8f6f0",
+                "another_todomvc_widget-ece8f6f0",
                 // Content-Type
                 "CNG",
                 "CNT",
@@ -522,11 +522,11 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget");
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget-ece8f6f0");
         assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/bundle/widgets/widget.ftl"));
 
-        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget");
+        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget-ece8f6f0");
         assertThat(allPassedWidgets.get(1).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(1).getCustomUi()).isEqualTo("<h2>Bundle 1 Widget</h2>");
     }
@@ -688,11 +688,11 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-1.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5")
+                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
                 && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
 

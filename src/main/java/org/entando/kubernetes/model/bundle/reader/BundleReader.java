@@ -11,7 +11,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -36,6 +35,7 @@ public class BundleReader {
     private final Path bundleBasePath;
     private final EntandoDeBundle entandoDeBundle;
     private BundleDescriptor bundleDescriptor;
+    private String bundleUrl;
 
     public BundleReader(Path filePath) {
         this.bundleBasePath = filePath;
@@ -177,14 +177,19 @@ public class BundleReader {
     }
 
     public String getBundleUrl() {
-        if (this.entandoDeBundle == null || this.entandoDeBundle.getSpec() == null
-                || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec().getTags())
-                || this.entandoDeBundle.getSpec().getTags().get(0) == null
-                || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec().getTags().get(0).getTarball())) {
-            throw new EntandoComponentManagerException("cannot determine the bundle URL");
+        if (ObjectUtils.isEmpty(this.bundleUrl)) {
+
+            if (this.entandoDeBundle == null || this.entandoDeBundle.getSpec() == null
+                    || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec().getTags())
+                    || this.entandoDeBundle.getSpec().getTags().get(0) == null
+                    || ObjectUtils.isEmpty(this.entandoDeBundle.getSpec().getTags().get(0).getTarball())) {
+                throw new EntandoComponentManagerException("cannot determine the bundle URL");
+            }
+
+            this.bundleUrl = this.entandoDeBundle.getSpec().getTags().get(0).getTarball();
         }
 
-        return this.entandoDeBundle.getSpec().getTags().get(0).getTarball();
+        return this.bundleUrl;
     }
 
     public boolean isBundleV1() {

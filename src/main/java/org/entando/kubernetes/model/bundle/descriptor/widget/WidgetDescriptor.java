@@ -2,13 +2,11 @@ package org.entando.kubernetes.model.bundle.descriptor.widget;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 
@@ -34,6 +32,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     // ------------------------------------------------------------
     // Version 2
 
+    private String name;
     private String configWidget;
     private String customElement;
     private List<ApiClaim> apiClaims;

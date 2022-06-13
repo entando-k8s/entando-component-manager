@@ -403,7 +403,7 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void shouldSignTheBundleId() {
-        final var bundleId = BundleUtilities.signBundleId(
+        final var bundleId = BundleUtilities.getBundleId(
                 BundleInfoStubHelper.GIT_REPO_ADDRESS.replace("http://", ""));
         assertThat(bundleId).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }

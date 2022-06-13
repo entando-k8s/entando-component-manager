@@ -168,10 +168,12 @@ public class TestInstallUtils {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
+        final InstallWithPlansRequest installWithPlansReq = mockInstallWithPlansRequestWithActions();
+
         MvcResult result = mockMvc.perform(
                 put(INSTALL_PLANS_ENDPOINT.build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(mockInstallWithPlansRequestWithActions())))
+                        .content(objectMapper.writeValueAsString(installWithPlansReq)))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -187,10 +189,12 @@ public class TestInstallUtils {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
+        final InstallWithPlansRequest installWithPlansRequest = mockInstallWithPlansRequestWithActionsV5();
+
         MvcResult result = mockMvc.perform(
                         put(INSTALL_PLANS_ENDPOINT_V5.build())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(mockInstallWithPlansRequestWithActionsV5())))
+                                .content(objectMapper.writeValueAsString(installWithPlansRequest)))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -361,8 +365,8 @@ public class TestInstallUtils {
                         "/bundles/something-ece8f6f0/resources/js/configUiScript.js", Status.NEW,
                         "/bundles/something-ece8f6f0/resources/js/script.js", Status.NEW,
                         "/bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js", Status.NEW))
-                .widgets(Map.of("another_todomvc_widget", Status.DIFF, "todomvc_widget", Status.NEW,
-                        "widget_with_config_ui", Status.NEW))
+                .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
+                        "widget_with_config_ui-ece8f6f0", Status.NEW))
                 .build();
     }
 
@@ -403,9 +407,9 @@ public class TestInstallUtils {
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                                 "/bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
-                .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                        "widget_with_config_ui", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .widgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "widget_with_config_ui-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .contentTypes(
@@ -518,8 +522,8 @@ public class TestInstallUtils {
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                                 "/bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
-                .setWidgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setWidgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setAssets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setContentTypes(
@@ -540,13 +544,13 @@ public class TestInstallUtils {
                 .setVersion("0.0.1")
                 .setHasConflicts(true)
                 .setResources(
-                        Map.of("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css",
+                        Map.of("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js",
+                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/js-res-1.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js",
+                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js/js-res-2.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
-                .setWidgets(Map.of("my_widget_descriptor_v5", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setWidgets(Map.of("my_widget_descriptor_v5-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setPlugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE_V3C, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         PLUGIN_TODOMVC_CUSTOMBASE_V4, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
     }
