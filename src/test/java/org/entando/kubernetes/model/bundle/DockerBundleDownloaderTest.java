@@ -19,8 +19,17 @@ import org.junit.jupiter.api.Test;
 @Tag("in-process")
 class DockerBundleDownloaderTest {
 
+    public static final String ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS =
+            System.getenv("ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS");
+    public static final String ENTANDO_TEST_DOCKER_BUNDLE_VERSION =
+            System.getenv("ENTANDO_TEST_DOCKER_BUNDLE_VERSION");
+
     @Test
     void shouldCreateBundleDownloaderFromTag() {
+        if (shouldRunDockerTest()) {
+            return;
+        }
+
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
@@ -33,8 +42,8 @@ class DockerBundleDownloaderTest {
                 .build();
 
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
-                .withVersion("v0.0.1")
-                .withTarball("docker://docker.io/gigiozzz/myapp2mysql-bundle:0.0.1")
+                .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_VERSION)
+                .withTarball(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_VERSION)
                 .build();
 
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
@@ -48,14 +57,18 @@ class DockerBundleDownloaderTest {
 
     @Test
     void shouldRetrieveTagsFromFullyQualifiedUrl() {
+        if (shouldRunDockerTest()) {
+            return;
+        }
+
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
 
-        String url = "docker://docker.io/entando/entando-k8s-app-controller:7.0.2";
+        String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_VERSION;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
-                .withVersion("v7.0.2")
+                .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_VERSION)
                 .withTarball(url)
                 .build();
 
@@ -66,6 +79,38 @@ class DockerBundleDownloaderTest {
         int sizeList = tags.size();
         assertThat(sizeList).isGreaterThan(10);
 
+    }
+
+    private boolean shouldRunDockerTest() {
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx");
+
+        if (ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS == null || ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS.length() == 0) {
+            System.out.println("ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS is not defined, skipping test");  // NOSONAR
+            return true;
+        }
+        if (ENTANDO_TEST_DOCKER_BUNDLE_VERSION == null || ENTANDO_TEST_DOCKER_BUNDLE_VERSION.length() == 0) {
+            System.out.println("ENTANDO_TEST_DOCKER_BUNDLE_VERSION is not defined, skipping test");  // NOSONAR
+            return true;
+        }
+        return false;
     }
 }
 

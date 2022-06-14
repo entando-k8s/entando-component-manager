@@ -30,7 +30,7 @@ COPY --from=build \
 USER 0
 RUN install -m 755 /tmp/skopeo /usr/local/bin/skopeo; \
     install -d -m 755 /var/lib/containers/sigstore; \
-	install -d -m 755 /etc/containers; \
+    install -d -m 755 /etc/containers; \
     install -m 644 /tmp/default-policy.json /etc/containers/policy.json; \
     install -d -m 755 /etc/containers/registries.d; \
     install -m 644 /tmp/default.yaml /etc/containers/registries.d/default.yaml; \
