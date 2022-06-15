@@ -89,9 +89,10 @@ public class DockerBundleDownloader extends BundleDownloader {
     protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         log.info("Docker saveBundleStrategy");
         try {
-            ImageValidator.parse(tag.getTarball()).isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
+            String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(tag);
+            ImageValidator.parse(fullyQualifiedImageUrl).isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
 
-            saveContainerImage(tag.getTarball(), targetPath);
+            saveContainerImage(fullyQualifiedImageUrl, targetPath);
             log.info("Docker image saved");
             untarContainerImage(targetPath);
             return targetPath;
@@ -310,6 +311,18 @@ public class DockerBundleDownloader extends BundleDownloader {
         throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
     }
 
+    private String generateFullyQualifiedWithTag(EntandoDeBundleTag tag) {
+        String fullyQualified = tag.getTarball();
+        if (tag.getVersion() != null) {
+            String sep = ":";
+            if (StringUtils.startsWithIgnoreCase(tag.getVersion(), "sha256:")) {
+                sep = "@";
+            }
+            fullyQualified = fullyQualified + sep + tag.getVersion();
+
+        }
+        return fullyQualified;
+    }
 
     // support class used to easily unmarshalling json and to improve readability
     @Getter

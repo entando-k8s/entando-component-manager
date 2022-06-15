@@ -43,7 +43,7 @@ class DockerBundleDownloaderTest {
 
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_VERSION)
-                .withTarball(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_VERSION)
+                .withTarball(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS)
                 .build();
 
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
@@ -69,7 +69,7 @@ class DockerBundleDownloaderTest {
         String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_VERSION;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_VERSION)
-                .withTarball(url)
+                .withTarball(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS)
                 .build();
 
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
