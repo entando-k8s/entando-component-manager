@@ -25,8 +25,8 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
@@ -130,7 +130,7 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1");
 
         // should generate the right populated EntandoPlugin
@@ -150,7 +150,7 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
 
         // should generate the right populated EntandoPlugin
@@ -195,7 +195,7 @@ public class EntandoBundleUtilitiesTest {
         // given a minimum filled plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+        descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());

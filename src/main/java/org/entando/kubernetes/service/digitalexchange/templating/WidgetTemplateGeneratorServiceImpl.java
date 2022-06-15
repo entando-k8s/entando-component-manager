@@ -2,8 +2,6 @@ package org.entando.kubernetes.service.digitalexchange.templating;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +15,8 @@ import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.job.PluginAPIDataEntity;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.model.job.PluginDataEntity;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -38,7 +36,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String CUSTOM_ELEMENT_TAG = "<%s config=\"${mfeSystemConfig}\"/>";
     public static final String APPLICATION_BASEURL_PARAM = "${systemParam_applicationBaseURL}";
 
-    private final PluginAPIDataRepository apiPathRepository;
+    private final PluginDataRepository apiPathRepository;
 
     private ObjectMapper jsonMapper = new ObjectMapper();
 
@@ -88,7 +86,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     protected String createAssignTag(WidgetDescriptor descriptor) throws JsonProcessingException {
         final MfeSystemConfig mfeSystemConfig = toSystemParams(descriptor.getApiClaims(),
                 descriptor.getDescriptorMetadata().getPluginIngressPathMap());
-        return String.format(ASSIGN_TAG, jsonMapper.writeValueAsString(mfeSystemConfig));
+        return String.format(ASSIGN_TAG, jsonMapper.writeValueAsString(mfeSystemConfig).replace("\"", "'"));
     }
 
     protected String createCustomElementTag(WidgetDescriptor descriptor) {
@@ -102,7 +100,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
             ingressPath = pluginIngressPathMap.get(apiClaim.getPluginCode());
         } else {
             ingressPath = apiPathRepository.findByBundleCodeAndPluginCode(apiClaim.getBundleCode(), apiClaim.getPluginCode())
-                    .map(PluginAPIDataEntity::getEndpoint)
+                    .map(PluginDataEntity::getEndpoint)
                     .orElse(null);
         }
 

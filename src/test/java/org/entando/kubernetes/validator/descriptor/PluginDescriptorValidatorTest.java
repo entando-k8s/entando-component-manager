@@ -15,12 +15,11 @@ import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.apache.commons.lang.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
-import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +83,7 @@ class PluginDescriptorValidatorTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenPluginDescriptorVersionNotRecognized() throws Exception {
+    void shouldThrowExceptionWhenDescriptorVersionNotRecognized() throws Exception {
 
         PluginDescriptor descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2.yaml"),
@@ -97,15 +96,15 @@ class PluginDescriptorValidatorTest {
     }
 
     @Test
-    void shouldThrowExceptionIfPluginDescriptorVersionIsNOTCompatibleWithTheDataFormat() throws IOException {
+    void shouldThrowExceptionIfDescriptorVersionIsNOTCompatibleWithTheDataFormat() throws IOException {
 
-        List<KeyValue<String, PluginDescriptorVersion>> descriptorVersionToSetList = Arrays.asList(
-                new DefaultKeyValue<>("todomvcV1.yaml", PluginDescriptorVersion.V2),
-                new DefaultKeyValue<>("todomvcV2.yaml", PluginDescriptorVersion.V1),
-                new DefaultKeyValue<>("todomvcV3_complete.yaml", PluginDescriptorVersion.V1),
-                new DefaultKeyValue<>("todomvcV4_complete.yaml", PluginDescriptorVersion.V3));
+        List<KeyValue<String, DescriptorVersion>> descriptorVersionToSetList = Arrays.asList(
+                new DefaultKeyValue<>("todomvcV1.yaml", DescriptorVersion.V2),
+                new DefaultKeyValue<>("todomvcV2.yaml", DescriptorVersion.V1),
+                new DefaultKeyValue<>("todomvcV3_complete.yaml", DescriptorVersion.V1),
+                new DefaultKeyValue<>("todomvcV4_complete.yaml", DescriptorVersion.V3));
 
-        for (KeyValue<String, PluginDescriptorVersion> keyValue : descriptorVersionToSetList) {
+        for (KeyValue<String, DescriptorVersion> keyValue : descriptorVersionToSetList) {
 
             PluginDescriptor descriptor = yamlMapper
                     .readValue(new File("src/test/resources/bundle/plugins/" + keyValue.getKey()),

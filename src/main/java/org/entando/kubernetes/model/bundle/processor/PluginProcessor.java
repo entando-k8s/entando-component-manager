@@ -22,7 +22,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
@@ -47,7 +47,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     private final KubernetesService kubernetesService;
     private final PluginDescriptorValidator descriptorValidator;
-    private final PluginAPIDataRepository pluginAPIPathRepository;
+    private final PluginDataRepository pluginPathRepository;
 
     @Override
     public ComponentType getSupportedComponentType() {
@@ -87,7 +87,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                         conflictStrategy,
                         installPlan);
                 installableList.add(new PluginInstallable(kubernetesService, pluginDescriptor, action,
-                        pluginAPIPathRepository));
+                        pluginPathRepository));
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -101,7 +101,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         return components.stream()
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new PluginInstallable(kubernetesService, buildDescriptorFromComponentJob(c), c.getAction(),
-                        pluginAPIPathRepository))
+                        pluginPathRepository))
                 .collect(Collectors.toList());
     }
 

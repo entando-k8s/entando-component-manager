@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.springframework.util.ObjectUtils;
@@ -132,10 +133,10 @@ public class PluginDescriptor extends VersionedDescriptor {
     }
 
     public boolean isVersionLowerThan3() {
-        final PluginDescriptorVersion pluginDescriptorVersion = PluginDescriptorVersion.fromVersion(
+        final DescriptorVersion descriptorVersion = DescriptorVersion.fromVersion(
                 super.getDescriptorVersion());
-        return pluginDescriptorVersion == PluginDescriptorVersion.V1
-                || pluginDescriptorVersion == PluginDescriptorVersion.V2;
+        return descriptorVersion == DescriptorVersion.V1
+                || descriptorVersion == DescriptorVersion.V2;
     }
 
     @Override

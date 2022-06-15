@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -73,6 +75,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
     private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
+    private final @NonNull BundleDescriptorValidator bundleDescriptorValidator;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -330,6 +333,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallPlan installPlan) {
 
         BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+
+        try {
+            bundleDescriptorValidator.validateOrThrow(bundleReader.readBundleDescriptor());
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("An error occurred while reading the root bundle descriptor");
+        }
+
         return getInstallableComponentsByPriority(bundleReader, conflictStrategy, installPlan);
     }
 
@@ -363,6 +373,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
         List<? extends Installable<?>> pluginInstallables = new ArrayList<>();
 
+        // process plugins and collect endpoints
         if (processorMap.containsKey(ComponentType.PLUGIN)) {
             pluginInstallables = processorMap.get(ComponentType.PLUGIN)
                     .process(bundleReader, conflictStrategy, installPlan);
@@ -377,6 +388,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             ((WidgetProcessor) processorMap.get(ComponentType.WIDGET)).setPluginIngressPathMap(pluginIngressMap);
         }
 
+        // process other components
         final List<? extends Installable<?>> installables = processorMap.values()
                 .stream()
                 .filter(processor -> !(processor instanceof PluginProcessor))  // skip plugins that have been already processed at the beginning of the method
@@ -384,6 +396,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
+        // concat results and return
         return Stream.concat(
                         installables.stream(),
                         pluginInstallables.stream())

@@ -3,7 +3,7 @@ package org.entando.kubernetes;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,13 +20,13 @@ public class DatabaseCleaner {
     InstalledEntandoBundleRepository installedComponentRepository;
 
     @Autowired
-    PluginAPIDataRepository pluginAPIDataRepository;
+    PluginDataRepository pluginDataRepository;
 
     public void cleanup() {
         installedComponentRepository.deleteAll();
         jobComponentRepository.deleteAll();
         jobRepository.deleteAll();
-        pluginAPIDataRepository.deleteAll();
+        pluginDataRepository.deleteAll();
     }
 
 }

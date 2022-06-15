@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 
@@ -49,13 +49,13 @@ public class PluginStubHelper {
 
     public static PluginDescriptor stubPluginDescriptorV3() {
         PluginDescriptor pluginDescriptorV3 = stubPluginDescriptorV2();
-        pluginDescriptorV3.setDescriptorVersion(PluginDescriptorVersion.V3.getVersion());
+        pluginDescriptorV3.setDescriptorVersion(DescriptorVersion.V3.getVersion());
         return pluginDescriptorV3;
     }
 
     public static PluginDescriptor stubPluginDescriptorV4() {
         PluginDescriptor pluginDescriptorV3 = stubPluginDescriptorV2();
-        pluginDescriptorV3.setDescriptorVersion(PluginDescriptorVersion.V4.getVersion());
+        pluginDescriptorV3.setDescriptorVersion(DescriptorVersion.V4.getVersion());
         return pluginDescriptorV3;
     }
 

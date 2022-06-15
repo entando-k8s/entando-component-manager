@@ -6,14 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptorVersion;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -44,7 +43,7 @@ class WidgetDescriptorValidatorTest {
         WidgetDescriptor descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml"),
                         WidgetDescriptor.class);
-        descriptor.setDescriptorVersion(WidgetDescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 

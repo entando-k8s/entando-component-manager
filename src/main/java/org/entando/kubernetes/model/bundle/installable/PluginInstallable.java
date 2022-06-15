@@ -8,9 +8,9 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
-import org.entando.kubernetes.model.job.PluginAPIDataEntity;
+import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
@@ -18,13 +18,13 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 public class PluginInstallable extends Installable<PluginDescriptor> {
 
     private final KubernetesService kubernetesService;
-    private final PluginAPIDataRepository pluginAPIDataRepository;
+    private final PluginDataRepository pluginDataRepository;
 
     public PluginInstallable(KubernetesService kubernetesService, PluginDescriptor plugin, InstallAction action,
-            PluginAPIDataRepository pluginAPIDataRepository) {
+            PluginDataRepository pluginDataRepository) {
         super(plugin, action);
         this.kubernetesService = kubernetesService;
-        this.pluginAPIDataRepository = pluginAPIDataRepository;
+        this.pluginDataRepository = pluginDataRepository;
     }
 
     @Override
@@ -48,11 +48,11 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
 
-            PluginAPIDataEntity apiPathEntity = new PluginAPIDataEntity()
+            PluginDataEntity apiPathEntity = new PluginDataEntity()
                     .setBundleCode(representation.getDescriptorMetadata().getBundleId())
                     .setPluginCode(representation.getDescriptorMetadata().getPluginCode())
                     .setEndpoint(BundleUtilities.composeIngressPathFromDockerImage(representation));
-            pluginAPIDataRepository.save(apiPathEntity);
+            pluginDataRepository.save(apiPathEntity);
         });
     }
 
@@ -70,7 +70,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             log.info("Removing link to plugin {}", pluginCode);
             kubernetesService.unlinkAndScaleDownPlugin(pluginCode);
 
-            if (! deletePluginApiData(pluginCode)) {
+            if (! deletePluginData(pluginCode)) {
                 log.warn("Plugin uninstalled but no data has been deleted from plugin_api_data db table");
             }
         });
@@ -89,21 +89,24 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     /**
      * delete from the db the info about the plugin api data.
      *
-     * @param pluginId the plugin id from which recover the data required to execute the query
-     * @return truye if a record has been delete, false otherwise
+     * @param pluginCode the plugin code from which recover the data required to execute the query
+     * @return true if a record has been delete, false otherwise
      */
-    private boolean deletePluginApiData(String pluginId) {
-        if (ObjectUtils.isEmpty(pluginId)) {
+    private boolean deletePluginData(String pluginCode) {
+        if (ObjectUtils.isEmpty(pluginCode)) {
+            log.warn("Empty plugin code retrieved by the database. Can't delete plugin detail");
             return false;
         }
 
-        pluginId = pluginId.replace(PluginProcessor.PLUGIN_DEPLOYMENT_PREFIX, "");
-        String[] tokens = pluginId.split("-", 2);
+        pluginCode = pluginCode.replace(PluginProcessor.PLUGIN_DEPLOYMENT_PREFIX, "");
+        String[] tokens = pluginCode.split("-", 2);
 
         if (tokens.length < 2) {
+            log.warn(String.format("The plugin code %s can't be tokenized to bundle id and plugin id. Can't delete "
+                    + "plugin detail", pluginCode));
             return false;
         }
 
-        return pluginAPIDataRepository.deleteByBundleCodeAndPluginCode(tokens[0], tokens[1]) > 0;
+        return pluginDataRepository.deleteByBundleCodeAndPluginCode(tokens[0], tokens[1]) > 0;
     }
 }

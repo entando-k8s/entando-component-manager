@@ -5,7 +5,7 @@ databaseChangeLog:
       changes:
         # plugin_api_data
         - createTable:
-            tableName: plugin_api_data
+            tableName: plugin_data
             columns:
               - column:
                   name: id

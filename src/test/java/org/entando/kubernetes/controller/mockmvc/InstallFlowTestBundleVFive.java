@@ -39,10 +39,10 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
-import org.entando.kubernetes.model.job.PluginAPIDataEntity;
+import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +95,7 @@ class InstallFlowTestBundleVFive {
     private EntandoBundleJobRepository jobRepository;
 
     @Autowired
-    private PluginAPIDataRepository pluginApiDataRepository;
+    private PluginDataRepository pluginDataRepository;
 
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
@@ -122,11 +122,11 @@ class InstallFlowTestBundleVFive {
         installFlowAssertionHelper =
                 new InstallFlowAssertionHelper(k8SServiceClient, coreClient, jobRepository, componentJobRepository);
 
-        PluginAPIDataEntity pluginAPIData = new PluginAPIDataEntity()
+        PluginDataEntity pluginData = new PluginDataEntity()
                 .setBundleCode("anotherbundle")
                 .setPluginCode("ms1")
                 .setEndpoint("my-path");
-        pluginApiDataRepository.save(pluginAPIData);
+        pluginDataRepository.save(pluginData);
     }
 
     @AfterEach

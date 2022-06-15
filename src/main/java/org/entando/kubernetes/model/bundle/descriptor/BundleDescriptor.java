@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleType;
 
 @Getter
@@ -13,6 +14,7 @@ import org.entando.kubernetes.model.bundle.BundleType;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Accessors(chain = true)
 public class BundleDescriptor extends VersionedDescriptor {
 
     private String code;

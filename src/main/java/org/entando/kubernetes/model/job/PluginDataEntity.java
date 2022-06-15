@@ -36,8 +36,8 @@ import org.springframework.validation.annotation.Validated;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@Table(name = "plugin_api_data")
-public class PluginAPIDataEntity {
+@Table(name = "plugin_data")
+public class PluginDataEntity {
 
     @Id
     @Column

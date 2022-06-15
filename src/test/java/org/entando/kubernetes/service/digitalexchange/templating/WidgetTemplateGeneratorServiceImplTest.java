@@ -2,7 +2,6 @@ package org.entando.kubernetes.service.digitalexchange.templating;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -18,8 +17,8 @@ import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.job.PluginAPIDataEntity;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.model.job.PluginDataEntity;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
@@ -37,12 +36,12 @@ class WidgetTemplateGeneratorServiceImplTest {
     @Mock
     private BundleReader bundleReader;
     @Mock
-    private PluginAPIDataRepository repository;
+    private PluginDataRepository repository;
 
     private WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
     private WidgetTemplateGeneratorServiceImpl service;
 
-    private PluginAPIDataEntity extApiDataEntity = new PluginAPIDataEntity()
+    private PluginDataEntity extApiDataEntity = new PluginDataEntity()
             .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_2_PATH);
 
     @BeforeEach
@@ -95,9 +94,9 @@ class WidgetTemplateGeneratorServiceImplTest {
 
         final String assignTag = service.createAssignTag(descriptor);
         assertThat(assignTag).isEqualTo(
-                "<#assign mfeSystemConfig>{\"systemParams\":{\"api\":{\"int-api\":{\"url\":\"${systemParam_application"
-                        + "BaseURL}/service-id-1/path\"},\"ext-api\":{\"url\":\"${systemParam_applicationBaseURL}/"
-                        + "service-id-2/path\"}}}}</#assign>");
+                "<#assign mfeSystemConfig>{'systemParams':{'api':{'int-api':{'url':'${systemParam_application"
+                        + "BaseURL}/service-id-1/path'},'ext-api':{'url':'${systemParam_applicationBaseURL}/"
+                        + "service-id-2/path'}}}}</#assign>");
     }
 
     @Test

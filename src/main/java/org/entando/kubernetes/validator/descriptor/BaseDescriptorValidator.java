@@ -1,6 +1,6 @@
 package org.entando.kubernetes.validator.descriptor;
 
-import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -18,10 +18,10 @@ import org.entando.kubernetes.validator.descriptor.DescriptorValidatorConfigBean
 @Slf4j
 @Getter
 @RequiredArgsConstructor
-public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V extends DescriptorVersion> {
+public abstract class BaseDescriptorValidator<D extends VersionedDescriptor> {
 
-    private final Class<? extends Enum<?>> descriptorVersionEnum;
-    protected Map<V, DescriptorValidatorConfigBean<D, V>> validationConfigMap;
+    protected Map<DescriptorVersion, DescriptorValidatorConfigBean<D>> validationConfigMap = new EnumMap<>(
+            DescriptorVersion.class);
 
     /**
      * returns the DescriptorVersion of the received VersionedDescriptor.
@@ -29,7 +29,9 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      * @param descriptor the VersionedDescriptor of which return the current DescriptorVersion
      * @return the DescriptorVersion of the received VersionedDescriptor
      */
-    protected abstract V readDescriptorVersion(D descriptor);
+    protected DescriptorVersion readDescriptorVersion(D descriptor) {
+        return DescriptorVersion.fromVersion(descriptor.getDescriptorVersion());
+    }
 
     /**
      * ensure that the received descriptor version is set. if the descriptor version is not set, set it.
@@ -40,7 +42,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      */
     protected D ensureDescriptorVersionIsSet(D descriptor) {
         if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
-            descriptor.setDescriptorVersion(DescriptorVersion.V1);
+            descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         }
 
         return descriptor;
@@ -60,7 +62,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      * @param objectsThatMustNOTBeNull the map of the object that must not be null in the descriptor
      * @param objectsThatMustBeNull    the map of the object that must be null in the descriptor
      */
-    public void configureValidationConfigMap(V descriptorVersion,
+    public void addValidationConfigMap(DescriptorVersion descriptorVersion,
             List<DescriptorValidationFunction<D>> validationFunctionList,
             Map<String, Function<D, Object>> objectsThatMustNOTBeNull,
             Map<String, Function<D, Object>> objectsThatMustBeNull) {
@@ -84,7 +86,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
 
         if (null != descriptor) {
             ensureDescriptorVersionIsSet(descriptor);
-            final V descriptorVersion = getDescriptorVersionOrThrow(descriptor);
+            final DescriptorVersion descriptorVersion = getDescriptorVersionOrThrow(descriptor);
             validationConfigMap.get(descriptorVersion).getValidationFunctions()
                     .forEach(validationFunction -> validationFunction.validateOrThrow(descriptor));
         }
@@ -101,7 +103,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      */
     protected D validateDescriptorFormatOrThrow(D descriptor) {
 
-        final V descriptorVersion = readDescriptorVersion(descriptor);
+        final DescriptorVersion descriptorVersion = readDescriptorVersion(descriptor);
 
         validateNullAndNonNullObjects(
                 descriptorVersion,
@@ -119,12 +121,13 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      * @return the DescriptorVersion detected
      * @throws InvalidBundleException if the one of the values is not the expected one
      */
-    private V getDescriptorVersionOrThrow(D descriptor) {
-        final V descriptorVersion = readDescriptorVersion(descriptor);
+    private DescriptorVersion getDescriptorVersionOrThrow(D descriptor) {
+        final DescriptorVersion descriptorVersion = readDescriptorVersion(descriptor);
 
-        if (descriptorVersion == null) {
-            String error = String.format(VERSION_NOT_VALID, descriptor.getComponentKey().getKey(),
-                    Arrays.stream(descriptorVersionEnum.getEnumConstants())
+        if (descriptorVersion == null || ! validationConfigMap.containsKey(descriptorVersion)) {
+            String error = String.format(VERSION_NOT_VALID, "\"" + descriptor.getComponentKey().getKey() + "\"",
+                    descriptor.getClass().getSimpleName().replace(".class", ""),
+                    validationConfigMap.keySet().stream()
                             .map((Object t) -> ((DescriptorVersion) t).getVersion())
                             .collect(Collectors.joining(", ")));
             log.debug(error);
@@ -143,7 +146,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
      * @param objectsThatMustBeNull    the map of supplier that must return a null object
      * @throws InvalidBundleException if the one of the values is not the expected one
      */
-    private void validateNullAndNonNullObjects(V descriptorVersion,
+    private void validateNullAndNonNullObjects(DescriptorVersion descriptorVersion,
             D descriptor,
             Map<String, Function<D, Object>> objectsThatMustNOTBeNull,
             Map<String, Function<D, Object>> objectsThatMustBeNull) {
@@ -164,7 +167,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor, V e
     }
 
     public static final String VERSION_NOT_VALID =
-            "The %s descriptor contains an invalid descriptorVersion. Accepted versions are: %s";
+            "The %s descriptor contains an invalid descriptorVersion. Accepted versions for %s are: %s";
     public static final String EXPECTED_NOT_NULL_IS_NULL =
             "Descriptor version detected: %s. With this version the %s property must NOT be null.";
     public static final String EXPECTED_NULL_IS_NOT_NULL =

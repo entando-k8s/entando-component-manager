@@ -72,7 +72,7 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
             if ((bundleReader.isBundleV1() && bundleReader.containsResourceFolder())
                     || bundleReader.containsWidgetFolder()) {
 
-                processBundle(bundleReader, conflictStrategy, installPlan, installables);
+                installables.add(collectDirectoryInstallable(bundleReader, conflictStrategy, installPlan));
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -90,13 +90,13 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                 .collect(Collectors.toList());
     }
 
-    private void processBundle(BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan,
-            List<Installable<DirectoryDescriptor>> installables) throws IOException {
+    private Installable<DirectoryDescriptor> collectDirectoryInstallable(BundleReader bundleReader,
+            InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
 
         String signedBundleFolder = BundleUtilities.composeSignedBundleFolder(bundleReader);
         InstallAction rootDirectoryAction = extractInstallAction(signedBundleFolder, conflictStrategy, installPlan);
-        installables.add(new DirectoryInstallable(engineService, new DirectoryDescriptor(signedBundleFolder, true),
-                rootDirectoryAction));
+        return new DirectoryInstallable(engineService, new DirectoryDescriptor(signedBundleFolder, true),
+                rootDirectoryAction);
     }
 
     @Override

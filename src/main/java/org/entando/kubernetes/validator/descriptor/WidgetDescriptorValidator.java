@@ -3,7 +3,6 @@ package org.entando.kubernetes.validator.descriptor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -11,24 +10,14 @@ import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptorVersion;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Slf4j
 @Component
-public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDescriptor, WidgetDescriptorVersion> {
-
-    public WidgetDescriptorValidator() {
-        super(WidgetDescriptorVersion.class);
-        super.validationConfigMap = new EnumMap<>(WidgetDescriptorVersion.class);
-    }
-
-    @Override
-    protected WidgetDescriptorVersion readDescriptorVersion(WidgetDescriptor descriptor) {
-        return WidgetDescriptorVersion.fromVersion(descriptor.getDescriptorVersion());
-    }
+public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDescriptor> {
 
     /**************************************************************************************************************
      * CONFIGURATION START.
@@ -51,7 +40,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
                 = getObjectsThatMustNotBeNullForEveryVersion();
         objectsThatMustNotBeNull.put("code", WidgetDescriptor::getCode);
 
-        configureValidationConfigMap(WidgetDescriptorVersion.V1,
+        addValidationConfigMap(DescriptorVersion.V1,
                 Collections.singletonList(super::validateDescriptorFormatOrThrow),
                 objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
@@ -69,7 +58,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         objectsThatMustNotBeNull.put("customElement", WidgetDescriptor::getCustomElement);
         objectsThatMustNotBeNull.put("name", WidgetDescriptor::getName);
 
-        configureValidationConfigMap(WidgetDescriptorVersion.V5,
+        addValidationConfigMap(DescriptorVersion.V5,
                 Arrays.asList(super::validateDescriptorFormatOrThrow, this::validateApiClaims),
                 objectsThatMustNotBeNull, objectsThatMustBeNull);
     }

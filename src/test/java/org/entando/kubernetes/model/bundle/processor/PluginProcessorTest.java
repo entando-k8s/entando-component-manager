@@ -25,7 +25,7 @@ import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.repository.PluginAPIDataRepository;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
@@ -49,7 +49,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Mock
     private PluginDescriptorValidator pluginDescriptorValidator;
     @Mock
-    private PluginAPIDataRepository pluginAPIDataRepository;
+    private PluginDataRepository pluginDataRepository;
     @Mock
     private BundleReader bundleReader;
 
@@ -60,7 +60,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginAPIDataRepository);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
     }
 
     @Test

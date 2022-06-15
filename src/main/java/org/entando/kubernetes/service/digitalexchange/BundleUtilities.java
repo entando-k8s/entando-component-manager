@@ -212,6 +212,12 @@ public class BundleUtilities {
         return ingressPath;
     }
 
+    /**
+     * compose the plugin ingress path starting by its docker image.
+     *
+     * @param descriptor the PluginDescriptor from which take the docker image
+     * @return the composed ingress path
+     */
     public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
 
         DockerImage image = descriptor.getDockerImage();

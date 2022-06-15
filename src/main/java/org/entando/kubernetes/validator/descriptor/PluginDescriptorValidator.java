@@ -2,7 +2,6 @@ package org.entando.kubernetes.validator.descriptor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +16,9 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -29,7 +28,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDescriptor, PluginDescriptorVersion> {
+public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDescriptor> {
 
 
     public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
@@ -44,9 +43,6 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     public PluginDescriptorValidator(@Value("${full.deployment.name.maxlength:" + STANDARD_FULL_DEPLOYMENT_NAME_LENGTH
             + "}") int fullDeploymentNameMaxlength) {
 
-        super(PluginDescriptorVersion.class);
-        super.validationConfigMap = new EnumMap<>(PluginDescriptorVersion.class);
-
         if (fullDeploymentNameMaxlength < MIN_FULL_DEPLOYMENT_NAME_LENGTH
                 || fullDeploymentNameMaxlength > MAX_FULL_DEPLOYMENT_NAME_LENGTH) {
 
@@ -60,11 +56,6 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
     public int getFullDeploymentNameMaxlength() {
         return fullDeploymentNameMaxlength;
-    }
-
-    @Override
-    protected PluginDescriptorVersion readDescriptorVersion(PluginDescriptor descriptor) {
-        return PluginDescriptorVersion.fromVersion(descriptor.getDescriptorVersion());
     }
 
     /**************************************************************************************************************
@@ -98,7 +89,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         objectsThatMustBeNull.put("securityLevel", PluginDescriptor::getSecurityLevel);
         objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
 
-        configureValidationConfigMap(PluginDescriptorVersion.V1,
+        addValidationConfigMap(DescriptorVersion.V1,
                 Arrays.asList(
                         super::validateDescriptorFormatOrThrow,
                         this::validateSecurityLevelOrThrow,
@@ -107,22 +98,22 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     }
 
     private void setupValidatorConfigurationDescriptorV2() {
-        setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V2);
+        setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion.V2);
     }
 
     private void setupValidatorConfigurationDescriptorV3() {
-        setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V3);
+        setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion.V3);
     }
 
     private void setupValidatorConfigurationDescriptorV4() {
-        setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion.V4);
-        DescriptorValidatorConfigBean<PluginDescriptor, PluginDescriptorVersion> configBeanV4 = validationConfigMap.get(
-                PluginDescriptorVersion.V4);
+        setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion.V4);
+        DescriptorValidatorConfigBean<PluginDescriptor> configBeanV4 = validationConfigMap.get(
+                DescriptorVersion.V4);
         configBeanV4.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
         configBeanV4.getValidationFunctions().add(this::validateEnvVarsOrThrow);
     }
 
-    private void setupValidatorConfigurationDescriptorV2Onwards(PluginDescriptorVersion descriptorVersion) {
+    private void setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion descriptorVersion) {
         Map<String, Function<PluginDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
         objectsThatMustNOTBeNull.put("image", PluginDescriptor::getImage);
         objectsThatMustNOTBeNull.put("dbms", PluginDescriptor::getDbms);
@@ -137,7 +128,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         validationFunctionList.add(this::validateSecurityLevelOrThrow);
         validationFunctionList.add(this::validateFullDeploymentNameLength);
 
-        configureValidationConfigMap(descriptorVersion, validationFunctionList, objectsThatMustNOTBeNull,
+        addValidationConfigMap(descriptorVersion, validationFunctionList, objectsThatMustNOTBeNull,
                 objectsThatMustBeNull);
     }
 
@@ -156,9 +147,9 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     protected PluginDescriptor ensureDescriptorVersionIsSet(PluginDescriptor descriptor) {
         if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
             if (descriptor.isVersion1()) {
-                descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
+                descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
             } else {
-                descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+                descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
             }
         }
 

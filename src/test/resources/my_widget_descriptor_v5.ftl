@@ -7,6 +7,6 @@
 
 <link href="<@wp.resourceURL />/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css" rel="stylesheet">
 
-<#assign mfeSystemConfig>{"systemParams":{"api":{"int-api":{"url":"${systemParam_applicationBaseURL}/entando/todomvcv3"},"ext-api":{"url":"${systemParam_applicationBaseURL}my-path"}}}}</#assign>
+<#assign mfeSystemConfig>{'systemParams':{'api':{'int-api':{'url':'${systemParam_applicationBaseURL}/entando/todomvcv3'},'ext-api':{'url':'${systemParam_applicationBaseURL}my-path'}}}}</#assign>
 
 <my-widget config="${mfeSystemConfig}"/>

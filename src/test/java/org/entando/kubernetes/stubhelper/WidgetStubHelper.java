@@ -4,13 +4,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetDescriptorBuilder;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptorVersion;
 
 public class WidgetStubHelper {
 
@@ -69,7 +69,7 @@ public class WidgetStubHelper {
                 .apiClaims(stubApiClaims())
                 .descriptorMetadata(stubDescriptorMetadata())
                 .build();
-        widgetDescriptor.setDescriptorVersion(WidgetDescriptorVersion.V5.getVersion());
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         return widgetDescriptor;
     }
 

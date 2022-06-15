@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -47,9 +47,9 @@ class PluginDescriptorConvertionTest {
     @Test
     void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersionMinorThan3() {
         Stream.of((PluginDescriptor) PluginStubHelper.stubPluginDescriptorV1()
-                                .setDescriptorVersion(PluginDescriptorVersion.V1.getVersion()),
+                                .setDescriptorVersion(DescriptorVersion.V1.getVersion()),
                   (PluginDescriptor) PluginStubHelper.stubPluginDescriptorV2()
-                                .setDescriptorVersion(PluginDescriptorVersion.V2.getVersion()))
+                                .setDescriptorVersion(DescriptorVersion.V2.getVersion()))
                 .forEach(pluginDescriptor -> {
                     String ingress = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor);
                     assertThat(ingress).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_MINOR_THAN_3);
@@ -70,7 +70,7 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
-                .setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+                .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
         assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
@@ -84,7 +84,7 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME)
-                .setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
+                .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
         assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME);
