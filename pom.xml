@@ -51,6 +51,8 @@
         <liquibase.version>4.3.1</liquibase.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <!-- not working -->
+        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
     </properties>
 
     <dependencies>
@@ -264,6 +266,14 @@
                     <source>11</source>
                 </configuration>
             </plugin>
+            <!-- added for problems with java output redirect, property doesn't work
+            https://stackoverflow.com/questions/55272870/surefire-maven-plugin-corrupted-stdout-by-directly-writing-to-native-stream-in
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -287,7 +297,6 @@
                     </reportSet>
                 </reportSets>
             </plugin>
-
 
 
         </plugins>

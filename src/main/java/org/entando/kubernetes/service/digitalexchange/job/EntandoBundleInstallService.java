@@ -89,7 +89,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         }
 
         InstallPlan installPlan;
-        BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
+        BundleDownloader bundleDownloader = downloaderFactory.newDownloader(tag);
 
         try {
             BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
@@ -213,7 +213,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobResult parentJobResult = JobResult.builder().build();
             JobScheduler scheduler = new JobScheduler();
-            BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
+            BundleDownloader bundleDownloader = downloaderFactory.newDownloader(tag);
 
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {

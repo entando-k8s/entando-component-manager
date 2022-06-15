@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
@@ -18,20 +19,6 @@ public abstract class BundleDownloader {
 
     public BundleDownloader() {
 
-    }
-
-    public static BundleDownloader getForType(String type) {
-        if (type == null) {
-            return new GitBundleDownloader();
-        }
-
-        switch (type.toLowerCase()) {
-            case "npm":
-                return new NpmBundleDownloader();
-            case "git":
-            default:
-                return new GitBundleDownloader();
-        }
     }
 
     public Path saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
@@ -71,7 +58,9 @@ public abstract class BundleDownloader {
     }
 
     public Path createTargetDirectory() throws IOException {
+        log.debug("creating temp dir");
         targetPath = Files.createTempDirectory(null);
+        log.debug("created temp dir {}", targetPath.toString());
         return targetPath;
     }
 
@@ -87,11 +76,6 @@ public abstract class BundleDownloader {
                         "An error occurred while cleaning up environment post bundle install", e);
             }
         }
-    }
-
-    public enum Type {
-        NPM,
-        GIT
     }
 
     public static class BundleDownloaderException extends RuntimeException {

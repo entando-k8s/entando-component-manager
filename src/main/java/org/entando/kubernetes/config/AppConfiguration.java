@@ -11,6 +11,8 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType;
+import org.entando.kubernetes.model.bundle.downloader.DockerBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -31,6 +33,13 @@ public class AppConfiguration {
 
     @Value("${entando.bundle.type:git}")
     public String type;
+    @Value("${entando.bundle.download.timeout:300}")
+    public int bundleDownloadTimeoutSeconds;
+    @Value("${entando.bundle.download.retries:3}")
+    public int bundleDownloadRetries;
+    @Value("${entando.bundle.decompress.timeout:600}")
+    public int bundleDecompressTimeoutSeconds;
+
     @Getter
     public static boolean truncatePluginBaseNameIfLonger;   // NOSONAR
 
@@ -46,11 +55,14 @@ public class AppConfiguration {
     @Bean
     public BundleDownloaderFactory bundleDownloaderFactory() {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
-        if (type.equalsIgnoreCase("npm")) {
-            factory.setDefaultSupplier(NpmBundleDownloader::new);
-        } else {
-            factory.setDefaultSupplier(GitBundleDownloader::new);
-        }
+        factory.setDefaultSupplier(
+                () -> BundleDownloaderFactory.getForType(type, bundleDownloadTimeoutSeconds, bundleDownloadRetries,
+                        bundleDecompressTimeoutSeconds));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(bundleDownloadTimeoutSeconds, bundleDownloadRetries,
+                        bundleDecompressTimeoutSeconds));
+        factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
+        factory.registerSupplier(BundleDownloaderType.NPM, NpmBundleDownloader::new);
         return factory;
     }
 

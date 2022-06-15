@@ -103,7 +103,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
         for (String stringUrl : bundlesStatusQuery.getIds()) {
             try {
-                ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(stringUrl,
+                ValidationFunctions.composeCommonUrlOrThrow(stringUrl,
                         "The received url is empty", "The received url is not valid");
                 repoUrlList.add(stringUrl);
             } catch (Exception e) {
@@ -115,7 +115,7 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
 
         BundlesStatusResult bundlesStatusResult = bundleService.getBundlesStatus(repoUrlList);
 
-        if (! invalidBundlesStatusItemList.isEmpty()) {
+        if (!invalidBundlesStatusItemList.isEmpty()) {
             bundlesStatusResult.getBundlesStatuses().addAll(invalidBundlesStatusItemList);
         }
 

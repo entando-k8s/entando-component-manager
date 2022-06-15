@@ -20,12 +20,11 @@ public class ValidationFunctions {
     public static final List<String> VALID_PROTOCOLS = List.of(HTTP_PROTOCOL, HTTPS_PROTOCOL);
 
     /**
-     * if the url uses the git or ssh protocol, replace it with http
-     * validate the received url using url regex. checks that the url is not empty. if this fails, throw
-     * EntandoValidationException with nullError message checks that the url is valid. if this fails, throw
-     * EntandoValidationException with invalidError message
+     * if the url uses the git or ssh protocol, replace it with http validate the received url using url regex. checks
+     * that the url is not empty. if this fails, throw EntandoValidationException with nullError message checks that the
+     * url is valid. if this fails, throw EntandoValidationException with invalidError message
      *
-     * @param stringUrl    the string contianing the url to validate
+     * @param stringUrl    the string containing the url to validate
      * @param nullError    the message to add to the EntandoValidationException if the url is empty
      * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
      * @return the received url
@@ -36,12 +35,23 @@ public class ValidationFunctions {
         return stringUrl;
     }
 
+    public static String composeCommonUrlOrThrow(String stringUrl, String nullError, String invalidError) {
+        ImageValidator imageValidator = ImageValidator.parse(stringUrl);
+        if (imageValidator.isTransportValid()) {
+            // docker url with no transport e no tag
+            return imageValidator.composeCommonUrlOrThrow(invalidError);
+        } else {
+            // git url
+            return composeUrlForcingHttpProtocolOrThrow(stringUrl, nullError, invalidError);
+        }
+    }
+
     /**
      * validate the received url using url regex. checks that the url is not empty. if this fails, throw
      * EntandoValidationException with nullError message checks that the url is valid. if this fails, throw
      * EntandoValidationException with invalidError message
      *
-     * @param stringUrl    the string contianing the url to validate
+     * @param stringUrl    the string containing the url to validate
      * @param nullError    the message to add to the EntandoValidationException if the url is empty
      * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
      * @return the url as java.net.URL
@@ -65,7 +75,7 @@ public class ValidationFunctions {
                     invalidError + ": " + url + " - Protocol supported are : " + String.join(",", VALID_PROTOCOLS));
         }
 
-        if (! HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN.matcher(url.getHost()).matches()) {
+        if (!HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN.matcher(url.getHost()).matches()) {
             throw new EntandoValidationException(
                     invalidError + ": " + url + " - Hostname must start and finish with an alphanumeric character");
         }

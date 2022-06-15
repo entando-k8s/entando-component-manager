@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
@@ -36,10 +37,10 @@ import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
+import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 @UtilityClass
 @Slf4j
@@ -196,7 +197,7 @@ public class BundleUtilities {
 
         String ingressPath = null;
 
-        if (StringUtils.hasLength(descriptor.getIngressPath())) {
+        if (StringUtils.length(descriptor.getIngressPath()) > 0) {
             ingressPath = descriptor.getIngressPath();
             if (ingressPath.charAt(0) != '/') {
                 ingressPath = "/" + ingressPath;
@@ -310,7 +311,7 @@ public class BundleUtilities {
      *
      * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
      * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
-     *          no type is found
+     *     no type is found
      */
     public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
 
@@ -380,6 +381,7 @@ public class BundleUtilities {
 
     /**
      * compose the name of a bundle starting by its repository url.
+     *
      * @param bundleUrl the repository url of the bundle
      * @return the composed name of the bundle
      */
@@ -423,19 +425,26 @@ public class BundleUtilities {
 
     /**
      * return the received url without the protocol.
+     *
      * @param url the url to manipulate to remove the protocol
      * @return the received url without the protocol
      */
     public static String removeProtocolFromUrl(String url) {
-        URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
-                "The repository URL of the bundle is null",
-                "The repository URL of the bundle is invalid");
-        final int index = bundleUrl.toString().indexOf(bundleUrl.getHost());
-        return bundleUrl.toString().substring(index);
+        ImageValidator imageValidator = ImageValidator.parse(url);
+        if (imageValidator.isTransportValid()) {
+            return imageValidator.composeCommonUrlOrThrow("The image fully qualified URL of the bundle is invalid");
+        } else {
+            URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
+                    "The repository URL of the bundle is null",
+                    "The repository URL of the bundle is invalid");
+            final int index = bundleUrl.toString().indexOf(bundleUrl.getHost());
+            return bundleUrl.toString().substring(index);
+        }
     }
 
     /**
      * sign the bundle id prepending the first 8 chars of the bundle url.
+     *
      * @param bundleUrl the url of the repository of the bundle
      * @return the signed bundle id
      */

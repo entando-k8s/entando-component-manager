@@ -55,7 +55,6 @@ public class DigitalExchangeTestUtils {
     }
 
     public static RequestChecker checkRequest(final LoggedRequest loggedRequest) {
-        System.out.println(new String(loggedRequest.getBody()));
         final DocumentContext context = JsonPath.parse(new String(loggedRequest.getBody()));
         return new RequestChecker(context);
     }
