@@ -216,7 +216,6 @@ public class InstallFlowTest {
     }
 
 
-
     @Test
     void shouldCallCoreToInstallComponentsWithInstallPlanRequest() throws JsonProcessingException {
         simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequest();
@@ -243,7 +242,8 @@ public class InstallFlowTest {
         // check that db install_plan column is correctly populated
         List<EntandoBundleJobEntity> bundleJobEntityList = jobRepository.findAll();
         assertThat(bundleJobEntityList).hasSize(1);
-        String stringInstallPlan = new ObjectMapper().writeValueAsString(TestInstallUtils.mockInstallWithPlansRequestWithActions());
+        String stringInstallPlan = new ObjectMapper().writeValueAsString(
+                TestInstallUtils.mockInstallWithPlansRequestWithActions());
         EntandoBundleJobEntity entandoBundleJobEntity = bundleJobEntityList.get(0);
         assertThat(entandoBundleJobEntity.getInstallPlan()).isEqualTo(stringInstallPlan);
 
@@ -263,7 +263,6 @@ public class InstallFlowTest {
         simulateSuccessfullyCompletedInstallWithInstallPlan();
         installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents();
     }
-
 
 
     @Test
@@ -425,7 +424,7 @@ public class InstallFlowTest {
 
         List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
-        assertThat(installedComponents.get(0).getId()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME);
+        assertThat(installedComponents.get(0).getBundleCode()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME);
         assertThat(installedComponents.get(0).getBundleType()).isEqualTo("STANDARD_BUNDLE");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
     }
@@ -692,7 +691,8 @@ public class InstallFlowTest {
         List<EntandoBundleComponentJobEntity> pluginJobs = componentJobRepository.findAllByParentJob(job.get())
                 .stream()
                 .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
+        ;
 
         assertThat(pluginJobs).hasSize(6);
 

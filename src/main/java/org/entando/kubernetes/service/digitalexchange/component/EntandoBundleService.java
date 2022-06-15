@@ -54,4 +54,6 @@ public interface EntandoBundleService {
     BundlesStatusItem getSingleBundleStatus(String bundleName);
 
     Optional<EntandoBundle> getBundleByRepoUrl(String repoUrl);
+
+    Optional<EntandoBundle> getInstalledBundleByEncodedUrl(String encodedRepoUrl);
 }

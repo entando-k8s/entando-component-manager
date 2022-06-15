@@ -76,7 +76,7 @@ public class TestEntitiesGenerator {
 
     public static EntandoBundleEntity getTestComponent() {
         EntandoBundleEntity component = new EntandoBundleEntity();
-        component.setId("my-bundle");
+        component.setBundleCode("my-bundle");
         component.setName("My Bundle Title");
         component.setRepoUrl(REPO_URL);
         component.setInstalled(true);
@@ -86,7 +86,7 @@ public class TestEntitiesGenerator {
 
     public static EntandoBundleEntity getTestComponent(String code, String title) {
         EntandoBundleEntity component = getTestComponent();
-        component.setId(code);
+        component.setBundleCode(code);
         component.setName(title);
         return component;
     }

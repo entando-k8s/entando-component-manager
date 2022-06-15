@@ -45,7 +45,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJobEntity uninstall(String componentId) {
-        EntandoBundleEntity installedBundle = installedComponentRepository.findById(componentId)
+        EntandoBundleEntity installedBundle = installedComponentRepository.findByBundleCode(componentId)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + componentId + " is not installed"));
 
         verifyBundleUninstallIsPossibleOrThrow(installedBundle);
@@ -64,7 +64,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     }
 
     private void verifyNoConcurrentUninstallOrThrow(EntandoBundleEntity bundle) {
-        Optional<EntandoBundleJobEntity> lastJob = jobRepo.findFirstByComponentIdOrderByStartedAtDesc(bundle.getId());
+        Optional<EntandoBundleJobEntity> lastJob = jobRepo.findFirstByComponentIdOrderByStartedAtDesc(
+                bundle.getBundleCode());
         EnumSet<JobStatus> concurrentUninstallJobStatus = EnumSet
                 .of(JobStatus.UNINSTALL_IN_PROGRESS, JobStatus.UNINSTALL_CREATED);
         if (lastJob.isPresent() && lastJob.get().getStatus().isAny(concurrentUninstallJobStatus)) {
@@ -127,7 +128,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     optCompJob = scheduler.extractFromQueue();
                 }
 
-                installedComponentRepository.deleteById(parentJob.getComponentId());
+                installedComponentRepository.deleteByBundleCode(parentJob.getComponentId());
 
                 parentJobResult.clearException();
                 parentJobResult.setProgress(1.0);

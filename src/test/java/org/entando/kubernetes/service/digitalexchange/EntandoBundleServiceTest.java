@@ -10,6 +10,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -232,7 +234,7 @@ public class EntandoBundleServiceTest {
         k8SServiceClient.addInMemoryBundle(bundleA);
         k8SServiceClient.addInMemoryBundle(bundleB);
 
-        when(installedComponentRepository.existsById(eq(code))).thenReturn(true);
+        when(installedComponentRepository.existsByBundleCode(eq(code))).thenReturn(true);
         Mockito.when(jobRepository
                         .findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
                 .thenReturn(Optional.of(installedJob));
@@ -494,7 +496,8 @@ public class EntandoBundleServiceTest {
                 .thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
 
         // when I ask for their status
-        final BundlesStatusItem bundlesStatusItem = service.getSingleBundleStatus(BundleStatusItemStubHelper.NAME_INSTALLED);
+        final BundlesStatusItem bundlesStatusItem = service.getSingleBundleStatus(
+                BundleStatusItemStubHelper.NAME_INSTALLED);
 
         // then I expect to receive the correct list of bundle status item
         BundlesStatusItem expected = BundleStatusItemStubHelper.stubBundleStatusItemInstalled();
@@ -540,4 +543,37 @@ public class EntandoBundleServiceTest {
 
         assertThat(entandoBundle).isEmpty();
     }
+
+    @Test
+    void getInstalledBundleByEncodedUrl_withValidUrlAndNoBundles_shouldReturnEmptyBundle() {
+        final String validEncodedUrl = "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK";
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.empty());
+        Optional<EntandoBundle> entandoBundle = service.getInstalledBundleByEncodedUrl(validEncodedUrl);
+
+        assertThat(entandoBundle).isEmpty();
+    }
+
+    @Test
+    void getInstalledBundleByEncodedUrl_withValidUrl_shouldReturnInstalledBundle() {
+        final String validEncodedUrl = "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK";
+        final EntandoBundleEntity bundleEntity = getTestComponent();
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.of(bundleEntity));
+        Optional<EntandoBundle> entandoBundle = service.getInstalledBundleByEncodedUrl(validEncodedUrl);
+
+        assertThat(entandoBundle.get().getCode()).isEqualTo(bundleEntity.getBundleCode());
+    }
+
+    @Test
+    void getInstalledBundleByEncodedUrl_withInvalidUrl_shouldReturnError() {
+        assertThrows(IllegalArgumentException.class, () -> service.getInstalledBundleByEncodedUrl(null));
+
+        final String invalidEncodedUrl = "q56bfdéç°";
+        assertThrows(IllegalArgumentException.class, () -> service.getInstalledBundleByEncodedUrl(invalidEncodedUrl));
+
+        final String validEncodedInvalidUrlUrl = Base64.getEncoder()
+                .encodeToString("mqtt://-test".getBytes(StandardCharsets.UTF_8));
+        assertThrows(EntandoValidationException.class,
+                () -> service.getInstalledBundleByEncodedUrl(validEncodedInvalidUrlUrl));
+    }
+
 }

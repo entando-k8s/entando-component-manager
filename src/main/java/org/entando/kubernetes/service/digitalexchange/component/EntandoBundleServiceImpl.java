@@ -157,7 +157,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public Optional<EntandoBundle> getInstalledBundle(String id) {
-        return installedComponentRepo.findById(id)
+        return installedComponentRepo.findByBundleCode(id)
                 .map(this::convertToBundleFromEntity);
     }
 
@@ -187,7 +187,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         //TODO could be a problem if available bundles list is too big
         Set<String> keySet = availableBundles.stream().map(EntandoBundle::getCode).collect(Collectors.toSet());
         return installedBundles.stream()
-                .filter(b -> !keySet.contains(b.getId()))
+                .filter(b -> !keySet.contains(b.getBundleCode()))
                 .collect(Collectors.toList());
     }
 
@@ -207,19 +207,20 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public EntandoBundle convertToBundleFromEntity(EntandoBundleEntity entity) {
         EntandoBundleJob installedJob = null;
-        EntandoBundleJob lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(entity.getId())
+        EntandoBundleJob lastJob = jobRepository.findFirstByComponentIdOrderByStartedAtDesc(entity.getBundleCode())
                 .map(EntandoBundleJob::fromEntity)
                 .orElse(null);
 
-        if (installedComponentRepo.existsById(entity.getId())) {
+        if (installedComponentRepo.existsByBundleCode(entity.getBundleCode())) {
             installedJob = jobRepository
-                    .findFirstByComponentIdAndStatusOrderByStartedAtDesc(entity.getId(), JobStatus.INSTALL_COMPLETED)
+                    .findFirstByComponentIdAndStatusOrderByStartedAtDesc(entity.getBundleCode(),
+                            JobStatus.INSTALL_COMPLETED)
                     .map(EntandoBundleJob::fromEntity)
                     .orElse(null);
         }
 
         return EntandoBundle.builder()
-                .code(entity.getId())
+                .code(entity.getBundleCode())
                 .title(entity.getName())
                 .description(entity.getDescription())
                 .thumbnail(entity.getImage())
@@ -269,9 +270,9 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public EntandoBundleEntity convertToEntityFromBundle(EntandoBundle bundle) {
         return EntandoBundleEntity.builder()
-                .id(bundle.getCode())
+                .bundleCode(bundle.getCode())
                 //.name(bundle.getTitle())
-                .name(bundle.getCode())
+                .name(bundle.getCode()) // FIXME maybe as Walter suggested must be title
                 .description(bundle.getDescription())
                 .image(bundle.getThumbnail())
                 //.organization(entity.getOrganization())
@@ -306,7 +307,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .map(EntandoBundleJob::fromEntity)
                 .orElse(null);
 
-        if (installedComponentRepo.existsById(code)) {
+        if (installedComponentRepo.existsByBundleCode(code)) {
             installedJob = jobRepository
                     .findFirstByComponentIdAndStatusOrderByStartedAtDesc(code, JobStatus.INSTALL_COMPLETED)
                     .map(EntandoBundleJob::fromEntity)
@@ -424,20 +425,42 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     @Override
     public Optional<EntandoBundle> getBundleByRepoUrl(String encodedRepoUrl) {
 
-        Assert.notNull(encodedRepoUrl, "repoUrl cannot be null");
-
-        // repoUrl should be decoded from BASE64
-        final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedRepoUrl));
-
-        final String decodedRepoUrl = ValidationFunctions.composeCommonUrlOrThrow(decodedRepoUrlString,
-                "Repo url is empty", "Repo url is not valid");
+        final String decodedRepoUrlString = decodeUrl(encodedRepoUrl);
 
         // Check in installed bundles
-        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);
+        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrlString);
         return installedBundle.map(this::convertToBundleFromEntity).or(() -> {
             // Check in available bundles
             List<EntandoBundle> availableBundles = listBundlesFromEcr();
             return availableBundles.stream().filter(eb -> eb.getRepoUrl().equals(decodedRepoUrlString)).findFirst();
         });
+    }
+
+    /**
+     * .
+     * <p>
+     * Returns an {@link EntandoBundle} by looking up inside installed components.
+     * </p>
+     *
+     * @param encodedUrl BASE64 encoded URL
+     * @return
+     */
+    @Override
+    public Optional<EntandoBundle> getInstalledBundleByEncodedUrl(String encodedUrl) {
+        final String decodedRepoUrl = decodeUrl(encodedUrl);
+
+        // Check in installed bundles
+        Optional<EntandoBundleEntity> installedBundle = installedComponentRepo.findFirstByRepoUrl(decodedRepoUrl);
+        return installedBundle.map(this::convertToBundleFromEntity).or(Optional::empty);
+    }
+
+    private String decodeUrl(String encodedUrl) {
+        Assert.notNull(encodedUrl, "repoUrl cannot be null");
+
+        // repoUrl should be decoded from BASE64
+        final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedUrl));
+
+        return ValidationFunctions.composeCommonUrlOrThrow(decodedRepoUrlString,
+                "Repo url is empty", "Repo url is not valid");
     }
 }

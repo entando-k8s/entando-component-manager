@@ -208,7 +208,7 @@ public class InstallServiceTest {
         EntandoDeBundle bundle = getTestBundle();
 
         EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
-                .id(bundle.getMetadata().getName())
+                .bundleCode(bundle.getMetadata().getName())
                 .name(bundle.getSpec().getDetails().getName())
                 .build();
 
@@ -233,7 +233,7 @@ public class InstallServiceTest {
         EntandoDeBundle bundle = getTestBundle();
 
         EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
-                .id(bundle.getMetadata().getName())
+                .bundleCode(bundle.getMetadata().getName())
                 .name(bundle.getSpec().getDetails().getName())
                 .build();
 
@@ -255,7 +255,7 @@ public class InstallServiceTest {
     @Test
     public void shouldIncrementProgressDuringUninstall() {
         EntandoBundleEntity bundleEntity = EntandoBundleEntity.builder()
-                .id(BUNDLE_ID)
+                .bundleCode(BUNDLE_ID)
                 .name(BUNDLE_TITLE)
                 .build();
         EntandoBundleJobEntity jobEntity = EntandoBundleJobEntity.builder()
@@ -275,7 +275,7 @@ public class InstallServiceTest {
 
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
 
-        when(installRepo.findById(any())).thenReturn(Optional.of(bundleEntity));
+        when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getUsage(ComponentType.CONTENT_TYPE, "A"))
                 .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));

@@ -18,12 +18,14 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -34,6 +36,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
 import org.entando.kubernetes.model.web.SystemConstants;
+import org.hibernate.annotations.Type;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -47,15 +50,19 @@ import org.springframework.validation.annotation.Validated;
 public class EntandoBundleEntity {
 
     @Id
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "id", unique = true, nullable = false)
-    private String id;
+    @Column
+    @Type(type = "uuid-char")
+    private UUID id;
 
     @NotNull
     @Size(min = 1, max = 255)
     @Column(name = "name", nullable = false)
     private String name;
+
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "bundle_code", nullable = false)
+    private String bundleCode;
 
     @NotNull
     @Column(name = "bundleType", nullable = false)
@@ -100,4 +107,10 @@ public class EntandoBundleEntity {
     @Size(max = 511)
     @Column(name = "repo_url")
     private String repoUrl;
+
+    @PrePersist
+    public void generateId() {
+        this.id = UUID.randomUUID();
+    }
+
 }
