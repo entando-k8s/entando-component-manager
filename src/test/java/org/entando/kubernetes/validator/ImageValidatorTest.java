@@ -1,13 +1,8 @@
 package org.entando.kubernetes.validator;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
-import java.net.URL;
-import java.util.List;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.junit.Assert;
 import org.junit.jupiter.api.Tag;
@@ -57,7 +52,7 @@ class ImageValidatorTest {
                 "oci://docker.io/library/nginx"
         ).forEach(t -> {
             try {
-                ImageValidator.parse(t).isValidOrThrow(invalidMex);
+                ImageValidator.parse(t).isValidOrThrow(invalidMex); //NOSONAR
                 Assert.fail("validation must throw error for image url: " + t);
             } catch (EntandoValidationException ex) {
                 assertThat(ex.getMessage()).startsWith(invalidMex);

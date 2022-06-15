@@ -15,22 +15,6 @@ public class ImageValidator {
     public static final String DOCKER_OFFICIAL_LIBRARY = "library";
     public static final String TAG_LATEST = "latest";
 
-    // https://github.com/containers/skopeo/blob/02ae5c2af5d198fa178917899370f42d11e6b206/vendor/github.com/containers/image/v5/docker/reference/regexp.go
-    // Cannot use DOMAIN_REGEXP and DOMAIN_REGEXP_PATTERN because in java this repetition can lead to a stack overflow for large inputs.
-    // private static final String DOMAIN_REGEXP = "(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])";
-    // private static final Pattern DOMAIN_REGEXP_PATTERN = Pattern.compile(
-    //        "^" + DOMAIN_REGEXP + "(?:\\." + DOMAIN_REGEXP + ")*(?::[0-9]+)?$");
-    // Solution: use URI and just an admitted char pattern and after that we will relay on skopeo to have a better validation
-
-    // Cannot use ORGANIZATION_REGEXP and ORGANIZATION_REGEXP_PATTERN because in java this repetition can lead to a stack overflow for large inputs.
-    // private static final String ORGANIZATION_REGEXP = "[a-z0-9]+(?:(?:(?:[._]|__|[-]*)[a-z0-9]+)+)?";
-    // private static final Pattern ORGANIZATION_REGEXP_PATTERN = Pattern.compile(ORGANIZATION_REGEXP);
-    // Solution: use just an admitted char pattern and after that we will relay on skopeo to have a better validation
-
-    // Cannot use ORGANIZATION_REGEXP and REPOSITORY_REGEXP_PATTERN because in java this repetition can lead to a stack overflow for large inputs.
-    //    private static final Pattern REPOSITORY_REGEXP_PATTERN = Pattern.compile(
-    //            ORGANIZATION_REGEXP + "(?:(?:/" + ORGANIZATION_REGEXP + ")+)?");
-    // Solution: use just an admitted char pattern and after that we will relay on skopeo to have a better validation
     private static final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
     private static final Pattern DIGEST_REGEXP = Pattern.compile("^sha256:[a-z0-9]{32,}$");
     @Getter(AccessLevel.NONE)

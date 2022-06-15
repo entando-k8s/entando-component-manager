@@ -31,7 +31,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     private static final String LOG_CMD_TO_EXECUTE = "Command to execute:'{}' with param to execute:'{}' and execution timeout:'{}'";
     private static final String IMAGE_LAYER_DIR = "image_dir";
     private static final String SKOPEO_CMD = "skopeo";
-    private static final String TAR_CMD_PATH = "/usr/bin/tar";
+    private static final String TAR_CMD_PATH = "/usr/bin/tar"; //NOSONAR
 
     private final int downloadTimeoutSeconds;
     private final int downloadRetries;
