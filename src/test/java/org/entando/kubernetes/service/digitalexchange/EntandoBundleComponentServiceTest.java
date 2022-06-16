@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 @Tag("unit")
-public class EntandoBundleComponentServiceTest {
+class EntandoBundleComponentServiceTest {
 
     private EntandoBundleComponentService service;
     private EntandoBundleService bundleService;

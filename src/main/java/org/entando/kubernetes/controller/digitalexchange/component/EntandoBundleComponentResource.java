@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJob;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -37,13 +36,11 @@ public interface EntandoBundleComponentResource {
     static final String ACCEPTED_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE + ";v=" + VERSION;
 
     @Operation(description = "Returns available installed Digital Exchange components for a bundle specified by bundleCode or by url encoded")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Not valid input in URL or Bundle not installed"),
-            @ApiResponse(responseCode = "406", description = "Not valid media type "),
-            @ApiResponse(responseCode = "422", description = "bundleCode/url not compliant"),
-            @ApiResponse(responseCode = "500", description = "Generic server error")
-    })
+    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "404", description = "Not valid input in URL or Bundle not installed")
+    @ApiResponse(responseCode = "406", description = "Not valid media type ")
+    @ApiResponse(responseCode = "422", description = "bundleCode/url not compliant")
+    @ApiResponse(responseCode = "500", description = "Generic server error")
     @GetMapping(value = "/{bundleCode}/components", produces = ACCEPTED_MEDIA_TYPE)
     ResponseEntity<PagedRestResponse<EntandoBundleComponentJob>> getBundleInstalledComponents(
             @PathVariable("bundleCode") @Parameter(description = "Formatted as: bundleCode | `" + REPO_URL_PATH_PARAM

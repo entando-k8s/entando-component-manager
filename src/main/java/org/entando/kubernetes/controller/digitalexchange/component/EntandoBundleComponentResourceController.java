@@ -56,7 +56,8 @@ public class EntandoBundleComponentResourceController implements EntandoBundleCo
                                 bundleComponentService.getInstalledComponentsByBundleCode(requestList,
                                         bundleCode.toString()));
                     }
-                }).get();
+                }).orElseThrow(() -> Problem.valueOf(Status.NOT_FOUND,
+                        "Can't manage a request with bundleCode: " + bundleCode));
         // FIXME empty list is error? not for only assets ...
         //        if (pagedComponents.getBody().isEmpty()) {
         //            throw Problem.valueOf(Status.UNPROCESSABLE_ENTITY, "Bundle " + bundleCode + " is not installed correctly");

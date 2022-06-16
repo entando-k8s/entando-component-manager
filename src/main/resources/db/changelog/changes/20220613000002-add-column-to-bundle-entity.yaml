@@ -22,14 +22,16 @@ databaseChangeLog:
                   name: uuid
                   type: VARCHAR(36)
         - customChange:
-            class: org.entando.kubernetes.liquibase.GenerateUUID
+            class: org.entando.kubernetes.liquibase.GenerateUUIDForNullColumn
             params:
               - param:
                   name: columnName
                   value: uuid
+        # add not null constraints is needed by H2
         - addNotNullConstraint:
             tableName: installed_entando_bundles
             columnName: uuid
+            columnDataType: VARCHAR(36)
             constraintName: CON_INS_ENT_BUN_E7_NOT_NULL
         - dropPrimaryKey:
             tableName: installed_entando_bundles
@@ -38,10 +40,12 @@ databaseChangeLog:
             tableName: installed_entando_bundles
             newColumnName: bundle_code
             oldColumnName: id
+            columnDataType: VARCHAR(36)
         - renameColumn:
             tableName: installed_entando_bundles
             newColumnName: id
             oldColumnName: uuid
+            columnDataType: VARCHAR(36)
         - addPrimaryKey:
             tableName: installed_entando_bundles
             columnNames: id

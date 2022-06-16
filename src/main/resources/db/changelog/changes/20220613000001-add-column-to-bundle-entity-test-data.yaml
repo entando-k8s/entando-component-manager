@@ -1,0 +1,64 @@
+databaseChangeLog:
+  # installed_entando_bundles
+  - changeSet:
+      id: 20220613000001_installed_entando_bundles-test-data
+      context: test-db
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: installed_entando_bundles
+      changes:
+        - insert:
+            tableName: entando_bundle_jobs
+            columns:
+              - column:
+                  name: id
+                  value: "e55db0d0-6f73-46d6-a4f4-cb6619475a1f"
+              - column:
+                  name: component_id
+                  value: "sd-banking"
+              - column:
+                  name: component_name
+                  value: "sd-banking"
+              - column:
+                  name: component_version
+                  value: "v0.0.2"
+              - column:
+                  name: status
+                  value: "INSTALL_COMPLETED"
+              - column:
+                  name: progress
+                  value: 1
+        - insert:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  name: id
+                  value: "sd-banking"
+              - column:
+                  name: description
+                  value: "Standard Demo Banking"
+              - column:
+                  name: name
+                  value: "sd-banking"
+              - column:
+                  name: installed
+                  valueBoolean: true
+              - column:
+                  name: job_id
+                  value: "e55db0d0-6f73-46d6-a4f4-cb6619475a1f"
+              - column:
+                  name: rating
+                  value: 0
+              - column:
+                  name: type
+                  value: "widget, plugin, bundle"
+              - column:
+                  name: version
+                  value: "v0.0.2"
+              - column:
+                  name: repo_url
+                  value: "docker://docker.io/gigiozzz/standard-demo-banking-bundle:v0.0.2"
+
+
