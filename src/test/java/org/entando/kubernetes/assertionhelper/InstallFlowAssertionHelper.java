@@ -229,16 +229,16 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
     }
 
@@ -251,15 +251,15 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("css-res.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-1.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
                 && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
 
@@ -394,8 +394,8 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/my_widget_descriptor_v5.ftl").trim());
         assertThat(allPassedWidgets.get(0).getCustomElement()).isEqualTo("my-widget");
 
-        ApiClaim apiClaim1 = new ApiClaim("ext-api", "external", "ms1", "anotherbundle");
-        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "bb1e1949-custombasenamev3c", null);
+        ApiClaim apiClaim1 = new ApiClaim("ext-api", "external", "ms1", "abcdefgh");
+        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "custombasenamev3c", null);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(0)).isEqualToComparingFieldByField(apiClaim1);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(1)).isEqualToComparingFieldByField(apiClaim2);
     }
@@ -416,7 +416,7 @@ public class InstallFlowAssertionHelper {
                 TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V3C,
                 TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V4,
                 // Directories
-                "/bundles/something-ece8f6f0",
+                "bundles/something-ece8f6f0",
                 // Categories
                 "my-category",
                 "another_category",
@@ -430,11 +430,11 @@ public class InstallFlowAssertionHelper {
                 "HELLO",
                 "WORLD",
                 // Files
-                "/bundles/something-ece8f6f0/resources/css/custom.css",
-                "/bundles/something-ece8f6f0/resources/css/style.css",
-                "/bundles/something-ece8f6f0/resources/js/configUiScript.js",
-                "/bundles/something-ece8f6f0/resources/js/script.js",
-                "/bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                "bundles/something-ece8f6f0/resources/css/custom.css",
+                "bundles/something-ece8f6f0/resources/css/style.css",
+                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                "bundles/something-ece8f6f0/resources/js/script.js",
+                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
                 //Widgets
                 "todomvc_widget-ece8f6f0",
                 "another_todomvc_widget-ece8f6f0",
@@ -668,13 +668,13 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
     }
 
@@ -688,11 +688,11 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-1.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
                 && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
 

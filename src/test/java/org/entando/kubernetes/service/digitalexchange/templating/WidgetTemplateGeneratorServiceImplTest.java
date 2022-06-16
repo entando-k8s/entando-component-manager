@@ -62,11 +62,11 @@ class WidgetTemplateGeneratorServiceImplTest {
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
-        String expected = ("<script src=\"<@wp.resourceURL />/bundles/my-component-[REP]/widgets/my-code-"
+        String expected = ("<script src=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
                 + "[REP]/static/js/main.js\"></script>\n"
-                + "<script src=\"<@wp.resourceURL />/bundles/my-component-[REP]/widgets/my-code-"
+                + "<script src=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
                 + "[REP]/static/js/runtime.js\"></script>\n\n"
-                + "<link href=\"<@wp.resourceURL />/bundles/my-component-[REP]/widgets/my-code-"
+                + "<link href=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
                 + "[REP]/static/css/style.css\" rel=\"stylesheet\">")
                 .replace("[REP]", BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
 
@@ -77,7 +77,7 @@ class WidgetTemplateGeneratorServiceImplTest {
     @Test
     void shouldThrowExceptionIfCantProvideApiPathWhileCreatingTheAssignTags() {
         WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        descriptor.getApiClaims().get(1).setPluginCode("non-existing");
+        descriptor.getApiClaims().get(1).setPluginName("non-existing");
         assertThrows(EntandoComponentManagerException.class, () -> service.createAssignTag(descriptor));
     }
 
@@ -89,7 +89,7 @@ class WidgetTemplateGeneratorServiceImplTest {
 
     @Test
     void shouldCreateTheExpectedMfeSystemConfigAssignTag() throws JsonProcessingException {
-        when(repository.findByBundleCodeAndPluginCode(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
+        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
                 WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity));
 
         final String assignTag = service.createAssignTag(descriptor);
@@ -118,7 +118,7 @@ class WidgetTemplateGeneratorServiceImplTest {
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
-        when(repository.findByBundleCodeAndPluginCode(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
+        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
                 WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity));
 
         File file = new File("src/test/resources/widget.ftl");

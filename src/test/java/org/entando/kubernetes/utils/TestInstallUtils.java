@@ -360,11 +360,11 @@ public class TestInstallUtils {
                 .fragments(Map.of("title_fragment", Status.NEW, "another_fragment", Status.DIFF))
                 .pageTemplates(Map.of("todomvc_page_model", Status.NEW, "todomvc_another_page_model", Status.DIFF))
                 .pages(Map.of("my-page", Status.NEW, "another-page", Status.DIFF))
-                .resources(Map.of("/bundles/something-ece8f6f0/resources/css/custom.css", Status.DIFF,
-                        "/bundles/something-ece8f6f0/resources/css/style.css", Status.NEW,
-                        "/bundles/something-ece8f6f0/resources/js/configUiScript.js", Status.NEW,
-                        "/bundles/something-ece8f6f0/resources/js/script.js", Status.NEW,
-                        "/bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js", Status.NEW))
+                .resources(Map.of("bundles/something-ece8f6f0/resources/css/custom.css", Status.DIFF,
+                        "bundles/something-ece8f6f0/resources/css/style.css", Status.NEW,
+                        "bundles/something-ece8f6f0/resources/js/configUiScript.js", Status.NEW,
+                        "bundles/something-ece8f6f0/resources/js/script.js", Status.NEW,
+                        "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js", Status.NEW))
                 .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
                         "widget_with_config_ui-ece8f6f0", Status.NEW))
                 .build();
@@ -372,9 +372,9 @@ public class TestInstallUtils {
 
     public static AnalysisReport getCoreAnalysisReportV5() {
         return AnalysisReport.builder()
-                .resources(Map.of("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css", Status.DIFF,
-                        "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js", Status.NEW,
-                        "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js", Status.NEW))
+                .resources(Map.of("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css", Status.DIFF,
+                        "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js", Status.NEW,
+                        "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js", Status.NEW))
                 .widgets(Map.of("my_widget_descriptor_v5", Status.DIFF))
                 .build();
     }
@@ -397,15 +397,15 @@ public class TestInstallUtils {
                 .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .resources(
-                        Map.of("/bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                                "/bundles/something-ece8f6f0/resources/css/style.css",
+                                "bundles/something-ece8f6f0/resources/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "/bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "/bundles/something-ece8f6f0/resources/js/script.js",
+                                "bundles/something-ece8f6f0/resources/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "/bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js",
+                                "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .widgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
@@ -433,11 +433,11 @@ public class TestInstallUtils {
         return InstallPlan.builder()
                 .hasConflicts(true)
                 .resources(
-                        Map.of("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css",
+                        Map.of("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js",
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js",
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .widgets(Map.of("my_widget_descriptor_v5", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE_V3C, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
@@ -465,15 +465,15 @@ public class TestInstallUtils {
                 .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .resources(
-                        Map.of("/bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "/bundles/something-ece8f6f0/resources/css/style.css",
+                                "bundles/something-ece8f6f0/resources/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/bundles/something-ece8f6f0/resources/js/script.js",
+                                "bundles/something-ece8f6f0/resources/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                                "/bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
                 .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
@@ -512,15 +512,15 @@ public class TestInstallUtils {
                 .setPages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setResources(
-                        Map.of("/bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "/bundles/something-ece8f6f0/resources/css/style.css",
+                                "bundles/something-ece8f6f0/resources/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/bundles/something-ece8f6f0/resources/js/script.js",
+                                "bundles/something-ece8f6f0/resources/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                                "/bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
                 .setWidgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
@@ -544,11 +544,11 @@ public class TestInstallUtils {
                 .setVersion("0.0.1")
                 .setHasConflicts(true)
                 .setResources(
-                        Map.of("/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css",
+                        Map.of("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/js-res-1.js",
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/js-res-1.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js/js-res-2.js",
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js/js-res-2.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setWidgets(Map.of("my_widget_descriptor_v5-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setPlugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE_V3C, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),

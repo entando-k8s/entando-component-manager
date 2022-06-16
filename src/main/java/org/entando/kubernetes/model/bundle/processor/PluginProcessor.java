@@ -27,6 +27,7 @@ import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -108,7 +109,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new PluginDescriptor()
-                .setDescriptorMetadata(new DescriptorMetadata(null, null, null, component.getComponentId()));
+                .setDescriptorMetadata(new DescriptorMetadata(null, null, null, null, component.getComponentId()));
     }
 
     @Override
@@ -140,13 +141,16 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
         final String bundleId = BundleUtilities.getBundleId(url);
-        final String pluginCode = this.generatePluginCode(pluginDescriptor);
+        final String signedPluginDeplName = this.signPluginDeploymentName(pluginDescriptor);
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
                 bundleReader.getBundleCode() + "-" + bundleId,
-                pluginCode,
-                generateFullDeploymentName(bundleId, pluginCode));
+                signedPluginDeplName.split("-")[0],
+                ObjectUtils.isEmpty(pluginDescriptor.getName())
+                        ? signedPluginDeplName.split("-", 2)[1]
+                        : pluginDescriptor.getName(),
+                generateFullDeploymentName(bundleId, signedPluginDeplName));
     }
 
 
@@ -159,12 +163,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     }
 
     /**
-     * generate the plugin id starting by the deployment base name or by the docker image.
+     * generate a signed plugin deployment name starting by the deployment base name or by the docker image.
      *
      * @param descriptor the PluginDescriptor from which read data
-     * @return the generated plugin id
+     * @return the generated signed plugin deployment name
      */
-    public String generatePluginCode(PluginDescriptor descriptor) {
+    public String signPluginDeploymentName(PluginDescriptor descriptor) {
 
         String deploymentBaseName;
         String inputValueForSha;
@@ -187,15 +191,15 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * generate the full deployment name (deployment-name + bundleId) the deployment name is generated starting by the.
      * deployment base name or by the docker image apply a truncation if required
      *
-     * @param bundleId   the bundle identifier to concatenate to the deployment name
-     * @param pluginId   the plugin identifier to concatenate to the deployment name
+     * @param bundleId         the bundle identifier to concatenate to the deployment name
+     * @param signedPluginName the plugin identifier (hash-name) to concatenate to the deployment name
      * @return the generated full deployment name
      */
-    public String generateFullDeploymentName(String bundleId, String pluginId) {
+    public String generateFullDeploymentName(String bundleId, String signedPluginName) {
 
         String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
                 BundleUtilities.makeKubernetesCompatible(bundleId),
-                pluginId);
+                signedPluginName);
 
         if (fullDeploymentName.length() > descriptorValidator.getFullDeploymentNameMaxlength()) {
             throw new EntandoComponentManagerException("The resulting plugin full deployment name \""

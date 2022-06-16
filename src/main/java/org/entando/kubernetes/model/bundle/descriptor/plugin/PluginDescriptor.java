@@ -25,8 +25,9 @@ public class PluginDescriptor extends VersionedDescriptor {
     public static class DescriptorMetadata {
         private final String bundleId;
         private final String bundleCode;
+        private final String pluginId;
+        private final String pluginName;
         private final String pluginCode;
-        private final String fullDeploymentName;
     }
 
     /**
@@ -141,23 +142,26 @@ public class PluginDescriptor extends VersionedDescriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(this.getDescriptorMetadata().getFullDeploymentName());
+        return new ComponentKey(this.getDescriptorMetadata().getPluginCode());
     }
 
-    public PluginDescriptor setDescriptorMetadata(String bundleId, String bundleCode, String pluginCode, String fullDeploymentName) {
+    public PluginDescriptor setDescriptorMetadata(String bundleId, String bundleCode, String pluginId, String pluginName, String pluginCode) {
         if (ObjectUtils.isEmpty(bundleId)) {
             throw new EntandoComponentManagerException("Empty bundle id received as plugin metadata");
         }
         if (ObjectUtils.isEmpty(bundleCode)) {
             throw new EntandoComponentManagerException("Empty bundle code received as plugin metadata");
         }
+        if (ObjectUtils.isEmpty(pluginId)) {
+            throw new EntandoComponentManagerException("Empty plugin id received as plugin metadata");
+        }
+        if (ObjectUtils.isEmpty(pluginName)) {
+            throw new EntandoComponentManagerException("Empty plugin name name received as plugin metadata");
+        }
         if (ObjectUtils.isEmpty(pluginCode)) {
             throw new EntandoComponentManagerException("Empty plugin code received as plugin metadata");
         }
-        if (ObjectUtils.isEmpty(fullDeploymentName)) {
-            throw new EntandoComponentManagerException("Empty full deployment name received as plugin metadata");
-        }
-        this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginCode, fullDeploymentName);
+        this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginId, pluginName, pluginCode);
         return this;
     }
 }

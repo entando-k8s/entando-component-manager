@@ -143,12 +143,12 @@ class WidgetDescriptorValidatorTest {
     void shouldThrowExceptionWhileValidatingAWidgetDescriptorWithInvalidApiClaims() {
         // internal api with bundle id
         WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        descriptor.getApiClaims().get(0).setBundleCode("id");
+        descriptor.getApiClaims().get(0).setBundleId("id");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         // external api without bundle id
-        descriptor.getApiClaims().get(0).setBundleCode(null);
-        descriptor.getApiClaims().get(1).setBundleCode(null);
+        descriptor.getApiClaims().get(0).setBundleId(null);
+        descriptor.getApiClaims().get(1).setBundleId(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 }

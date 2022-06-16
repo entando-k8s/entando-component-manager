@@ -71,7 +71,7 @@ public class BundleUtilities {
     public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
     public static final int PLUGIN_HASH_LENGTH = 8;
 
-    public static final String BUNDLES_FOLDER = "/bundles";
+    public static final String BUNDLES_FOLDER = "bundles";
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -265,7 +265,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(descriptor.getDescriptorMetadata().getFullDeploymentName())
+                .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
                 .endMetadata()
                 .withNewSpec()
@@ -290,7 +290,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(descriptor.getDescriptorMetadata().getFullDeploymentName())
+                .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()

@@ -330,19 +330,19 @@ public class UpdateFlowTest {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
         assertThat(allPassedFiles.get(4)).matches(fd -> fd.getFilename().equals("jquery.js")
-                && fd.getFolder().equals("/bundles/something-ece8f6f0/resources/vendor/jquery")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/vendor/jquery")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/vendor/jquery/jquery.js")));
     }
 
@@ -510,7 +510,7 @@ public class UpdateFlowTest {
     private void verifyDirectoriesUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("/bundles/something-ece8f6f0", ac.getValue());
+        assertEquals("bundles/something-ece8f6f0", ac.getValue());
     }
 
     private void verifyLabelsUninstallRequests() {

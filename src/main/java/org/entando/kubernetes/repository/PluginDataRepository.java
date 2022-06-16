@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface PluginDataRepository extends JpaRepository<PluginDataEntity, UUID> {
 
     @Transactional
-    long deleteByBundleCodeAndPluginCode(String bundleCode, String pluginCode);
+    long deleteByPluginCode(String pluginCode);
 
-    Optional<PluginDataEntity> findByBundleCodeAndPluginCode(String bundleCode, String pluginCode);
+    Optional<PluginDataEntity> findByBundleIdAndPluginName(String bundleId, String pluginName);
 }

@@ -44,7 +44,8 @@ public class PluginStubHelper {
                 .dbms(TEST_DESCRIPTOR_DBMS)
                 .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
                 .build()
-                .setDescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, EXPECTED_PLUGIN_NAME, TEST_DESCRIPTOR_IMAGE_SHA);
+                .setDescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, TEST_DESCRIPTOR_IMAGE_SHA, EXPECTED_PLUGIN_NAME,
+                        TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME);
     }
 
     public static PluginDescriptor stubPluginDescriptorV3() {

@@ -49,7 +49,9 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             }
 
             PluginDataEntity apiPathEntity = new PluginDataEntity()
-                    .setBundleCode(representation.getDescriptorMetadata().getBundleId())
+                    .setBundleId(representation.getDescriptorMetadata().getBundleId())
+                    .setPluginId(representation.getDescriptorMetadata().getPluginId())
+                    .setPluginName(representation.getDescriptorMetadata().getPluginName())
                     .setPluginCode(representation.getDescriptorMetadata().getPluginCode())
                     .setEndpoint(BundleUtilities.composeIngressPathFromDockerImage(representation));
             pluginDataRepository.save(apiPathEntity);
@@ -83,7 +85,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public String getName() {
-        return this.representation.getDescriptorMetadata().getFullDeploymentName();
+        return this.representation.getDescriptorMetadata().getPluginCode();
     }
 
     /**
@@ -98,15 +100,6 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             return false;
         }
 
-        pluginCode = pluginCode.replace(PluginProcessor.PLUGIN_DEPLOYMENT_PREFIX, "");
-        String[] tokens = pluginCode.split("-", 2);
-
-        if (tokens.length < 2) {
-            log.warn(String.format("The plugin code %s can't be tokenized to bundle id and plugin id. Can't delete "
-                    + "plugin detail", pluginCode));
-            return false;
-        }
-
-        return pluginDataRepository.deleteByBundleCodeAndPluginCode(tokens[0], tokens[1]) > 0;
+        return pluginDataRepository.deleteByPluginCode(pluginCode) > 0;
     }
 }

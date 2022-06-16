@@ -44,6 +44,7 @@ class PluginDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV1.yaml"),
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0");
         validator.validateOrThrow(descriptor);
     }
@@ -54,6 +55,7 @@ class PluginDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2.yaml"),
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0");
         validator.validateOrThrow(descriptor);
 
@@ -61,6 +63,7 @@ class PluginDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2_complete.yaml"),
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName");
         validator.validateOrThrow(descriptor);
     }
@@ -71,6 +74,7 @@ class PluginDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV3.yaml"),
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0");
         validator.validateOrThrow(descriptor);
 
@@ -78,6 +82,7 @@ class PluginDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV3_complete.yaml"),
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName");
         validator.validateOrThrow(descriptor);
     }
@@ -89,6 +94,7 @@ class PluginDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2.yaml"),
                         PluginDescriptor.class)
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0");
         descriptor.setDescriptorVersion("v2.5");
 
@@ -154,6 +160,7 @@ class PluginDescriptorValidatorTest {
         descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
                 PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
         assertThat(validator.validateOrThrow(descriptor)).isTrue();
@@ -236,6 +243,7 @@ class PluginDescriptorValidatorTest {
             descriptor.setDescriptorMetadata(
                     PluginStubHelper.BUNDLE_ID,
                     PluginStubHelper.BUNDLE_CODE,
+                    PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
 
@@ -254,6 +262,7 @@ class PluginDescriptorValidatorTest {
                 .setDescriptorMetadata("abcd1234",
                         "abcd1234-mybundle",
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
@@ -273,6 +282,7 @@ class PluginDescriptorValidatorTest {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
                         PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
                 .setEnvironmentVariables(environmentVariables);
@@ -289,6 +299,7 @@ class PluginDescriptorValidatorTest {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
                         PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name");
 

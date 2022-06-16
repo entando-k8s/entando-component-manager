@@ -68,6 +68,7 @@ class PluginDescriptorConvertionTest {
         PluginDescriptor d = (PluginDescriptor) PluginStubHelper.stubPluginDescriptorV2()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
                         PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
@@ -82,6 +83,7 @@ class PluginDescriptorConvertionTest {
         PluginDescriptor d = (PluginDescriptor) PluginStubHelper.stubPluginDescriptorV1()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
                         PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());

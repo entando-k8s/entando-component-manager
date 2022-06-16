@@ -68,6 +68,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         setupValidatorConfigurationDescriptorV2();
         setupValidatorConfigurationDescriptorV3();
         setupValidatorConfigurationDescriptorV4();
+        setupValidatorConfigurationDescriptorV5();
     }
 
     private void setupValidatorConfigurationDescriptorV1() {
@@ -111,6 +112,15 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
                 DescriptorVersion.V4);
         configBeanV4.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
         configBeanV4.getValidationFunctions().add(this::validateEnvVarsOrThrow);
+    }
+
+    private void setupValidatorConfigurationDescriptorV5() {
+        setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion.V5);
+        DescriptorValidatorConfigBean<PluginDescriptor> configBeanV5 = validationConfigMap.get(
+                DescriptorVersion.V5);
+        configBeanV5.getObjectsThatMustNOTBeNull().put("name", PluginDescriptor::getName);
+        configBeanV5.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
+        configBeanV5.getValidationFunctions().add(this::validateEnvVarsOrThrow);
     }
 
     private void setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion descriptorVersion) {
@@ -264,12 +274,12 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
      * @return the validated string
      */
     private PluginDescriptor validateFullDeploymentNameLength(PluginDescriptor descriptor) {
-        if (descriptor.getDescriptorMetadata().getFullDeploymentName().length() > fullDeploymentNameMaxlength) {
+        if (descriptor.getDescriptorMetadata().getPluginCode().length() > fullDeploymentNameMaxlength) {
 
             throw new EntandoComponentManagerException(
                     String.format(
                             DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR,
-                            descriptor.getDescriptorMetadata().getFullDeploymentName(),
+                            descriptor.getDescriptorMetadata().getPluginCode(),
                             fullDeploymentNameMaxlength));
         }
 

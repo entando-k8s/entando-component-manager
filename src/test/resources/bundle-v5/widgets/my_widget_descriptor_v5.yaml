@@ -11,8 +11,8 @@ params:
 apiClaims:
   - name: ext-api
     type: external
-    serviceId: ms1
-    bundleId: anotherbundle
+    pluginName: ms1
+    bundleId: abcdefgh
   - name: int-api
     type: internal
-    serviceId: bb1e1949-custombasenamev3c
+    pluginName: custombasenamev3c

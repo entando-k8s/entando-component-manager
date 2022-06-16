@@ -71,7 +71,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(0).getName()).isEqualTo("/bundles/something-4f58c204");
+        assertThat(installables.get(0).getName()).isEqualTo("bundles/something-4f58c204");
     }
 
     @Test
@@ -85,7 +85,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(0).getName()).isEqualTo("/bundles/something-4f58c204");
+        assertThat(installables.get(0).getName()).isEqualTo("bundles/something-4f58c204");
     }
 
     @Test
@@ -100,7 +100,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                 .collect(Collectors.toList());
 
         assertThat(rootFolders).hasSize(1);
-        assertThat(rootFolders.get(0).getName()).isEqualTo("/bundles/something-4f58c204");
+        assertThat(rootFolders.get(0).getName()).isEqualTo("bundles/something-4f58c204");
     }
 
 
@@ -108,10 +108,10 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV1() throws IOException {
 
         List<String> expectedCodeList = Arrays
-                .asList("/bundles/resources/static/css/ootb", "/bundles/resources/static/css/ootb/page-templates",
-                        "/bundles/resources/static/css", "/bundles/resources/ootb-widgets", "/bundles/resources/static",
-                        "/bundles/resources/ootb-widgets/static/js", "/bundles/resources/ootb-widgets/static",
-                        "/bundles/resources/ootb-widgets/static/css");
+                .asList("bundles/resources/static/css/ootb", "bundles/resources/static/css/ootb/page-templates",
+                        "bundles/resources/static/css", "bundles/resources/ootb-widgets", "bundles/resources/static",
+                        "bundles/resources/ootb-widgets/static/js", "bundles/resources/ootb-widgets/static",
+                        "bundles/resources/ootb-widgets/static/css");
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
@@ -132,7 +132,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/css",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/js")
-                .map(s -> "/bundles/" + s)
+                .map(s -> "bundles/" + s)
                 .collect(Collectors.toList());
 
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
@@ -155,7 +155,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         List<String> expectedCodeList = Stream
                 .of("/static/css/ootb", "/static/css/ootb/page-templates", "/static/css", "/ootb-widgets",
                         "/static", "/ootb-widgets/static/js", "/ootb-widgets/static", "/ootb-widgets/static/css")
-                .map(s -> "/bundles/" + bundleDescriptor.getCode() + "-"
+                .map(s -> "bundles/" + bundleDescriptor.getCode() + "-"
                         + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/resources" + s)
                 .collect(Collectors.toList());
 
@@ -183,7 +183,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/css",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/js")
-                .map(s -> "/bundles/" + bundleDescriptor.getCode() + "-"
+                .map(s -> "bundles/" + bundleDescriptor.getCode() + "-"
                         + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/" + s)
                 .collect(Collectors.toList());
 
@@ -212,7 +212,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     @Test
     void shouldReturnTheExpectedNonRootDirectoryDescriptorFromTheEntandoBundleComponentJobEntity() {
 
-        String compId = "/bundles/new-bundle-test-f13d35ad/widgets/table-widget/static/js/main.js";
+        String compId = "bundles/new-bundle-test-f13d35ad/widgets/table-widget/static/js/main.js";
 
         EntandoBundleComponentJobEntity entity = new EntandoBundleComponentJobEntity();
         entity.setComponentId(compId);
@@ -225,7 +225,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     @Test
     void shouldReturnTheExpectedRootDirectoryDescriptorFromTheEntandoBundleComponentJobEntity() {
 
-        String compId = "/bundles/new-bundle-test-f13d35ad";
+        String compId = "bundles/new-bundle-test-f13d35ad";
 
         EntandoBundleComponentJobEntity entity = new EntandoBundleComponentJobEntity();
         entity.setComponentId(compId);

@@ -97,9 +97,9 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
         String ingressPath;
         if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)) {
-            ingressPath = pluginIngressPathMap.get(apiClaim.getPluginCode());
+            ingressPath = pluginIngressPathMap.get(apiClaim.getPluginName());
         } else {
-            ingressPath = apiPathRepository.findByBundleCodeAndPluginCode(apiClaim.getBundleCode(), apiClaim.getPluginCode())
+            ingressPath = apiPathRepository.findByBundleIdAndPluginName(apiClaim.getBundleId(), apiClaim.getPluginName())
                     .map(PluginDataEntity::getEndpoint)
                     .orElse(null);
         }

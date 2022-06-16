@@ -123,8 +123,10 @@ class InstallFlowTestBundleVFive {
                 new InstallFlowAssertionHelper(k8SServiceClient, coreClient, jobRepository, componentJobRepository);
 
         PluginDataEntity pluginData = new PluginDataEntity()
-                .setBundleCode("anotherbundle")
-                .setPluginCode("ms1")
+                .setBundleId("abcdefgh")
+                .setPluginId("a1b2c3d4")
+                .setPluginName("ms1")
+                .setPluginCode("pn-abcdefgh-a1b2c3d4-ms1")
                 .setEndpoint("my-path");
         pluginDataRepository.save(pluginData);
     }
@@ -194,7 +196,7 @@ class InstallFlowTestBundleVFive {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertThat(ac.getValue()).isEqualTo("/bundles/something-ece8f6f0");
+        assertThat(ac.getValue()).isEqualTo("bundles/something-ece8f6f0");
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(0)).deleteFragment(ac.capture());

@@ -68,10 +68,8 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
         private String name;
         private String type;
-        @JsonProperty("serviceId")
-        private String pluginCode;
-        @JsonProperty("bundleId")
-        private String bundleCode;
+        private String pluginName;
+        private String bundleId;
     }
 
     @Getter

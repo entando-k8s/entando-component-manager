@@ -82,23 +82,23 @@ class FileProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(0)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(0).getName()).isEqualTo("/bundles/something-4f58c204/resources/css/custom.css");
+        assertThat(installables.get(0).getName()).isEqualTo("bundles/something-4f58c204/resources/css/custom.css");
 
         assertThat(installables.get(1)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(1).getName()).isEqualTo("/bundles/something-4f58c204/resources/css/style.css");
+        assertThat(installables.get(1).getName()).isEqualTo("bundles/something-4f58c204/resources/css/style.css");
 
         assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(2).getName()).isEqualTo("/bundles/something-4f58c204/resources/js/configUiScript.js");
+        assertThat(installables.get(2).getName()).isEqualTo("bundles/something-4f58c204/resources/js/configUiScript.js");
 
         assertThat(installables.get(3)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(3).getName()).isEqualTo("/bundles/something-4f58c204/resources/js/script.js");
+        assertThat(installables.get(3).getName()).isEqualTo("bundles/something-4f58c204/resources/js/script.js");
 
         assertThat(installables.get(4)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(4).getName()).isEqualTo("/bundles/something-4f58c204/resources/vendor/jquery/jquery.js");
+        assertThat(installables.get(4).getName()).isEqualTo("bundles/something-4f58c204/resources/vendor/jquery/jquery.js");
     }
 
     @Test
@@ -116,17 +116,17 @@ class FileProcessorTest extends BaseProcessorTest {
         assertThat(installables.get(0)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(0).getName()).isEqualTo(
-                "/bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/assets/css-res.css");
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/assets/css-res.css");
 
         assertThat(installables.get(1)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(1).getName()).isEqualTo(
-                "/bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/js-res-1.js");
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/js-res-1.js");
 
         assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(2).getName()).isEqualTo(
-                "/bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/static/js/js-res-2.js");
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/static/js/js-res-2.js");
     }
 
     @Test
@@ -185,7 +185,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         final List<FileDescriptor> expected = Stream.of(fileDescriptor1, fileDescriptor2, fileDescriptor3)
                 .map(desc -> {
-                    desc.setFolder("/bundles/" + desc.getFolder());
+                    desc.setFolder("bundles/" + desc.getFolder());
                     return desc;
                 })
                 .collect(Collectors.toList());
@@ -208,12 +208,12 @@ class FileProcessorTest extends BaseProcessorTest {
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV1() throws IOException {
 
         List<String> expectedCodeList = Arrays
-                .asList("/bundles/resources/ootb-widgets/static/css/main.ootb.chunk.css",
-                        "/bundles/resources/ootb-widgets/static/css/sitemap.css",
-                        "/bundles/resources/ootb-widgets/static/js/2.ootb.chunk.js",
-                        "/bundles/resources/static/css/ootb/page-templates/index.css",
-                        "/bundles/resources/ootb-widgets/static/js/runtime-main.ootb.js",
-                        "/bundles/resources/ootb-widgets/static/js/main.ootb.chunk.js");
+                .asList("bundles/resources/ootb-widgets/static/css/main.ootb.chunk.css",
+                        "bundles/resources/ootb-widgets/static/css/sitemap.css",
+                        "bundles/resources/ootb-widgets/static/js/2.ootb.chunk.js",
+                        "bundles/resources/static/css/ootb/page-templates/index.css",
+                        "bundles/resources/ootb-widgets/static/js/runtime-main.ootb.js",
+                        "bundles/resources/ootb-widgets/static/js/main.ootb.chunk.js");
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
@@ -230,9 +230,9 @@ class FileProcessorTest extends BaseProcessorTest {
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV5() throws IOException {
 
         List<String> expectedCodeList = Arrays
-                .asList("/bundles/widgets/ootb-widgets-77b2b10e/css/main.css",
-                        "/bundles/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
-                        "/bundles/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js");
+                .asList("bundles/widgets/ootb-widgets-77b2b10e/css/main.css",
+                        "bundles/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
+                        "bundles/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js");
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
@@ -279,9 +279,9 @@ class FileProcessorTest extends BaseProcessorTest {
         bundleDescriptor.setBundleType(BundleType.STANDARD_BUNDLE);
 
         List<String> expectedCodeList = Arrays
-                .asList("/bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/css/main.css",
-                        "/bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
-                        "/bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js");
+                .asList("bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/css/main.css",
+                        "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
+                        "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js");
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
