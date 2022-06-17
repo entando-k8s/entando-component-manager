@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ class PluginDescriptorConvertionTest {
     void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersion3() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV3();
         String name = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
-        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_EQUAL_OR_MAJOR_THAN_3);
+        assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
     }
 
     @Test
@@ -92,10 +93,29 @@ class PluginDescriptorConvertionTest {
         assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME);
     }
 
+    @Test
+    void shouldConvertDescriptorToEntandoPluginVersion5() {
+        PluginDescriptor d = (PluginDescriptor) PluginStubHelper.stubPluginDescriptorV5()
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME)
+                .setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
+
+        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+    }
+
     private void assertOnConvertedEntandoPlugin(EntandoPlugin p, String expectedPluginName) {
+        assertOnConvertedEntandoPlugin(p, expectedPluginName, PluginStubHelper.EXPECTED_INGRESS_PATH_V_MINOR_THAN_3);
+    }
+
+    private void assertOnConvertedEntandoPlugin(EntandoPlugin p, String expectedPluginName, String ingressPath) {
         assertThat(p.getMetadata().getName()).isEqualTo(expectedPluginName);
         assertThat(p.getSpec().getImage()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_IMAGE);
-        assertThat(p.getSpec().getIngressPath()).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_MINOR_THAN_3);
+        assertThat(p.getSpec().getIngressPath()).isEqualTo(ingressPath);
         assertThat(p.getSpec().getHealthCheckPath()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_HEALTH_PATH);
 
         Map<String, String> lbls = new HashMap<>();

@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -60,8 +61,6 @@ public class BundleUtilities {
     public static final String BUNDLE_TYPE_LABEL_NAME = "bundle-type";
 
     public static final String LATEST_VERSION = "latest";
-
-    private static final String DESCRIPTOR_VERSION_STARTING_CHAR = "v";
 
     public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
     public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
@@ -150,16 +149,6 @@ public class BundleUtilities {
         return latestVersionOpt;
     }
 
-    /**
-     * compose the plugin descriptor version by concatenating the received version number to the leading char v.
-     *
-     * @param version the integer version
-     * @return the composed plugin descriptor version
-     */
-    public static String composePluginDescriptorVersion(int version) {
-        return DESCRIPTOR_VERSION_STARTING_CHAR + version;
-    }
-
     public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
         return Optional.ofNullable(descriptor.getRoles()).orElseGet(ArrayList::new).stream()
                 .distinct()
@@ -177,8 +166,17 @@ public class BundleUtilities {
     }
 
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
-        return Optional.ofNullable(composeIngressPathFromIngressPathProperty(descriptor))
-                .orElse(composeIngressPathFromDockerImage(descriptor));
+
+        // if v5
+        if (DescriptorVersion.fromVersion(descriptor.getDescriptorVersion()) == DescriptorVersion.V5) {
+            return composeIngressPathBundleIdAndPluginName(descriptor);
+        }
+
+        // TODO restore part of this login in ENG-3830
+        // return Optional.ofNullable(composeIngressPathFromIngressPathProperty(descriptor))
+        //        .orElse(composeIngressPathFromDockerImage(descriptor));
+
+        return composeIngressPathFromDockerImage(descriptor);
     }
 
     public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
@@ -234,6 +232,21 @@ public class BundleUtilities {
                 .map(BundleUtilities::makeKubernetesCompatible).collect(Collectors.toList());
 
         return "/" + String.join("/", kubeCompatiblesSegmentList);
+    }
+
+    /**
+     * compose the plugin ingress path starting by its bundle id and its name.
+     *
+     * @param descriptor the PluginDescriptor from which take the info
+     * @return the composed ingress path
+     */
+    public static String composeIngressPathBundleIdAndPluginName(PluginDescriptor descriptor) {
+
+        return "/"
+                + Stream.of(descriptor.getDescriptorMetadata().getBundleCode(),
+                        makeKubernetesCompatible(descriptor.getName()))
+                .map(BundleUtilities::makeKubernetesCompatible)
+                .collect(Collectors.joining("/"));
     }
 
 
