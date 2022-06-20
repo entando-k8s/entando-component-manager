@@ -366,7 +366,7 @@ public class InstallFlowTest {
         verify(coreClient, times(2)).deletePage(ac.capture());
         assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
 
-        verify(k8SServiceClient, times(3)).unlink(any());
+        verify(k8SServiceClient, times(6)).unlink(any());
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
     }
@@ -474,7 +474,12 @@ public class InstallFlowTest {
                     .filter(j -> j.getComponentType().equals(c.getComponentType()) && j.getComponentId()
                             .equals(c.getComponentId()))
                     .collect(Collectors.toList());
-            assertThat(jobs.size()).isEqualTo(2);
+
+            if (c.getComponentId().equals("customBaseName")) {
+                assertThat(jobs.size()).isEqualTo(8);
+            } else {
+                assertThat(jobs.size()).isEqualTo(2);
+            }
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
         }
 
@@ -687,7 +692,7 @@ public class InstallFlowTest {
                 .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
                 .collect(Collectors.toList());;
 
-        assertThat(pluginJobs.size()).isEqualTo(3);
+        assertThat(pluginJobs.size()).isEqualTo(6);
 
         // when deploymentBaseName is not present => component id should be the image organization, name and version
         assertThat(pluginJobs.get(0).getComponentId()).isEqualTo("entando-todomvcv1");

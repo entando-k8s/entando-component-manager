@@ -4,9 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 
 public class PluginStubHelper {
 
@@ -21,6 +24,11 @@ public class PluginStubHelper {
     public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
     public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
     public static final String TEST_DESCRIPTOR_SECURITY_LEVEL = "lenient";
+    public static final String TEST_ENV_VAR_1_NAME = "env1Name";
+    public static final String TEST_ENV_VAR_1_VALUE = "env1Value";
+    public static final String TEST_ENV_VAR_2_NAME = "env2Name";
+    public static final String TEST_ENV_VAR_2_SECRET_NAME = "env-2-secret-name";
+    public static final String TEST_ENV_VAR_2_SECRET_KEY = "env2SecretKey";
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {
@@ -35,8 +43,28 @@ public class PluginStubHelper {
 
     public static PluginDescriptor stubPluginDescriptorV3() {
         PluginDescriptor pluginDescriptorV3 = stubPluginDescriptorV2();
-        pluginDescriptorV3.setDescriptorVersion("v3");
+        pluginDescriptorV3.setDescriptorVersion(PluginDescriptorVersion.V3.getVersion());
         return pluginDescriptorV3;
+    }
+
+    public static PluginDescriptor stubPluginDescriptorV4() {
+        PluginDescriptor pluginDescriptorV3 = stubPluginDescriptorV2();
+        pluginDescriptorV3.setDescriptorVersion(PluginDescriptorVersion.V4.getVersion());
+        return pluginDescriptorV3;
+    }
+
+    public static PluginDescriptor stubPluginDescriptorV4WithEnvVars() {
+        PluginDescriptor pluginDescriptor = stubPluginDescriptorV4();
+        pluginDescriptor.setEnvironmentVariables(stubEnvironmentVariables());
+        return pluginDescriptor;
+    }
+
+    public static List<EnvironmentVariable> stubEnvironmentVariables() {
+        return Arrays.asList(
+                new EnvironmentVariable(TEST_ENV_VAR_1_NAME, TEST_ENV_VAR_1_VALUE, null),
+                new EnvironmentVariable(TEST_ENV_VAR_2_NAME, null,
+                        new SecretKeyRef(TEST_ENV_VAR_2_SECRET_NAME, TEST_ENV_VAR_2_SECRET_KEY))
+        );
     }
 
     public static PluginDescriptor stubPluginDescriptorV1() {

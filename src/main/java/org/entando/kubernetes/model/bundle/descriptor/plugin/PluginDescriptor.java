@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
@@ -19,6 +20,7 @@ import org.springframework.util.StringUtils;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Accessors(chain = true)
 public class PluginDescriptor implements Descriptor {
     /**
      * identifies the plugin descriptor version.
@@ -77,6 +79,10 @@ public class PluginDescriptor implements Descriptor {
      * The security level to apply to the current plugin.
      */
     private String securityLevel;
+    /**
+     * The list of the environment variable to inject in the plugin pod.
+     */
+    private List<EnvironmentVariable> environmentVariables;
 
 
     public DockerImage getDockerImage() {
@@ -92,6 +98,12 @@ public class PluginDescriptor implements Descriptor {
 
     public boolean isVersion1() {
         return StringUtils.isEmpty(image);
+    }
+
+    public boolean isVersionLowerThan3() {
+        final PluginDescriptorVersion pluginDescriptorVersion = PluginDescriptorVersion.fromVersion(descriptorVersion);
+        return pluginDescriptorVersion == PluginDescriptorVersion.V1
+                || pluginDescriptorVersion == PluginDescriptorVersion.V2;
     }
 
     @Override

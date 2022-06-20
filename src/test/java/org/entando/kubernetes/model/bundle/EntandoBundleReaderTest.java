@@ -32,8 +32,10 @@ import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -215,6 +217,58 @@ public class EntandoBundleReaderTest {
         assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
         assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
         assertThat(descriptor.getIngressPath()).isEqualTo("/myhostname.io/entando-plugin");
+        assertThat(descriptor.getSecurityLevel()).isEqualTo("lenient");
+
+        assertThat(descriptor.getPermissions()).containsExactly(
+                new PluginPermission("realm-management", "manage-users"),
+                new PluginPermission("realm-management", "view-users"));
+    }
+
+    @Test
+    void shouldReadPluginFromBundleV3() throws IOException {
+
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
+        this.assertOnPluginDescriptorV3Properties(descriptor);
+    }
+
+    @Test
+    void shouldReadPluginFromBundleV4() throws IOException {
+
+        PluginDescriptor descriptor = bundleReader
+                .readDescriptorFile("plugins/todomvcV4_complete.yaml", PluginDescriptor.class);
+        this.assertOnPluginDescriptorV3Properties(descriptor);
+
+        final List<EnvironmentVariable> environmentVariables = descriptor.getEnvironmentVariables();
+        assertThat(environmentVariables).hasSize(2);
+
+        final EnvironmentVariable envVar1 = environmentVariables.get(0);
+        final EnvironmentVariable expected1 = new EnvironmentVariable()
+                .setName("env1Name").setValue("env1value");
+        assertThat(envVar1).isEqualTo(expected1);
+
+        final EnvironmentVariable envVar2 = environmentVariables.get(1);
+        final EnvironmentVariable expected2 = new EnvironmentVariable()
+                .setName("env2Name")
+                .setSecretKeyRef(
+                        new SecretKeyRef("env-2-configmap-secretkey-ref-name", "env2ConfigMapSecretKeyRefKey"));
+        assertThat(envVar2).isEqualTo(expected2);
+    }
+
+    /**
+     * applies assertions shared across all plugin descriptor v3+.
+     * @param descriptor the plugin descriptor to validate
+     */
+    private void assertOnPluginDescriptorV3Properties(PluginDescriptor descriptor) {
+
+        assertThat(descriptor.getDbms()).isEqualTo("mysql");
+        assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
+        assertThat(descriptor.getImage()).isEqualTo("entando/todomvcV3:1.0.0");
+        assertThat(descriptor.getDockerImage().getName()).isEqualTo("todomvcV3");
+        assertThat(descriptor.getDockerImage().getOrganization()).isEqualTo("entando");
+        assertThat(descriptor.getDockerImage().getVersion()).isEqualTo("1.0.0");
+        assertThat(descriptor.getIngressPath()).isEqualTo("/myhostname.io/entando-plugin");
+        assertThat(descriptor.getSecurityLevel()).isEqualTo("lenient");
 
         assertThat(descriptor.getPermissions()).containsExactly(
                 new PluginPermission("realm-management", "manage-users"),

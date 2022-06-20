@@ -296,7 +296,7 @@ public class InstallFlowAssertionHelper {
     }
 
     private void verifyPluginInstallRequests(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(3)).linkAppWithPlugin(any(), any(), any());
+        verify(k8SServiceClient, times(6)).linkAppWithPlugin(any(), any(), any());
     }
 
     private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) {
@@ -359,6 +359,9 @@ public class InstallFlowAssertionHelper {
                 // Plugins
                 "entando-todomvcv1",
                 "entando-todomvcv2",
+                "customBaseName",
+                "customBaseName",
+                "customBaseName",
                 "customBaseName",
                 // Directories
                 "/something",
@@ -440,7 +443,7 @@ public class InstallFlowAssertionHelper {
         expectedComponents.put(ComponentType.FRAGMENT, 2);
         expectedComponents.put(ComponentType.PAGE, 2);
         expectedComponents.put(ComponentType.PAGE_CONFIGURATION, 2);
-        expectedComponents.put(ComponentType.PLUGIN, 3);
+        expectedComponents.put(ComponentType.PLUGIN, 6);
 
         assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);
     }
@@ -452,7 +455,7 @@ public class InstallFlowAssertionHelper {
 
     public void verifyPluginInstallRequestsWithInstallPlanRequest(K8SServiceClient k8SServiceClient) {
         verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
-        verify(k8SServiceClient, times(1)).updatePlugin(any());
+        verify(k8SServiceClient, times(4)).updatePlugin(any());
     }
 
     public void verifyWidgetsInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {
