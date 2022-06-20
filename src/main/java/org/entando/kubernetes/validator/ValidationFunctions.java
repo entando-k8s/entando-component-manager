@@ -15,9 +15,10 @@ public class ValidationFunctions {
     public static final Pattern HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN = Pattern.compile(
             HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX);
 
+    public static final String GIT_PROTOCOL = "git";
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";
-    public static final List<String> VALID_PROTOCOLS = List.of(HTTP_PROTOCOL, HTTPS_PROTOCOL);
+    public static final List<String> VALID_PROTOCOLS = List.of(GIT_PROTOCOL, HTTP_PROTOCOL, HTTPS_PROTOCOL);
 
     /**
      * if the url uses the git or ssh protocol, replace it with http validate the received url using url regex. checks

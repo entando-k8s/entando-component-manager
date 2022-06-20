@@ -57,14 +57,13 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class EntandoBundleReaderTest {
 
-    public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
     BundleReader bundleReader;
     Path bundleFolder;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder);
+        bundleReader = new BundleReader(bundleFolder, BundleInfoStubHelper.GIT_REPO_ADDRESS);
     }
 
     @Test
@@ -102,7 +101,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadBundleIdCorrectly() throws IOException {
-        assertThat(bundleReader.getBundleCode()).isEqualTo("something");
+        assertThat(bundleReader.getBundleCode()).isEqualTo("something-77b2b10e");
     }
 
     @Test

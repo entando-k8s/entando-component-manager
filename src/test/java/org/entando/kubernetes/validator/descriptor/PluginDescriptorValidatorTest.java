@@ -114,7 +114,8 @@ class PluginDescriptorValidatorTest {
 
             PluginDescriptor descriptor = yamlMapper
                     .readValue(new File("src/test/resources/bundle/plugins/" + keyValue.getKey()),
-                            PluginDescriptor.class);
+                            PluginDescriptor.class)
+                    .setDescriptorMetadata(PluginStubHelper.stubDescriptorMetadata());
             descriptor.setDescriptorVersion(keyValue.getValue().getVersion());
 
             assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));

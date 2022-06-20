@@ -244,7 +244,7 @@ public class InstallFlowAssertionHelper {
 
     private void verifyFileInstallRequestsV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(3)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(4)).createFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
@@ -254,11 +254,15 @@ public class InstallFlowAssertionHelper {
                 && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-2.js")
+        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("generic-file.txt")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media")
+                && fd.getBase64()
+                .equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt")));
+        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-2.js")
                 && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
-        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-1.js")
+        assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("js-res-1.js")
                 && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
                 && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }
@@ -680,18 +684,23 @@ public class InstallFlowAssertionHelper {
 
     public void verifyFileInstallRequestsWithInstallPlanRequestV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(2)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(3)).createFile(fileArgCaptor.capture());
         verify(coreClient, times(0)).updateFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
+        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("generic-file.txt")
+                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media")
+                && fd.getBase64()
+                .equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt")));
+        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-2.js")
+                && fd.getFolder()
+                .equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
                 && fd.getBase64().equals(readFileAsBase64(
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-1.js")
+        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-1.js")
                 && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
                 && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
     }

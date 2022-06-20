@@ -126,7 +126,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor> {
 
         if (descriptorVersion == null || ! validationConfigMap.containsKey(descriptorVersion)) {
             String error = String.format(VERSION_NOT_VALID, "\"" + descriptor.getComponentKey().getKey() + "\"",
-                    descriptor.getClass().getSimpleName().replace(".class", ""),
+                    descriptor.getDescriptorClassName(),
                     validationConfigMap.keySet().stream()
                             .map((Object t) -> ((DescriptorVersion) t).getVersion())
                             .collect(Collectors.joining(", ")));
@@ -154,6 +154,8 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor> {
         objectsThatMustNOTBeNull.forEach((key, fn) -> {
             if (ObjectUtils.isEmpty(fn.apply(descriptor))) {
                 throw new InvalidBundleException(String.format(EXPECTED_NOT_NULL_IS_NULL,
+                        descriptor.getDescriptorClassName(),
+                        descriptor.getComponentKey().getKey(),
                         descriptorVersion.getVersion(), key));
             }
         });
@@ -161,6 +163,8 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor> {
         objectsThatMustBeNull.forEach((key, fn) -> {
             if (ObjectUtils.isNotEmpty(fn.apply(descriptor))) {
                 throw new InvalidBundleException(String.format(EXPECTED_NULL_IS_NOT_NULL,
+                        descriptor.getDescriptorClassName(),
+                        descriptor.getComponentKey().getKey(),
                         descriptorVersion.getVersion(), key));
             }
         });
@@ -169,8 +173,8 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor> {
     public static final String VERSION_NOT_VALID =
             "The %s descriptor contains an invalid descriptorVersion. Accepted versions for %s are: %s";
     public static final String EXPECTED_NOT_NULL_IS_NULL =
-            "Descriptor version detected: %s. With this version the %s property must NOT be null.";
+            "%s descriptor %s version detected: %s. With this version the %s property must NOT be null.";
     public static final String EXPECTED_NULL_IS_NOT_NULL =
-            "Descriptor version detected: %s. With this version the %s property must be null.";
+            "%s descriptor %s version detected: %s. With this version the %s property must be null.";
 
 }

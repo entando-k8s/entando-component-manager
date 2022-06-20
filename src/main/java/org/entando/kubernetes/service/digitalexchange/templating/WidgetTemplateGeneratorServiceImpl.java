@@ -3,8 +3,10 @@ package org.entando.kubernetes.service.digitalexchange.templating;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -101,7 +103,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         } else {
             ingressPath = apiPathRepository.findByBundleIdAndPluginName(apiClaim.getBundleId(), apiClaim.getPluginName())
                     .map(PluginDataEntity::getEndpoint)
-                    .orElse(null);
+                    .orElse("");
         }
 
         if (ObjectUtils.isEmpty(ingressPath)) {
@@ -112,7 +114,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     }
 
     protected MfeSystemConfig toSystemParams(List<ApiClaim> apiClaimList, Map<String, String> pluginIngressPathMap) {
-        final Map<String, ApiUrl> apiMap = apiClaimList.stream()
+        final Map<String, ApiUrl> apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
                     String ingressPath = APPLICATION_BASEURL_PARAM + getApiUrl(ac, pluginIngressPathMap);
                     return new SimpleEntry<>(ac.getName(), new ApiUrl(ingressPath));

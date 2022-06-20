@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -85,8 +83,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 widgetDescriptor.setDescriptorMetadata(new DescriptorMetadata(pluginIngressPathMap));
                 descriptorValidator.validateOrThrow(widgetDescriptor);
 
-                widgetDescriptor.setCode(bundleReader);
-                setCustomUi(widgetDescriptor, fileName, bundleReader);
+                composeAndSetCode(widgetDescriptor, bundleReader);
+                composeAndSetCustomUi(widgetDescriptor, fileName, bundleReader);
 
                 widgetDescriptor.setBundleId(descriptor.getCode());
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
@@ -116,7 +114,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      * @param bundleReader     the bundle reader used to access the bundle files
      * @throws IOException if any file access error occurs
      */
-    private void setCustomUi(WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader)
+    private void composeAndSetCustomUi(WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader)
             throws IOException {
 
         if (widgetDescriptor.isVersion1()) {
@@ -128,6 +126,16 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             String ftl = templateGeneratorService.generateWidgetTemplate(fileName, widgetDescriptor, bundleReader);
             widgetDescriptor.setCustomUi(ftl);
         }
+    }
+
+    /**
+     * compose and set the widget code in the descriptor.
+     */
+    private void composeAndSetCode(WidgetDescriptor widgetDescriptor, BundleReader bundleReader) {
+        // set the code
+        final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
+        widgetDescriptor.setCode(widgetCode);
     }
 
     @Override
@@ -151,7 +159,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         try {
             WidgetDescriptor widgetDescriptor =
                     (WidgetDescriptor) bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
-            widgetDescriptor.setCode(bundleReader);
+            composeAndSetCode(widgetDescriptor, bundleReader);
             return List.of(widgetDescriptor.getComponentKey().getKey());
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format(

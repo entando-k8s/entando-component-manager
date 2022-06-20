@@ -162,7 +162,8 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode());
+        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode() + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);
@@ -190,7 +191,8 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode());
+        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode() + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);

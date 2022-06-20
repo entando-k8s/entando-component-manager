@@ -58,7 +58,8 @@ class WidgetTemplateGeneratorServiceImplTest {
                 WidgetStubHelper.CSS_RESOURCES);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         BundleDescriptor bundleDescriptor = mock(BundleDescriptor.class);
-        when(bundleReader.getBundleCode()).thenReturn(BundleStubHelper.BUNDLE_CODE);
+        when(bundleReader.getBundleCode()).thenReturn(
+                BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
@@ -114,7 +115,8 @@ class WidgetTemplateGeneratorServiceImplTest {
 
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         BundleDescriptor bundleDescriptor = mock(BundleDescriptor.class);
-        when(bundleReader.getBundleCode()).thenReturn(BundleStubHelper.BUNDLE_CODE);
+        when(bundleReader.getBundleCode()).thenReturn(
+                BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 

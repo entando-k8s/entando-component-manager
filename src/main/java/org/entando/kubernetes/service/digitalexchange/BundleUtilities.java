@@ -28,7 +28,9 @@ import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
@@ -159,7 +161,7 @@ public class BundleUtilities {
     }
 
     public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
-        return descriptor.getRoles().stream()
+        return Optional.ofNullable(descriptor.getRoles()).orElseGet(ArrayList::new).stream()
                 .distinct()
                 .map(role -> new ExpectedRole(role, role))
                 .collect(Collectors.toList());
@@ -369,11 +371,7 @@ public class BundleUtilities {
      */
     public static String composeSignedBundleFolder(BundleReader bundleReader) throws IOException {
         final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
-        if (! resourceFolder.equals("/")) {
-            return BundleUtilities.appendHashToBundleFolder(bundleReader, resourceFolder);
-        } else {
-            return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
-        }
+        return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
     }
 
     /**
@@ -517,7 +515,7 @@ public class BundleUtilities {
         final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
         Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
 
-        if (! bundleReader.isBundleV1()) {
+        if (!bundleReader.isBundleV1()) {
             final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
             fileFolder = Paths.get(fileFolder.toString().replace(fileFolder.subpath(0, 1).toString(), signedFolder));
         }
@@ -525,13 +523,25 @@ public class BundleUtilities {
         return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
     }
 
-    public static String appendHashToBundleFolder(BundleReader bundleReader, String bundleFolder) {
-        String signedBundleFolder = appendBundleUrlHash(bundleReader, bundleFolder);
-        return Paths.get(BUNDLES_FOLDER, signedBundleFolder).toString();
-    }
+    /**
+     * generic method to compose the descriptor code concatenating the bundle id to the descriptor name.
+     *
+     * @return the composed descriptor code
+     */
+    public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
+            String bundleUrl) {
 
-    public static String appendBundleUrlHash(BundleReader bundleReader, String firstToken) {
-        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-        return firstToken + "-" + bundleId;
+        String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleUrl);
+        String composedCode = code;
+
+        if (descriptor.isVersion1() || !descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
+            if (!code.endsWith(bundleIdHash)) {
+                composedCode += "-" + bundleIdHash;
+            }
+        } else {
+            composedCode = name + "-" + bundleIdHash;
+        }
+
+        return composedCode;
     }
 }

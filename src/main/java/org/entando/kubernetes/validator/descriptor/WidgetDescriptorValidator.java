@@ -26,7 +26,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     @PostConstruct
     public void setupValidatorConfiguration() {
         setupValidatorConfigurationDescriptorV1();
-        setupValidatorConfigurationDescriptorV2();
+        setupValidatorConfigurationDescriptorV5();
     }
 
     private void setupValidatorConfigurationDescriptorV1() {
@@ -45,7 +45,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
                 objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
 
-    private void setupValidatorConfigurationDescriptorV2() {
+    private void setupValidatorConfigurationDescriptorV5() {
 
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
         objectsThatMustBeNull.put("code", WidgetDescriptor::getCode);

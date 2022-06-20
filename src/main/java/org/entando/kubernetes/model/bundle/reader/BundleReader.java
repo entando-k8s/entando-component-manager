@@ -11,6 +11,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -27,13 +28,15 @@ import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
 
 @Slf4j
 public class BundleReader {
 
     private final YAMLMapper mapper = new YAMLMapper();
     private final Path bundleBasePath;
-    private final EntandoDeBundle entandoDeBundle;
+    private EntandoDeBundle entandoDeBundle;
     private BundleDescriptor bundleDescriptor;
     private String bundleUrl;
 
@@ -42,17 +45,39 @@ public class BundleReader {
         this.entandoDeBundle = null;
     }
 
+    public BundleReader(Path filePath, String bundleUrl) {
+        this.bundleBasePath = filePath;
+        this.bundleUrl = bundleUrl;
+    }
+
     public BundleReader(Path filePath, EntandoDeBundle entandoDeBundle) {
         this.bundleBasePath = filePath;
         this.entandoDeBundle = entandoDeBundle;
     }
 
     public BundleDescriptor readBundleDescriptor() throws IOException {
+        return readBundleDescriptor(null);
+    }
+
+    public BundleDescriptor readBundleDescriptor(BundleDescriptorValidator bundleValidator) throws IOException {
         if (this.bundleDescriptor == null) {
+            // read and assign
             this.bundleDescriptor = readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), BundleDescriptor.class);
+
+            // validate the bundle
+            if (bundleValidator != null) {
+                bundleValidator.validateOrThrow(bundleDescriptor);
+            }
+
+            // ensure the right code is used
+            final String code = BundleUtilities.composeDescriptorCode(bundleDescriptor.getCode(),
+                    bundleDescriptor.getName(), bundleDescriptor, getBundleUrl());
+            bundleDescriptor.setCode(code);
         }
+
         return this.bundleDescriptor;
     }
+
 
     public boolean containsResourceFolder() {
         return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
@@ -74,19 +99,37 @@ public class BundleReader {
         return getResourceOfType(BundleProperty.RESOURCES_FOLDER_PATH.getValue(), Files::isRegularFile);
     }
 
+    /**
+     * create the list of each directory (at every level) present inside the widgets folder.
+     *
+     * @return the list of each directory (at every level) present inside the widgets folder
+     */
     public List<String> getWidgetsFolders() {
         return getResourceOfType(BundleProperty.WIDGET_FOLDER_PATH.getValue(), Files::isDirectory);
     }
 
-    public List<String> getWidgetsFiles() {
-        return getResourceOfType(BundleProperty.WIDGET_FOLDER_PATH.getValue(),
-                (Path file) -> {
-                    String ext = FilenameUtils.getExtension(file.toString());
-                    return ext.equals("js") || ext.equals("css");
-                });
+    /**
+     * create the list of each directory directly descendant of the widgets folder.
+     *
+     * @return the list of each directory directly descendant of the widgets folder
+     */
+    public List<String> getWidgetsBaseFolders() throws IOException {
+        Path widgetsPath = bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue());
+
+        try (Stream<Path> foldersStream = Files.list(widgetsPath)) {
+            return foldersStream.filter(Files::isDirectory)
+                    .map(Path::getFileName)
+                    .map(f -> Paths.get(BundleProperty.WIDGET_FOLDER_PATH.getValue(), f.toString()))
+                    .map(Path::toString)
+                    .collect(Collectors.toList());
+        }
     }
 
-    private List<String> getResourceOfType(String resourcesPath, Predicate<Path> checkFunction) {
+    public List<String> getWidgetsFiles() {
+        return getResourceOfType(BundleProperty.WIDGET_FOLDER_PATH.getValue(), Files::isRegularFile);
+    }
+
+    public List<String> getResourceOfType(String resourcesPath, Predicate<Path> checkFunction) {
         List<Path> resources;
         Path resourcePath = bundleBasePath.resolve(resourcesPath);
         try (Stream<Path> paths = Files.walk(resourcePath)) {

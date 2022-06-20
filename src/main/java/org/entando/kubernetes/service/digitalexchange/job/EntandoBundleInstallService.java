@@ -335,7 +335,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
 
         try {
-            bundleDescriptorValidator.validateOrThrow(bundleReader.readBundleDescriptor());
+            bundleReader.readBundleDescriptor(bundleDescriptorValidator);
         } catch (IOException e) {
             throw new EntandoComponentManagerException("An error occurred while reading the root bundle descriptor");
         }

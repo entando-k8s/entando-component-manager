@@ -1,6 +1,6 @@
 descriptorVersion: v5
 
-code: something
+name: something
 description: bundle description
 
 components:

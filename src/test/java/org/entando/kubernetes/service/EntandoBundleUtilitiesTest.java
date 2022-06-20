@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -27,6 +28,7 @@ import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
@@ -41,6 +43,7 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -439,6 +442,60 @@ public class EntandoBundleUtilitiesTest {
             String actual = BundleUtilities.gitSshProtocolToHttp(url);
             Assertions.assertThat(actual).isEqualTo(url);
         });
+    }
+
+    @Test
+    void shouldComposeTheExpectedCodeWithDescriptorVersionMinorThan5AndCodeWithoutTheHash() {
+        final WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldComposeTheExpectedCodeWithDescriptorVersionMinorThan5AndCodeWithTheCorrectHash() {
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldComposeTheExpectedCodeWithDescriptorVersionMinorThan5AndCodeWithAnIncorrectHash() {
+        String wrongHash = "abcd1234";
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash);
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash
+                + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldSetTheExpectedWidgetCodeWithWidgetDescriptorV5() {
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5();
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_NAME
+                + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }
 
 

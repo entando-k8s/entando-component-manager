@@ -7,6 +7,8 @@ import java.util.stream.Stream;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Metadata;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
@@ -44,8 +46,7 @@ public class PluginStubHelper {
                 .dbms(TEST_DESCRIPTOR_DBMS)
                 .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
                 .build()
-                .setDescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, TEST_DESCRIPTOR_IMAGE_SHA, EXPECTED_PLUGIN_NAME,
-                        TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME);
+                .setDescriptorMetadata(stubDescriptorMetadata());
     }
 
     public static PluginDescriptor stubPluginDescriptorV3() {
@@ -94,5 +95,10 @@ public class PluginStubHelper {
                 .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
                 .setDbms(TEST_DESCRIPTOR_DBMS)
                 .setSecurityLevel(TEST_DESCRIPTOR_SECURITY_LEVEL);
+    }
+
+    public static PluginDescriptor.DescriptorMetadata stubDescriptorMetadata() {
+        return new DescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, TEST_DESCRIPTOR_IMAGE_SHA, EXPECTED_PLUGIN_NAME,
+                TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME);
     }
 }

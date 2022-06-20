@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -75,9 +76,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                         processFiles(bundleReader, bundleReader.getResourceFiles(),
                                 BundleProperty.RESOURCES_FOLDER_PATH, conflictStrategy, installPlan));
             } else if (bundleReader.containsWidgetFolder()) {
-                installables.addAll(
-                        processFiles(bundleReader, bundleReader.getWidgetsFiles(), BundleProperty.WIDGET_FOLDER_PATH,
-                                conflictStrategy, installPlan));
+                processWidgetFiles(installables, bundleReader, conflictStrategy, installPlan);
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -92,6 +91,20 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new FileInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
+    }
+
+
+    private List<Installable<FileDescriptor>> processWidgetFiles(List<Installable<FileDescriptor>> installables,
+            BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
+
+        for (String folder : bundleReader.getWidgetsBaseFolders()) {
+            final List<String> resourceOfType = bundleReader.getResourceOfType(folder, Files::isRegularFile);
+            installables.addAll(
+                    processFiles(bundleReader, resourceOfType,
+                            BundleProperty.WIDGET_FOLDER_PATH, conflictStrategy, installPlan));
+        }
+
+        return installables;
     }
 
     /**

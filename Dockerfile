@@ -19,7 +19,8 @@ LABEL name="Entando Component Manager" \
       summary="Entando Component Manager for Entando Component Repository" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
 
-#COPY target/generated-resources/licenses /licenses
+COPY target/generated-resources/licenses /licenses
+
 ### start Skopeo section -- copy and install
 COPY --from=build \
      /tmp/skopeo/src/github.com/containers/skopeo/bin/skopeo \

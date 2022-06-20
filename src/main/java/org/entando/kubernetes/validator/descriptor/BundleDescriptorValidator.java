@@ -1,6 +1,5 @@
 package org.entando.kubernetes.validator.descriptor;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,18 +20,35 @@ public class BundleDescriptorValidator extends BaseDescriptorValidator<BundleDes
 
     @PostConstruct
     public void setupValidatorConfiguration() {
+        setupValidatorConfigurationDescriptorV1();
+        setupValidatorConfigurationDescriptorV5();
+    }
+
+    private void setupValidatorConfigurationDescriptorV1() {
         Map<String, Function<BundleDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
-        objectsThatMustNOTBeNull.put("code", BundleDescriptor::getCode);
         objectsThatMustNOTBeNull.put("components", BundleDescriptor::getComponents);
+        objectsThatMustNOTBeNull.put("code", BundleDescriptor::getCode);
+
+        Map<String, Function<BundleDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
+        objectsThatMustBeNull.put("name", BundleDescriptor::getName);
 
         addValidationConfigMap(DescriptorVersion.V1,
                 List.of(super::validateDescriptorFormatOrThrow),
                 objectsThatMustNOTBeNull,
-                new HashMap<>());
+                objectsThatMustBeNull);
+    }
+
+    private void setupValidatorConfigurationDescriptorV5() {
+        Map<String, Function<BundleDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
+        objectsThatMustNOTBeNull.put("components", BundleDescriptor::getComponents);
+        objectsThatMustNOTBeNull.put("name", BundleDescriptor::getName);
+
+        Map<String, Function<BundleDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
+        objectsThatMustBeNull.put("code", BundleDescriptor::getCode);
 
         addValidationConfigMap(DescriptorVersion.V5,
                 List.of(super::validateDescriptorFormatOrThrow),
                 objectsThatMustNOTBeNull,
-                new HashMap<>());
+                objectsThatMustBeNull);
     }
 }

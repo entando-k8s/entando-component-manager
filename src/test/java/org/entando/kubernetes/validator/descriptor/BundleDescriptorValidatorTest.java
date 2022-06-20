@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -23,9 +24,25 @@ class BundleDescriptorValidatorTest {
     }
 
     @Test
-    void shouldCorrectlyValidateABundleDescriptorWithValidFields() {
-        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
-        bundleDescriptor.setComponents(new ComponentSpecDescriptor());
+    void shouldCorrectlyValidateABundleDescriptorV1WithValidFields() {
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null)
+                .setComponents(new ComponentSpecDescriptor());
+
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
+
+        bundleDescriptor.setName(null);
+        assertDoesNotThrow(() -> validator.validateOrThrow(bundleDescriptor));
+    }
+
+    @Test
+    void shouldCorrectlyValidateABundleDescriptorV5WithValidFields() {
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null)
+                .setComponents(new ComponentSpecDescriptor());
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
+
+        bundleDescriptor.setCode(null);
         assertDoesNotThrow(() -> validator.validateOrThrow(bundleDescriptor));
     }
 

@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.descriptor.widget;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -11,8 +10,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
-import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.springframework.util.ObjectUtils;
 
 @Getter
 @Setter
@@ -35,7 +33,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private String customUiPath;
 
     // ------------------------------------------------------------
-    // Version 2
+    // Version 5
 
     private String name;
     private String configWidget;
@@ -46,7 +44,9 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(code);
+        return ObjectUtils.isEmpty(code)
+                ? new ComponentKey(name) :
+                new ComponentKey(code);
     }
 
     @Getter
@@ -86,23 +86,5 @@ public class WidgetDescriptor extends VersionedDescriptor {
     public WidgetDescriptor setCode(String code) {
         this.code = code;
         return this;
-    }
-
-    /**
-     * set the widget code depending on the widget descriptor version. ensure that the widget code is signed with the
-     * bundle id hash
-     *
-     * @param bundleReader     the bundle reader to use to read the bundle id
-     */
-    public void setCode(BundleReader bundleReader) {
-        String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-
-        if (this.isVersion1()) {
-            if (!code.endsWith(bundleIdHash)) {
-                code += "-" + bundleIdHash;
-            }
-        } else {
-            code = name + "-" + bundleIdHash;
-        }
     }
 }
