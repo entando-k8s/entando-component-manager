@@ -5,13 +5,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Data
 public class EntandoCoreWidget {
+
+    private static final Logger logger = LoggerFactory.getLogger(EntandoCoreWidget.class);
 
     private String code;
     private Map<String, String> titles;
@@ -20,6 +25,7 @@ public class EntandoCoreWidget {
     private String customUi;
     private Map<String, Object> configUi;
     private List<WidgetParameter> params;
+    private String configMfe;
     private String parentCode;
     private Map<String, String> paramsDefaults;
 
@@ -39,21 +45,16 @@ public class EntandoCoreWidget {
                     new WidgetParameter(p.getName(), p.getDescription())
             ).collect(Collectors.toList());
         }
+        this.configMfe = descriptor.getConfigMfe();
         this.parentCode = descriptor.getParentCode();
         this.paramsDefaults = descriptor.getParamsDefaults();
     }
 
     @Getter
+    @AllArgsConstructor
     public static class WidgetParameter {
-
-        public WidgetParameter(String name, String description) {
-            this.name = name;
-            this.description = description;
-        }
-
-        private String name;
-        private String description;
-
+        final private String name;
+        final private String description;
     }
 
 }

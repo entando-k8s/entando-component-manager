@@ -2,6 +2,7 @@ package org.entando.kubernetes.client.model.entandocore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +62,7 @@ public class EntandoCoreWidgetTest {
                 new WidgetDescriptor.Param("key2", "description of key 2")
         );
         wd.setParams(parameters);
+        wd.setConfigMfe("configMfe");
 
         EntandoCoreWidget ecw = new EntandoCoreWidget(wd);
         List<WidgetParameter> ecwParameters = ecw.getParams();
@@ -69,6 +71,7 @@ public class EntandoCoreWidgetTest {
         Assertions.assertEquals("key2", ecwParameters.get(1).getName());
         Assertions.assertEquals("description of key 1", ecwParameters.get(0).getDescription());
         Assertions.assertEquals("description of key 2", ecwParameters.get(1).getDescription());
+        Assertions.assertEquals("configMfe", ecw.getConfigMfe());
 
         assertThat(ecw.getParentCode()).isNull();
         assertThat(ecw.getParamsDefaults()).isNull();
@@ -103,7 +106,6 @@ public class EntandoCoreWidgetTest {
     }
 
     private WidgetDescriptor testWidgetDescriptor() {
-
         Map<String, String> titles = new HashMap<>();
         titles.put("en", "My title");
         titles.put("it", "Il mio titolo");
