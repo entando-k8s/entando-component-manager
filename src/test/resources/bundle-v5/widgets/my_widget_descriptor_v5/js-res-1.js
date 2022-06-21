@@ -1,0 +1,1 @@
+my_widget_descriptor_v2

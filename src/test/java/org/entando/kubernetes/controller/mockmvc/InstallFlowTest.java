@@ -10,6 +10,7 @@ import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_PLANS_ENDPOINT;
+import static org.entando.kubernetes.utils.TestInstallUtils.MOCK_BUNDLE_NAME;
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
@@ -73,9 +74,6 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
-import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
-import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
-import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
@@ -148,12 +146,6 @@ public class InstallFlowTest {
 
     @Autowired
     private Map<ComponentType, ComponentProcessor> processorMap;
-
-    @Autowired
-    private List<ReportableComponentProcessor> reportableComponentProcessorList;
-
-    @Autowired
-    private Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
 
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
@@ -319,7 +311,7 @@ public class InstallFlowTest {
 
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteWidget(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("todomvc_widget", "another_todomvc_widget"));
+        assertThat(ac.getAllValues()).containsAll(Arrays.asList("todomvc_widget-ece8f6f0", "another_todomvc_widget-ece8f6f0"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePageModel(ac.capture());
@@ -335,7 +327,7 @@ public class InstallFlowTest {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("/something", ac.getValue());
+        assertEquals("bundles/something-ece8f6f0", ac.getValue());
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteFragment(ac.capture());
@@ -420,12 +412,12 @@ public class InstallFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].code").value(TestInstallUtils.MOCK_BUNDLE_NAME))
+                .andExpect(jsonPath("$.payload[0].code").value(MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload[0].installed").value("true"));
 
         List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
         assertThat(installedComponents).hasSize(1);
-        assertThat(installedComponents.get(0).getId()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME);
+        assertThat(installedComponents.get(0).getId()).isEqualTo(MOCK_BUNDLE_NAME);
         assertThat(installedComponents.get(0).getBundleType()).isEqualTo("STANDARD_BUNDLE");
         assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
     }
@@ -450,7 +442,7 @@ public class InstallFlowTest {
         mockMvc.perform(get(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
-                .andExpect(jsonPath("$.payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME))
+                .andExpect(jsonPath("$.payload.componentId").value(MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
@@ -475,11 +467,7 @@ public class InstallFlowTest {
                             .equals(c.getComponentId()))
                     .collect(Collectors.toList());
 
-            if (c.getComponentId().equals(TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE)) {
-                assertThat(jobs).hasSize(8);
-            } else {
-                assertThat(jobs).hasSize(2);
-            }
+            assertThat(jobs).hasSize(2);
             assertThat(jobs.stream().anyMatch(j -> j.getStatus().equals(JobStatus.INSTALL_ROLLBACK))).isTrue();
         }
 
@@ -552,14 +540,14 @@ public class InstallFlowTest {
                 .andDo(print())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].code").value(TestInstallUtils.MOCK_BUNDLE_NAME))
+                .andExpect(jsonPath("$.payload[0].code").value(MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
         // Component install status should be rollback
         mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.id").value(failingJobId))
-                .andExpect(jsonPath("$.payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME))
+                .andExpect(jsonPath("$.payload.componentId").value(MOCK_BUNDLE_NAME))
                 .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
         // And component should not be installed
@@ -580,7 +568,7 @@ public class InstallFlowTest {
 
         // All jobs should be available via the API
         mockMvc.perform(get("/jobs?filters[0].attribute=componentId&filters[0].operator=eq&filters[0].value="
-                        + TestInstallUtils.MOCK_BUNDLE_NAME))
+                        + MOCK_BUNDLE_NAME))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -620,10 +608,7 @@ public class InstallFlowTest {
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
-        //        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
-        //                .andExpect(status().isConflict())
-        //                .andExpect(content().string(containsString("JOB ID: " + jobId)));
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
+        waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
     }
 
     @Test
@@ -647,7 +632,7 @@ public class InstallFlowTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
+        waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_ROLLBACK, JobStatus.INSTALL_ERROR);
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
@@ -683,7 +668,7 @@ public class InstallFlowTest {
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isCreated())
                 .andReturn();
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
+        waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
@@ -709,13 +694,13 @@ public class InstallFlowTest {
         simulateInProgressInstall();
         assertThat(installedCompRepo.findAll()).isEmpty();
 
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
+        waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
         assertThat(installedCompRepo.findAll()).isNotEmpty();
 
         simulateInProgressUninstall();
         assertThat(installedCompRepo.findAll()).isNotEmpty();
 
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_COMPLETED);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
         assertThat(installedCompRepo.findAll()).isEmpty();
     }
 
@@ -745,7 +730,7 @@ public class InstallFlowTest {
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict());
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_COMPLETED);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
     }
 
     @Test
@@ -759,7 +744,7 @@ public class InstallFlowTest {
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isConflict());
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_COMPLETED);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
     }
 
     @Test
@@ -917,7 +902,7 @@ public class InstallFlowTest {
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_ERROR);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_ERROR);
     }
 
     @Test

@@ -1,4 +1,4 @@
-package org.entando.kubernetes.model.bundle.descriptor;
+package org.entando.kubernetes.model.bundle.descriptor.widget;
 
 import java.util.Map;
 import lombok.AllArgsConstructor;

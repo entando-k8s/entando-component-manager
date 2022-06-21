@@ -9,28 +9,26 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
-import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
-public class PluginDescriptor implements Descriptor {
+public class PluginDescriptor extends VersionedDescriptor {
 
     @AllArgsConstructor
     @Getter
     public static class DescriptorMetadata {
         private final String bundleId;
-        private final String fullDeploymentName;
+        private final String bundleCode;
+        private final String pluginId;
+        private final String pluginName;
+        private final String pluginCode;
     }
-
-    /**
-     * identifies the plugin descriptor version.
-     */
-    private String descriptorVersion;
 
     /**
      * Cache of the processing of the image field.
@@ -104,7 +102,7 @@ public class PluginDescriptor implements Descriptor {
             String image, String healthCheckPath, String dbms, List<String> roles,
             List<PluginPermission> permissions, String ingressPath, String securityLevel,
             List<EnvironmentVariable> environmentVariables) {
-        this.descriptorVersion = descriptorVersion;
+        super.setDescriptorVersion(descriptorVersion);
         this.dockerImage = dockerImage;
         this.spec = spec;
         this.name = name;
@@ -130,29 +128,40 @@ public class PluginDescriptor implements Descriptor {
         return this.dockerImage;
     }
 
+    @Override
     public boolean isVersion1() {
-        return StringUtils.isEmpty(image);
+        return ObjectUtils.isEmpty(image);
     }
 
     public boolean isVersionLowerThan3() {
-        final PluginDescriptorVersion pluginDescriptorVersion = PluginDescriptorVersion.fromVersion(descriptorVersion);
-        return pluginDescriptorVersion == PluginDescriptorVersion.V1
-                || pluginDescriptorVersion == PluginDescriptorVersion.V2;
+        final DescriptorVersion descriptorVersion = DescriptorVersion.fromVersion(
+                super.getDescriptorVersion());
+        return descriptorVersion == DescriptorVersion.V1
+                || descriptorVersion == DescriptorVersion.V2;
     }
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(this.getDescriptorMetadata().getFullDeploymentName());
+        return new ComponentKey(this.getDescriptorMetadata().getPluginCode());
     }
 
-    public PluginDescriptor setDescriptorMetadata(String bundleId, String fullDeploymentName) {
+    public PluginDescriptor setDescriptorMetadata(String bundleId, String bundleCode, String pluginId, String pluginName, String pluginCode) {
         if (ObjectUtils.isEmpty(bundleId)) {
             throw new EntandoComponentManagerException("Empty bundle id received as plugin metadata");
         }
-        if (ObjectUtils.isEmpty(fullDeploymentName)) {
-            throw new EntandoComponentManagerException("Empty full deployment name received as plugin metadata");
+        if (ObjectUtils.isEmpty(bundleCode)) {
+            throw new EntandoComponentManagerException("Empty bundle code received as plugin metadata");
         }
-        this.descriptorMetadata = new DescriptorMetadata(bundleId, fullDeploymentName);
+        if (ObjectUtils.isEmpty(pluginId)) {
+            throw new EntandoComponentManagerException("Empty plugin id received as plugin metadata");
+        }
+        if (ObjectUtils.isEmpty(pluginName)) {
+            throw new EntandoComponentManagerException("Empty plugin name name received as plugin metadata");
+        }
+        if (ObjectUtils.isEmpty(pluginCode)) {
+            throw new EntandoComponentManagerException("Empty plugin code received as plugin metadata");
+        }
+        this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginId, pluginName, pluginCode);
         return this;
     }
 }

@@ -5,6 +5,8 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,9 +25,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
+import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
@@ -67,6 +72,8 @@ public class BundleUtilities {
     public static final String COLONS_REGEX = ":(?!\\/)";
     public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
     public static final int PLUGIN_HASH_LENGTH = 8;
+
+    public static final String BUNDLES_FOLDER = "bundles";
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -154,7 +161,7 @@ public class BundleUtilities {
     }
 
     public static List<ExpectedRole> extractRolesFromDescriptor(PluginDescriptor descriptor) {
-        return descriptor.getRoles().stream()
+        return Optional.ofNullable(descriptor.getRoles()).orElseGet(ArrayList::new).stream()
                 .distinct()
                 .map(role -> new ExpectedRole(role, role))
                 .collect(Collectors.toList());
@@ -207,7 +214,13 @@ public class BundleUtilities {
         return ingressPath;
     }
 
-    private static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
+    /**
+     * compose the plugin ingress path starting by its docker image.
+     *
+     * @param descriptor the PluginDescriptor from which take the docker image
+     * @return the composed ingress path
+     */
+    public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
 
         DockerImage image = descriptor.getDockerImage();
 
@@ -254,7 +267,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(descriptor.getDescriptorMetadata().getFullDeploymentName())
+                .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
                 .endMetadata()
                 .withNewSpec()
@@ -279,7 +292,7 @@ public class BundleUtilities {
     public static EntandoPlugin generatePluginFromDescriptorV1(PluginDescriptor descriptor) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(descriptor.getDescriptorMetadata().getFullDeploymentName())
+                .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()
@@ -347,6 +360,18 @@ public class BundleUtilities {
         return "/" + (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
                 ? bundleReader.getBundleCode()
                 : "");
+    }
+
+    /**
+     * return the bundle folder name full of the signing hash.
+     *
+     * @param bundleReader the BundleReader to use to compose the signed bundle folder name
+     * @return the composed signed bundle folder name
+     * @throws IOException if an error occurrs during the reading of the bundle
+     */
+    public static String composeSignedBundleFolder(BundleReader bundleReader) throws IOException {
+        final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+        return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
     }
 
     /**
@@ -443,13 +468,24 @@ public class BundleUtilities {
     }
 
     /**
-     * sign the bundle id prepending the first 8 chars of the bundle url.
+     * get the bundle id returning the first 8 chars of the bundle url.
      *
      * @param bundleUrl the url of the repository of the bundle
      * @return the signed bundle id
      */
-    public static String signBundleId(String bundleUrl) {
+    public static String getBundleId(String bundleUrl) {
         return DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH);
+    }
+
+    /**
+     * get the bundle id returning the first 8 chars of the bundle url.
+     *
+     * @param bundleUrl the url of the repository of the bundle
+     * @return the signed bundle id
+     */
+    public static String removeProtocolAndGetBundleId(String bundleUrl) {
+        final String url = BundleUtilities.removeProtocolFromUrl(bundleUrl);
+        return getBundleId(url);
     }
 
     /**
@@ -461,5 +497,51 @@ public class BundleUtilities {
     public static String gitSshProtocolToHttp(String url) {
         String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
         return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
+    }
+
+
+    /**
+     * build the full path of a resource inside a bundle.
+     *
+     * @param bundleReader         the bundle reader responsible for reading the bundle
+     * @param folderProp           the BundleProperty indicating the root folder of the file
+     * @param fileDescriptorFolder  the folder containing the current file
+     * @param bundleId             the id of the current bundle
+     * @return the built full path of a resource
+     */
+    public static String buildFullBundleResourcePath(BundleReader bundleReader, BundleProperty folderProp,
+            String fileDescriptorFolder, String bundleId) throws IOException {
+
+        final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
+        Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
+
+        if (!bundleReader.isBundleV1()) {
+            final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
+            fileFolder = Paths.get(fileFolder.toString().replace(fileFolder.subpath(0, 1).toString(), signedFolder));
+        }
+
+        return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
+    }
+
+    /**
+     * generic method to compose the descriptor code concatenating the bundle id to the descriptor name.
+     *
+     * @return the composed descriptor code
+     */
+    public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
+            String bundleUrl) {
+
+        String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleUrl);
+        String composedCode = code;
+
+        if (descriptor.isVersion1() || !descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
+            if (!code.endsWith(bundleIdHash)) {
+                composedCode += "-" + bundleIdHash;
+            }
+        } else {
+            composedCode = name + "-" + bundleIdHash;
+        }
+
+        return composedCode;
     }
 }

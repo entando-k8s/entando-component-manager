@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,8 @@ class EntandoDeBundleComposerTest {
                     assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
                     final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-                    assertThat(details.getName()).isEqualTo("something");
+                    assertThat(details.getName()).isEqualTo(
+                            "something-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
                     assertThat(details.getDescription()).isEqualTo("bundle description");
 
                     assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);

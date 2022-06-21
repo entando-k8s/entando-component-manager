@@ -31,7 +31,6 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -80,20 +79,31 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class TestInstallUtils {
 
     public static final String MOCK_BUNDLE_NAME = "todomvc";
+    public static final String MOCK_BUNDLE_NAME_V5 = "todomvc_v5";
     public static final String MOCK_BUNDLE_NAME_TGZ = "bundle.tgz";
+    public static final String MOCK_BUNDLE_V5_NAME_TGZ = "bundle-v5.tgz";
     public static final String PLUGIN_TODOMVC_CUSTOMBASE = "pn-ece8f6f0-cbece4f7-custombasename";
+    public static final String PLUGIN_TODOMVC_CUSTOMBASE_V3 = "pn-ece8f6f0-434f3174-custombasenamev3";
+    public static final String PLUGIN_TODOMVC_CUSTOMBASE_V3C = "pn-ece8f6f0-bb1e1949-custombasenamev3c";
+    public static final String PLUGIN_TODOMVC_CUSTOMBASE_V4 = "pn-ece8f6f0-68277159-custombasenamev4";
     public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-ece8f6f0-bb576c5d-entando-todomvcv1";
     public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-ece8f6f0-cc2d5236-entando-todomvcv2";
     public static final UriBuilder INSTALL_PLANS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME, "installplans");
+    public static final UriBuilder INSTALL_PLANS_ENDPOINT_V5 = UriComponentsBuilder.newInstance()
+            .pathSegment("components", MOCK_BUNDLE_NAME_V5, "installplans");
     public static final UriBuilder ALL_COMPONENTS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components");
     public static final UriBuilder SINGLE_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME);
     public static final UriBuilder INSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME, "install");
+    public static final UriBuilder INSTALL_COMPONENT_ENDPOINT_V5 = UriComponentsBuilder.newInstance()
+            .pathSegment("components", MOCK_BUNDLE_NAME_V5, "install");
     public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME, "uninstall");
+    public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT_V5 = UriComponentsBuilder.newInstance()
+            .pathSegment("components", MOCK_BUNDLE_NAME_V5, "uninstall");
     public static final String JOBS_ENDPOINT = "/jobs";
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
@@ -108,7 +118,20 @@ public class TestInstallUtils {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        return completeSuccessfullyCompletedInstall(mockMvc, result);
+        return completeSuccessfullyCompletedInstall(mockMvc, MOCK_BUNDLE_NAME, result);
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedInstallV5(MockMvc mockMvc, EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT_V5.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSuccessfullyCompletedInstall(mockMvc, MOCK_BUNDLE_NAME_V5, result);
     }
 
     @SneakyThrows
@@ -121,7 +144,20 @@ public class TestInstallUtils {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        return completeSuccessfullyCompletedInstall(mockMvc, result);
+        return completeSuccessfullyCompletedInstall(mockMvc, MOCK_BUNDLE_NAME, result);
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedInstallWithInstallPlanV5(MockMvc mockMvc,
+            EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
+
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT_V5.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSuccessfullyCompletedInstall(mockMvc, MOCK_BUNDLE_NAME_V5, result);
     }
 
     @SneakyThrows
@@ -132,15 +168,38 @@ public class TestInstallUtils {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
+        final InstallWithPlansRequest installWithPlansReq = mockInstallWithPlansRequestWithActions();
+
         MvcResult result = mockMvc.perform(
                 put(INSTALL_PLANS_ENDPOINT.build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(mockInstallWithPlansRequestWithActions())))
+                        .content(objectMapper.writeValueAsString(installWithPlansReq)))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        return completeSuccessfullyCompletedInstall(mockMvc, result);
+        return completeSuccessfullyCompletedInstall(mockMvc, MOCK_BUNDLE_NAME, result);
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedInstallWithInstallPlanAndInstallPlanRequestV5(MockMvc mockMvc,
+            EntandoCoreClient coreClient, K8SServiceClient k8sServiceClient, String bundleName) {
+
+        mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        final InstallWithPlansRequest installWithPlansRequest = mockInstallWithPlansRequestWithActionsV5();
+
+        MvcResult result = mockMvc.perform(
+                        put(INSTALL_PLANS_ENDPOINT_V5.build())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(installWithPlansRequest)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return completeSuccessfullyCompletedInstall(mockMvc, MOCK_BUNDLE_NAME_V5, result);
     }
 
     /**
@@ -170,13 +229,40 @@ public class TestInstallUtils {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
     }
 
-    private static String completeSuccessfullyCompletedInstall(MockMvc mockMvc, MvcResult result) throws Exception {
+    /**
+     * perform mock operations required to simulate a successfully bundle installation.
+     *
+     * @param coreClient the EntandoCoreClient
+     * @param k8sServiceClient the K8SServiceClient
+     * @param bundleName the name of the bundle
+     */
+    private static void mockSuccessfullyCompletedInstallV5(EntandoCoreClient coreClient,
+            K8SServiceClient k8sServiceClient, String bundleName) {
+
+        Mockito.reset(coreClient);
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        mockBundle(k8sServiceClient, getTestBundleV5());
+        mockPluginsV5(k8sServiceClient, SUCCESSFUL);
+
+        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
+                        .withBody(readFromDEPackage(bundleName))));
+
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
+    }
+
+    private static String completeSuccessfullyCompletedInstall(MockMvc mockMvc, String bundleName, MvcResult result) throws Exception {
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
 
-        waitForInstallStatus(mockMvc, JobStatus.INSTALL_COMPLETED);
+        waitForInstallStatus(mockMvc, bundleName, JobStatus.INSTALL_COMPLETED);
 
         return jobId;
     }
@@ -228,7 +314,15 @@ public class TestInstallUtils {
                 .withNamespace("entando-de-bundles")
                 .endMetadata()
                 .withSpec(getTestEntandoDeBundleSpec()).build();
+    }
 
+    public static EntandoDeBundle getTestBundleV5() {
+        return new EntandoDeBundleBuilder()
+                .withNewMetadata()
+                .withName(MOCK_BUNDLE_NAME_V5)
+                .withNamespace("entando-de-bundles")
+                .endMetadata()
+                .withSpec(getTestEntandoDeBundleSpec()).build();
     }
 
     public static EntandoDeBundleSpec getTestEntandoDeBundleSpec() {
@@ -256,6 +350,7 @@ public class TestInstallUtils {
                 .build();
     }
 
+
     public static AnalysisReport getCoreAnalysisReport() {
         return AnalysisReport.builder()
                 .categories(Map.of("my-category", Status.NEW, "another_category", Status.DIFF))
@@ -265,11 +360,22 @@ public class TestInstallUtils {
                 .fragments(Map.of("title_fragment", Status.NEW, "another_fragment", Status.DIFF))
                 .pageTemplates(Map.of("todomvc_page_model", Status.NEW, "todomvc_another_page_model", Status.DIFF))
                 .pages(Map.of("my-page", Status.NEW, "another-page", Status.DIFF))
-                .resources(Map.of("/something/css/custom.css", Status.DIFF, "/something/css/style.css", Status.NEW,
-                        "/something/js/configUiScript.js", Status.NEW, "/something/js/script.js", Status.NEW,
-                        "/something/js/vendor/jquery/jquery.js", Status.NEW))
-                .widgets(Map.of("another_todomvc_widget", Status.DIFF, "todomvc_widget", Status.NEW,
-                        "widget_with_config_ui", Status.NEW))
+                .resources(Map.of("bundles/something-ece8f6f0/resources/css/custom.css", Status.DIFF,
+                        "bundles/something-ece8f6f0/resources/css/style.css", Status.NEW,
+                        "bundles/something-ece8f6f0/resources/js/configUiScript.js", Status.NEW,
+                        "bundles/something-ece8f6f0/resources/js/script.js", Status.NEW,
+                        "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js", Status.NEW))
+                .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
+                        "widget_with_config_ui-ece8f6f0", Status.NEW))
+                .build();
+    }
+
+    public static AnalysisReport getCoreAnalysisReportV5() {
+        return AnalysisReport.builder()
+                .resources(Map.of("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css", Status.DIFF,
+                        "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js", Status.NEW,
+                        "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js", Status.NEW))
+                .widgets(Map.of("my_widget_descriptor_v5", Status.DIFF))
                 .build();
     }
 
@@ -291,16 +397,19 @@ public class TestInstallUtils {
                 .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .resources(
-                        Map.of("/something/css/custom.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                                "/something/css/style.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "/something/js/configUiScript.js",
-                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "/something/js/script.js",
+                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                                "bundles/something-ece8f6f0/resources/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "/something/js/vendor/jquery/jquery.js",
+                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                                "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
-                .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                        "widget_with_config_ui", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .widgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "widget_with_config_ui-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .contentTypes(
@@ -312,10 +421,30 @@ public class TestInstallUtils {
                 .contents(Map.of("CNG102", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         "CNT103", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        PLUGIN_TODOMVC_CUSTOMBASE_V3, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        PLUGIN_TODOMVC_CUSTOMBASE_V3C, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        PLUGIN_TODOMVC_CUSTOMBASE_V4, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         PLUGIN_TODOMVC_TODOMVC_1, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                         PLUGIN_TODOMVC_TODOMVC_2, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .build();
     }
+
+    public static InstallPlan mockInstallPlanV5() {
+        return InstallPlan.builder()
+                .hasConflicts(true)
+                .resources(
+                        Map.of("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/assets/css-res.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/js-res-1.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5/static/js/js-res-2.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .widgets(Map.of("my_widget_descriptor_v5", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE_V3C, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        PLUGIN_TODOMVC_CUSTOMBASE_V4, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
+                .build();
+    }
+
 
 
     public static InstallPlan mockInstallPlanWithActions() {
@@ -336,11 +465,16 @@ public class TestInstallUtils {
                 .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .resources(
-                        Map.of("/something/css/custom.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "/something/css/style.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/something/js/configUiScript.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/something/js/script.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                                "/something/vendor/jquery/jquery.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "bundles/something-ece8f6f0/resources/css/style.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
                 .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
@@ -378,13 +512,18 @@ public class TestInstallUtils {
                 .setPages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setResources(
-                        Map.of("/something/css/custom.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "/something/css/style.css", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/something/js/configUiScript.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "/something/js/script.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                                "/something/vendor/jquery/jquery.js", InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
-                .setWidgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "bundles/something-ece8f6f0/resources/css/style.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
+                .setWidgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setAssets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setContentTypes(
@@ -398,6 +537,22 @@ public class TestInstallUtils {
                 .setPlugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         PLUGIN_TODOMVC_TODOMVC_1, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         PLUGIN_TODOMVC_TODOMVC_2, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
+    }
+
+    public static InstallWithPlansRequest mockInstallWithPlansRequestWithActionsV5() {
+        return (InstallWithPlansRequest) new InstallWithPlansRequest()
+                .setVersion("0.0.1")
+                .setHasConflicts(true)
+                .setResources(
+                        Map.of("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/js-res-1.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
+                                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js/js-res-2.js",
+                                InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setWidgets(Map.of("my_widget_descriptor_v5-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
+                .setPlugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE_V3C, InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        PLUGIN_TODOMVC_CUSTOMBASE_V4, InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)));
     }
 
 
@@ -420,8 +575,18 @@ public class TestInstallUtils {
     public static AnalysisReport getPluginAnalysisReport() {
         return AnalysisReport.builder()
                 .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, Status.DIFF,
+                        PLUGIN_TODOMVC_CUSTOMBASE_V3, Status.DIFF,
+                        PLUGIN_TODOMVC_CUSTOMBASE_V3C, Status.DIFF,
+                        PLUGIN_TODOMVC_CUSTOMBASE_V4, Status.DIFF,
                         PLUGIN_TODOMVC_TODOMVC_1, Status.NEW,
                         PLUGIN_TODOMVC_TODOMVC_2, Status.NEW))
+                .build();
+    }
+
+    public static AnalysisReport getPluginAnalysisReportV5() {
+        return AnalysisReport.builder()
+                .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE_V3C, Status.DIFF,
+                        PLUGIN_TODOMVC_CUSTOMBASE_V4, Status.DIFF))
                 .build();
     }
 
@@ -429,6 +594,16 @@ public class TestInstallUtils {
         AnalysisReport coreAnalysisReport = getCoreAnalysisReport();
         AnalysisReport cmsAnalysisReport = getCmsAnalysisReport();
         AnalysisReport pluginAnalysisReport = getPluginAnalysisReport();
+
+        when(coreClient.getEngineAnalysisReport(any())).thenReturn(coreAnalysisReport);
+        when(coreClient.getCMSAnalysisReport(any())).thenReturn(cmsAnalysisReport);
+        when(k8SServiceClient.getAnalysisReport(any())).thenReturn(pluginAnalysisReport);
+    }
+
+    public static void mockAnalysisReportV5(EntandoCoreClient coreClient, K8SServiceClient k8SServiceClient) {
+        AnalysisReport coreAnalysisReport = getCoreAnalysisReportV5();
+        AnalysisReport cmsAnalysisReport = new AnalysisReport();
+        AnalysisReport pluginAnalysisReport = getPluginAnalysisReportV5();
 
         when(coreClient.getEngineAnalysisReport(any())).thenReturn(coreAnalysisReport);
         when(coreClient.getCMSAnalysisReport(any())).thenReturn(cmsAnalysisReport);
@@ -471,12 +646,40 @@ public class TestInstallUtils {
         EntandoAppPluginLink plugin3 = new EntandoAppPluginLink(new ObjectMeta(),
                 new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE),
                 deploymentStatus);
+        EntandoAppPluginLink plugin4 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3),
+                deploymentStatus);
+        EntandoAppPluginLink plugin5 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3C),
+                deploymentStatus);
+        EntandoAppPluginLink plugin6 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
+                deploymentStatus);
 
         when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
         when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
         when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
         when(k8sServiceClient.updatePlugin(any())).thenReturn(null);
-        when(k8sServiceClient.getAppLinks(any())).thenReturn(List.of(plugin1, plugin2, plugin3));
+        when(k8sServiceClient.getAppLinks(any())).thenReturn(
+                List.of(plugin1, plugin2, plugin3, plugin4, plugin5, plugin6));
+    }
+
+    public static void mockPluginsV5(K8SServiceClient k8sServiceClient, EntandoDeploymentPhase status) {
+        EntandoCustomResourceStatus deploymentStatus = new EntandoCustomResourceStatus();
+        deploymentStatus.updateDeploymentPhase(status, 1L);
+
+        EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3C),
+                deploymentStatus);
+        EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
+                deploymentStatus);
+
+        when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
+        when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
+        when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
+        when(k8sServiceClient.updatePlugin(any())).thenReturn(null);
+        when(k8sServiceClient.getAppLinks(any())).thenReturn(List.of(plugin1, plugin2));
     }
 
     @SneakyThrows
@@ -503,8 +706,8 @@ public class TestInstallUtils {
                 expected);
     }
 
-    public static void waitForUninstallStatus(MockMvc mockMvc, JobStatus expected) {
-        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, MOCK_BUNDLE_NAME,
+    public static void waitForUninstallStatus(MockMvc mockMvc, String bundleName, JobStatus expected) {
+        waitForJobStatus(() -> getComponentLastJobStatusOfType(mockMvc, bundleName,
                         JobType.UNINSTALL.getStatuses()), expected);
     }
 
@@ -564,9 +767,22 @@ public class TestInstallUtils {
 
     public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String jobId, JobStatus expectedStatus)
             throws Exception {
+        verifyJobHasComponentAndStatus(mockMvc, TestInstallUtils.MOCK_BUNDLE_NAME, jobId, expectedStatus);
+    }
+
+    public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String bundleName, String jobId, JobStatus expectedStatus)
+            throws Exception {
         mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
                 .andDo(print()).andExpect(status().isOk())
-                .andExpect(jsonPath("payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME))
+                .andExpect(jsonPath("payload.componentId").value(bundleName))
+                .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
+    }
+
+    public static void verifyJobHasComponentAndStatusV5(MockMvc mockMvc, String jobId, JobStatus expectedStatus)
+            throws Exception {
+        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(jsonPath("payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME_V5))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
     }
 
@@ -622,7 +838,32 @@ public class TestInstallUtils {
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
 
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_COMPLETED);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
+
+        return jobId;
+    }
+
+    @SneakyThrows
+    public static String simulateSuccessfullyCompletedUninstallV5(MockMvc mockMvc, EntandoCoreClient coreClient) {
+        Mockito.reset(coreClient);
+        WireMock.reset();
+        WireMock.setGlobalFixedDelay(0);
+
+        setupComponentUsageToAllowUninstall(coreClient);
+        stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"iddqd\" }")));
+        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
+
+        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT_V5.build()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
+        assertThat(result.getResponse().containsHeader("Location")).isTrue();
+        assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
+
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME_V5, JobStatus.UNINSTALL_COMPLETED);
 
         return jobId;
     }
@@ -788,7 +1029,7 @@ public class TestInstallUtils {
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
 
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_ERROR);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_ERROR);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
@@ -865,7 +1106,7 @@ public class TestInstallUtils {
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
         assertThat(result.getResponse().containsHeader("Location")).isTrue();
         assertThat(result.getResponse().getHeader("Location")).endsWith("/jobs/" + jobId);
-        waitForUninstallStatus(mockMvc, JobStatus.UNINSTALL_IN_PROGRESS);
+        waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_IN_PROGRESS);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }

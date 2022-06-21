@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -32,13 +33,13 @@ import org.entando.kubernetes.model.bundle.descriptor.GroupDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LabelDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -56,14 +57,13 @@ import org.springframework.core.io.ClassPathResource;
 @Tag("unit")
 public class EntandoBundleReaderTest {
 
-    public static final String ALTERNATIVE_STRUCTURE_BUNDLE_NAME = "generic_bundle.tgz";
     BundleReader bundleReader;
     Path bundleFolder;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder);
+        bundleReader = new BundleReader(bundleFolder, BundleInfoStubHelper.GIT_REPO_ADDRESS);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadBundleIdCorrectly() throws IOException {
-        assertThat(bundleReader.getBundleCode()).isEqualTo("something");
+        assertThat(bundleReader.getBundleCode()).isEqualTo("something-77b2b10e");
     }
 
     @Test
@@ -381,6 +381,33 @@ public class EntandoBundleReaderTest {
         assertThat(fd.getFilename()).isEqualTo("custom.css");
         assertThat(fd.getFolder()).isEqualTo("resources/css/");
     }
+
+
+    @Test
+    void shouldReturnTheExpectedWidgetResources() throws IOException {
+        bundleFolder = new ClassPathResource("bundle-v5").getFile().toPath();
+        bundleReader = new BundleReader(bundleFolder);
+
+        final List<String> expectedJsRes = Arrays.asList("widgets/my_widget_descriptor_v5/js-res-1.js",
+                "widgets/my_widget_descriptor_v5/static/js/js-res-2.js");
+        final List<String> jsRes = bundleReader.getWidgetResourcesOfType("widgets/my_widget_descriptor_v5", "js");
+        assertThat(jsRes).containsExactlyInAnyOrder(expectedJsRes.toArray(String[]::new));
+
+        final List<String> expectedCssRes = Collections.singletonList(
+                "widgets/my_widget_descriptor_v5/assets/css-res.css");
+        final List<String> cssRes = bundleReader.getWidgetResourcesOfType("widgets/my_widget_descriptor_v5", "css");
+        assertThat(cssRes).containsExactlyInAnyOrder(expectedCssRes.toArray(String[]::new));
+    }
+
+    @Test
+    void shouldReturnAnEmptyListOfResourcesWithNonExistingPath() {
+        List<String> res = bundleReader.getWidgetResourcesOfType("widgets/NON_EXISTING", "js");
+        assertThat(res).isEmpty();
+
+        res = bundleReader.getWidgetResourcesOfType("widgets/NON_EXISTING", "css");
+        assertThat(res).isEmpty();
+    }
+
 
     private Path getTestDefaultBundlePath() throws IOException {
         return getBundlePath(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);

@@ -4,8 +4,8 @@ public enum BundleProperty {
 
     DESCRIPTOR_FILENAME("descriptor.yaml"),
     RESOURCES_FOLDER_NAME("resources"),
-    RESOURCES_FOLDER_PATH("resources/");
-
+    RESOURCES_FOLDER_PATH("resources/"),
+    WIDGET_FOLDER_PATH("widgets/");
 
     private final String value;
 

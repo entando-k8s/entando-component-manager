@@ -4,17 +4,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Metadata;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 
 public class PluginStubHelper {
 
-    public static final String BUNDLE_ID = "my-bundle";
+    public static final String BUNDLE_NAME = "my-bundle";
+    public static final String BUNDLE_ID = "a1b2c3d4";
+    public static final String BUNDLE_CODE = BUNDLE_NAME + "-" + BUNDLE_ID;
     public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas";
     public static final String EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME = "customdepbasename";
     public static final String EXPECTED_INGRESS_PATH_V_MINOR_THAN_3 = "/entando/the-lucas/0-0-1-snapshot";
@@ -30,8 +34,7 @@ public class PluginStubHelper {
     public static final String TEST_ENV_VAR_1_NAME = "env1Name";
     public static final String TEST_ENV_VAR_1_VALUE = "env1Value";
     public static final String TEST_ENV_VAR_2_NAME = "env2Name";
-    public static final String TEST_ENV_VAR_2_SECRET_NAME =
-            BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "-env-2-secret-name";
+    public static final String TEST_ENV_VAR_2_SECRET_NAME = BUNDLE_ID + "-env-2-secret-name";
     public static final String TEST_ENV_VAR_2_SECRET_KEY = "env2SecretKey";
 
 
@@ -43,18 +46,18 @@ public class PluginStubHelper {
                 .dbms(TEST_DESCRIPTOR_DBMS)
                 .deploymentBaseName(TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME)
                 .build()
-                .setDescriptorMetadata(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, TEST_DESCRIPTOR_IMAGE_SHA);
+                .setDescriptorMetadata(stubDescriptorMetadata());
     }
 
     public static PluginDescriptor stubPluginDescriptorV3() {
         PluginDescriptor pluginDescriptorV3 = stubPluginDescriptorV2();
-        pluginDescriptorV3.setDescriptorVersion(PluginDescriptorVersion.V3.getVersion());
+        pluginDescriptorV3.setDescriptorVersion(DescriptorVersion.V3.getVersion());
         return pluginDescriptorV3;
     }
 
     public static PluginDescriptor stubPluginDescriptorV4() {
         PluginDescriptor pluginDescriptorV3 = stubPluginDescriptorV2();
-        pluginDescriptorV3.setDescriptorVersion(PluginDescriptorVersion.V4.getVersion());
+        pluginDescriptorV3.setDescriptorVersion(DescriptorVersion.V4.getVersion());
         return pluginDescriptorV3;
     }
 
@@ -92,5 +95,10 @@ public class PluginStubHelper {
                 .setHealthCheckPath(TEST_DESCRIPTOR_HEALTH_PATH)
                 .setDbms(TEST_DESCRIPTOR_DBMS)
                 .setSecurityLevel(TEST_DESCRIPTOR_SECURITY_LEVEL);
+    }
+
+    public static PluginDescriptor.DescriptorMetadata stubDescriptorMetadata() {
+        return new DescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, TEST_DESCRIPTOR_IMAGE_SHA, EXPECTED_PLUGIN_NAME,
+                TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME);
     }
 }

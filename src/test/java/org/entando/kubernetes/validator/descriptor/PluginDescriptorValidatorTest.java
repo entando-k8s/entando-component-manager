@@ -1,4 +1,4 @@
-package org.entando.kubernetes.validator;
+package org.entando.kubernetes.validator.descriptor;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -15,12 +15,11 @@ import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.apache.commons.lang.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
-import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +43,9 @@ class PluginDescriptorValidatorTest {
         PluginDescriptor descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV1.yaml"),
                         PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "entando-todomvcV1-1-0-0");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0");
         validator.validateOrThrow(descriptor);
     }
 
@@ -53,13 +54,17 @@ class PluginDescriptorValidatorTest {
         PluginDescriptor descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2.yaml"),
                         PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "entando-todomvcV2-1-0-0");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0");
         validator.validateOrThrow(descriptor);
 
         descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2_complete.yaml"),
                         PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "customBaseName");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName");
         validator.validateOrThrow(descriptor);
     }
 
@@ -68,42 +73,49 @@ class PluginDescriptorValidatorTest {
         PluginDescriptor descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV3.yaml"),
                         PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "entando-todomvcV1-1-0-0");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0");
         validator.validateOrThrow(descriptor);
 
         descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV3_complete.yaml"),
                         PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "customBaseName");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName");
         validator.validateOrThrow(descriptor);
     }
 
     @Test
-    void shouldThrowExceptionWhenPluginDescriptorVersionNotRecognized() throws Exception {
+    void shouldThrowExceptionWhenDescriptorVersionNotRecognized() throws Exception {
 
         PluginDescriptor descriptor = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV2.yaml"),
                         PluginDescriptor.class)
-                .setDescriptorMetadata(BundleStubHelper.BUNDLE_NAME, "entando-todomvcV2-1-0-0");
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0");
         descriptor.setDescriptorVersion("v2.5");
 
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
     @Test
-    void shouldThrowExceptionIfPluginDescriptorVersionIsNOTCompatibleWithTheDataFormat() throws IOException {
+    void shouldThrowExceptionIfDescriptorVersionIsNOTCompatibleWithTheDataFormat() throws IOException {
 
-        List<KeyValue<String, PluginDescriptorVersion>> descriptorVersionToSetList = Arrays.asList(
-                new DefaultKeyValue<>("todomvcV1.yaml", PluginDescriptorVersion.V2),
-                new DefaultKeyValue<>("todomvcV2.yaml", PluginDescriptorVersion.V1),
-                new DefaultKeyValue<>("todomvcV3_complete.yaml", PluginDescriptorVersion.V1),
-                new DefaultKeyValue<>("todomvcV4_complete.yaml", PluginDescriptorVersion.V3));
+        List<KeyValue<String, DescriptorVersion>> descriptorVersionToSetList = Arrays.asList(
+                new DefaultKeyValue<>("todomvcV1.yaml", DescriptorVersion.V2),
+                new DefaultKeyValue<>("todomvcV2.yaml", DescriptorVersion.V1),
+                new DefaultKeyValue<>("todomvcV3_complete.yaml", DescriptorVersion.V1),
+                new DefaultKeyValue<>("todomvcV4_complete.yaml", DescriptorVersion.V3));
 
-        for (KeyValue<String, PluginDescriptorVersion> keyValue : descriptorVersionToSetList) {
+        for (KeyValue<String, DescriptorVersion> keyValue : descriptorVersionToSetList) {
 
             PluginDescriptor descriptor = yamlMapper
                     .readValue(new File("src/test/resources/bundle/plugins/" + keyValue.getKey()),
-                            PluginDescriptor.class);
+                            PluginDescriptor.class)
+                    .setDescriptorMetadata(PluginStubHelper.stubDescriptorMetadata());
             descriptor.setDescriptorVersion(keyValue.getValue().getVersion());
 
             assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
@@ -148,6 +160,9 @@ class PluginDescriptorValidatorTest {
 
         descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
         assertThat(validator.validateOrThrow(descriptor)).isTrue();
 
@@ -228,6 +243,9 @@ class PluginDescriptorValidatorTest {
             descriptor.setEnvironmentVariables(Arrays.asList(varWithValue, varWithRef));
             descriptor.setDescriptorMetadata(
                     PluginStubHelper.BUNDLE_ID,
+                    PluginStubHelper.BUNDLE_CODE,
+                    PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                    PluginStubHelper.EXPECTED_PLUGIN_NAME,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
 
             if (secretName.contains("github-org")) {
@@ -242,7 +260,10 @@ class PluginDescriptorValidatorTest {
     @Test
     void shouldThrowExceptionWhenValidatingAPluginDescriptorWithNonProprietarySecrets() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4WithEnvVars()
-                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                .setDescriptorMetadata("abcd1234",
+                        "abcd1234-mybundle",
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
@@ -261,6 +282,9 @@ class PluginDescriptorValidatorTest {
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
                 .setEnvironmentVariables(environmentVariables);
 
@@ -275,6 +299,9 @@ class PluginDescriptorValidatorTest {
 
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4()
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
+                        PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name");
 
         assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));

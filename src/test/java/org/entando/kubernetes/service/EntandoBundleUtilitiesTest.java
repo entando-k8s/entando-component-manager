@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -25,8 +26,9 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
@@ -41,6 +43,7 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -130,8 +133,9 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
-        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, "entando-todomvcv1");
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -150,8 +154,9 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V1
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorVersion(PluginDescriptorVersion.V1.getVersion());
-        descriptor.setDescriptorMetadata("entando", "loooong-entando");
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -177,7 +182,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata("entando", "loooong-entando");
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando");
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -195,8 +201,9 @@ public class EntandoBundleUtilitiesTest {
         // given a minimum filled plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorVersion(PluginDescriptorVersion.V2.getVersion());
-        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+        descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
@@ -213,7 +220,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
@@ -230,7 +238,8 @@ public class EntandoBundleUtilitiesTest {
         // given a complete plugin descriptor V3
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
-        descriptor.setDescriptorMetadata(bundleReader.getBundleId(),
+        descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV3-1-0-0-" + bundleReader.getBundleId());
 
         // should generate the right populated EntandoPlugin
@@ -274,7 +283,8 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V2
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class)
-                .setDescriptorMetadata(TestEntitiesGenerator.BUNDLE_NAME,
+                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
+                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         "custombasename-" + TestEntitiesGenerator.BUNDLE_NAME);
 
         // should add the leading slash to the ingress path
@@ -399,7 +409,7 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void shouldSignTheBundleId() {
-        final var bundleId = BundleUtilities.signBundleId(
+        final var bundleId = BundleUtilities.getBundleId(
                 BundleInfoStubHelper.GIT_REPO_ADDRESS.replace("http://", ""));
         assertThat(bundleId).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }
@@ -432,6 +442,60 @@ public class EntandoBundleUtilitiesTest {
             String actual = BundleUtilities.gitSshProtocolToHttp(url);
             Assertions.assertThat(actual).isEqualTo(url);
         });
+    }
+
+    @Test
+    void shouldComposeTheExpectedCodeWithDescriptorVersionMinorThan5AndCodeWithoutTheHash() {
+        final WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldComposeTheExpectedCodeWithDescriptorVersionMinorThan5AndCodeWithTheCorrectHash() {
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
+                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldComposeTheExpectedCodeWithDescriptorVersionMinorThan5AndCodeWithAnIncorrectHash() {
+        String wrongHash = "abcd1234";
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
+        widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash);
+        widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash
+                + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldSetTheExpectedWidgetCodeWithWidgetDescriptorV5() {
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5();
+
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+                widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+
+        assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_NAME
+                + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }
 
 

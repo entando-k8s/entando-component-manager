@@ -57,9 +57,6 @@ public class EntandoDeBundleComposer {
             throw new EntandoValidationException("The received bundle url is null");
         }
 
-        ValidationFunctions.composeCommonUrlOrThrow(bundleInfo.getGitRepoAddress(),
-                "Bundle url is empty", "Bundle url is not valid");
-
         final BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
 
         final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader,
@@ -86,8 +83,12 @@ public class EntandoDeBundleComposer {
     private BundleDescriptor fetchBundleDescriptor(BundleDownloader bundleDownloader, String bundleUrl) {
 
         try {
+            final String httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(bundleUrl);
+            ValidationFunctions.composeCommonUrlOrThrow(httpProtocolUrl,
+                    "Bundle url is empty", "Bundle url is not valid");
+
             Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundleUrl);
-            final BundleReader bundleReader = new BundleReader(pathToDownloadedBundle);
+            final BundleReader bundleReader = new BundleReader(pathToDownloadedBundle, httpProtocolUrl);
             return bundleReader.readBundleDescriptor();
         } catch (IOException e) {
             throw new EntandoComponentManagerException("Error during bundle descriptor reading");

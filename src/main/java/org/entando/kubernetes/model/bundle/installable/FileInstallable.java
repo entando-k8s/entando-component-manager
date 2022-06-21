@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -50,7 +51,7 @@ public class FileInstallable extends Installable<FileDescriptor> {
 
     @Override
     public String getName() {
-        return representation.getFolder() + "/" + representation.getFilename();
+        return Paths.get(representation.getFolder(), representation.getFilename()).toString();
     }
 
 

@@ -65,15 +65,19 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
-import org.entando.kubernetes.validator.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -102,6 +106,10 @@ public class InstallServiceTest {
     private EntandoBundleComponentUsageService usageService;
     private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
     private PluginDescriptorValidator pluginDescriptorValidator;
+    private PluginDataRepository pluginDataRepository;
+    private WidgetTemplateGeneratorService templateGeneratorService;
+    private WidgetDescriptorValidator widgetDescriptorValidator;
+    private BundleDescriptorValidator bundleDescriptorValidator;
 
     @BeforeEach
     public void init() {
@@ -121,12 +129,17 @@ public class InstallServiceTest {
         bundleOperationsConcurrencyManager = mock(BundleOperationsConcurrencyManager.class);
         pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        pluginDataRepository = mock(PluginDataRepository.class);
+        templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
+        widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
+        bundleDescriptorValidator = mock(BundleDescriptorValidator.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
         installService = new EntandoBundleInstallService(
                 bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap,
-                reportableComponentProcessorList, analysisReportStrategies, bundleOperationsConcurrencyManager);
+                reportableComponentProcessorList, analysisReportStrategies, bundleOperationsConcurrencyManager,
+                bundleDescriptorValidator);
 
         uninstallService = new EntandoBundleUninstallService(
                 jobRepository, compJobRepo, installRepo, usageService, processorMap);
@@ -151,8 +164,9 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new LanguageProcessor(coreClient));
         reportableComponentProcessorList.add(new PageProcessor(coreClient));
         reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
-        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator));
-        reportableComponentProcessorList.add(new WidgetProcessor(coreClient));
+        reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator,
+                pluginDataRepository));
+        reportableComponentProcessorList.add(new WidgetProcessor(coreClient, templateGeneratorService, widgetDescriptorValidator));
 
         // instruct the strategy map with stub data
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE,

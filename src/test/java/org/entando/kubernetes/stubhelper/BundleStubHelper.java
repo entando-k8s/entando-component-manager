@@ -32,7 +32,7 @@ public class BundleStubHelper {
 
 
     public static BundleDescriptor stubBundleDescriptor(ComponentSpecDescriptor spec) {
-        return new BundleDescriptor(BUNDLE_CODE, BUNDLE_DESCRIPTION, BUNDLE_TYPE, spec);
+        return new BundleDescriptor(BUNDLE_CODE, BUNDLE_NAME, BUNDLE_DESCRIPTION, BUNDLE_TYPE, spec);
     }
 
     /**

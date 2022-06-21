@@ -2,8 +2,10 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +27,13 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
+import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
@@ -49,6 +55,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -68,6 +75,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull List<ReportableComponentProcessor> reportableComponentProcessorList;
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
     private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
+    private final @NonNull BundleDescriptorValidator bundleDescriptorValidator;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -325,6 +333,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallPlan installPlan) {
 
         BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+
+        try {
+            bundleReader.readBundleDescriptor(bundleDescriptorValidator);
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException("An error occurred while reading the root bundle descriptor");
+        }
+
         return getInstallableComponentsByPriority(bundleReader, conflictStrategy, installPlan);
     }
 
@@ -355,9 +370,36 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallPlan installPlan) {
-        return processorMap.values().stream()
+
+        List<? extends Installable<?>> pluginInstallables = new ArrayList<>();
+
+        // process plugins and collect endpoints
+        if (processorMap.containsKey(ComponentType.PLUGIN)) {
+            pluginInstallables = processorMap.get(ComponentType.PLUGIN)
+                    .process(bundleReader, conflictStrategy, installPlan);
+
+            final Map<String, String> pluginIngressMap = pluginInstallables.stream()
+                    .filter(i -> i.getComponentType() == ComponentType.PLUGIN)
+                    .map(Installable::getRepresentation)
+                    .collect(Collectors.toMap(
+                            d -> ((PluginDescriptor) d).getDescriptorMetadata().getPluginName(),
+                            d -> BundleUtilities.composeIngressPathFromDockerImage((PluginDescriptor) d)));
+
+            ((WidgetProcessor) processorMap.get(ComponentType.WIDGET)).setPluginIngressPathMap(pluginIngressMap);
+        }
+
+        // process other components
+        final List<? extends Installable<?>> installables = processorMap.values()
+                .stream()
+                .filter(processor -> !(processor instanceof PluginProcessor))  // skip plugins that have been already processed at the beginning of the method
                 .map(processor -> processor.process(bundleReader, conflictStrategy, installPlan))
                 .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        // concat results and return
+        return Stream.concat(
+                        installables.stream(),
+                        pluginInstallables.stream())
                 .sorted(Comparator.comparingInt(Installable::getPriority))
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
