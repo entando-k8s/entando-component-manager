@@ -10,10 +10,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.BundleAssertionHelper;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
@@ -88,7 +92,7 @@ public class EntandoBundleServiceTest {
         when(installedComponentRepository.findAll()).thenReturn(Collections.emptyList());
         PagedMetadata<EntandoBundle> bundles = service.listBundles();
         assertThat(bundles.getTotalItems()).isEqualTo(1);
-        assertThat(bundles.getBody().size()).isEqualTo(1);
+        assertThat(bundles.getBody()).hasSize(1);
     }
 
     @Test
@@ -98,7 +102,7 @@ public class EntandoBundleServiceTest {
 
         when(installedComponentRepository.findAll()).thenReturn(Collections.singletonList(component));
         PagedMetadata<EntandoBundle> components = service.listBundles();
-        assertThat(components.getBody().size()).isEqualTo(1);
+        assertThat(components.getBody()).hasSize(1);
         assertThat(components.getBody().get(0).getCode()).isEqualTo(bundle.getMetadata().getName());
         assertThat(components.getTotalItems()).isEqualTo(1);
 
@@ -114,7 +118,7 @@ public class EntandoBundleServiceTest {
         when(jobRepository.findEntandoBundleJobEntityByIdIn(any(Set.class)))
                 .thenReturn(Optional.of(Collections.singletonList(getTestJobEntity())));
         PagedMetadata<EntandoBundle> components = service.listBundles();
-        assertThat(components.getBody().size()).isEqualTo(1);
+        assertThat(components.getBody()).hasSize(1);
         assertThat(components.getBody().get(0).getCode()).isEqualTo(bundle.getMetadata().getName());
         assertThat(components.getBody().get(0).getCustomInstallation()).isTrue();
         assertThat(components.getTotalItems()).isEqualTo(1);
@@ -232,7 +236,7 @@ public class EntandoBundleServiceTest {
         k8SServiceClient.addInMemoryBundle(bundleA);
         k8SServiceClient.addInMemoryBundle(bundleB);
 
-        when(installedComponentRepository.existsById(eq(code))).thenReturn(true);
+        when(installedComponentRepository.existsByBundleCode(code)).thenReturn(true);
         Mockito.when(jobRepository
                         .findFirstByComponentIdAndStatusOrderByStartedAtDesc(eq(code), eq(JobStatus.INSTALL_COMPLETED)))
                 .thenReturn(Optional.of(installedJob));
@@ -335,8 +339,8 @@ public class EntandoBundleServiceTest {
         assertThat(components.getTotalItems()).isEqualTo(2);
         assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleA");
         assertThat(components.getBody().get(1).getCode()).isEqualTo("my-bundleB");
-        assertThat(components.getBody().get(0).getComponentTypes().contains("widget")).isTrue();
-        assertThat(components.getBody().get(1).getComponentTypes().contains("widget")).isTrue();
+        assertThat(components.getBody().get(0).getComponentTypes()).contains("widget");
+        assertThat(components.getBody().get(1).getComponentTypes()).contains("widget");
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "contentType"));
@@ -345,8 +349,8 @@ public class EntandoBundleServiceTest {
         assertThat(components.getTotalItems()).isEqualTo(2);
         assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleB");
         assertThat(components.getBody().get(1).getCode()).isEqualTo("my-bundleC");
-        assertThat(components.getBody().get(0).getComponentTypes().contains("contentType")).isTrue();
-        assertThat(components.getBody().get(1).getComponentTypes().contains("contentType")).isTrue();
+        assertThat(components.getBody().get(0).getComponentTypes()).contains("contentType");
+        assertThat(components.getBody().get(1).getComponentTypes()).contains("contentType");
 
         request = new PagedListRequest();
         request.addFilter(new Filter("type", "page"));
@@ -354,7 +358,7 @@ public class EntandoBundleServiceTest {
         components = service.listBundles(request);
         assertThat(components.getTotalItems()).isEqualTo(1);
         assertThat(components.getBody().get(0).getCode()).isEqualTo("my-bundleA");
-        assertThat(components.getBody().get(0).getComponentTypes().contains("page")).isTrue();
+        assertThat(components.getBody().get(0).getComponentTypes()).contains("page");
 
         request = new PagedListRequest();
         Filter multiValueFilter = new Filter();
@@ -388,8 +392,8 @@ public class EntandoBundleServiceTest {
         PagedMetadata<EntandoBundle> bundles = service.listBundles();
 
         assertThat(bundles.getTotalItems()).isEqualTo(1);
-        assertThat(bundles.getBody().size()).isEqualTo(1);
-        assertThat(bundles.getBody().get(0).getVersions().size()).isEqualTo(1);
+        assertThat(bundles.getBody()).hasSize(1);
+        assertThat(bundles.getBody().get(0).getVersions()).hasSize(1);
         assertThat(bundles.getBody().get(0).getVersions().get(0).getVersion()).isEqualTo("0.0.1");
     }
 
@@ -494,7 +498,8 @@ public class EntandoBundleServiceTest {
                 .thenReturn(BundleStatusItemStubHelper.stubBundleStatusItemInstalled());
 
         // when I ask for their status
-        final BundlesStatusItem bundlesStatusItem = service.getSingleBundleStatus(BundleStatusItemStubHelper.NAME_INSTALLED);
+        final BundlesStatusItem bundlesStatusItem = service.getSingleBundleStatus(
+                BundleStatusItemStubHelper.NAME_INSTALLED);
 
         // then I expect to receive the correct list of bundle status item
         BundlesStatusItem expected = BundleStatusItemStubHelper.stubBundleStatusItemInstalled();
@@ -540,4 +545,61 @@ public class EntandoBundleServiceTest {
 
         assertThat(entandoBundle).isEmpty();
     }
+
+    @Test
+    void getInstalledBundleByEncodedUrl_withValidUrlAndNoBundles_shouldReturnEmptyBundle() {
+        final String validEncodedUrl = "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK";
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.empty());
+        Optional<EntandoBundle> entandoBundle = service.getInstalledBundleByEncodedUrl(validEncodedUrl);
+        assertThat(entandoBundle).isEmpty();
+    }
+
+    @Test
+    void getInstalledBundleByEncodedUrl_withValidUrl_shouldReturnInstalledBundle() {
+        final String validEncodedUrl = "aHR0cDovL2xvY2FsaG9zdDo4MDgxL3JlcG9zaXRvcnkvbnBtLWludGVybmFsL215LWJ1bmRsZS8tL215LWJ1bmRsZS0wLjAuMS50Z3oK";
+        final EntandoBundleEntity bundleEntity = getTestComponent();
+        when(installedComponentRepository.findFirstByRepoUrl(any())).thenReturn(Optional.of(bundleEntity));
+        Optional<EntandoBundle> entandoBundle = service.getInstalledBundleByEncodedUrl(validEncodedUrl);
+        assertThat(entandoBundle.get().getCode()).isEqualTo(bundleEntity.getBundleCode());
+    }
+
+    @Test
+    void getInstalledBundleByEncodedUrl_withInvalidUrl_shouldReturnError() {
+        assertThrows(IllegalArgumentException.class, () -> service.getInstalledBundleByEncodedUrl(null));
+        final String invalidEncodedUrl = "q56bfdéç°";
+        assertThrows(IllegalArgumentException.class, () -> service.getInstalledBundleByEncodedUrl(invalidEncodedUrl));
+        final String validEncodedInvalidUrlUrl = Base64.getEncoder()
+                .encodeToString("mqtt://-test".getBytes(StandardCharsets.UTF_8));
+        assertThrows(EntandoValidationException.class,
+                () -> service.getInstalledBundleByEncodedUrl(validEncodedInvalidUrlUrl));
+    }
+
+    @Test
+    void getInstalledBundleByBundleId_shouldReturnValue() {
+        List<EntandoBundleEntity> listKo = new ArrayList<>();
+        String url = "docker://docker.io/entando/test";
+        IntStream.range(1, 4).forEach(i -> {
+            EntandoBundleEntity entity = getTestComponent();
+            entity.setRepoUrl(url + i);
+            listKo.add(entity);
+        });
+        when(installedComponentRepository.findAll()).thenReturn(listKo);
+        Optional<EntandoBundle> entandoBundle = service.getInstalledBundleByBundleId("a1b2c3d4");
+        assertThat(entandoBundle).isEmpty();
+        final String titleOk = "entityOk";
+        String urlOk = "docker://docker.io/entando/testok";
+        EntandoBundleEntity entity = getTestComponent();
+        entity.setRepoUrl(urlOk);
+        entity.setName(titleOk);
+        List<EntandoBundleEntity> listOk = new ArrayList<>();
+        listOk.addAll(listKo);
+        listOk.add(entity);
+        when(installedComponentRepository.findAll()).thenReturn(listOk);
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(urlOk);
+
+        entandoBundle = service.getInstalledBundleByBundleId(bundleId);
+        assertThat(entandoBundle).isNotEmpty();
+        assertThat(entandoBundle.get().getTitle()).isEqualTo(titleOk);
+    }
+
 }

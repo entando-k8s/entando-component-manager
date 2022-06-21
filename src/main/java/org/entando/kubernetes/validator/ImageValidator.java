@@ -255,6 +255,11 @@ public class ImageValidator {
      */
     public String composeCommonUrlOrThrow(String invalidError) {
         this.isValidOrThrow(invalidError);
+        return DOCKER_TRANSPORT + "://" + domainRegistry + "/" + organization + "/" + repository;
+    }
+
+    public String composeCommonWithoutTransportUrlOrThrow(String invalidError) {
+        this.isValidOrThrow(invalidError);
         return domainRegistry + "/" + organization + "/" + repository;
     }
 

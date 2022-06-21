@@ -34,6 +34,14 @@ public interface EntandoBundleService {
 
     Optional<EntandoBundle> getInstalledBundle(String id);
 
+    /**
+     * This method retrieves the installed EntandoBundle data based on the input bundle identifier.
+     *
+     * @param bundleId the bundle identifier
+     * @return the Optional EntandoBundle identified by the bundleId in input or Optional.empty()
+     */
+    Optional<EntandoBundle> getInstalledBundleByBundleId(String bundleId);
+
     List<EntandoBundleComponentJobEntity> getBundleInstalledComponents(String id);
 
     //Utility converters
@@ -54,4 +62,13 @@ public interface EntandoBundleService {
     BundlesStatusItem getSingleBundleStatus(String bundleName);
 
     Optional<EntandoBundle> getBundleByRepoUrl(String repoUrl);
+
+    /**
+     * This method retrieves the installed EntandoBundle data based on the input encoded URL.
+     *
+     * @param encodedRepoUrl a valid URL encoded with base64 algorithm used to generate the bundleId
+     * @return the Optional EntandoBundle identified by the encoded URL in input or Optional.empty()
+     */
+    Optional<EntandoBundle> getInstalledBundleByEncodedUrl(String encodedRepoUrl);
+
 }

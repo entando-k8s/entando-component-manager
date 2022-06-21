@@ -1,5 +1,6 @@
 package org.entando.kubernetes.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.model.job.PluginDataEntity;
@@ -14,4 +15,7 @@ public interface PluginDataRepository extends JpaRepository<PluginDataEntity, UU
     long deleteByPluginCode(String pluginCode);
 
     Optional<PluginDataEntity> findByBundleIdAndPluginName(String bundleId, String pluginName);
+    
+    List<PluginDataEntity> findAllByBundleId(String bundleId);
+
 }

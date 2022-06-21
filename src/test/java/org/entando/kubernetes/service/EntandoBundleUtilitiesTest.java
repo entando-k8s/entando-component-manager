@@ -4,15 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.when;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -372,9 +373,10 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void shouldThrowEceptionIfBundleIdentifierSizeExceeds253Chars() throws MalformedURLException {
-        String url = "http://www.github.com/entando/my-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-"
-                + "bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemy-bundlemy-bundlemy-"
-                + "bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundle";
+        String url =
+                "http://www.github.com/entando/my-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-"
+                        + "bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemymy-bundlemy-bundlemy-bundlemy-"
+                        + "bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundlemy-bundle";
 
         assertThrows(EntandoValidationException.class, () -> BundleUtilities.composeBundleIdentifier(url));
     }
@@ -391,12 +393,16 @@ public class EntandoBundleUtilitiesTest {
 
         url = BundleUtilities.removeProtocolFromUrl("https://www.github.com/entando/mybundle.git");
         assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
+
+        url = BundleUtilities.removeProtocolFromUrl("docker://docker.io/entando/bundle");
+        assertThat(url).isEqualTo("docker.io/entando/bundle");
+
     }
 
     @Test
     void shouldThrowExceptionWhileReturningTheReceivedUrlWithoutTheProtocolWhenTheUrlIsNotValid() {
         Stream.of("", "ftp://entando.com", "http://", "https://", "https://.com", "http://.com", "https://my-domain-",
-                        "https://my-domain.", "http:// ", "http://com.", "http://.com")
+                        "https://my-domain.", "http:// ", "http://com.", "http://.com", "docker://-test")
                 .forEach(urlString -> {
                     try {
                         assertThrows(EntandoValidationException.class,
@@ -449,7 +455,8 @@ public class EntandoBundleUtilitiesTest {
         final WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1();
         widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
 
-        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                widgetDescriptor.getName(),
                 widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
@@ -464,7 +471,8 @@ public class EntandoBundleUtilitiesTest {
                 + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
 
-        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                widgetDescriptor.getName(),
                 widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-"
@@ -479,7 +487,8 @@ public class EntandoBundleUtilitiesTest {
         widgetDescriptor.setCode(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash);
         widgetDescriptor.setDescriptorVersion(DescriptorVersion.V4.getVersion());
 
-        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                widgetDescriptor.getName(),
                 widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_CODE + "-" + wrongHash
@@ -491,13 +500,30 @@ public class EntandoBundleUtilitiesTest {
 
         WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5();
 
-        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(), widgetDescriptor.getName(),
+        final String code = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                widgetDescriptor.getName(),
                 widgetDescriptor, BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         assertThat(code).isEqualTo(WidgetStubHelper.WIDGET_1_NAME
                 + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
     }
 
+    @Test
+    void shouldDecodeAndvalidateUrl() {
+
+        assertThrows(IllegalArgumentException.class, () -> BundleUtilities.decodeUrl(null));
+
+        final String urlOk = "docker://docker.io/enatando/repository";
+        final String encodedUrlOk = Base64.getEncoder().encodeToString(urlOk.getBytes(StandardCharsets.UTF_8));
+
+        assertThat(BundleUtilities.decodeUrl(encodedUrlOk)).isEqualTo(urlOk);
+
+        final String urlKo = "-docker.io/enatando/repository";
+        final String encodedUrlKo = Base64.getEncoder().encodeToString(urlKo.getBytes(StandardCharsets.UTF_8));
+
+        assertThrows(EntandoValidationException.class, () -> BundleUtilities.decodeUrl(encodedUrlKo));
+
+    }
 
     /*****************************************************************************************************
      * ROLES ASSERTIONS.

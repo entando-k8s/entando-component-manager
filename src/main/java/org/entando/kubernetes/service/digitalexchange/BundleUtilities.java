@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -457,7 +459,8 @@ public class BundleUtilities {
     public static String removeProtocolFromUrl(String url) {
         ImageValidator imageValidator = ImageValidator.parse(url);
         if (imageValidator.isTransportValid()) {
-            return imageValidator.composeCommonUrlOrThrow("The image fully qualified URL of the bundle is invalid");
+            return imageValidator.composeCommonWithoutTransportUrlOrThrow(
+                    "The image fully qualified URL of the bundle is invalid");
         } else {
             URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
                     "The repository URL of the bundle is null",
@@ -505,7 +508,7 @@ public class BundleUtilities {
      *
      * @param bundleReader         the bundle reader responsible for reading the bundle
      * @param folderProp           the BundleProperty indicating the root folder of the file
-     * @param fileDescriptorFolder  the folder containing the current file
+     * @param fileDescriptorFolder the folder containing the current file
      * @param bundleId             the id of the current bundle
      * @return the built full path of a resource
      */
@@ -544,4 +547,19 @@ public class BundleUtilities {
 
         return composedCode;
     }
+
+    /**
+     * This method decodes the input URL with base64 algorithm and validates it.
+     *
+     * @param encodedUrl a nom-null String representing a valid URL encoded with the base64 algorithm
+     * @return the URL decoded and validated
+     */
+    public static String decodeUrl(String encodedUrl) {
+        Assert.notNull(encodedUrl, "repoUrl cannot be null");
+        // repoUrl should be decoded from BASE64
+        final String decodedRepoUrlString = new String(Base64.getDecoder().decode(encodedUrl));
+        return ValidationFunctions.composeCommonUrlOrThrow(decodedRepoUrlString,
+                "Repo url is empty", "Repo url is not valid");
+    }
+
 }

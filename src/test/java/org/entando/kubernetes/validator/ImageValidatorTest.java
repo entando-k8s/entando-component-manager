@@ -51,8 +51,9 @@ class ImageValidatorTest {
                 "docker:///nginx:1212:12",
                 "oci://docker.io/library/nginx"
         ).forEach(t -> {
+            ImageValidator validator = ImageValidator.parse(t);
             try {
-                ImageValidator.parse(t).isValidOrThrow(invalidMex); //NOSONAR
+                validator.isValidOrThrow(invalidMex);
                 Assert.fail("validation must throw error for image url: " + t);
             } catch (EntandoValidationException ex) {
                 assertThat(ex.getMessage()).startsWith(invalidMex);
@@ -62,9 +63,17 @@ class ImageValidatorTest {
 
     @Test
     void composeShouldBeOk() {
-        final String COMPOSED = "docker.io/library/nginx";
+        final String COMPOSED = "docker://docker.io/library/nginx";
         final String test = "docker://docker.io/nginx@sha256:92ae85a2740161f8b534e0b85ad267624ea88def5691742008f9353cc72ec060";
 
         assertThat(ImageValidator.parse(test).composeCommonUrlOrThrow(invalidMex)).isEqualTo(COMPOSED);
+    }
+
+    @Test
+    void composeWithoutTransportShouldBeOk() {
+        final String COMPOSED = "docker.io/library/nginx";
+        final String test = "docker://docker.io/nginx@sha256:92ae85a2740161f8b534e0b85ad267624ea88def5691742008f9353cc72ec060";
+
+        assertThat(ImageValidator.parse(test).composeCommonWithoutTransportUrlOrThrow(invalidMex)).isEqualTo(COMPOSED);
     }
 }
