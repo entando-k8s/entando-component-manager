@@ -160,6 +160,8 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .map(this::convertToBundleFromEntity);
     }
 
+    // TECH-DEBT: to search with the bundleId in the table installed_entando_bundles that does not contain it
+    // and doesn't have a FK to PluginDataEntity I calculate the bundleId on the fly from the repoUrl
     @Override
     public Optional<EntandoBundle> getInstalledBundleByBundleId(String bundleId) {
         return installedComponentRepo.findAll().stream()

@@ -36,7 +36,7 @@ public class GenerateUUIDForNullColumn implements CustomTaskChange {
             while (uprs.next()) {
                 String pk = uprs.getString(primaryKeyColumn);
                 String generatedUuuid = UUID.randomUUID().toString();
-                log.info("find row update pk column:'{}' value:'{}' update column:'{}' generated UUID value:'{}'",
+                log.debug("find row update pk column:'{}' value:'{}' update column:'{}' generated UUID value:'{}'",
                         primaryKeyColumn, pk, columnName, generatedUuuid);
                 uprs.updateString(columnName, generatedUuuid);
                 uprs.updateRow();
