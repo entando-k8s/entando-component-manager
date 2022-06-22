@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -84,6 +85,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 descriptorValidator.validateOrThrow(widgetDescriptor);
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
+                composeAndSetParentCode(widgetDescriptor, bundleReader);
                 composeAndSetCustomUi(widgetDescriptor, fileName, bundleReader);
 
                 widgetDescriptor.setBundleId(descriptor.getCode());
@@ -136,6 +138,18 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
                 widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
         widgetDescriptor.setCode(widgetCode);
+    }
+
+    /**
+     * compose and set the widget parent code in the descriptor.
+     */
+    private void composeAndSetParentCode(WidgetDescriptor descriptor, BundleReader bundleReader) {
+        // set the code
+        if (ObjectUtils.isEmpty(descriptor.getParentCode())
+                && !ObjectUtils.isEmpty(descriptor.getParentName())) {
+
+            descriptor.setParentCode(descriptor.getParentName() + "-" + bundleReader.getBundleId());
+        }
     }
 
     @Override

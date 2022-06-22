@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
@@ -147,6 +149,75 @@ class WidgetProcessorTest extends BaseProcessorTest {
                 BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertThat(reportable.getCodes().get(1)).isEqualTo(
                 BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldAddWidgetParentCodeWhileProcessingWidgetsWithParentName() throws IOException {
+
+        when(bundleReader.getBundleId()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5()
+                .setParentName(WidgetStubHelper.PARENT_NAME);
+
+        List<Installable<WidgetDescriptor>> installableList = execWidgetProcessorParentNameParentCode(widgetDescriptor);
+        final WidgetDescriptor actual = installableList.get(0).getRepresentation();
+
+        assertThat(actual.getParentName()).isEqualTo(WidgetStubHelper.PARENT_NAME);
+        assertThat(actual.getParentCode()).isEqualTo(
+                WidgetStubHelper.PARENT_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldUseTheReceivedWidgetParentCodeIfAvailableWhileProcessingWidgets() throws IOException {
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5()
+                .setParentCode(WidgetStubHelper.PARENT_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+
+        List<Installable<WidgetDescriptor>> installableList = execWidgetProcessorParentNameParentCode(widgetDescriptor);
+        final WidgetDescriptor actual = installableList.get(0).getRepresentation();
+
+        assertThat(actual.getParentCode()).isEqualTo(
+                WidgetStubHelper.PARENT_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
+    @Test
+    void shouldThrowExceptionWhileProcessingWidgetsAndValidationFails() throws IOException {
+
+        WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5()
+                .setParentCode(WidgetStubHelper.PARENT_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(bundleReader.readDescriptorFile(any(), any())).thenReturn(widgetDescriptor);
+        when(validator.validateOrThrow(any())).thenThrow(InvalidBundleException.class);
+
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+        final InstallPlan installPlan = new InstallPlan();
+
+        assertThrows(InvalidBundleException.class, () -> widgetProcessor.process(bundleReader, InstallAction.CREATE,
+                installPlan));
+    }
+
+    private List<Installable<WidgetDescriptor>> execWidgetProcessorParentNameParentCode(
+            WidgetDescriptor widgetDescriptor) throws IOException {
+
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
+
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(bundleReader.readDescriptorFile(any(), any())).thenReturn(widgetDescriptor);
+        when(validator.validateOrThrow(any())).thenReturn(true);
+
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+        widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
+
+        return widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 }
 

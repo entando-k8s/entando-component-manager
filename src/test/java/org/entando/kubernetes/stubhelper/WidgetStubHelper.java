@@ -44,6 +44,7 @@ public class WidgetStubHelper {
     public static final String PLUGIN_INGRESS_1_PATH = "/" + API_CLAIM_1_SERVICE_ID + "/path";
     public static final String PLUGIN_INGRESS_2_CODE = API_CLAIM_2_SERVICE_ID;
     public static final String PLUGIN_INGRESS_2_PATH = "/" + API_CLAIM_2_SERVICE_ID + "/path";
+    public static final String PARENT_NAME = "parent-name";
 
 
     public static List<WidgetConfigurationDescriptor> stubWidgetConfigurationDescriptor() {
@@ -63,6 +64,7 @@ public class WidgetStubHelper {
 
     public static WidgetDescriptor stubWidgetDescriptorV5() {
         WidgetDescriptor widgetDescriptor = stubWidgetDescriptor()
+                .code(null)
                 .name(WIDGET_1_NAME)
                 .customElement(WIDGET_1_CODE)
                 .configWidget(CONFIG_WIDGET)
