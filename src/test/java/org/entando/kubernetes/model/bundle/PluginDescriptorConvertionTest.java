@@ -71,7 +71,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
@@ -86,7 +87,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME)
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
@@ -100,7 +102,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME)
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 

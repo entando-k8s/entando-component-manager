@@ -40,7 +40,7 @@ public abstract class BaseDescriptorValidator<D extends VersionedDescriptor> {
      * @return the received Descriptor
      * @throws InvalidBundleException if the one of the values is not the expected one
      */
-    protected D ensureDescriptorVersionIsSet(D descriptor) {
+    public D ensureDescriptorVersionIsSet(D descriptor) {
         if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
             descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         }

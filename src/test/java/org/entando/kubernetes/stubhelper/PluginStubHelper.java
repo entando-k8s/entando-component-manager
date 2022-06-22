@@ -107,6 +107,7 @@ public class PluginStubHelper {
 
     public static PluginDescriptor.DescriptorMetadata stubDescriptorMetadata() {
         return new DescriptorMetadata(BUNDLE_ID, BUNDLE_CODE, TEST_DESCRIPTOR_IMAGE_SHA, EXPECTED_PLUGIN_NAME,
-                TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME);
+                TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }
 }

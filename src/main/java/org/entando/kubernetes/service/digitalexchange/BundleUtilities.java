@@ -168,7 +168,8 @@ public class BundleUtilities {
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
 
         // if v5
-        if (DescriptorVersion.fromVersion(descriptor.getDescriptorVersion()) == DescriptorVersion.V5) {
+        if (!ObjectUtils.isEmpty(descriptor.getDescriptorVersion())
+                && descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
             return composeIngressPathBundleIdAndPluginName(descriptor);
         }
 
