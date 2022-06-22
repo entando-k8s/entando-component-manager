@@ -1,6 +1,7 @@
 package org.entando.kubernetes.validator;
 
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -255,7 +256,12 @@ public class ImageValidator {
      */
     public String composeCommonUrlOrThrow(String invalidError) {
         this.isValidOrThrow(invalidError);
-        return domainRegistry + "/" + organization + "/" + repository;
+        return DOCKER_TRANSPORT + "://" + Paths.get(domainRegistry, organization, repository);
+    }
+
+    public String composeCommonWithoutTransportUrlOrThrow(String invalidError) {
+        this.isValidOrThrow(invalidError);
+        return Paths.get(domainRegistry, organization, repository).toString();
     }
 
     @AllArgsConstructor

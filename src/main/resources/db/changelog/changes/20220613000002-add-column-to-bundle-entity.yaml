@@ -1,0 +1,52 @@
+databaseChangeLog:
+  # installed_entando_bundles
+  - changeSet:
+      id: 20220613000001_installed_entando_bundles
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: installed_entando_bundles
+        - not:
+            - columnExists:
+                tableName: installed_entando_bundles
+                columnName: uuid
+            - columnExists:
+                tableName: installed_entando_bundles
+                columnName: bundle_code
+      changes:
+        - addColumn:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  name: uuid
+                  type: VARCHAR(36)
+        - customChange:
+            class: org.entando.kubernetes.liquibase.GenerateUUIDForNullColumn
+            params:
+              - param:
+                  name: columnName
+                  value: uuid
+        # add not null constraints is needed by H2
+        - addNotNullConstraint:
+            tableName: installed_entando_bundles
+            columnName: uuid
+            columnDataType: VARCHAR(36)
+            constraintName: CON_INS_ENT_BUN_E7_NOT_NULL
+        - dropPrimaryKey:
+            tableName: installed_entando_bundles
+            constraintName: PK_INS_ENT_BUN_E7
+        - renameColumn:
+            tableName: installed_entando_bundles
+            newColumnName: bundle_code
+            oldColumnName: id
+            columnDataType: VARCHAR(36)
+        - renameColumn:
+            tableName: installed_entando_bundles
+            newColumnName: id
+            oldColumnName: uuid
+            columnDataType: VARCHAR(36)
+        - addPrimaryKey:
+            tableName: installed_entando_bundles
+            columnNames: id
+            constraintName: PK_INS_ENT_BUN_E7

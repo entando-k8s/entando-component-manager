@@ -19,7 +19,6 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.bundle.BundleProperty;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.validator.ImageValidator;
 
@@ -156,8 +155,7 @@ public class DockerBundleDownloader extends BundleDownloader {
         params.add("--retry-times");
         params.add("" + downloadRetries);
 
-        String fullyQualifiedImageUrlWithoutTag = BundleDownloaderConstants.DOCKER_PROTOCOL
-                + image.composeCommonUrlOrThrow(ERROR_WHILE_FETCHING_TAGS_IMAGE);
+        String fullyQualifiedImageUrlWithoutTag = image.composeCommonUrlOrThrow(ERROR_WHILE_FETCHING_TAGS_IMAGE);
         params.add(fullyQualifiedImageUrlWithoutTag);
 
         log.info(LOG_CMD_TO_EXECUTE, SKOPEO_CMD, params.stream().collect(Collectors.joining(" ")),

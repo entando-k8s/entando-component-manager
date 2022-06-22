@@ -130,7 +130,8 @@ class EntandoBundleResourceControllerIntegrationTest {
                     try {
 
                         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo
-                        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setGitRepoAddress(bundleUrl);
+                        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
+                                .setGitRepoAddress(bundleUrl);
 
                         // when the user sends the request
                         String payload = mapper.writeValueAsString(bundleInfo);
@@ -177,7 +178,6 @@ class EntandoBundleResourceControllerIntegrationTest {
                         .content(payload)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is4xxClientError());
-
 
         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with a null repoUrl
         bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
@@ -367,7 +367,7 @@ class EntandoBundleResourceControllerIntegrationTest {
 
         EntandoBundleEntity installedNotDeployedBundleEntity = TestEntitiesGenerator.getTestComponent()
                 .setRepoUrl(installedNotDeployedRepoUrl);
-        installedNotDeployedBundleEntity.setId(BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED);
+        installedNotDeployedBundleEntity.setBundleCode(BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED);
         installedNotDeployedBundleEntity.setName(BundleStatusItemStubHelper.NAME_INSTALLED_NOT_DEPLOYED);
         installedNotDeployedBundleEntity.setBundleType(BundleType.STANDARD_BUNDLE.getType());
         installedNotDeployedBundleEntity.setVersion("v1.1.0");
