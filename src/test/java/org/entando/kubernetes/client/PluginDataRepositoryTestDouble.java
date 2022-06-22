@@ -45,6 +45,11 @@ public class PluginDataRepositoryTestDouble implements PluginDataRepository {
     }
 
     @Override
+    public List<PluginDataEntity> findAllByBundleId(String bundleId) {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public List<PluginDataEntity> findAll() {
         return new ArrayList<>(database.values());
     }

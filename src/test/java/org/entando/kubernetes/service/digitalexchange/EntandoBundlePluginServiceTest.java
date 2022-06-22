@@ -6,8 +6,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
@@ -125,6 +127,7 @@ class EntandoBundlePluginServiceTest {
     void getInstalledPluginComponent_withValidBundleIdAndPluginCode_shouldReturnPlugin() {
 
         final PagedListRequest req = new PagedListRequest();
+        final String rolesA = "rolesA";
         final String repoUrl = "github.com/entando/example-qe-bundle-01";
         final String bundleId = BundleUtilities.getBundleId(repoUrl);
         final Optional<EntandoBundle> installedBundle = Optional.of(
@@ -134,12 +137,28 @@ class EntandoBundlePluginServiceTest {
         when(bundleService.getInstalledBundleByBundleId(any())).thenReturn(installedBundle);
 
         PluginDataEntity pluginEntity = new PluginDataEntity().setPluginCode(pluginName).setBundleId(bundleId)
-                .setPluginName(pluginName);
+                .setPluginName(pluginName).setEndpoint("ingress/path")
+                .setRoles(new HashSet<String>(Arrays.asList(rolesA, "rolesB")));
         when(pluginDataRepository.findByBundleIdAndPluginName(any(), any())).thenReturn(Optional.of(pluginEntity));
-
         PluginData plugin = targetService.getInstalledPlugin(bundleId, pluginName);
-
         assertThat(plugin.getPluginName()).isEqualTo(pluginName);
+        assertThat(plugin.getRoles()).contains(rolesA);
+
+        pluginEntity = new PluginDataEntity().setPluginCode(pluginName).setBundleId(bundleId)
+                .setPluginName(pluginName).setEndpoint("ingress/path")
+                .setRoles(null);
+        when(pluginDataRepository.findByBundleIdAndPluginName(any(), any())).thenReturn(Optional.of(pluginEntity));
+        plugin = targetService.getInstalledPlugin(bundleId, pluginName);
+        assertThat(plugin.getPluginName()).isEqualTo(pluginName);
+        assertThat(plugin.getRoles()).isNull();
+
+        pluginEntity = new PluginDataEntity().setPluginCode(pluginName).setBundleId(bundleId)
+                .setPluginName(pluginName).setEndpoint("ingress/path")
+                .setRoles(new HashSet<>());
+        when(pluginDataRepository.findByBundleIdAndPluginName(any(), any())).thenReturn(Optional.of(pluginEntity));
+        plugin = targetService.getInstalledPlugin(bundleId, pluginName);
+        assertThat(plugin.getPluginName()).isEqualTo(pluginName);
+        assertThat(plugin.getRoles()).isEmpty();
 
         when(pluginDataRepository.findByBundleIdAndPluginName(any(), any())).thenReturn(Optional.empty());
         assertThrows(DefaultProblem.class,

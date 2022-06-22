@@ -14,18 +14,23 @@
 
 package org.entando.kubernetes.model.job;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.entando.kubernetes.model.bundle.PluginRolesConverter;
 import org.hibernate.annotations.Type;
 import org.springframework.validation.annotation.Validated;
 
@@ -63,6 +68,11 @@ public class PluginDataEntity {
     @NotNull
     @Column(name = "endpoint", nullable = false)
     private String endpoint;
+
+    @Size(min = 1, max = 255)
+    @Column(name = "roles")
+    @Convert(converter = PluginRolesConverter.class)
+    private Set<String> roles = new HashSet<>();
 
     @PrePersist
     public void generateId() {

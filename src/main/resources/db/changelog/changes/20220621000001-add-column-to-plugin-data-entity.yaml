@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220621000001
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: plugin_data
+        - not:
+            - columnExists:
+                tableName: plugin_data
+                columnName: roles
+      changes:
+        - addColumn:
+            tableName: plugin_data
+            columns:
+              - column:
+                  name: roles
+                  type: VARCHAR(255)

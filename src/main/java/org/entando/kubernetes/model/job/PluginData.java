@@ -44,6 +44,7 @@ public class PluginData {
                 .pluginName(entity.getPluginName())
                 .pluginCode(entity.getPluginCode())
                 .ingressPath(entity.getEndpoint())
+                .roles(entity.getRoles() != null ? entity.getRoles().stream().toArray(String[]::new) : null)
                 .build();
     }
 
