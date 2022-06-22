@@ -19,6 +19,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
@@ -70,6 +71,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         initBundleReaderShortImagesName();
 
         PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
+        descriptorV2.setDescriptorVersion(DescriptorVersion.V2.getVersion());
         when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
                 .thenReturn(descriptorV2);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
@@ -90,6 +92,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         PluginDescriptor descriptorV3 = PluginStubHelper.stubPluginDescriptorV3();
         when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
                 .thenReturn(descriptorV3);
+        descriptorV3.setDescriptorVersion(DescriptorVersion.V3.getVersion());
 
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
@@ -136,6 +139,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     private void initBundleReaderShortImagesName() throws IOException {
 
         PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
+        descriptorV1.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         initBundleReaderWithTwoPlugins("plugins/pluginV1.yaml", descriptorV1);
     }
 
@@ -144,14 +148,14 @@ class PluginProcessorTest extends BaseProcessorTest {
         PluginDescriptor descriptorV1 = yamlMapper
                 .readValue(new File("src/test/resources/bundle/plugins/todomvcV1_docker_image_too_long.yaml"),
                         PluginDescriptor.class);
+        descriptorV1.setDescriptorVersion(DescriptorVersion.V1.getVersion());
 
         initBundleReaderWithTwoPlugins("plugins/todomvcV1_docker_image_too_long.yaml", descriptorV1);
     }
 
     private void initBundleReaderWithTwoPlugins(String descriptorFilename, PluginDescriptor descriptor) throws IOException {
 
-        when(bundleReader.readDescriptorFile(eq(descriptorFilename), any()))
-                .thenReturn(descriptor);
+        when(bundleReader.readDescriptorFile(eq(descriptorFilename), any())).thenReturn(descriptor);
         this.initGenericBundleReader(descriptorFilename, pluginV2Filename);
     }
 

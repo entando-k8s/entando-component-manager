@@ -45,7 +45,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint");
         validator.validateOrThrow(descriptor);
     }
 
@@ -56,7 +56,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint");
         validator.validateOrThrow(descriptor);
 
         descriptor = yamlMapper
@@ -64,7 +64,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint");
         validator.validateOrThrow(descriptor);
     }
 
@@ -75,7 +75,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint");
         validator.validateOrThrow(descriptor);
 
         descriptor = yamlMapper
@@ -83,7 +83,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint");
         validator.validateOrThrow(descriptor);
     }
 
@@ -95,7 +95,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class)
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0");
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint");
         descriptor.setDescriptorVersion("v2.5");
 
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
@@ -163,7 +163,8 @@ class PluginDescriptorValidatorTest {
                 PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+                PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
         assertThat(validator.validateOrThrow(descriptor)).isTrue();
 
         // with empty name should fail
@@ -246,7 +247,8 @@ class PluginDescriptorValidatorTest {
                     PluginStubHelper.BUNDLE_CODE,
                     PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                    PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+                    PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                    PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
 
             if (secretName.contains("github-org")) {
                 assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
@@ -264,7 +266,8 @@ class PluginDescriptorValidatorTest {
                         "abcd1234-mybundle",
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                        PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME);
+                        PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
@@ -285,7 +288,8 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME)
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
                 .setEnvironmentVariables(environmentVariables);
 
         Assertions.assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
@@ -302,7 +306,8 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name");
+                        "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name",
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
 
         assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
     }

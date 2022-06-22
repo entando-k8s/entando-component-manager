@@ -154,7 +154,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
      * @throws InvalidBundleException if the one of the values is not the expected one
      */
     @Override
-    protected PluginDescriptor ensureDescriptorVersionIsSet(PluginDescriptor descriptor) {
+    public PluginDescriptor ensureDescriptorVersionIsSet(PluginDescriptor descriptor) {
         if (StringUtils.isEmpty(descriptor.getDescriptorVersion())) {
             if (descriptor.isVersion1()) {
                 descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());

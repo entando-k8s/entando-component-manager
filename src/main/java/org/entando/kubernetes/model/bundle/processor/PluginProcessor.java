@@ -109,7 +109,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new PluginDescriptor()
-                .setDescriptorMetadata(new DescriptorMetadata(null, null, null, null, component.getComponentId()));
+                .setDescriptorMetadata(
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null));
     }
 
     @Override
@@ -123,6 +124,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
                 PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
                         .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+                descriptorValidator.ensureDescriptorVersionIsSet(pluginDescriptor);
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 logDescriptorWarnings(pluginDescriptor);
                 idList.add(pluginDescriptor.getComponentKey().getKey());
@@ -142,6 +144,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
         final String bundleId = BundleUtilities.getBundleId(url);
         final String signedPluginDeplName = this.signPluginDeploymentName(pluginDescriptor);
+        final String endpoint = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor);
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
@@ -150,7 +153,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 ObjectUtils.isEmpty(pluginDescriptor.getName())
                         ? signedPluginDeplName.split("-", 2)[1]
                         : pluginDescriptor.getName(),
-                generateFullDeploymentName(bundleId, signedPluginDeplName));
+                generateFullDeploymentName(bundleId, signedPluginDeplName),
+                endpoint);
     }
 
 

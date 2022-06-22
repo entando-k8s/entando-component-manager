@@ -7,6 +7,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
@@ -48,12 +49,13 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
 
+            final DescriptorMetadata metadata = representation.getDescriptorMetadata();
             PluginDataEntity apiPathEntity = new PluginDataEntity()
-                    .setBundleId(representation.getDescriptorMetadata().getBundleId())
-                    .setPluginId(representation.getDescriptorMetadata().getPluginId())
-                    .setPluginName(representation.getDescriptorMetadata().getPluginName())
-                    .setPluginCode(representation.getDescriptorMetadata().getPluginCode())
-                    .setEndpoint(BundleUtilities.composeIngressPathFromDockerImage(representation));
+                    .setBundleId(metadata.getBundleId())
+                    .setPluginId(metadata.getPluginId())
+                    .setPluginName(metadata.getPluginName())
+                    .setPluginCode(metadata.getPluginCode())
+                    .setEndpoint(metadata.getEndpoint());
             pluginDataRepository.save(apiPathEntity);
         });
     }

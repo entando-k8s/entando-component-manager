@@ -151,6 +151,8 @@ public class InstallServiceTest {
     @Test
     void receivingDataFromRemoteHandlerWillReturnTheRightInstallPlan() {
 
+        when(pluginDescriptorValidator.ensureDescriptorVersionIsSet(any())).thenCallRealMethod();
+
         reportableComponentProcessorList.add(new AssetProcessor(coreClient));
         reportableComponentProcessorList.add(new CategoryProcessor(coreClient));
         reportableComponentProcessorList.add(new ContentProcessor(coreClient));
