@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -61,8 +62,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         kubernetesService.linkPluginAndWaitForSuccess(plugin);
 
         PluginDataEntity pluginDataEntity = pluginDataRepository.findByBundleIdAndPluginName(
-                representation.getDescriptorMetadata().getBundleId(),
-                representation.getDescriptorMetadata().getPluginName())
+                        representation.getDescriptorMetadata().getBundleId(),
+                        representation.getDescriptorMetadata().getPluginName())
                 .orElseGet(PluginDataEntity::new);
         pluginDataEntity = composePluginDataEntity(pluginDataEntity);
         pluginDataRepository.save(pluginDataEntity);
@@ -75,7 +76,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 .setPluginId(metadata.getPluginId())
                 .setPluginName(metadata.getPluginName())
                 .setPluginCode(metadata.getPluginCode())
-                .setEndpoint(metadata.getEndpoint());
+                .setEndpoint(metadata.getEndpoint())
+                .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null);
     }
 
     @Override
@@ -91,7 +93,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             log.info("Removing link to plugin {}", pluginCode);
             kubernetesService.unlinkAndScaleDownPlugin(pluginCode);
 
-            if (! deletePluginData(pluginCode)) {
+            if (!deletePluginData(pluginCode)) {
                 log.warn("Plugin uninstalled but no data has been deleted from plugin_api_data db table");
             }
         });
