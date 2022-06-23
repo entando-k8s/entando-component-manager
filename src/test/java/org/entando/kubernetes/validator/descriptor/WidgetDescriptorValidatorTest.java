@@ -151,4 +151,21 @@ class WidgetDescriptorValidatorTest {
         descriptor.getApiClaims().get(1).setBundleId(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
+
+    @Test
+    void shouldThrowExceptionWhileValidatingAWidgetDescriptorWithParentNameAndParentCode() {
+        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5()
+                .setParentName(WidgetStubHelper.PARENT_NAME)
+                .setParentCode("code");
+
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+    }
+
+    @Test
+    void shouldThrowExceptionWhileValidatingAWidgetDescriptorWithParentCodeWithInvalidFormat() {
+        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5()
+                .setParentCode("wrong-format");
+
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+    }
 }

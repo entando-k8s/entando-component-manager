@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -18,6 +19,9 @@ import org.springframework.util.ObjectUtils;
 @Slf4j
 @Component
 public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDescriptor> {
+
+    private static final String BUNDLE_CODE_REGEX = "^[\\w|-]+-[0-9a-fA-F]{8}$";
+    private static final Pattern BUNDLE_CODE_PATTERN = Pattern.compile(BUNDLE_CODE_REGEX);
 
     /**************************************************************************************************************
      * CONFIGURATION START.
@@ -35,6 +39,8 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         objectsThatMustBeNull.put("configWidget", WidgetDescriptor::getConfigWidget);
         objectsThatMustBeNull.put("customElement", WidgetDescriptor::getCustomElement);
         objectsThatMustBeNull.put("name", WidgetDescriptor::getName);
+        objectsThatMustBeNull.put("parentName", WidgetDescriptor::getParentName);
+        objectsThatMustBeNull.put("parentCode", WidgetDescriptor::getParentCode);
 
         final Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNotBeNull
                 = getObjectsThatMustNotBeNullForEveryVersion();
@@ -59,7 +65,8 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         objectsThatMustNotBeNull.put("name", WidgetDescriptor::getName);
 
         addValidationConfigMap(DescriptorVersion.V5,
-                Arrays.asList(super::validateDescriptorFormatOrThrow, this::validateApiClaims),
+                Arrays.asList(super::validateDescriptorFormatOrThrow, this::validateApiClaims,
+                        this::validateParentNameAndParentCode),
                 objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
 
@@ -93,6 +100,31 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         return descriptor;
     }
 
+    /**
+     * ensure consistency between parentName and parentCode fields.
+     *
+     * @param descriptor the widget descriptor to validate
+     * @return the validated widget descriptor
+     */
+    private WidgetDescriptor validateParentNameAndParentCode(WidgetDescriptor descriptor) {
+
+        // mutual exclusion
+        if (!ObjectUtils.isEmpty(descriptor.getParentName()) && !ObjectUtils.isEmpty(descriptor.getParentCode())) {
+
+            throw new InvalidBundleException(
+                    String.format(PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT, descriptor.getCode()));
+        }
+
+        // check the format
+        if (!ObjectUtils.isEmpty(descriptor.getParentCode())
+                && !BUNDLE_CODE_PATTERN.matcher(descriptor.getParentCode()).matches()) {
+
+            throw new InvalidBundleException(String.format(WRONG_PARENT_CODE_FORMAT, descriptor.getCode()));
+        }
+
+        return descriptor;
+    }
+
     /**************************************************************************************************************
      * CONFIGURATION END.
      *************************************************************************************************************/
@@ -101,4 +133,8 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
             "The %s descriptor contains an API claim marked as internal but referencing an external bundle";
     public static final String EXTERNAL_API_CLAIM_WITHOUT_BUNDLE_ID =
             "The %s descriptor contains an API claim marked as external NOT referencing any external bundle";
+    public static final String PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT =
+            "The %s descriptor contains both a parentName and a parentCode. They are mutually exclusive";
+    public static final String WRONG_PARENT_CODE_FORMAT =
+            "The %s descriptor contains a parentCode that not respects the format " + BUNDLE_CODE_REGEX;
 }

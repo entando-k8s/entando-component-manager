@@ -40,6 +40,8 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private String customElement;
     private List<ApiClaim> apiClaims;
     private DescriptorMetadata descriptorMetadata;
+    private String parentName;
+    private String parentCode;
 
 
     @Override
