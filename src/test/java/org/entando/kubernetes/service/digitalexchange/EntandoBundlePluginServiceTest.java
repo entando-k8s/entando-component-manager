@@ -150,7 +150,7 @@ class EntandoBundlePluginServiceTest {
         when(pluginDataRepository.findByBundleIdAndPluginName(any(), any())).thenReturn(Optional.of(pluginEntity));
         plugin = targetService.getInstalledPlugin(bundleId, pluginName);
         assertThat(plugin.getPluginName()).isEqualTo(pluginName);
-        assertThat(plugin.getRoles()).isNull();
+        assertThat(plugin.getRoles()).isEmpty();
 
         pluginEntity = new PluginDataEntity().setPluginCode(pluginName).setBundleId(bundleId)
                 .setPluginName(pluginName).setEndpoint("ingress/path")

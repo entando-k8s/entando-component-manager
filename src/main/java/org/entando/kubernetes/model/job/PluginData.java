@@ -14,6 +14,7 @@
 
 package org.entando.kubernetes.model.job;
 
+import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,8 +45,15 @@ public class PluginData {
                 .pluginName(entity.getPluginName())
                 .pluginCode(entity.getPluginCode())
                 .ingressPath(entity.getEndpoint())
-                .roles(entity.getRoles() != null ? entity.getRoles().stream().toArray(String[]::new) : null)
+                .roles(manageRoles(entity.getRoles()))
                 .build();
     }
 
+    private static String[] manageRoles(Set<String> roles) {
+        if (roles == null) {
+            return new String[0];
+        } else {
+            return roles.stream().toArray(String[]::new);
+        }
+    }
 }
