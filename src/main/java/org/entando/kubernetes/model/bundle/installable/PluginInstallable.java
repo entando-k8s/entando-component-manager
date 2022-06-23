@@ -8,7 +8,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
-import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
@@ -41,25 +40,43 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
 
             if (shouldCreate()) {
-                kubernetesService.linkPluginAndWaitForSuccess(plugin);
+                installPlugin(plugin);
             } else if (shouldOverride()) {
-                kubernetesService.unlink(plugin.getMetadata().getName());
-                kubernetesService.linkPluginAndWaitForSuccess(plugin);
+                overridePlugin(plugin);
             } else {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
-
-            final DescriptorMetadata metadata = representation.getDescriptorMetadata();
-            PluginDataEntity apiPathEntity = new PluginDataEntity()
-                    .setBundleId(metadata.getBundleId())
-                    .setPluginId(metadata.getPluginId())
-                    .setPluginName(metadata.getPluginName())
-                    .setPluginCode(metadata.getPluginCode())
-                    .setEndpoint(metadata.getEndpoint());
-            pluginDataRepository.save(apiPathEntity);
         });
     }
 
+    private void installPlugin(EntandoPlugin plugin) {
+        kubernetesService.linkPluginAndWaitForSuccess(plugin);
+
+        PluginDataEntity pluginDataEntity = composePluginDataEntity(new PluginDataEntity());
+        pluginDataRepository.save(pluginDataEntity);
+    }
+
+    private void overridePlugin(EntandoPlugin plugin) {
+        kubernetesService.unlink(plugin.getMetadata().getName());
+        kubernetesService.linkPluginAndWaitForSuccess(plugin);
+
+        PluginDataEntity pluginDataEntity = pluginDataRepository.findByBundleIdAndPluginName(
+                representation.getDescriptorMetadata().getBundleId(),
+                representation.getDescriptorMetadata().getPluginName())
+                .orElseGet(PluginDataEntity::new);
+        pluginDataEntity = composePluginDataEntity(pluginDataEntity);
+        pluginDataRepository.save(pluginDataEntity);
+    }
+
+    private PluginDataEntity composePluginDataEntity(PluginDataEntity pluginData) {
+        final DescriptorMetadata metadata = representation.getDescriptorMetadata();
+
+        return pluginData.setBundleId(metadata.getBundleId())
+                .setPluginId(metadata.getPluginId())
+                .setPluginName(metadata.getPluginName())
+                .setPluginCode(metadata.getPluginCode())
+                .setEndpoint(metadata.getEndpoint());
+    }
 
     @Override
     public CompletableFuture<Void> uninstall() {
