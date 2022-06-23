@@ -39,6 +39,8 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private String configWidget;
     private String customElement;
     private List<ApiClaim> apiClaims;
+    private List<MfeParam> params;
+    private List<String> contextParams;
     private DescriptorMetadata descriptorMetadata;
     private String parentName;
     private String parentCode;
@@ -72,6 +74,16 @@ public class WidgetDescriptor extends VersionedDescriptor {
         private String type;
         private String pluginName;
         private String bundleId;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MfeParam {
+
+        private String name;
+        private String description;
     }
 
     @Getter

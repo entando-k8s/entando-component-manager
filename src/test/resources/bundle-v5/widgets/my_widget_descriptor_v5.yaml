@@ -6,8 +6,13 @@ titles:
 group: free
 customElement: my-widget
 params:
-  - url
-  - title
+  - name: url
+    description: "the url"
+  - name: title
+    description: "the title"
+contextParams:
+  - "page_code"
+  - "info_startLang"
 apiClaims:
   - name: ext-api
     type: external
