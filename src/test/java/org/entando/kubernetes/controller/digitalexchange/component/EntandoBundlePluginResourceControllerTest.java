@@ -38,6 +38,13 @@ class EntandoBundlePluginResourceControllerTest {
     }
 
     @Test
+    void getBundles_shouldBeOk() {
+        final PagedListRequest req = new PagedListRequest();
+        when(bundleComponentService.listBundles(req)).thenReturn(new PagedMetadata(req, new ArrayList<>()));
+        assertThat(controller.getBundles(req).getBody().getPayload()).isEmpty();
+    }
+
+    @Test
     void getBundleInstalledComponents_withValidBundleId_shouldBeOk() {
         final PagedListRequest req = new PagedListRequest();
         when(

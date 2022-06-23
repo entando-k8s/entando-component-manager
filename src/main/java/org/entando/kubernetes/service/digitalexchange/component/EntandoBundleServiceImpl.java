@@ -201,7 +201,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .collect(Collectors.toList());
     }
 
-    private List<EntandoBundle> listBundlesFromEcr() {
+    public List<EntandoBundle> listBundlesFromEcr() {
         List<EntandoDeBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces();

@@ -18,6 +18,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.model.bundle.EntandoBundleData;
 import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.job.PluginData;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
@@ -36,6 +37,13 @@ public class EntandoBundlePluginResourceController implements EntandoBundlePlugi
 
     private final EntandoBundlePluginService bundleComponentService;
     private static final String ERROR_MSG = "Can't manage a request with bundleCode: ";
+
+    @Override
+    public ResponseEntity<PagedRestResponse<EntandoBundleData>> getBundles(PagedListRequest requestList) {
+        PagedMetadata<EntandoBundleData> pagedBundles = bundleComponentService.listBundles(requestList);
+        PagedRestResponse<EntandoBundleData> response = new PagedRestResponse<>(pagedBundles);
+        return ResponseEntity.ok(response);
+    }
 
     @Override
     public ResponseEntity<PagedRestResponse<PluginData>> getBundleInstalledComponents(
