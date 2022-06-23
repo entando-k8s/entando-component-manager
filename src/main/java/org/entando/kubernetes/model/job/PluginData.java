@@ -45,11 +45,11 @@ public class PluginData {
                 .pluginName(entity.getPluginName())
                 .pluginCode(entity.getPluginCode())
                 .ingressPath(entity.getEndpoint())
-                .roles(manageRoles(entity.getRoles()))
+                .roles(toStringArray(entity.getRoles()))
                 .build();
     }
 
-    private static String[] manageRoles(Set<String> roles) {
+    private static String[] toStringArray(Set<String> roles) {
         if (roles == null) {
             return new String[0];
         } else {
