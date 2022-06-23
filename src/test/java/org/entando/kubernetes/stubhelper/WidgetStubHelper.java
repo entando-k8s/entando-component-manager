@@ -10,6 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.MfeParam;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetDescriptorBuilder;
 
 public class WidgetStubHelper {
@@ -69,6 +70,15 @@ public class WidgetStubHelper {
                 .customElement(WIDGET_1_CODE)
                 .configWidget(CONFIG_WIDGET)
                 .apiClaims(stubApiClaims())
+                .contextParams(List.of(
+                        "page_code",
+                        "info_startLang",
+                        "systemParam_applicationBaseURL"
+                ))
+                .params(List.of(
+                        new MfeParam("paramA", "descA"),
+                        new MfeParam("paramB", "descB")
+                ))
                 .descriptorMetadata(stubDescriptorMetadata())
                 .build();
         widgetDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
