@@ -1,0 +1,16 @@
+databaseChangeLog:
+  # installed_entando_bundles
+  - changeSet:
+      id: 20220613000003-add-unique-constraint-to-bundle-entity
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: installed_entando_bundles
+        - columnExists:
+            tableName: installed_entando_bundles
+            columnName: bundle_code
+      changes:
+        - addUniqueConstraint:
+            tableName: installed_entando_bundles
+            columnNames: bundle_code
