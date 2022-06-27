@@ -3,7 +3,6 @@ package org.entando.kubernetes.model.bundle.processor;
 import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_CONFIG;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,9 +66,10 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     private Map<String, String> pluginIngressPathMap;
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
+
     /**
-     * Map of descriptors of type widgetConfig. It's used to recover information about the configWidgets when processing
-     * a widget
+     * Map of descriptors of type widgetConfig
+     * used to recover information about the configWidgets when processing a widget
      */
     @Setter
     private Map<String, WidgetDescriptor> widgetConfigDescriptorsMap;
@@ -131,6 +131,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         return installables;
     }
 
+
     @Override
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
@@ -189,7 +190,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         return res;
     }
-
     private WidgetDescriptor makeWidgetDescriptorFromFile(BundleReader bundleReader, String fileName,
             Map<String, String> pluginIngressPathMap) throws IOException {
         var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
@@ -224,6 +224,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             widgetDescriptor.setCustomUi(ftl);
         }
     }
+
+
 
     /**
      * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.

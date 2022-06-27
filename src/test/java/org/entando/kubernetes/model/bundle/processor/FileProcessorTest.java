@@ -111,8 +111,6 @@ class FileProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = fileProcessor.process(bundleReader);
 
-        installables.sort(Comparator.comparing(Installable::getName));
-
         assertThat(installables).hasSize(11);
 
         var expectedNames = Stream.of(
