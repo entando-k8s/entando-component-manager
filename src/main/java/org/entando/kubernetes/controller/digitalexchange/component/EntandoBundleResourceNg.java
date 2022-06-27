@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping(value = "/bundles")
-public interface EntandoBundlePluginResource {
+public interface EntandoBundleResourceNg {
 
     static final String REPO_URL_PATH_PARAM = "url";
     static final String VERSION = "v1";
@@ -38,6 +38,7 @@ public interface EntandoBundlePluginResource {
 
     @Operation(description = "Returns available bundles")
     @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "500", description = "Generic server error")
     @GetMapping(produces = ACCEPTED_MEDIA_TYPE)
     ResponseEntity<PagedRestResponse<EntandoBundleData>> getBundles(PagedListRequest requestList);
 

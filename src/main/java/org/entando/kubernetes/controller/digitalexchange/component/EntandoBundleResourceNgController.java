@@ -33,7 +33,7 @@ import org.zalando.problem.Status;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class EntandoBundlePluginResourceController implements EntandoBundlePluginResource {
+public class EntandoBundleResourceNgController implements EntandoBundleResourceNg {
 
     private final EntandoBundlePluginService bundleComponentService;
     private static final String ERROR_MSG = "Can't manage a request with bundleCode: ";
