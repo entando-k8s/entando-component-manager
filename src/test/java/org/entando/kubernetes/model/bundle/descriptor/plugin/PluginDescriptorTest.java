@@ -21,4 +21,17 @@ class PluginDescriptorTest {
                 .build();
         assertNull(descriptor.getDescriptorMetadata());
     }
+
+    @Test
+    void testV5_shouldKeepDeploymentFullNameNullEvenInTheAllArgsContructor() { // because it is set inside the
+        // PluginProcessor
+        PluginDescriptor descriptor = PluginDescriptor.builder()
+                .image("image")
+                .roles(Arrays.asList("role1", "role2"))
+                .healthCheckPath("healtcheak")
+                .dbms("mysql")
+                .name("test-name")
+                .build();
+        assertNull(descriptor.getDescriptorMetadata());
+    }
 }

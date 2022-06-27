@@ -1,0 +1,14 @@
+descriptorVersion: v5
+name: todomvc_widget_config
+type: widget-config
+titles:
+  en: TODO MVC Widget
+  it: TODO MVC Widget
+group: free
+customElement: my-widget-config
+params:
+  - name: url
+    description: "the url"
+  - name: title
+    description: "the title"
+

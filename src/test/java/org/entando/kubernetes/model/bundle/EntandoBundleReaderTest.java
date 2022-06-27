@@ -39,7 +39,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -368,7 +368,7 @@ public class EntandoBundleReaderTest {
         WidgetDescriptor wd = bundleReader
                 .readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
-        assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
+        assertThat(wd.getConfigUi()).isInstanceOf(ConfigUi.class);
         assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");
         assertThat(wd.getConfigUi().getResources()).hasSize(1);
         assertThat(wd.getConfigUi().getResources()).contains("something/js/configUiScript.js", Index.atIndex(0));

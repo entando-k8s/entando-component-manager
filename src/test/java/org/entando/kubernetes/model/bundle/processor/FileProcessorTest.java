@@ -108,7 +108,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = fileProcessor.process(bundleReader);
 
-        assertThat(installables).hasSize(4);
+        assertThat(installables).hasSize(7);
 
         assertThat(installables.get(0)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);

@@ -59,10 +59,9 @@ class AppConfigurationTest {
         ApplicationContext context = mock(ApplicationContext.class);
         when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
 
-        ComponentType[] expected = Arrays.stream(ComponentType.values())
-                .toArray(ComponentType[]::new);
+        ComponentType[] expected = Arrays.stream(ComponentType.values()).toArray(ComponentType[]::new);
 
-        assertThat(appConfig.processorMap(context).keySet()).containsExactlyInAnyOrder(expected);
+        assertThat(appConfig.processorMap(context).keySet().stream()).containsExactlyInAnyOrder(expected);
     }
 
 

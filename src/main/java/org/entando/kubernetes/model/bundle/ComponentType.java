@@ -26,7 +26,6 @@ public enum ComponentType {
     CONTENT("content", 14),
     PAGE_CONFIGURATION("pageConfiguration", 15);
 
-
     private final String typeName;
     private final int installPriority;
 

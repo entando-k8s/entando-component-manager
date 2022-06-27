@@ -29,23 +29,31 @@ public class WidgetDescriptor extends VersionedDescriptor {
     // ------------------------------------------------------------
     // Version 1
 
-    private ConfigUIDescriptor configUi;
+    private ConfigUi configUi;
     private String customUiPath;
+    private String configWidget;
 
     // ------------------------------------------------------------
     // Version 5
-
     private String name;
-    private String configWidget;
-    private String customElement;
+    private String type;
+    private String configMfe;
     private List<ApiClaim> apiClaims;
-    private List<MfeParam> params;
+    private List<Param> params;
     private List<String> contextParams;
+    private String customElement;
+
+    public final static String TYPE_WIDGET_STANDARD = "widget";
+    public final static String TYPE_WIDGET_CONFIG = "widget-config";
+    public final static String TYPE_WIDGET_APPBUILDER = "app-builder";
+
+    // ------------------------------------------------------------
+    // METADATA
     private DescriptorMetadata descriptorMetadata;
     private String parentName;
     private String parentCode;
 
-
+    // ------------------------------------------------------------
     @Override
     public ComponentKey getComponentKey() {
         return ObjectUtils.isEmpty(code)
@@ -55,7 +63,9 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     @Getter
     @Setter
-    public static class ConfigUIDescriptor {
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ConfigUi {
 
         private String customElement;
         private List<String> resources;
@@ -80,7 +90,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class MfeParam {
+    public static class Param {
 
         private String name;
         private String description;
@@ -95,10 +105,25 @@ public class WidgetDescriptor extends VersionedDescriptor {
          * value = plugin ingress path
          */
         private final Map<String, String> pluginIngressPathMap;
+        private final String filename;
     }
 
     public WidgetDescriptor setCode(String code) {
         this.code = code;
         return this;
+    }
+
+    public void applyFallbacks() {
+        if (getType() == null) {
+            setType(WidgetDescriptor.TYPE_WIDGET_STANDARD);
+        }
+    }
+
+    @Override
+    public boolean isAuxiliary() {
+        if (isVersion1()) {
+            return false;
+        }
+        return type != null && !type.equals(WidgetDescriptor.TYPE_WIDGET_STANDARD);
     }
 }

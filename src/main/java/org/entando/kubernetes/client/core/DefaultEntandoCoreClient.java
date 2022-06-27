@@ -111,23 +111,26 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
-        restTemplate
-                .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
-                        new EntandoCoreWidget(descriptor),
-                        Void.class);
+        restTemplate.postForEntity(
+                resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
+                new EntandoCoreWidget(descriptor),
+                Void.class
+        );
     }
 
     @Override
     public void updateWidget(WidgetDescriptor descriptor) {
-        restTemplate
-                .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build().toUri(),
-                        new EntandoCoreWidget(descriptor));
+        restTemplate.put(
+                resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build().toUri(),
+                new EntandoCoreWidget(descriptor)
+        );
     }
 
     @Override
     public void deleteWidget(final String code) {
         notFoundOrUnauthorizedProtectedDelete(
-                resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, code).build().toUri());
+                resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, code).build().toUri()
+        );
     }
 
     @Override

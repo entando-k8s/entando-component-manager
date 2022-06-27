@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -47,12 +47,12 @@ public class EntandoCoreWidgetTest {
 
     }
 
-    private ConfigUIDescriptor testConfigUiDescriptor() {
-        ConfigUIDescriptor configUIDescriptor = new WidgetDescriptor.ConfigUIDescriptor();
-        configUIDescriptor.setCustomElement("myCustomElement");
-        configUIDescriptor.setResources(Arrays.asList("css/style.css", "js/main.js", "js/runtime.js"));
+    private ConfigUi testConfigUiDescriptor() {
+        ConfigUi configUI = new ConfigUi();
+        configUI.setCustomElement("myCustomElement");
+        configUI.setResources(Arrays.asList("css/style.css", "js/main.js", "js/runtime.js"));
 
-        return configUIDescriptor;
+        return configUI;
     }
 
     private WidgetDescriptor testWidgetDescriptor() {

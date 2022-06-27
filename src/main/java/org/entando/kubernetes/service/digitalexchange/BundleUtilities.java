@@ -178,7 +178,6 @@ public class BundleUtilities {
             return composeIngressPathBundleIdAndPluginName(descriptor, bundleCode);
         }
 
-        // TODO remove this code? check with old bundles
         return composeIngressPathFromDockerImage(descriptor);
     }
 
