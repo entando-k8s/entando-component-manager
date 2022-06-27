@@ -60,9 +60,11 @@ class AppConfigurationTest {
         when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
 
         ComponentType[] expected = Arrays.stream(ComponentType.values())
-                .toArray(ComponentType[]::new);
+                .filter(ComponentType::isNotAlias).toArray(ComponentType[]::new);
 
-        assertThat(appConfig.processorMap(context).keySet()).containsExactlyInAnyOrder(expected);
+        assertThat(
+                appConfig.processorMap(context).keySet().stream().filter(ComponentType::isNotAlias)
+        ).containsExactlyInAnyOrder(expected);
     }
 
 

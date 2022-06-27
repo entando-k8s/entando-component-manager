@@ -63,6 +63,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
                 = getObjectsThatMustNotBeNullForEveryVersion();
         objectsThatMustNotBeNull.put("customElement", WidgetDescriptor::getCustomElement);
         objectsThatMustNotBeNull.put("name", WidgetDescriptor::getName);
+        objectsThatMustNotBeNull.put("type", WidgetDescriptor::getType);
 
         addValidationConfigMap(DescriptorVersion.V5,
                 Arrays.asList(super::validateDescriptorFormatOrThrow, this::validateApiClaims,

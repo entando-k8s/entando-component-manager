@@ -18,7 +18,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.MfeParam;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.Param;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
@@ -226,10 +226,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     }
 
 
-    protected HashMap<String, String> toMfeParamsForConfig(List<MfeParam> mfeParams) {
+    protected HashMap<String, String> toMfeParamsForConfig(List<Param> params) {
         var res = new HashMap<String, String>();
-        if (mfeParams != null) {
-            for (var p : mfeParams) {
+        if (params != null) {
+            for (var p : params) {
                 res.put(p.getName(), "${" + FTL_WIDGETS_PARAM_PREFIX + FTL_OBJECT_MEMBER_SEPARATOR + p.getName() + "}");
             }
         }

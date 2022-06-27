@@ -34,18 +34,26 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     // ------------------------------------------------------------
     // Version 5
-
     private String name;
+    private String type;
     private String configWidget;
-    private String customElement;
+    private String configMfe;
     private List<ApiClaim> apiClaims;
-    private List<MfeParam> params;
+    private List<Param> params;
     private List<String> contextParams;
+    private String customElement;
+
+    public final static String TYPE_WIDGET = "widget";
+    public final static String TYPE_WIDGET_CONFIG = "widget-config";
+    public final static String TYPE_WIDGET_APPBUILDER = "app-builder";
+
+    // ------------------------------------------------------------
+    // METADATA
     private DescriptorMetadata descriptorMetadata;
     private String parentName;
     private String parentCode;
 
-
+    // ------------------------------------------------------------
     @Override
     public ComponentKey getComponentKey() {
         return ObjectUtils.isEmpty(code)
@@ -55,6 +63,8 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     @Getter
     @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class ConfigUIDescriptor {
 
         private String customElement;
@@ -80,7 +90,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class MfeParam {
+    public static class Param {
 
         private String name;
         private String description;
@@ -95,10 +105,17 @@ public class WidgetDescriptor extends VersionedDescriptor {
          * value = plugin ingress path
          */
         private final Map<String, String> pluginIngressPathMap;
+        private final String filename;
     }
 
     public WidgetDescriptor setCode(String code) {
         this.code = code;
         return this;
+    }
+
+    public void applyFallbacks() {
+        if (getType() == null) {
+            setType(WidgetDescriptor.TYPE_WIDGET);
+        }
     }
 }

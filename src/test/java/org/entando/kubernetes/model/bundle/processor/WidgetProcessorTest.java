@@ -9,15 +9,18 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
@@ -58,7 +61,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
 
-        final List<Installable<WidgetDescriptor>> installableList = execWidgetProcessor(widgDescrFile);
+        var installableList = execWidgetProcessor(widgDescrFile, null);
 
         assertThat(installableList).hasSize(1);
 
@@ -75,11 +78,23 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
     @Test
     void canProcessDescriptorV5() throws IOException {
-
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        when(bundleReader.getBundleCode()).thenReturn("bundle-v5");
+        String widgetConfigFolder = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5";
+        when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "js")).thenReturn(
+                List.of(
+                        "widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js",
+                        "widgets/my_widget_config_descriptor_v5/static/js-res-1.js"
+                )
+        );
+        when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "css")).thenReturn(
+                List.of("widgets/my_widget_config_descriptor_v5/assets/css-res.css")
+        );
+
+        String widgConfigDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5.yaml";
         String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
 
-        final List<Installable<WidgetDescriptor>> installableList = execWidgetProcessor(widgDescrFile);
+        var installableList = execWidgetProcessor(widgDescrFile, widgConfigDescrFile);
 
         assertThat(installableList).hasSize(1);
 
@@ -93,12 +108,21 @@ class WidgetProcessorTest extends BaseProcessorTest {
         assertThat(actual.getApiClaims()).hasSize(expected.getApiClaims().size());
         assertThat(actual.getCustomElement()).isEqualTo("my-widget");
         assertThat(actual.getCustomUi()).isEqualTo(WidgetTemplateGeneratorServiceDouble.FTL_TEMPLATE);
+
+        assertThat(actual.getConfigUi().getCustomElement()).isEqualTo("my-widget-config");
+        List<String> res = actual.getConfigUi().getResources();
+        assertThat(res.size()).isEqualTo(3);
+        assertThat(res).contains("bundles/bundle-v5/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js");
+        assertThat(res).contains("bundles/bundle-v5/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js");
+        assertThat(res).contains("bundles/bundle-v5/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
     }
 
-    private List<Installable<WidgetDescriptor>> execWidgetProcessor(String widgetDescFile) throws IOException {
+    private List<Installable<WidgetDescriptor>> execWidgetProcessor(String widgetDescFile, String widgConfigDescrFile)
+            throws IOException {
+        //~
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
-        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
         WidgetDescriptor descriptor = yamlMapper.readValue(new File(widgetDescFile), WidgetDescriptor.class);
 
@@ -109,6 +133,14 @@ class WidgetProcessorTest extends BaseProcessorTest {
         final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
                 new WidgetTemplateGeneratorServiceDouble(), validator);
         widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
+
+        if (widgConfigDescrFile != null) {
+            WidgetDescriptor wcdesc = yamlMapper.readValue(new File(widgConfigDescrFile), WidgetDescriptor.class);
+            wcdesc.setDescriptorMetadata(new DescriptorMetadata(Map.of("", ""), widgConfigDescrFile));
+            var wcdm = new HashMap<String, WidgetDescriptor>();
+            wcdm.put(wcdesc.getName(), wcdesc);
+            widgetProcessor.setWidgetConfigDescriptorsMap(wcdm);
+        }
 
         return widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }

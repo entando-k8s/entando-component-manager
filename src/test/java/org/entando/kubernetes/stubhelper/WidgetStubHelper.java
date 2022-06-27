@@ -4,13 +4,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.MfeParam;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.Param;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetDescriptorBuilder;
 
 public class WidgetStubHelper {
@@ -66,6 +67,7 @@ public class WidgetStubHelper {
     public static WidgetDescriptor stubWidgetDescriptorV5() {
         WidgetDescriptor widgetDescriptor = stubWidgetDescriptor()
                 .code(null)
+                .type(ComponentType.WIDGET.getTypeName())
                 .name(WIDGET_1_NAME)
                 .customElement(WIDGET_1_CODE)
                 .configWidget(CONFIG_WIDGET)
@@ -76,8 +78,8 @@ public class WidgetStubHelper {
                         "systemParam_applicationBaseURL"
                 ))
                 .params(List.of(
-                        new MfeParam("paramA", "descA"),
-                        new MfeParam("paramB", "descB")
+                        new Param("paramA", "descA"),
+                        new Param("paramB", "descB")
                 ))
                 .descriptorMetadata(stubDescriptorMetadata())
                 .build();
@@ -94,7 +96,11 @@ public class WidgetStubHelper {
     }
 
     public static DescriptorMetadata stubDescriptorMetadata() {
-        return new DescriptorMetadata(stubPluginIngressPathMap());
+        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename());
+    }
+
+    private static String stubWidgetFilename() {
+        return "stub-widget";
     }
 
     public static ConfigUIDescriptor stubConfigUiDescriptor() {

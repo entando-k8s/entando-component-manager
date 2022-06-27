@@ -24,8 +24,14 @@ public enum ComponentType {
     PAGE_TEMPLATE("pageTemplate", 12),
     PAGE("page", 13),
     CONTENT("content", 14),
-    PAGE_CONFIGURATION("pageConfiguration", 15);
+    PAGE_CONFIGURATION("pageConfiguration", 15),
 
+    // ALIASES
+    WIDGET_CONFIG("widget-config", 7);
+
+    public boolean isNotAlias() {
+        return this != ComponentType.WIDGET_CONFIG;
+    }
 
     private final String typeName;
     private final int installPriority;

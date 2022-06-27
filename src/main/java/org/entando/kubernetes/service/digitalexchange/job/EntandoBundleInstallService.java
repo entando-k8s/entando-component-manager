@@ -28,6 +28,7 @@ import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -388,6 +389,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             ((WidgetProcessor) processorMap.get(ComponentType.WIDGET)).setPluginIngressPathMap(pluginIngressMap);
         }
 
+        collectWidgetConfigDescriptors(bundleReader, conflictStrategy, installPlan);
+
         // process other components
         final List<? extends Installable<?>> installables = processorMap.values()
                 .stream()
@@ -402,6 +405,27 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                         pluginInstallables.stream())
                 .sorted(Comparator.comparingInt(Installable::getPriority))
                 .collect(Collectors.toCollection(ArrayDeque::new));
+    }
+
+    /** Collects the descriptors of all the WIDGET_CONFIG components */
+    private void collectWidgetConfigDescriptors(
+            BundleReader bundleReader,
+            InstallAction conflictStrategy,
+            InstallPlan installPlan) {
+        //~
+        if (!processorMap.containsKey(ComponentType.WIDGET_CONFIG)) {
+            return;
+        }
+
+        WidgetProcessor widgetsProcessor = (WidgetProcessor) processorMap.get(ComponentType.WIDGET);
+        var installables = widgetsProcessor.process(bundleReader, conflictStrategy, installPlan);
+
+        var widgetConfigDescriptors = installables.stream()
+                .filter(i -> i.getComponentType() == ComponentType.WIDGET_CONFIG)
+                .map(Installable::getRepresentation)
+                .collect(Collectors.toMap(WidgetDescriptor::getName, d -> d));
+
+        widgetsProcessor.setWidgetConfigDescriptorsMap(widgetConfigDescriptors);
     }
 
 
