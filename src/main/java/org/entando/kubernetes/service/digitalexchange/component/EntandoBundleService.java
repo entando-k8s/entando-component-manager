@@ -71,4 +71,10 @@ public interface EntandoBundleService {
      */
     Optional<EntandoBundle> getInstalledBundleByEncodedUrl(String encodedRepoUrl);
 
+    /**
+     * This method retrieves from entando k8s service the list of EntandoDeBundle CRs deployed (installed or not).
+     *
+     * @return the list of EntandoDeBundle CRs deployed (installed or not)
+     */
+    List<EntandoBundle> listBundlesFromEcr();
 }

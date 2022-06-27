@@ -14,14 +14,19 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.EntandoBundleData;
 import org.entando.kubernetes.model.job.PluginData;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.ValidationFunctions;
@@ -35,9 +40,35 @@ import org.zalando.problem.Status;
 public class EntandoBundlePluginServiceImpl implements EntandoBundlePluginService {
 
     private final PluginDataRepository pluginDataRepository;
+    private final InstalledEntandoBundleRepository installedEntandoBundleRepository;
 
     private final EntandoBundleService bundleService;
 
+    @Override
+    public PagedMetadata<EntandoBundleData> listBundles(PagedListRequest request) {
+        // installed
+        List<EntandoBundleData> installedBundles = installedEntandoBundleRepository.findAll()
+                .stream().map(EntandoBundleData::fromEntity).collect(Collectors.toList());
+        // CRD
+        List<EntandoBundleData> entandoDeBundles = bundleService.listBundlesFromEcr().stream()
+                .map(this::convertToEntandoBundleData).collect(Collectors.toList());
+
+        // installed + CRD not installed
+        List<EntandoBundleData> allBundles = new ArrayList<>(installedBundles);
+        allBundles.addAll(entandoDeBundles.stream().filter(f -> !listContainsBundleByName(installedBundles, f))
+                .collect(Collectors.toList()));
+
+        // filter all
+        List<EntandoBundleData> localFilteredList = new EntandoBundleDataListProcessor(request, allBundles)
+                .filterAndSort().toList();
+        List<EntandoBundleData> sublist = request.getSublist(localFilteredList);
+
+        return new PagedMetadata<>(request, sublist, localFilteredList.size());
+    }
+
+    private boolean listContainsBundleByName(List<EntandoBundleData> allBundles, EntandoBundleData bundle) {
+        return allBundles.stream().anyMatch(b -> StringUtils.equals(b.getBundleName(), bundle.getBundleName()));
+    }
 
     @Override
     public PagedMetadata<PluginData> getInstalledPluginsByBundleId(PagedListRequest requestList,
@@ -101,5 +132,16 @@ public class EntandoBundlePluginServiceImpl implements EntandoBundlePluginServic
         return bundleService.getInstalledBundleByBundleId(bundleId).map(e -> true)
                 .orElseThrow(() -> new BundleNotInstalledException(
                         "Bundle " + bundleId + " is not installed in the system"));
+    }
+
+    private EntandoBundleData convertToEntandoBundleData(EntandoBundle bundle) {
+        return EntandoBundleData.builder()
+                .id(null)
+                .bundleId(BundleUtilities.removeProtocolAndGetBundleId(bundle.getRepoUrl()))
+                .bundleName(bundle.getCode())
+                .installed(bundle.isInstalled())
+                .componentTypes(bundle.getComponentTypes())
+                .publicationUrl(bundle.getRepoUrl())
+                .build();
     }
 }

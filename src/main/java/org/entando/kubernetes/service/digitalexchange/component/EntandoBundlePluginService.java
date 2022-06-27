@@ -14,11 +14,21 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import org.entando.kubernetes.model.bundle.EntandoBundleData;
 import org.entando.kubernetes.model.job.PluginData;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface EntandoBundlePluginService {
+
+
+    /**
+     * This method retrieves the list of bundles installed or only deployed as CR.
+     *
+     * @param request the data to filter and sort the list of bundles
+     * @return the list of bundles, it can be empty
+     */
+    PagedMetadata<EntandoBundleData> listBundles(PagedListRequest request);
 
     /**
      * This method retrieves the list of installed plugins based on the input bundle identifier.

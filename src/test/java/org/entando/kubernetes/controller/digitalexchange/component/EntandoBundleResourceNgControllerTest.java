@@ -25,16 +25,23 @@ import org.zalando.problem.DefaultProblem;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-class EntandoBundlePluginResourceControllerTest {
+class EntandoBundleResourceNgControllerTest {
 
-    private EntandoBundlePluginResourceController controller;
+    private EntandoBundleResourceNgController controller;
 
     @Mock
     private EntandoBundlePluginService bundleComponentService;
 
     @BeforeEach
     public void setup() {
-        controller = new EntandoBundlePluginResourceController(bundleComponentService);
+        controller = new EntandoBundleResourceNgController(bundleComponentService);
+    }
+
+    @Test
+    void getBundles_shouldBeOk() {
+        final PagedListRequest req = new PagedListRequest();
+        when(bundleComponentService.listBundles(req)).thenReturn(new PagedMetadata(req, new ArrayList<>()));
+        assertThat(controller.getBundles(req).getBody().getPayload()).isEmpty();
     }
 
     @Test
@@ -55,7 +62,7 @@ class EntandoBundlePluginResourceControllerTest {
         assertThrows(DefaultProblem.class, () -> controller.getBundleInstalledComponents(idWrongFormat, request));
 
         final RestNamedId idWrongEncode = RestNamedId.from(
-                EntandoBundlePluginResourceController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + "09)°");
+                EntandoBundleResourceNgController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + "09)°");
         assertThrows(DefaultProblem.class, () -> controller.getBundleInstalledComponents(idWrongEncode, request));
 
         String urlEncode = Base64.getEncoder().encodeToString("mccp://-test".getBytes(StandardCharsets.UTF_8));
@@ -63,7 +70,7 @@ class EntandoBundlePluginResourceControllerTest {
                 bundleComponentService.getInstalledPluginsByEncodedUrl(request, urlEncode)).thenThrow(
                 new EntandoValidationException());
         final RestNamedId idWrongValue = RestNamedId.from(
-                EntandoBundlePluginResourceController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + urlEncode);
+                EntandoBundleResourceNgController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + urlEncode);
         assertThrows(EntandoValidationException.class,
                 () -> controller.getBundleInstalledComponents(idWrongValue, request));
     }
@@ -87,7 +94,7 @@ class EntandoBundlePluginResourceControllerTest {
                 () -> controller.getBundleInstalledPlugin(idWrongFormat, pluginCode));
 
         final RestNamedId idWrongEncode = RestNamedId.from(
-                EntandoBundlePluginResourceController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + "09)°");
+                EntandoBundleResourceNgController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + "09)°");
         assertThrows(DefaultProblem.class,
                 () -> controller.getBundleInstalledPlugin(idWrongEncode, pluginCode));
 
@@ -96,7 +103,7 @@ class EntandoBundlePluginResourceControllerTest {
                 bundleComponentService.getInstalledPluginByEncodedUrl(urlEncode, pluginCode))
                 .thenThrow(new EntandoValidationException());
         final RestNamedId idWrongValue = RestNamedId.from(
-                EntandoBundlePluginResourceController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + urlEncode);
+                EntandoBundleResourceNgController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + urlEncode);
         assertThrows(EntandoValidationException.class,
                 () -> controller.getBundleInstalledPlugin(idWrongValue, pluginCode));
     }

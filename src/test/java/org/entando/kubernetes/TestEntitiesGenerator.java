@@ -76,6 +76,7 @@ public class TestEntitiesGenerator {
 
     public static EntandoBundleEntity getTestComponent() {
         EntandoBundleEntity component = new EntandoBundleEntity();
+        component.setId(UUID.randomUUID());
         component.setBundleCode("my-bundle");
         component.setName("My Bundle Title");
         component.setRepoUrl(REPO_URL);
