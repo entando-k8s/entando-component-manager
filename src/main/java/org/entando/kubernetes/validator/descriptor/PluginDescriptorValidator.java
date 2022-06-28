@@ -135,6 +135,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
         List<DescriptorValidationFunction<PluginDescriptor>> validationFunctionList = new ArrayList<>();
         validationFunctionList.add(this::validateDescriptorFormatOrThrow);
+        validationFunctionList.add(this::validateCustomIngressPathOrThrow);
         validationFunctionList.add(this::validateSecurityLevelOrThrow);
         validationFunctionList.add(this::validateFullDeploymentNameLength);
 
@@ -185,6 +186,29 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
                     .filter(pluginSecurityLevel -> pluginSecurityLevel.toName().equals(securityLevel))
                     .findFirst()
                     .orElseThrow(() -> new InvalidBundleException(SECURITY_LEVEL_NOT_RECOGNIZED)); // NOSONAR
+        }
+        return descriptor;
+    }
+
+    /**
+     * validate the customIngress of the plugin descriptor.
+     *
+     * @param descriptor the plugin descriptor to validate
+     * @throws InvalidBundleException if the one of the values is not the expected one
+     */
+    private PluginDescriptor validateCustomIngressPathOrThrow(PluginDescriptor descriptor) {
+
+        if (!StringUtils.isEmpty(descriptor.getIngressPath())) {
+
+            String ingressPath = BundleUtilities.composeIngressPathFromIngressPathProperty(descriptor);
+            String[] splitIngressPath = ingressPath.split("/");
+
+            if (splitIngressPath.length >= 1
+                    && BundleUtilities.DESCRIPTOR_CODE_PATTERN.matcher(splitIngressPath[1]).matches()) {
+
+                throw new InvalidBundleException(String.format(INVALID_CUSTOM_INGRESS_PATH, descriptor.getName(),
+                        ingressPath));
+            }
         }
         return descriptor;
     }
@@ -299,5 +323,9 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
             "The plugin full deployment name \"%s\" "
                     + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
                     + "environment variable FULL_DEPLOYMENT_NAME_MAXLENGTH";
+    public static final String INVALID_CUSTOM_INGRESS_PATH =
+            "The plugin \"%s\" contains an invalid custom ingress path: \"%s\". Custom ingress paths cannot mime the "
+                    + "standard format in which the first subpath matches with the regex \""
+                    + BundleUtilities.DESCRIPTOR_CODE_REGEX + "\"";
 
 }

@@ -87,7 +87,7 @@ public class BundleReader {
         return bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
 
-    public String getBundleCode() throws IOException {
+    public String getCode() throws IOException {
         return readBundleDescriptor().getCode();
     }
 

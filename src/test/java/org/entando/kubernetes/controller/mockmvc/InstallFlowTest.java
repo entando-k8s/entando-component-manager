@@ -6,7 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
+import static org.entando.kubernetes.model.common.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_PLANS_ENDPOINT;

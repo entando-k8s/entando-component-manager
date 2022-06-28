@@ -9,7 +9,7 @@ import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.model.DbmsVendor;
+import org.entando.kubernetes.model.common.DbmsVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
@@ -58,7 +58,7 @@ public class PluginInstallTest {
 
         K8SServiceClientTestDouble k8sSvcClient = (K8SServiceClientTestDouble) k8SServiceClient;
         Set<EntandoPlugin> linkedPluginDatabase = k8sSvcClient.getInMemoryPlugins();
-        assertThat(linkedPluginDatabase.size()).isEqualTo(1);
+        assertThat(linkedPluginDatabase).hasSize(1);
         EntandoPlugin plugin = linkedPluginDatabase.iterator().next();
 
         assertThat(plugin.getSpec().getIngressPath()).isEqualTo("/avatar");

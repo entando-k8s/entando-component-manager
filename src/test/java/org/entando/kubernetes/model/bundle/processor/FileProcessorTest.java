@@ -262,7 +262,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         // prefix each expected file path with the bundle code
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode());
+        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode());
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFolderV1);
@@ -295,7 +295,7 @@ class FileProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getBundleCode()).thenReturn(
+        when(mockBundleReader.getCode()).thenReturn(
                 bundleDescriptor.getCode() + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
 

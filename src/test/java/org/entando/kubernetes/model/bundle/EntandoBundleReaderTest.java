@@ -101,7 +101,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     public void shouldReadBundleIdCorrectly() throws IOException {
-        assertThat(bundleReader.getBundleCode()).isEqualTo("something-77b2b10e");
+        assertThat(bundleReader.getCode()).isEqualTo("something-77b2b10e");
     }
 
     @Test

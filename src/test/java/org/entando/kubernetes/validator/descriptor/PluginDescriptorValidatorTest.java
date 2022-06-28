@@ -20,6 +20,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +46,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint", "custIngr");
         validator.validateOrThrow(descriptor);
     }
 
@@ -56,7 +57,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint", "custIngr");
         validator.validateOrThrow(descriptor);
 
         descriptor = yamlMapper
@@ -64,7 +65,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint", "custIngr");
         validator.validateOrThrow(descriptor);
     }
 
@@ -75,7 +76,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint", "custIngr");
         validator.validateOrThrow(descriptor);
 
         descriptor = yamlMapper
@@ -83,7 +84,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint");
+                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint", "custIngr");
         validator.validateOrThrow(descriptor);
     }
 
@@ -95,7 +96,7 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class)
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint");
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint", "custIngr");
         descriptor.setDescriptorVersion("v2.5");
 
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
@@ -164,7 +165,8 @@ class PluginDescriptorValidatorTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
         assertThat(validator.validateOrThrow(descriptor)).isTrue();
 
         // with empty name should fail
@@ -248,7 +250,8 @@ class PluginDescriptorValidatorTest {
                     PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
-                    PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                    PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                    PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
             if (secretName.contains("github-org")) {
                 assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
@@ -267,7 +270,8 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
@@ -289,7 +293,8 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setEnvironmentVariables(environmentVariables);
 
         Assertions.assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
@@ -307,9 +312,30 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name",
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
+    }
+
+    @Test
+    void shouldCorrectlyValidateIngressPath() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+
+        // valid with format not compliant with bundle code
+        Stream.of("/mybundle/ingress", "mybundle/ingress")
+                .forEach(ingress -> {
+                    descriptor.setIngressPath(ingress);
+                    assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+                });
+
+        // NOT valid with format compliant with bundle code
+        Stream.of("/mybundle-1a2b3c4d/ingress", "mybundle-1a2b3c4d/ingress")
+                .forEach(ingress -> {
+                    descriptor.setIngressPath(ingress);
+                    assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
+                });
     }
 
     @Test

@@ -19,7 +19,7 @@ import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.k8ssvc.EntandoAppPluginLinkingProcessException;
-import org.entando.kubernetes.model.EntandoDeploymentPhase;
+import org.entando.kubernetes.model.common.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;

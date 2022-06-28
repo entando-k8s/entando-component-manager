@@ -84,7 +84,7 @@ class BaseDescriptorValidatorTest {
                 Collections.emptyMap());
 
         PluginDescriptor descriptor = (PluginDescriptor) new PluginDescriptor()
-                .setDescriptorMetadata("abcdefgh", "abcdefgh-my-bundle", "1ab2c3d4", "code", "name", "endpooint")
+                .setDescriptorMetadata("abcdefgh", "abcdefgh-my-bundle", "1ab2c3d4", "code", "name", "endpooint", "cusIngr")
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
         // existent version should work

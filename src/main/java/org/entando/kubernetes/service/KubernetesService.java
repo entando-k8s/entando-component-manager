@@ -1,7 +1,8 @@
 package org.entando.kubernetes.service;
 
-import static org.entando.kubernetes.model.EntandoDeploymentPhase.FAILED;
-import static org.entando.kubernetes.model.EntandoDeploymentPhase.SUCCESSFUL;
+
+import static org.entando.kubernetes.model.common.EntandoDeploymentPhase.FAILED;
+import static org.entando.kubernetes.model.common.EntandoDeploymentPhase.SUCCESSFUL;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -121,13 +122,15 @@ public class KubernetesService {
     public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin) {
         boolean result = false;
         Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());
-        if (linkByName.isPresent()) {
-            if (linkByName.get().getStatus().getEntandoDeploymentPhase().equals(FAILED)) {
+        if (linkByName.isPresent() && linkByName.get().getStatus() != null
+                && linkByName.get().getStatus().getPhase() != null) {
+
+            if (linkByName.get().getStatus().getPhase().equals(FAILED)) {
                 String msg = String.format("Linking procedure between app %s and plugin %s failed", entandoAppName,
                         plugin.getMetadata().getName());
                 throw new EntandoAppPluginLinkingProcessException(msg);
             }
-            result = linkByName.get().getStatus().getEntandoDeploymentPhase().equals(SUCCESSFUL)
+            result = linkByName.get().getStatus().getPhase().equals(SUCCESSFUL)
                     && isPluginReady(plugin);
         }
         return result;
