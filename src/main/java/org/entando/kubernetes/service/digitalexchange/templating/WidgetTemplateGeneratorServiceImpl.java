@@ -197,7 +197,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     protected SystemParams toSystemParamsForConfig(List<ApiClaim> apiClaimList, Map<String, String> pluginIngressPathMap) {
         final Map<String, ApiUrl> apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
-                    String ingressPath = APPLICATION_BASEURL_PARAM + getApiUrl(ac, pluginIngressPathMap);
+                    String ingressPath = getApiUrl(ac, pluginIngressPathMap);
                     return new SimpleEntry<>(ac.getName(), new ApiUrl(ingressPath));
                 })
                 .collect(Collectors.toMap(
