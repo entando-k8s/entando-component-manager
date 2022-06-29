@@ -175,10 +175,10 @@ public class BundleUtilities {
         // if v5
         if (!ObjectUtils.isEmpty(descriptor.getDescriptorVersion())
                 && descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
-            return composeIngressPathBundleIdAndPluginName(descriptor, bundleCode);
+            return composeIngressPathForV5(descriptor, bundleCode);
         }
 
-        return composeIngressPathFromDockerImage(descriptor);
+        return composeIngressPathForV1(descriptor);
     }
 
     public static Map<String, String> extractLabelsFromDescriptor(PluginDescriptor descriptor) {
@@ -220,7 +220,7 @@ public class BundleUtilities {
      * @param descriptor the PluginDescriptor from which take the docker image
      * @return the composed ingress path
      */
-    public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
+    public static String composeIngressPathForV1(PluginDescriptor descriptor) {
 
         DockerImage image = descriptor.getDockerImage();
 
@@ -237,12 +237,12 @@ public class BundleUtilities {
     }
 
     /**
-     * compose the plugin ingress path starting by its bundle id and its name.
+     * compose the plugin ingress path starting by its bundle code and its name.
      *
      * @param descriptor the PluginDescriptor from which take the info
      * @return the composed ingress path
      */
-    public static String composeIngressPathBundleIdAndPluginName(PluginDescriptor descriptor, String bundleCode) {
+    public static String composeIngressPathForV5(PluginDescriptor descriptor, String bundleCode) {
 
         return "/"
                 + Stream.of(bundleCode,
@@ -314,7 +314,7 @@ public class BundleUtilities {
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getSpec().getDbms().toUpperCase()))
                 .withImage(descriptor.getDockerImage().toString())
-                .withIngressPath(composeIngressPathFromDockerImage(descriptor))
+                .withIngressPath(composeIngressPathForV1(descriptor))
                 .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
                 .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSpec().getSecurityLevel()))
@@ -371,11 +371,18 @@ public class BundleUtilities {
      */
     public static String determineBundleResourceRootFolder(BundleReader bundleReader) throws IOException {
 
+        var resourceFolder = "/";
         var bundleType = bundleReader.readBundleDescriptor().getBundleType();
 
-        return "/" + (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
-                ? bundleReader.getCode()
-                : "");
+        if (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE) {
+            if (bundleReader.readBundleDescriptor().isVersion1()) {
+                resourceFolder += bundleReader.getBundleName();
+            } else {
+                resourceFolder += bundleReader.getCode();
+            }
+        }
+
+        return resourceFolder;
     }
 
     /**
@@ -576,4 +583,11 @@ public class BundleUtilities {
                 "Repo url is empty", "Repo url is not valid");
     }
 
+    public static String composeBundleResourceRootFolter(BundleReader bundleReader) throws IOException {
+        if (bundleReader.isBundleV1() && bundleReader.containsResourceFolder()) {
+            return determineBundleResourceRootFolder(bundleReader);
+        } else {
+            return composeSignedBundleFolder(bundleReader);
+        }
+    }
 }

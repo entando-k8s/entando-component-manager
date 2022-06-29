@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -22,6 +21,7 @@ import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -30,7 +30,6 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,35 +69,36 @@ class FileProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void testCreateFilesBundleV1() {
+    public void testCreateFilesBundleV1() throws IOException {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
-        final List<? extends Installable> installables = fileProcessor.process(bundleReader);
+        final List<? extends Installable> installables = fileProcessor
+                .process(bundleReader);
 
         assertThat(installables).hasSize(5);
 
         assertThat(installables.get(0)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(0).getName()).isEqualTo("bundles/something-4f58c204/resources/css/custom.css");
+        assertThat(installables.get(0).getName()).isEqualTo("/something/css/custom.css");
 
         assertThat(installables.get(1)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(1).getName()).isEqualTo("bundles/something-4f58c204/resources/css/style.css");
+        assertThat(installables.get(1).getName()).isEqualTo("/something/css/style.css");
 
         assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
+        assertThat(installables.get(2).getName()).isEqualTo("/something/js/configUiScript.js");
         assertThat(installables.get(2).getName()).isEqualTo(
-                "bundles/something-4f58c204/resources/js/configUiScript.js");
+                "/something/js/configUiScript.js");
 
         assertThat(installables.get(3)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(3).getName()).isEqualTo("bundles/something-4f58c204/resources/js/script.js");
+        assertThat(installables.get(3).getName()).isEqualTo("/something/js/script.js");
 
         assertThat(installables.get(4)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(4).getName()).isEqualTo(
-                "bundles/something-4f58c204/resources/vendor/jquery/jquery.js");
+        assertThat(installables.get(4).getName()).isEqualTo("/something/vendor/jquery/jquery.js");
     }
 
     @Test
@@ -150,6 +150,7 @@ class FileProcessorTest extends BaseProcessorTest {
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/css/main.css",
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/css/sitemap.css",
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/js/main.js"));
+        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         execShouldOmitBundleCodeRootFolderIfSystemLevelBundle(false, BundleProperty.WIDGET_FOLDER_PATH,
                 mockBundleReader::containsWidgetFolder, mockBundleReader::getWidgetsFiles);
@@ -180,17 +181,18 @@ class FileProcessorTest extends BaseProcessorTest {
                 .build();
 
         when(mockBundleReader.isBundleV1()).thenReturn(isV1);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
-        when(mockBundleReader.getResourceFileAsDescriptor(
-                bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
+        when(mockBundleReader.getResourceFileAsDescriptor(bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
                 .thenReturn(fileDescriptor1);
         when(mockBundleReader.getResourceFileAsDescriptor(
                 bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css")).thenReturn(fileDescriptor2);
         when(mockBundleReader.getResourceFileAsDescriptor(bundleProperty.getValue() + "ootb-widgets/static/js/main.js"))
                 .thenReturn(fileDescriptor3);
 
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
+        bundleDescriptor.setDescriptorVersion(
+                isV1 ? DescriptorVersion.V1.getVersion() : DescriptorVersion.V5.getVersion());
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(containsFolderFn.getAsBoolean()).thenReturn(true);
         lenient().when(fileListFn.get()).thenReturn(resourceFiles);
 
@@ -221,15 +223,15 @@ class FileProcessorTest extends BaseProcessorTest {
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV1() throws IOException {
 
         List<String> expectedCodeList = Arrays
-                .asList("bundles/resources/ootb-widgets/static/css/main.ootb.chunk.css",
-                        "bundles/resources/ootb-widgets/static/css/sitemap.css",
-                        "bundles/resources/ootb-widgets/static/js/2.ootb.chunk.js",
-                        "bundles/resources/static/css/ootb/page-templates/index.css",
-                        "bundles/resources/ootb-widgets/static/js/runtime-main.ootb.js",
-                        "bundles/resources/ootb-widgets/static/js/main.ootb.chunk.js");
+                .asList("/ootb-widgets/static/css/main.ootb.chunk.css",
+                        "/ootb-widgets/static/css/sitemap.css",
+                        "/ootb-widgets/static/js/2.ootb.chunk.js",
+                        "/static/css/ootb/page-templates/index.css",
+                        "/ootb-widgets/static/js/runtime-main.ootb.js",
+                        "/ootb-widgets/static/js/main.ootb.chunk.js");
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        when(mockBundleReader.containsResourceFolder()).thenReturn(true);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFolderV1);
 
@@ -265,18 +267,17 @@ class FileProcessorTest extends BaseProcessorTest {
         bundleDescriptor.setBundleType(BundleType.STANDARD_BUNDLE);
 
         // prefix each expected file path with the bundle code
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode());
         when(mockBundleReader.isBundleV1()).thenReturn(true);
+        when(mockBundleReader.getBundleName()).thenReturn(BundleStubHelper.BUNDLE_NAME);
+        when(mockBundleReader.containsResourceFolder()).thenReturn(true);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFolderV1);
-        String signedBundleCode = BundleUtilities.composeSignedBundleFolder(mockBundleReader);
 
         List<String> expectedCodeList = Stream
                 .of("/ootb-widgets/static/css/main.ootb.chunk.css", "/ootb-widgets/static/css/sitemap.css",
                         "/ootb-widgets/static/js/2.ootb.chunk.js", "/static/css/ootb/page-templates/index.css",
                         "/ootb-widgets/static/js/runtime-main.ootb.js", "/ootb-widgets/static/js/main.ootb.chunk.js")
-                .map(s -> signedBundleCode + "/resources" + s)
+                .map(s -> "/" + BundleStubHelper.BUNDLE_NAME + s)
                 .collect(Collectors.toList());
 
         Reportable reportable = fileProcessor.getReportable(mockBundleReader, fileProcessor);
@@ -290,6 +291,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
         bundleDescriptor.setBundleType(BundleType.STANDARD_BUNDLE);
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
         List<String> expectedCodeList = Arrays
                 .asList("bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/css/main.css",

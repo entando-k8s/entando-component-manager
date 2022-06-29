@@ -360,11 +360,11 @@ public class TestInstallUtils {
                 .fragments(Map.of("title_fragment", Status.NEW, "another_fragment", Status.DIFF))
                 .pageTemplates(Map.of("todomvc_page_model", Status.NEW, "todomvc_another_page_model", Status.DIFF))
                 .pages(Map.of("my-page", Status.NEW, "another-page", Status.DIFF))
-                .resources(Map.of("bundles/something-ece8f6f0/resources/css/custom.css", Status.DIFF,
-                        "bundles/something-ece8f6f0/resources/css/style.css", Status.NEW,
-                        "bundles/something-ece8f6f0/resources/js/configUiScript.js", Status.NEW,
-                        "bundles/something-ece8f6f0/resources/js/script.js", Status.NEW,
-                        "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js", Status.NEW))
+                .resources(Map.of("/something/css/custom.css", Status.DIFF,
+                        "/something/css/style.css", Status.NEW,
+                        "/something/js/configUiScript.js", Status.NEW,
+                        "/something/js/script.js", Status.NEW,
+                        "/something/js/vendor/jquery/jquery.js", Status.NEW))
                 .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
                         "widget_with_config_ui-ece8f6f0", Status.NEW))
                 .build();
@@ -397,15 +397,15 @@ public class TestInstallUtils {
                 .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .resources(
-                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("/something/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                                "bundles/something-ece8f6f0/resources/css/style.css",
+                                "/something/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "/something/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                "/something/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js",
+                                "/something/js/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .widgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
                         "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
@@ -512,15 +512,15 @@ public class TestInstallUtils {
                 .setPages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setResources(
-                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("/something/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "bundles/something-ece8f6f0/resources/css/style.css",
+                                "/something/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "/something/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                "/something/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                                "/something/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
                 .setWidgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                         "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))

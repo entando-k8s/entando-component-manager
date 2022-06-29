@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.processor;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -20,6 +21,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -71,12 +73,16 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         try {
+            // bundle descriptor v1 and resource folder
             if (bundleReader.isBundleV1() && bundleReader.containsResourceFolder()) {
-                installables.addAll(
-                        processFiles(bundleReader, bundleReader.getResourceFiles(),
-                                BundleProperty.RESOURCES_FOLDER_PATH, conflictStrategy, installPlan));
-            } else if (bundleReader.containsWidgetFolder()) {
-                processWidgetFiles(installables, bundleReader, conflictStrategy, installPlan);
+
+                collectResourceFiles(installables, bundleReader, conflictStrategy, installPlan);
+
+                // otherwise if bundle descriptor v5 and widget folder
+            } else if (bundleReader.readBundleDescriptor().isVersionEqualOrGreaterThan(DescriptorVersion.V5)
+                    && bundleReader.containsWidgetFolder()) {
+
+                collectWidgetFiles(installables, bundleReader, conflictStrategy, installPlan);
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -94,18 +100,59 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
     }
 
 
-    private List<Installable<FileDescriptor>> processWidgetFiles(List<Installable<FileDescriptor>> installables,
+    private void collectResourceFiles(List<Installable<FileDescriptor>> installables,
+            BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
+
+        installables.addAll(processFilesBundleV1(bundleReader, conflictStrategy, installPlan));
+    }
+
+    private void collectWidgetFiles(List<Installable<FileDescriptor>> installables,
             BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
 
         for (String folder : bundleReader.getWidgetsBaseFolders()) {
             final List<String> resourceOfType = bundleReader.getResourceOfType(folder, Files::isRegularFile);
             installables.addAll(
-                    processFiles(bundleReader, resourceOfType,
+                    processFilesBundleV5Onward(bundleReader, resourceOfType,
                             BundleProperty.WIDGET_FOLDER_PATH, conflictStrategy, installPlan));
+        }
+    }
+
+
+    /**
+     * for each file in the resourceFile list, generate the relative descriptor and Installable and return them. this
+     * method processes files of bundle V1
+     *
+     * @param bundleReader     the BundleReader to use to parse the descriptors
+     * @param conflictStrategy the Conflict Strategy to apply
+     * @param installPlan      the Install Plan to use against the received conflict strategy
+     * @return the generated Installable list
+     * @throws IOException in case of read error
+     */
+    private List<Installable<FileDescriptor>> processFilesBundleV1(BundleReader bundleReader,
+            InstallAction conflictStrategy, InstallPlan installPlan)
+            throws IOException {
+
+        final List<Installable<FileDescriptor>> installables = new LinkedList<>();
+
+        final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+
+        List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted()
+                .collect(Collectors.toList());
+        for (final String resourceFile : resourceFiles) {
+            final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
+
+            Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
+                    .relativize(Paths.get(fileDescriptor.getFolder()));
+            String folder = Paths.get(resourceFolder).resolve(fileFolder).toString();
+            fileDescriptor.setFolder(folder);
+            String filename = folder + "/" + fileDescriptor.getFilename();
+            InstallAction action = extractInstallAction(filename, conflictStrategy, installPlan);
+            installables.add(new FileInstallable(engineService, fileDescriptor, action));
         }
 
         return installables;
     }
+
 
     /**
      * for each file in the resourceFilelist list, generate the relative descriptor and Installable and return them.
@@ -118,7 +165,8 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
      * @return the generated Installable list
      * @throws IOException in case of read error
      */
-    private List<Installable<FileDescriptor>> processFiles(BundleReader bundleReader, List<String> resourceFilelist,
+    private List<Installable<FileDescriptor>> processFilesBundleV5Onward(BundleReader bundleReader,
+            List<String> resourceFilelist,
             BundleProperty folderProp, InstallAction conflictStrategy, InstallPlan installPlan)
             throws IOException {
 
@@ -156,31 +204,61 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
     @Override
     public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
 
-        List<String> reportableIdList = new ArrayList<>();
-
         try {
-            final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-            BundleProperty bundleProp = bundleReader.isBundleV1()
-                    ? BundleProperty.RESOURCES_FOLDER_PATH
-                    : BundleProperty.WIDGET_FOLDER_PATH;
+            // bundle descriptor v1
+            if (bundleReader.isBundleV1()) {
 
-            List<String> fileList = bundleReader.isBundleV1()
-                    ? bundleReader.getResourceFiles()
-                    : bundleReader.getWidgetsFiles();
-
-            List<String> idList = fileList.stream().sorted().collect(Collectors.toList());
-            for (String file : idList) {
-                final String fileId = BundleUtilities.buildFullBundleResourcePath(bundleReader, bundleProp, file,
-                        bundleId);
-                reportableIdList.add(fileId);
+                return getReportableBundleV1(bundleReader, componentProcessor);
+            } else {
+                // bundle descriptor v5 onward
+                return getReportableBundleV5Onward(bundleReader, componentProcessor);
             }
-
-            return new Reportable(componentProcessor.getSupportedComponentType(), reportableIdList,
-                    this.getReportableRemoteHandler());
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s type",
                     componentProcessor.getSupportedComponentType().getTypeName()), e);
         }
+    }
+
+    private Reportable getReportableBundleV1(BundleReader bundleReader, ComponentProcessor<?> componentProcessor)
+            throws IOException {
+
+        List<String> idList = new ArrayList<>();
+
+        if (bundleReader.containsResourceFolder()) {
+            final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+
+            List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted()
+                    .collect(Collectors.toList());
+            for (final String resourceFile : resourceFiles) {
+
+                Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
+                        .relativize(Paths.get(resourceFile));
+
+                String file = Paths.get(resourceFolder).resolve(fileFolder).toString();
+                idList.add(file);
+            }
+        }
+
+        return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                this.getReportableRemoteHandler());
+    }
+
+    private Reportable getReportableBundleV5Onward(BundleReader bundleReader, ComponentProcessor<?> componentProcessor)
+            throws IOException {
+
+        List<String> reportableIdList = new ArrayList<>();
+
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
+        List<String> idList = bundleReader.getWidgetsFiles().stream().sorted().collect(Collectors.toList());
+        for (String file : idList) {
+            final String fileId = BundleUtilities.buildFullBundleResourcePath(bundleReader,
+                    BundleProperty.WIDGET_FOLDER_PATH, file, bundleId);
+            reportableIdList.add(fileId);
+        }
+
+        return new Reportable(componentProcessor.getSupportedComponentType(), reportableIdList,
+                this.getReportableRemoteHandler());
     }
 }

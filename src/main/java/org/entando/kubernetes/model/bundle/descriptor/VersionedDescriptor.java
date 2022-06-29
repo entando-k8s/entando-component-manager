@@ -33,7 +33,9 @@ public abstract class VersionedDescriptor implements Descriptor {
      */
     public boolean isVersionEqualOrGreaterThan(DescriptorVersion version) {
         try {
-            int numDescriptorVersion = Integer.parseInt(descriptorVersion.replace("v", ""));
+            int numDescriptorVersion = ObjectUtils.isEmpty(descriptorVersion)
+                    ? 1
+                    : Integer.parseInt(descriptorVersion.replace("v", ""));
             int paramVersion = Integer.parseInt(version.getVersion().replace("v", ""));
             return numDescriptorVersion >= paramVersion;
         } catch (NumberFormatException e) {

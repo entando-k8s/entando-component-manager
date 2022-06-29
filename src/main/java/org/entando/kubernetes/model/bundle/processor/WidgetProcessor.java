@@ -68,7 +68,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
 
     /**
-     * Map of descriptors of type widgetConfig
+     * Map of descriptors of type widgetConfig.
      * used to recover information about the configWidgets when processing a widget
      */
     @Setter
@@ -190,6 +190,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         return res;
     }
+
     private WidgetDescriptor makeWidgetDescriptorFromFile(BundleReader bundleReader, String fileName,
             Map<String, String> pluginIngressPathMap) throws IOException {
         var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
@@ -225,11 +226,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         }
     }
 
-
-
     /**
      * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.
-     *
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param bundleReader     the bundle reader used to access the bundle files
      */
@@ -357,6 +355,5 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
-
     }
 }

@@ -220,7 +220,7 @@ public class InstallFlowTest {
         installFlowAssertionHelper.verifyLanguagesInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyLabelsInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyDirectoryInstallRequestsWithInstallPlanRequest(coreClient);
-        installFlowAssertionHelper.verifyFileInstallRequestsWithInstallPlanRequest(coreClient);
+        installFlowAssertionHelper.verifyFileInstallRequestsWithInstallPlanRequestV1(coreClient);
         installFlowAssertionHelper.verifyFragmentInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyPageInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyPageConfigurationInstallRequestsWithInstallPlanRequest(coreClient);
@@ -247,13 +247,13 @@ public class InstallFlowTest {
     @Test
     void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() {
         simulateSuccessfullyCompletedInstall();
-        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents();
+        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1();
     }
 
     @Test
     void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsWithInstallPlan() {
         simulateSuccessfullyCompletedInstallWithInstallPlan();
-        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents();
+        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1();
     }
 
 
@@ -327,7 +327,7 @@ public class InstallFlowTest {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("bundles/something-ece8f6f0", ac.getValue());
+        assertEquals("/something", ac.getValue());
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteFragment(ac.capture());

@@ -65,7 +65,7 @@ public class InstallFlowAssertionHelper {
         verifyLanguagesInstallRequests(coreClient);
         verifyLabelsInstallRequests(coreClient);
         verifyDirectoryInstallRequests(coreClient);
-        verifyFileInstallRequests(coreClient);
+        verifyFileInstallRequestsV1(coreClient);
         verifyFragmentInstallRequests(coreClient);
         verifyPageInstallRequests(coreClient);
         verifyPageConfigurationInstallRequests(coreClient);
@@ -220,7 +220,7 @@ public class InstallFlowAssertionHelper {
 
     }
 
-    private void verifyFileInstallRequests(EntandoCoreClient coreClient) {
+    private void verifyFileInstallRequestsV1(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
         verify(coreClient, times(5)).createFile(fileArgCaptor.capture());
 
@@ -228,13 +228,13 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        validateResourceFile(allPassedFiles, 0, "custom.css", "bundles/something-ece8f6f0/resources/css",
+        validateResourceFile(allPassedFiles, 0, "custom.css", "/something/css",
                 "/bundle/resources/css/custom.css");
-        validateResourceFile(allPassedFiles, 1, "style.css", "bundles/something-ece8f6f0/resources/css",
+        validateResourceFile(allPassedFiles, 1, "style.css", "/something/css",
                 "/bundle/resources/css/style.css");
-        validateResourceFile(allPassedFiles, 2, "configUiScript.js", "bundles/something-ece8f6f0/resources/js",
+        validateResourceFile(allPassedFiles, 2, "configUiScript.js", "/something/js",
                 "/bundle/resources/js/configUiScript.js");
-        validateResourceFile(allPassedFiles, 3, "script.js", "bundles/something-ece8f6f0/resources/js",
+        validateResourceFile(allPassedFiles, 3, "script.js", "/something/js",
                 "/bundle/resources/js/script.js");
     }
 
@@ -420,7 +420,7 @@ public class InstallFlowAssertionHelper {
     }
 
 
-    public void verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() {
+    public void verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1() {
 
         List<EntandoBundleJobEntity> jobs = jobRepository.findAll();
         assertThat(jobs).hasSize(1);
@@ -435,7 +435,7 @@ public class InstallFlowAssertionHelper {
                 TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V3C,
                 TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE_V4,
                 // Directories
-                "bundles/something-ece8f6f0",
+                "/something",
                 // Categories
                 "my-category",
                 "another_category",
@@ -449,11 +449,11 @@ public class InstallFlowAssertionHelper {
                 "HELLO",
                 "WORLD",
                 // Files
-                "bundles/something-ece8f6f0/resources/css/custom.css",
-                "bundles/something-ece8f6f0/resources/css/style.css",
-                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
-                "bundles/something-ece8f6f0/resources/js/script.js",
-                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                "/something/css/custom.css",
+                "/something/css/style.css",
+                "/something/js/configUiScript.js",
+                "/something/js/script.js",
+                "/something/vendor/jquery/jquery.js",
                 //Widgets
                 "todomvc_widget-ece8f6f0",
                 "another_todomvc_widget-ece8f6f0",
@@ -676,7 +676,7 @@ public class InstallFlowAssertionHelper {
         assertThat(allFragmentsRequests.get(1).getGuiCode()).isEqualTo("<h2>Bundle 1 Fragment</h2>");
     }
 
-    public void verifyFileInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {
+    public void verifyFileInstallRequestsWithInstallPlanRequestV1(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
         verify(coreClient, times(2)).createFile(fileArgCaptor.capture());
         verify(coreClient, times(2)).updateFile(fileArgCaptor.capture());
@@ -685,11 +685,11 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        validateResourceFile(allPassedFiles, 0, "style.css", "bundles/something-ece8f6f0/resources/css",
+        validateResourceFile(allPassedFiles, 0, "style.css", "/something/css",
                 "/bundle/resources/css/style.css");
-        validateResourceFile(allPassedFiles, 1, "configUiScript.js", "bundles/something-ece8f6f0/resources/js",
+        validateResourceFile(allPassedFiles, 1, "configUiScript.js", "/something/js",
                 "/bundle/resources/js/configUiScript.js");
-        validateResourceFile(allPassedFiles, 2, "script.js", "bundles/something-ece8f6f0/resources/js",
+        validateResourceFile(allPassedFiles, 2, "script.js", "/something/js",
                 "/bundle/resources/js/script.js");
     }
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -18,6 +20,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -69,10 +72,13 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
         final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
         try {
-            if ((bundleReader.isBundleV1() && bundleReader.containsResourceFolder())
-                    || bundleReader.containsWidgetFolder()) {
+            String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(bundleReader);
 
-                installables.add(collectDirectoryInstallable(bundleReader, conflictStrategy, installPlan));
+            if (!ObjectUtils.isEmpty(bundleRootFolder)) {
+                InstallAction rootDirectoryAction = extractInstallAction(bundleRootFolder, conflictStrategy,
+                        installPlan);
+                installables.add(new DirectoryInstallable(engineService,
+                        new DirectoryDescriptor(bundleRootFolder, true), rootDirectoryAction));
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -90,19 +96,11 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
                 .collect(Collectors.toList());
     }
 
-    private Installable<DirectoryDescriptor> collectDirectoryInstallable(BundleReader bundleReader,
-            InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
-
-        String signedBundleFolder = BundleUtilities.composeSignedBundleFolder(bundleReader);
-        InstallAction rootDirectoryAction = extractInstallAction(signedBundleFolder, conflictStrategy, installPlan);
-        return new DirectoryInstallable(engineService, new DirectoryDescriptor(signedBundleFolder, true),
-                rootDirectoryAction);
-    }
-
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         Path dirPath = Paths.get(component.getComponentId());
-        boolean isRoot = dirPath.getParent().toString().equals(BundleUtilities.BUNDLES_FOLDER);
+        boolean isRoot = dirPath.getParent().toString().equals(BundleUtilities.BUNDLES_FOLDER)
+                || dirPath.getParent().equals(dirPath.getRoot());
         return new DirectoryDescriptor(component.getComponentId(), isRoot);
     }
 
@@ -113,10 +111,10 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
 
         try {
             if (bundleReader.isBundleV1()) {
-                idList = getReportableBundle(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH,
+                idList = getReportableBundleV1(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH,
                         bundleReader.getResourceFolders());
             } else {
-                idList = getReportableBundle(bundleReader, BundleProperty.WIDGET_FOLDER_PATH,
+                idList = getReportableBundleV5(bundleReader, BundleProperty.WIDGET_FOLDER_PATH,
                         bundleReader.getWidgetsFolders());
             }
 
@@ -129,12 +127,42 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
         }
     }
 
-    private List<String> getReportableBundle(BundleReader bundleReader, BundleProperty bundleProperty,
+    private List<String> getReportableBundleV1(BundleReader bundleReader, BundleProperty bundleProperty,
             List<String> folderList) throws IOException {
+
+        List<String> idList = new ArrayList<>();
+
+        final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+        if (!resourceFolder.equals("/")) {
+            idList.add(resourceFolder);
+        }
+
+        List<String> resourceFolders = bundleReader.getResourceFolders().stream().sorted()
+                .collect(Collectors.toList());
+        for (final String resourceDir : resourceFolders) {
+            Path fileFolder = Paths.get(BundleProperty.RESOURCES_FOLDER_PATH.getValue())
+                    .relativize(Paths.get(resourceDir));
+
+            String folder = Paths.get(resourceFolder).resolve(fileFolder).toString();
+            idList.add(folder);
+        }
+
+        idList.sort(null);
+        return idList;
+    }
+
+    private List<String> getReportableBundleV5(BundleReader bundleReader, BundleProperty bundleProperty,
+            List<String> folderList) throws IOException {
+
+        List<String> list = new ArrayList<>();
+
+        final String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(bundleReader);
+        if (!bundleRootFolder.equals("/")) {
+            list.add(bundleRootFolder);
+        }
 
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
-        List<String> list = new ArrayList<>();
         for (String resDir : folderList) {
             String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, bundleProperty, resDir, bundleId);
             list.add(path);

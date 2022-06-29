@@ -163,4 +163,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
             "The %s descriptor contains both a parentName and a parentCode. They are mutually exclusive";
     public static final String WRONG_PARENT_CODE_FORMAT =
             "The %s descriptor contains a parentCode that not respects the format " + BUNDLE_CODE_REGEX;
+    public static final String FTL_NOT_AVAILABLE =
+            "The %s descriptor does NOT contains any FTL. In widget descriptor v1 one of \"customUi\" and "
+                    + "\"customUiPath\" must be populated";
 }
