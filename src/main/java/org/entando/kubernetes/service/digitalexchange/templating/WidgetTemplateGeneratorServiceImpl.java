@@ -182,14 +182,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     protected String getApiUrl(WidgetDescriptor.ApiClaim apiClaim, Map<String, String> pluginIngressPathMap) {
 
-        String ingressPath;
-        if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)) {
-            ingressPath = pluginIngressPathMap.get(apiClaim.getPluginName());
-        } else {
-            ingressPath = apiPathRepository.findByBundleIdAndPluginName(apiClaim.getBundleId(), apiClaim.getPluginName())
-                    .map(PluginDataEntity::getEndpoint)
-                    .orElse("");
-        }
+        String ingressPath = apiPathRepository
+                .findByBundleIdAndPluginName(apiClaim.getBundleId(), apiClaim.getPluginName())
+                .map(PluginDataEntity::getEndpoint)
+                .orElse("");
 
         if (ObjectUtils.isEmpty(ingressPath)) {
             throw new EntandoComponentManagerException("Can't supply the claimed API " + apiClaim.getName());
