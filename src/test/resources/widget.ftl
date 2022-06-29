@@ -13,6 +13,15 @@
 
 <link href="<@wp.resourceURL />bundles/my-component-77b2b10e/widgets/my-code-77b2b10e/static/css/style.css" rel="stylesheet">
 
-<#assign mfeConfig>{"systemParams":{"api":{"int-api":{"url":"${systemParam_applicationBaseURL}/service-id-1/path"},"ext-api":{"url":"${systemParam_applicationBaseURL}/service-id-2/path"}}},"contextParams":{"info_startLang":"${info_startLang}","page_code":"${page_code}","systemParam_applicationBaseURL":"${systemParam_applicationBaseURL}"},"params":{"paramA":"${widget_paramA}","paramB":"${widget_paramB}"}}</#assign>
+<script>
+if (entando.widget == undefined) {
+  window.entando.widget={}
+}
+window.entando.widget["my-widget"]={
+  "basePath": "bundles/my-component-77b2b10e/widgets/..-77b2b10e/any-path"
+}
+</script>
+
+<#assign mfeConfig>{"systemParams":{"api":{"int-api":{"url":"/service-id-1/path"},"ext-api":{"url":"/service-id-2/path"}}},"contextParams":{"info_startLang":"${info_startLang}","page_code":"${page_code}","systemParam_applicationBaseURL":"${systemParam_applicationBaseURL}"},"params":{"paramA":"${widget_paramA}","paramB":"${widget_paramB}"}}</#assign>
 
 <my-code config="<#outputformat 'HTML'>${mfeConfig}</#outputformat>"/>

@@ -13,6 +13,15 @@
 
 <link href="<@wp.resourceURL />bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css" rel="stylesheet">
 
-<#assign mfeConfig>{"systemParams":{"api":{"int-api":{"url":"${systemParam_applicationBaseURL}/entando/todomvcv3"},"ext-api":{"url":"${systemParam_applicationBaseURL}my-path"}}},"contextParams":{"info_startLang":"${info_startLang}","page_code":"${page_code}"},"params":{"title":"${widget_title}","url":"${widget_url}"}}</#assign>
+<script>
+if (entando.widget == undefined) {
+  window.entando.widget={}
+}
+window.entando.widget["my-widget"]={
+  "basePath": "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5.yaml-ece8f6f0"
+}
+</script>
+
+<#assign mfeConfig>{"systemParams":{"api":{"int-api":{"url":"my-path3"},"ext-api":{"url":"my-path"}}},"contextParams":{"info_startLang":"${info_startLang}","page_code":"${page_code}"},"params":{"title":"${widget_title}","url":"${widget_url}"}}</#assign>
 
 <my-widget config="<#outputformat 'HTML'>${mfeConfig}</#outputformat>"/>

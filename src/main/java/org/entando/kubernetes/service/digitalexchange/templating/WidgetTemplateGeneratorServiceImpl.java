@@ -2,6 +2,7 @@ package org.entando.kubernetes.service.digitalexchange.templating;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +41,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String ASSIGN_TAG = "<#assign mfeConfig>%s</#assign>";
     public static final String CUSTOM_ELEMENT_TAG =
             "<%s config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>";
-    public static final String APPLICATION_BASEURL_PARAM = "${systemParam_applicationBaseURL}";
+    //public static final String APPLICATION_BASEURL_PARAM = "${systemParam_applicationBaseURL}";
+    public static final String APPLICATION_BASEURL_PARAM = "";
     public static final String DEFAULT_CONTEXT_PARAM = "systemParam_applicationBaseURL";
     public static final String PARAM_TYPE_PAGE = "page";
     public static final String PARAM_TYPE_INFO = "info";
@@ -51,6 +53,14 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String FTL_WIDGETS_PARAM_PREFIX = "widget";
     public static final String DESCRIPTOR_OBJECT_MEMBER_SEPARATOR = "_";
     public static final String FTL_OBJECT_MEMBER_SEPARATOR = "_";
+    public static final String PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL = "<script>\n"
+            + "if (entando.widget == undefined) {\n"
+            + "  window.entando.widget={}\n"
+            + "}\n"
+            + "window.entando.widget[\"my-widget\"]={\n"
+            + "  \"basePath\": \"%s\"\n"
+            + "}\n"
+            + "</script>";
 
     private final PluginDataRepository apiPathRepository;
 
@@ -64,12 +74,30 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                     + generateCodeForContextParametersExtraction(descriptor) + "\n"
                     + generateCodeForMfeParametersExtraction(descriptor) + "\n"
                     + generateCodeForResourcesInclusion(descriptorFileName, bundleReader) + "\n"
-                    + "\n" + generateCodeForMfeConfigObjectCreation(descriptor) + "\n"
+                    + "\n" + generateCodeForPageGlobalObjectUpdate(descriptorFileName, bundleReader) + "\n"
+                    + "\n" + generateCodeForMfeConfigObjectCreation(descriptor, bundleReader.calculateBundleId()) + "\n"
                     + "\n" + generateCodeForCustomElementInvocation(descriptor);
         } catch (Exception e) {
             throw new EntandoComponentManagerException(
-                    "An error occurred during the generation of the FTL for the " + FTL_WIDGETS_PARAM_PREFIX + " " + descriptor.getCode(), e);
+                    "An error occurred during the generation of the FTL for the " + FTL_WIDGETS_PARAM_PREFIX + " "
+                            + descriptor.getCode(), e);
         }
+    }
+
+    private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, BundleReader bundleReader) {
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
+        Object baseWidgetPath;
+        try {
+            baseWidgetPath = BundleUtilities.buildFullBundleResourcePath(bundleReader,
+                    BundleProperty.WIDGET_FOLDER_PATH, descriptorFileName,
+                    bundleId);
+        } catch (IOException e) {
+            log.error("Unable to determine the widget base path", e);
+            baseWidgetPath = "/";
+        }
+
+        return String.format(PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL, baseWidgetPath);
     }
 
     private String generateCodeForMfeParametersExtraction(WidgetDescriptor descriptor) {
@@ -167,10 +195,14 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         }
     }
 
-    protected String generateCodeForMfeConfigObjectCreation(WidgetDescriptor descriptor) throws JsonProcessingException {
+    protected String generateCodeForMfeConfigObjectCreation(WidgetDescriptor descriptor, String bundleId)
+            throws JsonProcessingException {
         Map<String, Object> res = new HashMap<>();
-        res.put(CONFIG_KEY_SYSTEM_PARAMS, toSystemParamsForConfig(descriptor.getApiClaims(),
-                descriptor.getDescriptorMetadata().getPluginIngressPathMap()));
+        res.put(CONFIG_KEY_SYSTEM_PARAMS, toSystemParamsForConfig(
+                descriptor.getApiClaims(),
+                descriptor.getDescriptorMetadata().getPluginIngressPathMap(),
+                bundleId
+        ));
         res.put(CONFIG_KEY_MFE_PARAMS, toMfeParamsForConfig(descriptor.getParams()));
         res.put(CONFIG_KEY_CONTEXT_PARAMS, toContextParamsForConfig(descriptor.getContextParams()));
         return String.format(ASSIGN_TAG, jsonMapper.writeValueAsString(res));
@@ -180,10 +212,13 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return String.format(CUSTOM_ELEMENT_TAG, descriptor.getCustomElement());
     }
 
-    protected String getApiUrl(WidgetDescriptor.ApiClaim apiClaim, Map<String, String> pluginIngressPathMap) {
+    protected String getApiUrl(ApiClaim apiClaim, Map<String, String> pluginIngressPathMap, String currentBundleId) {
+
+        String apiBundleId = (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)) ?
+                currentBundleId : apiClaim.getBundleId();
 
         String ingressPath = apiPathRepository
-                .findByBundleIdAndPluginName(apiClaim.getBundleId(), apiClaim.getPluginName())
+                .findByBundleIdAndPluginName(apiBundleId, apiClaim.getPluginName())
                 .map(PluginDataEntity::getEndpoint)
                 .orElse("");
 
@@ -194,10 +229,14 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return ingressPath;
     }
 
-    protected SystemParams toSystemParamsForConfig(List<ApiClaim> apiClaimList, Map<String, String> pluginIngressPathMap) {
+    protected SystemParams toSystemParamsForConfig(
+            List<ApiClaim> apiClaimList,
+            Map<String, String> pluginIngressPathMap,
+            String bundleId) {
+        //~
         final Map<String, ApiUrl> apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
-                    String ingressPath = getApiUrl(ac, pluginIngressPathMap);
+                    String ingressPath = APPLICATION_BASEURL_PARAM + getApiUrl(ac, pluginIngressPathMap, bundleId);
                     return new SimpleEntry<>(ac.getName(), new ApiUrl(ingressPath));
                 })
                 .collect(Collectors.toMap(
