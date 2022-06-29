@@ -365,6 +365,13 @@ public class TestInstallUtils {
                         "/something/js/configUiScript.js", Status.NEW,
                         "/something/js/script.js", Status.NEW,
                         "/something/js/vendor/jquery/jquery.js", Status.NEW))
+                .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
+                        "widget_with_config_ui-ece8f6f0", Status.NEW))
+                .resources(Map.of("/something/css/custom.css", Status.DIFF,
+                        "/something/css/style.css", Status.NEW,
+                        "/something/js/configUiScript.js", Status.NEW,
+                        "/something/js/script.js", Status.NEW,
+                        "/something/js/vendor/jquery/jquery.js", Status.NEW))
                 .widgets(Map.of("another_todomvc_widget", Status.DIFF, "todomvc_widget", Status.NEW,
                         "widget_with_config_ui", Status.NEW))
                 .build();

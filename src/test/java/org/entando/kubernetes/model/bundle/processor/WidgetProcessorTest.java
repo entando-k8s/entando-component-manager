@@ -68,6 +68,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
     void canProcessDescriptorV1() throws IOException {
 
         String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
@@ -164,7 +165,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         spec.setWidgets(singletonList(STANDARD_WIDGET_DESCRIPTOR));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
-        
+
         var installableList = execWidgetProcessor(widgDescrFile, widgConfigDescrFile, bundleDescriptor);
         assertThat(installableList).hasSize(1);
         assertThat(installableList.get(0).getRepresentation().getExt()).isNotNull();
@@ -228,13 +229,15 @@ class WidgetProcessorTest extends BaseProcessorTest {
         when(bundleReader.readDescriptorFile("widget_descriptor_v1.yaml", WidgetDescriptor.class))
                 .thenReturn(widgetDescriptor1);
 
-        final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
+                new EntandoCoreClientTestDouble(),
                 new WidgetTemplateGeneratorServiceDouble(), validator);
 
         final Reportable reportable = widgetProcessor.getReportable(bundleReader, widgetProcessor);
 
         assertThat(reportable.getCodes()).hasSize(1);
-        assertThat(reportable.getCodes().get(0)).isEqualTo(BundleStubHelper.BUNDLE_CODE);
+        assertThat(reportable.getCodes().get(0)).isEqualTo(
+                BundleStubHelper.BUNDLE_CODE);
     }
 
     @Test

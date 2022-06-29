@@ -89,8 +89,6 @@ class FileProcessorTest extends BaseProcessorTest {
         assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
         assertThat(installables.get(2).getName()).isEqualTo("/something/js/configUiScript.js");
-        assertThat(installables.get(2).getName()).isEqualTo(
-                "/something/js/configUiScript.js");
 
         assertThat(installables.get(3)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
@@ -182,7 +180,8 @@ class FileProcessorTest extends BaseProcessorTest {
 
         when(mockBundleReader.isBundleV1()).thenReturn(isV1);
 
-        when(mockBundleReader.getResourceFileAsDescriptor(bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
+        when(mockBundleReader.getResourceFileAsDescriptor(
+                bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
                 .thenReturn(fileDescriptor1);
         when(mockBundleReader.getResourceFileAsDescriptor(
                 bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css")).thenReturn(fileDescriptor2);
