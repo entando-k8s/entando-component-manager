@@ -24,7 +24,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private Map<String, String> titles;
     private String group;
     private String customUi;
-    private String bundleId;
+    //private String bundleId;
 
     // ------------------------------------------------------------
     // Version 1
@@ -49,7 +49,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     // ------------------------------------------------------------
     // METADATA
-    private DescriptorMetadata descriptorMetadata;
+    private DescriptorMetadata descriptorMetadata = new DescriptorMetadata(null, null, null);
     private String parentName;
     private String parentCode;
 
@@ -106,6 +106,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
          */
         private final Map<String, String> pluginIngressPathMap;
         private final String filename;
+        private final String bundleCode;
     }
 
     public WidgetDescriptor setCode(String code) {

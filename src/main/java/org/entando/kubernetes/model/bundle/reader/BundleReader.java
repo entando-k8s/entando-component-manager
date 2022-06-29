@@ -211,7 +211,7 @@ public class BundleReader {
         return bundleBasePath.resolve(directory + "/" + fileName).toFile();
     }
 
-    public String getBundleId() {
+    public String getDeBundleMetadataName_EX_BundleId() {
         if (this.entandoDeBundle == null) {
             throw new EntandoComponentManagerException("null entandoDeBundle detected while determining the bundle ID");
         }
@@ -241,5 +241,9 @@ public class BundleReader {
         } catch (IOException e) {
             throw new EntandoComponentManagerException("An error occurred while reading the bundle descriptor");
         }
+    }
+
+    public String calculateBundleId() {
+        return BundleUtilities.removeProtocolAndGetBundleId(bundleUrl);
     }
 }

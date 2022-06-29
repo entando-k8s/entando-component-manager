@@ -28,11 +28,12 @@ public class WidgetStubHelper {
     public static final String CUSTOM_UI = "<h3>hello</h3>";
     public static final String CUSTOM_UI_PATH = "src/test/resources/bundle/widgets/widget.ftl";
     public static final String CUSTOM_ELEMENT = "myCustomElement";
-    public static final String BUNDLE_ID = "my-bundle";
+    public static final String BUNDLE_CODE = "my-bundle";
     public static final String CONFIG_WIDGET = "conf_widget";
     public static final String API_CLAIM_1_NAME = "int-api";
     public static final String API_CLAIM_1_TYPE = "internal";
     public static final String API_CLAIM_1_SERVICE_ID = "service-id-1";
+    public static final String API_CLAIM_1_BUNDLE_ID = "my-bundle";
     public static final String API_CLAIM_2_NAME = "ext-api";
     public static final String API_CLAIM_2_TYPE = "external";
     public static final String API_CLAIM_2_SERVICE_ID = "service-id-2";
@@ -92,11 +93,11 @@ public class WidgetStubHelper {
                 .code(WIDGET_1_CODE)
                 .titles(TITLES_MAP)
                 .group(GROUP)
-                .bundleId(BUNDLE_ID);
+                .descriptorMetadata(new DescriptorMetadata(null, null, BUNDLE_CODE));
     }
 
     public static DescriptorMetadata stubDescriptorMetadata() {
-        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename());
+        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename(), BUNDLE_CODE);
     }
 
     private static String stubWidgetFilename() {

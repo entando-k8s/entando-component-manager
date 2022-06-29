@@ -128,7 +128,16 @@ class InstallFlowTestBundleVFive {
                 .setPluginName("ms1")
                 .setPluginCode("pn-abcdefgh-a1b2c3d4-ms1")
                 .setEndpoint("my-path");
+
+        PluginDataEntity pluginData2 = new PluginDataEntity()
+                .setBundleId("abababab")
+                .setPluginId("a7b7c7d7")
+                .setPluginName("custombasenamev3c")
+                .setPluginCode("pn-abababab-a7b7c7d7-custombasenamev3c")
+                .setEndpoint("my-path2");
+
         pluginDataRepository.save(pluginData);
+        pluginDataRepository.save(pluginData2);
     }
 
     @AfterEach

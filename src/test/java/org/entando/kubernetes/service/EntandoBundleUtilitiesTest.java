@@ -234,8 +234,7 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId(),
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);

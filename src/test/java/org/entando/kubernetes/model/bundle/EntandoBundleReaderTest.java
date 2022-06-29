@@ -69,13 +69,13 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldThrowExceptionWhenNoEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder);
-        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleId());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getDeBundleMetadataName_EX_BundleId());
     }
 
     @Test
     void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
-        assertThat(bundleReader.getBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+        assertThat(bundleReader.getDeBundleMetadataName_EX_BundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
     }
 
     @Test

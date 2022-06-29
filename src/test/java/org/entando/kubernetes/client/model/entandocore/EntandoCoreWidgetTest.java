@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -63,10 +64,10 @@ public class EntandoCoreWidgetTest {
 
         return WidgetDescriptor.builder()
                 .code("my-code")
-                .bundleId("my-bundle")
                 .customUi("<h1>Hello world</h1>")
                 .group("free")
                 .titles(titles)
+                .descriptorMetadata(new DescriptorMetadata(null, null, "my-bundle"))
                 .build();
     }
 }

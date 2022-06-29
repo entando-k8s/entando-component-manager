@@ -25,7 +25,7 @@ public class EntandoCoreWidget {
             this.configUi.put("customElement", descriptor.getConfigUi().getCustomElement());
             this.configUi.put("resources", descriptor.getConfigUi().getResources());
         }
-        this.bundleId = descriptor.getBundleId();
+        this.bundleId = descriptor.getDescriptorMetadata().getBundleCode();
     }
 
 

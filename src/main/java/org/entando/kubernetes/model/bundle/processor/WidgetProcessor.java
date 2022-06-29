@@ -23,7 +23,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
@@ -89,8 +88,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
 
         try {
-            BundleDescriptor descriptor = bundleReader.readBundleDescriptor();
-
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
             for (final String fileName : descriptorList) {
@@ -102,7 +99,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 composeAndSetCustomUi(widgetDescriptor, fileName, bundleReader);
                 composeAndSetConfigUi(widgetDescriptor, bundleReader);
 
-                widgetDescriptor.setBundleId(descriptor.getCode());
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
                 installables.add(new WidgetInstallable(engineService, widgetDescriptor, action));
             }
@@ -128,7 +124,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 final WidgetDescriptor widgetDescriptor =
                         makeWidgetDescriptorFromFile(bundleReader, fileName, pluginIngressPathMap);
                 if (widgetDescriptor.getType().equals(TYPE_WIDGET_CONFIG)) {
-                    widgetDescriptor.setBundleId(descriptor.getCode());
+                    //widgetDescriptor.setBundleId(descriptor.getCode());
                     InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy,
                             installPlan);
                     res.add(new WidgetInstallable(engineService, widgetDescriptor, action));
@@ -145,7 +141,9 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             Map<String, String> pluginIngressPathMap) throws IOException {
         var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
         widgetDescriptor.applyFallbacks();
-        widgetDescriptor.setDescriptorMetadata(new DescriptorMetadata(pluginIngressPathMap, fileName));
+        widgetDescriptor.setDescriptorMetadata(
+                new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getBundleCode())
+        );
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
     }
@@ -253,7 +251,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         if (ObjectUtils.isEmpty(descriptor.getParentCode())
                 && !ObjectUtils.isEmpty(descriptor.getParentName())) {
 
-            descriptor.setParentCode(descriptor.getParentName() + "-" + bundleReader.getBundleId());
+            descriptor.setParentCode(descriptor.getParentName() + "-" + bundleReader.calculateBundleId());
         }
     }
 

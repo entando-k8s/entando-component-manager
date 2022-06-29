@@ -42,7 +42,10 @@ class WidgetTemplateGeneratorServiceImplTest {
     private WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
     private WidgetTemplateGeneratorServiceImpl service;
 
-    private PluginDataEntity extApiDataEntity = new PluginDataEntity()
+    private PluginDataEntity extApiDataEntity1 = new PluginDataEntity()
+            .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_1_PATH);
+
+    private PluginDataEntity extApiDataEntity2 = new PluginDataEntity()
             .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_2_PATH);
 
     @BeforeEach
@@ -80,7 +83,9 @@ class WidgetTemplateGeneratorServiceImplTest {
     void shouldThrowExceptionIfCantProvideApiPathWhileCreatingTheAssignTags() {
         WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
         descriptor.getApiClaims().get(1).setPluginName("non-existing");
-        assertThrows(EntandoComponentManagerException.class, () -> service.generateCodeForMfeConfigObjectCreation(descriptor));
+        assertThrows(EntandoComponentManagerException.class,
+                () -> service.generateCodeForMfeConfigObjectCreation(descriptor,
+                        bundleReader.getDeBundleMetadataName_EX_BundleId()));
     }
 
     @Test
@@ -91,14 +96,19 @@ class WidgetTemplateGeneratorServiceImplTest {
 
     @Test
     void shouldProperlyGenerateMfeConfigObject() throws JsonProcessingException {
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity));
+        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_1_BUNDLE_ID,
+                WidgetStubHelper.API_CLAIM_1_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity1));
 
-        var assignTag = service.generateCodeForMfeConfigObjectCreation(descriptor);
+        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
+                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity2));
+
+        var assignTag = service.generateCodeForMfeConfigObjectCreation(descriptor,
+                WidgetStubHelper.API_CLAIM_1_BUNDLE_ID);
+
         assertThat(assignTag).isEqualTo("<#assign mfeConfig>"
                 + "{\"systemParams\":{\"api\":{"
-                + "\"int-api\":{\"url\":\"${systemParam_applicationBaseURL}/service-id-1/path\"},"
-                + "\"ext-api\":{\"url\":\"${systemParam_applicationBaseURL}/service-id-2/path\"}}},"
+                + "\"int-api\":{\"url\":\"/service-id-1/path\"},"
+                + "\"ext-api\":{\"url\":\"/service-id-2/path\"}}},"
                 + "\"contextParams\":{\"info_startLang\":\"${info_startLang}\",\"page_code\":\"${page_code}\","
                 + "\"systemParam_applicationBaseURL\":\"${systemParam_applicationBaseURL}\"},"
                 + "\"params\":{\"paramA\":\"${widget_paramA}\",\"paramB\":\"${widget_paramB}\"}}"
@@ -108,7 +118,7 @@ class WidgetTemplateGeneratorServiceImplTest {
         descriptor.setContextParams(new ArrayList<>());
         descriptor.setParams(new ArrayList<>());
         descriptor.setApiClaims(new ArrayList<>());
-        assignTag = service.generateCodeForMfeConfigObjectCreation(descriptor);
+        assignTag = service.generateCodeForMfeConfigObjectCreation(descriptor, WidgetStubHelper.API_CLAIM_2_BUNDLE_ID);
 
         assertThat(assignTag).isEqualTo("<#assign mfeConfig>"
                 + "{\"systemParams\":{\"api\":{}},"
@@ -120,7 +130,9 @@ class WidgetTemplateGeneratorServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenGeneratingMfeConfigObjectWithNonExistingPaths() {
-        assertThrows(EntandoComponentManagerException.class, () -> service.generateCodeForMfeConfigObjectCreation(descriptor));
+        assertThrows(EntandoComponentManagerException.class,
+                () -> service.generateCodeForMfeConfigObjectCreation(descriptor,
+                        bundleReader.getDeBundleMetadataName_EX_BundleId()));
     }
 
     @Test
@@ -138,11 +150,14 @@ class WidgetTemplateGeneratorServiceImplTest {
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity));
+        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_1_BUNDLE_ID,
+                WidgetStubHelper.API_CLAIM_1_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity1));
 
-        File file = new File("src/test/resources/widget.ftl");
-        String expected = FileUtils.readFileToString(file, "UTF-8").trim();
+        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
+                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity2));
+
+        File expectedOnFile = new File("src/test/resources/widget.ftl");
+        String expected = FileUtils.readFileToString(expectedOnFile, "UTF-8").trim();
 
         final String ftl = service.generateWidgetTemplate("any-path", descriptor, bundleReader);
 
