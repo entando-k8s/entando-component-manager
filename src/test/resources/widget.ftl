@@ -14,11 +14,14 @@
 <link href="<@wp.resourceURL />bundles/my-component-77b2b10e/widgets/my-code-77b2b10e/static/css/style.css" rel="stylesheet">
 
 <script>
-if (entando.widget == undefined) {
-  window.entando.widget={}
-}
-window.entando.widget["my-widget"]={
-  "basePath": "bundles/my-component-77b2b10e/widgets/..-77b2b10e/any-path"
+window.entando = {
+  ...(window.entando || {}),
+};
+window.entando.widgets = {
+  ...(window.entando.widgets || {}),
+};
+window.entando.widgets["my-name"]={
+  "basePath": "<@wp.resourceURL />bundles/my-component-77b2b10e/widgets/any-path-77b2b10e"
 }
 </script>
 

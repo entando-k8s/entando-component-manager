@@ -24,7 +24,6 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private Map<String, String> titles;
     private String group;
     private String customUi;
-    //private String bundleId;
 
     // ------------------------------------------------------------
     // Version 1

@@ -22,4 +22,4 @@ apiClaims:
     bundleId: abcdefgh
   - name: int-api
     type: internal
-    pluginName: custombasenamev3c
+    pluginName: testPluginCD

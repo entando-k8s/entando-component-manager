@@ -148,9 +148,10 @@ class WidgetTemplateGeneratorServiceImplTest {
         when(bundleReader.getCode()).thenReturn(
                 BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(bundleReader.calculateBundleId()).thenCallRealMethod();
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_1_BUNDLE_ID,
+        when(repository.findByBundleIdAndPluginName(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
                 WidgetStubHelper.API_CLAIM_1_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity1));
 
         when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
@@ -159,7 +160,7 @@ class WidgetTemplateGeneratorServiceImplTest {
         File expectedOnFile = new File("src/test/resources/widget.ftl");
         String expected = FileUtils.readFileToString(expectedOnFile, "UTF-8").trim();
 
-        final String ftl = service.generateWidgetTemplate("any-path", descriptor, bundleReader);
+        final String ftl = service.generateWidgetTemplate("widgets/any-path", descriptor, bundleReader);
 
         assertThat(ftl).isEqualTo(expected);
     }

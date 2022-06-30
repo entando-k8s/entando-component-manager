@@ -54,11 +54,14 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String DESCRIPTOR_OBJECT_MEMBER_SEPARATOR = "_";
     public static final String FTL_OBJECT_MEMBER_SEPARATOR = "_";
     public static final String PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL = "<script>\n"
-            + "if (entando.widget == undefined) {\n"
-            + "  window.entando.widget={}\n"
-            + "}\n"
-            + "window.entando.widget[\"my-widget\"]={\n"
-            + "  \"basePath\": \"%s\"\n"
+            + "window.entando = {\n"
+            + "  ...(window.entando || {}),\n"
+            + "};\n"
+            + "window.entando.widgets = {\n"
+            + "  ...(window.entando.widgets || {}),\n"
+            + "};\n"
+            + "window.entando.widgets[\"%s\"]={\n"
+            + "  \"basePath\": \"<@wp.resourceURL />%s\"\n"
             + "}\n"
             + "</script>";
 
@@ -74,7 +77,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                     + generateCodeForContextParametersExtraction(descriptor) + "\n"
                     + generateCodeForMfeParametersExtraction(descriptor) + "\n"
                     + generateCodeForResourcesInclusion(descriptorFileName, bundleReader) + "\n"
-                    + "\n" + generateCodeForPageGlobalObjectUpdate(descriptorFileName, bundleReader) + "\n"
+                    + "\n" + generateCodeForPageGlobalObjectUpdate(descriptorFileName, descriptor, bundleReader) + "\n"
                     + "\n" + generateCodeForMfeConfigObjectCreation(descriptor, bundleReader.calculateBundleId()) + "\n"
                     + "\n" + generateCodeForCustomElementInvocation(descriptor);
         } catch (Exception e) {
@@ -84,20 +87,22 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         }
     }
 
-    private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, BundleReader bundleReader) {
+    private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, WidgetDescriptor descriptor,
+            BundleReader bundleReader) {
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         Object baseWidgetPath;
         try {
+            final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
             baseWidgetPath = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, descriptorFileName,
-                    bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, widgetFolder, bundleId);
+
         } catch (IOException e) {
             log.error("Unable to determine the widget base path", e);
             baseWidgetPath = "/";
         }
 
-        return String.format(PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL, baseWidgetPath);
+        return String.format(PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL, descriptor.getName(), baseWidgetPath);
     }
 
     private String generateCodeForMfeParametersExtraction(WidgetDescriptor descriptor) {

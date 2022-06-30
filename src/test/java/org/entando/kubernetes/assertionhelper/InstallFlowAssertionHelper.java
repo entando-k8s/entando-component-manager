@@ -399,7 +399,7 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedWidgets.get(0).getCustomElement()).isEqualTo("my-widget");
 
         ApiClaim apiClaim1 = new ApiClaim("ext-api", "external", "ms1", "abcdefgh");
-        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "custombasenamev3c", null);
+        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "testPluginCD", null);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(0)).isEqualToComparingFieldByField(apiClaim1);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(1)).isEqualToComparingFieldByField(apiClaim2);
     }

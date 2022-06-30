@@ -244,6 +244,6 @@ public class BundleReader {
     }
 
     public String calculateBundleId() {
-        return BundleUtilities.removeProtocolAndGetBundleId(bundleUrl);
+        return BundleUtilities.removeProtocolAndGetBundleId(getBundleUrl());
     }
 }
