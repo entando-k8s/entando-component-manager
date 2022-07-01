@@ -311,7 +311,7 @@ public class InstallFlowTest {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteWidget(ac.capture());
         assertThat(ac.getAllValues()).containsAll(
-                Arrays.asList("todomvc_widget-ece8f6f0", "another_todomvc_widget-ece8f6f0"));
+                Arrays.asList("todomvc_widget", "another_todomvc_widget"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePageModel(ac.capture());

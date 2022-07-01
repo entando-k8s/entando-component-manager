@@ -306,10 +306,12 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      * compose and set the widget code in the descriptor.
      */
     private void composeAndSetCode(WidgetDescriptor widgetDescriptor, BundleReader bundleReader) {
-        // set the code
-        final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
-                widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
-        widgetDescriptor.setCode(widgetCode);
+        if (! widgetDescriptor.isVersion1()) {
+            // set the code
+            final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                    widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
+            widgetDescriptor.setCode(widgetCode);
+        }
     }
 
     /**

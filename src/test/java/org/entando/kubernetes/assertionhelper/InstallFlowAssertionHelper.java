@@ -392,11 +392,11 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget-ece8f6f0");
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget");
         assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/bundle/widgets/widget.ftl"));
 
-        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget-ece8f6f0");
+        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget");
         assertThat(allPassedWidgets.get(1).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(1).getCustomUi()).isEqualTo("<h2>Bundle 1 Widget</h2>");
     }
@@ -455,8 +455,8 @@ public class InstallFlowAssertionHelper {
                 "/something/js/script.js",
                 "/something/vendor/jquery/jquery.js",
                 //Widgets
-                "todomvc_widget-ece8f6f0",
-                "another_todomvc_widget-ece8f6f0",
+                "todomvc_widget",
+                "another_todomvc_widget",
                 // Content-Type
                 "CNG",
                 "CNT",
@@ -540,11 +540,11 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget-ece8f6f0");
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget");
         assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/bundle/widgets/widget.ftl"));
 
-        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget-ece8f6f0");
+        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget");
         assertThat(allPassedWidgets.get(1).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(1).getCustomUi()).isEqualTo("<h2>Bundle 1 Widget</h2>");
     }

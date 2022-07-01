@@ -365,8 +365,8 @@ public class TestInstallUtils {
                         "/something/js/configUiScript.js", Status.NEW,
                         "/something/js/script.js", Status.NEW,
                         "/something/js/vendor/jquery/jquery.js", Status.NEW))
-                .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
-                        "widget_with_config_ui-ece8f6f0", Status.NEW))
+                .widgets(Map.of("another_todomvc_widget", Status.DIFF, "todomvc_widget", Status.NEW,
+                        "widget_with_config_ui", Status.NEW))
                 .build();
     }
 
@@ -407,9 +407,9 @@ public class TestInstallUtils {
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                                 "/something/js/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
-                .widgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                        "widget_with_config_ui-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "widget_with_config_ui", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .contentTypes(
@@ -522,8 +522,8 @@ public class TestInstallUtils {
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
                                 "/something/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
-                .setWidgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setWidgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setAssets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setContentTypes(
