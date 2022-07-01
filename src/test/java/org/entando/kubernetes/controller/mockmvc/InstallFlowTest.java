@@ -13,7 +13,7 @@ import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_PLANS_ENDPOI
 import static org.entando.kubernetes.utils.TestInstallUtils.MOCK_BUNDLE_NAME;
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
+import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReportV1;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockBundle;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockPlugins;
 import static org.entando.kubernetes.utils.TestInstallUtils.readFromDEPackage;
@@ -235,7 +235,7 @@ public class InstallFlowTest {
         List<EntandoBundleJobEntity> bundleJobEntityList = jobRepository.findAll();
         assertThat(bundleJobEntityList).hasSize(1);
         String stringInstallPlan = new ObjectMapper().writeValueAsString(
-                TestInstallUtils.mockInstallWithPlansRequestWithActions());
+                TestInstallUtils.mockInstallWithPlansRequestWithActionsV1());
         EntandoBundleJobEntity entandoBundleJobEntity = bundleJobEntityList.get(0);
         assertThat(entandoBundleJobEntity.getInstallPlan()).isEqualTo(stringInstallPlan);
 
@@ -820,11 +820,11 @@ public class InstallFlowTest {
 
 
     @Test
-    void shouldReturnAValidInstallPlan() throws Exception {
-        mockAnalysisReport(coreClient, k8SServiceClient);
+    void shouldReturnAValidInstallPlanV1() throws Exception {
+        mockAnalysisReportV1(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
-        InstallPlan expected = TestInstallUtils.mockInstallPlan();
+        InstallPlan expected = TestInstallUtils.mockInstallPlanV1();
         MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -930,7 +930,7 @@ public class InstallFlowTest {
     @Test
     void shouldReturn503OnInstallPlanIfAnotherBundleOperationIsRunning() throws Exception {
 
-        mockAnalysisReport(coreClient, k8SServiceClient);
+        mockAnalysisReportV1(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)

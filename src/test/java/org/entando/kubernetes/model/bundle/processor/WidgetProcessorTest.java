@@ -176,9 +176,6 @@ class WidgetProcessorTest extends BaseProcessorTest {
     private List<Installable<WidgetDescriptor>> execWidgetProcessor(String widgetDescFile, String widgConfigDescrFile,
             BundleDescriptor bundleDescriptor) throws IOException {
         //~
-        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        spec.setWidgets(singletonList(STANDARD_WIDGET_DESCRIPTOR));
-
         WidgetDescriptor descriptor = yamlMapper.readValue(new File(widgetDescFile), WidgetDescriptor.class);
 
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
