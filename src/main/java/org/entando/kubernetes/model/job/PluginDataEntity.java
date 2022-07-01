@@ -69,6 +69,9 @@ public class PluginDataEntity {
     @Column(name = "endpoint", nullable = false)
     private String endpoint;
 
+    @Column(name = "custom_endpoint")
+    private String customEndpoint;
+
     @Size(min = 1, max = 255)
     @Column(name = "roles")
     @Convert(converter = PluginRolesConverter.class)

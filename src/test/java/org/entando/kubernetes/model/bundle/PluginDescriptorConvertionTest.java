@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.common.DbmsVendor;
+import org.entando.kubernetes.model.common.ExpectedRole;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Tag;
@@ -52,7 +52,7 @@ class PluginDescriptorConvertionTest {
                   (PluginDescriptor) PluginStubHelper.stubPluginDescriptorV2()
                                 .setDescriptorVersion(DescriptorVersion.V2.getVersion()))
                 .forEach(pluginDescriptor -> {
-                    String ingress = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor);
+                    String ingress = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor, "code");
                     assertThat(ingress).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_MINOR_THAN_3);
                 });
     }
@@ -60,7 +60,7 @@ class PluginDescriptorConvertionTest {
     @Test
     void shouldGenerateKubernetesCompatibleIngressPathFromDescriptorVersion3() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV3();
-        String name = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
+        String name = BundleUtilities.extractIngressPathFromDescriptor(descriptor, "code");
         assertThat(name).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
     }
 
@@ -72,11 +72,13 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
-        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME);
+        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }
 
 
@@ -88,7 +90,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
@@ -103,7 +106,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 

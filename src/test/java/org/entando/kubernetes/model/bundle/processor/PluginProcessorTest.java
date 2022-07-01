@@ -66,33 +66,37 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     @Test
     void testCreatePluginV2() throws IOException, ExecutionException, InterruptedException {
-        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
+        descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
 
-        initBundleReaderShortImagesName();
-
-        PluginDescriptor descriptorV2 = PluginStubHelper.stubPluginDescriptorV2();
-        descriptorV2.setDescriptorVersion(DescriptorVersion.V2.getVersion());
-        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
-                .thenReturn(descriptorV2);
-        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-
-        final List<? extends Installable> installables = processor.process(bundleReader);
-        assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+        execTestCreatePlugin(descriptor);
     }
 
     @Test
     void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
+        execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV3());
+    }
+
+    @Test
+    void testCreatePluginV4() throws IOException, ExecutionException, InterruptedException {
+        execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV4());
+    }
+
+    @Test
+    void testCreatePluginV5() throws IOException, ExecutionException, InterruptedException {
+        execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+    }
+
+    private void execTestCreatePlugin(PluginDescriptor descriptor)
+            throws IOException, ExecutionException, InterruptedException {
 
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
-        initBundleReaderShortImagesName();
-
-        PluginDescriptor descriptorV3 = PluginStubHelper.stubPluginDescriptorV3();
         when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
-                .thenReturn(descriptorV3);
-        descriptorV3.setDescriptorVersion(DescriptorVersion.V3.getVersion());
+                .thenReturn(descriptor);
+
+        initBundleReaderShortImagesName();
 
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",

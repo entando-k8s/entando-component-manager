@@ -29,6 +29,7 @@ public class PluginDescriptor extends VersionedDescriptor {
         private final String pluginName;
         private final String pluginCode;
         private final String endpoint;
+        private final String customEndpoint;
     }
 
     /**
@@ -147,7 +148,7 @@ public class PluginDescriptor extends VersionedDescriptor {
     }
 
     public PluginDescriptor setDescriptorMetadata(String bundleId, String bundleCode, String pluginId,
-            String pluginName, String pluginCode, String endpoint) {
+            String pluginName, String pluginCode, String endpoint, String customEndpoint) {
         if (ObjectUtils.isEmpty(bundleId)) {
             throw new EntandoComponentManagerException("Empty bundle id received as plugin metadata");
         }
@@ -167,7 +168,7 @@ public class PluginDescriptor extends VersionedDescriptor {
             throw new EntandoComponentManagerException("Empty endpoint received as plugin metadata");
         }
         this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginId, pluginName, pluginCode,
-                endpoint);
+                endpoint, customEndpoint);
         return this;
     }
 }

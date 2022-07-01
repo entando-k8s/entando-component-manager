@@ -26,7 +26,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
-import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -37,12 +36,13 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.common.DbmsVendor;
+import org.entando.kubernetes.model.common.ExpectedRole;
+import org.entando.kubernetes.model.common.Permission;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
-import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
@@ -63,6 +63,9 @@ public class BundleUtilities {
     public static final String BUNDLE_TYPE_LABEL_NAME = "bundle-type";
 
     public static final String LATEST_VERSION = "latest";
+
+    public static final String DESCRIPTOR_CODE_REGEX = "^[\\w|-]+-[0-9a-fA-F]{8}$";
+    public static final Pattern DESCRIPTOR_CODE_PATTERN = Pattern.compile(DESCRIPTOR_CODE_REGEX);
 
     public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
     public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
@@ -167,18 +170,15 @@ public class BundleUtilities {
                 .collect(Collectors.toList());
     }
 
-    public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor) {
+    public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor, String bundleCode) {
 
         // if v5
         if (!ObjectUtils.isEmpty(descriptor.getDescriptorVersion())
                 && descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
-            return composeIngressPathBundleIdAndPluginName(descriptor);
+            return composeIngressPathBundleIdAndPluginName(descriptor, bundleCode);
         }
 
-        // TODO restore part of this login in ENG-3830
-        // return Optional.ofNullable(composeIngressPathFromIngressPathProperty(descriptor))
-        //        .orElse(composeIngressPathFromDockerImage(descriptor));
-
+        // TODO remove this code? check with old bundles
         return composeIngressPathFromDockerImage(descriptor);
     }
 
@@ -201,7 +201,7 @@ public class BundleUtilities {
      * @param descriptor the PluginDescriptor from which get the ingress path
      * @return the ingress path read from the plugin descriptor property or null if it is not present
      */
-    private static String composeIngressPathFromIngressPathProperty(PluginDescriptor descriptor) {
+    public static String composeIngressPathFromIngressPathProperty(PluginDescriptor descriptor) {
 
         String ingressPath = null;
 
@@ -243,10 +243,10 @@ public class BundleUtilities {
      * @param descriptor the PluginDescriptor from which take the info
      * @return the composed ingress path
      */
-    public static String composeIngressPathBundleIdAndPluginName(PluginDescriptor descriptor) {
+    public static String composeIngressPathBundleIdAndPluginName(PluginDescriptor descriptor, String bundleCode) {
 
         return "/"
-                + Stream.of(descriptor.getDescriptorMetadata().getBundleCode(),
+                + Stream.of(bundleCode,
                         makeKubernetesCompatible(descriptor.getName()))
                 .map(BundleUtilities::makeKubernetesCompatible)
                 .collect(Collectors.joining("/"));
@@ -289,7 +289,8 @@ public class BundleUtilities {
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getDbms().toUpperCase()))
                 .withImage(descriptor.getImage())
-                .withIngressPath(extractIngressPathFromDescriptor(descriptor))
+                .withIngressPath(descriptor.getDescriptorMetadata().getEndpoint())
+                .withCustomIngressPath(descriptor.getDescriptorMetadata().getCustomEndpoint())
                 .withRoles(extractRolesFromDescriptor(descriptor))
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
                 .withPermissions(extractPermissionsFromDescriptor(descriptor))
@@ -374,7 +375,7 @@ public class BundleUtilities {
         var bundleType = bundleReader.readBundleDescriptor().getBundleType();
 
         return "/" + (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE
-                ? bundleReader.getBundleCode()
+                ? bundleReader.getCode()
                 : "");
     }
 

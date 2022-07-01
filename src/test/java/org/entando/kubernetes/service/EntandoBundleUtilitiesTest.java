@@ -25,20 +25,20 @@ import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
-import org.entando.kubernetes.model.DbmsVendor;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
+import org.entando.kubernetes.model.common.DbmsVendor;
+import org.entando.kubernetes.model.common.ExpectedRole;
+import org.entando.kubernetes.model.common.Permission;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginSpec;
-import org.entando.kubernetes.model.plugin.ExpectedRole;
-import org.entando.kubernetes.model.plugin.Permission;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
@@ -138,14 +138,15 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1",
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
-                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1,
+                getRolesForTodoMvc1(), Collections.<Permission>emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
 
@@ -160,7 +161,8 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -181,7 +183,6 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    @Disabled("Re enable (and update if necessary) with ENG-3830")
     void withACompletePluginDescriptorV2ShouldCreateACorrectEntandoPlugin() throws IOException {
 
         // given a complete plugin descriptor V2
@@ -189,16 +190,18 @@ public class EntandoBundleUtilitiesTest {
                 .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                null);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
-                "/myhostname.io/entando-plugin", "/api/v1/todos",
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc2, PluginSecurityLevel.forName("lenient"));
         assertThat(entandoPlugin.getMetadata().getName()).isEqualTo("loooong-entando");
+        assertThat(entandoPlugin.getSpec().getCustomIngressPath()).isNull();
     }
 
     @Test
@@ -211,14 +214,15 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId(),
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
-                "entando/todomvcV2:1.0.0", "/entando/todomvcv2/1-0-0", "/api/v1/todos",
-                Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
+                "entando/todomvcV2:1.0.0", PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
+                Collections.<ExpectedRole>emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
 
     @Test
@@ -230,18 +234,18 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId(),
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
-                "/entando/todomvcv2", "/api/v1/todos",
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
 
     @Test
-    @Disabled("Re enable (and update if necessary) with ENG-3830")
     void withACompletePluginDescriptorV3ShouldCreateACorrectEntandoPlugin() throws IOException {
 
         // given a complete plugin descriptor V3
@@ -250,15 +254,18 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV3-1-0-0-" + bundleReader.getBundleId(),
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV3:1.0.0",
-                "/myhostname.io/entando-plugin", "/api/v1/todos",
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc3, PluginSecurityLevel.LENIENT);
+        assertThat(entandoPlugin.getSpec().getCustomIngressPath()).isEqualTo(
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
     }
 
     @Test
@@ -284,25 +291,6 @@ public class EntandoBundleUtilitiesTest {
         metadata.setLabels(Map.of("widgets", "true"));
         bundleType = BundleUtilities.extractBundleTypeFromBundle(entandoDeBundle);
         assertThat(bundleType).isEqualTo(BundleType.STANDARD_BUNDLE);
-    }
-
-
-    @Test
-    @Disabled("Re enable (and update if necessary) with ENG-3830")
-    void whenReadingARelativeIngressPathItShouldPrefixItWithASlash() throws IOException {
-
-        // given a plugin descriptor V2
-        PluginDescriptor descriptor = bundleReader
-                .readDescriptorFile("plugins/exampleV2_relative_ingress_path.yaml", PluginDescriptor.class)
-                .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
-                        PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                        "custombasename-" + TestEntitiesGenerator.BUNDLE_NAME,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
-
-        // should add the leading slash to the ingress path
-        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
-
-        assertThat(entandoPlugin.getSpec().getIngressPath()).isEqualTo("/myhostname.io/entando-plugin");
     }
 
     @Test
@@ -464,7 +452,7 @@ public class EntandoBundleUtilitiesTest {
     @Test
     void shouldReturnTheExpectedIngressPathWithPluginDescriptorV4() {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4();
-        final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
+        final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor, "code");
         assertThat(ingressPath).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
     }
 
@@ -472,7 +460,8 @@ public class EntandoBundleUtilitiesTest {
     void shouldReturnTheExpectedIngressPathWithPluginDescriptorV5() {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5()
                 .setName("MyStrange___plugin.Name");
-        final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
+        final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor,
+                PluginStubHelper.BUNDLE_CODE);
         assertThat(ingressPath).isEqualTo("/" + PluginStubHelper.BUNDLE_CODE + "/mystrange---plugin-name");
     }
 
@@ -480,7 +469,8 @@ public class EntandoBundleUtilitiesTest {
     void shouldIgnoreCustomIngressPathWithPluginDescriptorV5() {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5()
                 .setIngressPath("mycustomingress");
-        final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor);
+        final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor,
+                PluginStubHelper.BUNDLE_CODE);
         assertThat(ingressPath).isEqualTo(PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }
 
@@ -557,6 +547,17 @@ public class EntandoBundleUtilitiesTest {
 
         assertThrows(EntandoValidationException.class, () -> BundleUtilities.decodeUrl(encodedUrlKo));
 
+    }
+
+    @Test
+    void shouldComposeTheExpectedIngressPathFromDockerImage() {
+
+        // given a plugin descriptor V2
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
+        // when the ingress path is composed starting by the docker image
+        String ingressPath = BundleUtilities.composeIngressPathFromDockerImage(descriptor);
+        // then the expected ingress path is generated
+        assertThat(ingressPath).isEqualTo("/entando/the-lucas");
     }
 
     /*****************************************************************************************************

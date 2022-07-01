@@ -13,6 +13,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
@@ -110,7 +111,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new PluginDescriptor()
                 .setDescriptorMetadata(
-                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null));
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
     }
 
     @Override
@@ -141,20 +142,26 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) throws IOException {
 
+        final BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptor();
+
         final String url = BundleUtilities.removeProtocolFromUrl(bundleReader.getBundleUrl());
         final String bundleId = BundleUtilities.getBundleId(url);
+        final String bundleCode = BundleUtilities.composeDescriptorCode(bundleDescriptor.getCode(),
+                bundleDescriptor.getName(), bundleDescriptor, bundleReader.getBundleUrl());
         final String signedPluginDeplName = this.signPluginDeploymentName(pluginDescriptor);
-        final String endpoint = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor);
+        final String endpoint = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor, bundleCode);
+        final String customEndpoint = BundleUtilities.composeIngressPathFromIngressPathProperty(pluginDescriptor);
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
-                bundleReader.getBundleCode() + "-" + bundleId,
+                bundleCode,
                 signedPluginDeplName.split("-")[0],
                 ObjectUtils.isEmpty(pluginDescriptor.getName())
                         ? signedPluginDeplName.split("-", 2)[1]
                         : pluginDescriptor.getName(),
                 generateFullDeploymentName(bundleId, signedPluginDeplName),
-                endpoint);
+                endpoint,
+                customEndpoint);
     }
 
 

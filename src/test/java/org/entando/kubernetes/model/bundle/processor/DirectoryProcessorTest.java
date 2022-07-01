@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
-import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -162,7 +161,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode() + "-"
+        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode() + "-"
                 + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
@@ -191,7 +190,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getBundleCode()).thenReturn(bundleDescriptor.getCode() + "-"
+        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode() + "-"
                 + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 

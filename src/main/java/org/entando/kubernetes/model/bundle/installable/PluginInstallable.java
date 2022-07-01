@@ -77,6 +77,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 .setPluginName(metadata.getPluginName())
                 .setPluginCode(metadata.getPluginCode())
                 .setEndpoint(metadata.getEndpoint())
+                .setCustomEndpoint(metadata.getCustomEndpoint())
                 .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null);
     }
 
