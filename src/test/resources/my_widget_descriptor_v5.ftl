@@ -13,6 +13,9 @@
 
 <link href="<@wp.resourceURL />bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets/css-res.css" rel="stylesheet">
 
+<#assign apiClaim_ext__DASH__api>my-path</#assign>
+<#assign apiClaim_int__DASH__api>/entando/todomvcv3</#assign>
+
 <script>
 window.entando = {
   ...(window.entando || {}),
@@ -25,6 +28,6 @@ window.entando.widgets["todomvc_widget"]={
 }
 </script>
 
-<#assign mfeConfig>{"systemParams":{"api":{"int-api":{"url":"my-path3"},"ext-api":{"url":"my-path"}}},"contextParams":{"info_startLang":"${info_startLang}","page_code":"${page_code}"},"params":{"title":"${widget_title}","url":"${widget_url}"}}</#assign>
+<#assign mfeConfig>{"systemParams":{"api":{"int-api":{"url":"${apiClaim_int__DASH__api}"},"ext-api":{"url":"${apiClaim_ext__DASH__api}"}}},"contextParams":{"info_startLang":"${info_startLang}","page_code":"${page_code}"},"params":{"title":"${widget_title}","url":"${widget_url}"}}</#assign>
 
 <my-widget config="<#outputformat 'HTML'>${mfeConfig}</#outputformat>"/>

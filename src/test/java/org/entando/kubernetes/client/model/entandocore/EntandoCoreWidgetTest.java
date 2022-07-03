@@ -67,7 +67,7 @@ public class EntandoCoreWidgetTest {
                 .customUi("<h1>Hello world</h1>")
                 .group("free")
                 .titles(titles)
-                .descriptorMetadata(new DescriptorMetadata(null, null, "my-bundle"))
+                .descriptorMetadata(new DescriptorMetadata(null, null, "my-bundle", null, null))
                 .build();
     }
 }

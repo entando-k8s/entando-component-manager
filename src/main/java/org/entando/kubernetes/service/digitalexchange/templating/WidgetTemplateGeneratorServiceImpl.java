@@ -38,7 +38,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String APS_CORE_TAG = "<#assign wp=JspTaglibs[\"/aps-core\"]>";
     public static final String SCRIPT_TAG = "<script src=\"<@wp.resourceURL />%s\"></script>";
     public static final String CSS_TAG = "<link href=\"<@wp.resourceURL />%s\" rel=\"stylesheet\">";
-    public static final String ASSIGN_TAG = "<#assign mfeConfig>%s</#assign>";
+    public static final String ASSIGN_TAG_MFE_CONFIG = "<#assign mfeConfig>%s</#assign>";
+    public static final String ASSIGN_TAG_GENERIC = "<#assign %s>%s</#assign>";
     public static final String CUSTOM_ELEMENT_TAG =
             "<%s config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>";
     //public static final String APPLICATION_BASEURL_PARAM = "${systemParam_applicationBaseURL}";
@@ -50,9 +51,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String CONFIG_KEY_SYSTEM_PARAMS = "systemParams";
     public static final String CONFIG_KEY_MFE_PARAMS = "params";
     public static final String CONFIG_KEY_CONTEXT_PARAMS = "contextParams";
+    public static final String CONFIG_KEY_API_CLAIM_PARAMS = "apiClaim";
     public static final String FTL_WIDGETS_PARAM_PREFIX = "widget";
     public static final String DESCRIPTOR_OBJECT_MEMBER_SEPARATOR = "_";
-    public static final String FTL_OBJECT_MEMBER_SEPARATOR = "_";
+    public static final String FTL_SCOPE_SEPARATOR = "_";
     public static final String PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL = "<script>\n"
             + "window.entando = {\n"
             + "  ...(window.entando || {}),\n"
@@ -64,6 +66,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
             + "  \"basePath\": \"<@wp.resourceURL />%s\"\n"
             + "}\n"
             + "</script>";
+    public static final String PLACEHOLDER_FOR_API_URL_EXTRACTION = "<#assign PLACEHOLDER_FOR_API_URL_EXTRACTION></#assign>";
+    public static final String FTL_DASH_REPLACEMENT_IN_VARS = "__DASH__";
 
     private final PluginDataRepository apiPathRepository;
 
@@ -77,6 +81,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                     + generateCodeForContextParametersExtraction(descriptor) + "\n"
                     + generateCodeForMfeParametersExtraction(descriptor) + "\n"
                     + generateCodeForResourcesInclusion(descriptorFileName, bundleReader) + "\n"
+                    + "\n" + PLACEHOLDER_FOR_API_URL_EXTRACTION + "\n"
                     + "\n" + generateCodeForPageGlobalObjectUpdate(descriptorFileName, descriptor, bundleReader) + "\n"
                     + "\n" + generateCodeForMfeConfigObjectCreation(descriptor, bundleReader.calculateBundleId()) + "\n"
                     + "\n" + generateCodeForCustomElementInvocation(descriptor);
@@ -85,6 +90,34 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                     "An error occurred during the generation of the FTL for the " + FTL_WIDGETS_PARAM_PREFIX + " "
                             + descriptor.getCode(), e);
         }
+    }
+
+    /**
+     * Updates the FTL code by replacing PLACEHOLDER_FOR_API_URL_EXTRACTION
+     * with code to properly assign the apiClaim variables that
+     * are then referenced in the mfe configuration object
+     */
+    @Override
+    public String updateWidgetTemplate(String ftl, List<ApiClaim> apiClaims, Map<String, String> pluginIngressPathMap,
+            String currentBundleId) {
+        var res = new StringBuilder();
+        if (apiClaims != null) {
+            for (var apiClaim : apiClaims) {
+                var ftlVarName = ftlScopedVar(CONFIG_KEY_API_CLAIM_PARAMS, apiClaim.getName());
+                String resolvedApiUrl = getApiUrl(apiClaim, pluginIngressPathMap, currentBundleId);
+                res.append(String.format(ASSIGN_TAG_GENERIC, ftlVarName, resolvedApiUrl));
+                res.append('\n');
+            }
+            if (res.length() > 0) {
+                res.setLength(res.length() - 1);
+            }
+        }
+        return ftl.replace(PLACEHOLDER_FOR_API_URL_EXTRACTION, res.toString());
+    }
+
+    @Override
+    public boolean checkApiClaim(ApiClaim apiClaim, String bundleId) {
+        return getApiUrl(apiClaim, null, bundleId) != null;
     }
 
     private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, WidgetDescriptor descriptor,
@@ -110,8 +143,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         var params = descriptor.getParams();
         if (params != null) {
             for (var p : params) {
-                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s%s%s\" />\n",
-                        "config", p.getName(), FTL_WIDGETS_PARAM_PREFIX, FTL_OBJECT_MEMBER_SEPARATOR, p.getName()));
+                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",
+                        "config", p.getName(), ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName())));
             }
         }
         return res.toString();
@@ -134,16 +167,16 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                 String paramName = v.get(1);
                 switch (paramType) {
                     case PARAM_TYPE_PAGE:
-                        res.append(String.format("<@wp.currentPage param=\"%s\" var=\"%s%s%s\" />\n",
-                                paramName, paramType, FTL_OBJECT_MEMBER_SEPARATOR,paramName));
+                        res.append(String.format("<@wp.currentPage param=\"%s\" var=\"%s\" />\n",
+                                paramName, ftlScopedVar(paramType, paramName)));
                         break;
                     case PARAM_TYPE_INFO:
-                        res.append(String.format("<@wp.info key=\"%s\" var=\"%s%s%s\" />\n",
-                                paramName, paramType, FTL_OBJECT_MEMBER_SEPARATOR,paramName));
+                        res.append(String.format("<@wp.info key=\"%s\" var=\"%s\" />\n",
+                                paramName, ftlScopedVar(paramType, paramName)));
                         break;
                     case PARAM_TYPE_SYSTEM_PARAM:
-                        res.append(String.format("<@wp.info key=\"%s\" paramName=\"%s\" var=\"%s%s%s\" />\n",
-                                paramType, paramName, paramType, FTL_OBJECT_MEMBER_SEPARATOR, paramName));
+                        res.append(String.format("<@wp.info key=\"%s\" paramName=\"%s\" var=\"%s\" />\n",
+                                paramType, paramName, ftlScopedVar(paramType, paramName)));
                         break;
                     default:
                         log.error("Received illegal paramType \"{}\" in contextParam \"{}\"", paramType, p);
@@ -203,14 +236,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     protected String generateCodeForMfeConfigObjectCreation(WidgetDescriptor descriptor, String bundleId)
             throws JsonProcessingException {
         Map<String, Object> res = new HashMap<>();
-        res.put(CONFIG_KEY_SYSTEM_PARAMS, toSystemParamsForConfig(
-                descriptor.getApiClaims(),
-                descriptor.getDescriptorMetadata().getPluginIngressPathMap(),
-                bundleId
-        ));
+        res.put(CONFIG_KEY_SYSTEM_PARAMS, toSystemParamsForConfig(descriptor.getApiClaims()));
         res.put(CONFIG_KEY_MFE_PARAMS, toMfeParamsForConfig(descriptor.getParams()));
         res.put(CONFIG_KEY_CONTEXT_PARAMS, toContextParamsForConfig(descriptor.getContextParams()));
-        return String.format(ASSIGN_TAG, jsonMapper.writeValueAsString(res));
+        return String.format(ASSIGN_TAG_MFE_CONFIG, jsonMapper.writeValueAsString(res));
     }
 
     protected String generateCodeForCustomElementInvocation(WidgetDescriptor descriptor) {
@@ -234,20 +263,25 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return ingressPath;
     }
 
-    protected SystemParams toSystemParamsForConfig(
-            List<ApiClaim> apiClaimList,
-            Map<String, String> pluginIngressPathMap,
-            String bundleId) {
+    protected FtlSystemParams toSystemParamsForConfig(List<ApiClaim> apiClaimList) {
         //~
-        final Map<String, ApiUrl> apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
+        var apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
-                    String ingressPath = APPLICATION_BASEURL_PARAM + getApiUrl(ac, pluginIngressPathMap, bundleId);
-                    return new SimpleEntry<>(ac.getName(), new ApiUrl(ingressPath));
+                    String key = ac.getName();
+                    String val = ftlScopedVar(CONFIG_KEY_API_CLAIM_PARAMS, ac.getName(), true);
+                    return new SimpleEntry<>(key, new FtlApiUrl(APPLICATION_BASEURL_PARAM + val));
                 })
-                .collect(Collectors.toMap(
-                        SimpleEntry::getKey,
-                        SimpleEntry::getValue));
-        return new SystemParams(apiMap);
+                .collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue));
+        return new FtlSystemParams(apiMap);
+    }
+
+    private static String ftlScopedVar(String scope, String value) {
+        return ftlScopedVar(scope, value, false);
+    }
+
+    private static String ftlScopedVar(String scope, String value, boolean interpolated) {
+        String var = scope + FTL_SCOPE_SEPARATOR + value.replace("-", FTL_DASH_REPLACEMENT_IN_VARS);
+        return interpolated ? "${" + var + "}" : var;
     }
 
     private HashMap<String, String> toContextParamsForConfig(List<String> contextParams) {
@@ -258,7 +292,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                 if (!v.isEmpty()) {
                     String varType = v.get(0);
                     String varName = v.get(1);
-                    res.put(p, "${" + varType + FTL_OBJECT_MEMBER_SEPARATOR + varName + "}");
+                    res.put(p, ftlScopedVar(varType, varName, true));
                 }
             }
         }
@@ -270,7 +304,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         var res = new HashMap<String, String>();
         if (params != null) {
             for (var p : params) {
-                res.put(p.getName(), "${" + FTL_WIDGETS_PARAM_PREFIX + FTL_OBJECT_MEMBER_SEPARATOR + p.getName() + "}");
+                res.put(p.getName(), ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName(), true));
             }
         }
         return res;
@@ -278,14 +312,14 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     @AllArgsConstructor
     @Getter
-    private class SystemParams {
+    private static class FtlSystemParams {
 
-        private Map<String, ApiUrl> api;
+        private Map<String, FtlApiUrl> api;
     }
 
     @AllArgsConstructor
     @Getter
-    private class ApiUrl {
+    private static class FtlApiUrl {
 
         private String url;
     }

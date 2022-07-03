@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -48,7 +50,12 @@ import org.springframework.stereotype.Service;
 public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> implements
         EntandoEngineReportableProcessor {
 
+    public static final String EXT_API_CLAIM_ERROR = "External apiClaim \"%s\" cannot be satisfied "
+            + "because there is no service on the system with name \"%s\" and bundleId \"%s\"";
+    public static final String INT_API_CLAIM_ERROR = "Internal apiClaim \"%s\" cannot be satisfied "
+            + "because there no service with name \"%s\", declared in the same bundle";
     private final EntandoCoreClient engineService;
+    @Getter
     private final WidgetTemplateGeneratorService templateGeneratorService;
     private final WidgetDescriptorValidator descriptorValidator;
     @Setter
@@ -91,8 +98,11 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
             for (final String fileName : descriptorList) {
-                final WidgetDescriptor widgetDescriptor =
-                        makeWidgetDescriptorFromFile(bundleReader, fileName, pluginIngressPathMap);
+                final WidgetDescriptor widgetDescriptor = makeWidgetDescriptorFromFile(
+                        bundleReader, fileName, pluginIngressPathMap
+                );
+
+                validateApiClaims(widgetDescriptor.getApiClaims());
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
                 composeAndSetParentCode(widgetDescriptor, bundleReader);
@@ -108,6 +118,31 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         }
 
         return installables;
+    }
+
+    private void validateApiClaims(List<ApiClaim> apiClaims) {
+        if (apiClaims != null) {
+            for (var apiClaim : apiClaims) {
+                if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)) {
+                    if (!checkInternalApiClaim(apiClaim)) {
+                        throw new EntandoComponentManagerException(String.format(INT_API_CLAIM_ERROR,
+                                apiClaim.getName(), apiClaim.getPluginName()
+                        ));
+                    }
+                } else {
+                    if (!templateGeneratorService.checkApiClaim(apiClaim, apiClaim.getBundleId())) {
+                        throw new EntandoComponentManagerException(String.format(EXT_API_CLAIM_ERROR,
+                                apiClaim.getName(), apiClaim.getPluginName(), apiClaim.getBundleId()
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean checkInternalApiClaim(ApiClaim apiClaim) {
+        return pluginIngressPathMap != null &&
+                pluginIngressPathMap.keySet().stream().anyMatch(pluginName -> pluginName.equals(apiClaim.getPluginName()));
     }
 
     public List<Installable<WidgetDescriptor>> collectConfigWidgets(BundleReader bundleReader,
@@ -140,10 +175,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     private WidgetDescriptor makeWidgetDescriptorFromFile(BundleReader bundleReader, String fileName,
             Map<String, String> pluginIngressPathMap) throws IOException {
         var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
         widgetDescriptor.applyFallbacks();
-        widgetDescriptor.setDescriptorMetadata(
-                new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getBundleCode())
-        );
+        widgetDescriptor.setDescriptorMetadata(new DescriptorMetadata(
+                pluginIngressPathMap, fileName, bundleReader.getCode(),
+                bundleId,
+                templateGeneratorService
+        ));
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
     }

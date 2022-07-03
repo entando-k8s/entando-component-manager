@@ -47,6 +47,8 @@ public class WidgetStubHelper {
     public static final String PLUGIN_INGRESS_1_PATH = "/" + API_CLAIM_1_SERVICE_ID + "/path";
     public static final String PLUGIN_INGRESS_2_CODE = API_CLAIM_2_SERVICE_ID;
     public static final String PLUGIN_INGRESS_2_PATH = "/" + API_CLAIM_2_SERVICE_ID + "/path";
+    public static final String PLUGIN_INGRESS_3_CODE = "customBaseNameV5";
+    public static final String PLUGIN_INGRESS_3_PATH = "/" + API_CLAIM_2_SERVICE_ID + "/path";
     public static final String PARENT_NAME = "parent-name";
 
 
@@ -93,11 +95,11 @@ public class WidgetStubHelper {
                 .code(WIDGET_1_CODE)
                 .titles(TITLES_MAP)
                 .group(GROUP)
-                .descriptorMetadata(new DescriptorMetadata(null, null, BUNDLE_CODE));
+                .descriptorMetadata(new DescriptorMetadata(null, null, BUNDLE_CODE, null, null));
     }
 
     public static DescriptorMetadata stubDescriptorMetadata() {
-        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename(), BUNDLE_CODE);
+        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename(), BUNDLE_CODE, null, null);
     }
 
     private static String stubWidgetFilename() {
@@ -112,8 +114,11 @@ public class WidgetStubHelper {
     }
 
     public static Map<String, String> stubPluginIngressPathMap() {
-        return Map.of(PLUGIN_INGRESS_1_CODE, PLUGIN_INGRESS_1_PATH,
-                PLUGIN_INGRESS_2_CODE, PLUGIN_INGRESS_2_PATH);
+        return Map.of(
+                PLUGIN_INGRESS_1_CODE, PLUGIN_INGRESS_1_PATH,
+                PLUGIN_INGRESS_2_CODE, PLUGIN_INGRESS_2_PATH,
+                PLUGIN_INGRESS_3_CODE, PLUGIN_INGRESS_3_PATH
+        );
     }
 
     public static List<ApiClaim> stubApiClaims() {

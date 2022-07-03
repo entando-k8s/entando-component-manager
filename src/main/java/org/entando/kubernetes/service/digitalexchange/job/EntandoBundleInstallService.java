@@ -101,7 +101,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         BundleDownloader bundleDownloader = downloaderFactory.newDownloader(tag);
 
         try {
-            BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+            BundleReader bundleReader =
+                    this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+
             Map<ReportableRemoteHandler, List<Reportable>> reportableByHandler =
                     this.getReportableComponentsByRemoteHandler(bundleReader);
 
@@ -384,7 +386,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallPlan installPlan) {
 
-        collectWidgetConfigDescriptors(bundleReader, conflictStrategy, installPlan);
 
         List<? extends Installable<?>> pluginInstallables = new ArrayList<>();
 
@@ -402,6 +403,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             ((WidgetProcessor) processorMap.get(ComponentType.WIDGET)).setPluginIngressPathMap(pluginIngressMap);
         }
+
+        collectWidgetConfigDescriptors(bundleReader, conflictStrategy, installPlan);
 
         // process other components
         final List<? extends Installable<?>> installables = processorMap.values()
@@ -443,7 +446,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job) {
         EntandoBundleEntity installedComponent = bundleRepository
-                .findByBundleCode(bundleService.convertToBundleFromEcr(bundle).getCode())
+                .findByBundleCode(bundle.getMetadata().getName())       // $$$:discuss with Luigi
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
         
         installedComponent.setVersion(job.getComponentVersion());

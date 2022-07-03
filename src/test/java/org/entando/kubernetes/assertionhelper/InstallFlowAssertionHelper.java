@@ -334,7 +334,7 @@ public class InstallFlowAssertionHelper {
     }
 
     private void verifyPluginInstallRequestsV5(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
+        verify(k8SServiceClient, times(3)).linkAppWithPlugin(any(), any(), any());
     }
 
     private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) {
@@ -399,7 +399,7 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedWidgets.get(0).getCustomElement()).isEqualTo("my-widget");
 
         ApiClaim apiClaim1 = new ApiClaim("ext-api", "external", "ms1", "abcdefgh");
-        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "testPluginCD", null);
+        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "customBaseNameV5", null);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(0)).isEqualToComparingFieldByField(apiClaim1);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(1)).isEqualToComparingFieldByField(apiClaim2);
     }
@@ -514,7 +514,7 @@ public class InstallFlowAssertionHelper {
     }
 
     public void verifyPluginInstallRequestsWithInstallPlanRequestV5(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
+        verify(k8SServiceClient, times(3)).linkAppWithPlugin(any(), any(), any());
     }
 
     public void verifyWidgetsInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {

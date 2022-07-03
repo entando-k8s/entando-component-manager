@@ -213,9 +213,10 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName_EX_BundleId(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -233,8 +234,9 @@ public class EntandoBundleUtilitiesTest {
                 .readDescriptorFile("plugins/todomvcV3.yaml", PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                "entando-todomvcV2-1-0-0-" + bundleReader.getBundleId(),
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+                "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName_EX_BundleId(),
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
@@ -252,7 +254,7 @@ public class EntandoBundleUtilitiesTest {
                 .readDescriptorFile("plugins/todomvcV3_complete.yaml", PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                "entando-todomvcV3-1-0-0-" + bundleReader.getBundleId(),
+                "entando-todomvcV3-1-0-0-" + bundleReader.getDeBundleMetadataName_EX_BundleId(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
 

@@ -11,12 +11,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
@@ -80,35 +80,29 @@ class WidgetTemplateGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldThrowExceptionIfCantProvideApiPathWhileCreatingTheAssignTags() {
-        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        descriptor.getApiClaims().get(1).setPluginName("non-existing");
-        assertThrows(EntandoComponentManagerException.class,
-                () -> service.generateCodeForMfeConfigObjectCreation(descriptor,
-                        bundleReader.getDeBundleMetadataName_EX_BundleId()));
+    void shouldThrowException_If_claimingApiToNonExistentExternal() {
+        assertThrows(EntandoComponentManagerException.class, () -> service.checkApiClaim(
+                new ApiClaim("api-ext", "external", "non-existing", "99999999"),
+                "99999999"
+        ));
     }
 
     @Test
     void shouldCreateTheExpectedCustomElementTag() {
         String tag = service.generateCodeForCustomElementInvocation(descriptor);
-        assertThat(tag).isEqualTo("<" + WidgetStubHelper.WIDGET_1_CODE + " config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>");
+        assertThat(tag).isEqualTo("<" + WidgetStubHelper.WIDGET_1_CODE
+                + " config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>");
     }
 
     @Test
     void shouldProperlyGenerateMfeConfigObject() throws JsonProcessingException {
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_1_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_1_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity1));
-
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity2));
-
         var assignTag = service.generateCodeForMfeConfigObjectCreation(descriptor,
                 WidgetStubHelper.API_CLAIM_1_BUNDLE_ID);
 
         assertThat(assignTag).isEqualTo("<#assign mfeConfig>"
                 + "{\"systemParams\":{\"api\":{"
-                + "\"int-api\":{\"url\":\"/service-id-1/path\"},"
-                + "\"ext-api\":{\"url\":\"/service-id-2/path\"}}},"
+                + "\"int-api\":{\"url\":\"${apiClaim_int__DASH__api}\"},"
+                + "\"ext-api\":{\"url\":\"${apiClaim_ext__DASH__api}\"}}},"
                 + "\"contextParams\":{\"info_startLang\":\"${info_startLang}\",\"page_code\":\"${page_code}\","
                 + "\"systemParam_applicationBaseURL\":\"${systemParam_applicationBaseURL}\"},"
                 + "\"params\":{\"paramA\":\"${widget_paramA}\",\"paramB\":\"${widget_paramB}\"}}"
@@ -129,10 +123,9 @@ class WidgetTemplateGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenGeneratingMfeConfigObjectWithNonExistingPaths() {
+    void shouldThrowExceptionWhen_GeneratingApiVarAssignments_WithNonExistingPaths() {
         assertThrows(EntandoComponentManagerException.class,
-                () -> service.generateCodeForMfeConfigObjectCreation(descriptor,
-                        bundleReader.getDeBundleMetadataName_EX_BundleId()));
+                () -> service.updateWidgetTemplate("", descriptor.getApiClaims(), null, null));
     }
 
     @Test
@@ -150,12 +143,6 @@ class WidgetTemplateGeneratorServiceImplTest {
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleReader.calculateBundleId()).thenCallRealMethod();
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
-
-        when(repository.findByBundleIdAndPluginName(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
-                WidgetStubHelper.API_CLAIM_1_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity1));
-
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity2));
 
         File expectedOnFile = new File("src/test/resources/widget.ftl");
         String expected = FileUtils.readFileToString(expectedOnFile, "UTF-8").trim();

@@ -10,6 +10,8 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
+import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.springframework.util.ObjectUtils;
 
 @Getter
@@ -48,7 +50,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     // ------------------------------------------------------------
     // METADATA
-    private DescriptorMetadata descriptorMetadata = new DescriptorMetadata(null, null, null);
+    private DescriptorMetadata descriptorMetadata = new DescriptorMetadata(null, null, null, null, null);
     private String parentName;
     private String parentCode;
 
@@ -106,6 +108,8 @@ public class WidgetDescriptor extends VersionedDescriptor {
         private final Map<String, String> pluginIngressPathMap;
         private final String filename;
         private final String bundleCode;
+        private final String bundleId;
+        private final WidgetTemplateGeneratorService templateGeneratorService;
     }
 
     public WidgetDescriptor setCode(String code) {

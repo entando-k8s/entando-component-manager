@@ -27,12 +27,25 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 return; //Do nothing
             }
 
+            finalizeConfigUI(representation);
+
             if (shouldCreate()) {
                 engineService.createWidget(representation);
             } else {
                 engineService.updateWidget(representation);
             }
         });
+    }
+
+    private void finalizeConfigUI(WidgetDescriptor representation) {
+        var customUi = representation.getCustomUi();
+        representation.setCustomUi(
+                representation.getDescriptorMetadata().getTemplateGeneratorService().updateWidgetTemplate(
+                        customUi,
+                        representation.getApiClaims(),
+                        representation.getDescriptorMetadata().getPluginIngressPathMap(),
+                        representation.getDescriptorMetadata().getBundleId())
+        );
     }
 
     @Override
