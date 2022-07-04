@@ -187,8 +187,6 @@ class InstallFlowTestBundleVFive {
 
         // check that db custom_install column is correctly populated
         assertThat(entandoBundleJobEntity.getCustomInstallation()).isTrue();
-
-        // $$$: finalize
     }
 
 

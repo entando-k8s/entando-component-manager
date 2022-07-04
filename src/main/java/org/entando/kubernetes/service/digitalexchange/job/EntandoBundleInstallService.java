@@ -422,7 +422,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
-    /** Collects the descriptors of all the WIDGET_CONFIG components */
+    /**
+     * Collects the descriptors of all the WIDGET_CONFIG components.
+     */
     private void collectWidgetConfigDescriptors(
             BundleReader bundleReader,
             InstallAction conflictStrategy,
@@ -446,7 +448,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job) {
         EntandoBundleEntity installedComponent = bundleRepository
-                .findByBundleCode(bundle.getMetadata().getName())       // $$$:discuss with Luigi
+                .findByBundleCode(bundle.getMetadata().getName())
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
         
         installedComponent.setVersion(job.getComponentVersion());

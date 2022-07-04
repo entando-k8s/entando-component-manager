@@ -93,7 +93,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     }
 
     /**
-     * Updates the FTL code by replacing PLACEHOLDER_FOR_API_URL_EXTRACTION
+     * Updates the FTL code.
+     * It replaces PLACEHOLDER_FOR_API_URL_EXTRACTION
      * with code to properly assign the apiClaim variables that
      * are then referenced in the mfe configuration object
      */
@@ -248,8 +249,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     protected String getApiUrl(ApiClaim apiClaim, Map<String, String> pluginIngressPathMap, String currentBundleId) {
 
-        String apiBundleId = (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)) ?
-                currentBundleId : apiClaim.getBundleId();
+        String apiBundleId = (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API))
+                ? currentBundleId : apiClaim.getBundleId();
 
         String ingressPath = apiPathRepository
                 .findByBundleIdAndPluginName(apiBundleId, apiClaim.getPluginName())

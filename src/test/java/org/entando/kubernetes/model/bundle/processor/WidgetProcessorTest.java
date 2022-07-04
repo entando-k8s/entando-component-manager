@@ -15,8 +15,8 @@ import java.util.Map;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
-import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
@@ -239,6 +239,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleReader.readDescriptorFile(any(), any())).thenReturn(widgetDescriptor);
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(validator.validateOrThrow(any())).thenThrow(InvalidBundleException.class);
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),

@@ -246,23 +246,23 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        var i=0;
-        validateResourceFile(allPassedFiles, i+=1, "js-res-2.js",
+        var i = 0;
+        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/static/js",
                 "/bundle-v5/widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js");
-        validateResourceFile(allPassedFiles, i+=1, "js-res-1.js",
+        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0",
                 "/bundle-v5/widgets/my_widget_config_descriptor_v5/js-res-1.js");
-        validateResourceFile(allPassedFiles, i+=1, "css-res.css",
+        validateResourceFile(allPassedFiles, i += 1, "css-res.css",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css");
-        validateResourceFile(allPassedFiles, i+=1, "generic-file.txt",
+        validateResourceFile(allPassedFiles, i += 1, "generic-file.txt",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt");
-        validateResourceFile(allPassedFiles, i+=1, "js-res-2.js",
+        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js");
-        validateResourceFile(allPassedFiles, i+=1, "js-res-1.js",
+        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js");
     }

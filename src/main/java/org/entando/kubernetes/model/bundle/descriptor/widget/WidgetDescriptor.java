@@ -44,9 +44,9 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private List<String> contextParams;
     private String customElement;
 
-    public final static String TYPE_WIDGET_STANDARD = "widget";
-    public final static String TYPE_WIDGET_CONFIG = "widget-config";
-    public final static String TYPE_WIDGET_APPBUILDER = "app-builder";
+    public static final String TYPE_WIDGET_STANDARD = "widget";
+    public static final String TYPE_WIDGET_CONFIG = "widget-config";
+    public static final String TYPE_WIDGET_APPBUILDER = "app-builder";
 
     // ------------------------------------------------------------
     // METADATA

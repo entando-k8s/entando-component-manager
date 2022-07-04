@@ -16,8 +16,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -62,8 +62,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     private Map<String, String> pluginIngressPathMap;
 
     /**
-     * Map of descriptors of type widgetConfig
-     * used to recover information about the configWidgets when processing a widget
+     * Map of descriptors of type widgetConfig.
+     * It's used to recover information about the configWidgets when processing a widget
      */
     @Setter
     private Map<String, WidgetDescriptor> widgetConfigDescriptorsMap;
@@ -120,6 +120,14 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         return installables;
     }
 
+    @Override
+    public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
+        return components.stream()
+                .filter(c -> c.getComponentType() == getSupportedComponentType())
+                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .collect(Collectors.toList());
+    }
+
     private void validateApiClaims(List<ApiClaim> apiClaims) {
         if (apiClaims != null) {
             for (var apiClaim : apiClaims) {
@@ -141,8 +149,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     }
 
     private boolean checkInternalApiClaim(ApiClaim apiClaim) {
-        return pluginIngressPathMap != null &&
-                pluginIngressPathMap.keySet().stream().anyMatch(pluginName -> pluginName.equals(apiClaim.getPluginName()));
+        return pluginIngressPathMap != null && pluginIngressPathMap.keySet().stream()
+                .anyMatch(pluginName -> pluginName.equals(apiClaim.getPluginName()));
     }
 
     public List<Installable<WidgetDescriptor>> collectConfigWidgets(BundleReader bundleReader,
@@ -186,14 +194,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         return widgetDescriptor;
     }
 
-    @Override
-    public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
-        return components.stream()
-                .filter(c -> c.getComponentType() == getSupportedComponentType())
-                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
-                .collect(Collectors.toList());
-    }
-
     /**
      * depending of descriptor version => read or generate the ftl custom ui.
      *
@@ -217,7 +217,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     }
 
     /**
-     * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe
+     * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param bundleReader     the bundle reader used to access the bundle files
      */
