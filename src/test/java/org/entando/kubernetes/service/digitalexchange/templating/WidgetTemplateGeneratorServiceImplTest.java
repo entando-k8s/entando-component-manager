@@ -11,12 +11,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Optional;
 import org.apache.commons.io.FileUtils;
+import org.entando.kubernetes.client.PluginDataRepositoryTestDouble;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
@@ -36,13 +37,16 @@ class WidgetTemplateGeneratorServiceImplTest {
 
     @Mock
     private BundleReader bundleReader;
-    @Mock
-    private PluginDataRepository repository;
+
+    private PluginDataRepository repository = new PluginDataRepositoryTestDouble();
 
     private WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
     private WidgetTemplateGeneratorServiceImpl service;
 
-    private PluginDataEntity extApiDataEntity = new PluginDataEntity()
+    private PluginDataEntity extApiDataEntity1 = new PluginDataEntity()
+            .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_1_PATH);
+
+    private PluginDataEntity extApiDataEntity2 = new PluginDataEntity()
             .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_2_PATH);
 
     @BeforeEach
@@ -67,7 +71,7 @@ class WidgetTemplateGeneratorServiceImplTest {
         String expected = ("<script src=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
                 + "[REP]/static/js/main.js\"></script>\n"
                 + "<script src=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
-                + "[REP]/static/js/runtime.js\"></script>\n\n"
+                + "[REP]/static/js/runtime.js\"></script>\n"
                 + "<link href=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
                 + "[REP]/static/css/style.css\" rel=\"stylesheet\">")
                 .replace("[REP]", BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
@@ -77,28 +81,28 @@ class WidgetTemplateGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldThrowExceptionIfCantProvideApiPathWhileCreatingTheAssignTags() {
-        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        descriptor.getApiClaims().get(1).setPluginName("non-existing");
-        assertThrows(EntandoComponentManagerException.class, () -> service.generateCodeForMfeConfigObjectCreation(descriptor));
+    void shouldThrowException_If_claimingApiToNonExistentExternal() {
+        assertThrows(EntandoComponentManagerException.class, () -> service.checkApiClaim(
+                new ApiClaim("api-ext", "external", "non-existing", "99999999"),
+                "99999999"
+        ));
     }
 
     @Test
     void shouldCreateTheExpectedCustomElementTag() {
         String tag = service.generateCodeForCustomElementInvocation(descriptor);
-        assertThat(tag).isEqualTo("<" + WidgetStubHelper.WIDGET_1_CODE + " config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>");
+        assertThat(tag).isEqualTo("<" + WidgetStubHelper.WIDGET_1_CODE
+                + " config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>");
     }
 
     @Test
     void shouldProperlyGenerateMfeConfigObject() throws JsonProcessingException {
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity));
-
         var assignTag = service.generateCodeForMfeConfigObjectCreation(descriptor);
+
         assertThat(assignTag).isEqualTo("<#assign mfeConfig>"
                 + "{\"systemParams\":{\"api\":{"
-                + "\"int-api\":{\"url\":\"${systemParam_applicationBaseURL}/service-id-1/path\"},"
-                + "\"ext-api\":{\"url\":\"${systemParam_applicationBaseURL}/service-id-2/path\"}}},"
+                + "\"int-api\":{\"url\":\"${apiClaim_int_DASH_api}\"},"
+                + "\"ext-api\":{\"url\":\"${apiClaim_ext_DASH_api}\"}}},"
                 + "\"contextParams\":{\"info_startLang\":\"${info_startLang}\",\"page_code\":\"${page_code}\","
                 + "\"systemParam_applicationBaseURL\":\"${systemParam_applicationBaseURL}\"},"
                 + "\"params\":{\"paramA\":\"${widget_paramA}\",\"paramB\":\"${widget_paramB}\"}}"
@@ -119,8 +123,29 @@ class WidgetTemplateGeneratorServiceImplTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenGeneratingMfeConfigObjectWithNonExistingPaths() {
-        assertThrows(EntandoComponentManagerException.class, () -> service.generateCodeForMfeConfigObjectCreation(descriptor));
+    void shouldThrowException_WhenUpdatingTheTemplate_WithNonExistingPaths() {
+        assertThrows(EntandoComponentManagerException.class,
+                () -> service.updateWidgetTemplate(
+                        "<#assign PLACEHOLDER_FOR_API_URL_EXTRACTION></#assign>",
+                        descriptor.getApiClaims(),
+                        null
+                ));
+    }
+
+    @Test
+    void shouldGeneratingApiVarAssignments_WhenUpdatingTheTemplate_WithExistingPathMaps() {
+        setupPluginDataRepository();
+
+        var ftl = service.updateWidgetTemplate(
+                "<#assign PLACEHOLDER_FOR_API_URL_EXTRACTION></#assign>",
+                descriptor.getApiClaims(),
+                "a1a1a1a1"
+        );
+
+        assertThat(ftl).isEqualTo(
+                "<#assign apiClaim_int_DASH_api>/path1</#assign>" + "\n"
+                        + "<#assign apiClaim_ext_DASH_api>/path2</#assign>"
+        );
     }
 
     @Test
@@ -138,14 +163,30 @@ class WidgetTemplateGeneratorServiceImplTest {
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
-        when(repository.findByBundleIdAndPluginName(WidgetStubHelper.API_CLAIM_2_BUNDLE_ID,
-                WidgetStubHelper.API_CLAIM_2_SERVICE_ID)).thenReturn(Optional.of(extApiDataEntity));
+        File expectedOnFile = new File("src/test/resources/widget.ftl");
+        String expected = FileUtils.readFileToString(expectedOnFile, "UTF-8").trim();
 
-        File file = new File("src/test/resources/widget.ftl");
-        String expected = FileUtils.readFileToString(file, "UTF-8").trim();
-
-        final String ftl = service.generateWidgetTemplate("any-path", descriptor, bundleReader);
+        final String ftl = service.generateWidgetTemplate("widgets/any-path", descriptor, bundleReader);
 
         assertThat(ftl).isEqualTo(expected);
+    }
+
+    public void setupPluginDataRepository() {
+        PluginDataEntity pluginData1 = new PluginDataEntity()
+                .setBundleId("a1a1a1a1")
+                .setPluginId("a1b2c3d4")
+                .setPluginName("service-id-1")
+                .setPluginCode("pn-a1a1a1a1-a1b2c3d4-service-id-1")
+                .setEndpoint("/path1");
+
+        PluginDataEntity pluginData2 = new PluginDataEntity()
+                .setBundleId("a2a2a2a2")
+                .setPluginId("a1b2c3d4")
+                .setPluginName("service-id-2")
+                .setPluginCode("pn-a2a2a2a2-a1b2c3d4-service-id-1")
+                .setEndpoint("/path2");
+
+        repository.save(pluginData1);
+        repository.save(pluginData2);
     }
 }

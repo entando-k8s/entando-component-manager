@@ -4,21 +4,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.descriptor.DescriptorValidatorConfigBean.DescriptorValidationFunction;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Slf4j
 @Component
 public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDescriptor> {
+    private static final String BUNDLE_CODE_REGEX = "^[\\w|-]+-[0-9a-fA-F]{8}$";
+    private static final Pattern BUNDLE_CODE_PATTERN = Pattern.compile(BUNDLE_CODE_REGEX);
+    public static final String FORMAT_MISSING_FIELD_FROM_WIDGET_TYPE =
+            "In WidgetDescriptor \"%s\" of version \"%s\" and widgetType \"%s\", mandatory field \"%s\" is missing";
 
     /**************************************************************************************************************
      * CONFIGURATION START.
@@ -42,6 +48,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         final Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNotBeNull
                 = getObjectsThatMustNotBeNullForEveryVersion();
         objectsThatMustNotBeNull.put("code", WidgetDescriptor::getCode);
+        objectsThatMustNotBeNull.put("titles", WidgetDescriptor::getTitles);
 
         addValidationConfigMap(DescriptorVersion.V1,
                 Collections.singletonList(super::validateDescriptorFormatOrThrow),
@@ -60,16 +67,38 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
                 = getObjectsThatMustNotBeNullForEveryVersion();
         objectsThatMustNotBeNull.put("customElement", WidgetDescriptor::getCustomElement);
         objectsThatMustNotBeNull.put("name", WidgetDescriptor::getName);
+        objectsThatMustNotBeNull.put("type", WidgetDescriptor::getType);
 
+        List<DescriptorValidationFunction<WidgetDescriptor>> validationFunctionList = Arrays.asList(
+                super::validateDescriptorFormatOrThrow, this::validateApiClaims,
+                this::validateParentNameAndParentCode, this::validateWidgetTypeForV5);
         addValidationConfigMap(DescriptorVersion.V5,
-                Arrays.asList(super::validateDescriptorFormatOrThrow, this::validateApiClaims,
-                        this::validateParentNameAndParentCode),
-                objectsThatMustNotBeNull, objectsThatMustBeNull);
+                validationFunctionList, objectsThatMustNotBeNull, objectsThatMustBeNull);
+    }
+
+    private WidgetDescriptor validateWidgetTypeForV5(WidgetDescriptor widgetDescriptor) {
+        switch (widgetDescriptor.getType()) {
+            case WidgetDescriptor.TYPE_WIDGET_STANDARD:
+                if (widgetDescriptor.getTitles() == null) {
+                    throw new InvalidBundleException(String.format(FORMAT_MISSING_FIELD_FROM_WIDGET_TYPE,
+                            widgetDescriptor.getComponentKey().getKey(),
+                            widgetDescriptor.getDescriptorVersion(),
+                            widgetDescriptor.getType(),
+                            "titles")
+                    );
+                }
+                break;
+            case WidgetDescriptor.TYPE_WIDGET_CONFIG:
+            case WidgetDescriptor.TYPE_WIDGET_APPBUILDER:
+                break;
+            default:
+                throw new IllegalArgumentException("unexpected widgetType \"" + widgetDescriptor.getType() + "\"");
+        }
+        return widgetDescriptor;
     }
 
     private Map<String, Function<WidgetDescriptor, Object>> getObjectsThatMustNotBeNullForEveryVersion() {
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
-        objectsThatMustNOTBeNull.put("titles", WidgetDescriptor::getTitles);
         objectsThatMustNOTBeNull.put("group", WidgetDescriptor::getGroup);
         return objectsThatMustNOTBeNull;
     }
@@ -114,7 +143,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
 
         // check the format
         if (!ObjectUtils.isEmpty(descriptor.getParentCode())
-                && !BundleUtilities.DESCRIPTOR_CODE_PATTERN.matcher(descriptor.getParentCode()).matches()) {
+                && !BUNDLE_CODE_PATTERN.matcher(descriptor.getParentCode()).matches()) {
 
             throw new InvalidBundleException(String.format(WRONG_PARENT_CODE_FORMAT, descriptor.getCode()));
         }
@@ -133,6 +162,5 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     public static final String PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT =
             "The %s descriptor contains both a parentName and a parentCode. They are mutually exclusive";
     public static final String WRONG_PARENT_CODE_FORMAT =
-            "The %s descriptor contains a parentCode that not respects the format "
-                    + BundleUtilities.DESCRIPTOR_CODE_REGEX;
+            "The %s descriptor contains a parentCode that not respects the format " + BUNDLE_CODE_REGEX;
 }

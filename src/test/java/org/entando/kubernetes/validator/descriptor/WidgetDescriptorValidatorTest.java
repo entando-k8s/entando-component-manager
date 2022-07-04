@@ -12,7 +12,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -127,7 +127,7 @@ class WidgetDescriptorValidatorTest {
                         WidgetDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
 
-        descriptor.setConfigUi(new ConfigUIDescriptor());
+        descriptor.setConfigUi(new ConfigUi());
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setConfigUi(null);

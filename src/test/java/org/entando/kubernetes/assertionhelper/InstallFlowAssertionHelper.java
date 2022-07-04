@@ -228,43 +228,43 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
-        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
-        assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
+        validateResourceFile(allPassedFiles, 0, "custom.css", "bundles/something-ece8f6f0/resources/css",
+                "/bundle/resources/css/custom.css");
+        validateResourceFile(allPassedFiles, 1, "style.css", "bundles/something-ece8f6f0/resources/css",
+                "/bundle/resources/css/style.css");
+        validateResourceFile(allPassedFiles, 2, "configUiScript.js", "bundles/something-ece8f6f0/resources/js",
+                "/bundle/resources/js/configUiScript.js");
+        validateResourceFile(allPassedFiles, 3, "script.js", "bundles/something-ece8f6f0/resources/js",
+                "/bundle/resources/js/script.js");
     }
 
     private void verifyFileInstallRequestsV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(4)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(7)).createFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("css-res.css")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets")
-                && fd.getBase64().equals(readFileAsBase64(
-                "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("generic-file.txt")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media")
-                && fd.getBase64()
-                .equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt")));
-        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
-                && fd.getBase64().equals(readFileAsBase64(
-                "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
-        assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("js-res-1.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
-                && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
+        var i = 0;
+        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/static/js",
+                "/bundle-v5/widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js");
+        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0",
+                "/bundle-v5/widgets/my_widget_config_descriptor_v5/js-res-1.js");
+        validateResourceFile(allPassedFiles, i += 1, "css-res.css",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css");
+        validateResourceFile(allPassedFiles, i += 1, "generic-file.txt",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt");
+        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js");
+        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js");
     }
 
 
@@ -334,7 +334,7 @@ public class InstallFlowAssertionHelper {
     }
 
     private void verifyPluginInstallRequestsV5(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
+        verify(k8SServiceClient, times(3)).linkAppWithPlugin(any(), any(), any());
     }
 
     private void verifyPageModelsInstallRequests(EntandoCoreClient coreClient) {
@@ -399,7 +399,7 @@ public class InstallFlowAssertionHelper {
         assertThat(allPassedWidgets.get(0).getCustomElement()).isEqualTo("my-widget");
 
         ApiClaim apiClaim1 = new ApiClaim("ext-api", "external", "ms1", "abcdefgh");
-        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "custombasenamev3c", null);
+        ApiClaim apiClaim2 = new ApiClaim("int-api", "internal", "customBaseNameV5", null);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(0)).isEqualToComparingFieldByField(apiClaim1);
         assertThat(allPassedWidgets.get(0).getApiClaims().get(1)).isEqualToComparingFieldByField(apiClaim2);
     }
@@ -514,7 +514,7 @@ public class InstallFlowAssertionHelper {
     }
 
     public void verifyPluginInstallRequestsWithInstallPlanRequestV5(K8SServiceClient k8SServiceClient) {
-        verify(k8SServiceClient, times(2)).linkAppWithPlugin(any(), any(), any());
+        verify(k8SServiceClient, times(3)).linkAppWithPlugin(any(), any(), any());
     }
 
     public void verifyWidgetsInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {
@@ -671,40 +671,47 @@ public class InstallFlowAssertionHelper {
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
-        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
-                && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
+        validateResourceFile(allPassedFiles, 0, "style.css", "bundles/something-ece8f6f0/resources/css",
+                "/bundle/resources/css/style.css");
+        validateResourceFile(allPassedFiles, 1, "configUiScript.js", "bundles/something-ece8f6f0/resources/js",
+                "/bundle/resources/js/configUiScript.js");
+        validateResourceFile(allPassedFiles, 2, "script.js", "bundles/something-ece8f6f0/resources/js",
+                "/bundle/resources/js/script.js");
     }
 
     public void verifyFileInstallRequestsWithInstallPlanRequestV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(3)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(6)).createFile(fileArgCaptor.capture());
         verify(coreClient, times(0)).updateFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("generic-file.txt")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media")
-                && fd.getBase64()
-                .equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt")));
-        assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("js-res-2.js")
-                && fd.getFolder()
-                .equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js")
-                && fd.getBase64().equals(readFileAsBase64(
-                "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js")));
-        assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("js-res-1.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0")
-                && fd.getBase64().equals(readFileAsBase64("/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js")));
+        var i = 0;
+        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/static/js",
+                "/bundle-v5/widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js");
+        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0",
+                "/bundle-v5/widgets/my_widget_config_descriptor_v5/js-res-1.js");
+        validateResourceFile(allPassedFiles, i += 1, "generic-file.txt",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt");
+        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js");
+        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0",
+                "/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js");
     }
 
+    private void validateResourceFile(List<FileDescriptor> allPassedFiles, int i,
+            String shouldBeNamed, String shouldBeInFolder, String shouldMatchTheContentsOfFile) {
+        assertThat(allPassedFiles.get(i)).matches(fd -> fd.getFilename().equals(shouldBeNamed)
+                && fd.getFolder().equals(shouldBeInFolder)
+                && fd.getBase64().equals(readFileAsBase64(shouldMatchTheContentsOfFile)));
+    }
 
     public void verifyLanguagesInstallRequestsWithInstallPlanRequest(EntandoCoreClient coreClient) {
         ArgumentCaptor<LanguageDescriptor> languageArgCaptor = ArgumentCaptor.forClass(LanguageDescriptor.class);

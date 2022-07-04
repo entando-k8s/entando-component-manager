@@ -32,12 +32,15 @@ public class BundleStubHelper {
 
 
     public static BundleDescriptor stubBundleDescriptor(ComponentSpecDescriptor spec) {
-        return new BundleDescriptor(BUNDLE_CODE, BUNDLE_NAME, BUNDLE_DESCRIPTION, BUNDLE_TYPE, spec);
+        return stubBundleDescriptor(spec, BundleType.SYSTEM_LEVEL_BUNDLE);
+    }
+
+    public static BundleDescriptor stubBundleDescriptor(ComponentSpecDescriptor spec, BundleType type) {
+        return new BundleDescriptor(BUNDLE_CODE, BUNDLE_NAME, BUNDLE_DESCRIPTION, type, spec);
     }
 
     /**
      * receives a List of ContentAttribute representing the content of the file bundle/contents/cng102-descriptor.yaml.
-     *
      * @return
      */
     public static List<ContentAttribute> stubContentAttributeList() {

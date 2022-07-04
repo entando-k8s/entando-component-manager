@@ -4,13 +4,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.MfeParam;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.Param;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetDescriptorBuilder;
 
 public class WidgetStubHelper {
@@ -27,15 +28,16 @@ public class WidgetStubHelper {
     public static final String CUSTOM_UI = "<h3>hello</h3>";
     public static final String CUSTOM_UI_PATH = "src/test/resources/bundle/widgets/widget.ftl";
     public static final String CUSTOM_ELEMENT = "myCustomElement";
-    public static final String BUNDLE_ID = "my-bundle";
+    public static final String BUNDLE_CODE = "my-bundle";
     public static final String CONFIG_WIDGET = "conf_widget";
     public static final String API_CLAIM_1_NAME = "int-api";
     public static final String API_CLAIM_1_TYPE = "internal";
     public static final String API_CLAIM_1_SERVICE_ID = "service-id-1";
+    public static final String API_CLAIM_1_BUNDLE_ID = "a1a1a1a1";
     public static final String API_CLAIM_2_NAME = "ext-api";
     public static final String API_CLAIM_2_TYPE = "external";
     public static final String API_CLAIM_2_SERVICE_ID = "service-id-2";
-    public static final String API_CLAIM_2_BUNDLE_ID = "api-bundle";
+    public static final String API_CLAIM_2_BUNDLE_ID = "a2a2a2a2";
     public static final List<String> RESOURCES = Arrays.asList("css/style.css", "js/main.js", "js/runtime.js");
     public static final String RESOURCE_BASE_PATH = "widgets/" + WIDGET_1_CODE + "/static";
     public static final List<String> JS_RESOURCES = Arrays.asList(RESOURCE_BASE_PATH + "/js/main.js",
@@ -45,6 +47,8 @@ public class WidgetStubHelper {
     public static final String PLUGIN_INGRESS_1_PATH = "/" + API_CLAIM_1_SERVICE_ID + "/path";
     public static final String PLUGIN_INGRESS_2_CODE = API_CLAIM_2_SERVICE_ID;
     public static final String PLUGIN_INGRESS_2_PATH = "/" + API_CLAIM_2_SERVICE_ID + "/path";
+    public static final String PLUGIN_INGRESS_3_CODE = "customBaseNameV5";
+    public static final String PLUGIN_INGRESS_3_PATH = "/" + API_CLAIM_2_SERVICE_ID + "/path";
     public static final String PARENT_NAME = "parent-name";
 
 
@@ -66,6 +70,7 @@ public class WidgetStubHelper {
     public static WidgetDescriptor stubWidgetDescriptorV5() {
         WidgetDescriptor widgetDescriptor = stubWidgetDescriptor()
                 .code(null)
+                .type(ComponentType.WIDGET.getTypeName())
                 .name(WIDGET_1_NAME)
                 .customElement(WIDGET_1_CODE)
                 .configWidget(CONFIG_WIDGET)
@@ -76,8 +81,8 @@ public class WidgetStubHelper {
                         "systemParam_applicationBaseURL"
                 ))
                 .params(List.of(
-                        new MfeParam("paramA", "descA"),
-                        new MfeParam("paramB", "descB")
+                        new Param("paramA", "descA"),
+                        new Param("paramB", "descB")
                 ))
                 .descriptorMetadata(stubDescriptorMetadata())
                 .build();
@@ -90,23 +95,30 @@ public class WidgetStubHelper {
                 .code(WIDGET_1_CODE)
                 .titles(TITLES_MAP)
                 .group(GROUP)
-                .bundleId(BUNDLE_ID);
+                .descriptorMetadata(new DescriptorMetadata(null, null, BUNDLE_CODE, null, null));
     }
 
     public static DescriptorMetadata stubDescriptorMetadata() {
-        return new DescriptorMetadata(stubPluginIngressPathMap());
+        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename(), BUNDLE_CODE, null, null);
     }
 
-    public static ConfigUIDescriptor stubConfigUiDescriptor() {
-        ConfigUIDescriptor configUIDescriptor = new WidgetDescriptor.ConfigUIDescriptor();
-        configUIDescriptor.setCustomElement(CUSTOM_ELEMENT);
-        configUIDescriptor.setResources(RESOURCES);
-        return configUIDescriptor;
+    private static String stubWidgetFilename() {
+        return "stub-widget";
+    }
+
+    public static ConfigUi stubConfigUiDescriptor() {
+        ConfigUi configUI = new ConfigUi();
+        configUI.setCustomElement(CUSTOM_ELEMENT);
+        configUI.setResources(RESOURCES);
+        return configUI;
     }
 
     public static Map<String, String> stubPluginIngressPathMap() {
-        return Map.of(PLUGIN_INGRESS_1_CODE, PLUGIN_INGRESS_1_PATH,
-                PLUGIN_INGRESS_2_CODE, PLUGIN_INGRESS_2_PATH);
+        return Map.of(
+                PLUGIN_INGRESS_1_CODE, PLUGIN_INGRESS_1_PATH,
+                PLUGIN_INGRESS_2_CODE, PLUGIN_INGRESS_2_PATH,
+                PLUGIN_INGRESS_3_CODE, PLUGIN_INGRESS_3_PATH
+        );
     }
 
     public static List<ApiClaim> stubApiClaims() {

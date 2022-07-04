@@ -1,6 +1,8 @@
 package org.entando.kubernetes.service.templating;
 
+import java.util.List;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 
@@ -11,5 +13,16 @@ public class WidgetTemplateGeneratorServiceDouble implements WidgetTemplateGener
     @Override
     public String generateWidgetTemplate(String descriptorFileName, WidgetDescriptor widgetDescriptor, BundleReader bundleReader) {
         return FTL_TEMPLATE;
+    }
+
+    @Override
+    public String updateWidgetTemplate(String ftl, List<ApiClaim> apiClaims,
+            String currentBundleId) {
+        return ftl;
+    }
+
+    @Override
+    public boolean checkApiClaim(ApiClaim apiClaim, String bundleId) {
+        return true;
     }
 }

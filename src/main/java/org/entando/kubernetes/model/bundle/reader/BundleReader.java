@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -126,7 +127,18 @@ public class BundleReader {
     }
 
     public List<String> getWidgetsFiles() {
-        return getResourceOfType(BundleProperty.WIDGET_FOLDER_PATH.getValue(), Files::isRegularFile);
+        var res = new ArrayList<String>();
+        Path resourcePath = bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue());
+        try (Stream<Path> paths = Files.walk(resourcePath, 1)) {
+            paths.forEach(path -> {
+                if (Files.isDirectory(path) && !path.equals(resourcePath)) {
+                    res.addAll(getResourceOfType(path.toString(), Files::isRegularFile));
+                }
+            });
+        } catch (IOException e) {
+            log.error("Collection of widget files interrupted due to IO error", e);
+        }
+        return res;
     }
 
     public List<String> getResourceOfType(String resourcesPath, Predicate<Path> checkFunction) {
@@ -211,7 +223,7 @@ public class BundleReader {
         return bundleBasePath.resolve(directory + "/" + fileName).toFile();
     }
 
-    public String getBundleId() {
+    public String getDeBundleMetadataName() {
         if (this.entandoDeBundle == null) {
             throw new EntandoComponentManagerException("null entandoDeBundle detected while determining the bundle ID");
         }
@@ -241,5 +253,9 @@ public class BundleReader {
         } catch (IOException e) {
             throw new EntandoComponentManagerException("An error occurred while reading the bundle descriptor");
         }
+    }
+
+    public String calculateBundleId() {
+        return BundleUtilities.removeProtocolAndGetBundleId(getBundleUrl());
     }
 }

@@ -39,7 +39,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginPermission;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUIDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -69,13 +69,13 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldThrowExceptionWhenNoEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder);
-        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleId());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getDeBundleMetadataName());
     }
 
     @Test
     void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
-        assertThat(bundleReader.getBundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+        assertThat(bundleReader.getDeBundleMetadataName()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
     }
 
     @Test
@@ -316,7 +316,6 @@ public class EntandoBundleReaderTest {
                 new PluginPermission("realm-management", "view-users"));
     }
 
-
     @Test
     void shouldBeTolerantWithUnknowFields() throws IOException {
 
@@ -368,7 +367,7 @@ public class EntandoBundleReaderTest {
         WidgetDescriptor wd = bundleReader
                 .readDescriptorFile("widgets/widget_with_config_ui.yaml", WidgetDescriptor.class);
         assertThat(wd).isNotNull();
-        assertThat(wd.getConfigUi()).isInstanceOf(ConfigUIDescriptor.class);
+        assertThat(wd.getConfigUi()).isInstanceOf(ConfigUi.class);
         assertThat(wd.getConfigUi().getCustomElement()).isEqualTo("my-config");
         assertThat(wd.getConfigUi().getResources()).hasSize(1);
         assertThat(wd.getConfigUi().getResources()).contains("something/js/configUiScript.js", Index.atIndex(0));
@@ -408,6 +407,11 @@ public class EntandoBundleReaderTest {
         assertThat(res).isEmpty();
     }
 
+    @Test
+    void getWidgetsFilesShouldReturnExpectedFiles() {
+        var files = bundleReader.getWidgetsFiles();
+        assertThat(files).hasSize(4);
+    }
 
     private Path getTestDefaultBundlePath() throws IOException {
         return getBundlePath(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);

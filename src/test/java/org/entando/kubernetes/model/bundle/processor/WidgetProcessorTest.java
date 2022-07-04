@@ -9,18 +9,22 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.templating.WidgetTemplateGeneratorServiceDouble;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
@@ -58,7 +62,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
 
-        final List<Installable<WidgetDescriptor>> installableList = execWidgetProcessor(widgDescrFile);
+        var installableList = execWidgetProcessor(widgDescrFile, null);
 
         assertThat(installableList).hasSize(1);
 
@@ -75,17 +79,32 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
     @Test
     void canProcessDescriptorV5() throws IOException {
-
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
+        String bundleCode = "bundle-v5";
+        when(bundleReader.getCode()).thenReturn(bundleCode);
+        String widgetConfigFolder = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5";
+        when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "js")).thenReturn(
+                List.of(
+                        "widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js",
+                        "widgets/my_widget_config_descriptor_v5/static/js-res-1.js"
+                )
+        );
+        when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "css")).thenReturn(
+                List.of("widgets/my_widget_config_descriptor_v5/assets/css-res.css")
+        );
 
-        final List<Installable<WidgetDescriptor>> installableList = execWidgetProcessor(widgDescrFile);
+        String widgConfigDescrFile =
+                "src/test/resources/" + bundleCode + "/widgets/my_widget_config_descriptor_v5.yaml";
+        String widgDescrFile = "src/test/resources/" + bundleCode + "/widgets/my_widget_descriptor_v5.yaml";
+
+        var installableList = execWidgetProcessor(widgDescrFile, widgConfigDescrFile);
 
         assertThat(installableList).hasSize(1);
 
         WidgetDescriptor actual = installableList.get(0).getRepresentation();
         WidgetDescriptor expected = yamlMapper.readValue(new File(widgDescrFile), WidgetDescriptor.class);
         expected.setCode("todomvc_widget-77b2b10e");
+        expected.setDescriptorMetadata(new DescriptorMetadata(null, null, bundleCode, null, null));
 
         assertOnWidgetDescriptors(actual, expected);
 
@@ -93,12 +112,24 @@ class WidgetProcessorTest extends BaseProcessorTest {
         assertThat(actual.getApiClaims()).hasSize(expected.getApiClaims().size());
         assertThat(actual.getCustomElement()).isEqualTo("my-widget");
         assertThat(actual.getCustomUi()).isEqualTo(WidgetTemplateGeneratorServiceDouble.FTL_TEMPLATE);
+
+        assertThat(actual.getConfigUi().getCustomElement()).isEqualTo("my-widget-config");
+        List<String> res = actual.getConfigUi().getResources();
+        assertThat(res.size()).isEqualTo(3);
+        assertThat(res).contains(
+                "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js");
+        assertThat(res).contains(
+                "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js");
+        assertThat(res).contains(
+                "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
     }
 
-    private List<Installable<WidgetDescriptor>> execWidgetProcessor(String widgetDescFile) throws IOException {
+    private List<Installable<WidgetDescriptor>> execWidgetProcessor(String widgetDescFile, String widgConfigDescrFile)
+            throws IOException {
+        //~
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
-        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
         WidgetDescriptor descriptor = yamlMapper.readValue(new File(widgetDescFile), WidgetDescriptor.class);
 
@@ -110,6 +141,21 @@ class WidgetProcessorTest extends BaseProcessorTest {
                 new WidgetTemplateGeneratorServiceDouble(), validator);
         widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
 
+        if (widgConfigDescrFile != null) {
+            WidgetDescriptor wcdesc = yamlMapper.readValue(new File(widgConfigDescrFile), WidgetDescriptor.class);
+            final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+            wcdesc.setDescriptorMetadata(new DescriptorMetadata(
+                    Map.of("", ""),
+                    widgConfigDescrFile,
+                    bundleDescriptor.getCode(),
+                    bundleId,
+                    widgetProcessor.getTemplateGeneratorService()
+            ));
+            var wcdm = new HashMap<String, WidgetDescriptor>();
+            wcdm.put(wcdesc.getName(), wcdesc);
+            widgetProcessor.setWidgetConfigDescriptorsMap(wcdm);
+        }
+
         return widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
 
@@ -117,7 +163,8 @@ class WidgetProcessorTest extends BaseProcessorTest {
         assertThat(actual.getCode()).isEqualTo(expected.getCode());
         assertThat(actual.getTitles()).containsAllEntriesOf(expected.getTitles());
         assertThat(actual.getGroup()).isEqualTo(expected.getGroup());
-        assertThat(actual.getBundleId()).isEqualTo(BundleStubHelper.BUNDLE_CODE);
+        assertThat(actual.getDescriptorMetadata().getBundleCode()).isEqualTo(
+                expected.getDescriptorMetadata().getBundleCode());
         assertThat(actual.getDescriptorMetadata().getPluginIngressPathMap()).isEqualTo(pluginIngressPathMap);
     }
 
@@ -154,7 +201,8 @@ class WidgetProcessorTest extends BaseProcessorTest {
     @Test
     void shouldAddWidgetParentCodeWhileProcessingWidgetsWithParentName() throws IOException {
 
-        when(bundleReader.getBundleId()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        when(bundleReader.calculateBundleId()).thenReturn(
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
 
         WidgetDescriptor widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5()
                 .setParentName(WidgetStubHelper.PARENT_NAME);
@@ -191,6 +239,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleReader.readDescriptorFile(any(), any())).thenReturn(widgetDescriptor);
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(validator.validateOrThrow(any())).thenThrow(InvalidBundleException.class);
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(new EntandoCoreClientTestDouble(),

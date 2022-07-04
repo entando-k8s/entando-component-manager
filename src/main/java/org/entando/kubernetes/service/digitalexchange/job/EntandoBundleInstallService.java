@@ -28,6 +28,7 @@ import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -100,7 +101,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         BundleDownloader bundleDownloader = downloaderFactory.newDownloader(tag);
 
         try {
-            BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+            BundleReader bundleReader =
+                    this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+
             Map<ReportableRemoteHandler, List<Reportable>> reportableByHandler =
                     this.getReportableComponentsByRemoteHandler(bundleReader);
 
@@ -225,8 +228,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
+                // PREPARES THE JOBS
+
                 Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag,
                         bundleDownloader, conflictStrategy, installPlan);
+
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
                         .map(i -> {
                             EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
@@ -237,17 +243,22 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             cj.setInstallable(i);
                             cj.setAction(i.getAction());
                             return cj;
-                        })
-                        .collect(Collectors.toCollection(ArrayDeque::new));
-                scheduler.queueAll(componentJobQueue);
+                        }).collect(Collectors.toCollection(ArrayDeque::new));
+
+                scheduler.queuePrimaryComponents(componentJobQueue);
 
                 JobProgress installProgress = new JobProgress(1.0 / componentJobQueue.size());
+
+                // ITERATES AND EXECUTES THE JOBS
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
                 while (optCompJob.isPresent()) {
                     EntandoBundleComponentJobEntity installJob = optCompJob.get();
-                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(installJob,
-                            this::executeInstall);
+
+                    JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(
+                            installJob, this::executeInstall
+                    );
+
                     scheduler.recordProcessedComponentJob(tracker.getJob());
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ERROR)) {
                         parentJobResult.setInstallException(new EntandoComponentManagerException(
@@ -258,6 +269,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     parentJobTracker.setProgress(installProgress.getValue());
                     optCompJob = scheduler.extractFromQueue();
                 }
+
+                // EVALUATES THE JOBS RESULTS
+
                 if (parentJobResult.hasException()) {
                     log.error("An error occurred during component installation --- {}",
                             parentJobResult.getInstallError());
@@ -372,6 +386,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallPlan installPlan) {
 
+
         List<? extends Installable<?>> pluginInstallables = new ArrayList<>();
 
         // process plugins and collect endpoints
@@ -389,6 +404,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             ((WidgetProcessor) processorMap.get(ComponentType.WIDGET)).setPluginIngressPathMap(pluginIngressMap);
         }
 
+        collectWidgetConfigDescriptors(bundleReader, conflictStrategy, installPlan);
+
         // process other components
         final List<? extends Installable<?>> installables = processorMap.values()
                 .stream()
@@ -405,10 +422,33 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
+    /**
+     * Collects the descriptors of all the WIDGET_CONFIG components.
+     */
+    private void collectWidgetConfigDescriptors(
+            BundleReader bundleReader,
+            InstallAction conflictStrategy,
+            InstallPlan installPlan) {
+        //~
+        WidgetProcessor widgetsProcessor = (WidgetProcessor) processorMap.get(ComponentType.WIDGET);
+        if (widgetsProcessor == null) {
+            log.error("No widget processor was found");
+            return;
+        }
+        var installables = widgetsProcessor.collectConfigWidgets(bundleReader, conflictStrategy, installPlan);
+
+        var widgetConfigDescriptors = installables.stream()
+                .filter(i -> i.getRepresentation().getType().equals(WidgetDescriptor.TYPE_WIDGET_CONFIG))
+                .map(Installable::getRepresentation)
+                .collect(Collectors.toMap(WidgetDescriptor::getName, d -> d));
+
+        widgetsProcessor.setWidgetConfigDescriptorsMap(widgetConfigDescriptors);
+    }
+
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job) {
         EntandoBundleEntity installedComponent = bundleRepository
-                .findByBundleCode(bundleService.convertToBundleFromEcr(bundle).getCode())
+                .findByBundleCode(bundle.getMetadata().getName())
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
         
         installedComponent.setVersion(job.getComponentVersion());

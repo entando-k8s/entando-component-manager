@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Optional;
+import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 
 public class JobScheduler {
 
@@ -28,9 +29,12 @@ public class JobScheduler {
         jobQueue.addLast(job);
     }
 
-    public void queueAll(Collection<EntandoBundleComponentJobEntity> jobs) {
+    public void queuePrimaryComponents(Collection<EntandoBundleComponentJobEntity> jobs) {
         for (EntandoBundleComponentJobEntity job : jobs) {
-            this.addToQueue(job);
+            Descriptor i = job.getInstallable().getRepresentation();
+            if (!i.isAuxiliary()) {
+                this.addToQueue(job);
+            }
         }
     }
 

@@ -113,7 +113,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void createWidget(final WidgetDescriptor descriptor) {
         restTemplate
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
-                        new EntandoCoreWidget(descriptor),
+                new EntandoCoreWidget(descriptor),
                         Void.class);
     }
 

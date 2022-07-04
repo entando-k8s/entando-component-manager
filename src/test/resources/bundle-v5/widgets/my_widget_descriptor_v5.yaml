@@ -1,10 +1,12 @@
 descriptorVersion: v5
 name: todomvc_widget
+type: widget
 titles:
   en: TODO MVC Widget
   it: TODO MVC Widget
 group: free
 customElement: my-widget
+configMfe: todomvc_widget_config
 params:
   - name: url
     description: "the url"
@@ -20,4 +22,4 @@ apiClaims:
     bundleId: abcdefgh
   - name: int-api
     type: internal
-    pluginName: custombasenamev3c
+    pluginName: customBaseNameV5
