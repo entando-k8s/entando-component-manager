@@ -42,7 +42,6 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String ASSIGN_TAG_GENERIC = "<#assign %s>%s</#assign>";
     public static final String CUSTOM_ELEMENT_TAG =
             "<%s config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>";
-    //public static final String APPLICATION_BASEURL_PARAM = "${systemParam_applicationBaseURL}";
     public static final String APPLICATION_BASEURL_PARAM = "";
     public static final String DEFAULT_CONTEXT_PARAM = "systemParam_applicationBaseURL";
     public static final String PARAM_TYPE_PAGE = "page";
@@ -67,7 +66,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
             + "}\n"
             + "</script>";
     public static final String PLACEHOLDER_FOR_API_URL_EXTRACTION = "<#assign PLACEHOLDER_FOR_API_URL_EXTRACTION></#assign>";
-    public static final String FTL_DASH_REPLACEMENT_IN_VARS = "__DASH__";
+    public static final String FTL_DASH_REPLACEMENT_IN_VARS = "_DASH_";
 
     private final PluginDataRepository apiPathRepository;
 
@@ -79,11 +78,11 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         try {
             return APS_HEAD + "\n" + APS_CORE_TAG + "\n" + "\n"
                     + generateCodeForContextParametersExtraction(descriptor) + "\n"
-                    + generateCodeForMfeParametersExtraction(descriptor) + "\n"
-                    + generateCodeForResourcesInclusion(descriptorFileName, bundleReader) + "\n"
+                    + generateCodeForMfeParametersExtraction(descriptor)
                     + "\n" + PLACEHOLDER_FOR_API_URL_EXTRACTION + "\n"
                     + "\n" + generateCodeForPageGlobalObjectUpdate(descriptorFileName, descriptor, bundleReader) + "\n"
-                    + "\n" + generateCodeForMfeConfigObjectCreation(descriptor, bundleReader.calculateBundleId()) + "\n"
+                    + "\n" + generateCodeForResourcesInclusion(descriptorFileName, bundleReader) + "\n"
+                    + "\n" + generateCodeForMfeConfigObjectCreation(descriptor) + "\n"
                     + "\n" + generateCodeForCustomElementInvocation(descriptor);
         } catch (Exception e) {
             throw new EntandoComponentManagerException(
@@ -99,13 +98,15 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
      * are then referenced in the mfe configuration object
      */
     @Override
-    public String updateWidgetTemplate(String ftl, List<ApiClaim> apiClaims, Map<String, String> pluginIngressPathMap,
-            String currentBundleId) {
+    public String updateWidgetTemplate(String ftl, List<ApiClaim> apiClaims, String currentBundleId) {
         var res = new StringBuilder();
         if (apiClaims != null) {
             for (var apiClaim : apiClaims) {
                 var ftlVarName = ftlScopedVar(CONFIG_KEY_API_CLAIM_PARAMS, apiClaim.getName());
-                String resolvedApiUrl = getApiUrl(apiClaim, pluginIngressPathMap, currentBundleId);
+                String resolvedApiUrl = getApiUrl(apiClaim, currentBundleId);
+                if (resolvedApiUrl.endsWith("/")) {
+                    resolvedApiUrl = resolvedApiUrl.substring(0, resolvedApiUrl.length() - 1);
+                }
                 res.append(String.format(ASSIGN_TAG_GENERIC, ftlVarName, resolvedApiUrl));
                 res.append('\n');
             }
@@ -118,14 +119,15 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     @Override
     public boolean checkApiClaim(ApiClaim apiClaim, String bundleId) {
-        return getApiUrl(apiClaim, null, bundleId) != null;
+        return getApiUrl(apiClaim, bundleId) != null;
     }
 
     private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, WidgetDescriptor descriptor,
             BundleReader bundleReader) {
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
-        Object baseWidgetPath;
+        String baseWidgetPath = "";
+
         try {
             final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
             baseWidgetPath = BundleUtilities.buildFullBundleResourcePath(bundleReader,
@@ -133,7 +135,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
         } catch (IOException e) {
             log.error("Unable to determine the widget base path", e);
-            baseWidgetPath = "/";
+        }
+
+        if (baseWidgetPath.endsWith("/")) {
+            baseWidgetPath = baseWidgetPath.substring(0, baseWidgetPath.length() - 1);
         }
 
         return String.format(PAGE_GLOBAL_OBJECT_UPDATE_BASE_WIDGET_PATH_TPL, descriptor.getName(), baseWidgetPath);
@@ -215,7 +220,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                 .map(file -> formatTagFilePath(bundleReader, SCRIPT_TAG, file, bundleId))
                 .collect(Collectors.joining("\n"));
 
-        ftl += "\n\n";
+        ftl += "\n";
 
         ftl += bundleReader.getWidgetResourcesOfType(widgetFolder, CSS_TYPE).stream()
                 .map(file -> formatTagFilePath(bundleReader, CSS_TAG, file, bundleId))
@@ -234,7 +239,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         }
     }
 
-    protected String generateCodeForMfeConfigObjectCreation(WidgetDescriptor descriptor, String bundleId)
+    protected String generateCodeForMfeConfigObjectCreation(WidgetDescriptor descriptor)
             throws JsonProcessingException {
         Map<String, Object> res = new HashMap<>();
         res.put(CONFIG_KEY_SYSTEM_PARAMS, toSystemParamsForConfig(descriptor.getApiClaims()));
@@ -247,7 +252,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return String.format(CUSTOM_ELEMENT_TAG, descriptor.getCustomElement());
     }
 
-    protected String getApiUrl(ApiClaim apiClaim, Map<String, String> pluginIngressPathMap, String currentBundleId) {
+    protected String getApiUrl(ApiClaim apiClaim, String currentBundleId) {
 
         String apiBundleId = (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API))
                 ? currentBundleId : apiClaim.getBundleId();
@@ -281,8 +286,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     }
 
     private static String ftlScopedVar(String scope, String value, boolean interpolated) {
-        String var = scope + FTL_SCOPE_SEPARATOR + value.replace("-", FTL_DASH_REPLACEMENT_IN_VARS);
-        return interpolated ? "${" + var + "}" : var;
+        String varName = scope + FTL_SCOPE_SEPARATOR + value
+                .replace(FTL_DASH_REPLACEMENT_IN_VARS, "_" + FTL_DASH_REPLACEMENT_IN_VARS + "_")
+                .replace("-", FTL_DASH_REPLACEMENT_IN_VARS);
+        return interpolated ? "${" + varName + "}" : varName;
     }
 
     private HashMap<String, String> toContextParamsForConfig(List<String> contextParams) {

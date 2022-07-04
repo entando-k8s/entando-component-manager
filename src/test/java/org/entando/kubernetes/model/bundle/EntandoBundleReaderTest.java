@@ -69,13 +69,13 @@ public class EntandoBundleReaderTest {
     @Test
     void shouldThrowExceptionWhenNoEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder);
-        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getDeBundleMetadataName_EX_BundleId());
+        assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getDeBundleMetadataName());
     }
 
     @Test
     void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
         bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
-        assertThat(bundleReader.getDeBundleMetadataName_EX_BundleId()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+        assertThat(bundleReader.getDeBundleMetadataName()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
     }
 
     @Test
@@ -316,7 +316,6 @@ public class EntandoBundleReaderTest {
                 new PluginPermission("realm-management", "view-users"));
     }
 
-
     @Test
     void shouldBeTolerantWithUnknowFields() throws IOException {
 
@@ -408,6 +407,11 @@ public class EntandoBundleReaderTest {
         assertThat(res).isEmpty();
     }
 
+    @Test
+    void getWidgetsFilesShouldReturnExpectedFiles() {
+        var files = bundleReader.getWidgetsFiles();
+        assertThat(files).hasSize(4);
+    }
 
     private Path getTestDefaultBundlePath() throws IOException {
         return getBundlePath(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);

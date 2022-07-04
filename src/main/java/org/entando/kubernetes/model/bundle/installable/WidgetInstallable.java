@@ -43,7 +43,6 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 representation.getDescriptorMetadata().getTemplateGeneratorService().updateWidgetTemplate(
                         customUi,
                         representation.getApiClaims(),
-                        representation.getDescriptorMetadata().getPluginIngressPathMap(),
                         representation.getDescriptorMetadata().getBundleId())
         );
     }

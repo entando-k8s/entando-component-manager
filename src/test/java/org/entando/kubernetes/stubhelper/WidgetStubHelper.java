@@ -33,11 +33,11 @@ public class WidgetStubHelper {
     public static final String API_CLAIM_1_NAME = "int-api";
     public static final String API_CLAIM_1_TYPE = "internal";
     public static final String API_CLAIM_1_SERVICE_ID = "service-id-1";
-    public static final String API_CLAIM_1_BUNDLE_ID = "my-bundle";
+    public static final String API_CLAIM_1_BUNDLE_ID = "a1a1a1a1";
     public static final String API_CLAIM_2_NAME = "ext-api";
     public static final String API_CLAIM_2_TYPE = "external";
     public static final String API_CLAIM_2_SERVICE_ID = "service-id-2";
-    public static final String API_CLAIM_2_BUNDLE_ID = "api-bundle";
+    public static final String API_CLAIM_2_BUNDLE_ID = "a2a2a2a2";
     public static final List<String> RESOURCES = Arrays.asList("css/style.css", "js/main.js", "js/runtime.js");
     public static final String RESOURCE_BASE_PATH = "widgets/" + WIDGET_1_CODE + "/static";
     public static final List<String> JS_RESOURCES = Arrays.asList(RESOURCE_BASE_PATH + "/js/main.js",

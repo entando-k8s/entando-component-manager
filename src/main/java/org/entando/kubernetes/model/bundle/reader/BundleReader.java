@@ -223,7 +223,7 @@ public class BundleReader {
         return bundleBasePath.resolve(directory + "/" + fileName).toFile();
     }
 
-    public String getDeBundleMetadataName_EX_BundleId() {
+    public String getDeBundleMetadataName() {
         if (this.entandoDeBundle == null) {
             throw new EntandoComponentManagerException("null entandoDeBundle detected while determining the bundle ID");
         }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -108,27 +109,25 @@ class FileProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = fileProcessor.process(bundleReader);
 
+        installables.sort(Comparator.comparing(Installable::getName));
+
         assertThat(installables).hasSize(7);
 
-        assertThat(installables.get(0)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(0).getName()).isEqualTo(
-                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/assets/css-res.css");
+        var expectedNames = Stream.of(
+                "bundles/something-4f58c204/widgets/my_widget_config_descriptor_v5-4f58c204/assets/css-res.css",
+                "bundles/something-4f58c204/widgets/my_widget_config_descriptor_v5-4f58c204/js-res-1.js",
+                "bundles/something-4f58c204/widgets/my_widget_config_descriptor_v5-4f58c204/static/js/js-res-2.js",
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/assets/css-res.css",
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/js-res-1.js",
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/media/generic-file.txt",
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/static/js/js-res-2.js"
+        ).sorted().collect(Collectors.toList());
 
-        assertThat(installables.get(1)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(1).getName()).isEqualTo(
-                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/js-res-1.js");
-
-        assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(2).getName()).isEqualTo(
-                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/media/generic-file.txt");
-
-        assertThat(installables.get(3)).isInstanceOf(FileInstallable.class);
-        assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(3).getName()).isEqualTo(
-                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/static/js/js-res-2.js");
+        for (int i = 0, e = expectedNames.size(); i < e; i++) {
+            assertThat(installables.get(i)).isInstanceOf(FileInstallable.class);
+            assertThat(installables.get(i).getComponentType()).isEqualTo(ComponentType.RESOURCE);
+            assertThat(installables.get(i).getName()).isEqualTo(expectedNames.get(i));
+        }
     }
 
     @Test

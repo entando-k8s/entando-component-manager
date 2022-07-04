@@ -160,14 +160,12 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         final var res = new LinkedList<Installable<WidgetDescriptor>>();
 
         try {
-            var descriptor = bundleReader.readBundleDescriptor();
             final var descriptorList = getDescriptorList(bundleReader);
 
             for (final String fileName : descriptorList) {
                 final WidgetDescriptor widgetDescriptor =
                         makeWidgetDescriptorFromFile(bundleReader, fileName, pluginIngressPathMap);
                 if (widgetDescriptor.getType().equals(TYPE_WIDGET_CONFIG)) {
-                    //widgetDescriptor.setBundleId(descriptor.getCode());
                     InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy,
                             installPlan);
                     res.add(new WidgetInstallable(engineService, widgetDescriptor, action));
@@ -266,7 +264,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                         file,
                         bundleId);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new EntandoComponentManagerException(e);
             }
         }).collect(Collectors.toList());
     }
