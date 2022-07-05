@@ -14,9 +14,9 @@ import org.entando.kubernetes.client.ComponentDataRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -24,12 +24,14 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.zalando.problem.DefaultProblem;
 
+@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class WidgetInstallableTest {
 
     @Spy
     private EntandoCoreClientTestDouble entandoCoreClientTestDouble;
-    private ComponentDataRepository componentDataRepository;
+    @Spy
+    private ComponentDataRepositoryTestDouble componentDataRepository;
     private WidgetDescriptor widgetDescriptor;
     private WidgetInstallable widgetInstallable;
     @Mock
@@ -38,13 +40,14 @@ class WidgetInstallableTest {
     @BeforeEach
     public void setup() {
         this.widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        this.componentDataRepository = new ComponentDataRepositoryTestDouble();
+        //this.componentDataRepository = new ComponentDataRepositoryTestDouble();
     }
 
     @Test
     void shouldThrowError_installNull() {
-        componentDataRepository = new ComponentDataRepositoryTestDouble();
+        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         MockWidgetDescriptor mockDescriptor = new MockWidgetDescriptor();
+        mockDescriptor.setType(WidgetDescriptor.TYPE_WIDGET_APPBUILDER);
         mockDescriptor.setDescriptorMetadata(WidgetStubHelper.stubDescriptorMetadata());
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, mockDescriptor,
                 InstallAction.CREATE,
@@ -61,6 +64,20 @@ class WidgetInstallableTest {
     }
 
     @Test
+    void shouldSkip_install() {
+        MockWidgetDescriptor mockDescriptor = new MockWidgetDescriptor();
+        mockDescriptor.setDescriptorMetadata(WidgetStubHelper.stubDescriptorMetadata());
+        widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, mockDescriptor,
+                InstallAction.SKIP,
+                componentDataRepository);
+        verify(entandoCoreClientTestDouble, times(0)).createWidget(any());
+        verify(entandoCoreClientTestDouble, times(0)).updateWidget(any());
+        verify(componentDataRepository, times(0)).save(any());
+
+    }
+
+
+    @Test
     void shouldInstall_StrategyIsCreate() {
         componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
@@ -72,7 +89,7 @@ class WidgetInstallableTest {
 
     @Test
     void shouldInstallAndUpdate_StrategyIsCreate() {
-        componentDataRepository = new ComponentDataRepositoryTestDouble();
+        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
         widgetInstallable.install().join();
@@ -90,7 +107,7 @@ class WidgetInstallableTest {
 
     @Test
     void shouldUninstall_StrategyIsCreate() {
-        componentDataRepository = new ComponentDataRepositoryTestDouble();
+        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
         widgetInstallable.install().join();
@@ -106,7 +123,7 @@ class WidgetInstallableTest {
     @Test
     void shouldNOTUnpublishAndNOTDeleteIfConflictStrategyIsNOTCreate() {
         // install just one
-        componentDataRepository = new ComponentDataRepositoryTestDouble();
+        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
         widgetInstallable.install().join();

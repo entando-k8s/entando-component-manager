@@ -245,7 +245,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             return cj;
                         }).collect(Collectors.toCollection(ArrayDeque::new));
 
-                scheduler.queueAll(componentJobQueue);
+                scheduler.queuePrimaryComponents(componentJobQueue);
 
                 JobProgress installProgress = new JobProgress(1.0 / componentJobQueue.size());
 

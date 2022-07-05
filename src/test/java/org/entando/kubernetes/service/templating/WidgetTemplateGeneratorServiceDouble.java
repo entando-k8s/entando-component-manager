@@ -12,7 +12,7 @@ public class WidgetTemplateGeneratorServiceDouble implements WidgetTemplateGener
 
     public static final String FTL_TEMPLATE = "my custom ftl template";
     public static final String API_KEY = "int-api";
-    public static final String API_URL = "${systemParam_applicationBaseURL}/service-id-1/path";
+    public static final String API_URL = "/ingress-path/service-id-1/path";
 
     @Override
     public String generateWidgetTemplate(String descriptorFileName, WidgetDescriptor widgetDescriptor,
@@ -32,10 +32,10 @@ public class WidgetTemplateGeneratorServiceDouble implements WidgetTemplateGener
     }
 
     @Override
-    public FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList) {
-        Map<String, FtlApiUrl> api = new HashMap<>();
-        api.put(API_KEY, new FtlApiUrl(API_URL));
-        FtlSystemParams systemParams = new FtlSystemParams(api);
+    public SystemParams generateSystemParamsWithIngressPath(List<ApiClaim> apiClaimList, String bundleId) {
+        Map<String, ApiUrl> api = new HashMap<>();
+        api.put(API_KEY, new ApiUrl(API_URL));
+        SystemParams systemParams = new SystemParams(api);
         return systemParams;
     }
 

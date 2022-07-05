@@ -9,10 +9,13 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
+
 
 @Slf4j
 public class WidgetInstallable extends Installable<WidgetDescriptor> {
@@ -42,7 +45,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 finalizeConfigUI(representation);
             }
 
-            if (!representation.isAuxiliary()) {
+            if (shouldApplyToAppEngine(representation)) {
                 if (shouldCreate()) {
                     engineService.createWidget(representation);
                 } else {
@@ -50,11 +53,17 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 }
             }
 
-            // FIXME usually save on db and than do web service to rollback transaction, here we don't have transaction ???
-            ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElse(convertDescriptorToEntity());
-            componentDataRepository.save(widgetComponentEntity);
+            saveWidgetDefinitionToEcr();
 
         });
+    }
+
+    private void saveWidgetDefinitionToEcr() {
+        if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
+            finalizeMetadataSystemParams(representation);
+        }
+        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElse(convertDescriptorToEntity());
+        componentDataRepository.save(widgetComponentEntity);
     }
 
     private void finalizeConfigUI(WidgetDescriptor representation) {
@@ -67,15 +76,44 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         );
     }
 
+    private boolean shouldApplyToAppEngine(WidgetDescriptor descriptor) {
+        if (descriptor.isVersion1()) {
+            return true;
+        } else {
+            return WidgetDescriptor.TYPE_WIDGET_STANDARD.equals(descriptor.getType());
+        }
+    }
+
+    private void finalizeMetadataSystemParams(WidgetDescriptor representation) {
+        DescriptorMetadata originalMetadata = representation.getDescriptorMetadata();
+        SystemParams systemParams = originalMetadata
+                .getTemplateGeneratorService()
+                .generateSystemParamsWithIngressPath(representation.getApiClaims(), originalMetadata.getBundleId());
+
+        representation.setDescriptorMetadata(DescriptorMetadata.builder()
+                .templateGeneratorService(originalMetadata.getTemplateGeneratorService())
+                .bundleId(originalMetadata.getBundleId())
+                .bundleCode(originalMetadata.getBundleCode())
+                .filename(originalMetadata.getFilename())
+                .systemParams(systemParams)
+                .pluginIngressPathMap(originalMetadata.getPluginIngressPathMap())
+                .assets(originalMetadata.getAssets()).build());
+
+    }
+
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Widget {}", getName());
-            if (shouldCreate() && !representation.isAuxiliary()) {
+            if (shouldCreate() && shouldApplyToAppEngine(representation)) {
                 engineService.deleteWidget(getName());
             }
-            retrieveWidgetFromDb().ifPresent(componentDataRepository::delete);
+            deleteWidgetDefinitionFromEcr();
         });
+    }
+
+    private void deleteWidgetDefinitionFromEcr() {
+        retrieveWidgetFromDb().ifPresent(componentDataRepository::delete);
     }
 
     @Override

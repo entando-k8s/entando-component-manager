@@ -25,25 +25,26 @@ public interface WidgetTemplateGeneratorService {
      * configurations API.
      *
      * @param apiClaimList a list of ApiClaim objects containing the external / internal API paths
+     * @param bundleId     the 8-digits code used as bundle identifier
      * @return a System Params json object
      */
-    FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList);
+    SystemParams generateSystemParamsWithIngressPath(List<ApiClaim> apiClaimList, String bundleId);
 
 
     @AllArgsConstructor
     @Jacksonized
     @Builder
     @Getter
-    class FtlSystemParams {
+    class SystemParams {
 
-        private Map<String, FtlApiUrl> api;
+        private Map<String, ApiUrl> api;
     }
 
     @AllArgsConstructor
     @Jacksonized
     @Builder
     @Getter
-    class FtlApiUrl {
+    class ApiUrl {
 
         private String url;
     }

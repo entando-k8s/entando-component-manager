@@ -20,7 +20,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetExt;
-import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.FtlSystemParams;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 
 @Data
 @Builder
@@ -41,6 +41,6 @@ public class ComponentWidgetData {
     private String customElement;
     private String[] assets;
     private WidgetExt descriptorExt;
-    private FtlSystemParams systemParams;
+    private SystemParams systemParams;
 
 }

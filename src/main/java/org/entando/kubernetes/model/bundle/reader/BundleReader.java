@@ -91,7 +91,6 @@ public class BundleReader {
     }
 
     public String getCode() throws IOException {
-        // FIXME maybe is not needed IOException ???
         return readBundleDescriptor().getCode();
     }
 

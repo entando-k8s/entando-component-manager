@@ -66,6 +66,10 @@ class WidgetDescriptorTest {
         descriptor.setType(WidgetDescriptor.TYPE_WIDGET_STANDARD);
         assertThat(descriptor.isAuxiliary()).isFalse();
 
+        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        descriptor.setType(WidgetDescriptor.TYPE_WIDGET_APPBUILDER);
+        assertThat(descriptor.isAuxiliary()).isFalse();
+
         descriptor.setType(WidgetDescriptor.TYPE_WIDGET_CONFIG);
         assertThat(descriptor.isAuxiliary()).isTrue();
 
