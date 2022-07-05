@@ -101,7 +101,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         if (apiClaims != null) {
             for (var apiClaim : apiClaims) {
                 var ftlVarName = ftlScopedVar(CONFIG_KEY_API_CLAIM_PARAMS, apiClaim.getName());
-                String resolvedApiUrl = getApiUrl(apiClaim, currentBundleId);
+                String resolvedApiUrl = mustFindApiUrl(apiClaim, currentBundleId);
                 if (resolvedApiUrl.endsWith("/")) {
                     resolvedApiUrl = resolvedApiUrl.substring(0, resolvedApiUrl.length() - 1);
                 }
@@ -115,9 +115,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return ftl.replace(PLACEHOLDER_FOR_API_URL_EXTRACTION, res.toString());
     }
 
-    @Override
     public boolean checkApiClaim(ApiClaim apiClaim, String bundleId) {
-        return getApiUrl(apiClaim, bundleId) != null;
+        return findApiUrl(apiClaim, bundleId) != null;
     }
 
     private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, WidgetDescriptor descriptor,
@@ -250,20 +249,25 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return String.format(CUSTOM_ELEMENT_TAG, descriptor.getCustomElement());
     }
 
-    protected String getApiUrl(ApiClaim apiClaim, String currentBundleId) {
+    protected String mustFindApiUrl(ApiClaim apiClaim, String currentBundleId) {
 
-        String apiBundleId = (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API))
+        String ingressPath = findApiUrl(apiClaim, currentBundleId);
+
+        if (ObjectUtils.isEmpty(ingressPath)) {
+            throw new EntandoComponentManagerException("Can't supply the claimed API " + apiClaim.getName());
+        }
+
+        return ingressPath;
+    }
+
+    private String findApiUrl(ApiClaim apiClaim, String currentBundleId) {
+        String apiBundleId = (apiClaim.getType().equals(ApiClaim.INTERNAL_API))
                 ? currentBundleId : apiClaim.getBundleId();
 
         String ingressPath = apiPathRepository
                 .findByBundleIdAndPluginName(apiBundleId, apiClaim.getPluginName())
                 .map(PluginDataEntity::getEndpoint)
                 .orElse("");
-
-        if (ObjectUtils.isEmpty(ingressPath)) {
-            throw new EntandoComponentManagerException("Can't supply the claimed API " + apiClaim.getName());
-        }
-
         return ingressPath;
     }
 
