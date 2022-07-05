@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.entandocore;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +22,7 @@ public class EntandoCoreWidget {
     private String bundleId;
     private String customUi;
     private Map<String, Object> configUi;
-    private List<WidgetParameter> params;
+    private List<MfeParam> params;
     private String configMfe;
     private String parentCode;
     private Map<String, String> paramsDefaults;
@@ -42,7 +40,7 @@ public class EntandoCoreWidget {
         this.bundleId = descriptor.getDescriptorMetadata().getBundleCode();
         if (null != descriptor.getParams()) {
             this.params = descriptor.getParams().stream().map(p ->
-                    new WidgetParameter(p.getName(), p.getDescription())
+                    new MfeParam(p.getName(), p.getDescription())
             ).collect(Collectors.toList());
         }
         this.configMfe = descriptor.getConfigMfe();
@@ -52,7 +50,7 @@ public class EntandoCoreWidget {
 
     @Getter
     @AllArgsConstructor
-    public static class WidgetParameter {
+    public static class MfeParam {
         final private String name;
         final private String description;
     }

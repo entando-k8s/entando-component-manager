@@ -61,6 +61,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private String parentCode;
 
     // ------------------------------------------------------------
+
     @Override
     public ComponentKey getComponentKey() {
         return ObjectUtils.isEmpty(code)
