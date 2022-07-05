@@ -13,6 +13,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.Co
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.Param;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetDescriptorBuilder;
+import org.entando.kubernetes.service.templating.WidgetTemplateGeneratorServiceDouble;
 
 public class WidgetStubHelper {
 
@@ -95,11 +96,13 @@ public class WidgetStubHelper {
                 .code(WIDGET_1_CODE)
                 .titles(TITLES_MAP)
                 .group(GROUP)
-                .descriptorMetadata(new DescriptorMetadata(null, null, BUNDLE_CODE, null, null));
+                .descriptorMetadata(DescriptorMetadata.builder().bundleCode(BUNDLE_CODE).build());
     }
 
     public static DescriptorMetadata stubDescriptorMetadata() {
-        return new DescriptorMetadata(stubPluginIngressPathMap(), stubWidgetFilename(), BUNDLE_CODE, null, null);
+        return DescriptorMetadata.builder().pluginIngressPathMap(stubPluginIngressPathMap())
+                .filename(stubWidgetFilename()).bundleCode(BUNDLE_CODE)
+                .templateGeneratorService(new WidgetTemplateGeneratorServiceDouble()).build();
     }
 
     private static String stubWidgetFilename() {

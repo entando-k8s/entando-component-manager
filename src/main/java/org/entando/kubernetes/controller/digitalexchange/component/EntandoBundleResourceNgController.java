@@ -20,11 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.bundle.EntandoBundleData;
 import org.entando.kubernetes.model.common.RestNamedId;
+import org.entando.kubernetes.model.job.ComponentWidgetData;
 import org.entando.kubernetes.model.job.PluginData;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundlePluginService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleWidgetService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
@@ -36,6 +38,7 @@ import org.zalando.problem.Status;
 public class EntandoBundleResourceNgController implements EntandoBundleResourceNg {
 
     private final EntandoBundlePluginService bundleComponentService;
+    private final EntandoBundleWidgetService bundleWidgetService;
     private static final String ERROR_MSG = "Can't manage a request with bundleCode: ";
 
     @Override
@@ -84,6 +87,13 @@ public class EntandoBundleResourceNgController implements EntandoBundleResourceN
                 }).orElseThrow(() -> Problem.valueOf(Status.NOT_FOUND, ERROR_MSG + bundleId));
 
         return ResponseEntity.ok(plugin);
+    }
+
+    @Override
+    public ResponseEntity<PagedRestResponse<ComponentWidgetData>> getAllWidgets(PagedListRequest requestList) {
+        PagedMetadata<ComponentWidgetData> pagedBundles = bundleWidgetService.listWidgets(requestList);
+        PagedRestResponse<ComponentWidgetData> response = new PagedRestResponse<>(pagedBundles);
+        return ResponseEntity.ok(response);
     }
 
 }

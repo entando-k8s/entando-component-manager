@@ -110,7 +110,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 Queue<EntandoBundleComponentJobEntity> uninstallJobs =
                         createUninstallComponentJobs(parentJob, referenceJob);
 
-                scheduler.queuePrimaryComponents(uninstallJobs);
+                scheduler.queueAll(uninstallJobs);
 
                 JobProgress uninstallProgress = new JobProgress(1.0 / uninstallJobs.size());
 

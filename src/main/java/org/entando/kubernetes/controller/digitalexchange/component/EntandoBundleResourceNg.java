@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.entando.kubernetes.model.bundle.EntandoBundleData;
 import org.entando.kubernetes.model.common.RestNamedId;
+import org.entando.kubernetes.model.job.ComponentWidgetData;
 import org.entando.kubernetes.model.job.PluginData;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
@@ -69,4 +70,10 @@ public interface EntandoBundleResourceNg {
             @PathVariable("pluginName") @Parameter(description = "Formatted as: pluginName",
                     schema = @Schema(implementation = String.class)) String pluginName);
 
+    @Operation(description = "Returns available widgets for all installed bundles")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "500", description = "Generic server error")
+    @GetMapping(value = "/all/widgets", produces = ACCEPTED_MEDIA_TYPE)
+    ResponseEntity<PagedRestResponse<ComponentWidgetData>> getAllWidgets(PagedListRequest requestList);
+    
 }

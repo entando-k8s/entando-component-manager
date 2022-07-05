@@ -62,6 +62,7 @@ import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
+import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
@@ -107,6 +108,7 @@ public class InstallServiceTest {
     private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
     private PluginDescriptorValidator pluginDescriptorValidator;
     private PluginDataRepository pluginDataRepository;
+    private ComponentDataRepository componentDataRepository;
     private WidgetTemplateGeneratorService templateGeneratorService;
     private WidgetDescriptorValidator widgetDescriptorValidator;
     private BundleDescriptorValidator bundleDescriptorValidator;
@@ -169,7 +171,8 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator,
                 pluginDataRepository));
         reportableComponentProcessorList.add(
-                new WidgetProcessor(coreClient, templateGeneratorService, widgetDescriptorValidator));
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                        widgetDescriptorValidator));
 
         // instruct the strategy map with stub data
         analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE,

@@ -32,6 +32,7 @@ import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
@@ -39,6 +40,7 @@ import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.context.ApplicationContext;
 
 class AppConfigurationTest {
@@ -46,6 +48,8 @@ class AppConfigurationTest {
     private EntandoCoreClientTestDouble entandoCoreClientTestDouble;
     private K8SServiceClientTestDouble k8SServiceClientTestDouble;
     private AppConfiguration appConfig;
+    @Mock
+    private ComponentDataRepository componentDataRepository;
 
     @BeforeEach
     void setup() {
@@ -63,7 +67,6 @@ class AppConfigurationTest {
 
         assertThat(appConfig.processorMap(context).keySet().stream()).containsExactlyInAnyOrder(expected);
     }
-
 
 
     @SuppressWarnings("rawtypes")
@@ -90,7 +93,8 @@ class AppConfigurationTest {
         processors.put(ComponentType.PLUGIN.toString(),
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository));
         processors.put(ComponentType.WIDGET.toString(),
-                new WidgetProcessor(coreClient, templateGeneratorService, widgetDescriptorValidator));
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                        widgetDescriptorValidator));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
         processors.put(ComponentType.PAGE_CONFIGURATION.toString(), new PageConfigurationProcessor(coreClient));
@@ -141,7 +145,8 @@ class AppConfigurationTest {
         processors.put(ComponentType.PLUGIN.toString(),
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository));
         processors.put(ComponentType.WIDGET.toString(),
-                new WidgetProcessor(coreClient, templateGeneratorService, widgetDescriptorValidator));
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                        widgetDescriptorValidator));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
 

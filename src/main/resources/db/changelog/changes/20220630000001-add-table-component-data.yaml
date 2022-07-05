@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220630000001
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - not:
+            - tableExists:
+                tableName: component_data
+      changes:
+        # component_data
+        - createTable:
+            tableName: component_data
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: PK_ENT_COMP_DATA_E7
+              - column:
+                  name: bundle_id
+                  type: CHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_type
+                  type: VARCHAR(35)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_sub_type
+                  type: VARCHAR(35)
+              - column:
+                  name: component_id
+                  type: VARCHAR(255)
+              - column:
+                  name: component_name
+                  type: VARCHAR(255)
+              - column:
+                  name: component_code
+                  type: VARCHAR(255)
+              - column:
+                  name: component_group
+                  type: VARCHAR(255)
+              - column:
+                  name: component_descriptor
+                  # mysql limit for varchar utf8 use 21845 BUT CHARSET=utf8mb4 use VARCHAR(16383) - 1200 other columns
+                  # oracle limit for varchar 4000
+                  type: VARCHAR(4000)

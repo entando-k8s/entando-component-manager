@@ -245,7 +245,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             return cj;
                         }).collect(Collectors.toCollection(ArrayDeque::new));
 
-                scheduler.queuePrimaryComponents(componentJobQueue);
+                scheduler.queueAll(componentJobQueue);
 
                 JobProgress installProgress = new JobProgress(1.0 / componentJobQueue.size());
 
@@ -386,7 +386,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getInstallableComponentsByPriority(BundleReader bundleReader,
             InstallAction conflictStrategy, InstallPlan installPlan) {
 
-
         List<? extends Installable<?>> pluginInstallables = new ArrayList<>();
 
         // process plugins and collect endpoints
@@ -450,7 +449,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         EntandoBundleEntity installedComponent = bundleRepository
                 .findByBundleCode(bundle.getMetadata().getName())
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
-        
+
         installedComponent.setVersion(job.getComponentVersion());
         installedComponent.setJob(job);
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
