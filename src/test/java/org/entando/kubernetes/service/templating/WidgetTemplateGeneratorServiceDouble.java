@@ -32,7 +32,7 @@ public class WidgetTemplateGeneratorServiceDouble implements WidgetTemplateGener
     }
 
     @Override
-    public FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList) {
+    public FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList, boolean interpolated) {
         Map<String, FtlApiUrl> api = new HashMap<>();
         api.put(API_KEY, new FtlApiUrl(API_URL));
         FtlSystemParams systemParams = new FtlSystemParams(api);

@@ -27,7 +27,7 @@ public interface WidgetTemplateGeneratorService {
      * @param apiClaimList a list of ApiClaim objects containing the external / internal API paths
      * @return a System Params json object
      */
-    FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList);
+    FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList, boolean interpolated);
 
 
     @AllArgsConstructor

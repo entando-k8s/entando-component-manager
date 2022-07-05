@@ -267,7 +267,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         String[] assets = collectResourcesPaths(descriptor.getDescriptorMetadata().getFilename(),
                 bundleReader).toArray(new String[0]);
         FtlSystemParams systemParams = templateGeneratorService.generateSystemParamsForConfig(
-                descriptor.getApiClaims());
+                descriptor.getApiClaims(), false);
         try {
             descriptor.setDescriptorMetadata(
                     new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCode(), assets,
