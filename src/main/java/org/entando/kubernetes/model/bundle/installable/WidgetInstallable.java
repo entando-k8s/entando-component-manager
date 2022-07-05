@@ -38,7 +38,9 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 return; //Do nothing
             }
 
-            finalizeConfigUI(representation);
+            if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_STANDARD)) {
+                finalizeConfigUI(representation);
+            }
 
             if (!representation.isAuxiliary()) {
                 if (shouldCreate()) {

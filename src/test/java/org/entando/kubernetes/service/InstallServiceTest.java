@@ -132,6 +132,7 @@ public class InstallServiceTest {
         pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
         pluginDataRepository = mock(PluginDataRepository.class);
+        componentDataRepository = mock(ComponentDataRepository.class);
         templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
         widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
         bundleDescriptorValidator = mock(BundleDescriptorValidator.class);

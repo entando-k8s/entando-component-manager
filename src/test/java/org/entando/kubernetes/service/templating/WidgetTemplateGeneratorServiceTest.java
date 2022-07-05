@@ -38,10 +38,8 @@ class WidgetTemplateGeneratorServiceTest {
         String widgDescriptorFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
         WidgetDescriptor widgetDescriptor = yamlMapper.readValue(new File(widgDescriptorFile), WidgetDescriptor.class);
 
-        FtlSystemParams systemParams = targetService.generateSystemParamsForConfig(widgetDescriptor.getApiClaims(),
-                false);
-        // FIXME
-        assertThat(systemParams.getApi().get("ext-api").getUrl()).isEqualTo("apiClaim_ext_DASH_api");
+        FtlSystemParams systemParams = targetService.generateSystemParamsForConfig(widgetDescriptor.getApiClaims());
+        assertThat(systemParams.getApi().get("ext-api").getUrl()).isEqualTo("${apiClaim_ext_DASH_api}");
     }
 
 }

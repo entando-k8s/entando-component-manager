@@ -27,14 +27,14 @@ public interface WidgetTemplateGeneratorService {
      * @param apiClaimList a list of ApiClaim objects containing the external / internal API paths
      * @return a System Params json object
      */
-    FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList, boolean interpolated);
+    FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList);
 
 
     @AllArgsConstructor
     @Jacksonized
     @Builder
     @Getter
-    public static class FtlSystemParams {
+    class FtlSystemParams {
 
         private Map<String, FtlApiUrl> api;
     }
@@ -43,7 +43,7 @@ public interface WidgetTemplateGeneratorService {
     @Jacksonized
     @Builder
     @Getter
-    public static class FtlApiUrl {
+    class FtlApiUrl {
 
         private String url;
     }

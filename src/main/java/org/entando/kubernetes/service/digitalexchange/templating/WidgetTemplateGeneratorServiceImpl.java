@@ -90,8 +90,10 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     }
 
     /**
-     * Updates the FTL code. It replaces PLACEHOLDER_FOR_API_URL_EXTRACTION with code to properly assign the apiClaim
-     * variables that are then referenced in the mfe configuration object
+     * Updates the FTL code.
+     * It replaces PLACEHOLDER_FOR_API_URL_EXTRACTION
+     * with code to properly assign the apiClaim variables that
+     * are then referenced in the mfe configuration object
      */
     @Override
     public String updateWidgetTemplate(String ftl, List<ApiClaim> apiClaims, String currentBundleId) {
@@ -265,17 +267,13 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return ingressPath;
     }
 
-    public FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList) {
-        return generateSystemParamsForConfig(apiClaimList, true);
-    }
-
     @Override
-    public FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList, boolean interpolated) {
+    public FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList) {
         //~
         var apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
                     String key = ac.getName();
-                    String val = ftlScopedVar(CONFIG_KEY_API_CLAIM_PARAMS, ac.getName(), interpolated);
+                    String val = ftlScopedVar(CONFIG_KEY_API_CLAIM_PARAMS, ac.getName(), true);
                     return new SimpleEntry<>(key, new FtlApiUrl(APPLICATION_BASEURL_PARAM + val));
                 })
                 .collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue));
