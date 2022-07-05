@@ -9,8 +9,10 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 
@@ -41,6 +43,9 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
             if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_STANDARD)) {
                 finalizeConfigUI(representation);
             }
+            if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
+                finalizeMetadataSystemParams(representation);
+            }
 
             if (!representation.isAuxiliary()) {
                 if (shouldCreate()) {
@@ -50,7 +55,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 }
             }
 
-            // FIXME usually save on db and than do web service to rollback transaction, here we don't have transaction ???
+            // FIXME usually save on db and than do web service to rollback transaction, here we don't have transaction at installable level
             ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElse(convertDescriptorToEntity());
             componentDataRepository.save(widgetComponentEntity);
 
@@ -65,6 +70,23 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                         representation.getApiClaims(),
                         representation.getDescriptorMetadata().getBundleId())
         );
+    }
+
+    private void finalizeMetadataSystemParams(WidgetDescriptor representation) {
+        DescriptorMetadata originalMetadata = representation.getDescriptorMetadata();
+        SystemParams systemParams = originalMetadata
+                .getTemplateGeneratorService()
+                .generateSystemParamsWithIngressPath(representation.getApiClaims(), originalMetadata.getBundleId());
+
+        representation.setDescriptorMetadata(DescriptorMetadata.builder()
+                .templateGeneratorService(originalMetadata.getTemplateGeneratorService())
+                .bundleId(originalMetadata.getBundleId())
+                .bundleCode(originalMetadata.getBundleCode())
+                .filename(originalMetadata.getFilename())
+                .systemParams(systemParams)
+                .pluginIngressPathMap(originalMetadata.getPluginIngressPathMap())
+                .assets(originalMetadata.getAssets()).build());
+
     }
 
     @Override

@@ -15,7 +15,7 @@ import lombok.extern.jackson.Jacksonized;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
-import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.FtlSystemParams;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 import org.springframework.util.ObjectUtils;
 
 @Getter
@@ -115,7 +115,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
         private final String filename;
         private final String bundleCode;
         private final String[] assets;
-        private final FtlSystemParams systemParams;
+        private final SystemParams systemParams;
         private final String bundleId;
         @JsonIgnore
         private final WidgetTemplateGeneratorService templateGeneratorService;
@@ -151,7 +151,6 @@ public class WidgetDescriptor extends VersionedDescriptor {
         if (isVersion1()) {
             return false;
         }
-        //FIXME app-builder ....
         return type != null && !type.equals(WidgetDescriptor.TYPE_WIDGET_STANDARD);
     }
 }

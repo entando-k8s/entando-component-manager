@@ -61,6 +61,7 @@ class EntandoBundleWidgetServiceTest {
         List<ComponentDataEntity> list = generateWidgetListOf_SIZE();
         when(componentDataRepository.findAll()).thenReturn(list);
         assertThat(targetService.listWidgets(req).getBody()).hasSize(INSTALLED_WIDGET_SIZE - 1);
+        assertThat(targetService.listWidgets(req).getBody().get(0).getDescriptorExt().getAdminConsole()).isNull();
 
         ComponentDataEntity entity = createWidget(1);
         entity.setComponentDescriptor(null);
@@ -179,7 +180,8 @@ class EntandoBundleWidgetServiceTest {
                 .componentType(ComponentType.WIDGET)
                 .componentSubType(selectWidgetSubType(idx))
                 .componentGroup(PREFIX_GROUP + idx)
-                .componentDescriptor("{}")
+                .componentDescriptor(
+                        "{\"ext\": {\"appBuilder\":{\"slot\": \"content\"}, \"adminConsole\": {\"access\": 12 }}}")
                 .build();
     }
 

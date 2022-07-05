@@ -38,7 +38,6 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
-import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.FtlSystemParams;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
@@ -266,18 +265,17 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             Map<String, String> pluginIngressPathMap) {
         String[] assets = collectResourcesPaths(descriptor.getDescriptorMetadata().getFilename(),
                 bundleReader).toArray(new String[0]);
-        FtlSystemParams systemParams = templateGeneratorService.generateSystemParamsForConfig(
-                descriptor.getApiClaims(), false);
         try {
             descriptor.setDescriptorMetadata(
                     new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCode(), assets,
-                            systemParams, bundleReader.calculateBundleId(), templateGeneratorService));
+                            null, bundleReader.calculateBundleId(), templateGeneratorService));
         } catch (IOException ex) {
             log.error("Error reading descriptor for WidgetDescriptor:'{}'", descriptor.getCode(), ex);
             throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR,
                     String.format("Error reading descriptor for WidgetDescriptor:'%s' error:'%s'",
                             descriptor.getCode(), ex.getMessage()));
         }
+
     }
 
     protected List<String> collectResourcesPaths(
@@ -343,7 +341,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     @Override
     public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
-
         try {
             WidgetDescriptor widgetDescriptor =
                     (WidgetDescriptor) bundleReader.readDescriptorFile(fileName,
@@ -358,5 +355,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
+
     }
 }
