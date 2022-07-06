@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +19,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -111,8 +109,7 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
 
         try {
             if (bundleReader.isBundleV1()) {
-                idList = getReportableBundleV1(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH,
-                        bundleReader.getResourceFolders());
+                idList = getReportableBundleV1(bundleReader);
             } else {
                 idList = getReportableBundleV5(bundleReader, BundleProperty.WIDGET_FOLDER_PATH,
                         bundleReader.getWidgetsFolders());
@@ -127,8 +124,7 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
         }
     }
 
-    private List<String> getReportableBundleV1(BundleReader bundleReader, BundleProperty bundleProperty,
-            List<String> folderList) throws IOException {
+    private List<String> getReportableBundleV1(BundleReader bundleReader) throws IOException {
 
         List<String> idList = new ArrayList<>();
 

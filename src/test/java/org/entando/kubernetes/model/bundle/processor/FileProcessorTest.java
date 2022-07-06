@@ -69,7 +69,7 @@ class FileProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void testCreateFilesBundleV1() throws IOException {
+    void testCreateFilesBundleV1() {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
@@ -158,10 +158,6 @@ class FileProcessorTest extends BaseProcessorTest {
             BooleanSupplier containsFolderFn, Supplier<List<String>> fileListFn)
             throws IOException {
 
-        List<String> resourceFiles = Arrays.asList(bundleProperty.getValue() + "ootb-widgets/static/css/main.css",
-                bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css",
-                bundleProperty.getValue() + "ootb-widgets/static/js/main.js");
-
         FileDescriptor fileDescriptor1 = FileDescriptor.builder()
                 .folder(bundleProperty.getValue() + "ootb-widgets/static/css")
                 .filename("main.css")
@@ -193,6 +189,11 @@ class FileProcessorTest extends BaseProcessorTest {
                 isV1 ? DescriptorVersion.V1.getVersion() : DescriptorVersion.V5.getVersion());
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(containsFolderFn.getAsBoolean()).thenReturn(true);
+
+        List<String> resourceFiles = Arrays.asList(bundleProperty.getValue() + "ootb-widgets/static/css/main.css",
+                bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css",
+                bundleProperty.getValue() + "ootb-widgets/static/js/main.js");
+
         lenient().when(fileListFn.get()).thenReturn(resourceFiles);
 
         final List<Installable<FileDescriptor>> installableList = fileProcessor.process(mockBundleReader);

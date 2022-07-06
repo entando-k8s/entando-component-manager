@@ -91,7 +91,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void shouldExtractRootFolderV1() {
+    void shouldExtractRootFolderV1() {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 

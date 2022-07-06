@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.processor;
 import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_CONFIG;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;

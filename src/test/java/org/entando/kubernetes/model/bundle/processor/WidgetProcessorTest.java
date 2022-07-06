@@ -132,13 +132,13 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         assertThat(actual.getConfigUi().getCustomElement()).isEqualTo("my-widget-config");
         List<String> res = actual.getConfigUi().getResources();
-        assertThat(res.size()).isEqualTo(3);
-        assertThat(res).contains(
-                "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js");
-        assertThat(res).contains(
-                "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js");
-        assertThat(res).contains(
-                "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
+        assertThat(res).hasSize(3)
+                .contains(
+                    "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js")
+                .contains(
+                    "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js")
+                .contains(
+                    "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
     }
 
     @Test
