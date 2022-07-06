@@ -9,12 +9,16 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.UUID;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.common.RestNamedId;
+import org.entando.kubernetes.model.job.ComponentWidgetData;
 import org.entando.kubernetes.model.job.PluginData;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundlePluginService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleWidgetService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -31,10 +35,12 @@ class EntandoBundleResourceNgControllerTest {
 
     @Mock
     private EntandoBundlePluginService bundleComponentService;
+    @Mock
+    private EntandoBundleWidgetService bundleWidgetService;
 
     @BeforeEach
     public void setup() {
-        controller = new EntandoBundleResourceNgController(bundleComponentService);
+        controller = new EntandoBundleResourceNgController(bundleComponentService, bundleWidgetService);
     }
 
     @Test
@@ -106,5 +112,14 @@ class EntandoBundleResourceNgControllerTest {
                 EntandoBundleResourceNgController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + urlEncode);
         assertThrows(EntandoValidationException.class,
                 () -> controller.getBundleInstalledPlugin(idWrongValue, pluginCode));
+    }
+
+    @Test
+    void getAllWidgets_shouldBeOk() {
+        final PagedListRequest req = new PagedListRequest();
+        List<ComponentWidgetData> testList = new ArrayList<>();
+        testList.add(ComponentWidgetData.builder().id(UUID.randomUUID().toString()).build());
+        when(bundleWidgetService.listWidgets(req)).thenReturn(new PagedMetadata(req, testList));
+        assertThat(controller.getAllWidgets(req).getBody().getPayload()).hasSize(testList.size());
     }
 }

@@ -240,29 +240,44 @@ public class InstallFlowAssertionHelper {
 
     private void verifyFileInstallRequestsV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(7)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(11)).createFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        var i = 0;
-        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+        int i = 0;
+        validateResourceFile(allPassedFiles, i++, "css-res.css",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/assets",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/assets/css-res.css");
+        validateResourceFile(allPassedFiles, i++, "generic-file.txt",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/media",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/media/generic-file.txt");
+        validateResourceFile(allPassedFiles, i++, "js-res-2.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/static/js",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/static/js/js-res-2.js");
+        validateResourceFile(allPassedFiles, i++, "js-res-1.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/js-res-1.js");
+        validateResourceFile(allPassedFiles, i++, "css-res.css",
+                "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/assets",
+                "/bundle-v5/widgets/my_widget_config_descriptor_v5/assets/css-res.css");
+        validateResourceFile(allPassedFiles, i++, "js-res-2.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/static/js",
                 "/bundle-v5/widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js");
-        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+        validateResourceFile(allPassedFiles, i++, "js-res-1.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0",
                 "/bundle-v5/widgets/my_widget_config_descriptor_v5/js-res-1.js");
-        validateResourceFile(allPassedFiles, i += 1, "css-res.css",
+        validateResourceFile(allPassedFiles, i++, "css-res.css",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/assets",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/assets/css-res.css");
-        validateResourceFile(allPassedFiles, i += 1, "generic-file.txt",
+        validateResourceFile(allPassedFiles, i++, "generic-file.txt",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt");
-        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+        validateResourceFile(allPassedFiles, i++, "js-res-2.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js");
-        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+        validateResourceFile(allPassedFiles, i++, "js-res-1.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js");
     }
@@ -504,7 +519,6 @@ public class InstallFlowAssertionHelper {
         assertThat(jobComponentTypes).containsAllEntriesOf(expectedComponents);
     }
 
-
     //##############################################################################
     // INSTALL WITH INSTALL PLAN
     //##############################################################################
@@ -681,27 +695,42 @@ public class InstallFlowAssertionHelper {
 
     public void verifyFileInstallRequestsWithInstallPlanRequestV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(6)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(10)).createFile(fileArgCaptor.capture());
         verify(coreClient, times(0)).updateFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
-        var i = 0;
-        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+        int i = 0;
+        validateResourceFile(allPassedFiles, i++, "css-res.css",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/assets",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/assets/css-res.css");
+        validateResourceFile(allPassedFiles, i++, "generic-file.txt",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/media",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/media/generic-file.txt");
+        validateResourceFile(allPassedFiles, i++, "js-res-2.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/static/js",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/static/js/js-res-2.js");
+        validateResourceFile(allPassedFiles, i++, "js-res-1.js",
+                "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0",
+                "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/js-res-1.js");
+        validateResourceFile(allPassedFiles, i++, "css-res.css",
+                "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/assets",
+                "/bundle-v5/widgets/my_widget_config_descriptor_v5/assets/css-res.css");
+        validateResourceFile(allPassedFiles, i++, "js-res-2.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0/static/js",
                 "/bundle-v5/widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js");
-        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+        validateResourceFile(allPassedFiles, i++, "js-res-1.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_config_descriptor_v5-ece8f6f0",
                 "/bundle-v5/widgets/my_widget_config_descriptor_v5/js-res-1.js");
-        validateResourceFile(allPassedFiles, i += 1, "generic-file.txt",
+        validateResourceFile(allPassedFiles, i++, "generic-file.txt",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/media",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/media/generic-file.txt");
-        validateResourceFile(allPassedFiles, i += 1, "js-res-2.js",
+        validateResourceFile(allPassedFiles, i++, "js-res-2.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0/static/js",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/static/js/js-res-2.js");
-        validateResourceFile(allPassedFiles, i += 1, "js-res-1.js",
+        validateResourceFile(allPassedFiles, i++, "js-res-1.js",
                 "bundles/something-ece8f6f0/widgets/my_widget_descriptor_v5-ece8f6f0",
                 "/bundle-v5/widgets/my_widget_descriptor_v5/js-res-1.js");
     }

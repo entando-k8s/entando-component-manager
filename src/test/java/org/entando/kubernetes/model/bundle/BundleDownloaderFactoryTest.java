@@ -1,29 +1,17 @@
 package org.entando.kubernetes.model.bundle;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.ServerSocket;
-import java.nio.file.Path;
-import java.util.Optional;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType;
 import org.entando.kubernetes.model.bundle.downloader.DockerBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
-import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
-import org.entando.kubernetes.model.debundle.EntandoDeBundle;
-import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
 
 @Tag("unit")
 class BundleDownloaderFactoryTest {

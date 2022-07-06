@@ -92,10 +92,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     }
 
     /**
-     * Updates the FTL code.
-     * It replaces PLACEHOLDER_FOR_API_URL_EXTRACTION
-     * with code to properly assign the apiClaim variables that
-     * are then referenced in the mfe configuration object
+     * Updates the FTL code. It replaces PLACEHOLDER_FOR_API_URL_EXTRACTION with code to properly assign the apiClaim
+     * variables that are then referenced in the mfe configuration object
      */
     @Override
     public String updateWidgetTemplate(String ftl, List<ApiClaim> apiClaims, String currentBundleId) {
@@ -242,7 +240,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     protected String generateCodeForMfeConfigObjectCreation(WidgetDescriptor descriptor)
             throws JsonProcessingException {
         Map<String, Object> res = new HashMap<>();
-        res.put(CONFIG_KEY_SYSTEM_PARAMS, toSystemParamsForConfig(descriptor.getApiClaims()));
+        res.put(CONFIG_KEY_SYSTEM_PARAMS, generateSystemParamsForConfig(descriptor.getApiClaims()));
         res.put(CONFIG_KEY_MFE_PARAMS, toMfeParamsForConfig(descriptor.getParams()));
         res.put(CONFIG_KEY_CONTEXT_PARAMS, toContextParamsForConfig(descriptor.getContextParams()));
         return String.format(ASSIGN_TAG_MFE_CONFIG, jsonMapper.writeValueAsString(res));
@@ -269,7 +267,24 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         return ingressPath;
     }
 
-    protected FtlSystemParams toSystemParamsForConfig(List<ApiClaim> apiClaimList) {
+    @Override
+    public SystemParams generateSystemParamsWithIngressPath(List<ApiClaim> apiClaimList, String bundleId) {
+        var apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
+                .map(ac -> {
+                    String key = ac.getName();
+                    String url = getApiUrl(ac, bundleId);
+                    if (url.endsWith("/")) {
+                        url = url.substring(0, url.length() - 1);
+                    }
+                    return new SimpleEntry<>(key, new ApiUrl(url));
+                })
+                .collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue));
+
+        return new SystemParams(apiMap);
+
+    }
+
+    protected FtlSystemParams generateSystemParamsForConfig(List<ApiClaim> apiClaimList) {
         //~
         var apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
@@ -331,4 +346,5 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
         private String url;
     }
+
 }

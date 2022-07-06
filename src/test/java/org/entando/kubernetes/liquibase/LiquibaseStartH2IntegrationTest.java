@@ -3,6 +3,7 @@ package org.entando.kubernetes.liquibase;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import java.util.Properties;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestAppConfiguration;
@@ -38,7 +39,7 @@ class LiquibaseStartH2IntegrationTest {
         propsBackup = new Properties(System.getProperties());
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("root").setLevel(Level.INFO);
         System.setProperty("spring.datasource.url",
-                "jdbc:h2:file:./databases/liquibase-test/h2.db;DB_CLOSE_ON_EXIT=FALSE");
+                "jdbc:h2:file:./databases/liquibase-test/h2-" + UUID.randomUUID() + ".db;DB_CLOSE_ON_EXIT=FALSE");
         System.setProperty("spring.datasource.driverClassName", "org.h2.Driver");
         System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.H2Dialect");
         System.setProperty("spring.datasource.username", "testuser");

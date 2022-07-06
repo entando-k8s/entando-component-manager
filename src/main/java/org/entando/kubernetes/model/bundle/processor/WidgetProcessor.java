@@ -4,6 +4,7 @@ import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescri
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -34,10 +35,13 @@ import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
+import org.zalando.problem.Problem;
+import org.zalando.problem.Status;
 
 /**
  * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
@@ -54,16 +58,18 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             + "because there is no service on the system with name \"%s\" and bundleId \"%s\"";
     public static final String INT_API_CLAIM_ERROR = "Internal apiClaim \"%s\" cannot be satisfied "
             + "because there no service with name \"%s\", declared in the same bundle";
+    private final ComponentDataRepository componentDataRepository;
     private final EntandoCoreClient engineService;
     @Getter
     private final WidgetTemplateGeneratorService templateGeneratorService;
     private final WidgetDescriptorValidator descriptorValidator;
     @Setter
     private Map<String, String> pluginIngressPathMap;
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     /**
-     * Map of descriptors of type widgetConfig.
-     * It's used to recover information about the configWidgets when processing a widget
+     * Map of descriptors of type widgetConfig. It's used to recover information about the configWidgets when processing
+     * a widget
      */
     @Setter
     private Map<String, WidgetDescriptor> widgetConfigDescriptorsMap;
@@ -109,8 +115,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 composeAndSetCustomUi(widgetDescriptor, fileName, bundleReader);
                 composeAndSetConfigUi(widgetDescriptor, bundleReader);
 
+                if (WidgetDescriptor.TYPE_WIDGET_APPBUILDER.equals(widgetDescriptor.getType())) {
+                    composeAndSetAppBuilderMetadata(widgetDescriptor, bundleReader, fileName, pluginIngressPathMap);
+                }
+
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
-                installables.add(new WidgetInstallable(engineService, widgetDescriptor, action));
+                installables.add(
+                        new WidgetInstallable(engineService, widgetDescriptor, action, componentDataRepository));
             }
 
         } catch (IOException e) {
@@ -124,7 +135,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
-                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction()))
+                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction(),
+                        componentDataRepository))
                 .collect(Collectors.toList());
     }
 
@@ -168,7 +180,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 if (widgetDescriptor.getType().equals(TYPE_WIDGET_CONFIG)) {
                     InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy,
                             installPlan);
-                    res.add(new WidgetInstallable(engineService, widgetDescriptor, action));
+                    res.add(new WidgetInstallable(engineService, widgetDescriptor, action, componentDataRepository));
                 }
             }
         } catch (IOException e) {
@@ -183,11 +195,10 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
         widgetDescriptor.applyFallbacks();
-        widgetDescriptor.setDescriptorMetadata(new DescriptorMetadata(
-                pluginIngressPathMap, fileName, bundleReader.getCode(),
-                bundleId,
-                templateGeneratorService
-        ));
+        widgetDescriptor.setDescriptorMetadata(
+                DescriptorMetadata.builder().pluginIngressPathMap(pluginIngressPathMap).filename(fileName).bundleCode(
+                                bundleReader.getCode()).bundleId(bundleId).templateGeneratorService(templateGeneratorService)
+                        .build());
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
     }
@@ -216,6 +227,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
     /**
      * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.
+     *
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param bundleReader     the bundle reader used to access the bundle files
      */
@@ -243,6 +255,27 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         } else {
             log.warn("Unable to find referenced configWidget \"{}\"", configMfe);
         }
+    }
+
+    /**
+     * Compose and set useful data for AppBuilder as widget metadata in the descriptor.
+     */
+    private void composeAndSetAppBuilderMetadata(WidgetDescriptor descriptor, BundleReader bundleReader,
+            String fileName,
+            Map<String, String> pluginIngressPathMap) {
+        String[] assets = collectResourcesPaths(descriptor.getDescriptorMetadata().getFilename(),
+                bundleReader).toArray(new String[0]);
+        try {
+            descriptor.setDescriptorMetadata(
+                    new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCode(), assets,
+                            null, bundleReader.calculateBundleId(), templateGeneratorService));
+        } catch (IOException ex) {
+            log.error("Error reading descriptor for WidgetDescriptor:'{}'", descriptor.getCode(), ex);
+            throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR,
+                    String.format("Error reading descriptor for WidgetDescriptor:'%s' error:'%s'",
+                            descriptor.getCode(), ex.getMessage()));
+        }
+
     }
 
     protected List<String> collectResourcesPaths(
@@ -308,7 +341,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     @Override
     public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
-
         try {
             WidgetDescriptor widgetDescriptor =
                     (WidgetDescriptor) bundleReader.readDescriptorFile(fileName,
@@ -323,5 +355,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
+
     }
 }

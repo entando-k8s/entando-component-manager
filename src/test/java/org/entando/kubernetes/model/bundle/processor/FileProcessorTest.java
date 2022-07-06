@@ -88,7 +88,8 @@ class FileProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(2)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(2).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(2).getName()).isEqualTo("bundles/something-4f58c204/resources/js/configUiScript.js");
+        assertThat(installables.get(2).getName()).isEqualTo(
+                "bundles/something-4f58c204/resources/js/configUiScript.js");
 
         assertThat(installables.get(3)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(3).getComponentType()).isEqualTo(ComponentType.RESOURCE);
@@ -96,7 +97,8 @@ class FileProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(4)).isInstanceOf(FileInstallable.class);
         assertThat(installables.get(4).getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(installables.get(4).getName()).isEqualTo("bundles/something-4f58c204/resources/vendor/jquery/jquery.js");
+        assertThat(installables.get(4).getName()).isEqualTo(
+                "bundles/something-4f58c204/resources/vendor/jquery/jquery.js");
     }
 
     @Test
@@ -111,9 +113,13 @@ class FileProcessorTest extends BaseProcessorTest {
 
         installables.sort(Comparator.comparing(Installable::getName));
 
-        assertThat(installables).hasSize(7);
+        assertThat(installables).hasSize(11);
 
         var expectedNames = Stream.of(
+                "bundles/something-4f58c204/widgets/my_widget_app_builder_descriptor_v5-4f58c204/assets/css-res.css",
+                "bundles/something-4f58c204/widgets/my_widget_app_builder_descriptor_v5-4f58c204/js-res-1.js",
+                "bundles/something-4f58c204/widgets/my_widget_app_builder_descriptor_v5-4f58c204/media/generic-file.txt",
+                "bundles/something-4f58c204/widgets/my_widget_app_builder_descriptor_v5-4f58c204/static/js/js-res-2.js",
                 "bundles/something-4f58c204/widgets/my_widget_config_descriptor_v5-4f58c204/assets/css-res.css",
                 "bundles/something-4f58c204/widgets/my_widget_config_descriptor_v5-4f58c204/js-res-1.js",
                 "bundles/something-4f58c204/widgets/my_widget_config_descriptor_v5-4f58c204/static/js/js-res-2.js",
@@ -156,8 +162,8 @@ class FileProcessorTest extends BaseProcessorTest {
             throws IOException {
 
         List<String> resourceFiles = Arrays.asList(bundleProperty.getValue() + "ootb-widgets/static/css/main.css",
-                        bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css",
-                        bundleProperty.getValue() + "ootb-widgets/static/js/main.js");
+                bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css",
+                bundleProperty.getValue() + "ootb-widgets/static/js/main.js");
 
         FileDescriptor fileDescriptor1 = FileDescriptor.builder()
                 .folder(bundleProperty.getValue() + "ootb-widgets/static/css")
@@ -178,7 +184,8 @@ class FileProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(isV1);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
-        when(mockBundleReader.getResourceFileAsDescriptor(bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
+        when(mockBundleReader.getResourceFileAsDescriptor(
+                bundleProperty.getValue() + "ootb-widgets/static/css/main.css"))
                 .thenReturn(fileDescriptor1);
         when(mockBundleReader.getResourceFileAsDescriptor(
                 bundleProperty.getValue() + "ootb-widgets/static/css/sitemap.css")).thenReturn(fileDescriptor2);

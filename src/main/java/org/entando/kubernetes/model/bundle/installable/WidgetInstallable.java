@@ -1,20 +1,34 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
+import org.entando.kubernetes.model.job.ComponentDataEntity;
+import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
+import org.zalando.problem.Problem;
+import org.zalando.problem.Status;
+
 
 @Slf4j
 public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
     private final EntandoCoreClient engineService;
+    private final ComponentDataRepository componentDataRepository;
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
-    public WidgetInstallable(EntandoCoreClient engineService, WidgetDescriptor widgetDescriptor, InstallAction action) {
+    public WidgetInstallable(EntandoCoreClient engineService, WidgetDescriptor widgetDescriptor, InstallAction action,
+            ComponentDataRepository componentDataRepository) {
         super(widgetDescriptor, action);
         this.engineService = engineService;
+        this.componentDataRepository = componentDataRepository;
     }
 
     @Override
@@ -27,14 +41,29 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 return; //Do nothing
             }
 
-            finalizeConfigUI(representation);
-
-            if (shouldCreate()) {
-                engineService.createWidget(representation);
-            } else {
-                engineService.updateWidget(representation);
+            if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_STANDARD)) {
+                finalizeConfigUI(representation);
             }
+
+            if (shouldApplyToAppEngine(representation)) {
+                if (shouldCreate()) {
+                    engineService.createWidget(representation);
+                } else {
+                    engineService.updateWidget(representation);
+                }
+            }
+
+            saveWidgetDefinitionToEcr();
+
         });
+    }
+
+    private void saveWidgetDefinitionToEcr() {
+        if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
+            finalizeMetadataSystemParams(representation);
+        }
+        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElse(convertDescriptorToEntity());
+        componentDataRepository.save(widgetComponentEntity);
     }
 
     private void finalizeConfigUI(WidgetDescriptor representation) {
@@ -47,14 +76,44 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         );
     }
 
+    private boolean shouldApplyToAppEngine(WidgetDescriptor descriptor) {
+        if (descriptor.isVersion1()) {
+            return true;
+        } else {
+            return WidgetDescriptor.TYPE_WIDGET_STANDARD.equals(descriptor.getType());
+        }
+    }
+
+    private void finalizeMetadataSystemParams(WidgetDescriptor representation) {
+        DescriptorMetadata originalMetadata = representation.getDescriptorMetadata();
+        SystemParams systemParams = originalMetadata
+                .getTemplateGeneratorService()
+                .generateSystemParamsWithIngressPath(representation.getApiClaims(), originalMetadata.getBundleId());
+
+        representation.setDescriptorMetadata(DescriptorMetadata.builder()
+                .templateGeneratorService(originalMetadata.getTemplateGeneratorService())
+                .bundleId(originalMetadata.getBundleId())
+                .bundleCode(originalMetadata.getBundleCode())
+                .filename(originalMetadata.getFilename())
+                .systemParams(systemParams)
+                .pluginIngressPathMap(originalMetadata.getPluginIngressPathMap())
+                .assets(originalMetadata.getAssets()).build());
+
+    }
+
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Widget {}", getName());
-            if (shouldCreate()) {
+            if (shouldCreate() && shouldApplyToAppEngine(representation)) {
                 engineService.deleteWidget(getName());
             }
+            deleteWidgetDefinitionFromEcr();
         });
+    }
+
+    private void deleteWidgetDefinitionFromEcr() {
+        retrieveWidgetFromDb().ifPresent(componentDataRepository::delete);
     }
 
     @Override
@@ -67,4 +126,32 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         return representation.getCode();
     }
 
+    private Optional<ComponentDataEntity> retrieveWidgetFromDb() {
+        return componentDataRepository.findByComponentTypeAndComponentCode(ComponentType.WIDGET,
+                representation.getCode());
+    }
+
+    private ComponentDataEntity convertDescriptorToEntity() {
+        String widgetDescriptor = null;
+        try {
+            widgetDescriptor = jsonMapper.writeValueAsString(representation);
+        } catch (JsonProcessingException ex) {
+            log.error("error unmarshalling widgetDescriptor from object with code:'{}'",
+                    representation.getCode(), ex);
+            throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR,
+                    String.format(
+                            "error unmarshalling widgetDescriptor from object with code:'%s' error:'%s'",
+                            representation.getCode(), ex.getMessage()));
+        }
+        return ComponentDataEntity.builder()
+                .bundleId(representation.getDescriptorMetadata().getBundleId())
+                .componentType(ComponentType.WIDGET)
+                .componentSubType(representation.getType())
+                .componentId(null)
+                .componentName(representation.getName())
+                .componentCode(representation.getCode())
+                .componentGroup(representation.getGroup())
+                .componentDescriptor(widgetDescriptor)
+                .build();
+    }
 }

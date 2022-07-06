@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -63,7 +64,8 @@ public class BundleReader {
     public BundleDescriptor readBundleDescriptor(BundleDescriptorValidator bundleValidator) throws IOException {
         if (this.bundleDescriptor == null) {
             // read and assign
-            this.bundleDescriptor = readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(), BundleDescriptor.class);
+            this.bundleDescriptor = readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(),
+                    BundleDescriptor.class);
 
             // validate the bundle
             if (bundleValidator != null) {
@@ -122,6 +124,7 @@ public class BundleReader {
                     .map(Path::getFileName)
                     .map(f -> Paths.get(BundleProperty.WIDGET_FOLDER_PATH.getValue(), f.toString()))
                     .map(Path::toString)
+                    .sorted(Comparator.naturalOrder())
                     .collect(Collectors.toList());
         }
     }

@@ -1,5 +1,8 @@
 package org.entando.kubernetes.model.bundle.descriptor.widget;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -8,10 +11,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.jackson.Jacksonized;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
-import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
+import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 import org.springframework.util.ObjectUtils;
 
 @Getter
@@ -43,6 +47,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private List<Param> params;
     private List<String> contextParams;
     private String customElement;
+    private WidgetExt ext;
 
     public static final String TYPE_WIDGET_STANDARD = "widget";
     public static final String TYPE_WIDGET_CONFIG = "widget-config";
@@ -50,7 +55,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     // ------------------------------------------------------------
     // METADATA
-    private DescriptorMetadata descriptorMetadata = new DescriptorMetadata(null, null, null, null, null);
+    private DescriptorMetadata descriptorMetadata = DescriptorMetadata.builder().build();
     private String parentName;
     private String parentCode;
 
@@ -98,18 +103,36 @@ public class WidgetDescriptor extends VersionedDescriptor {
     }
 
     @Getter
+    @Jacksonized
+    @Builder
     @AllArgsConstructor
     public static class DescriptorMetadata {
 
         /**
-         * key = plugin identifier.
-         * value = plugin ingress path
+         * key = plugin identifier. value = plugin ingress path
          */
         private final Map<String, String> pluginIngressPathMap;
         private final String filename;
         private final String bundleCode;
+        private final String[] assets;
+        private final SystemParams systemParams;
         private final String bundleId;
+        @JsonIgnore
         private final WidgetTemplateGeneratorService templateGeneratorService;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class WidgetExt {
+
+        @JsonDeserialize(using = KeepAsJsonDeserializer.class)
+        @JsonRawValue
+        private String appBuilder;
+        @JsonDeserialize(using = KeepAsJsonDeserializer.class)
+        @JsonRawValue
+        private String adminConsole;
     }
 
     public WidgetDescriptor setCode(String code) {
@@ -128,6 +151,6 @@ public class WidgetDescriptor extends VersionedDescriptor {
         if (isVersion1()) {
             return false;
         }
-        return type != null && !type.equals(WidgetDescriptor.TYPE_WIDGET_STANDARD);
+        return type != null && type.equals(WidgetDescriptor.TYPE_WIDGET_CONFIG);
     }
 }
