@@ -14,12 +14,12 @@
 
 package org.entando.kubernetes.model.job;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.WidgetExt;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 
 @Data
@@ -40,7 +40,8 @@ public class ComponentWidgetData {
     // json fields and metadata
     private String customElement;
     private String[] assets;
-    private WidgetExt descriptorExt;
+    @JsonRawValue
+    private String descriptorExt;
     private SystemParams systemParams;
 
 }

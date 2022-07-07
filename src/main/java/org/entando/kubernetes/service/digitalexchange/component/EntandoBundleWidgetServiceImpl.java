@@ -16,7 +16,6 @@ package org.entando.kubernetes.service.digitalexchange.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +43,6 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
         List<ComponentWidgetData> allWidgets = componentDataRepository.findAll().stream()
                 .filter(c -> ComponentType.WIDGET.equals(c.getComponentType()))
                 .map(this::convertToComponentWidgetData)
-                .map(this::filterAdminConsoleFromExt)
                 .collect(Collectors.toList());
 
         List<ComponentWidgetData> localFilteredList = new ComponentWidgetDataListProcessor(request, allWidgets)
@@ -53,13 +51,6 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
 
         return new PagedMetadata<>(request, sublist, localFilteredList.size());
 
-    }
-
-    private ComponentWidgetData filterAdminConsoleFromExt(ComponentWidgetData input) {
-        if (Objects.nonNull(input.getDescriptorExt())) {
-            input.getDescriptorExt().setAdminConsole(null);
-        }
-        return input;
     }
 
     private ComponentWidgetData convertToComponentWidgetData(ComponentDataEntity entity) {
@@ -75,6 +66,8 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
                             entity.getId().toString(), ex.getMessage()));
         }
 
+        String descriptorExt = widgetDescriptor.getExt() != null ? widgetDescriptor.getExt().getAppBuilder() : null;
+
         return ComponentWidgetData.builder()
                 .id(entity.getId().toString())
                 .bundleId(entity.getBundleId())
@@ -84,7 +77,7 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
                 .bundleGroup(entity.getComponentGroup())
                 .customElement(widgetDescriptor.getCustomElement())
                 .assets(widgetDescriptor.getDescriptorMetadata().getAssets())
-                .descriptorExt(widgetDescriptor.getExt())
+                .descriptorExt(descriptorExt)
                 .systemParams(widgetDescriptor.getDescriptorMetadata().getSystemParams())
                 .build();
 

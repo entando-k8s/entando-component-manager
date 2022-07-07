@@ -6,8 +6,10 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.commons.lang.StringUtils;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -28,6 +30,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.zalando.problem.DefaultProblem;
 
 @Tag("unit")
@@ -43,6 +47,9 @@ class EntandoBundleWidgetServiceTest {
     private static final String PREFIX_GROUP = "group";
     private static final String PREFIX_BUNDLE_REPO_URL = "http://test.com/gitrepo/reponame";
     private static final int INSTALLED_WIDGET_SIZE = 6;
+    private static final String APP_BUILDER_OBJ = "{\"slot\":\"content\"}";
+    private static final String COMPONENT_DESCRIPTOR =
+            "{\"ext\":{\"appBuilder\":" + APP_BUILDER_OBJ + ", \"adminConsole\":{\"access\":12}}}";
 
     @BeforeEach
     public void setup() {
@@ -55,13 +62,22 @@ class EntandoBundleWidgetServiceTest {
     }
 
     @Test
-    void listWidgets_shouldReturnBundleList() {
+    void listWidgets_shouldReturnBundleListWithCorrectMarshalling() throws JsonProcessingException {
         PagedListRequest req = new PagedListRequest();
         // test all installed
         List<ComponentDataEntity> list = generateWidgetListOf_SIZE();
         when(componentDataRepository.findAll()).thenReturn(list);
-        assertThat(targetService.listWidgets(req).getBody()).hasSize(INSTALLED_WIDGET_SIZE - 1);
-        assertThat(targetService.listWidgets(req).getBody().get(0).getDescriptorExt().getAdminConsole()).isNull();
+        List<ComponentWidgetData> listToTest = targetService.listWidgets(req).getBody().stream()
+                .sorted(Comparator.comparing(ComponentWidgetData::getWidgetName))
+                .collect(Collectors.toList());
+        assertThat(listToTest).hasSize(INSTALLED_WIDGET_SIZE - 1);
+        ComponentWidgetData toTest = listToTest.get(0);
+        assertThat(toTest.getDescriptorExt()).isEqualTo(APP_BUILDER_OBJ);
+        ObjectMapper mapper = new ObjectMapper();
+        String value = mapper.writeValueAsString(toTest);
+        assertThat(value).contains(APP_BUILDER_OBJ);
+
+        assertThat(listToTest.get(1).getDescriptorExt()).isNull();
 
         ComponentDataEntity entity = createWidget(1);
         entity.setComponentDescriptor(null);
@@ -175,13 +191,15 @@ class EntandoBundleWidgetServiceTest {
         String bundleId = StringUtils.leftPad("2" + idx, 8, "0");
         String widgetName = PREFIX_WIDGET_NAME + idx;
         String widgetCode = widgetName + "-" + bundleId;
+        String componentDescriptor =
+                idx != 2 ? "{\"ext\": {\"appBuilder\":" + APP_BUILDER_OBJ + ", \"adminConsole\": {\"access\": 12 }}}"
+                        : "{}";
         return ComponentDataEntity.builder().id(UUID.randomUUID()).bundleId(bundleId)
                 .componentName(widgetName).componentCode(widgetCode)
                 .componentType(ComponentType.WIDGET)
                 .componentSubType(selectWidgetSubType(idx))
                 .componentGroup(PREFIX_GROUP + idx)
-                .componentDescriptor(
-                        "{\"ext\": {\"appBuilder\":{\"slot\": \"content\"}, \"adminConsole\": {\"access\": 12 }}}")
+                .componentDescriptor(componentDescriptor)
                 .build();
     }
 
