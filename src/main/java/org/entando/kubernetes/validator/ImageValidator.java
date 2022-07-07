@@ -259,9 +259,28 @@ public class ImageValidator {
         return DOCKER_TRANSPORT + "://" + Paths.get(domainRegistry, organization, repository);
     }
 
-    public String composeCommonWithoutTransportUrlOrThrow(String invalidError) {
+    public String composeCommonUrlWithoutTransportWithoutTagOrThrow(String invalidError) {
         this.isValidOrThrow(invalidError);
         return Paths.get(domainRegistry, organization, repository).toString();
+    }
+
+    public String composeCommonUrlWithoutTransportOrThrow(String invalidError) {
+        this.isValidOrThrow(invalidError);
+        String url = Paths.get(domainRegistry, organization, repository).toString();
+
+        return generateFullyQualifiedWithTag(url);
+    }
+
+    private String generateFullyQualifiedWithTag(String url) {
+        if (tag != null) {
+            String sep = ":";
+            if (isDigest) {
+                sep = "@";
+            }
+            url = url + sep + tag;
+
+        }
+        return url;
     }
 
     @AllArgsConstructor

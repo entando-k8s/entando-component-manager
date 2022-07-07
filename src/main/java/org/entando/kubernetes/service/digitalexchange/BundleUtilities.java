@@ -480,7 +480,7 @@ public class BundleUtilities {
     public static String removeProtocolFromUrl(String url) {
         ImageValidator imageValidator = ImageValidator.parse(url);
         if (imageValidator.isTransportValid()) {
-            return imageValidator.composeCommonWithoutTransportUrlOrThrow(
+            return imageValidator.composeCommonUrlWithoutTransportWithoutTagOrThrow(
                     "The image fully qualified URL of the bundle is invalid");
         } else {
             URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,

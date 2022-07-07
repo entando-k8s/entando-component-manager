@@ -74,6 +74,7 @@ class ImageValidatorTest {
         final String COMPOSED = "docker.io/library/nginx";
         final String test = "docker://docker.io/nginx@sha256:92ae85a2740161f8b534e0b85ad267624ea88def5691742008f9353cc72ec060";
 
-        assertThat(ImageValidator.parse(test).composeCommonWithoutTransportUrlOrThrow(invalidMex)).isEqualTo(COMPOSED);
+        assertThat(ImageValidator.parse(test).composeCommonUrlWithoutTransportWithoutTagOrThrow(invalidMex)).isEqualTo(
+                COMPOSED);
     }
 }
