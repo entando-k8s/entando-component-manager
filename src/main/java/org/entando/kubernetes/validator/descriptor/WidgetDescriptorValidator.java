@@ -1,5 +1,7 @@
 package org.entando.kubernetes.validator.descriptor;
 
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,7 +18,6 @@ import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.validator.descriptor.DescriptorValidatorConfigBean.DescriptorValidationFunction;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
 @Slf4j
 @Component
@@ -25,7 +26,9 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     private static final String BUNDLE_CODE_PARENT_REGEX = "^[\\w|-]+$";
     private static final Pattern BUNDLE_PARENT_CODE_REGEX = Pattern.compile(BUNDLE_CODE_PARENT_REGEX);
     public static final String FORMAT_MISSING_FIELD_FROM_WIDGET_TYPE = "In WidgetDescriptor \"%s\" "
-            + "of version \"%s\" and widgetType \"%s\", field \"%s\" is required%s";
+            + "of version \"%s\" and widgetType \"%s\", field \"%s\" is not allowed required%s";
+    public static final String FORMAT_NOT_ALLOWED_FIELD_FROM_WIDGET_TYPE = "In WidgetDescriptor \"%s\" "
+            + "of version \"%s\" and widgetType \"%s\", field \"%s\" is not allowed%s";
 
     /**************************************************************************************************************
      * CONFIGURATION START.
@@ -83,13 +86,22 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
                     mustHaveField(widgetDescriptor, "titles", widgetDescriptor.getTitles(), null);
                 }
 
-                if (widgetDescriptor.getCustomUi() == null && widgetDescriptor.getCustomUiPath() == null) {
-                    mustHaveField(
-                            widgetDescriptor,
-                            "customElement",
-                            widgetDescriptor.getCustomElement(),
-                            "if no configUi or configUiPath is provided"
-                    );
+                if (!isLogicalWidget(widgetDescriptor)) {
+                    if (isEmpty(widgetDescriptor.getCustomUi()) && isEmpty(widgetDescriptor.getCustomUiPath())) {
+                        mustHaveField(
+                                widgetDescriptor,
+                                "customElement",
+                                widgetDescriptor.getCustomElement(),
+                                "if no configUi or configUiPath is provided"
+                        );
+                    } else {
+                        mustNotHaveField(
+                                widgetDescriptor,
+                                "customElement",
+                                widgetDescriptor.getCustomElement(),
+                                "if configUi or configUiPath is provided"
+                        );
+                    }
                 }
                 break;
             case WidgetDescriptor.TYPE_WIDGET_CONFIG:
@@ -101,12 +113,26 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         return widgetDescriptor;
     }
 
+    private boolean isLogicalWidget(WidgetDescriptor widgetDescriptor) {
+        return !isEmpty(widgetDescriptor.getParentCode()) || !isEmpty(widgetDescriptor.getParentName());
+    }
+
     private void mustHaveField(WidgetDescriptor descriptor, String field, Object value, String comment) {
+        fieldMustRespectCondition(field, value, false, FORMAT_MISSING_FIELD_FROM_WIDGET_TYPE, comment, descriptor);
+    }
+
+    private void mustNotHaveField(WidgetDescriptor descriptor, String field, Object value, String comment) {
+        fieldMustRespectCondition(field, value, true, FORMAT_NOT_ALLOWED_FIELD_FROM_WIDGET_TYPE, comment, descriptor);
+    }
+
+    private void fieldMustRespectCondition(
+            String field, Object value, boolean mustBePresent, String format, String comment,
+            WidgetDescriptor descriptor) {
         //~
-        if (value == null) {
+        if (isEmpty(value) != mustBePresent) {
             comment = (comment == null) ? "" : comment + " ";
             throw new InvalidBundleException(String.format(
-                    FORMAT_MISSING_FIELD_FROM_WIDGET_TYPE,
+                    format,
                     descriptor.getComponentKey().getKey(),
                     descriptor.getDescriptorVersion(),
                     descriptor.getType(),
@@ -130,12 +156,12 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         Optional.ofNullable(descriptor.getApiClaims()).orElseGet(ArrayList::new)
                 .forEach(apiClaim -> {
                     if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)
-                            && !ObjectUtils.isEmpty(apiClaim.getBundleId())) {
+                            && !isEmpty(apiClaim.getBundleId())) {
                         throw new InvalidBundleException(
                                 String.format(INTERNAL_API_CLAIM_WITH_BUNDLE_ID, descriptor.getCode()));
                     }
                     if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.EXTERNAL_API)
-                            && ObjectUtils.isEmpty(apiClaim.getBundleId())) {
+                            && isEmpty(apiClaim.getBundleId())) {
                         throw new InvalidBundleException(
                                 String.format(EXTERNAL_API_CLAIM_WITHOUT_BUNDLE_ID, descriptor.getCode()));
                     }
@@ -146,22 +172,20 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
 
     /**
      * ensure consistency between parentName and parentCode fields.
-     *
      * @param descriptor the widget descriptor to validate
      * @return the validated widget descriptor
      */
     private WidgetDescriptor validateParentNameAndParentCode(WidgetDescriptor descriptor) {
         String parentCode = descriptor.getParentCode();
+        String parentName = descriptor.getParentName();
 
-        // mutual exclusion
-        if (!ObjectUtils.isEmpty(descriptor.getParentName()) && !ObjectUtils.isEmpty(parentCode)) {
-
-            throw new InvalidBundleException(
-                    String.format(PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT, descriptor.getCode()));
-        }
-
-        // check the format
-        if (!ObjectUtils.isEmpty(parentCode)) {
+        if (!isEmpty(parentCode)) {
+            // mutual exclusion
+            if (!isEmpty(parentName)) {
+                throw new InvalidBundleException(
+                        String.format(PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT, descriptor.getCode()));
+            }
+            // check the format
             if (!BUNDLE_PARENT_CODE_REGEX.matcher(parentCode).matches()) {
                 throw new InvalidBundleException(String.format(WRONG_PARENT_CODE_FORMAT, descriptor.getCode()));
             }
