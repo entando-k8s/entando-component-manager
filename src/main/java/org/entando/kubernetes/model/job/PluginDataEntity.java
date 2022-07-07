@@ -54,10 +54,6 @@ public class PluginDataEntity {
     private String bundleId;
 
     @NotNull
-    @Column(name = "plugin_id", nullable = false)
-    private String pluginId;
-
-    @NotNull
     @Column(name = "plugin_name", nullable = false)
     private String pluginName;
 

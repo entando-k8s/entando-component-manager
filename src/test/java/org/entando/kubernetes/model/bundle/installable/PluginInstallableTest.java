@@ -66,7 +66,6 @@ class PluginInstallableTest {
                         metadata.getPluginName())
                 .get();
         assertThat(pluginDataEntity.getBundleId()).isEqualTo(metadata.getBundleId());
-        assertThat(pluginDataEntity.getPluginId()).isEqualTo(metadata.getPluginId());
         assertThat(pluginDataEntity.getPluginName()).isEqualTo(metadata.getPluginName());
         assertThat(pluginDataEntity.getPluginCode()).isEqualTo(metadata.getPluginCode());
         assertThat(pluginDataEntity.getEndpoint()).isEqualTo(metadata.getEndpoint());
@@ -106,7 +105,6 @@ class PluginInstallableTest {
                         metadata.getPluginName())
                 .get();
         assertThat(pluginDataEntity.getBundleId()).isEqualTo(metadata.getBundleId());
-        assertThat(pluginDataEntity.getPluginId()).isEqualTo(metadata.getPluginId());
         assertThat(pluginDataEntity.getPluginName()).isEqualTo(metadata.getPluginName());
         assertThat(pluginDataEntity.getPluginCode()).isEqualTo(metadata.getPluginCode());
         assertThat(pluginDataEntity.getEndpoint()).isEqualTo(metadata.getEndpoint());
@@ -140,7 +138,6 @@ class PluginInstallableTest {
     private void populateDbWithStartingRecords() {
         PluginDataEntity startingPluginDataEntity = new PluginDataEntity()
                 .setBundleId(PluginStubHelper.BUNDLE_ID)
-                .setPluginId(PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA)
                 .setPluginName(PluginStubHelper.EXPECTED_PLUGIN_NAME)
                 .setPluginCode(
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA + "-" + PluginStubHelper.EXPECTED_PLUGIN_NAME)

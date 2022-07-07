@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220707000001
+      author: l.corsetti@entando.com
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: plugin_data
+            columnName: plugin_id
+      changes:
+        - dropColumn:
+            tableName: plugin_data
+            columnName: plugin_id

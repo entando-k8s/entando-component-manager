@@ -73,7 +73,6 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         final DescriptorMetadata metadata = representation.getDescriptorMetadata();
 
         return pluginData.setBundleId(metadata.getBundleId())
-                .setPluginId(metadata.getPluginId())
                 .setPluginName(metadata.getPluginName())
                 .setPluginCode(metadata.getPluginCode())
                 .setEndpoint(metadata.getEndpoint())

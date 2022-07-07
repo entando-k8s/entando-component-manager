@@ -41,7 +41,6 @@ public class PluginData {
         return PluginData.builder()
                 .id(entity.getId())
                 .bundleId(entity.getBundleId())
-                .pluginId(entity.getPluginId())
                 .pluginName(entity.getPluginName())
                 .pluginCode(entity.getPluginCode())
                 .ingressPath(entity.getEndpoint())
