@@ -554,7 +554,7 @@ public class EntandoBundleUtilitiesTest {
         // given a plugin descriptor V2
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
         // when the ingress path is composed starting by the docker image
-        String ingressPath = BundleUtilities.composeIngressPathFromDockerImage(descriptor);
+        String ingressPath = BundleUtilities.composeIngressPathForV1(descriptor);
         // then the expected ingress path is generated
         assertThat(ingressPath).isEqualTo("/entando/the-lucas");
     }

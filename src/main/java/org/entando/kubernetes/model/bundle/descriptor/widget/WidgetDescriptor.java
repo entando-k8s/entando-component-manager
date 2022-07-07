@@ -109,7 +109,8 @@ public class WidgetDescriptor extends VersionedDescriptor {
     public static class DescriptorMetadata {
 
         /**
-         * key = plugin identifier. value = plugin ingress path
+         * key = plugin identifier.
+         * value = plugin ingress path
          */
         private final Map<String, String> pluginIngressPathMap;
         private final String filename;

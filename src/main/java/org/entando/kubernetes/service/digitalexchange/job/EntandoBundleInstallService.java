@@ -398,7 +398,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     .map(Installable::getRepresentation)
                     .collect(Collectors.toMap(
                             d -> ((PluginDescriptor) d).getDescriptorMetadata().getPluginName(),
-                            d -> BundleUtilities.composeIngressPathFromDockerImage((PluginDescriptor) d)));
+                            d -> BundleUtilities.composeIngressPathForV1((PluginDescriptor) d)));
 
             ((WidgetProcessor) processorMap.get(ComponentType.WIDGET)).setPluginIngressPathMap(pluginIngressMap);
         }

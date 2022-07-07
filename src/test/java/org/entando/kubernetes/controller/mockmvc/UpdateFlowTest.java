@@ -330,19 +330,19 @@ public class UpdateFlowTest {
                 .collect(Collectors.toList());
 
         assertThat(allPassedFiles.get(0)).matches(fd -> fd.getFilename().equals("custom.css")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("/something/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/custom.css")));
         assertThat(allPassedFiles.get(1)).matches(fd -> fd.getFilename().equals("style.css")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/css")
+                && fd.getFolder().equals("/something/css")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/css/style.css")));
         assertThat(allPassedFiles.get(2)).matches(fd -> fd.getFilename().equals("configUiScript.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("/something/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/configUiScript.js")));
         assertThat(allPassedFiles.get(3)).matches(fd -> fd.getFilename().equals("script.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/js")
+                && fd.getFolder().equals("/something/js")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/js/script.js")));
         assertThat(allPassedFiles.get(4)).matches(fd -> fd.getFilename().equals("jquery.js")
-                && fd.getFolder().equals("bundles/something-ece8f6f0/resources/vendor/jquery")
+                && fd.getFolder().equals("/something/vendor/jquery")
                 && fd.getBase64().equals(readFileAsBase64("/bundle/resources/vendor/jquery/jquery.js")));
     }
 
@@ -457,11 +457,11 @@ public class UpdateFlowTest {
                 .stream().sorted(Comparator.comparing(WidgetDescriptor::getCode))
                 .collect(Collectors.toList());
 
-        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget-ece8f6f0");
+        assertThat(allPassedWidgets.get(0).getCode()).isEqualTo("another_todomvc_widget");
         assertThat(allPassedWidgets.get(0).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(0).getCustomUi()).isEqualTo(readFile("/bundle/widgets/widget.ftl"));
 
-        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget-ece8f6f0");
+        assertThat(allPassedWidgets.get(1).getCode()).isEqualTo("todomvc_widget");
         assertThat(allPassedWidgets.get(1).getGroup()).isEqualTo("free");
         assertThat(allPassedWidgets.get(1).getCustomUi()).isEqualTo("<h2>Bundle 1 Widget</h2>");
     }
@@ -510,7 +510,7 @@ public class UpdateFlowTest {
     private void verifyDirectoriesUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("bundles/something-ece8f6f0", ac.getValue());
+        assertEquals("/something", ac.getValue());
     }
 
     private void verifyLabelsUninstallRequests() {
@@ -534,7 +534,7 @@ public class UpdateFlowTest {
     private void verifyWidgetsUninstallRequests() {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteWidget(ac.capture());
-        assertThat(ac.getAllValues()).contains("todomvc_widget-ece8f6f0");
+        assertThat(ac.getAllValues()).contains("todomvc_widget");
     }
 
     private String simulateSuccessfullyCompletedUpdate() {

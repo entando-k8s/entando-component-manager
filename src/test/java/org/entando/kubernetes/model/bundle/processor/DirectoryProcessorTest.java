@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -16,6 +15,7 @@ import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -43,6 +43,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     private BundleReader bundleReader;
     private DirectoryProcessor directoryProcessor;
     private final EntandoDeBundle entandoDeBundle = TestEntitiesGenerator.getTestBundle();
+    private Path bundleFolderV5;
 
     private List<String> resourceFolder = Arrays
             .asList("resources/ootb-widgets", "resources/ootb-widgets/static", "resources/ootb-widgets/static/css",
@@ -55,6 +56,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+        bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
         bundleReader = new BundleReader(bundleFolder, entandoDeBundle);
         directoryProcessor = new DirectoryProcessor(engineService);
     }
@@ -70,7 +72,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(0)).isInstanceOf(DirectoryInstallable.class);
         assertThat(installables.get(0).getComponentType()).isEqualTo(ComponentType.DIRECTORY);
-        assertThat(installables.get(0).getName()).isEqualTo("bundles/something-4f58c204");
+        assertThat(installables.get(0).getName()).isEqualTo("/something");
     }
 
     @Test
@@ -78,6 +80,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
+        bundleReader = new BundleReader(bundleFolderV5, entandoDeBundle);
         final List<? extends Installable> installables = directoryProcessor.process(bundleReader);
 
         assertThat(installables).hasSize(1);
@@ -88,7 +91,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void shouldExtractRootFolder() {
+    void shouldExtractRootFolderV1() {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
@@ -99,7 +102,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                 .collect(Collectors.toList());
 
         assertThat(rootFolders).hasSize(1);
-        assertThat(rootFolders.get(0).getName()).isEqualTo("bundles/something-4f58c204");
+        assertThat(rootFolders.get(0).getName()).isEqualTo("/something");
     }
 
 
@@ -107,13 +110,11 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV1() throws IOException {
 
         List<String> expectedCodeList = Arrays
-                .asList("bundles/resources/static/css/ootb", "bundles/resources/static/css/ootb/page-templates",
-                        "bundles/resources/static/css", "bundles/resources/ootb-widgets", "bundles/resources/static",
-                        "bundles/resources/ootb-widgets/static/js", "bundles/resources/ootb-widgets/static",
-                        "bundles/resources/ootb-widgets/static/css");
+                .asList("/static/css/ootb", "/static/css/ootb/page-templates", "/static/css", "/ootb-widgets",
+                        "/static", "/ootb-widgets/static/js", "/ootb-widgets/static", "/ootb-widgets/static/css");
+
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
@@ -154,15 +155,12 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         List<String> expectedCodeList = Stream
                 .of("/static/css/ootb", "/static/css/ootb/page-templates", "/static/css", "/ootb-widgets",
                         "/static", "/ootb-widgets/static/js", "/ootb-widgets/static", "/ootb-widgets/static/css")
-                .map(s -> "bundles/" + bundleDescriptor.getCode() + "-"
-                        + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/resources" + s)
+                .map(s -> "/" + bundleDescriptor.getCode() + s)
                 .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode() + "-"
-                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        when(mockBundleReader.getBundleName()).thenReturn(bundleDescriptor.getCode());
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);
@@ -176,6 +174,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
         bundleDescriptor.setBundleType(BundleType.STANDARD_BUNDLE);
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
         // prefix each expected file path with the bundle code
         List<String> expectedCodeList = Stream

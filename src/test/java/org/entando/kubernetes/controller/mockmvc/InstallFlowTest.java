@@ -13,7 +13,7 @@ import static org.entando.kubernetes.utils.TestInstallUtils.INSTALL_PLANS_ENDPOI
 import static org.entando.kubernetes.utils.TestInstallUtils.MOCK_BUNDLE_NAME;
 import static org.entando.kubernetes.utils.TestInstallUtils.UNINSTALL_COMPONENT_ENDPOINT;
 import static org.entando.kubernetes.utils.TestInstallUtils.getJobStatus;
-import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReport;
+import static org.entando.kubernetes.utils.TestInstallUtils.mockAnalysisReportV1;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockBundle;
 import static org.entando.kubernetes.utils.TestInstallUtils.mockPlugins;
 import static org.entando.kubernetes.utils.TestInstallUtils.readFromDEPackage;
@@ -220,7 +220,7 @@ public class InstallFlowTest {
         installFlowAssertionHelper.verifyLanguagesInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyLabelsInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyDirectoryInstallRequestsWithInstallPlanRequest(coreClient);
-        installFlowAssertionHelper.verifyFileInstallRequestsWithInstallPlanRequest(coreClient);
+        installFlowAssertionHelper.verifyFileInstallRequestsWithInstallPlanRequestV1(coreClient);
         installFlowAssertionHelper.verifyFragmentInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyPageInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyPageConfigurationInstallRequestsWithInstallPlanRequest(coreClient);
@@ -235,7 +235,7 @@ public class InstallFlowTest {
         List<EntandoBundleJobEntity> bundleJobEntityList = jobRepository.findAll();
         assertThat(bundleJobEntityList).hasSize(1);
         String stringInstallPlan = new ObjectMapper().writeValueAsString(
-                TestInstallUtils.mockInstallWithPlansRequestWithActions());
+                TestInstallUtils.mockInstallWithPlansRequestWithActionsV1());
         EntandoBundleJobEntity entandoBundleJobEntity = bundleJobEntityList.get(0);
         assertThat(entandoBundleJobEntity.getInstallPlan()).isEqualTo(stringInstallPlan);
 
@@ -247,13 +247,13 @@ public class InstallFlowTest {
     @Test
     void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() {
         simulateSuccessfullyCompletedInstall();
-        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents();
+        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1();
     }
 
     @Test
     void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsWithInstallPlan() {
         simulateSuccessfullyCompletedInstallWithInstallPlan();
-        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents();
+        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1();
     }
 
 
@@ -311,7 +311,7 @@ public class InstallFlowTest {
         ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteWidget(ac.capture());
         assertThat(ac.getAllValues()).containsAll(
-                Arrays.asList("todomvc_widget-ece8f6f0", "another_todomvc_widget-ece8f6f0"));
+                Arrays.asList("todomvc_widget", "another_todomvc_widget"));
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePageModel(ac.capture());
@@ -327,7 +327,7 @@ public class InstallFlowTest {
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("bundles/something-ece8f6f0", ac.getValue());
+        assertEquals("/something", ac.getValue());
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deleteFragment(ac.capture());
@@ -820,11 +820,11 @@ public class InstallFlowTest {
 
 
     @Test
-    void shouldReturnAValidInstallPlan() throws Exception {
-        mockAnalysisReport(coreClient, k8SServiceClient);
+    void shouldReturnAValidInstallPlanV1() throws Exception {
+        mockAnalysisReportV1(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
-        InstallPlan expected = TestInstallUtils.mockInstallPlan();
+        InstallPlan expected = TestInstallUtils.mockInstallPlanV1();
         MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -930,7 +930,7 @@ public class InstallFlowTest {
     @Test
     void shouldReturn503OnInstallPlanIfAnotherBundleOperationIsRunning() throws Exception {
 
-        mockAnalysisReport(coreClient, k8SServiceClient);
+        mockAnalysisReportV1(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)

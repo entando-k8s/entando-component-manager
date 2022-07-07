@@ -28,6 +28,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -41,6 +42,7 @@ public class BundleReader {
     private EntandoDeBundle entandoDeBundle;
     private BundleDescriptor bundleDescriptor;
     private String bundleUrl;
+    private String bundleName;
 
     public BundleReader(Path filePath) {
         this.bundleBasePath = filePath;
@@ -71,6 +73,11 @@ public class BundleReader {
             if (bundleValidator != null) {
                 bundleValidator.validateOrThrow(bundleDescriptor);
             }
+
+            this.bundleName = (!bundleDescriptor.isVersion1() && bundleDescriptor.isVersionEqualOrGreaterThan(
+                    DescriptorVersion.V5))
+                    ? bundleDescriptor.getName()
+                    : bundleDescriptor.getCode();
 
             // ensure the right code is used
             final String code = BundleUtilities.composeDescriptorCode(bundleDescriptor.getCode(),
@@ -260,5 +267,9 @@ public class BundleReader {
 
     public String calculateBundleId() {
         return BundleUtilities.removeProtocolAndGetBundleId(getBundleUrl());
+    }
+
+    public String getBundleName() {
+        return bundleName;
     }
 }

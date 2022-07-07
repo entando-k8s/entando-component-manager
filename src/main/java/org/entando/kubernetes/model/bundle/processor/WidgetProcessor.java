@@ -67,9 +67,10 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     private Map<String, String> pluginIngressPathMap;
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
+
     /**
-     * Map of descriptors of type widgetConfig. It's used to recover information about the configWidgets when processing
-     * a widget
+     * Map of descriptors of type widgetConfig.
+     * used to recover information about the configWidgets when processing a widget
      */
     @Setter
     private Map<String, WidgetDescriptor> widgetConfigDescriptorsMap;
@@ -130,6 +131,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         return installables;
     }
+
 
     @Override
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
@@ -227,7 +229,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
     /**
      * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.
-     *
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param bundleReader     the bundle reader used to access the bundle files
      */
@@ -306,10 +307,12 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      * compose and set the widget code in the descriptor.
      */
     private void composeAndSetCode(WidgetDescriptor widgetDescriptor, BundleReader bundleReader) {
-        // set the code
-        final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
-                widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
-        widgetDescriptor.setCode(widgetCode);
+        if (! widgetDescriptor.isVersion1()) {
+            // set the code
+            final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+                    widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
+            widgetDescriptor.setCode(widgetCode);
+        }
     }
 
     /**
@@ -355,6 +358,5 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
-
     }
 }

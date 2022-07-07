@@ -168,7 +168,7 @@ public class TestInstallUtils {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        final InstallWithPlansRequest installWithPlansReq = mockInstallWithPlansRequestWithActions();
+        final InstallWithPlansRequest installWithPlansReq = mockInstallWithPlansRequestWithActionsV1();
 
         MvcResult result = mockMvc.perform(
                 put(INSTALL_PLANS_ENDPOINT.build())
@@ -286,7 +286,7 @@ public class TestInstallUtils {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        mockAnalysisReport(coreClient, k8sServiceClient);
+        mockAnalysisReportV1(coreClient, k8sServiceClient);
 
         InstallRequest request = InstallRequest.builder()
                 .conflictStrategy(InstallAction.OVERRIDE)
@@ -351,7 +351,7 @@ public class TestInstallUtils {
     }
 
 
-    public static AnalysisReport getCoreAnalysisReport() {
+    public static AnalysisReport getCoreAnalysisReportV1() {
         return AnalysisReport.builder()
                 .categories(Map.of("my-category", Status.NEW, "another_category", Status.DIFF))
                 .groups(Map.of("ecr", Status.NEW, "ps", Status.DIFF))
@@ -360,13 +360,18 @@ public class TestInstallUtils {
                 .fragments(Map.of("title_fragment", Status.NEW, "another_fragment", Status.DIFF))
                 .pageTemplates(Map.of("todomvc_page_model", Status.NEW, "todomvc_another_page_model", Status.DIFF))
                 .pages(Map.of("my-page", Status.NEW, "another-page", Status.DIFF))
-                .resources(Map.of("bundles/something-ece8f6f0/resources/css/custom.css", Status.DIFF,
-                        "bundles/something-ece8f6f0/resources/css/style.css", Status.NEW,
-                        "bundles/something-ece8f6f0/resources/js/configUiScript.js", Status.NEW,
-                        "bundles/something-ece8f6f0/resources/js/script.js", Status.NEW,
-                        "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js", Status.NEW))
-                .widgets(Map.of("another_todomvc_widget-ece8f6f0", Status.DIFF, "todomvc_widget-ece8f6f0", Status.NEW,
-                        "widget_with_config_ui-ece8f6f0", Status.NEW))
+                .resources(Map.of("/something/css/custom.css", Status.DIFF,
+                        "/something/css/style.css", Status.NEW,
+                        "/something/js/configUiScript.js", Status.NEW,
+                        "/something/js/script.js", Status.NEW,
+                        "/something/js/vendor/jquery/jquery.js", Status.NEW))
+                .widgets(Map.of("another_todomvc_widget", Status.DIFF, "todomvc_widget", Status.NEW,
+                        "widget_with_config_ui", Status.NEW))
+                .resources(Map.of("/something/css/custom.css", Status.DIFF,
+                        "/something/css/style.css", Status.NEW,
+                        "/something/js/configUiScript.js", Status.NEW,
+                        "/something/js/script.js", Status.NEW,
+                        "/something/js/vendor/jquery/jquery.js", Status.NEW))
                 .build();
     }
 
@@ -379,7 +384,7 @@ public class TestInstallUtils {
                 .build();
     }
 
-    public static InstallPlan mockInstallPlan() {
+    public static InstallPlan mockInstallPlanV1() {
         return InstallPlan.builder()
                 .hasConflicts(true)
                 .categories(Map.of("my-category", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
@@ -397,19 +402,19 @@ public class TestInstallUtils {
                 .pages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .resources(
-                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("/something/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                                "bundles/something-ece8f6f0/resources/css/style.css",
+                                "/something/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "/something/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                "/something/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                                "bundles/something-ece8f6f0/resources/js/vendor/jquery/jquery.js",
+                                "/something/js/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
-                .widgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
-                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
-                        "widget_with_config_ui-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
+                .widgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
+                        "widget_with_config_ui", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW)))
                 .assets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF)))
                 .contentTypes(
@@ -493,7 +498,7 @@ public class TestInstallUtils {
                 .build();
     }
 
-    public static InstallWithPlansRequest mockInstallWithPlansRequestWithActions() {
+    public static InstallWithPlansRequest mockInstallWithPlansRequestWithActionsV1() {
         return (InstallWithPlansRequest) new InstallWithPlansRequest()
                 .setVersion("0.0.1")
                 .setHasConflicts(true)
@@ -512,18 +517,18 @@ public class TestInstallUtils {
                 .setPages(Map.of("my-page", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE), "another-page",
                         InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setResources(
-                        Map.of("bundles/something-ece8f6f0/resources/css/custom.css",
+                        Map.of("/something/css/custom.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.SKIP),
-                                "bundles/something-ece8f6f0/resources/css/style.css",
+                                "/something/css/style.css",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "bundles/something-ece8f6f0/resources/js/configUiScript.js",
+                                "/something/js/configUiScript.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
-                                "bundles/something-ece8f6f0/resources/js/script.js",
+                                "/something/js/script.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                                "bundles/something-ece8f6f0/resources/vendor/jquery/jquery.js",
+                                "/something/vendor/jquery/jquery.js",
                                 InstallPlanStubHelper.stubComponentInstallPlan(Status.EQUAL, InstallAction.OVERRIDE)))
-                .setWidgets(Map.of("another_todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
-                        "todomvc_widget-ece8f6f0", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
+                .setWidgets(Map.of("another_todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE),
+                        "todomvc_widget", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE)))
                 .setAssets(Map.of("my-asset", InstallPlanStubHelper.stubComponentInstallPlan(Status.NEW, InstallAction.CREATE),
                         "anotherAsset", InstallPlanStubHelper.stubComponentInstallPlan(Status.DIFF, InstallAction.OVERRIDE)))
                 .setContentTypes(
@@ -572,7 +577,7 @@ public class TestInstallUtils {
     }
 
 
-    public static AnalysisReport getPluginAnalysisReport() {
+    public static AnalysisReport getPluginAnalysisReportV1() {
         return AnalysisReport.builder()
                 .plugins(Map.of(PLUGIN_TODOMVC_CUSTOMBASE, Status.DIFF,
                         PLUGIN_TODOMVC_CUSTOMBASE_V3, Status.DIFF,
@@ -590,10 +595,10 @@ public class TestInstallUtils {
                 .build();
     }
 
-    public static void mockAnalysisReport(EntandoCoreClient coreClient, K8SServiceClient k8SServiceClient) {
-        AnalysisReport coreAnalysisReport = getCoreAnalysisReport();
+    public static void mockAnalysisReportV1(EntandoCoreClient coreClient, K8SServiceClient k8SServiceClient) {
+        AnalysisReport coreAnalysisReport = getCoreAnalysisReportV1();
         AnalysisReport cmsAnalysisReport = getCmsAnalysisReport();
-        AnalysisReport pluginAnalysisReport = getPluginAnalysisReport();
+        AnalysisReport pluginAnalysisReport = getPluginAnalysisReportV1();
 
         when(coreClient.getEngineAnalysisReport(any())).thenReturn(coreAnalysisReport);
         when(coreClient.getCMSAnalysisReport(any())).thenReturn(cmsAnalysisReport);
