@@ -82,7 +82,7 @@ class WidgetTemplateGeneratorServiceImplTest {
 
     @Test
     void shouldThrowException_If_claimingApiToNonExistentExternal() {
-        assertThrows(EntandoComponentManagerException.class, () -> service.checkApiClaim(
+        assertThrows(EntandoComponentManagerException.class, () -> service.mustFindApiUrl(
                 new ApiClaim("api-ext", "external", "non-existing", "99999999"),
                 "99999999"
         ));
