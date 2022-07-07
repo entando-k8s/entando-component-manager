@@ -276,7 +276,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         var apiMap = Optional.ofNullable(apiClaimList).orElseGet(ArrayList::new).stream()
                 .map(ac -> {
                     String key = ac.getName();
-                    String url = getApiUrl(ac, bundleId);
+                    String url = mustFindApiUrl(ac, bundleId);
                     if (url.endsWith("/")) {
                         url = url.substring(0, url.length() - 1);
                     }
