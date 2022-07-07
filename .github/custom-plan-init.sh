@@ -1,37 +1,28 @@
 #!/bin/bash
 
 
-ENTANDO_SKOPEO_VERSION="$(
-  grep "ENV\s*ENTANDO_SKOPEO_VERSION" Dockerfile | cut -d'=' -f 2
+ENTANDO_CRANE_VERSION="$(
+  grep "ENV\s*ENTANDO_CRANE_VERSION" Dockerfile | cut -d'=' -f 2
 )"
+WORK_DIR="$HOME/.entando/crane"
+mkdir -p "$WORK_DIR"
+cd "$WORK_DIR"
 
-chmod a+x build-skopeo.sh
-mkdir -p "$HOME/.entando/skopeo";
-./build-skopeo.sh "$HOME/.entando/skopeo" "$ENTANDO_SKOPEO_VERSION";
+echo ""
+echo "> Download crane version: ${ENTANDO_CRANE_VERSION}.."
+echo ""
 
-#cp "$HOME/.entando/skopeo/src/github.com/containers/skopeo/bin/skopeo" "/usr/local/bin"
-#chmod a+x "/usr/local/bin/skopeo"
+curl -OL "https://github.com/google/go-containerregistry/releases/download/$ENTANDO_CRANE_VERSION/go-containerregistry_Linux_i386.tar.gz"
+echo ""
+echo "> Untar crane.."
+echo ""
+tar -zxvf go-containerregistry_Linux_i386.tar.gz
 
-sudo install -m 755 \
-  "$HOME/.entando/skopeo/src/github.com/containers/skopeo/bin/skopeo" \
-  /usr/local/bin/skopeo
+echo ""
+echo "> Install crane.."
+echo ""
+sudo install -m 755 "$WORK_DIR/crane" /usr/local/bin/crane
 
-if [ "$ENTANDO_IN_REAL_PIPELINE" = "true" ]; then
-  sudo install -m 644 \
-    "$HOME/.entando/skopeo/src/github.com/containers/skopeo/default-policy.json" \
-    /etc/containers/policy.json
-  sudo install -m 644 \
-    "$HOME/.entando/skopeo/src/github.com/containers/skopeo/default.yaml" \
-    /etc/containers/registries.d/default.yaml
-else
-  echo ""
-  echo "############################################################################"
-  echo "> WARNING: skopeo installation only partially complete"
-  echo "> reason: not allowed to install system files during non-pipeline executions"
-  echo "############################################################################"
-  echo ""
-fi
+rm -rf "$WORK_DIR"
 
-rm -rf "$HOME/.entando/skopeo"
-
-skopeo -v
+crane version

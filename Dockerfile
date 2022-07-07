@@ -12,6 +12,7 @@ LABEL name="Entando Component Manager" \
 COPY target/generated-resources/licenses /licenses
 
 ### start crane section -- copy and install
+ENV ENTANDO_CRANE_VERSION=v0.10.0
 USER 0
 RUN mkdir /tmp/crane; \
     cd /tmp/crane; \

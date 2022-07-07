@@ -9,15 +9,18 @@ public class MethodRetryer<I, O> {
     private RetryerExecutor<I, O> execMethod = null;
     private Predicate<O> checkerMethod = null;
     private int retries = 3;
-    
+
     public O execute(I input) {
         O result = null;
         boolean success = false;
         int executionNumber = 0;
-        while (!success && executionNumber < retries) {
+        while (!success || executionNumber < retries) {
             result = execMethod.exec(input);
             executionNumber++;
             success = checkerMethod.test(result);
+            if (executionNumber >= retries) {
+                break;
+            }
         }
         return result;
     }

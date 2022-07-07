@@ -166,6 +166,7 @@ public class DockerBundleDownloader extends BundleDownloader {
                     .command(CRANE_CMD)
                     .params(params)
                     .timeout(downloadTimeoutSeconds)
+                    .inheritIO(false)
                     .build());
 
             if (result.getEx() != null) {
@@ -224,6 +225,7 @@ public class DockerBundleDownloader extends BundleDownloader {
                 .command(CRANE_CMD)
                 .params(params)
                 .timeout(downloadTimeoutSeconds)
+                .inheritIO(true)
                 .build());
 
         if (result.getEx() != null) {
@@ -260,7 +262,9 @@ public class DockerBundleDownloader extends BundleDownloader {
             ExecResult result = methodRetryer.execute(
                     ExecProcessInputParameters.builder()
                             .command(TAR_CMD_PATH).params(params)
-                            .timeout(decompressTimeoutSeconds).build());
+                            .timeout(decompressTimeoutSeconds)
+                            .inheritIO(true)
+                            .build());
 
             if (result.getEx() != null) {
                 throw result.getEx();
@@ -294,9 +298,10 @@ public class DockerBundleDownloader extends BundleDownloader {
         try {
 
             ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(parameters.getCommand(),
-                    parameters.getParams());
-            int exitStatus = processHandler.start()
-                    .waitFor(parameters.getTimeout()).exitValue();
+                            parameters.getParams(), parameters.isInheritIO()).start()
+                    .waitFor(parameters.getTimeout());
+            int exitStatus = processHandler.exitValue();
+
             result.setReturnValue(exitStatus);
             result.setProcess(processHandler);
 
@@ -444,5 +449,6 @@ public class DockerBundleDownloader extends BundleDownloader {
         private final String command;
         private final List<String> params;
         private final int timeout;
+        private boolean inheritIO;
     }
 }
