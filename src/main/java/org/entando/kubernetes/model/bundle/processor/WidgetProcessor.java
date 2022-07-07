@@ -207,23 +207,52 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
     /**
      * depending of descriptor version => read or generate the ftl custom ui.
-     *
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param fileName         the filename with path of the widget descriptor
      * @param bundleReader     the bundle reader used to access the bundle files
      * @throws IOException if any file access error occurs
      */
-    private void composeAndSetCustomUi(WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader)
-            throws IOException {
-
+    private void composeAndSetCustomUi(
+            WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader) throws IOException {
+        //~
         if (widgetDescriptor.isVersion1()) {
-            if (widgetDescriptor.getCustomUiPath() != null) {
-                String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
-                widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
-            }
+            composeAndSetCustomUiV1(widgetDescriptor, fileName, bundleReader);
         } else {
-            String ftl = templateGeneratorService.generateWidgetTemplate(fileName, widgetDescriptor, bundleReader);
-            widgetDescriptor.setCustomUi(ftl);
+            composeAndSetCustomUiV5(widgetDescriptor, fileName, bundleReader);
+        }
+    }
+
+    private void composeAndSetCustomUiV1(WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader)
+            throws IOException {
+        if (widgetDescriptor.getCustomUiPath() != null) {
+            String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
+            widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
+        }
+    }
+
+    private void composeAndSetCustomUiV5(WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader)
+            throws IOException {
+        String customUi = null;
+
+        // Tries from file
+        String customUiPath = widgetDescriptor.getCustomUiPath();
+        if (customUiPath != null) {
+            customUi = bundleReader.readFileAsString(customUiPath);
+        }
+
+        // Fallback to direct customUi
+        if (customUi == null) {
+            customUi = widgetDescriptor.getCustomUi();
+        }
+
+        // Fallback to auto generation
+        if (customUi == null) {
+            customUi = templateGeneratorService.generateWidgetTemplate(fileName, widgetDescriptor, bundleReader);
+        }
+
+        // Finalize
+        if (customUi != null) {
+            widgetDescriptor.setCustomUi(customUi);
         }
     }
 

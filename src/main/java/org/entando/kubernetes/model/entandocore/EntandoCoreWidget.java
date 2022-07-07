@@ -1,8 +1,8 @@
 package org.entando.kubernetes.model.entandocore;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -51,8 +51,8 @@ public class EntandoCoreWidget {
     @Getter
     @AllArgsConstructor
     public static class MfeParam {
-        final private String name;
-        final private String description;
+        private final String name;
+        private final String description;
     }
 
 }
