@@ -82,8 +82,9 @@ class WidgetTemplateGeneratorServiceImplTest {
 
     @Test
     void shouldThrowException_If_claimingApiToNonExistentExternal() {
+        final ApiClaim apiClaim = new ApiClaim("api-ext", "external", "non-existing", "99999999");
         assertThrows(EntandoComponentManagerException.class, () -> service.mustFindApiUrl(
-                new ApiClaim("api-ext", "external", "non-existing", "99999999"),
+                apiClaim,
                 "99999999"
         ));
     }
@@ -174,14 +175,12 @@ class WidgetTemplateGeneratorServiceImplTest {
     public void setupPluginDataRepository() {
         PluginDataEntity pluginData1 = new PluginDataEntity()
                 .setBundleId("a1a1a1a1")
-                .setPluginId("a1b2c3d4")
                 .setPluginName("service-id-1")
                 .setPluginCode("pn-a1a1a1a1-a1b2c3d4-service-id-1")
                 .setEndpoint("/path1");
 
         PluginDataEntity pluginData2 = new PluginDataEntity()
                 .setBundleId("a2a2a2a2")
-                .setPluginId("a1b2c3d4")
                 .setPluginName("service-id-2")
                 .setPluginCode("pn-a2a2a2a2-a1b2c3d4-service-id-1")
                 .setEndpoint("/path2");
