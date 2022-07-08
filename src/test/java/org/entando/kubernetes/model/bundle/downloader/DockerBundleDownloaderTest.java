@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Test;
 @Tag("in-process")
 class DockerBundleDownloaderTest {
 
-    private static final String ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS_VAR_NAME = "ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS";
-    public static final String ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS =
-            System.getenv(ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS_VAR_NAME);
-    private static final String ENTANDO_OPT_DOCKER_BUNDLE_TAG_VAR_NAME = "ENTANDO_OPT_DOCKER_BUNDLE_TAG";
-    public static final String ENTANDO_OPT_DOCKER_BUNDLE_TAG =
-            System.getenv(ENTANDO_OPT_DOCKER_BUNDLE_TAG_VAR_NAME);
+    private static final String ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS_VAR_NAME = "ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS";
+    public static final String ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS =
+            System.getenv(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS_VAR_NAME);
+    private static final String ENTANDO_TEST_DOCKER_BUNDLE_TAG_VAR_NAME = "ENTANDO_TEST_DOCKER_BUNDLE_TAG";
+    public static final String ENTANDO_TEST_DOCKER_BUNDLE_TAG =
+            System.getenv(ENTANDO_TEST_DOCKER_BUNDLE_TAG_VAR_NAME);
 
     @Test
     void shouldCreateBundleDownloaderFromTag() {
@@ -39,8 +39,8 @@ class DockerBundleDownloaderTest {
                 .build();
 
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
-                .withVersion(ENTANDO_OPT_DOCKER_BUNDLE_TAG)
-                .withTarball(ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS)
+                .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_TAG)
+                .withTarball(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS)
                 .build();
 
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
@@ -63,10 +63,10 @@ class DockerBundleDownloaderTest {
         factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
 
-        String url = ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_OPT_DOCKER_BUNDLE_TAG;
+        String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_TAG;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
-                .withVersion(ENTANDO_OPT_DOCKER_BUNDLE_TAG)
-                .withTarball(ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS)
+                .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_TAG)
+                .withTarball(ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS)
                 .build();
 
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
@@ -79,13 +79,13 @@ class DockerBundleDownloaderTest {
     }
 
     private boolean shouldRunDockerTest() {
-        if (ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS == null || ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS.length() == 0) {
+        if (ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS == null || ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS.length() == 0) {
             System.out.println(
-                    ENTANDO_OPT_DOCKER_BUNDLE_ADDRESS_VAR_NAME + " is not defined, skipping test");  // NOSONAR
+                    ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS_VAR_NAME + " is not defined, skipping test");  // NOSONAR
             return true;
         }
-        if (ENTANDO_OPT_DOCKER_BUNDLE_TAG == null || ENTANDO_OPT_DOCKER_BUNDLE_TAG.length() == 0) {
-            System.out.println(ENTANDO_OPT_DOCKER_BUNDLE_TAG_VAR_NAME + " is not defined, skipping test");  // NOSONAR
+        if (ENTANDO_TEST_DOCKER_BUNDLE_TAG == null || ENTANDO_TEST_DOCKER_BUNDLE_TAG.length() == 0) {
+            System.out.println(ENTANDO_TEST_DOCKER_BUNDLE_TAG_VAR_NAME + " is not defined, skipping test");  // NOSONAR
             return true;
         }
         return false;
