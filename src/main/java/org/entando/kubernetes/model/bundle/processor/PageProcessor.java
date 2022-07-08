@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implements EntandoEngineReportableProcessor {
-
+    
     private final EntandoCoreClient engineService;
 
     @Override
@@ -92,18 +93,21 @@ public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implem
     private void composeAndSetCode(PageDescriptor pageDescriptor, BundleReader bundleReader) {
         if (!pageDescriptor.isVersion1()) {
             // set the code and the parenCode
-            final String pageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getCode(),
-                    pageDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl());
-            pageDescriptor.setCode(pageCode);
-            final String paretPageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getParentCode(),
-                    pageDescriptor.getParentName(), pageDescriptor, bundleReader.getBundleUrl());
-            pageDescriptor.setParentCode(paretPageCode);
-            
+            if (StringUtils.isBlank(pageDescriptor.getCode())) {
+                final String pageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getCode(),
+                        pageDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl());
+                pageDescriptor.setCode(pageCode);
+            }
+            if (StringUtils.isBlank(pageDescriptor.getParentCode())) {
+                final String paretPageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getParentCode(),
+                        pageDescriptor.getParentName(), pageDescriptor, bundleReader.getBundleUrl());
+                pageDescriptor.setParentCode(paretPageCode);
+            }
         }
     }
     
     private void composeAndSetWidgetCode(WidgetConfigurationDescriptor widgetDescriptor, PageDescriptor pageDescriptor, BundleReader bundleReader) {
-        if (!pageDescriptor.isVersion1()) {
+        if (!pageDescriptor.isVersion1() && StringUtils.isBlank(widgetDescriptor.getCode())) {
             // set the code
             final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
                     widgetDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl());

@@ -18,4 +18,10 @@ public class WidgetConfigurationDescriptor {
     private String name;
     private String code;
     private Map<String, Object> config;
+    
+    public WidgetConfigurationDescriptor setCode(String code) {
+        this.code = code;
+        return this;
+    }
+    
 }
