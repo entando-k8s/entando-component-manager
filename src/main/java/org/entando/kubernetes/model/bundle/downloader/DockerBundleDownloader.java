@@ -36,13 +36,13 @@ public class DockerBundleDownloader extends BundleDownloader {
     private final int downloadRetries;
     private final int decompressTimeoutSeconds;
     private final String jsonContainerRegistryCredentials;
-    public static final String ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS = "ENTANDO_CONTAINER_REGISTRY_CREDENTIALS";
 
-    public DockerBundleDownloader(int downloadTimeoutSeconds, int downloadRetries, int decompressTimeoutSeconds) {
+    public DockerBundleDownloader(int downloadTimeoutSeconds, int downloadRetries, int decompressTimeoutSeconds,
+            String jsonContainerRegistryCredentials) {
         this.downloadTimeoutSeconds = downloadTimeoutSeconds;
         this.downloadRetries = downloadRetries;
         this.decompressTimeoutSeconds = decompressTimeoutSeconds;
-        this.jsonContainerRegistryCredentials = System.getenv(ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS);
+        this.jsonContainerRegistryCredentials = jsonContainerRegistryCredentials;
     }
 
     /**
@@ -152,7 +152,8 @@ public class DockerBundleDownloader extends BundleDownloader {
                 ERROR_WHILE_FETCHING_TAGS_IMAGE);
         params.add(fullyQualifiedImageUrlWithoutTag);
 
-        log.info(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
+        log.info("Executing crane tags list");
+        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
         try {
@@ -213,7 +214,8 @@ public class DockerBundleDownloader extends BundleDownloader {
         params.add(urlWithTagNoTransport);
         params.add(tarImage.toAbsolutePath().toString());
 
-        log.info(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
+        log.info("Executing crane image download");
+        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
         var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
@@ -251,7 +253,8 @@ public class DockerBundleDownloader extends BundleDownloader {
             params.add("-C");
             params.add(targetPath.toAbsolutePath().toString());
 
-            log.info(LOG_CMD_TO_EXECUTE, TAR_CMD_PATH, params.stream().collect(Collectors.joining(" ")),
+            log.info("Executing decompress of the image downloaded");
+            log.debug(LOG_CMD_TO_EXECUTE, TAR_CMD_PATH, params.stream().collect(Collectors.joining(" ")),
                     decompressTimeoutSeconds);
 
             var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
@@ -320,16 +323,10 @@ public class DockerBundleDownloader extends BundleDownloader {
         log.info("doCraneAuthLogin for domain registry:'{}'", credentials.getDomainRegistry());
 
         // crane auth login -u username -p password domainRegistry
-        String param = "auth login";
-        List<String> params = new ArrayList<>(List.of(param.trim().split("\\s+")));
-        params.add("-u");
-        params.add(credentials.getUsername());
-        params.add("-p");
-        params.add(credentials.getPassword());
-        params.add(credentials.getDomainRegistry());
+        List<String> params = composeCraneAuthParamsList(credentials, credentials.getPassword());
 
-        log.info(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream()
-                        .map(v -> obfuscateIfPassword(v, credentials.getPassword()))
+        log.info("Executing crane repository credentials load");
+        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, composeCraneAuthParamsList(credentials, "******").stream()
                         .collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
@@ -356,13 +353,15 @@ public class DockerBundleDownloader extends BundleDownloader {
         }
     }
 
-    private String obfuscateIfPassword(String value, String password) {
-        if (StringUtils.equals(password, value)) {
-            return "*******";
-        } else {
-            return value;
-        }
-
+    private List<String> composeCraneAuthParamsList(RegistryCredentials credentials, String password) {
+        String param = "auth login";
+        List<String> params = new ArrayList<>(List.of(param.trim().split("\\s+")));
+        params.add("-u");
+        params.add(credentials.getUsername());
+        params.add("-p");
+        params.add(password);
+        params.add(credentials.getDomainRegistry());
+        return params;
     }
 
     private boolean descriptorExists(Path dir) {
@@ -384,8 +383,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     private Optional<RegistryCredentials> getCredentials(String fullyQualifiedImageUrl) {
         if (StringUtils.isNotBlank(jsonContainerRegistryCredentials)) {
             ImageValidator image = ImageValidator.parse(fullyQualifiedImageUrl);
-            log.info("manage jsonContainerRegistryCredentials:'{}' for domainRegistry:'{}'",
-                    jsonContainerRegistryCredentials, image.getDomainRegistry());
+            log.debug("manage jsonContainerRegistryCredentials for domainRegistry:'{}'", image.getDomainRegistry());
 
             try {
                 JSONObject rootObj = (JSONObject) new JSONParser(JSONParser.DEFAULT_PERMISSIVE_MODE).parse(
@@ -402,8 +400,8 @@ public class DockerBundleDownloader extends BundleDownloader {
                     return Optional.ofNullable(new RegistryCredentials(image.getDomainRegistry(), username, password));
                 }
             } catch (Exception ex) {
-                log.error("Error retrieve registry credentials from env var name:'{}' value:'{}' for url:'{}'",
-                        ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS, jsonContainerRegistryCredentials,
+                log.error("Error retrieve registry credentials from env value:'{}' for url:'{}'",
+                        jsonContainerRegistryCredentials,
                         fullyQualifiedImageUrl, ex);
             }
         }

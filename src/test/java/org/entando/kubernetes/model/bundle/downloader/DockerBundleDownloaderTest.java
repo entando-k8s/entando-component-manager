@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle.downloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.entando.kubernetes.model.bundle.downloader.DockerBundleDownloader.ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
@@ -14,8 +13,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.ClearEnvironmentVariable;
-import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
 @Tag("in-process")
 class DockerBundleDownloaderTest {
@@ -41,13 +38,13 @@ class DockerBundleDownloaderTest {
 
 
     @Test
-    @SetEnvironmentVariable(key = ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS, value = UNUSED_CREDENTIALS)
     void shouldCreateBundleDownloaderFromTag() {
         if (shouldRunDockerTest()) {
             return;
         }
 
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(300, 3, 600, UNUSED_CREDENTIALS));
         EntandoDeBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
@@ -74,13 +71,13 @@ class DockerBundleDownloaderTest {
     }
 
     @Test
-    @SetEnvironmentVariable(key = ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS, value = UNUSED_CREDENTIALS)
     void shouldRetrieveTagsFromFullyQualifiedUrl() {
         if (shouldRunDockerTest()) {
             return;
         }
 
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(300, 3, 600, UNUSED_CREDENTIALS));
         String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_TAG;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_TAG)
@@ -97,13 +94,12 @@ class DockerBundleDownloaderTest {
     }
 
     @Test
-    @ClearEnvironmentVariable(key = ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS)
     void retrieveTags_shouldReturnError_FromWrongUrl() {
         if (shouldRunDockerTest()) {
             return;
         }
 
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null));
         String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + "WRONG_TAG" + ":" + ENTANDO_TEST_DOCKER_BUNDLE_TAG;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_TAG)
@@ -118,13 +114,13 @@ class DockerBundleDownloaderTest {
     }
 
     @Test
-    @SetEnvironmentVariable(key = ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS, value = WRONG_CREDENTIALS)
     void downloadBundleWithPassword_shouldReturnError_FromWrongPassword() {
         if (shouldRunDockerTest()) {
             return;
         }
 
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(300, 3, 600, WRONG_CREDENTIALS));
         EntandoDeBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
@@ -144,13 +140,13 @@ class DockerBundleDownloaderTest {
     }
 
     @Test
-    @SetEnvironmentVariable(key = ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS, value = "{as , ]}")
     void downloadBundleWithPassword_shouldReturnError_FromWrongJsonCredentials() {
         if (shouldRunDockerTest()) {
             return;
         }
 
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(300, 3, 600, "{as , ]}"));
         EntandoDeBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")

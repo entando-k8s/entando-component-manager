@@ -89,7 +89,7 @@ public class EntandoBundleDownloaderTest {
                 .withName("my-name")
                 .endMetadata()
                 .build();
-        downloader = BundleDownloaderFactory.getForType("git", 300, 3, 600);
+        downloader = BundleDownloaderFactory.getForType("git", 300, 3, 600, null);
         Path target = downloader.saveBundleLocally(bundle, tag);
         Path unexpectedFile = target.resolve("package.json");
         assertThat(unexpectedFile.toFile().exists()).isFalse();
@@ -109,7 +109,7 @@ public class EntandoBundleDownloaderTest {
                 .build();
         WireMockServer npmRegistry = getMockedNpmRegistry();
         npmRegistry.start();
-        downloader = BundleDownloaderFactory.getForType("npm", 300, 3, 600);
+        downloader = BundleDownloaderFactory.getForType("npm", 300, 3, 600, null);
         Path target = downloader.saveBundleLocally(bundle, tag);
         assertThat(target.toFile().exists()).isTrue();
 
@@ -120,16 +120,16 @@ public class EntandoBundleDownloaderTest {
 
     @Test
     public void shouldGetInstanceBasedOnType() {
-        downloader = BundleDownloaderFactory.getForType("NPM", 300, 3, 600);
+        downloader = BundleDownloaderFactory.getForType("NPM", 300, 3, 600, null);
         assertThat(downloader instanceof NpmBundleDownloader).isTrue();
 
-        downloader = BundleDownloaderFactory.getForType("GIT", 300, 3, 600);
+        downloader = BundleDownloaderFactory.getForType("GIT", 300, 3, 600, null);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
-        downloader = BundleDownloaderFactory.getForType("ANYTHING", 300, 3, 600);
+        downloader = BundleDownloaderFactory.getForType("ANYTHING", 300, 3, 600, null);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
-        downloader = BundleDownloaderFactory.getForType(null, 300, 3, 600);
+        downloader = BundleDownloaderFactory.getForType(null, 300, 3, 600, null);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
     }
 
@@ -140,7 +140,7 @@ public class EntandoBundleDownloaderTest {
 
         factory.registerSupplier(BundleDownloaderType.NPM, NpmBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null));
 
         downloader = factory.newDownloader();
         assertThat(downloader).isInstanceOf(GitBundleDownloader.class);
