@@ -16,10 +16,12 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfiguration
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PageDescriptor implements Descriptor {
+public class PageDescriptor extends VersionedDescriptor {
 
     private String code;
+    private String name;
     private String parentCode;
+    private String parentName;
     private String ownerGroup;
     private String pageModel;
     private Map<String, String> titles;

@@ -15,6 +15,7 @@ import lombok.Setter;
 public class WidgetConfigurationDescriptor {
 
     private Integer pos;
+    private String name;
     private String code;
     private Map<String, Object> config;
 }
