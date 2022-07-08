@@ -14,7 +14,7 @@ public class MethodRetryer<I, O> {
         O result = null;
         boolean success = false;
         int executionNumber = 0;
-        while (!success || executionNumber < retries) {
+        while (!success) {
             result = execMethod.exec(input);
             executionNumber++;
             success = checkerMethod.test(result);

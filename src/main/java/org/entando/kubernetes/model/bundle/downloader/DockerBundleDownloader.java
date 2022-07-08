@@ -36,7 +36,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     private final int downloadRetries;
     private final int decompressTimeoutSeconds;
     private final String jsonContainerRegistryCredentials;
-    private static final String ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS = "ENTANDO_CONTAINER_REGISTRY_CREDENTIALS";
+    public static final String ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS = "ENTANDO_CONTAINER_REGISTRY_CREDENTIALS";
 
     public DockerBundleDownloader(int downloadTimeoutSeconds, int downloadRetries, int decompressTimeoutSeconds) {
         this.downloadTimeoutSeconds = downloadTimeoutSeconds;
@@ -328,7 +328,9 @@ public class DockerBundleDownloader extends BundleDownloader {
         params.add(credentials.getPassword());
         params.add(credentials.getDomainRegistry());
 
-        log.info(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
+        log.info(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream()
+                        .map(v -> obfuscateIfPassword(v, credentials.getPassword()))
+                        .collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
         ProcessHandler processHandler = null;
@@ -351,6 +353,14 @@ public class DockerBundleDownloader extends BundleDownloader {
             throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
         } else {
             log.info("Ok doing cran auth login, status:'{}'", exitStatus);
+        }
+    }
+
+    private String obfuscateIfPassword(String value, String password) {
+        if (StringUtils.equals(password, value)) {
+            return "*******";
+        } else {
+            return value;
         }
 
     }
