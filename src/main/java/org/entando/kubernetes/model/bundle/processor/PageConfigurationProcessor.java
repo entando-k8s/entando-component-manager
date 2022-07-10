@@ -21,6 +21,7 @@ import org.entando.kubernetes.model.bundle.installable.PageConfigurationInstalla
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,6 +33,8 @@ import org.springframework.stereotype.Service;
 public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescriptor> {
 
     private final EntandoCoreClient engineService;
+    
+    private final PageDescriptorValidator descriptorValidator;
 
     @Override
     public ComponentType getSupportedComponentType() {
@@ -62,6 +65,7 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescr
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader
                         .readDescriptorFile(fileName, this.getDescriptorClass());
+                this.descriptorValidator.validateOrThrow(pageDescriptor);
                 this.composeAndSetCode(pageDescriptor, bundleReader);
                 Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets -> {
                     widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader));

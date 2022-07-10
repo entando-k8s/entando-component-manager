@@ -1,0 +1,21 @@
+descriptorVersion: v5
+code: my_page
+parentCode: my_homepage
+titles:
+  en: Test page
+  it: Test page
+pageModel: 1-column
+ownerGroup: free
+joinGroups: []
+displayedInMenu: true
+seo: false
+charset: utf-8
+status: published
+widgets:
+  - name: widget1
+    config:
+      param: value
+    pos: 4
+  - name: widget2
+    config: null
+    pos: 5

@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.installable.PageConfigurationInstalla
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,9 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
 
     @Mock
     private DefaultEntandoCoreClient entandoCoreClient;
-
+    
+    private PageDescriptorValidator validator = new PageDescriptorValidator();
+    
     @Mock
     private BundleReader bundleReader;
 
@@ -39,7 +42,8 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        pageConfigurationProcessor = new PageConfigurationProcessor(entandoCoreClient);
+        validator.setupValidatorConfiguration();
+        pageConfigurationProcessor = new PageConfigurationProcessor(entandoCoreClient, validator);
     }
 
     @Test
@@ -90,6 +94,6 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PageConfigurationProcessor(new EntandoCoreClientTestDouble()), "pageConfiguration");
+                new PageConfigurationProcessor(new EntandoCoreClientTestDouble(), validator), "pageConfiguration");
     }
 }

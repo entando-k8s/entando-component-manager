@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
+import org.springframework.util.ObjectUtils;
 
 @Getter
 @Setter
@@ -34,6 +35,9 @@ public class PageDescriptor extends VersionedDescriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(code);
+        return ObjectUtils.isEmpty(code)
+                ? new ComponentKey(name) :
+                new ComponentKey(code);
     }
+    
 }
