@@ -14,17 +14,20 @@ import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
@@ -45,25 +48,56 @@ class PageProcessorTest extends BaseProcessorTest {
         MockitoAnnotations.initMocks(this);
         validator.setupValidatorConfiguration();
         pageProcessor = new PageProcessor(entandoCoreClient, validator);
+        Mockito.lenient().when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
     }
 
     @Test
     public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
         PageDescriptor descriptor = this.createPageDescriptor();
         initBundleReader(descriptor);
-        List<? extends Installable> installables = pageProcessor.process(bundleReader);
+        List<Installable<PageDescriptor>> installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0)).isInstanceOf(PageInstallable.class);
         PageInstallable pginst = (PageInstallable) installables.get(0);
         assertThat(pginst.getName()).isEqualTo("my-page");
+        
+        descriptor.setName("name");
+        descriptor.setCode(null);
+        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        initBundleReader(descriptor);
+        installables = pageProcessor.process(bundleReader);
+        assertThat(installables).hasSize(1);
+        assertThat(installables.get(0).getRepresentation().getCode()).startsWith("name");
+        
+        descriptor.setCode(null);
+        descriptor.setParentName("parent");
+        descriptor.setParentCode(null);
+        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        initBundleReader(descriptor);
+        installables = pageProcessor.process(bundleReader);
+        assertThat(installables).hasSize(1);
+        assertThat(installables.get(0).getRepresentation().getParentCode()).startsWith("parent");
     }
     
     @Test
     public void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
         PageDescriptor descriptor = this.createPageDescriptor();
         descriptor.setName("name");
-        descriptor.setDescriptorVersion("V5");
+        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         initBundleReader(descriptor);
+        assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
+        
+        descriptor.setCode(null);
+        descriptor.setName("%$code");
+        initBundleReader(descriptor);
+        assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
+        
+        descriptor.setName("name");
+        descriptor.setParentName("parent");
+        assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
+        
+        descriptor.setParentCode(null);
+        descriptor.setParentName("%&parent");
         assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
     }
     

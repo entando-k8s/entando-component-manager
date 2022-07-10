@@ -122,28 +122,7 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
         }
         return pageDescriptor;
     }
-
-
-    /*
-    private WidgetConfigurationDescriptor validateWidgetNameAndCodeForV5(WidgetConfigurationDescriptor widgetDescriptor) {
-        String descriptorCodeForMessage = (StringUtils.isBlank(widgetDescriptor.getCode()) ? widgetDescriptor.getName() : widgetDescriptor.getCode());
-        if (!isEmpty(widgetDescriptor.getCode()) && !isEmpty(widgetDescriptor.getName())) {
-            throw new InvalidBundleException(
-                    String.format(NAME_AND_CODE_BOTH_PRESENT, descriptorCodeForMessage));
-        } else if (isEmpty(widgetDescriptor.getCode()) && isEmpty(widgetDescriptor.getName())) {
-            throw new InvalidBundleException(
-                    String.format(NAME_OR_CODE_REQUIRED, descriptorCodeForMessage));
-        }
-        if (!isEmpty(widgetDescriptor.getCode())) {
-            if (!PATTERN_REGEX.matcher(widgetDescriptor.getCode()).matches()) {
-                throw new InvalidBundleException(String.format(WRONG_FORMAT, widgetDescriptor.getCode(), "code"));
-            }
-        } else if (!PATTERN_REGEX.matcher(widgetDescriptor.getName()).matches()) {
-            throw new InvalidBundleException(String.format(WRONG_FORMAT, widgetDescriptor.getName(), "name"));
-        }
-        return widgetDescriptor;
-    }
-     */
+    
     /**
      * ************************************************************************************************************
      * CONFIGURATION END.
