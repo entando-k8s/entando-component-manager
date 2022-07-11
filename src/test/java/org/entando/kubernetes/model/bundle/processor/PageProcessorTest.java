@@ -16,6 +16,7 @@ import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -77,6 +78,20 @@ class PageProcessorTest extends BaseProcessorTest {
         installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0).getRepresentation().getParentCode()).startsWith("parent");
+        
+        descriptor.setCode(null);
+        descriptor.setParentName("parent");
+        descriptor.setParentCode(null);
+        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        descriptor.setWidgets(Collections.singletonList(WidgetConfigurationDescriptor.builder()
+                        .pos(0).name("my-name").build()));
+        initBundleReader(descriptor);
+        installables = pageProcessor.process(bundleReader);
+        assertThat(installables).hasSize(1);
+        PageDescriptor representation = installables.get(0).getRepresentation();
+        assertThat(representation.getWidgets()).hasSize(1);
+        assertThat(representation.getWidgets().get(0).getCode()).isNotEqualTo("my-name");
+        assertThat(representation.getWidgets().get(0).getCode()).startsWith("my-name");
     }
     
     @Test

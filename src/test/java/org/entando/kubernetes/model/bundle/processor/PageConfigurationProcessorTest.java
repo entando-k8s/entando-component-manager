@@ -5,6 +5,8 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -75,11 +77,25 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
         descriptor.setCode(null);
         descriptor.setParentName("parent");
         descriptor.setParentCode(null);
-        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         initBundleReader(descriptor);
         installables = pageConfigurationProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0).getRepresentation().getParentCode()).startsWith("parent");
+        
+        descriptor.setCode(null);
+        descriptor.setParentName("parent");
+        descriptor.setParentCode(null);
+        initBundleReader(descriptor);
+        descriptor.getWidgets().add(WidgetConfigurationDescriptor.builder()
+                        .pos(1).name("my-name").build());
+        initBundleReader(descriptor);
+        installables = pageConfigurationProcessor.process(bundleReader);
+        assertThat(installables).hasSize(1);
+        PageDescriptor representation = installables.get(0).getRepresentation();
+        assertThat(representation.getWidgets()).hasSize(2);
+        assertThat(representation.getWidgets().get(0).getCode()).isEqualTo("my-code");
+        assertThat(representation.getWidgets().get(1).getCode()).isNotEqualTo("my-name");
+        assertThat(representation.getWidgets().get(1).getCode()).startsWith("my-name");
     }
     
     @Test
@@ -108,6 +124,9 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
         Map<String, String> pageTitles = new HashMap<>();
         pageTitles.put("it", "La mia pagina");
         pageTitles.put("en", "My page");
+        List<WidgetConfigurationDescriptor> widgets = new ArrayList<>();
+        widgets.add(WidgetConfigurationDescriptor.builder()
+                        .pos(0).code("my-code").build());
         PageDescriptor pageConfigurationDescriptor = PageDescriptor.builder()
                 .code("my-page")
                 .parentCode("homepage")
@@ -117,8 +136,7 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
                 .ownerGroup("administrators")
                 .seo(false)
                 .titles(pageTitles)
-                .widgets(Collections.singletonList(WidgetConfigurationDescriptor.builder()
-                        .pos(0).code("my-code").build()))
+                .widgets(widgets)
                 .build();
         return pageConfigurationDescriptor;
     }
