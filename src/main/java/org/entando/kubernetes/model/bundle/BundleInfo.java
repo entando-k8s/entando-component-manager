@@ -17,6 +17,7 @@ public class BundleInfo {
     private String name;
     private String description;
     private String gitRepoAddress;
+    private String version;
     private String descriptionImage;
     private List<BundleGroup> bundleGroups;
     private String bundleId;

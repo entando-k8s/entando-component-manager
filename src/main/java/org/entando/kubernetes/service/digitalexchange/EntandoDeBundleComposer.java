@@ -24,6 +24,7 @@ import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
@@ -60,11 +61,12 @@ public class EntandoDeBundleComposer {
         if (ObjectUtils.isEmpty(bundleInfo.getGitRepoAddress())) {
             throw new EntandoValidationException("The received bundle url is null");
         }
-
-        final BundleDownloader bundleDownloader = downloaderFactory.newDownloader();
+        final EntandoDeBundleTag tagAsSelector = (new EntandoDeBundleTagBuilder()).withTarball(
+                bundleInfo.getGitRepoAddress()).build();
+        final BundleDownloader bundleDownloader = downloaderFactory.newDownloader(tagAsSelector);
 
         final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader,
-                bundleInfo.getGitRepoAddress());
+                bundleInfo.getGitRepoAddress(), bundleInfo.getVersion());
         if (bundleDescriptor == null) {
             throw new EntandoComponentManagerException("Null bundle descriptor");
         }
@@ -82,12 +84,21 @@ public class EntandoDeBundleComposer {
      *
      * @param bundleDownloader the bundledownloader to use for the current operation
      * @param bundleUrl        the url of the bundle of which fetching the descriptor
+     * @param version          the version of the bundle of which fetching the descriptor
      * @return the fetched bundle descriptor
      */
-    private BundleDescriptor fetchBundleDescriptor(BundleDownloader bundleDownloader, String bundleUrl) {
+    private BundleDescriptor fetchBundleDescriptor(BundleDownloader bundleDownloader, String bundleUrl,
+            String version) {
 
         try {
-            final String httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(bundleUrl);
+            final String httpProtocolUrl;
+            if (bundleUrl.startsWith(BundleDownloaderConstants.DOCKER_PROTOCOL)) {
+                httpProtocolUrl = bundleUrl + ":" + version;
+                bundleUrl = bundleUrl + ":" + version;
+            } else {
+                httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(bundleUrl);
+
+            }
             ValidationFunctions.composeCommonUrlOrThrow(httpProtocolUrl,
                     "Bundle url is empty", "Bundle url is not valid");
 
@@ -117,6 +128,7 @@ public class EntandoDeBundleComposer {
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
+                // FIXME  should be bundleDescriptor.getName()
                 .withName(bundleDescriptor.getCode())
                 .withDescription(bundleDescriptor.getDescription())
                 .addNewDistTag(BundleUtilities.LATEST_VERSION, getLatestSemverVersion(deBundleTags))

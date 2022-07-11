@@ -442,6 +442,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         }
     }
 
+    @Override
+    public ApplicationStatus getAppStatusPhase(String appName) {
+        return tryOrThrow(() ->
+                traverson.follow(APPS_ENDPOINT).follow(Hop.rel("app").withParameter("name", appName))
+                        .follow(Hop.rel("app-status"))
+                        .toObject(ApplicationStatus.class));
+    }
+
     private Ingress getAppIngress(String appName) {
         return tryOrThrow(() -> traverson.follow(APPS_ENDPOINT)
                 .follow(Hop.rel("app").withParameter("name", appName))

@@ -57,7 +57,7 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public List<EntandoAppPluginLink> getAppLinks(String entandoAppName) {
         return this.inMemoryLinks.stream().filter(link ->
-                link.getSpec().getEntandoAppName().equals(entandoAppName))
+                        link.getSpec().getEntandoAppName().equals(entandoAppName))
                 .collect(Collectors.toList());
 
     }
@@ -170,6 +170,13 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     @Override
     public void undeployDeBundle(String bundleName) {
 
+    }
+
+    @Override
+    public ApplicationStatus getAppStatusPhase(String appName) {
+        ApplicationStatus appStatus = new ApplicationStatus();
+        appStatus.setStatus(deployedLinkPhase.toValue());
+        return appStatus;
     }
 
 }

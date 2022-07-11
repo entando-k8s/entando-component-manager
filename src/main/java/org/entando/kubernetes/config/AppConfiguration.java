@@ -19,9 +19,13 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitProcessListener;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -41,7 +45,7 @@ public class AppConfiguration {
     public int bundleDecompressTimeoutSeconds;
     @Value("${entando.container.registry.credentials:#{null}}")
     public String containerRegistryCredentials = null;
-
+    
     @Getter
     public static boolean truncatePluginBaseNameIfLonger;   // NOSONAR
 
@@ -52,6 +56,11 @@ public class AppConfiguration {
     public AppConfiguration(EntandoCoreClient entandoCoreClient, K8SServiceClient kubernetesServiceClient) {
         this.entandoCoreClient = entandoCoreClient;
         this.kubernetesServiceClient = kubernetesServiceClient;
+    }
+
+    @Bean
+    public ApplicationListener<ApplicationReadyEvent> ecrPostInitProcessListener(PostInitService service) {
+        return new PostInitProcessListener(service);
     }
 
     @Bean

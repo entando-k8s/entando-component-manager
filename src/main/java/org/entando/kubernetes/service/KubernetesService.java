@@ -108,6 +108,11 @@ public class KubernetesService {
 
     }
 
+    public String getCurrentAppStatusPhase() {
+        return k8sServiceClient.getAppStatusPhase(entandoAppName).getStatus();
+    }
+
+
     private EntandoPlugin createNewPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = new EntandoPluginBuilder()
                 .withMetadata(plugin.getMetadata())

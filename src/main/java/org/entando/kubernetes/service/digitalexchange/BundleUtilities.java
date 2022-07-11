@@ -563,11 +563,16 @@ public class BundleUtilities {
                 composedCode += "-" + bundleIdHash;
             }
         } else {
-            composedCode = name + "-" + bundleIdHash;
+            composedCode = composeBundleCode(name, bundleIdHash);
         }
 
         return composedCode;
     }
+
+    public static String composeBundleCode(String bundleName, String bundleId) {
+        return bundleName + "-" + bundleId;
+    }
+
 
     /**
      * This method decodes the input URL with base64 algorithm and validates it.

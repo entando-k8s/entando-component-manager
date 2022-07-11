@@ -2,6 +2,8 @@ package org.entando.kubernetes.client.k8ssvc;
 
 import java.util.List;
 import java.util.Optional;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.entando.kubernetes.client.ECMClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
@@ -44,4 +46,14 @@ public interface K8SServiceClient extends ECMClient {
     EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle);
 
     void undeployDeBundle(String bundleName);
+
+    ApplicationStatus getAppStatusPhase(String appName);
+
+    @Data
+    @NoArgsConstructor
+    class ApplicationStatus {
+
+        private String status;
+    }
+
 }
