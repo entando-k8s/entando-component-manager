@@ -1,13 +1,3 @@
-FROM golang:1.16-bullseye as build
-### start Skopeo stage -- checkout and compile
-ENV ENTANDO_SKOPEO_VERSION=v1.8.0
-RUN echo "$(go version)"
-
-COPY build-skopeo.sh /tmp/
-RUN chmod a+x /tmp/build-skopeo.sh; \
-    mkdir /tmp/skopeo; \
-    /tmp/build-skopeo.sh "/tmp/skopeo" "$ENTANDO_SKOPEO_VERSION";
-
 FROM entando/entando-ubi8-java11-base:6.4.0
 ARG VERSION
 ### Required OpenShift Labels
@@ -21,25 +11,17 @@ LABEL name="Entando Component Manager" \
 
 COPY target/generated-resources/licenses /licenses
 
-### start Skopeo section -- copy and install
-COPY --from=build \
-     /tmp/skopeo/src/github.com/containers/skopeo/bin/skopeo \
-     /tmp/skopeo/src/github.com/containers/skopeo/default-policy.json \
-     /tmp/skopeo/src/github.com/containers/skopeo/default.yaml \
-     /tmp/
-
+### start crane section -- copy and install
+ENV ENTANDO_CRANE_VERSION=v0.10.0
 USER 0
-RUN install -m 755 /tmp/skopeo /usr/local/bin/skopeo; \
-    install -d -m 755 /var/lib/containers/sigstore; \
-    install -d -m 755 /etc/containers; \
-    install -m 644 /tmp/default-policy.json /etc/containers/policy.json; \
-    install -d -m 755 /etc/containers/registries.d; \
-    install -m 644 /tmp/default.yaml /etc/containers/registries.d/default.yaml; \
-    rm /tmp/skopeo; \
-    rm /tmp/default-policy.json; \
-    rm /tmp/default.yaml
+RUN mkdir /tmp/crane; \
+    cd /tmp/crane; \
+    curl -OL https://github.com/google/go-containerregistry/releases/download/v0.10.0/go-containerregistry_Linux_i386.tar.gz; \
+    tar -zxvf go-containerregistry_Linux_i386.tar.gz; \
+    install -m 755 /tmp/crane/crane /usr/local/bin/crane; \
+    rm -R /tmp/crane;
 USER 1001
-### end Skopeo section --
+### end crane section --
 
 ENV PORT=8080 \
     CLASSPATH=/opt/lib \

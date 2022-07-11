@@ -1,8 +1,5 @@
 package org.entando.kubernetes.model.bundle.downloader;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,7 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -27,24 +26,23 @@ public class DockerBundleDownloader extends BundleDownloader {
 
     private static final String ERROR_WHILE_DOWNLOADING_IMAGE = "An error occurred while downloading image";
     private static final String ERROR_WHILE_FETCHING_TAGS_IMAGE = "An error occurred while fetching tag list";
+    private static final String ERROR_WHILE_SETTING_REPOSITORY_CREDENTIALS = "An error occurred while setting image repository credentials";
     private static final String LOG_CMD_TO_EXECUTE = "Command to execute:'{}' with param to execute:'{}' and execution timeout:'{}'";
-    private static final String IMAGE_LAYER_DIR = "image_dir";
-    private static final String SKOPEO_CMD = "skopeo";
+    private static final String IMAGE_TAR = "image.tar";
+    private static final String CRANE_CMD = "crane";
     private static final String TAR_CMD_PATH = "/usr/bin/tar"; //NOSONAR
 
     private final int downloadTimeoutSeconds;
     private final int downloadRetries;
     private final int decompressTimeoutSeconds;
-    private static final ObjectMapper objectMapper = new ObjectMapper().configure(
-            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private final String jsonContainerRegistryCredentials;
-    private static final String ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS = "ENTANDO_CONTAINER_REGISTRY_CREDENTIALS";
 
-    public DockerBundleDownloader(int downloadTimeoutSeconds, int downloadRetries, int decompressTimeoutSeconds) {
+    public DockerBundleDownloader(int downloadTimeoutSeconds, int downloadRetries, int decompressTimeoutSeconds,
+            String jsonContainerRegistryCredentials) {
         this.downloadTimeoutSeconds = downloadTimeoutSeconds;
         this.downloadRetries = downloadRetries;
         this.decompressTimeoutSeconds = decompressTimeoutSeconds;
-        this.jsonContainerRegistryCredentials = System.getenv(ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS);
+        this.jsonContainerRegistryCredentials = jsonContainerRegistryCredentials;
     }
 
     /**
@@ -95,10 +93,10 @@ public class DockerBundleDownloader extends BundleDownloader {
             log.info("Docker image saved");
             untarContainerImage(targetPath);
             return targetPath;
-        } catch (IOException e) {
-            throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);
+        } catch (Exception e) {
             throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);
         }
     }
@@ -121,10 +119,10 @@ public class DockerBundleDownloader extends BundleDownloader {
             log.info("Docker image saved from url:'{}'", url);
             untarContainerImage(targetPath);
             return targetPath;
-        } catch (IOException e) {
-            throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);
+        } catch (Exception e) {
             throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);
         }
     }
@@ -144,124 +142,226 @@ public class DockerBundleDownloader extends BundleDownloader {
         ImageValidator image = ImageValidator.parse(repoUrl);
         image.isValidOrThrow(ERROR_WHILE_FETCHING_TAGS_IMAGE);
 
+        // crane ls repo
         List<String> params = new ArrayList<>();
-        params.add("list-tags");
+        params.add("ls");
         if (useCredentials()) {
-            getCredentials(repoUrl).ifPresent(credentials -> {
-                params.add("--creds");
-                params.add(String.format("%s:%s", credentials.getUsername(), credentials.getPassword()));
-            });
+            getCredentials(repoUrl).ifPresent(this::doCraneAuthLogin);
         }
-        params.add("--retry-times");
-        params.add("" + downloadRetries);
-
-        String fullyQualifiedImageUrlWithoutTag = image.composeCommonUrlOrThrow(ERROR_WHILE_FETCHING_TAGS_IMAGE);
+        String fullyQualifiedImageUrlWithoutTag = image.composeCommonUrlWithoutTransportWithoutTagOrThrow(
+                ERROR_WHILE_FETCHING_TAGS_IMAGE);
         params.add(fullyQualifiedImageUrlWithoutTag);
 
-        log.info(LOG_CMD_TO_EXECUTE, SKOPEO_CMD, params.stream().collect(Collectors.joining(" ")),
+        log.info("Executing crane tags list");
+        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
         try {
-            ProcessHandler process = ProcessHandlerBuilder.buildCommand(SKOPEO_CMD, params, false).start()
-                    .waitFor(downloadTimeoutSeconds);
-            if (process.exitValue() == 0) {
-                String body = process.getOutputLines().stream()
-                        .collect(Collectors.joining("\n"));
-                SkopeoTagList tagList = objectMapper.readValue(body, SkopeoTagList.class);
+            var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
+                    .retries(downloadRetries)
+                    .execMethod(this::genericExecuteCommand)
+                    .checkerMethod(this::checker)
+                    .build();
+
+            ExecResult result = methodRetryer.execute(ExecProcessInputParameters.builder()
+                    .command(CRANE_CMD)
+                    .params(params)
+                    .timeout(downloadTimeoutSeconds)
+                    .inheritIO(false)
+                    .build());
+
+            if (result.getEx() != null) {
+                throw result.getEx();
+            }
+
+            ProcessHandler process = result.getProcess();
+            if (result.getProcess().exitValue() == 0) {
+                List<String> tagList = process.getOutputLines().stream().collect(Collectors.toList());
                 log.debug("found tags info:'{}'", tagList);
-                return new ArrayList<>(List.of(tagList.getTags()));
+                return tagList;
 
             } else {
                 log.warn("Error fetching image tags, status:'{}'", process.exitValue());
                 throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE);
             }
-        } catch (IOException ex) {
-            log.warn("Error retrieve tags", ex);
-            throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE, ex);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
+            log.warn("Error retrieve tags", ex);
+            throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE, ex);
+        } catch (Exception ex) {
             log.warn("Error retrieve tags", ex);
             throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE, ex);
         }
 
     }
 
-    private void saveContainerImage(String fullyQualifiedImageUrl, Path targetPath)
-            throws IOException, InterruptedException {
+    private void saveContainerImage(String fullyQualifiedImageUrl, Path targetPath) throws Exception {
         log.info("saveContainerImage to path:'{}'", targetPath);
 
-        // skopeo copy --src-no-creds --retry-times %s  %s dir:%s
-        String param = "copy --retry-times";
-        final Path tmpImage = Paths.get(targetPath.toString(), IMAGE_LAYER_DIR);
+        // crane export docker.io/entando/ /targetPath/image.tar
+        String param = "export";
+        final Path tarImage = Paths.get(targetPath.toString(), IMAGE_TAR);
         List<String> params = new ArrayList<>(List.of(param.trim().split("\\s+")));
-        params.add("" + downloadRetries);
         if (useCredentials()) {
-            getCredentials(fullyQualifiedImageUrl).ifPresent(credentials -> {
-                params.add("--src-creds");
-                params.add(String.format("%s:%s", credentials.getUsername(), credentials.getPassword()));
-            });
+            getCredentials(fullyQualifiedImageUrl).ifPresent(this::doCraneAuthLogin);
         }
-        params.add(fullyQualifiedImageUrl);
-        params.add("dir:" + tmpImage.toAbsolutePath());
 
-        log.info(LOG_CMD_TO_EXECUTE, SKOPEO_CMD, params.stream().collect(Collectors.joining(" ")),
+        ImageValidator image = ImageValidator.parse(fullyQualifiedImageUrl);
+        image.isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
+        String urlWithTagNoTransport = image.composeCommonUrlWithoutTransportOrThrow(
+                ERROR_WHILE_FETCHING_TAGS_IMAGE);
+
+        params.add(urlWithTagNoTransport);
+        params.add(tarImage.toAbsolutePath().toString());
+
+        log.info("Executing crane image download");
+        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
-        ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(SKOPEO_CMD, params)
-                .start()
-                .waitFor(downloadTimeoutSeconds);
-        int exitStatus = processHandler.exitValue();
-        if (exitStatus != 0 || !tmpImage.toFile().exists()) {
-            log.warn("Error downloading image status:'{}' folder exists:'{}'", exitStatus, tmpImage.toFile().exists());
+        var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
+                .retries(downloadRetries)
+                .checkerMethod(this::checker)
+                .execMethod(this::genericExecuteCommand).build();
+
+        ExecResult result = methodRetryer.execute(ExecProcessInputParameters.builder()
+                .command(CRANE_CMD)
+                .params(params)
+                .timeout(downloadTimeoutSeconds)
+                .inheritIO(true)
+                .build());
+
+        if (result.getEx() != null) {
+            throw result.getEx();
+        }
+        int exitStatus = result.getReturnValue();
+        if (exitStatus != 0 || !tarImage.toFile().exists()) {
+            log.warn("Error downloading image status:'{}' tarImage exists:'{}'", exitStatus,
+                    tarImage.toFile().exists());
             throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
         } else {
             log.info("Ok download image, status:'{}'", exitStatus);
         }
     }
 
-    private void untarContainerImage(Path targetPath) throws IOException, InterruptedException {
-        Path tmpImageDir = Paths.get(targetPath.toString(), IMAGE_LAYER_DIR);
+    private void untarContainerImage(Path targetPath) throws Exception {
+        Path tarImagePath = Paths.get(targetPath.toString(), IMAGE_TAR);
 
-        Path imageManifest = Paths.get(tmpImageDir.toString(), "manifest.json");
-        if (imageManifest.toFile().exists()) {
+        if (tarImagePath.toFile().exists()) {
+            List<String> params = new ArrayList<>();
+            params.add("-xf");
+            params.add(tarImagePath.toAbsolutePath().toString());
+            params.add("-C");
+            params.add(targetPath.toAbsolutePath().toString());
 
-            Manifest manifest = objectMapper.readValue(imageManifest.toFile(), Manifest.class);
-            for (Layer layer : manifest.getLayers()) {
-                Path layerTarFile = Paths.get(tmpImageDir.toString(),
-                        StringUtils.substringAfter(layer.getDigest(), ":"));
-                if (layerTarFile.toFile().exists()) {
-                    List<String> params = new ArrayList<>();
-                    params.add("-xf");
-                    params.add(layerTarFile.toAbsolutePath().toString());
-                    params.add("-C");
-                    params.add(targetPath.toAbsolutePath().toString());
+            log.info("Executing decompress of the image downloaded");
+            log.debug(LOG_CMD_TO_EXECUTE, TAR_CMD_PATH, params.stream().collect(Collectors.joining(" ")),
+                    decompressTimeoutSeconds);
 
-                    log.info(LOG_CMD_TO_EXECUTE, TAR_CMD_PATH, params.stream().collect(Collectors.joining(" ")),
-                            decompressTimeoutSeconds);
+            var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
+                    .retries(1).execMethod(this::genericExecuteCommand)
+                    .checkerMethod(this::checker)
+                    .build();
 
-                    ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(TAR_CMD_PATH, params);
-                    int exitStatus = processHandler.start()
-                            .waitFor(decompressTimeoutSeconds).exitValue();
-                    if (exitStatus != 0) {
-                        log.warn("error unzip image status:'{}'", exitStatus);
-                        throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
-                    } else {
-                        log.info("Ok unzip image, status:'{}'", exitStatus);
-                    }
-                } else {
-                    log.warn("error for image layer with digest:'{}' path:'{}' not exist", layer.getDigest(),
-                            layerTarFile.toAbsolutePath());
+            ExecResult result = methodRetryer.execute(
+                    ExecProcessInputParameters.builder()
+                            .command(TAR_CMD_PATH).params(params)
+                            .timeout(decompressTimeoutSeconds)
+                            .inheritIO(true)
+                            .build());
+
+            if (result.getEx() != null) {
+                throw result.getEx();
+            }
+            int exitStatus = result.getReturnValue();
+
+            if (exitStatus != 0) {
+                log.warn("error decompress image process status:'{}'", exitStatus);
+                throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
+            } else {
+                log.debug("Ok decompress image, status:'{}'", exitStatus);
+                if (!descriptorExists(targetPath)) {
+                    log.warn("descriptor not exists:'{}'", descriptorExists(targetPath));
                     throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
                 }
             }
-            if (!descriptorExists(targetPath)) {
-                log.warn("descriptor not exists:'{}'", descriptorExists(targetPath));
-                throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
-            }
         } else {
-            log.warn("error image manifest path:'{}' not exist", imageManifest.toAbsolutePath());
+            log.warn("error tar file from crane with path:'{}' not exist", tarImagePath.toAbsolutePath());
             throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
         }
+    }
+
+    private boolean checker(ExecResult result) {
+        boolean success = result.getReturnValue() == 0;
+        boolean isException = result.getEx() != null;
+        return success || isException;
+    }
+
+    private ExecResult genericExecuteCommand(ExecProcessInputParameters parameters) {
+        ExecResult result = new ExecResult();
+        try {
+
+            ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(parameters.getCommand(),
+                            parameters.getParams(), parameters.isInheritIO()).start()
+                    .waitFor(parameters.getTimeout());
+            int exitStatus = processHandler.exitValue();
+
+            result.setReturnValue(exitStatus);
+            result.setProcess(processHandler);
+
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            result.setEx(ex);
+
+        } catch (IOException ex) {
+            result.setEx(ex);
+        }
+        return result;
+    }
+
+
+    private void doCraneAuthLogin(RegistryCredentials credentials) {
+        log.info("doCraneAuthLogin for domain registry:'{}'", credentials.getDomainRegistry());
+
+        // crane auth login -u username -p password domainRegistry
+        List<String> params = composeCraneAuthParamsList(credentials, credentials.getPassword());
+
+        log.info("Executing crane repository credentials load");
+        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, composeCraneAuthParamsList(credentials, "******").stream()
+                        .collect(Collectors.joining(" ")),
+                downloadTimeoutSeconds);
+
+        ProcessHandler processHandler = null;
+        try {
+            processHandler = ProcessHandlerBuilder.buildCommand(CRANE_CMD, params)
+                    .start()
+                    .waitFor(downloadTimeoutSeconds);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            log.warn("Error executing cran auth login", ex);
+            throw new BundleDownloaderException(ERROR_WHILE_SETTING_REPOSITORY_CREDENTIALS, ex);
+        } catch (IOException ex) {
+            log.error("Error executing cran auth login", ex);
+            throw new BundleDownloaderException(ERROR_WHILE_SETTING_REPOSITORY_CREDENTIALS, ex);
+        }
+
+        int exitStatus = processHandler.exitValue();
+        if (exitStatus != 0) {
+            log.warn("Error doing cran auth login, status:'{}'", exitStatus);
+            throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
+        } else {
+            log.info("Ok doing cran auth login, status:'{}'", exitStatus);
+        }
+    }
+
+    private List<String> composeCraneAuthParamsList(RegistryCredentials credentials, String password) {
+        String param = "auth login";
+        List<String> params = new ArrayList<>(List.of(param.trim().split("\\s+")));
+        params.add("-u");
+        params.add(credentials.getUsername());
+        params.add("-p");
+        params.add(password);
+        params.add(credentials.getDomainRegistry());
+        return params;
     }
 
     private boolean descriptorExists(Path dir) {
@@ -270,7 +370,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     }
 
     private void killPendingProcess() {
-        ProcessHandlerUtils.killProcessContainsName(SKOPEO_CMD);
+        ProcessHandlerUtils.killProcessContainsName(CRANE_CMD);
         ProcessHandlerUtils.killProcessStartWithName(TAR_CMD_PATH);
     }
 
@@ -283,8 +383,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     private Optional<RegistryCredentials> getCredentials(String fullyQualifiedImageUrl) {
         if (StringUtils.isNotBlank(jsonContainerRegistryCredentials)) {
             ImageValidator image = ImageValidator.parse(fullyQualifiedImageUrl);
-            log.info("manage jsonContainerRegistryCredentials:'{}' for domainRegistry:'{}'",
-                    jsonContainerRegistryCredentials, image.getDomainRegistry());
+            log.debug("manage jsonContainerRegistryCredentials for domainRegistry:'{}'", image.getDomainRegistry());
 
             try {
                 JSONObject rootObj = (JSONObject) new JSONParser(JSONParser.DEFAULT_PERMISSIVE_MODE).parse(
@@ -298,11 +397,11 @@ public class DockerBundleDownloader extends BundleDownloader {
                     String username = (String) domainRegistryObj.get("username");
                     String password = (String) domainRegistryObj.get("password");
 
-                    return Optional.ofNullable(new RegistryCredentials(username, password));
+                    return Optional.ofNullable(new RegistryCredentials(image.getDomainRegistry(), username, password));
                 }
             } catch (Exception ex) {
-                log.error("Error retrieve registry credentials from env var name:'{}' value:'{}' for url:'{}'",
-                        ENV_NAME_ENTANDO_CONTAINER_REGISTRY_CREDENTIALS, jsonContainerRegistryCredentials,
+                log.error("Error retrieve registry credentials from env value:'{}' for url:'{}'",
+                        jsonContainerRegistryCredentials,
                         fullyQualifiedImageUrl, ex);
             }
         }
@@ -322,6 +421,20 @@ public class DockerBundleDownloader extends BundleDownloader {
         return fullyQualified;
     }
 
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class ExecResult {
+
+        private int returnValue;
+        private Exception ex;
+        private ProcessHandler process;
+
+    }
+
     // support class used to easily unmarshalling json and to improve readability
     @Getter
     @Setter
@@ -329,31 +442,21 @@ public class DockerBundleDownloader extends BundleDownloader {
     @ToString
     private static class RegistryCredentials {
 
+        private String domainRegistry;
         private String username;
         private String password;
     }
 
     @Getter
     @Setter
-    private static class Manifest {
-
-        private Layer[] layers;
-    }
-
-    @Getter
-    @Setter
-    private static class Layer {
-
-        private String digest;
-    }
-
-    @Getter
-    @Setter
+    @AllArgsConstructor
+    @Builder
     @ToString
-    private static class SkopeoTagList {
+    private static class ExecProcessInputParameters {
 
-        @JsonProperty("Tags")
-        private String[] tags = new String[0];
+        private final String command;
+        private final List<String> params;
+        private final int timeout;
+        private boolean inheritIO;
     }
-
 }

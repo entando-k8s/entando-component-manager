@@ -20,7 +20,7 @@ class BundleDownloaderFactoryTest {
     void shouldCreateBundleDownloaderFromTag() {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600));
+        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null));
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
 
         EntandoDeBundleTag tagGit = new EntandoDeBundleTagBuilder()

@@ -39,6 +39,8 @@ public class AppConfiguration {
     public int bundleDownloadRetries;
     @Value("${entando.bundle.decompress.timeout:600}")
     public int bundleDecompressTimeoutSeconds;
+    @Value("${entando.container.registry.credentials:#{null}}")
+    public String containerRegistryCredentials = null;
 
     @Getter
     public static boolean truncatePluginBaseNameIfLonger;   // NOSONAR
@@ -57,10 +59,10 @@ public class AppConfiguration {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(
                 () -> BundleDownloaderFactory.getForType(type, bundleDownloadTimeoutSeconds, bundleDownloadRetries,
-                        bundleDecompressTimeoutSeconds));
+                        bundleDecompressTimeoutSeconds, containerRegistryCredentials));
         factory.registerSupplier(BundleDownloaderType.DOCKER,
                 () -> new DockerBundleDownloader(bundleDownloadTimeoutSeconds, bundleDownloadRetries,
-                        bundleDecompressTimeoutSeconds));
+                        bundleDecompressTimeoutSeconds, containerRegistryCredentials));
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.NPM, NpmBundleDownloader::new);
         return factory;

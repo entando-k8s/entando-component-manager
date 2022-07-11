@@ -14,15 +14,16 @@ public class BundleDownloaderFactory {
     /**
      * Build the correct BundleDownloader implementation based on the input parameters.
      *
-     * @param type                     the string must be a valid constant of BundleDownloaderConstants and is used to
-     *                                 select the implementation
-     * @param downloadTimeoutSeconds   the download timeout useful for DockerBundleDownloader
-     * @param downloadRetries          the number of download attempts useful for DockerBundleDownloader
-     * @param decompressTimeoutSeconds the decompress image timeout useful for DockerBundleDownloader
+     * @param type                             the string must be a valid constant of BundleDownloaderConstants and is
+     *                                         used to select the implementation
+     * @param downloadTimeoutSeconds           the download timeout useful for DockerBundleDownloader
+     * @param downloadRetries                  the number of download attempts useful for DockerBundleDownloader
+     * @param decompressTimeoutSeconds         the decompress image timeout useful for DockerBundleDownloader
+     * @param jsonContainerRegistryCredentials the domain registry and his credentials, it can be null
      * @return the correct BundleDownloader implementation
      */
     public static BundleDownloader getForType(String type, int downloadTimeoutSeconds, int downloadRetries,
-            int decompressTimeoutSeconds) {
+            int decompressTimeoutSeconds, String jsonContainerRegistryCredentials) {
         if (type == null) {
             return new GitBundleDownloader();
         }
@@ -31,7 +32,8 @@ public class BundleDownloaderFactory {
             case BundleDownloaderConstants.CODE_TYPE_NPM:
                 return new NpmBundleDownloader();
             case BundleDownloaderConstants.CODE_TYPE_DOCKER:
-                return new DockerBundleDownloader(downloadTimeoutSeconds, downloadRetries, decompressTimeoutSeconds);
+                return new DockerBundleDownloader(downloadTimeoutSeconds, downloadRetries, decompressTimeoutSeconds,
+                        jsonContainerRegistryCredentials);
             case BundleDownloaderConstants.CODE_TYPE_GIT:
             default:
                 return new GitBundleDownloader();

@@ -12,7 +12,7 @@ on:
       - release/*
 
 env:
-  ENTANDO_OPT_USE_PPL_TAG: "v1.4.0"
+  ENTANDO_OPT_USE_PPL_TAG: "v1.4.1"
   ENTANDO_OPT_DATA_REPO: "${{ secrets.ENTANDO_OPT_DATA_REPO }}"
   ENTANDO_OPT_DATA_REPO_TOKEN: "${{ secrets.ENTANDO_OPT_DATA_REPO_TOKEN }}"
   ENTANDO_OPT_ENVIRONMENT_NAMES: "${{ secrets.ENTANDO_OPT_ENVIRONMENT_NAMES }}"
@@ -40,8 +40,8 @@ jobs:
         run: |
           ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
           ~/ppl-run \
-            .. status-report \
             .. @checkout-branch --lcd "$LOCAL_CLONE_DIR" \
+            .. status-report \
             .. @setup-feature-flags "PR_PREFLIGHT_CHECKS" "BOM_CHECK" "BOM" \
             .. @setup-features-list "SCAN_MATRIX" --prefix "MTX-MVN-,MTX-SCAN-" \
           ;
@@ -152,8 +152,8 @@ jobs:
               export ENTANDO_OPT_IMAGE_REGISTRY_CREDENTIALS="${{ secrets.ENTANDO_OPT_IMAGE_REGISTRY_CREDENTIALS }}"
               export ENTANDO_OPT_DOCKER_USERNAME="${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}"
               export ENTANDO_OPT_DOCKER_PASSWORD="${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}"
-              export ENTANDO_OPT_TEST_TLS_CRT="${{ secrets.ENTANDO_OPT_TEST_TLS_CRT }}"
-              export ENTANDO_OPT_TEST_TLS_KEY="${{ secrets.ENTANDO_OPT_TEST_TLS_KEY }}"
+              export ENTANDO_TEST_TLS_CRT="${{ secrets.ENTANDO_TEST_TLS_CRT }}"
+              export ENTANDO_TEST_TLS_KEY="${{ secrets.ENTANDO_TEST_TLS_KEY }}"
               ;;
           esac
           ~/ppl-run generic "$SCAN_TYPE" mvn --id "$SCAN_TYPE" --lcd "$LOCAL_CLONE_DIR"
