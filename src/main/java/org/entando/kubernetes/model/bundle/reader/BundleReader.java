@@ -150,7 +150,7 @@ public class BundleReader {
                 log.error("Collection of widget files interrupted due to IO error", e);
             }
         } else {
-            log.info("Widgets directory:'{}' doesn't exist", resourcePath.toAbsolutePath());
+            log.debug("Widgets directory:'{}' doesn't exist", resourcePath.toAbsolutePath());
         }
         return res;
     }
