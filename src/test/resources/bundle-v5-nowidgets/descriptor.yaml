@@ -1,0 +1,10 @@
+descriptorVersion: v5
+
+name: something
+description: bundle description
+
+components:
+    plugins:
+        - plugins/todomvcV3_complete.yaml
+        - plugins/todomvcV4_complete.yaml
+        - plugins/todomvcV5_complete.yaml
