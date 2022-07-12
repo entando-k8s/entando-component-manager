@@ -1,0 +1,18 @@
+descriptorVersion: v4
+image: entando/todomvcV3:1.0.0
+name: customBaseNameV5
+dbms: mysql
+healthCheckPath: /api/v1/todos
+roles:
+  - user
+  - admin
+ingressPath: "/myhostname.io/entando-plugin"
+permissions:
+  - clientId: realm-management
+    role: manage-users
+  - clientId: realm-management
+    role: view-users
+securityLevel: lenient
+environmentVariables:
+  - name: env1Name
+    value: env1value

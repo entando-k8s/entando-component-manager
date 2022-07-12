@@ -139,14 +139,18 @@ public class BundleReader {
     public List<String> getWidgetsFiles() {
         var res = new ArrayList<String>();
         Path resourcePath = bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue());
-        try (Stream<Path> paths = Files.walk(resourcePath, 1)) {
-            paths.forEach(path -> {
-                if (Files.isDirectory(path) && !path.equals(resourcePath)) {
-                    res.addAll(getResourceOfType(path.toString(), Files::isRegularFile));
-                }
-            });
-        } catch (IOException e) {
-            log.error("Collection of widget files interrupted due to IO error", e);
+        if (resourcePath.toFile().exists()) {
+            try (Stream<Path> paths = Files.walk(resourcePath, 1)) {
+                paths.forEach(path -> {
+                    if (Files.isDirectory(path) && !path.equals(resourcePath)) {
+                        res.addAll(getResourceOfType(path.toString(), Files::isRegularFile));
+                    }
+                });
+            } catch (IOException e) {
+                log.error("Collection of widget files interrupted due to IO error", e);
+            }
+        } else {
+            log.debug("Widgets directory:'{}' doesn't exist", resourcePath.toAbsolutePath());
         }
         return res;
     }

@@ -19,6 +19,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
+import org.codehaus.plexus.util.FileUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -59,11 +60,19 @@ public class EntandoBundleReaderTest {
 
     BundleReader bundleReader;
     Path bundleFolder;
+    BundleReader bundleReaderV5;
+    Path bundleFolderV5;
+    BundleReader bundleReaderNoWidgetsV5;
+    Path bundleFolderNoWidgetsV5;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
         bundleReader = new BundleReader(bundleFolder, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
+        bundleReaderV5 = new BundleReader(bundleFolder, BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        bundleFolderNoWidgetsV5 = new ClassPathResource("bundle-v5-nowidgets").getFile().toPath();
+        bundleReaderNoWidgetsV5 = new BundleReader(bundleFolderNoWidgetsV5, BundleInfoStubHelper.GIT_REPO_ADDRESS);
     }
 
     @Test
@@ -409,8 +418,14 @@ public class EntandoBundleReaderTest {
 
     @Test
     void getWidgetsFilesShouldReturnExpectedFiles() {
-        var files = bundleReader.getWidgetsFiles();
+        var files = bundleReaderV5.getWidgetsFiles();
         assertThat(files).hasSize(4);
+    }
+
+    @Test
+    void getWidgetsFilesShouldReturnEmptyIfNoWidgetsFolder() {
+        var files = bundleReaderNoWidgetsV5.getWidgetsFiles();
+        assertThat(files).isEmpty();
     }
 
     private Path getTestDefaultBundlePath() throws IOException {
