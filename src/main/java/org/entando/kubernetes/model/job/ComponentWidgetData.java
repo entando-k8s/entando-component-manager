@@ -15,6 +15,7 @@
 package org.entando.kubernetes.model.job;
 
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +36,7 @@ public class ComponentWidgetData {
     private String widgetCode;
     private String widgetName;
     private String widgetType;
-    private String bundleGroup;
+    private String permGroup;
 
     // json fields and metadata
     private String customElement;
@@ -43,5 +44,15 @@ public class ComponentWidgetData {
     @JsonRawValue
     private String descriptorExt;
     private SystemParams systemParams;
+    private Labels labels;
+
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Labels {
+        private List<String> pbcNames;
+    }
 
 }

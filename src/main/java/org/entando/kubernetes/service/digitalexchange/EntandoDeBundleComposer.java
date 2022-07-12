@@ -2,11 +2,13 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -14,6 +16,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
+import org.entando.kubernetes.model.bundle.BundleInfo.BundleGroup;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -34,6 +37,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class EntandoDeBundleComposer {
 
+    public static final String PBC_ANNOTATIONS_KEY = "pbc.entando.org/";
     private final BundleDownloaderFactory downloaderFactory;
 
     @Autowired
@@ -70,7 +74,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoComponentManagerException("No versions available for the received bundle");
         }
 
-        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo.getGitRepoAddress(), bundleInfo);
+        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo);
     }
 
     /**
@@ -98,9 +102,9 @@ public class EntandoDeBundleComposer {
     }
 
     private EntandoDeBundle createEntandoDeBundle(BundleDescriptor bundleDescriptor, List<String> tagList,
-            String bundleUrl, BundleInfo bundleInfo) {
+            BundleInfo bundleInfo) {
 
-        final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleUrl);
+        final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleInfo.getGitRepoAddress());
         final List<String> versionList = deBundleTags.stream()
                 .map(EntandoDeBundleTag::getVersion)
                 .collect(Collectors.toList());
@@ -109,6 +113,7 @@ public class EntandoDeBundleComposer {
                 .withNewMetadata()
                 .withName(BundleUtilities.composeBundleIdentifier(bundleInfo.getName()))
                 .withLabels(createLabelsFrom(bundleDescriptor))
+                .withAnnotations(createAnnotationsFrom(bundleInfo.getBundleGroups()))
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
@@ -160,6 +165,15 @@ public class EntandoDeBundleComposer {
         labelsMap.put("bundle-type", BundleType.STANDARD_BUNDLE.getType());
 
         return labelsMap;
+    }
+
+    private Map<String, String> createAnnotationsFrom(List<BundleGroup> bundleGroups) {
+
+        return Optional.ofNullable(bundleGroups)
+                .orElseGet(ArrayList::new).stream()
+                .filter(g -> ObjectUtils.isNotEmpty(g.getName()))
+                .map(g -> PBC_ANNOTATIONS_KEY + g.getName())
+                .collect(Collectors.toMap(k -> k, v -> "true"));
     }
 
     /**

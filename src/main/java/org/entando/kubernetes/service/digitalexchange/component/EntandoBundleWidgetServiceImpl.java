@@ -15,6 +15,7 @@
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -23,9 +24,12 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.ComponentWidgetData;
+import org.entando.kubernetes.model.job.ComponentWidgetData.Labels;
+import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -37,12 +41,14 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
 
     private final ComponentDataRepository componentDataRepository;
     private static final ObjectMapper jsonMapper = new ObjectMapper();
+    private final InstalledEntandoBundleRepository installedComponentRepo;
 
     @Override
     public PagedMetadata<ComponentWidgetData> listWidgets(PagedListRequest request) {
         List<ComponentWidgetData> allWidgets = componentDataRepository.findAll().stream()
                 .filter(c -> ComponentType.WIDGET.equals(c.getComponentType()))
                 .map(this::convertToComponentWidgetData)
+                .map(this::populatePbcList)
                 .collect(Collectors.toList());
 
         List<ComponentWidgetData> localFilteredList = new ComponentWidgetDataListProcessor(request, allWidgets)
@@ -74,12 +80,24 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
                 .widgetCode(entity.getComponentCode())
                 .widgetName(entity.getComponentName())
                 .widgetType(entity.getComponentSubType())
-                .bundleGroup(entity.getComponentGroup())
+                .permGroup(entity.getComponentGroup())
                 .customElement(widgetDescriptor.getCustomElement())
                 .assets(widgetDescriptor.getDescriptorMetadata().getAssets())
                 .descriptorExt(descriptorExt)
                 .systemParams(widgetDescriptor.getDescriptorMetadata().getSystemParams())
                 .build();
 
+    }
+
+    private ComponentWidgetData populatePbcList(ComponentWidgetData componentWidgetData) {
+        final List<String> pbcList = installedComponentRepo.findByBundleId(componentWidgetData.getBundleId())
+                .map(EntandoBundleEntity::getPbcList)
+                .map(pbcs -> Arrays.asList(pbcs.split(",")))
+                .orElse(null);
+        if (componentWidgetData.getLabels() == null) {
+            componentWidgetData.setLabels(new Labels());
+        }
+        componentWidgetData.getLabels().setPbcNames(pbcList);
+        return componentWidgetData;
     }
 }

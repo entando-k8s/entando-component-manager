@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Sets;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -54,7 +53,6 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
-import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -164,11 +162,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     // and doesn't have a FK to PluginDataEntity I calculate the bundleId on the fly from the repoUrl
     @Override
     public Optional<EntandoBundle> getInstalledBundleByBundleId(String bundleId) {
-        return installedComponentRepo.findAll().stream()
-                .filter(b -> b.isInstalled() && StringUtils.equals(bundleId,
-                        BundleUtilities.removeProtocolAndGetBundleId(
-                                ValidationFunctions.composeCommonUrlOrThrow(b.getRepoUrl(), "", ""))))
-                .findFirst().map(this::convertToBundleFromEntity).or(Optional::empty);
+        return installedComponentRepo.findByBundleId(bundleId).map(this::convertToBundleFromEntity);
     }
 
     @Override

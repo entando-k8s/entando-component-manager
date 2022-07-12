@@ -104,6 +104,7 @@ public class TestInstallUtils {
             .pathSegment("components", MOCK_BUNDLE_NAME, "uninstall");
     public static final UriBuilder UNINSTALL_COMPONENT_ENDPOINT_V5 = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME_V5, "uninstall");
+    public static final UriBuilder DEPLOY_COMPONENT_ENDPOINT = ALL_COMPONENTS_ENDPOINT;
     public static final String JOBS_ENDPOINT = "/jobs";
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);

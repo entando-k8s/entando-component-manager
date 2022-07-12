@@ -31,7 +31,7 @@ public class ComponentWidgetDataListProcessor extends RequestListProcessor<Compo
     public static final String ID = "id";
     public static final String BUNDLE_ID = "bundleId";
     public static final String WIDGET_TYPE = "widgetType";
-    public static final String BUNDLE_GROUP = "bundleGroup";
+    public static final String PERM_GROUP = "permGroup";
 
     public ComponentWidgetDataListProcessor(PagedListRequest listRequest, List<ComponentWidgetData> components) {
         super(listRequest, components);
@@ -49,8 +49,8 @@ public class ComponentWidgetDataListProcessor extends RequestListProcessor<Compo
                     return c -> FilterUtils.filterString(filter, c.getBundleId());
                 case WIDGET_TYPE:
                     return c -> FilterUtils.filterString(filter, c.getWidgetType());
-                case BUNDLE_GROUP:
-                    return c -> FilterUtils.filterString(filter, c.getBundleGroup());
+                case PERM_GROUP:
+                    return c -> FilterUtils.filterString(filter, c.getPermGroup());
                 // no filter by id because it has no meaning and id is null for bundle CR only
                 case ID:
                 default:
@@ -67,8 +67,8 @@ public class ComponentWidgetDataListProcessor extends RequestListProcessor<Compo
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getBundleId(), b.getBundleId());
                 case WIDGET_TYPE:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getWidgetType(), b.getWidgetType());
-                case BUNDLE_GROUP:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getBundleGroup(), b.getBundleGroup());
+                case PERM_GROUP:
+                    return (a, b) -> StringUtils.compareIgnoreCase(a.getPermGroup(), b.getPermGroup());
                 case ID:
                 default:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getId(), b.getId());

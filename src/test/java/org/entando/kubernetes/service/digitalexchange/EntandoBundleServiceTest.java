@@ -6,7 +6,9 @@ import static org.entando.kubernetes.TestEntitiesGenerator.getTestComponent;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -584,6 +586,7 @@ public class EntandoBundleServiceTest {
             listKo.add(entity);
         });
         when(installedComponentRepository.findAll()).thenReturn(listKo);
+        doCallRealMethod().when(installedComponentRepository).findByBundleId(anyString());
         Optional<EntandoBundle> entandoBundle = service.getInstalledBundleByBundleId("a1b2c3d4");
         assertThat(entandoBundle).isEmpty();
         final String titleOk = "entityOk";
