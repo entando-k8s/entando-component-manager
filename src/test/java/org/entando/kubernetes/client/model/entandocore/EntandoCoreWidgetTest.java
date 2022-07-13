@@ -17,10 +17,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-public class EntandoCoreWidgetTest {
+class EntandoCoreWidgetTest {
 
     @Test
-    public void shouldReadDescriptorWithoutConfigUi() {
+    void shouldReadDescriptorWithoutConfigUi() {
         EntandoCoreWidget ecw = new EntandoCoreWidget(testWidgetDescriptor());
         assertThat(ecw.getBundleId()).isEqualTo("my-bundle");
         assertThat(ecw.getCode()).isEqualTo("my-code");
@@ -36,7 +36,7 @@ public class EntandoCoreWidgetTest {
     }
 
     @Test
-    public void shouldReadConfigUiDescriptor() {
+    void shouldReadConfigUiDescriptor() {
         WidgetDescriptor wd = testWidgetDescriptor();
         wd.setConfigUi(testConfigUiDescriptor());
 
@@ -55,7 +55,7 @@ public class EntandoCoreWidgetTest {
     }
 
     @Test
-    public void shouldReadParametrizedType() {
+    void shouldReadParametrizedType() {
         WidgetDescriptor wd = this.testWidgetDescriptor();
         var parameters = List.of(
                 new WidgetDescriptor.Param("key1", "description of key 1"),
@@ -78,7 +78,7 @@ public class EntandoCoreWidgetTest {
     }
 
     @Test
-    public void shouldReadLogicalType() {
+    void shouldReadLogicalType() {
         WidgetDescriptor wd = this.testWidgetDescriptor();
         wd.setParentCode("parent_code");
         Map<String, String> config = new HashMap<>();
@@ -118,4 +118,5 @@ public class EntandoCoreWidgetTest {
                 .descriptorMetadata(DescriptorMetadata.builder().bundleCode("my-bundle").build())
                 .build();
     }
+    
 }

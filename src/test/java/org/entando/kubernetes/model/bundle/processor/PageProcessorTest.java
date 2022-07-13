@@ -53,7 +53,7 @@ class PageProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    public void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
+    void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
         PageDescriptor descriptor = this.createPageDescriptor();
         initBundleReader(descriptor);
         List<Installable<PageDescriptor>> installables = pageProcessor.process(bundleReader);
@@ -95,7 +95,7 @@ class PageProcessorTest extends BaseProcessorTest {
     }
     
     @Test
-    public void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
+    void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
         PageDescriptor descriptor = this.createPageDescriptor();
         descriptor.setName("name");
         descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
@@ -146,8 +146,8 @@ class PageProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
-
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new PageProcessor(new EntandoCoreClientTestDouble(), validator), "page");
     }
+    
 }

@@ -67,9 +67,9 @@ public class PageProcessor extends BaseComponentProcessor<PageDescriptor> implem
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
                 this.descriptorValidator.validateOrThrow(pageDescriptor);
                 this.composeAndSetCode(pageDescriptor, bundleReader);
-                Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets -> {
-                    widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader));
-                });
+                Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
+                        -> widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader))
+                );
                 InstallAction action = extractInstallAction(pageDescriptor.getCode(), conflictStrategy, installPlan);
                 installables.add(new PageInstallable(engineService, pageDescriptor, action));
             }

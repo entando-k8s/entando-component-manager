@@ -67,9 +67,9 @@ public class PageConfigurationProcessor extends BaseComponentProcessor<PageDescr
                         .readDescriptorFile(fileName, this.getDescriptorClass());
                 this.descriptorValidator.validateOrThrow(pageDescriptor);
                 this.composeAndSetCode(pageDescriptor, bundleReader);
-                Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets -> {
-                    widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader));
-                });
+                Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
+                        -> widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader))
+                );
                 InstallAction action = extractInstallAction(pageDescriptor.getCode(), conflictStrategy, installPlan);
                 installables.add(new PageConfigurationInstallable(engineService, pageDescriptor, action));
             }

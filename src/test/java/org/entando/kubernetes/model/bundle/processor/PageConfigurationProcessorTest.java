@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +98,7 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
     }
     
     @Test
-    public void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
+    void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
         PageDescriptor descriptor = this.createPageDescriptor();
         descriptor.setName("name");
         descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
@@ -158,7 +157,6 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
-
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new PageConfigurationProcessor(new EntandoCoreClientTestDouble(), validator), "pageConfiguration");
     }
