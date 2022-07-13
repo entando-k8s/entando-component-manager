@@ -176,7 +176,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 .name(item.getName())
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(item.getUrl()))
                 .gitRepoAddress(item.getUrl())
-                //.version(item.getVersion())
+                .version(item.getVersion())
                 .build();
         return bundleService.deployDeBundle(bundleInfo);
     }
