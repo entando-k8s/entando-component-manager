@@ -97,8 +97,8 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
     @Override
     public DirectoryDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         Path dirPath = Paths.get(component.getComponentId());
-        boolean isRoot = dirPath.getParent().toString().equals(BundleUtilities.BUNDLES_FOLDER)
-                || dirPath.getParent().equals(dirPath.getRoot());
+        boolean isRoot = (null != dirPath.getParent()) && (dirPath.getParent().toString().equals(BundleUtilities.BUNDLES_FOLDER)
+                || dirPath.getParent().equals(dirPath.getRoot()));
         return new DirectoryDescriptor(component.getComponentId(), isRoot);
     }
 
