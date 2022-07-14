@@ -15,21 +15,27 @@
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.ComponentWidgetData;
-import org.entando.kubernetes.model.job.ComponentWidgetData.Labels;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -45,10 +51,28 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
 
     @Override
     public PagedMetadata<ComponentWidgetData> listWidgets(PagedListRequest request) {
-        List<ComponentWidgetData> allWidgets = componentDataRepository.findAll().stream()
+        // fetch from db
+        List<ComponentDataEntity> allWidgetEntities = componentDataRepository.findAll().stream()
                 .filter(c -> ComponentType.WIDGET.equals(c.getComponentType()))
+                .collect(Collectors.toList());
+
+        // collect all distinct bundleId
+        final List<String> bundleIdSet = new ArrayList<>(allWidgetEntities.stream()
+                .map(ComponentDataEntity::getBundleId)
+                .collect(Collectors.toSet()));
+
+        // collect map bundleId -> bundleCode
+        Map<String, String> bundleIdBundleCodeMap = new HashMap<>();
+        IntStream.range(0, bundleIdSet.size())
+                .forEach(i ->
+                    installedComponentRepo.findByBundleId(bundleIdSet.get(i))
+                            .map(b -> bundleIdBundleCodeMap.putIfAbsent(bundleIdSet.get(i), b.getBundleCode())));
+
+        // convert to dto
+        List<ComponentWidgetData> allWidgets = allWidgetEntities.stream()
                 .map(this::convertToComponentWidgetData)
                 .map(this::populatePbcList)
+                .map(w -> w.setBundleCode(bundleIdBundleCodeMap.getOrDefault(w.getBundleId(), null)))
                 .collect(Collectors.toList());
 
         List<ComponentWidgetData> localFilteredList = new ComponentWidgetDataListProcessor(request, allWidgets)
@@ -90,14 +114,8 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
     }
 
     private ComponentWidgetData populatePbcList(ComponentWidgetData componentWidgetData) {
-        final List<String> pbcList = installedComponentRepo.findByBundleId(componentWidgetData.getBundleId())
-                .map(EntandoBundleEntity::getPbcList)
-                .map(pbcs -> Arrays.asList(pbcs.split(",")))
-                .orElse(null);
-        if (componentWidgetData.getLabels() == null) {
-            componentWidgetData.setLabels(new Labels());
-        }
-        componentWidgetData.getLabels().setPbcNames(pbcList);
-        return componentWidgetData;
+        final EntandoBundleEntity bundleEntity = installedComponentRepo.findByBundleId(
+                componentWidgetData.getBundleId()).get();
+        return (ComponentWidgetData) componentWidgetData.setPbcLabelsFrom(bundleEntity);
     }
 }

@@ -15,12 +15,12 @@
 package org.entando.kubernetes.model.job;
 
 import com.fasterxml.jackson.annotation.JsonRawValue;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.entando.kubernetes.model.bundle.Labeled;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 
 @Data
@@ -28,11 +28,12 @@ import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateG
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class ComponentWidgetData {
+public class ComponentWidgetData implements Labeled {
 
     // db fields
     private String id;
     private String bundleId;
+    private String bundleCode;
     private String widgetCode;
     private String widgetName;
     private String widgetType;
@@ -46,13 +47,7 @@ public class ComponentWidgetData {
     private SystemParams systemParams;
     private Labels labels;
 
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class Labels {
-        private List<String> pbcNames;
+    public void setLabels(Labels labels) {
+        this.labels = labels;
     }
-
 }

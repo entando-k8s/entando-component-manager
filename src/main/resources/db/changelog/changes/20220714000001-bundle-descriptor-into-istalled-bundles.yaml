@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220714000001
+      author: l.corsetti@entando.com
+      changes:
+        - addColumn:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  name: bundle_descriptor
+                  type: VARCHAR(4000)

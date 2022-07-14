@@ -22,6 +22,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -79,4 +80,10 @@ public class ComponentDataEntity {
         this.id = UUID.randomUUID();
     }
 
+    /******************************************************
+     * TRANSIENT FIELDS.
+     *****************************************************/
+
+    @Transient
+    private String bundleCode;
 }
