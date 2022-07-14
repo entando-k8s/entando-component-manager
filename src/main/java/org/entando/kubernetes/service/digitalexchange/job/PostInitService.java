@@ -1,7 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
 import java.util.Optional;
-import org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.PostInitData;
 
 public interface PostInitService {
 
@@ -30,15 +29,6 @@ public interface PostInitService {
      * @return the configuration value of the frequency of post-init operation
      */
     int getFrequencyInSeconds();
-
-    /*
-     * This method returns the configuration data parsed from environment variables or from internal default.
-     *
-     * @return the configuration data used to execute post-init process
-     */
-    PostInitData getConfigurationData();
-    // FIXME talk to walter if we should expose
-
 
     /**
      * This method checks if some operation is allowed for a post init bundle.
