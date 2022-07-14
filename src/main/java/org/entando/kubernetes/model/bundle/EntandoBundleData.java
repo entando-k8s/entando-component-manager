@@ -21,6 +21,7 @@ public class EntandoBundleData {
     private String id;
     private String bundleId;
     private String bundleName;
+    private String bundleCode;
     private Set<String> componentTypes;
     private boolean installed;
     private String publicationUrl;
@@ -29,7 +30,8 @@ public class EntandoBundleData {
         return EntandoBundleData.builder()
                 .id(entity.getId().toString())
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(entity.getRepoUrl()))
-                .bundleName(entity.getBundleCode())
+                .bundleCode(entity.getBundleCode())
+                .bundleName(entity.getName())
                 .installed(entity.isInstalled())
                 .componentTypes(entity.getType())
                 .publicationUrl(entity.getRepoUrl())
