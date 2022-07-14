@@ -18,7 +18,16 @@ public class BundleInfo {
     private String description;
     private String gitRepoAddress;
     private String descriptionImage;
-    private List<String> bundleGroups;
+    private List<BundleGroup> bundleGroups;
     private String bundleId;
     private List<String> dependencies;
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class BundleGroup {
+        private String id;
+        private String name;
+    }
 }

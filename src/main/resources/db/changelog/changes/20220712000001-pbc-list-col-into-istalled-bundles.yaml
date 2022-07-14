@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220707000001
+      author: l.corsetti@entando.com
+      changes:
+        - addColumn:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  name: pbc_list
+                  type: VARCHAR(1023)

@@ -107,6 +107,10 @@ public class EntandoBundleEntity {
     @Column(name = "repo_url")
     private String repoUrl;
 
+    @Size(max = 1023)
+    @Column(name = "pbc_list")
+    private String pbcList;
+
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();

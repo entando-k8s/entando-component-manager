@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +55,7 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -450,12 +452,23 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .findByBundleCode(bundle.getMetadata().getName())
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
 
+        installedComponent.setPbcList(extractPbcListFrom(bundle));
         installedComponent.setVersion(job.getComponentVersion());
         installedComponent.setJob(job);
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
         installedComponent.setInstalled(true);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");
+    }
+
+
+    private String extractPbcListFrom(EntandoDeBundle bundle) {
+
+        return Optional.ofNullable(bundle.getMetadata().getAnnotations()).orElseGet(HashMap::new)
+                .keySet().stream()
+                .filter(k -> k.startsWith(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY))
+                .map(k -> k.replace(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY, ""))
+                .collect(Collectors.joining(","));
     }
 
     private boolean isUninstallable(EntandoBundleComponentJobEntity component) {

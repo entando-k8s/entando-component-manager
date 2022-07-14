@@ -26,7 +26,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
-import org.entando.kubernetes.validator.ValidationFunctions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,6 +38,7 @@ import org.springframework.core.io.ClassPathResource;
 @ExtendWith(MockitoExtension.class)
 class EntandoDeBundleComposerTest {
 
+    private final String pbcAnnotationsPrefix = "pbc.entando.org/";
     private final URL bundleUrl = new URL(BundleInfoStubHelper.GIT_REPO_ADDRESS);
     private final List<EntandoDeBundleTag> entandoDeBundleTags = BundleStubHelper.TAG_LIST.stream()
             .map(tag -> new EntandoDeBundleTag(tag, null, null, bundleUrl.toString()))
@@ -70,23 +70,90 @@ class EntandoDeBundleComposerTest {
 
                     final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
 
-                    String name = deBundle.getMetadata().getName();
-                    assertThat(name).isEqualTo(BundleInfoStubHelper.NAME);
-                    assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
-
-                    final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-                    assertThat(details.getName()).isEqualTo(
-                            "something-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-                    assertThat(details.getDescription()).isEqualTo("bundle description");
-
-                    assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);
-
-                    List<EntandoDeBundleTag> entandoDeBundleTags = BundleStubHelper.TAG_LIST.stream()
-                            .map(tag -> new EntandoDeBundleTag(tag, null, null, bundleUrl))
-                            .collect(Collectors.toList());
-
-                    assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
+                    assertOnComposedEntandoDeBundle(deBundle, bundleUrl);
+                    assertOnPbcAnnotations(deBundle);
                 });
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleEvenWithoutBundleGroups() {
+        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setBundleGroups(null);
+
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+
+        assertOnComposedEntandoDeBundle(deBundle, bundleInfo.getGitRepoAddress());
+
+        final List<String> pbcAnnotations = extractPbcAnnotationsFrom(deBundle);
+        assertThat(pbcAnnotations).hasSize(0);
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleEvenHavingOnlyBundleGroupsName() {
+
+        // given a bundle info with null bundle groups id
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
+        bundleInfo.getBundleGroups().forEach(bg -> bg.setId(null));
+
+        // when the debundle gets composed
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+
+        // then the result is the expected one
+        assertOnComposedEntandoDeBundle(deBundle, bundleInfo.getGitRepoAddress());
+
+        // and the bundle groups are correctly populated
+        assertOnPbcAnnotations(deBundle);
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleEvenHavingOnlyBundleGroupsId() {
+
+        // given a bundle info with null bundle groups name
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
+        bundleInfo.getBundleGroups().forEach(bg -> bg.setName(null));
+
+        // when the debundle gets composed
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+
+        // then the result is the expected one
+        assertOnComposedEntandoDeBundle(deBundle, bundleInfo.getGitRepoAddress());
+
+        // and no bundle groups have been added
+        final List<String> pbcAnnotations = extractPbcAnnotationsFrom(deBundle);
+        assertThat(pbcAnnotations).hasSize(0);
+    }
+
+    private void assertOnComposedEntandoDeBundle(EntandoDeBundle deBundle, String bundleUrl) {
+        String name = deBundle.getMetadata().getName();
+        assertThat(name).isEqualTo(BundleInfoStubHelper.NAME);
+        assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
+
+        final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
+        assertThat(details.getName()).isEqualTo(
+                "something-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        assertThat(details.getDescription()).isEqualTo("bundle description");
+
+        assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);
+
+        List<EntandoDeBundleTag> entandoDeBundleTags = BundleStubHelper.TAG_LIST.stream()
+                .map(tag -> new EntandoDeBundleTag(tag, null, null, bundleUrl))
+                .collect(Collectors.toList());
+
+        assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
+    }
+
+    private void assertOnPbcAnnotations(EntandoDeBundle deBundle) {
+        final List<String> expectedPbcAnnotations = BundleInfoStubHelper.GROUPS_NAME.stream()
+                .map(g -> pbcAnnotationsPrefix + g)
+                .collect(Collectors.toList());
+        final List<String> actualPbcAnnotations = extractPbcAnnotationsFrom(deBundle);
+        assertThat(actualPbcAnnotations).hasSize(expectedPbcAnnotations.size());
+        assertThat(actualPbcAnnotations).containsExactlyInAnyOrder(expectedPbcAnnotations.toArray(String[]::new));
+    }
+
+    private List<String> extractPbcAnnotationsFrom(EntandoDeBundle deBundle) {
+        return deBundle.getMetadata().getAnnotations().keySet().stream()
+                .filter(l -> l.startsWith(pbcAnnotationsPrefix))
+                .collect(Collectors.toList());
     }
 
     @Test
