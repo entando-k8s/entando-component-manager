@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
+    public static final String INSTALL_OR_UPDATE = "install-or-update";
     private final EntandoBundleService bundleService;
     private final EntandoBundleInstallService installService;
     private final KubernetesService kubernetesService;
@@ -46,12 +47,14 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     private PostInitStatus status;
     private boolean finished;
+    // FIXME discuss with Walter
     private static final int MAX_RETIES = 100;
     private int retries = 0;
     private PostInitData configurationData;
     private static final PostInitData DEFAULT_CONFIGURATION_DATA;
 
     static {
+        // FIXME what data should use?
         List<PostInitItem> items = new ArrayList<>();
         items.add(PostInitItem.builder()
                 .name("entando-post-init-01")
@@ -171,7 +174,6 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     private EntandoBundle deployPostInitBundle(PostInitItem item) {
-        // FIXME maybe needs more data ?
         BundleInfo bundleInfo = BundleInfo.builder()
                 .name(item.getName())
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(item.getUrl()))
@@ -221,7 +223,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     private boolean isInstallActionAllowed(PostInitItem item) {
-        return actionAllowed(item, "install-or-update");
+        return actionAllowed(item, INSTALL_OR_UPDATE);
     }
 
     private Optional<InstallAction> computeUpdateStrategy(EntandoBundle bundle, PostInitItem item) {
@@ -237,7 +239,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     private boolean isUpdateActionAllowed(PostInitItem item) {
-        return actionAllowed(item, "install-or-update");
+        return actionAllowed(item, INSTALL_OR_UPDATE);
     }
 
     private EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String versionToFind) {
