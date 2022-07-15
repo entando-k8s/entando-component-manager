@@ -63,6 +63,11 @@ public class BundleDownloaderFactory {
         return Optional.ofNullable(this.downloaderSuppliers.get(type)).orElse(this.getDefaultSupplier()).get();
     }
 
+    public BundleDownloader newDownloader(String url) {
+        BundleDownloaderType type = getTypeFromUrl(url);
+        return Optional.ofNullable(this.downloaderSuppliers.get(type)).orElse(this.getDefaultSupplier()).get();
+    }
+
     public BundleDownloader newDownloader() {
         return this.getDefaultSupplier().get();
     }
@@ -75,8 +80,8 @@ public class BundleDownloaderFactory {
         this.defaultSupplier = defaultSupplier;
     }
 
-    private BundleDownloaderType getTypeFromTarball(EntandoDeBundleTag tag) {
-        if (tag != null && tag.getTarball() != null && tag.getTarball().toLowerCase()
+    private BundleDownloaderType getTypeFromUrl(String url) {
+        if (url != null && url.toLowerCase()
                 .startsWith(BundleDownloaderConstants.DOCKER_PROTOCOL)) {
             return BundleDownloaderType.DOCKER;
         } else {
@@ -85,4 +90,16 @@ public class BundleDownloaderFactory {
             return BundleDownloaderType.GIT;
         }
     }
+
+    private BundleDownloaderType getTypeFromTarball(EntandoDeBundleTag tag) {
+        if (tag != null) {
+            return getTypeFromUrl(tag.getTarball());
+        } else {
+            // docker has explicit protocol in tarball other method no, npm is dismissing
+            // so use git as default
+            return BundleDownloaderType.GIT;
+        }
+    }
+
+
 }

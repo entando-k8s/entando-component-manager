@@ -40,6 +40,7 @@ public class EntandoDeBundleComposer {
 
     public static final String PBC_ANNOTATIONS_KEY = "pbc.entando.org/";
     private final BundleDownloaderFactory downloaderFactory;
+    private static final String MAIN_VERSION = "main";
 
     @Autowired
     public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory) {
@@ -61,22 +62,41 @@ public class EntandoDeBundleComposer {
         if (ObjectUtils.isEmpty(bundleInfo.getGitRepoAddress())) {
             throw new EntandoValidationException("The received bundle url is null");
         }
-        final EntandoDeBundleTag tagAsSelector = (new EntandoDeBundleTagBuilder()).withTarball(
-                bundleInfo.getGitRepoAddress()).build();
-        final BundleDownloader bundleDownloader = downloaderFactory.newDownloader(tagAsSelector);
 
-        final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader,
-                bundleInfo.getGitRepoAddress(), bundleInfo.getVersion());
-        if (bundleDescriptor == null) {
-            throw new EntandoComponentManagerException("Null bundle descriptor");
-        }
+        final BundleDownloader bundleDownloader = downloaderFactory.newDownloader(bundleInfo.getGitRepoAddress());
 
         final List<String> tagList = bundleDownloader.fetchRemoteTags(bundleInfo.getGitRepoAddress());
         if (CollectionUtils.isEmpty(tagList)) {
             throw new EntandoComponentManagerException("No versions available for the received bundle");
         }
 
+        final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader,
+                bundleInfo.getGitRepoAddress(), selectVersionToFetch(tagList));
+        if (bundleDescriptor == null) {
+            throw new EntandoComponentManagerException("Null bundle descriptor");
+        }
+
         return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo);
+    }
+
+    private String selectVersionToFetch(List<String> tagList) {
+        if (tagList.contains(MAIN_VERSION)) {
+            return MAIN_VERSION;
+        } else {
+            return tagList.stream()
+                    .map(tag -> {
+                        try {
+                            return new EntandoBundleVersion().setVersion(tag);
+                        } catch (Exception e) {
+                            log.error("Tag {} is not semver compliant. Ignoring it.", tag);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .min(Comparator.comparing(EntandoBundleVersion::getSemVersion))
+                    .map(EntandoBundleVersion::getVersion)
+                    .orElseThrow(() -> new EntandoComponentManagerException("Cannot find the first bundle version"));
+        }
     }
 
     /**
@@ -84,7 +104,7 @@ public class EntandoDeBundleComposer {
      *
      * @param bundleDownloader the bundledownloader to use for the current operation
      * @param bundleUrl        the url of the bundle of which fetching the descriptor
-     * @param version          the version of the bundle of which fetching the descriptor
+     * @param version          the version of the bundle of which fetching the descriptor used only for DOCKER protocol
      * @return the fetched bundle descriptor
      */
     private BundleDescriptor fetchBundleDescriptor(BundleDownloader bundleDownloader, String bundleUrl,
@@ -122,16 +142,12 @@ public class EntandoDeBundleComposer {
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                // FIXME  should be bundleDescriptor.getCode()
-                //.withName(BundleUtilities.composeBundleIdentifier(bundleInfo.getName()))
                 .withName(bundleDescriptor.getCode())
                 .withLabels(createLabelsFrom(bundleDescriptor))
                 .withAnnotations(createAnnotationsFrom(bundleInfo.getBundleGroups()))
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
-                // FIXME  should be bundleDescriptor.getName()
-                //.withName(bundleDescriptor.getCode())
                 .withName(bundleInfo.getName())
                 .withDescription(bundleDescriptor.getDescription())
                 .addNewDistTag(BundleUtilities.LATEST_VERSION, getLatestSemverVersion(deBundleTags))
