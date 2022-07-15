@@ -2,6 +2,7 @@ package org.entando.kubernetes.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
@@ -26,6 +27,7 @@ import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDoub
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -72,6 +74,7 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleSer
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
@@ -79,11 +82,12 @@ import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+@Tag("unit")
 public class InstallServiceTest {
 
     public static final String bundleFolder = InstallServiceTest.class.getResource("/bundle").getFile();
@@ -99,6 +103,7 @@ public class InstallServiceTest {
     private EntandoBundleJobRepository jobRepository;
     private EntandoBundleComponentJobRepository compJobRepo;
     private InstalledEntandoBundleRepository installRepo;
+    private PostInitService postInitService;
     private Map<ComponentType, ComponentProcessor<?>> processorMap;
     private List<ReportableComponentProcessor> reportableComponentProcessorList;
     private Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
@@ -125,6 +130,7 @@ public class InstallServiceTest {
         jobRepository = Mockito.spy(EntandoBundleJobRepositoryTestDouble.class);
         compJobRepo = Mockito.spy(EntandoBundleComponentJobRepositoryTestDouble.class);
         installRepo = mock(InstalledEntandoBundleRepository.class);
+        postInitService = mock(PostInitService.class);
         coreClient = mock(EntandoCoreClient.class);
         kubernetesService = mock(KubernetesService.class);
         usageService = mock(EntandoBundleComponentUsageService.class);
@@ -145,7 +151,7 @@ public class InstallServiceTest {
                 bundleDescriptorValidator);
 
         uninstallService = new EntandoBundleUninstallService(
-                jobRepository, compJobRepo, installRepo, usageService, processorMap);
+                jobRepository, compJobRepo, installRepo, usageService, postInitService, processorMap);
 
         when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(true);
     }
@@ -217,7 +223,7 @@ public class InstallServiceTest {
 
         EntandoDeBundleTag entandoDeBundleTag = bundle.getSpec().getTags().get(0);
 
-        Assertions.assertThrows(ReportAnalysisException.class,
+        assertThrows(ReportAnalysisException.class,
                 () -> installService.generateInstallPlan(bundle, entandoDeBundleTag,
                         true));
     }
@@ -274,6 +280,69 @@ public class InstallServiceTest {
     }
 
     @Test
+    void shouldSkipUninstall_ForPostInitBundle() {
+        EntandoBundleEntity bundleEntity = EntandoBundleEntity.builder()
+                .bundleCode(BUNDLE_ID)
+                .name(BUNDLE_TITLE)
+                .build();
+        EntandoBundleJobEntity jobEntity = EntandoBundleJobEntity.builder()
+                .componentId(BUNDLE_ID)
+                .componentName(BUNDLE_TITLE)
+                .componentVersion(BUNDLE_VERSION)
+                .status(JobStatus.INSTALL_COMPLETED)
+                .build();
+        bundleEntity.setJob(jobEntity);
+
+        when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
+        when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.FALSE));
+
+        assertThrows(EntandoComponentManagerException.class, () -> uninstallService.uninstall(BUNDLE_ID));
+
+    }
+
+    @Test
+    void shouldNotSkipUninstall_ForPostInitBundle() {
+        EntandoBundleEntity bundleEntity = EntandoBundleEntity.builder()
+                .bundleCode(BUNDLE_ID)
+                .name(BUNDLE_TITLE)
+                .build();
+        EntandoBundleJobEntity jobEntity = EntandoBundleJobEntity.builder()
+                .componentId(BUNDLE_ID)
+                .componentName(BUNDLE_TITLE)
+                .componentVersion(BUNDLE_VERSION)
+                .status(JobStatus.INSTALL_COMPLETED)
+                .build();
+        bundleEntity.setJob(jobEntity);
+
+        EntandoBundleComponentJobEntity cjeA = new EntandoBundleComponentJobEntity();
+        cjeA.setComponentId("A");
+        cjeA.setComponentType(ComponentType.CONTENT_TYPE);
+        EntandoBundleComponentJobEntity cjeB = new EntandoBundleComponentJobEntity();
+        cjeB.setComponentId("B");
+        cjeB.setComponentType(ComponentType.CONTENT_TYPE);
+
+        processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
+
+        when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
+        when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
+        when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
+        when(usageService.getUsage(ComponentType.CONTENT_TYPE, "A"))
+                .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));
+        when(usageService.getUsage(ComponentType.CONTENT_TYPE, "B"))
+                .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "B"));
+
+        EntandoBundleJobEntity job = uninstallService.uninstall(BUNDLE_ID);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        List<Double> progress = getJobProgress();
+        assertThat(progress).containsExactly(0.0, 0.5, 1.0);
+
+    }
+
+    @Test
     public void shouldIncrementProgressDuringUninstall() {
         EntandoBundleEntity bundleEntity = EntandoBundleEntity.builder()
                 .bundleCode(BUNDLE_ID)
@@ -319,14 +388,14 @@ public class InstallServiceTest {
         // analysis
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
-        Assertions.assertThrows(BundleOperationConcurrencyException.class,
+        assertThrows(BundleOperationConcurrencyException.class,
                 () -> installService.generateInstallPlan(null, null, true));
 
         // install
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
 
-        Assertions.assertThrows(BundleOperationConcurrencyException.class,
+        assertThrows(BundleOperationConcurrencyException.class,
                 () -> installService.install(null, null));
     }
 

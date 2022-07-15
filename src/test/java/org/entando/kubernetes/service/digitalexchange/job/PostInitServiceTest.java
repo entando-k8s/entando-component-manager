@@ -116,15 +116,17 @@ class PostInitServiceTest {
     @Test
     void postInit_ShouldNotInstall() throws Exception {
         EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
+        EntandoBundleService bundleServiceSpy = Mockito.spy(bundleService);
 
         PostInitData data = convertConfigDataToString();
-        data.getItems().get(0).setAction("deploy-only");
-        initServiceToTest(convertConfigDataToString(data), bundleService, installServiceSpy, kubernetesService,
+        data.getItems().get(0).setAction(null);
+        initServiceToTest(convertConfigDataToString(data), bundleServiceSpy, installServiceSpy, kubernetesService,
                 entandoBundleJobService);
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
-        when(bundleService.listBundles()).thenReturn(new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleServiceSpy.listBundles()).thenReturn(
+                new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
+        when(bundleServiceSpy.deployDeBundle(any())).thenReturn(new EntandoBundle());
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
         EntandoDeBundleSpecBuilder deBundleBuilder = new EntandoDeBundleSpecBuilder();
@@ -137,6 +139,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
+        verify(bundleServiceSpy, times(1)).deployDeBundle(any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
 
     }
@@ -190,13 +193,30 @@ class PostInitServiceTest {
     void isBundleOperationAllowed_shouldWork() throws Exception {
         initServiceToTest(convertConfigDataToString(convertConfigDataToString()));
 
-        Optional<Boolean> resp = serviceToTest.isBundleOperationAllowed("ciccio", "test");
+        Optional<Boolean> resp = serviceToTest.isEcrActionAllowed("ciccio", "test");
         assertThat(resp.isEmpty()).isTrue();
 
         String bundleCode = BundleUtilities.composeBundleCode(POST_INIT_BUNDLE_NAME,
                 BundleUtilities.removeProtocolAndGetBundleId(POST_INIT_BUNDLE_PUBLICATION_URL));
-        resp = serviceToTest.isBundleOperationAllowed(bundleCode, "test");
+        resp = serviceToTest.isEcrActionAllowed(bundleCode, "test");
         assertThat(resp.get()).isFalse();
+
+        PostInitData data = convertConfigDataToString();
+        PostInitItem item = data.getItems().get(0);
+        item.setEcrActions(new String[0]);
+        initServiceToTest(convertConfigDataToString(data));
+        resp = serviceToTest.isEcrActionAllowed(bundleCode, "uninstall");
+        assertThat(resp.get()).isFalse();
+
+        item.setEcrActions(new String[]{"undeploy"});
+        initServiceToTest(convertConfigDataToString(data));
+        resp = serviceToTest.isEcrActionAllowed(bundleCode, "uninstall");
+        assertThat(resp.get()).isFalse();
+
+        item.setEcrActions(new String[]{"uninstall"});
+        initServiceToTest(convertConfigDataToString(data));
+        resp = serviceToTest.isEcrActionAllowed(bundleCode, "uninstall");
+        assertThat(resp.get()).isTrue();
 
     }
 

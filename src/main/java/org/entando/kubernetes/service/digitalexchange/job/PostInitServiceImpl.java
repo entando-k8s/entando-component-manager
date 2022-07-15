@@ -50,6 +50,8 @@ import org.springframework.stereotype.Service;
 public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     public static final String ACTION_INSTALL_OR_UPDATE = "install-or-update";
+    public static final String DEFAULT_ACTION = "deploy-only";
+    public static final String ECR_ACTION_UNINSTALL = "uninstall";
     private final EntandoBundleService bundleService;
     private final EntandoBundleInstallService installService;
     private final EntandoBundleJobService entandoBundleJobService;
@@ -107,11 +109,11 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     @Override
-    public Optional<Boolean> isBundleOperationAllowed(String bundleCode, String operation) {
+    public Optional<Boolean> isEcrActionAllowed(String bundleCode, String action) {
         return configurationData.getItems().stream()
                 .filter(item -> StringUtils.equals(calculateBundleCode(item), bundleCode))
                 .findFirst()
-                .map(item -> Boolean.valueOf(bundleOperationAllowed(item, operation)))
+                .map(item -> Boolean.valueOf(ecrActionAllowed(item, action)))
                 .or(Optional::empty);
     }
 
@@ -126,9 +128,13 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         Optional<String> appStatus = retrieveApplicationStatus();
         if (appStatus.isPresent() && EntandoDeploymentPhase.SUCCESSFUL.toValue().toLowerCase()
                 .equals(appStatus.get())) {
-            // sort bundle ootb to manage
+            // sort bundle ootb to manage priority
+            Comparator<PostInitItem> compareByPriorityAndThenName = Comparator
+                    .comparingInt(PostInitItem::getPriority).reversed()
+                    .thenComparing(PostInitItem::getName);
+
             List<PostInitItem> bundleToInstall = configurationData.getItems().stream()
-                    .sorted(Comparator.comparingInt(PostInitItem::getPriority))
+                    .sorted(compareByPriorityAndThenName)
                     .collect(Collectors.toList());
 
             // list ALL bundles installed (for update) or not
@@ -140,38 +146,41 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
             try {
 
-                for (PostInitItem item : bundleToInstall) {
-                    log.info("Post init installing item name:'{}'", item.getName());
-                    if (StringUtils.isNotBlank(item.getAction())) {
-                        String bundleCode = calculateBundleCode(item);
+                for (PostInitItem itemFromConfig : bundleToInstall) {
+                    final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
+                    log.info("Post init executing '{}' on bundle '{}'", item.getAction(), item.getName());
 
-                        EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
-                                .orElseGet(() -> deployPostInitBundle(item));
+                    String bundleCode = calculateBundleCode(item);
 
-                        computeInstallStrategy(bundle, item)
-                                .or(() -> computeUpdateStrategy(bundle, item))
-                                .ifPresent(strategy -> {
-                                    // try to install
-                                    EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
-                                            .orElseThrow(() -> new BundleNotFoundException(bundleCode));
-                                    EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
+                    EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
+                            .orElseGet(() -> deployPostInitBundle(item));
 
-                                    EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy);
+                    computeInstallStrategy(bundle, item)
+                            .or(() -> computeUpdateStrategy(bundle, item))
+                            .ifPresent(strategy -> {
+                                // try to install
+                                EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
+                                        .orElseThrow(() -> {
+                                            log.debug("EntandoDeBundle not found with bundleCode:'{}'", bundleCode);
+                                            return new BundleNotFoundException(bundleCode);
+                                        });
+                                EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
 
-                                    Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
+                                EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy);
 
-                                    Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
-                                            JobStatus.INSTALL_ERROR);
-                                    Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
-                                    waitStatuses.add(JobStatus.INSTALL_COMPLETED);
+                                Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
 
-                                    waitForJobStatus(getJobStatus, waitStatuses);
+                                Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
+                                        JobStatus.INSTALL_ERROR);
+                                Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
+                                waitStatuses.add(JobStatus.INSTALL_COMPLETED);
 
-                                    if (errorStatuses.contains(getJobStatus.get())) {
-                                        throw new EntandoGeneralException("error installing " + item.getName());
-                                    }
-                                });
-                    }
+                                waitForJobStatus(getJobStatus, waitStatuses);
+
+                                if (errorStatuses.contains(getJobStatus.get())) {
+                                    throw new EntandoGeneralException("error installing " + item.getName());
+                                }
+                            });
                 }
 
                 log.info("Post init phase install executed successfully");
@@ -180,18 +189,33 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 finished = true;
 
             } catch (BundleNotFoundException | EntandoGeneralException | InvalidBundleException ex) {
-                log.debug("Error post init bundle install:'{}'", ex.getMessage());
+                log.info("Error post init bundle install:'{}'", ex.getMessage());
                 status = PostInitStatus.FAILED;
                 retries = MAX_RETIES;
+                finished = true;
+
+            } catch (Throwable ex) {
+                // useful catch to manage executor bug
+                log.error("Error unmanaged post init bundle install", ex.getMessage(), ex);
+                status = PostInitStatus.UNKNOWN;
                 finished = true;
 
             }
 
         } else {
-            log.debug("Error post application status unknown");
+            log.info("Error post application status unknown");
             status = PostInitStatus.UNKNOWN;
             finished = true;
         }
+    }
+
+    private PostInitItem checkActionOrSwitchToDefault(PostInitItem item) {
+        if (StringUtils.isBlank(item.getAction())) {
+            log.debug("For bundle :'{}' action is blank:'{}' switch do default:'{}'", item.getName(), item.getAction(),
+                    DEFAULT_ACTION);
+            item.setAction(DEFAULT_ACTION);
+        }
+        return item;
     }
 
     private JobStatus getEntandoBundleJobStatus(UUID id) {
@@ -246,9 +270,9 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     private Optional<InstallAction> computeInstallStrategy(EntandoBundle bundle, PostInitItem item) {
-        if (isFirstInstall(bundle) && isInstallActionAllowed(item)) {
+        if (isFirstInstall(bundle) && isInstallActionPlanned(item)) {
             log.info("Computed strategy: install `{}`", item.getName());
-            return Optional.of(InstallAction.CREATE);
+            return Optional.of(InstallAction.OVERRIDE);
         }
         return Optional.empty();
     }
@@ -257,24 +281,27 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         return !bundle.isInstalled();
     }
 
-    private boolean bundleOperationAllowed(PostInitItem item, String operation) {
-        return item.getEcrActions() != null && Arrays.stream(item.getEcrActions()).anyMatch(operation::equals);
-
-    }
-
-    private boolean actionAllowed(PostInitItem item, String action) {
-        boolean isActionAllowed = StringUtils.equals(item.getAction(), action);
+    private boolean ecrActionAllowed(PostInitItem item, String action) {
+        boolean isActionAllowed =
+                item.getEcrActions() != null && Arrays.stream(item.getEcrActions()).anyMatch(action::equals);
         log.trace("For bundle:'{}' action '{}' is allowed ? '{}'", item.getName(), action, isActionAllowed);
         return isActionAllowed;
 
     }
 
-    private boolean isInstallActionAllowed(PostInitItem item) {
-        return actionAllowed(item, ACTION_INSTALL_OR_UPDATE);
+    private boolean isActionPlanned(PostInitItem item, String action) {
+        boolean isActionPlanned = StringUtils.equals(item.getAction(), action);
+        log.trace("For bundle:'{}' action '{}' is planned ? '{}'", item.getName(), action, isActionPlanned);
+        return isActionPlanned;
+
+    }
+
+    private boolean isInstallActionPlanned(PostInitItem item) {
+        return isActionPlanned(item, ACTION_INSTALL_OR_UPDATE);
     }
 
     private Optional<InstallAction> computeUpdateStrategy(EntandoBundle bundle, PostInitItem item) {
-        if (isUpgrade(bundle, item.getVersion()) && isUpdateActionAllowed(item)) {
+        if (isUpgrade(bundle, item.getVersion()) && isUpdateActionPlanned(item)) {
             log.info("Computed strategy: update `{}`", item.getName());
             return Optional.of(InstallAction.OVERRIDE);
         }
@@ -286,12 +313,13 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 bundle.getInstalledJob().getComponentVersion());
     }
 
-    private boolean isUpdateActionAllowed(PostInitItem item) {
-        return actionAllowed(item, ACTION_INSTALL_OR_UPDATE);
+    private boolean isUpdateActionPlanned(PostInitItem item) {
+        return isActionPlanned(item, ACTION_INSTALL_OR_UPDATE);
     }
 
     private EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String versionToFind) {
-        return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
+        return Optional.ofNullable(bundle.getSpec().getTags())
+                .flatMap(tags -> tags.stream().filter(t -> t.getVersion().equals(versionToFind)).findAny())
                 .orElseThrow(
                         () -> new InvalidBundleException(
                                 "Version " + versionToFind + " not defined in bundle versions"));

@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import static org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.ECR_ACTION_UNINSTALL;
+
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -42,16 +45,28 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
     private final @NonNull EntandoBundleComponentUsageService usageService;
+    private final @NonNull PostInitService postInitService;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJobEntity uninstall(String componentId) {
         EntandoBundleEntity installedBundle = installedComponentRepository.findByBundleCode(componentId)
                 .orElseThrow(() -> new BundleNotInstalledException("Bundle " + componentId + " is not installed"));
 
+        verifyBundleUninstallIsAllowedOrThrow(componentId);
+
         verifyBundleUninstallIsPossibleOrThrow(installedBundle);
 
         return createAndSubmitUninstallJob(installedBundle.getJob());
     }
+
+    private void verifyBundleUninstallIsAllowedOrThrow(String bundleCode) {
+        Optional<Boolean> isAllowed = postInitService.isEcrActionAllowed(bundleCode, ECR_ACTION_UNINSTALL);
+        if (isAllowed.isPresent() && Boolean.FALSE.equals(isAllowed.get())) {
+            throw new InvalidBundleException(
+                    String.format("Action '%s' not allowed for bundle '%s'", ECR_ACTION_UNINSTALL, bundleCode));
+        }
+    }
+
 
     private void verifyBundleUninstallIsPossibleOrThrow(EntandoBundleEntity bundle) {
         if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
