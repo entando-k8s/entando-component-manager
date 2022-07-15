@@ -216,7 +216,6 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 .name(item.getName())
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(item.getUrl()))
                 .gitRepoAddress(item.getUrl())
-                .version(item.getVersion())
                 .build();
         return bundleService.deployDeBundle(bundleInfo);
     }
@@ -235,9 +234,9 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     private String calculateBundleCode(PostInitItem item) {
         String bundleId = BundleUtilities.removeProtocolAndGetBundleId(item.getUrl());
 
-        // FIXME rework regexp
         // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
         if (StringUtils.length(item.getName()) > 200
+                || !ValidationFunctions.VALID_CHARS_RFC_1123_REGEX_PATTERN.matcher(item.getName()).matches()
                 || !ValidationFunctions.HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN.matcher(item.getName())
                 .matches()) {
             throw new InvalidBundleException("Error bundle name not valid (RFC 1123) " + item.getName());
@@ -283,7 +282,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     private boolean isUpgrade(EntandoBundle bundle, String versionToinstall) {
-        return bundle.isInstalled() && StringUtils.equals(versionToinstall,
+        return bundle.isInstalled() && !StringUtils.equals(versionToinstall,
                 bundle.getInstalledJob().getComponentVersion());
     }
 

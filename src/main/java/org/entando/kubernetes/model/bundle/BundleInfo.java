@@ -17,7 +17,6 @@ public class BundleInfo {
     private String name;
     private String description;
     private String gitRepoAddress;
-    private String version;
     private String descriptionImage;
     private List<BundleGroup> bundleGroups;
     private String bundleId;
@@ -28,6 +27,7 @@ public class BundleInfo {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class BundleGroup {
+
         private String id;
         private String name;
     }

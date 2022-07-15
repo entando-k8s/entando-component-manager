@@ -31,7 +31,6 @@ public class PluginData {
 
     private UUID id;
     private String bundleId;
-    private String pluginId;
     private String pluginName;
     private String pluginCode;
     private String ingressPath;

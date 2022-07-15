@@ -4,27 +4,34 @@ import java.util.Optional;
 
 public interface PostInitService {
 
-    //  This method tries to deploy, install or update post-init bundle according to configuration data permissions.
+    /**
+     * This method tries to deploy, install or update post-init bundle according to configuration data permissions.
+     */
     void install();
 
-    /*
-     * This method returns the actual post-init operation global status.
+    /**
+     * This method retrieve the actual post-init operation global status.
      *
-     * @return the global status
+     * @return This method returns the actual post-init operation global status.
      */
     PostInitStatus getStatus();
 
-    /*
-     * This method returns true if install is not running otherwise return false.
+    /**
+     * This method retrieves the status of current operation.
      *
-     * @return the status of current operation;
+     * @return true if install is not running otherwise return false
      */
     boolean isCompleted();
 
+    /**
+     * This method retrieves the number of max retries.
+     *
+     * @return true if install should be repeated otherwise return false
+     */
     boolean shouldRetry();
 
-    /*
-     * This method returns the configuration value of the frequency of post-init operation.
+    /**
+     * This method retrieves the configuration value of the frequency of post-init operation.
      *
      * @return the configuration value of the frequency of post-init operation
      */
