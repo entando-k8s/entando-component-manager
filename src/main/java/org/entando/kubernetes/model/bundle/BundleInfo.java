@@ -27,6 +27,7 @@ public class BundleInfo {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class BundleGroup {
+
         private String id;
         private String name;
     }

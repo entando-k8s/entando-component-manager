@@ -124,12 +124,11 @@ class EntandoDeBundleComposerTest {
 
     private void assertOnComposedEntandoDeBundle(EntandoDeBundle deBundle, String bundleUrl) {
         String name = deBundle.getMetadata().getName();
-        assertThat(name).isEqualTo(BundleInfoStubHelper.NAME);
+        assertThat(name).isEqualTo("something-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
         final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-        assertThat(details.getName()).isEqualTo(
-                "something-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+        assertThat(details.getName()).isEqualTo(BundleInfoStubHelper.NAME);
         assertThat(details.getDescription()).isEqualTo("bundle description");
 
         assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);

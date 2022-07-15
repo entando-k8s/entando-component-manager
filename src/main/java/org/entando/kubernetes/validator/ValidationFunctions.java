@@ -12,8 +12,11 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 public class ValidationFunctions {
 
     public static final String HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX = "^[a-zA-Z0-9].*[a-zA-Z0-9]$";
+    public static final String VALID_CHARS_RFC_1123_REGEX = "^[a-z0-9.\\-].*$";
     public static final Pattern HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN = Pattern.compile(
             HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX);
+    public static final Pattern VALID_CHARS_RFC_1123_REGEX_PATTERN = Pattern.compile(
+            VALID_CHARS_RFC_1123_REGEX);
 
     public static final String GIT_PROTOCOL = "git";
     public static final String HTTP_PROTOCOL = "http";

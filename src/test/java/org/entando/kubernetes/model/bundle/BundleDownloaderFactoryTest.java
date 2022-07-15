@@ -47,6 +47,14 @@ class BundleDownloaderFactoryTest {
         BundleDownloader tagNoDownloader = factory.newDownloader(tagNo);
         assertThat(tagNoDownloader).isInstanceOf(GitBundleDownloader.class);
 
+        EntandoDeBundleTag tagNull = null;
+        BundleDownloader tagNullDownloader = factory.newDownloader(tagNull);
+        assertThat(tagNullDownloader).isInstanceOf(GitBundleDownloader.class);
+
+        String stringNull = null;
+        BundleDownloader stringNullDownloader = factory.newDownloader(stringNull);
+        assertThat(stringNullDownloader).isInstanceOf(GitBundleDownloader.class);
+
     }
 
 }
