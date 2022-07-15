@@ -27,6 +27,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
+import org.entando.kubernetes.exception.EntandoGeneralException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -62,8 +63,8 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     private int retries = 0;
     private PostInitData configurationData;
     private static final PostInitData DEFAULT_CONFIGURATION_DATA;
-    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(180);
-    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(3);
+    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(360);
+    private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(6);
 
 
     static {
@@ -161,13 +162,13 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
                                     Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
                                             JobStatus.INSTALL_ERROR);
-                                    Set<JobStatus> waitStatuses = new HashSet(errorStatuses);
+                                    Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
                                     waitStatuses.add(JobStatus.INSTALL_COMPLETED);
 
                                     waitForJobStatus(getJobStatus, waitStatuses);
 
                                     if (errorStatuses.contains(getJobStatus.get())) {
-                                        throw new InvalidBundleException("error installing " + item.getName());
+                                        throw new EntandoGeneralException("error installing " + item.getName());
                                     }
                                 });
                     }
@@ -178,7 +179,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 retries = MAX_RETIES;
                 finished = true;
 
-            } catch (BundleNotFoundException | InvalidBundleException ex) {
+            } catch (BundleNotFoundException | EntandoGeneralException | InvalidBundleException ex) {
                 log.debug("Error post init bundle install:'{}'", ex.getMessage());
                 status = PostInitStatus.FAILED;
                 retries = MAX_RETIES;
@@ -202,6 +203,11 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         await().atMost(MAX_WAITING_TIME_FOR_JOB_STATUS)
                 .pollInterval(AWAITILY_DEFAULT_POLL_INTERVAL)
                 .until(() -> expected.contains(jobStatus.get()));
+
+        if (!expected.contains(jobStatus.get())) {
+            log.info("Await installation timeout");
+            throw new EntandoGeneralException("error wait install timeout");
+        }
     }
 
     private EntandoBundle deployPostInitBundle(PostInitItem item) {
