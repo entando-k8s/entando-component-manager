@@ -27,6 +27,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
@@ -56,6 +57,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
+import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -231,9 +233,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             parentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
             try {
                 // PREPARES THE JOBS
+                BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
 
-                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundle, tag,
-                        bundleDownloader, conflictStrategy, installPlan);
+                Queue<Installable> bundleInstallableComponents = getBundleInstallableComponents(bundleReader,
+                        conflictStrategy, installPlan);
 
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
                         .map(i -> {
@@ -282,7 +285,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     parentJobResult = rollback(scheduler, parentJobResult);
                 } else {
 
-                    saveAsInstalledBundle(bundle, parentJob);
+                    saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor());
                     parentJobResult.clearException();
                     parentJobResult.setStatus(JobStatus.INSTALL_COMPLETED);
                     parentJobResult.setProgress(1.0);
@@ -346,10 +349,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return new BundleReader(pathToDownloadedBundle, bundle);
     }
 
-    private Queue<Installable> getBundleInstallableComponents(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            BundleDownloader bundleDownloader, InstallAction conflictStrategy, InstallPlan installPlan) {
-
-        BundleReader bundleReader = this.downloadBundleAndGetBundleReader(bundleDownloader, bundle, tag);
+    private Queue<Installable> getBundleInstallableComponents(BundleReader bundleReader, InstallAction conflictStrategy,
+            InstallPlan installPlan) {
 
         try {
             bundleReader.readBundleDescriptor(bundleDescriptorValidator);
@@ -447,15 +448,20 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
 
-    private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job) {
+    private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job,
+            BundleDescriptor bundleDescriptor) {
+
         EntandoBundleEntity installedComponent = bundleRepository
                 .findByBundleCode(bundle.getMetadata().getName())
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
+
+        String serializedDescriptor = JSONUtilities.serializeDescriptor(bundleDescriptor);
 
         installedComponent.setPbcList(extractPbcListFrom(bundle));
         installedComponent.setVersion(job.getComponentVersion());
         installedComponent.setJob(job);
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
+        installedComponent.setBundleDescriptor(serializedDescriptor);
         installedComponent.setInstalled(true);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");

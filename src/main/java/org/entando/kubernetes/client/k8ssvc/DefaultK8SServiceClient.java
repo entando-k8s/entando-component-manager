@@ -357,12 +357,20 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .path(plugin.getSpec().getIngressPath())
                 .path(plugin.getSpec().getHealthCheckPath())
                 .build();
+
+        String log = "Verifying plugin health check on " + pluginHealthCheck.toUriString();
+        LOGGER.info(log);
+
         RequestEntity<?> request = RequestEntity
                 .get(URI.create(pluginHealthCheck.toUriString()))
                 .accept(MediaType.APPLICATION_JSON)
                 .build();
         try {
             ResponseEntity<Object> response = this.noAuthRestTemplate.exchange(request, Object.class);
+
+            log = String.format("Plugin is%s ready", response.getStatusCode().is2xxSuccessful() ? "" : " NOT");
+            LOGGER.info(log);
+
             return response.getStatusCode().is2xxSuccessful();
         } catch (RestClientResponseException e) {
             HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());

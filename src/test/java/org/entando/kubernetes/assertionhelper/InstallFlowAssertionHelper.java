@@ -34,10 +34,12 @@ import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.mockito.ArgumentCaptor;
 
@@ -823,5 +825,27 @@ public class InstallFlowAssertionHelper {
                         && f.getSketch().getY1() == 1
                         && f.getSketch().getX2() == 11
                         && f.getSketch().getY2() == 1);
+    }
+
+    public void verifyInstalledBundleV5DbRecord(InstalledEntandoBundleRepository bundleRepository) {
+        EntandoBundleEntity installedBundle = bundleRepository.findAll().get(0);
+        assertThat(installedBundle.getName()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME_V5);
+        assertThat(installedBundle.getBundleCode()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME_V5);
+        assertThat(installedBundle.getBundleType()).isEqualTo("STANDARD_BUNDLE");
+        assertThat(installedBundle.getType()).containsExactlyInAnyOrder("bundle");
+        assertThat(installedBundle.getJob()).isNotNull();
+        assertThat(installedBundle.getPbcList()).isEqualTo("pbc-1,pbc-2");
+        assertThat(installedBundle.getVersion()).isEqualTo("0.0.1");
+        assertThat(installedBundle.getDescription()).isEqualTo("A bundle containing some demo components for Entando6");
+        assertThat(installedBundle.getRepoUrl()).isEqualTo("http://localhost:8099/repository/npm-internal/test_bundle/"
+                + "-/test_bundle-0.0.1.tgz");
+        assertThat(installedBundle.getBundleDescriptor()).isEqualTo("{\"descriptorVersion\":\"v5\",\"code\":\"something"
+                + "-ece8f6f0\",\"name\":\"something\",\"description\":\"bundle description\",\"components\":{\"plugins"
+                + "\":[\"plugins/todomvcV3_complete.yaml\",\"plugins/todomvcV4_complete.yaml\",\"plugins/todomvcV5_comp"
+                + "lete.yaml\"],\"widgets\":[\"widgets/my_widget_descriptor_v5.yaml\"],\"fragments\":null,\"categories"
+                + "\":null,\"pages\":null,\"pageTemplates\":null,\"contentTypes\":null,\"contentTemplates\":null,\"cont"
+                + "ents\":null,\"assets\":null,\"groups\":null,\"labels\":null,\"languages\":null},\"componentKey\":{\""
+                + "key\":\"something-ece8f6f0\"},\"version1\":false,\"descriptorClassName\":\"BundleDescriptor\",\"auxi"
+                + "liary\":false,\"bundle-type\":null}");
     }
 }

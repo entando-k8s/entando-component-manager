@@ -42,6 +42,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -96,6 +97,9 @@ class InstallFlowTestBundleVFive {
 
     @Autowired
     private PluginDataRepository pluginDataRepository;
+
+    @Autowired
+    private InstalledEntandoBundleRepository bundleRepository;
 
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
@@ -157,6 +161,7 @@ class InstallFlowTestBundleVFive {
     void shouldCallCoreToInstallComponents() {
         simulateSuccessfullyCompletedInstall();
         installFlowAssertionHelper.verifyCoreCallsV5();
+        installFlowAssertionHelper.verifyInstalledBundleV5DbRecord(bundleRepository);
     }
 
     @Test

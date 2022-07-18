@@ -37,7 +37,7 @@ class ContentComponentProcessorTestDouble implements ComponentProcessor<ContentD
     }
 
     @Override
-    public List<Installable> process(List components) {
+    public List<Installable<ContentDescriptor>> process(List components) {
         return new ArrayList<>();
     }
 

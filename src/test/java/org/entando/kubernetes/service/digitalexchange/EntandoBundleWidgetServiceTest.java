@@ -75,7 +75,12 @@ class EntandoBundleWidgetServiceTest {
         // check PBC names
         IntStream.range(0, listToTest.size())
                 .forEach(i -> {
-                    final List<String> pbcNames = listToTest.get(i).getLabels().getPbcNames();
+                    final ComponentWidgetData componentWidgetData = listToTest.get(i);
+
+                    assertThat(componentWidgetData.getBundleCode()).isEqualTo(
+                            BundleInfoStubHelper.NAME + "-" + componentWidgetData.getBundleId());
+
+                    final List<String> pbcNames = componentWidgetData.getLabels().getPbcNames();
                     assertThat(pbcNames).hasSize(2);
                     assertThat(pbcNames.get(0)).isEqualTo(BundleInfoStubHelper.GROUP_NAME_1 + (i + 1));
                     assertThat(pbcNames.get(1)).isEqualTo(BundleInfoStubHelper.GROUP_NAME_2 + (i + 1));
@@ -206,6 +211,7 @@ class EntandoBundleWidgetServiceTest {
                 }
                 EntandoBundleEntity installedBundle = EntandoBundleEntity.builder()
                         .pbcList(pbcList)
+                        .bundleCode(BundleInfoStubHelper.NAME + "-" + entity.getBundleId())
                         .build();
                 when(installedComponentRepo.findByBundleId(entity.getBundleId()))
                         .thenReturn(Optional.of(installedBundle));

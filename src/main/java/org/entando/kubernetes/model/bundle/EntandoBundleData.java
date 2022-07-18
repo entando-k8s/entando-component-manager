@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,25 +17,37 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 @NoArgsConstructor
 @JsonInclude
 @Accessors(chain = true)
-public class EntandoBundleData {
+public class EntandoBundleData implements Labeled {
 
     private String id;
     private String bundleId;
-    private String bundleName;
     private String bundleCode;
+    private String bundleName;
     private Set<String> componentTypes;
     private boolean installed;
     private String publicationUrl;
+    @JsonRawValue
+    private String descriptorExt;
+    private Labels labels;
+
+    public void setLabels(Labels labels) {
+        this.labels = labels;
+    }
 
     public static EntandoBundleData fromEntity(EntandoBundleEntity entity) {
+
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(entity.getRepoUrl());
+
         return EntandoBundleData.builder()
                 .id(entity.getId().toString())
-                .bundleId(BundleUtilities.removeProtocolAndGetBundleId(entity.getRepoUrl()))
+                .bundleId(bundleId)
                 .bundleCode(entity.getBundleCode())
                 .bundleName(entity.getName())
                 .installed(entity.isInstalled())
                 .componentTypes(entity.getType())
                 .publicationUrl(entity.getRepoUrl())
+                .labels(new Labels(Labeled.getPbcLabelsFrom(entity)))
+                .descriptorExt(entity.getBundleDescriptor())
                 .build();
     }
 

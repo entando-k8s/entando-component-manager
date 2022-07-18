@@ -23,7 +23,6 @@ public class BundleDescriptor extends VersionedDescriptor {
     private String description;
     @JsonProperty("bundle-type")
     private BundleType bundleType;
-
     private ComponentSpecDescriptor components;
 
     @Override

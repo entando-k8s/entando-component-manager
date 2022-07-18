@@ -111,6 +111,10 @@ public class EntandoBundleEntity {
     @Column(name = "pbc_list")
     private String pbcList;
 
+    @Size(max = 4000)
+    @Column(name = "bundle_descriptor")
+    private String bundleDescriptor;
+
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();

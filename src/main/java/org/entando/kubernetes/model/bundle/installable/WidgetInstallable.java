@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -12,9 +11,8 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
 
 
 @Slf4j
@@ -22,7 +20,6 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
     private final EntandoCoreClient engineService;
     private final ComponentDataRepository componentDataRepository;
-    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     public WidgetInstallable(EntandoCoreClient engineService, WidgetDescriptor widgetDescriptor, InstallAction action,
             ComponentDataRepository componentDataRepository) {
@@ -132,17 +129,9 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     }
 
     private ComponentDataEntity convertDescriptorToEntity() {
-        String widgetDescriptor = null;
-        try {
-            widgetDescriptor = jsonMapper.writeValueAsString(representation);
-        } catch (JsonProcessingException ex) {
-            log.error("error unmarshalling widgetDescriptor from object with code:'{}'",
-                    representation.getCode(), ex);
-            throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR,
-                    String.format(
-                            "error unmarshalling widgetDescriptor from object with code:'%s' error:'%s'",
-                            representation.getCode(), ex.getMessage()));
-        }
+
+        String widgetDescriptor = JSONUtilities.serializeDescriptor(representation);
+
         return ComponentDataEntity.builder()
                 .bundleId(representation.getDescriptorMetadata().getBundleId())
                 .componentType(ComponentType.WIDGET)
