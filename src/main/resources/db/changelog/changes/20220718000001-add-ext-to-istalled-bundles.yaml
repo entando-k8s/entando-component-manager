@@ -1,11 +1,11 @@
 databaseChangeLog:
   - changeSet:
-      id: 20220714000001
+      id: 20220718000001
       author: l.corsetti@entando.com
       changes:
         - addColumn:
             tableName: installed_entando_bundles
             columns:
               - column:
-                  name: bundle_descriptor
+                  name: ext
                   type: VARCHAR(4000)

@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.installable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +58,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
             finalizeMetadataSystemParams(representation);
         }
-        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElse(convertDescriptorToEntity());
+        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElseGet(this::convertDescriptorToEntity);
         componentDataRepository.save(widgetComponentEntity);
     }
 
@@ -130,7 +129,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
     private ComponentDataEntity convertDescriptorToEntity() {
 
-        String widgetDescriptor = JSONUtilities.serializeDescriptor(representation);
+        String widgetDescriptor = mkWidgetCleanedUpDescriptor();
 
         return ComponentDataEntity.builder()
                 .bundleId(representation.getDescriptorMetadata().getBundleId())
@@ -142,5 +141,33 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 .componentGroup(representation.getGroup())
                 .componentDescriptor(widgetDescriptor)
                 .build();
+    }
+
+    private String mkWidgetCleanedUpDescriptor() {
+        WidgetDescriptor cleanedUp = new WidgetDescriptor(
+                representation.getCode(),
+                representation.getTitles(),
+                representation.getGroup(),
+                null,
+                null,
+                representation.getCustomUiPath(),
+                representation.getConfigWidget(),
+                representation.getName(),
+                representation.getType(),
+                representation.getConfigMfe(),
+                representation.getApiClaims(),
+                representation.getParams(),
+                representation.getContextParams(),
+                representation.getCustomElement(),
+                representation.getExt(),
+                representation.getDescriptorMetadata(),
+                representation.getParentName(),
+                representation.getParentCode()
+        );
+        String res = JSONUtilities.serializeDescriptor(cleanedUp);
+        if (res.length() >= MAX_COMMON_SIZE_OF_STRINGS) {
+            log.warn("Detected possible overflow ({}) in deserialization of widgetDescriptor blob", res.length());
+        }
+        return res;
     }
 }
