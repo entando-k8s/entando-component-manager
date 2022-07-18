@@ -58,7 +58,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
             finalizeMetadataSystemParams(representation);
         }
-        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElse(convertDescriptorToEntity());
+        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElseGet(this::convertDescriptorToEntity);
         componentDataRepository.save(widgetComponentEntity);
     }
 

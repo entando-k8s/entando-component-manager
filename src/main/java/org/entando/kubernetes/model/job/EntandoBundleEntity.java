@@ -37,7 +37,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
-import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.hibernate.annotations.Type;
 import org.springframework.validation.annotation.Validated;

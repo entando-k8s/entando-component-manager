@@ -839,6 +839,7 @@ public class InstallFlowAssertionHelper {
         assertThat(installedBundle.getDescription()).isEqualTo("A bundle containing some demo components for Entando6");
         assertThat(installedBundle.getRepoUrl()).isEqualTo("http://localhost:8099/repository/npm-internal/test_bundle/"
                 + "-/test_bundle-0.0.1.tgz");
-        assertThat(installedBundle.getExt()).isEqualTo("{\"nav\":[{\"label\":{\"en\":\"Dashboard\",\"it\":\"Dashboard\"},\"target\":\"platform\",\"url\":\"/dashboard\"}]}");
+        assertThat(installedBundle.getExt()).isEqualTo("{\"nav\":[{\"label\":{\"en\":\"Dashboard\",\"it\":\"Dashboard\""
+                + "},\"target\":\"platform\",\"url\":\"/dashboard\"}]}");
     }
 }

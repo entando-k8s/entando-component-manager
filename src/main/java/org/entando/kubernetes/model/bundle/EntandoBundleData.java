@@ -2,21 +2,16 @@ package org.entando.kubernetes.model.bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
 
 @Slf4j
 @Data

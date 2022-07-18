@@ -1,15 +1,12 @@
 package org.entando.kubernetes.model.bundle.installable;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.concurrent.CompletionException;
 import org.entando.kubernetes.client.ComponentDataRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
@@ -19,10 +16,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zalando.problem.DefaultProblem;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -34,33 +29,10 @@ class WidgetInstallableTest {
     private ComponentDataRepositoryTestDouble componentDataRepository;
     private WidgetDescriptor widgetDescriptor;
     private WidgetInstallable widgetInstallable;
-    @Mock
-    private ObjectMapper jsonMapper;
 
     @BeforeEach
     public void setup() {
         this.widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV5();
-        //this.componentDataRepository = new ComponentDataRepositoryTestDouble();
-    }
-
-    @Test
-    void shouldThrowError_installNull() {
-        //componentDataRepository = new ComponentDataRepositoryTestDouble();
-        MockWidgetDescriptor mockDescriptor = new MockWidgetDescriptor();
-        mockDescriptor.setType(WidgetDescriptor.TYPE_WIDGET_APPBUILDER);
-        mockDescriptor.setDescriptorMetadata(WidgetStubHelper.stubDescriptorMetadata());
-        widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, mockDescriptor,
-                InstallAction.CREATE,
-                componentDataRepository);
-        assertThrows(DefaultProblem.class, () -> {
-            try {
-                widgetInstallable.install().join();
-            } catch (CompletionException ex) {
-                throw ex.getCause();
-            }
-            ;
-        });
-
     }
 
     @Test
@@ -107,7 +79,6 @@ class WidgetInstallableTest {
 
     @Test
     void shouldUninstall_StrategyIsCreate() {
-        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
         widgetInstallable.install().join();
@@ -123,7 +94,6 @@ class WidgetInstallableTest {
     @Test
     void shouldNOTUnpublishAndNOTDeleteIfConflictStrategyIsNOTCreate() {
         // install just one
-        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
         widgetInstallable.install().join();
