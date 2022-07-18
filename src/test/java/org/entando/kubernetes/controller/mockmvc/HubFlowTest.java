@@ -99,7 +99,7 @@ class HubFlowTest {
         mockMvc.perform(post(DEPLOY_COMPONENT_ENDPOINT.build()).contentType(APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(BundleInfoStubHelper.stubBunbleInfo())))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string("{\"payload\":{\"code\":\"something-77b2b10e\",\"title\":"
+                .andExpect(content().json("{\"payload\":{\"code\":\"something-77b2b10e\",\"title\":"
                         + "\"my-bundle\",\"description\":\"bundle description\",\"repoUrl\":\"http://www.github.com/entan"
                         + "do/mybundle.git\",\"bundleType\":\"standard-bundle\",\"thumbnail\":\"data:image/png;base64,"
                         + "iVBORw0KGgoAAAANSUhEUgAAARkAAAEZCAYAAACjEFEXAAAPLElEQVR4nOzdD2yc5X3A8V\",\"componentTypes\""

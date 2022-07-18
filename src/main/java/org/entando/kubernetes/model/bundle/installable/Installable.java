@@ -30,6 +30,11 @@ public abstract class Installable<T extends Descriptor> {
     }
 
     /**
+     * Maximum size of a string supported by any of the database engines that we support
+     */
+    public static final int MAX_COMMON_SIZE_OF_STRINGS=4000;
+
+    /**
      * This method will be called when every component was validated on the Digital Exchange bundle file.
      *
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
