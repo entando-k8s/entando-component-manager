@@ -455,13 +455,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .findByBundleCode(bundle.getMetadata().getName())
                 .orElse(bundleService.convertToEntityFromEcr(bundle));
 
-        String serializedDescriptor = JSONUtilities.serializeDescriptor(bundleDescriptor);
-
         installedComponent.setPbcList(extractPbcListFrom(bundle));
         installedComponent.setVersion(job.getComponentVersion());
         installedComponent.setJob(job);
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
-        installedComponent.setBundleDescriptor(serializedDescriptor);
+        installedComponent.setExt(bundleDescriptor.getExt());
         installedComponent.setInstalled(true);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");

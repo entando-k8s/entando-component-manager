@@ -8,9 +8,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.zalando.problem.Problem;
+import org.zalando.problem.Status;
+
+@Slf4j
 @Data
 @Builder
 @AllArgsConstructor
@@ -18,6 +26,8 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 @JsonInclude
 @Accessors(chain = true)
 public class EntandoBundleData implements Labeled {
+
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     private String id;
     private String bundleId;
@@ -47,8 +57,7 @@ public class EntandoBundleData implements Labeled {
                 .componentTypes(entity.getType())
                 .publicationUrl(entity.getRepoUrl())
                 .labels(new Labels(Labeled.getPbcLabelsFrom(entity)))
-                .descriptorExt(entity.getBundleDescriptor())
+                .descriptorExt(entity.getExt())
                 .build();
     }
-
 }

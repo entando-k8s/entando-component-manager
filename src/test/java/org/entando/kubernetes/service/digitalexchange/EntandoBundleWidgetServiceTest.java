@@ -76,6 +76,7 @@ class EntandoBundleWidgetServiceTest {
         IntStream.range(0, listToTest.size())
                 .forEach(i -> {
                     final ComponentWidgetData componentWidgetData = listToTest.get(i);
+
                     assertThat(componentWidgetData.getBundleCode()).isEqualTo(
                             BundleInfoStubHelper.NAME + "-" + componentWidgetData.getBundleId());
 

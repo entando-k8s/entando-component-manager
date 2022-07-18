@@ -14,6 +14,8 @@
 
 package org.entando.kubernetes.model.job;
 
+import static org.entando.kubernetes.model.bundle.installable.Installable.MAX_COMMON_SIZE_OF_STRINGS;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.Map;
@@ -35,6 +37,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
+import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.web.SystemConstants;
 import org.hibernate.annotations.Type;
 import org.springframework.validation.annotation.Validated;
@@ -111,9 +114,9 @@ public class EntandoBundleEntity {
     @Column(name = "pbc_list")
     private String pbcList;
 
-    @Size(max = 4000)
-    @Column(name = "bundle_descriptor")
-    private String bundleDescriptor;
+    @Size(max = MAX_COMMON_SIZE_OF_STRINGS)
+    @Column(name = "ext")
+    private String ext;
 
     @PrePersist
     public void generateId() {

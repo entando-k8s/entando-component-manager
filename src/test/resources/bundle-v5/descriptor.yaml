@@ -4,10 +4,18 @@ name: something
 description: bundle description
 
 components:
-    plugins:
-        - plugins/todomvcV3_complete.yaml
-        - plugins/todomvcV4_complete.yaml
-        - plugins/todomvcV5_complete.yaml
+  plugins:
+    - plugins/todomvcV3_complete.yaml
+    - plugins/todomvcV4_complete.yaml
+    - plugins/todomvcV5_complete.yaml
 
-    widgets:
-        - widgets/my_widget_descriptor_v5.yaml
+  widgets:
+    - widgets/my_widget_descriptor_v5.yaml
+
+ext:
+  nav:
+    - label:
+        en: Dashboard
+        it: Dashboard
+      target: platform
+      url: /dashboard

@@ -36,7 +36,7 @@ public class BundleStubHelper {
     }
 
     public static BundleDescriptor stubBundleDescriptor(ComponentSpecDescriptor spec, BundleType type) {
-        return new BundleDescriptor(BUNDLE_CODE, BUNDLE_NAME, BUNDLE_DESCRIPTION, type, spec);
+        return new BundleDescriptor(BUNDLE_CODE, BUNDLE_NAME, BUNDLE_DESCRIPTION, type, spec, "{ \"test_ext\": true }");
     }
 
     /**

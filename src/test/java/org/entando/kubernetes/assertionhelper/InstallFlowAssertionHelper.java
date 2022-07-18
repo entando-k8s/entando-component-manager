@@ -839,13 +839,6 @@ public class InstallFlowAssertionHelper {
         assertThat(installedBundle.getDescription()).isEqualTo("A bundle containing some demo components for Entando6");
         assertThat(installedBundle.getRepoUrl()).isEqualTo("http://localhost:8099/repository/npm-internal/test_bundle/"
                 + "-/test_bundle-0.0.1.tgz");
-        assertThat(installedBundle.getBundleDescriptor()).isEqualTo("{\"descriptorVersion\":\"v5\",\"code\":\"something"
-                + "-ece8f6f0\",\"name\":\"something\",\"description\":\"bundle description\",\"components\":{\"plugins"
-                + "\":[\"plugins/todomvcV3_complete.yaml\",\"plugins/todomvcV4_complete.yaml\",\"plugins/todomvcV5_comp"
-                + "lete.yaml\"],\"widgets\":[\"widgets/my_widget_descriptor_v5.yaml\"],\"fragments\":null,\"categories"
-                + "\":null,\"pages\":null,\"pageTemplates\":null,\"contentTypes\":null,\"contentTemplates\":null,\"cont"
-                + "ents\":null,\"assets\":null,\"groups\":null,\"labels\":null,\"languages\":null},\"componentKey\":{\""
-                + "key\":\"something-ece8f6f0\"},\"version1\":false,\"descriptorClassName\":\"BundleDescriptor\",\"auxi"
-                + "liary\":false,\"bundle-type\":null}");
+        assertThat(installedBundle.getExt()).isEqualTo("{\"nav\":[{\"label\":{\"en\":\"Dashboard\",\"it\":\"Dashboard\"},\"target\":\"platform\",\"url\":\"/dashboard\"}]}");
     }
 }

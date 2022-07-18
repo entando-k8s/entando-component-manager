@@ -19,9 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.AllArgsConstructor;
@@ -35,7 +33,6 @@ import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -114,8 +111,10 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
     }
 
     private ComponentWidgetData populatePbcList(ComponentWidgetData componentWidgetData) {
-        final EntandoBundleEntity bundleEntity = installedComponentRepo.findByBundleId(
-                componentWidgetData.getBundleId()).get();
-        return (ComponentWidgetData) componentWidgetData.setPbcLabelsFrom(bundleEntity);
+        Optional<EntandoBundleEntity> findByBundleId = installedComponentRepo
+                .findByBundleId(componentWidgetData.getBundleId());
+        return (findByBundleId.isPresent())
+                ? (ComponentWidgetData) componentWidgetData.setPbcLabelsFrom(findByBundleId.get())
+                : componentWidgetData;
     }
 }
