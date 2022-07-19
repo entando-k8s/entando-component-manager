@@ -58,7 +58,6 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
-import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -474,9 +473,24 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 .filter(e -> e.getKey().equals(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY))
                 .findFirst()
                 .map(Entry::getValue)
-                // replace json array useless chars
-                .map(v -> v.replaceAll("[\\[\\]\"]", ""))
+                .map(this::pbcJsonArrayToString)
                 .orElse(null);
+    }
+
+    /**
+     * receives the json representation of the pbc names collected into a json array.
+     * parses it and joins it as a comma separated string
+     *
+     * @param pbcJsonArray the json array containing the pbc names to parse
+     * @return the same array parsed in a single comma separated string
+     */
+    private String pbcJsonArrayToString(String pbcJsonArray) {
+        try {
+            return String.join(",", objectMapper.readValue(pbcJsonArray, String[].class));
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing PBC names from {} to string array", pbcJsonArray);
+            return "";
+        }
     }
 
     private boolean isUninstallable(EntandoBundleComponentJobEntity component) {

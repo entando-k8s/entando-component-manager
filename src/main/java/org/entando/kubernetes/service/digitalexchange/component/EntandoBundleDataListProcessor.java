@@ -30,7 +30,6 @@ public class EntandoBundleDataListProcessor extends RequestListProcessor<Entando
 
     public static final String ID = "id";
     public static final String BUNDLE_ID = "bundleId";
-    public static final String BUNDLE_NAME = "bundleName";
     public static final String COMPONENT_TYPE = "componentType";
     public static final String INSTALLED = "installed";
     public static final String PUBLICATION_URL = "publicationUrl";
@@ -49,8 +48,6 @@ public class EntandoBundleDataListProcessor extends RequestListProcessor<Entando
             switch (filter.getAttribute()) {
                 case BUNDLE_ID:
                     return c -> FilterUtils.filterString(filter, c.getBundleId());
-                case BUNDLE_NAME:
-                    return c -> FilterUtils.filterString(filter, c.getBundleName());
                 case COMPONENT_TYPE:
                     return c -> c.getComponentTypes().stream().anyMatch(t -> FilterUtils.filterString(filter, t));
                 case INSTALLED:
@@ -71,8 +68,6 @@ public class EntandoBundleDataListProcessor extends RequestListProcessor<Entando
             switch (sort) {
                 case BUNDLE_ID:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getBundleId(), b.getBundleId());
-                case BUNDLE_NAME:
-                    return (a, b) -> StringUtils.compareIgnoreCase(a.getBundleName(), b.getBundleName());
                 case PUBLICATION_URL:
                     return (a, b) -> StringUtils.compareIgnoreCase(a.getPublicationUrl(), b.getPublicationUrl());
                 case ID:
