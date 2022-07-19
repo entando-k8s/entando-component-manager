@@ -29,6 +29,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
@@ -74,6 +75,7 @@ import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallSe
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -82,6 +84,7 @@ import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 public class InstallServiceTest {
@@ -359,6 +362,32 @@ public class InstallServiceTest {
         verify(bundleOperationsConcurrencyManager, times(0)).operationTerminated();
     }
 
+    @Test
+    void shouldCorrectlyProcessPbcNames() {
+        processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
+        EntandoDeBundle bundle = getTestBundle();
+
+        EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
+                .bundleCode(bundle.getMetadata().getName())
+                .name(bundle.getSpec().getDetails().getName())
+                .build();
+
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
+
+        EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0));
+
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        final ArgumentCaptor<EntandoBundleEntity> captor = ArgumentCaptor.forClass(EntandoBundleEntity.class);
+        verify(installRepo, times(1)).save(captor.capture());
+        final EntandoBundleEntity value = captor.getValue();
+        assertThat(value.getPbcList()).isEqualTo(BundleInfoStubHelper.GROUPS_NAME.stream().collect(Collectors.joining(",")));
+    }
+
 
     private List<Double> getJobProgress() {
         List<Double> allProgresses = Mockito.mockingDetails(jobRepository).getInvocations()
@@ -386,6 +415,7 @@ public class InstallServiceTest {
     private EntandoDeBundle getTestBundle() {
         EntandoDeBundle bundle = new EntandoDeBundle();
         bundle.getMetadata().setName(BUNDLE_ID);
+        bundle.getMetadata().setAnnotations(Map.of("entando.org/pbc", BundleInfoStubHelper.PBC_ANNOTATION_VALUE));
         EntandoDeBundleSpec bundleSpec = new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
                 .withName(BUNDLE_TITLE)

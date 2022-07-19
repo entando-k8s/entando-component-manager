@@ -5,13 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -38,7 +42,7 @@ import org.springframework.core.io.ClassPathResource;
 @ExtendWith(MockitoExtension.class)
 class EntandoDeBundleComposerTest {
 
-    private final String pbcAnnotationsPrefix = "pbc.entando.org/";
+    private final String pbcAnnotationsPrefix = "entando.org/pbc";
     private final URL bundleUrl = new URL(BundleInfoStubHelper.GIT_REPO_ADDRESS);
     private final List<EntandoDeBundleTag> entandoDeBundleTags = BundleStubHelper.TAG_LIST.stream()
             .map(tag -> new EntandoDeBundleTag(tag, null, null, bundleUrl.toString()))
@@ -47,6 +51,7 @@ class EntandoDeBundleComposerTest {
     private final BundleDownloaderFactory bundleDownloaderFactory = new TestAppConfiguration(null,
             null).bundleDownloaderFactory();
     private EntandoDeBundleComposer deBundleComposer;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     EntandoDeBundleComposerTest() throws MalformedURLException {
     }
@@ -141,18 +146,21 @@ class EntandoDeBundleComposerTest {
     }
 
     private void assertOnPbcAnnotations(EntandoDeBundle deBundle) {
-        final List<String> expectedPbcAnnotations = BundleInfoStubHelper.GROUPS_NAME.stream()
-                .map(g -> pbcAnnotationsPrefix + g)
-                .collect(Collectors.toList());
-        final List<String> actualPbcAnnotations = extractPbcAnnotationsFrom(deBundle);
-        assertThat(actualPbcAnnotations).hasSize(expectedPbcAnnotations.size());
-        assertThat(actualPbcAnnotations).containsExactlyInAnyOrder(expectedPbcAnnotations.toArray(String[]::new));
+        final List<String> actualPbcs = extractPbcAnnotationsFrom(deBundle);
+        assertThat(actualPbcs).containsExactlyInAnyOrder(BundleInfoStubHelper.GROUPS_NAME.toArray(String[]::new));
     }
 
-    private List<String> extractPbcAnnotationsFrom(EntandoDeBundle deBundle) {
-        return deBundle.getMetadata().getAnnotations().keySet().stream()
-                .filter(l -> l.startsWith(pbcAnnotationsPrefix))
-                .collect(Collectors.toList());
+    private List<String> extractPbcAnnotationsFrom(EntandoDeBundle deBundle) throws RuntimeException {
+        try {
+            String pbcsValue = deBundle.getMetadata().getAnnotations().entrySet().stream()
+                    .filter(e -> e.getKey().equals(pbcAnnotationsPrefix))
+                    .findFirst()
+                    .map(Entry::getValue)
+                    .orElse(null);
+            return Arrays.asList(objectMapper.readValue(pbcsValue, String[].class));
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     @Test

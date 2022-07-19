@@ -65,6 +65,7 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkSpec;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
@@ -88,8 +89,6 @@ public class TestInstallUtils {
     public static final String PLUGIN_TODOMVC_CUSTOMBASE_V4 = "pn-ece8f6f0-68277159-custombasenamev4";
     public static final String PLUGIN_TODOMVC_TODOMVC_1 = "pn-ece8f6f0-bb576c5d-entando-todomvcv1";
     public static final String PLUGIN_TODOMVC_TODOMVC_2 = "pn-ece8f6f0-cc2d5236-entando-todomvcv2";
-    public static final String BUNDLE_PBC_1 = "pbc.entando.org/pbc-1";
-    public static final String BUNDLE_PBC_2 = "pbc.entando.org/pbc-2";
     public static final UriBuilder INSTALL_PLANS_ENDPOINT = UriComponentsBuilder.newInstance()
             .pathSegment("components", MOCK_BUNDLE_NAME, "installplans");
     public static final UriBuilder INSTALL_PLANS_ENDPOINT_V5 = UriComponentsBuilder.newInstance()
@@ -324,8 +323,7 @@ public class TestInstallUtils {
                 .withNewMetadata()
                 .withName(MOCK_BUNDLE_NAME_V5)
                 .withNamespace("entando-de-bundles")
-                .addToAnnotations(BUNDLE_PBC_1, "true")
-                .addToAnnotations(BUNDLE_PBC_2, "true")
+                .addToAnnotations("entando.org/pbc", BundleInfoStubHelper.PBC_ANNOTATION_VALUE)
                 .endMetadata()
                 .withSpec(getTestEntandoDeBundleSpec()).build();
     }

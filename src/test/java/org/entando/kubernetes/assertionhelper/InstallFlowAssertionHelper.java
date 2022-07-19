@@ -40,6 +40,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.mockito.ArgumentCaptor;
 
@@ -834,7 +835,7 @@ public class InstallFlowAssertionHelper {
         assertThat(installedBundle.getBundleType()).isEqualTo("STANDARD_BUNDLE");
         assertThat(installedBundle.getType()).containsExactlyInAnyOrder("bundle");
         assertThat(installedBundle.getJob()).isNotNull();
-        assertThat(installedBundle.getPbcList()).isEqualTo("pbc-1,pbc-2");
+        assertThat(installedBundle.getPbcList()).isEqualTo(BundleInfoStubHelper.GROUP_NAME_1 + "," + BundleInfoStubHelper.GROUP_NAME_2);
         assertThat(installedBundle.getVersion()).isEqualTo("0.0.1");
         assertThat(installedBundle.getDescription()).isEqualTo("A bundle containing some demo components for Entando6");
         assertThat(installedBundle.getRepoUrl()).isEqualTo("http://localhost:8099/repository/npm-internal/test_bundle/"

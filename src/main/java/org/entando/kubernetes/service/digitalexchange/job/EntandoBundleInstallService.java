@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -469,10 +470,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private String extractPbcListFrom(EntandoDeBundle bundle) {
 
         return Optional.ofNullable(bundle.getMetadata().getAnnotations()).orElseGet(HashMap::new)
-                .keySet().stream()
-                .filter(k -> k.startsWith(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY))
-                .map(k -> k.replace(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY, ""))
-                .collect(Collectors.joining(","));
+                .entrySet().stream()
+                .filter(e -> e.getKey().equals(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY))
+                .findFirst()
+                .map(Entry::getValue)
+                // replace json array useless chars
+                .map(v -> v.replaceAll("[\\[\\]\"]", ""))
+                .orElse(null);
     }
 
     private boolean isUninstallable(EntandoBundleComponentJobEntity component) {
