@@ -38,12 +38,13 @@ public interface PostInitService {
     int getFrequencyInSeconds();
 
     /**
-     * This method checks if some operation is allowed for a post init bundle.
+     * This method checks, with a white list strategy,  if some ECR action (list, refresh, uninstall ...) is allowed for
+     * a post init bundle.
      *
      * @param bundleCode the identifier of the bundle to check
-     * @param operation  the identifier of the operation to check
+     * @param action     the identifier of the action to check
      * @return Optional.empty if bundle not found, true if operation is allowed, otherwise false
      */
-    Optional<Boolean> isBundleOperationAllowed(String bundleCode, String operation);
+    Optional<Boolean> isEcrActionAllowed(String bundleCode, String action);
 
 }
