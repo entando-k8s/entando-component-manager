@@ -541,7 +541,7 @@ public class BundleUtilities {
 
         if (!bundleReader.isBundleV1()) {
             final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
-            fileFolder = Paths.get(fileFolder.toString().replace(fileFolder.subpath(0, 1).toString(), signedFolder));
+            fileFolder = Paths.get(signedFolder, fileFolder.subpath(0, 1).relativize(fileFolder).toString());
         }
 
         return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
