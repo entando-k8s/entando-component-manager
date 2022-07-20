@@ -103,17 +103,9 @@ class EntandoBundlePluginServiceTest {
         when(bundleService.listBundlesFromEcr()).thenReturn(new ArrayList<>());
         when(installedEntandoBundleRepository.findAll()).thenReturn(list);
 
-        // test filter by bundle name
-        PagedListRequest req = new PagedListRequest();
-        Filter filter = new Filter(EntandoBundleDataListProcessor.BUNDLE_NAME, PREFIX_BUNDLE_NAME + "6");
-        filter.setOperator(FilterOperator.EQUAL.getValue());
-        req.setFilters(new Filter[]{filter});
-
-        assertThat(targetService.listBundles(req).getBody()).hasSize(1);
-
         // test filter by installed
-        req = new PagedListRequest();
-        filter = new Filter(EntandoBundleDataListProcessor.INSTALLED, "true");
+        PagedListRequest req = new PagedListRequest();
+        Filter filter = new Filter(EntandoBundleDataListProcessor.INSTALLED, "true");
         filter.setOperator(FilterOperator.EQUAL.getValue());
         req.setFilters(new Filter[]{filter});
         assertThat(targetService.listBundles(req).getBody()).hasSize(INSTALLED_BUNDLE_SIZE);
@@ -164,26 +156,14 @@ class EntandoBundlePluginServiceTest {
         when(bundleService.listBundlesFromEcr()).thenReturn(new ArrayList<>());
         when(installedEntandoBundleRepository.findAll()).thenReturn(list);
 
-        // test sort by bundle name desc
+        // test sort by bundle id desc
         PagedListRequest req = new PagedListRequest();
-        req.setSort(EntandoBundleDataListProcessor.BUNDLE_NAME);
-        req.setDirection(Filter.DESC_ORDER);
+        req.setSort(EntandoBundleDataListProcessor.BUNDLE_ID);
+        req.setDirection(Filter.ASC_ORDER);
 
         PagedMetadata<EntandoBundleData> result = targetService.listBundles(req);
 
         assertThat(result.getBody()).hasSize(INSTALLED_BUNDLE_SIZE);
-        String bundleNameToTest = result.getBody().get(INSTALLED_BUNDLE_SIZE - 1).getBundleName();
-        assertThat(bundleNameToTest).isEqualTo(PREFIX_BUNDLE_NAME + "1");
-
-        // test sort by bundle id desc
-        req = new PagedListRequest();
-        req.setSort(EntandoBundleDataListProcessor.BUNDLE_ID);
-        req.setDirection(Filter.ASC_ORDER);
-
-        result = targetService.listBundles(req);
-
-        assertThat(result.getBody()).hasSize(INSTALLED_BUNDLE_SIZE);
-        // ????
 
         // test sort by pub url desc
         req = new PagedListRequest();

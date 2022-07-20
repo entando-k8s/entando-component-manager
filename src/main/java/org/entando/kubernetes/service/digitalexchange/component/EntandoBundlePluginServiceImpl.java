@@ -55,7 +55,7 @@ public class EntandoBundlePluginServiceImpl implements EntandoBundlePluginServic
 
         // installed + CRD not installed
         List<EntandoBundleData> allBundles = new ArrayList<>(installedBundles);
-        allBundles.addAll(entandoDeBundles.stream().filter(f -> !listContainsBundleByName(installedBundles, f))
+        allBundles.addAll(entandoDeBundles.stream().filter(f -> !listContainsBundleByCode(installedBundles, f))
                 .collect(Collectors.toList()));
 
         // filter all
@@ -66,8 +66,8 @@ public class EntandoBundlePluginServiceImpl implements EntandoBundlePluginServic
         return new PagedMetadata<>(request, sublist, localFilteredList.size());
     }
 
-    private boolean listContainsBundleByName(List<EntandoBundleData> allBundles, EntandoBundleData bundle) {
-        return allBundles.stream().anyMatch(b -> StringUtils.equals(b.getBundleName(), bundle.getBundleName()));
+    private boolean listContainsBundleByCode(List<EntandoBundleData> allBundles, EntandoBundleData bundle) {
+        return allBundles.stream().anyMatch(b -> StringUtils.equals(b.getBundleCode(), bundle.getBundleCode()));
     }
 
     @Override
@@ -138,7 +138,6 @@ public class EntandoBundlePluginServiceImpl implements EntandoBundlePluginServic
         return EntandoBundleData.builder()
                 .id(null)
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(bundle.getRepoUrl()))
-                .bundleName(bundle.getTitle())
                 .bundleCode(bundle.getCode())
                 .installed(bundle.isInstalled())
                 .componentTypes(bundle.getComponentTypes())

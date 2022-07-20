@@ -1,8 +1,11 @@
 package org.entando.kubernetes.service.digitalexchange;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -38,9 +41,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class EntandoDeBundleComposer {
 
-    public static final String PBC_ANNOTATIONS_KEY = "pbc.entando.org/";
+    public static final String PBC_ANNOTATIONS_KEY = "entando.org/pbc";
     private final BundleDownloaderFactory downloaderFactory;
     private static final String MAIN_VERSION = "main";
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory) {
@@ -200,11 +204,17 @@ public class EntandoDeBundleComposer {
 
     private Map<String, String> createAnnotationsFrom(List<BundleGroup> bundleGroups) {
 
-        return Optional.ofNullable(bundleGroups)
+        final List<String> pbcList = Optional.ofNullable(bundleGroups)
                 .orElseGet(ArrayList::new).stream()
-                .filter(g -> ObjectUtils.isNotEmpty(g.getName()))
-                .map(g -> PBC_ANNOTATIONS_KEY + g.getName())
-                .collect(Collectors.toMap(k -> k, v -> "true"));
+                .map(BundleGroup::getName)
+                .filter(ObjectUtils::isNotEmpty)
+                .collect(Collectors.toList());
+
+        try {
+            return Map.of(PBC_ANNOTATIONS_KEY, objectMapper.writeValueAsString(pbcList));
+        } catch (JsonProcessingException e) {
+            throw new EntandoComponentManagerException("An error occurred while serializing bundle's pbc names", e);
+        }
     }
 
     /**

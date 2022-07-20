@@ -17,6 +17,7 @@ public class BundleInfoStubHelper {
     public static final String GROUP_NAME_1 = "group one";
     public static final String GROUP_NAME_2 = "group two";
     public static final List<String> GROUPS_NAME = List.of(GROUP_NAME_1, GROUP_NAME_2);
+    public static final String PBC_ANNOTATION_VALUE = "[\"" + GROUP_NAME_1 + "\",\"" + GROUP_NAME_2 + "\"]";
     public static final String BUNDLE_ID = "140";
     public static final List<String> DEPENDENCIES = Collections.emptyList();
 

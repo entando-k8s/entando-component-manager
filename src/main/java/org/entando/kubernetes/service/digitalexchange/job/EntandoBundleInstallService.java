@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -57,7 +58,6 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
-import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -469,10 +469,28 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private String extractPbcListFrom(EntandoDeBundle bundle) {
 
         return Optional.ofNullable(bundle.getMetadata().getAnnotations()).orElseGet(HashMap::new)
-                .keySet().stream()
-                .filter(k -> k.startsWith(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY))
-                .map(k -> k.replace(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY, ""))
-                .collect(Collectors.joining(","));
+                .entrySet().stream()
+                .filter(e -> e.getKey().equals(EntandoDeBundleComposer.PBC_ANNOTATIONS_KEY))
+                .findFirst()
+                .map(Entry::getValue)
+                .map(this::pbcJsonArrayToString)
+                .orElse(null);
+    }
+
+    /**
+     * receives the json representation of the pbc names collected into a json array.
+     * parses it and joins it as a comma separated string
+     *
+     * @param pbcJsonArray the json array containing the pbc names to parse
+     * @return the same array parsed in a single comma separated string
+     */
+    private String pbcJsonArrayToString(String pbcJsonArray) {
+        try {
+            return String.join(",", objectMapper.readValue(pbcJsonArray, String[].class));
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing PBC names from {} to string array", pbcJsonArray);
+            return "";
+        }
     }
 
     private boolean isUninstallable(EntandoBundleComponentJobEntity component) {

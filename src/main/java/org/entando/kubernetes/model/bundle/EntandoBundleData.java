@@ -27,7 +27,6 @@ public class EntandoBundleData implements Labeled {
     private String id;
     private String bundleId;
     private String bundleCode;
-    private String bundleName;
     private Set<String> componentTypes;
     private boolean installed;
     private String publicationUrl;
@@ -47,7 +46,6 @@ public class EntandoBundleData implements Labeled {
                 .id(entity.getId().toString())
                 .bundleId(bundleId)
                 .bundleCode(entity.getBundleCode())
-                .bundleName(entity.getName())
                 .installed(entity.isInstalled())
                 .componentTypes(entity.getType())
                 .publicationUrl(entity.getRepoUrl())
