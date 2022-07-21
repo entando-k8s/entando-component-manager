@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220720000001
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: installed_entando_bundles
+        - not:
+            - columnExists:
+                tableName: operation_starter
+      changes:
+        - addColumn:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  name: operation_starter
+                  type: VARCHAR(64)
+                  defaultValue: "REST_CLIENT"

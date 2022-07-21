@@ -28,6 +28,8 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface EntandoBundleService {
 
+    PagedMetadata<EntandoBundle> listPostInitBundles();
+
     PagedMetadata<EntandoBundle> listBundles();
 
     PagedMetadata<EntandoBundle> listBundles(PagedListRequest request);

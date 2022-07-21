@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -35,6 +36,7 @@ import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.common.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.service.KubernetesService;
@@ -68,6 +70,8 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(360);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(6);
 
+    private Map<String, EntandoBundle> bundlesInstalledOrDeployed;
+    private Map<String, EntandoBundle> postInitBundlesInstalledNotInConfiguration;
 
     static {
         List<PostInitItem> items = new ArrayList<>();
@@ -133,12 +137,21 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                     .comparingInt(PostInitItem::getPriority).reversed()
                     .thenComparing(PostInitItem::getName);
 
-            List<PostInitItem> bundleToInstall = configurationData.getItems().stream()
+            List<PostInitItem> postInitBundleInConfiguration = configurationData.getItems().stream()
                     .sorted(compareByPriorityAndThenName)
                     .collect(Collectors.toList());
 
             // list ALL bundles installed (for update) or not
-            Map<String, EntandoBundle> bundlesInstalledOrDeployed = bundleService.listBundles().getBody().stream()
+            bundlesInstalledOrDeployed = bundleService.listBundles().getBody().stream()
+                    .collect(Collectors.toMap(
+                            EntandoBundle::getCode,
+                            Function.identity(),
+                            (item1, item2) -> item1));
+
+            // list installed PostInit bundle
+            postInitBundlesInstalledNotInConfiguration = bundleService.listPostInitBundles()
+                    .getBody().stream()
+                    .filter(bundle -> !isBundleInConfiguration(bundle))
                     .collect(Collectors.toMap(
                             EntandoBundle::getCode,
                             Function.identity(),
@@ -146,41 +159,14 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
             try {
 
-                for (PostInitItem itemFromConfig : bundleToInstall) {
+                for (PostInitItem itemFromConfig : postInitBundleInConfiguration) {
                     final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
                     log.info("Post init executing '{}' on bundle '{}'", item.getAction(), item.getName());
 
-                    String bundleCode = calculateBundleCode(item);
+                    Consumer<PostInitItem> postInitConsumer = this::installOrUpdateConfigurationItem;
 
-                    EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
-                            .orElseGet(() -> deployPostInitBundle(item));
-
-                    computeInstallStrategy(bundle, item)
-                            .or(() -> computeUpdateStrategy(bundle, item))
-                            .ifPresent(strategy -> {
-                                // try to install
-                                EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
-                                        .orElseThrow(() -> {
-                                            log.debug("EntandoDeBundle not found with bundleCode:'{}'", bundleCode);
-                                            return new BundleNotFoundException(bundleCode);
-                                        });
-                                EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
-
-                                EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy);
-
-                                Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
-
-                                Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
-                                        JobStatus.INSTALL_ERROR);
-                                Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
-                                waitStatuses.add(JobStatus.INSTALL_COMPLETED);
-
-                                waitForJobStatus(getJobStatus, waitStatuses);
-
-                                if (errorStatuses.contains(getJobStatus.get())) {
-                                    throw new EntandoGeneralException("error installing " + item.getName());
-                                }
-                            });
+                    postInitConsumer.accept(item);
+                    
                 }
 
                 log.info("Post init phase install executed successfully");
@@ -207,6 +193,46 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
             status = PostInitStatus.UNKNOWN;
             finished = true;
         }
+    }
+
+    private void installOrUpdateConfigurationItem(PostInitItem item) {
+        String bundleCode = calculateBundleCode(item);
+
+        EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
+                .orElseGet(() -> deployPostInitBundle(item));
+
+        computeInstallStrategy(bundle, item)
+                .or(() -> computeUpdateStrategy(bundle, item))
+                .ifPresent(strategy -> {
+                    // try to install
+                    EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
+                            .orElseThrow(() -> {
+                                log.debug("EntandoDeBundle not found with bundleCode:'{}'", bundleCode);
+                                return new BundleNotFoundException(bundleCode);
+                            });
+                    EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
+
+                    EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy,
+                            OperatorStarter.POST_INIT);
+
+                    Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
+
+                    Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
+                            JobStatus.INSTALL_ERROR);
+                    Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
+                    waitStatuses.add(JobStatus.INSTALL_COMPLETED);
+
+                    waitForJobStatus(getJobStatus, waitStatuses);
+
+                    if (errorStatuses.contains(getJobStatus.get())) {
+                        throw new EntandoGeneralException("error installing " + item.getName());
+                    }
+                });
+    }
+
+    private boolean isBundleInConfiguration(EntandoBundle bundle) {
+        return configurationData.getItems().stream().map(this::calculateBundleCode).anyMatch(code ->
+                StringUtils.equals(code, bundle.getCode()));
     }
 
     private PostInitItem checkActionOrSwitchToDefault(PostInitItem item) {
