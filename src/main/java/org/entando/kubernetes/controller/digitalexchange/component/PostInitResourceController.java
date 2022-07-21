@@ -16,7 +16,7 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitStatusService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,11 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PostInitResourceController implements PostInitResource {
 
-    private final PostInitService service;
+    private final PostInitStatusService status;
     private static final String ERROR_MSG = "Can't manage a request with bundleCode: ";
 
     @Override
     public ResponseEntity<String> getStatus() {
-        return ResponseEntity.ok(service.getStatus().toString());
+        return ResponseEntity.ok(status.getStatus().toString());
     }
 }

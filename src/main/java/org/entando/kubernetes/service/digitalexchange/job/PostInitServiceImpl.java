@@ -2,11 +2,7 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static org.awaitility.Awaitility.await;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -18,13 +14,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
@@ -42,92 +31,48 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
-import org.entando.kubernetes.validator.ValidationFunctions;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationServiceImpl.PostInitItem;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class PostInitServiceImpl implements PostInitService, InitializingBean {
+public class PostInitServiceImpl implements PostInitService {
 
     public static final String ACTION_INSTALL_OR_UPDATE = "install-or-update";
     public static final String DEFAULT_ACTION = "deploy-only";
     public static final String ECR_ACTION_UNINSTALL = "uninstall";
+    private final PostInitConfigurationService postInitConfigurationService;
+    private final PostInitStatusService postInitStatusService;
     private final EntandoBundleService bundleService;
     private final EntandoBundleInstallService installService;
+    private final EntandoBundleUninstallService uninstallService;
     private final EntandoBundleJobService entandoBundleJobService;
     private final KubernetesService kubernetesService;
-    private final String postInitConfigurationData;
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private PostInitStatus status;
-    private boolean finished;
-    private static final int MAX_RETIES = 30;
-    private int retries = 0;
-    private PostInitData configurationData;
-    private static final PostInitData DEFAULT_CONFIGURATION_DATA;
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(360);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(6);
 
     private Map<String, EntandoBundle> bundlesInstalledOrDeployed;
-    private Map<String, EntandoBundle> postInitBundlesInstalledNotInConfiguration;
 
-    static {
-        List<PostInitItem> items = new ArrayList<>();
-        items.add(PostInitItem.builder()
-                .name("entando-post-init-01")
-                .url("docker://docker.io/entando/post-init-01")
-                .version("1.0.0")
-                .priority(1)
-                .build());
-        DEFAULT_CONFIGURATION_DATA = PostInitData.builder().frequency(3).items(items).build();
 
-    }
-
-    public PostInitServiceImpl(@Value("${entando.ecr.postinit:#{null}}") String postInitConfigurationData,
+    public PostInitServiceImpl(PostInitConfigurationService postInitConfigurationService,
+            PostInitStatusService postInitStatusService,
             EntandoBundleService bundleService, EntandoBundleInstallService installService,
+            EntandoBundleUninstallService uninstallService,
             KubernetesService kubernetesService, EntandoBundleJobService entandoBundleJobService) {
-        this.postInitConfigurationData = postInitConfigurationData;
+        this.postInitConfigurationService = postInitConfigurationService;
+        this.postInitStatusService = postInitStatusService;
         this.bundleService = bundleService;
         this.installService = installService;
+        this.uninstallService = uninstallService;
         this.kubernetesService = kubernetesService;
         this.entandoBundleJobService = entandoBundleJobService;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        configurationData = parsePostInitConfiguration().orElse(DEFAULT_CONFIGURATION_DATA);
-        status = PostInitStatus.UNKNOWN;
-        finished = false;
-    }
-
-    @Override
-    public boolean shouldRetry() {
-        return retries < MAX_RETIES;
-    }
-
-    @Override
-    public int getFrequencyInSeconds() {
-        return configurationData.getFrequency();
-    }
-
-    @Override
-    public Optional<Boolean> isEcrActionAllowed(String bundleCode, String action) {
-        return configurationData.getItems().stream()
-                .filter(item -> StringUtils.equals(calculateBundleCode(item), bundleCode))
-                .findFirst()
-                .map(item -> Boolean.valueOf(ecrActionAllowed(item, action)))
-                .or(Optional::empty);
     }
 
     @Override
     public void install() {
         log.info("Post init phase install executing");
 
-        finished = false;
-        status = PostInitStatus.STARTED;
-        retries++;
+        postInitStatusService.startExecution();
 
         Optional<String> appStatus = retrieveApplicationStatus();
         if (appStatus.isPresent() && EntandoDeploymentPhase.SUCCESSFUL.toValue().toLowerCase()
@@ -137,7 +82,8 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                     .comparingInt(PostInitItem::getPriority).reversed()
                     .thenComparing(PostInitItem::getName);
 
-            List<PostInitItem> postInitBundleInConfiguration = configurationData.getItems().stream()
+            List<PostInitItem> postInitBundleInConfiguration = postInitConfigurationService.getConfigurationData()
+                    .getItems().stream()
                     .sorted(compareByPriorityAndThenName)
                     .collect(Collectors.toList());
 
@@ -148,14 +94,11 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                             Function.identity(),
                             (item1, item2) -> item1));
 
-            // list installed PostInit bundle
-            postInitBundlesInstalledNotInConfiguration = bundleService.listPostInitBundles()
+            // list installed or uninstalled not undeployed PostInit bundle that must be removed
+            List<EntandoBundle> postInitBundlesToRemove = bundleService.listPostInitBundles()
                     .getBody().stream()
                     .filter(bundle -> !isBundleInConfiguration(bundle))
-                    .collect(Collectors.toMap(
-                            EntandoBundle::getCode,
-                            Function.identity(),
-                            (item1, item2) -> item1));
+                    .collect(Collectors.toList());
 
             try {
 
@@ -163,47 +106,100 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                     final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
                     log.info("Post init executing '{}' on bundle '{}'", item.getAction(), item.getName());
 
-                    Consumer<PostInitItem> postInitConsumer = this::installOrUpdateConfigurationItem;
+                    Consumer<PostInitItem> postInitConsumer = computeActionToExecute(item);
 
                     postInitConsumer.accept(item);
-                    
                 }
 
+                for (EntandoBundle bundle : postInitBundlesToRemove) {
+                    if (bundle.isInstalled()) {
+                        uninstallBundleAndWaitForCompletion(bundle.getCode());
+                    }
+                    bundleService.undeployDeBundle(bundle.getCode());
+
+                }
                 log.info("Post init phase install executed successfully");
-                status = PostInitStatus.SUCCESSFUL;
-                retries = MAX_RETIES;
-                finished = true;
+                postInitStatusService.endExecution(PostInitStatus.SUCCESSFUL, true, true);
 
             } catch (BundleNotFoundException | EntandoGeneralException | InvalidBundleException ex) {
                 log.info("Error post init bundle install:'{}'", ex.getMessage());
-                status = PostInitStatus.FAILED;
-                retries = MAX_RETIES;
-                finished = true;
+                postInitStatusService.endExecution(PostInitStatus.FAILED, true, true);
 
             } catch (Throwable ex) {
                 // useful catch to manage executor bug
-                log.error("Error unmanaged post init bundle install", ex.getMessage(), ex);
-                status = PostInitStatus.UNKNOWN;
-                finished = true;
+                log.error("Error unmanaged post init bundle install:'{}'", ex.getMessage(), ex);
+                postInitStatusService.endExecution(PostInitStatus.UNKNOWN, true, false);
 
             }
 
         } else {
             log.info("Error post application status unknown");
-            status = PostInitStatus.UNKNOWN;
-            finished = true;
+            postInitStatusService.endExecution(PostInitStatus.UNKNOWN, true, false);
         }
     }
 
+    private Consumer<PostInitItem> computeActionToExecute(PostInitItem item) {
+        switch (item.getAction()) {
+            case ACTION_INSTALL_OR_UPDATE:
+                return this::installOrUpdateConfigurationItem;
+            case DEFAULT_ACTION:
+                return manageDeployOnlyAction(item);
+            default:
+                throw new EntandoGeneralException(String.format("Postinit action:'%s' on bundle:'%s' not recognized",
+                        item.getAction(), item.getName()));
+
+        }
+    }
+
+    private Consumer<PostInitItem> manageDeployOnlyAction(PostInitItem item) {
+        String bundleCode = PostInitServiceUtility.calculateBundleCode(item);
+        EntandoBundle bundle = bundlesInstalledOrDeployed.get(bundleCode);
+        if (bundle == null) {
+            return this::deployPostInitBundle;
+        } else if (bundle.isInstalled()) {
+            return this::uninstallBundle;
+        } else {
+            return i -> log.debug("Postinit action:'{}' on bundle:'{}' not installed do nothing",
+                    i.getAction(),
+                    i.getName());
+        }
+
+    }
+
+    private void uninstallBundle(PostInitItem item) {
+        log.info("Postinit try to uninstall bundle:'{}'", item.getName());
+
+        String bundleCode = PostInitServiceUtility.calculateBundleCode(item);
+
+        uninstallBundleAndWaitForCompletion(bundleCode);
+    }
+
+    private void uninstallBundleAndWaitForCompletion(String bundleCode) {
+        EntandoBundleJobEntity job = uninstallService.uninstall(bundleCode);
+
+        Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
+
+        Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ERROR);
+        Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
+        waitStatuses.add(JobStatus.UNINSTALL_COMPLETED);
+
+        waitForJobStatus(getJobStatus, waitStatuses);
+
+        if (errorStatuses.contains(getJobStatus.get())) {
+            throw new EntandoGeneralException("error uninstalling " + bundleCode);
+        }
+
+    }
+
     private void installOrUpdateConfigurationItem(PostInitItem item) {
-        String bundleCode = calculateBundleCode(item);
+        String bundleCode = PostInitServiceUtility.calculateBundleCode(item);
 
         EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
                 .orElseGet(() -> deployPostInitBundle(item));
 
-        computeInstallStrategy(bundle, item)
-                .or(() -> computeUpdateStrategy(bundle, item))
+        computeStrategy(bundle, item)
                 .ifPresent(strategy -> {
+                    log.info("Postinit try to install or update bundle:'{}'", item.getName());
                     // try to install
                     EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
                             .orElseThrow(() -> {
@@ -231,8 +227,9 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     private boolean isBundleInConfiguration(EntandoBundle bundle) {
-        return configurationData.getItems().stream().map(this::calculateBundleCode).anyMatch(code ->
-                StringUtils.equals(code, bundle.getCode()));
+        return postInitConfigurationService.getConfigurationData().getItems().stream()
+                .map(PostInitServiceUtility::calculateBundleCode)
+                .anyMatch(code -> StringUtils.equals(code, bundle.getCode()));
     }
 
     private PostInitItem checkActionOrSwitchToDefault(PostInitItem item) {
@@ -281,66 +278,21 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     }
 
-    private String calculateBundleCode(PostInitItem item) {
-        String bundleId = BundleUtilities.removeProtocolAndGetBundleId(item.getUrl());
-
-        // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
-        if (StringUtils.length(item.getName()) > 200
-                || !ValidationFunctions.VALID_CHARS_RFC_1123_REGEX_PATTERN.matcher(item.getName()).matches()
-                || !ValidationFunctions.HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN.matcher(item.getName())
-                .matches()) {
-            throw new InvalidBundleException("Error bundle name not valid (RFC 1123) " + item.getName());
-        }
-        String bundleName = item.getName();
-        return BundleUtilities.composeBundleCode(bundleName, bundleId);
-    }
-
-    private Optional<InstallAction> computeInstallStrategy(EntandoBundle bundle, PostInitItem item) {
-        if (isFirstInstall(bundle) && isInstallActionPlanned(item)) {
-            log.info("Computed strategy: install `{}`", item.getName());
+    private Optional<InstallAction> computeStrategy(EntandoBundle bundle, PostInitItem item) {
+        if (isInstall(bundle) || isUpgrade(bundle, item.getVersion())) {
+            log.info("Computed strategy: OVERRIDE `{}`", item.getName());
             return Optional.of(InstallAction.OVERRIDE);
         }
         return Optional.empty();
     }
 
-    private boolean isFirstInstall(EntandoBundle bundle) {
+    private boolean isInstall(EntandoBundle bundle) {
         return !bundle.isInstalled();
-    }
-
-    private boolean ecrActionAllowed(PostInitItem item, String action) {
-        boolean isActionAllowed =
-                item.getEcrActions() != null && Arrays.stream(item.getEcrActions()).anyMatch(action::equals);
-        log.trace("For bundle:'{}' action '{}' is allowed ? '{}'", item.getName(), action, isActionAllowed);
-        return isActionAllowed;
-
-    }
-
-    private boolean isActionPlanned(PostInitItem item, String action) {
-        boolean isActionPlanned = StringUtils.equals(item.getAction(), action);
-        log.trace("For bundle:'{}' action '{}' is planned ? '{}'", item.getName(), action, isActionPlanned);
-        return isActionPlanned;
-
-    }
-
-    private boolean isInstallActionPlanned(PostInitItem item) {
-        return isActionPlanned(item, ACTION_INSTALL_OR_UPDATE);
-    }
-
-    private Optional<InstallAction> computeUpdateStrategy(EntandoBundle bundle, PostInitItem item) {
-        if (isUpgrade(bundle, item.getVersion()) && isUpdateActionPlanned(item)) {
-            log.info("Computed strategy: update `{}`", item.getName());
-            return Optional.of(InstallAction.OVERRIDE);
-        }
-        return Optional.empty();
     }
 
     private boolean isUpgrade(EntandoBundle bundle, String versionToinstall) {
         return bundle.isInstalled() && !StringUtils.equals(versionToinstall,
                 bundle.getInstalledJob().getComponentVersion());
-    }
-
-    private boolean isUpdateActionPlanned(PostInitItem item) {
-        return isActionPlanned(item, ACTION_INSTALL_OR_UPDATE);
     }
 
     private EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String versionToFind) {
@@ -352,53 +304,5 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
 
-    private Optional<PostInitData> parsePostInitConfiguration() {
-        if (StringUtils.isBlank(postInitConfigurationData)) {
-            return Optional.empty();
-        } else {
-            try {
-                return Optional.ofNullable(mapper.readValue(postInitConfigurationData, PostInitData.class));
-            } catch (JsonProcessingException ex) {
-                log.warn("Error processing json input configuration data:'{}'", postInitConfigurationData, ex);
-                return Optional.empty();
-            }
-        }
-    }
 
-    @Override
-    public PostInitStatus getStatus() {
-        return status;
-    }
-
-    @Override
-    public boolean isCompleted() {
-        return finished;
-    }
-
-    @ToString
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PostInitData {
-
-        @Getter
-        @Setter
-        private int frequency;
-        @Getter
-        private List<PostInitItem> items = new ArrayList<>();
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PostInitItem {
-
-        private String name;
-        private String[] ecrActions;
-        private String action;
-        private String url;
-        private String version;
-        private int priority;
-    }
 }

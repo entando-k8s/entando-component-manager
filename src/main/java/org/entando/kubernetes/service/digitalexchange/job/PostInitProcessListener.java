@@ -15,7 +15,8 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
 
     private static final long START_DELAY = 1;
     private final PostInitService service;
-
+    private final PostInitStatusService status;
+    private final PostInitConfigurationService configuration;
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     TimerTask repeatedTask = new TimerTask() {
@@ -28,7 +29,7 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
 
                 log.info("Post init task executing");
 
-                if (service.isCompleted() && !service.shouldRetry()) {
+                if (status.isCompleted() && !status.shouldRetry()) {
                     if (!executor.isShutdown()) {
                         executor.shutdown();
                         log.info("Post init task removed");
@@ -49,7 +50,8 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
     public void onApplicationEvent(ApplicationReadyEvent event) {
         log.info("Application ECR read start post-init");
 
-        executor.scheduleWithFixedDelay(repeatedTask, START_DELAY, service.getFrequencyInSeconds(), TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(repeatedTask, START_DELAY, configuration.getFrequencyInSeconds(),
+                TimeUnit.SECONDS);
 
     }
 
