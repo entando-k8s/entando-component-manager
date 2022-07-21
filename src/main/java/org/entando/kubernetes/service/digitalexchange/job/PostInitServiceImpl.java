@@ -50,7 +50,7 @@ import org.springframework.stereotype.Service;
 public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     public static final String ACTION_INSTALL_OR_UPDATE = "install-or-update";
-    public static final String DEFAULT_ACTION = ACTION_INSTALL_OR_UPDATE;
+    public static final String DEFAULT_ACTION = "deploy-only";
     public static final String ECR_ACTION_UNINSTALL = "uninstall";
     private final EntandoBundleService bundleService;
     private final EntandoBundleInstallService installService;
@@ -75,6 +75,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 .name("entando-post-init-01")
                 .url("docker://docker.io/entando/post-init-01")
                 .version("1.0.0")
+                .action(ACTION_INSTALL_OR_UPDATE)
                 .priority(1)
                 .build());
         DEFAULT_CONFIGURATION_DATA = PostInitData.builder().frequency(3).items(items).build();
