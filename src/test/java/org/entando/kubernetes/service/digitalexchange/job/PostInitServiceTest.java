@@ -113,7 +113,7 @@ class PostInitServiceTest {
     }
 
 
-    @Test
+    /*@Test
     void postInit_ShouldNotInstall() throws Exception {
         EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
         EntandoBundleService bundleServiceSpy = Mockito.spy(bundleService);
@@ -141,8 +141,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.shouldRetry()).isFalse();
         verify(bundleServiceSpy, times(1)).deployDeBundle(any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
-
-    }
+    }*/
 
     @Test
     void postInit_errorInputConfig_ShouldNotInstall() throws Exception {
