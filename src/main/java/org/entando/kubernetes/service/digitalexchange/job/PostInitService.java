@@ -37,6 +37,8 @@ public interface PostInitService {
      */
     int getFrequencyInSeconds();
 
+    int getMaxAppWaitInSeconds();
+
     /**
      * This method checks, with a white list strategy,  if some ECR action (list, refresh, uninstall ...) is allowed for
      * a post init bundle.

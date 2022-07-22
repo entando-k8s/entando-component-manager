@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,40 +17,60 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
 
     private static final long START_DELAY = 1;
     private final PostInitService service;
-
+    private boolean isWaitingMessageDisplayed;
+    private Instant startTime;
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     TimerTask repeatedTask = new TimerTask() {
         public void run() {
-            log.info("Post init task executing");
+            log.debug("Post init task executing");
             // task ok
             try {
+                if (isMaxWaitExpired()) {
+                    log.info("Post init timeout waiting for the application to get ready");
+                    removeTask();
+                } else {
+                    service.install();
 
-                service.install();
-
-                log.info("Post init task executing");
-
-                if (service.isCompleted() && !service.shouldRetry()) {
-                    if (!executor.isShutdown()) {
-                        executor.shutdown();
-                        log.info("Post init task removed");
-                    } else {
-                        log.warn("PostInitProcessListener executor already shutdown");
+                    log.debug("Post init task executed");
+                    if (service.isCompleted() && service.shouldRetry() && !isWaitingMessageDisplayed) {
+                        isWaitingMessageDisplayed = true;
+                        log.info("Post init Waiting for the application to get ready");
+                    }
+                    if (service.isCompleted() && !service.shouldRetry()) {
+                        removeTask();
                     }
                 }
-
             } catch (Exception ex) {
                 log.error("Error to execute post init task", ex);
             }
-            log.info("Post init task executed");
+        }
+
+        private void removeTask() {
+            if (!executor.isShutdown()) {
+                executor.shutdown();
+                log.info("End Post init process");
+            } else {
+                log.warn("PostInitProcessListener executor already shutdown");
+            }
+        }
+
+        private boolean isMaxWaitExpired() {
+            Instant finishTime = Instant.now();
+            long timeElapsed = Duration.between(startTime, finishTime).toSeconds();
+            boolean maxWaitExpired = timeElapsed >= service.getMaxAppWaitInSeconds();
+            log.trace("isMaxWaitExpired ? '{}' elapsed time:'{}'s, maxAppWait:'{}'s", maxWaitExpired, timeElapsed,
+                    service.getMaxAppWaitInSeconds());
+            return maxWaitExpired;
         }
 
     };
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        log.info("Application ECR read start post-init");
-
+        log.info("Application ECR ready, start Post init process");
+        startTime = Instant.now();
+        isWaitingMessageDisplayed = false;
         executor.scheduleWithFixedDelay(repeatedTask, START_DELAY, service.getFrequencyInSeconds(), TimeUnit.SECONDS);
 
     }
