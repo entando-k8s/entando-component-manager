@@ -61,7 +61,9 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     private PostInitStatus status;
     private boolean finished;
-    private static final int MAX_RETIES = 30;
+    private static final int MAX_RETIES = 5000;
+    private static final int DEFAULT_CONFIGURATION_TIMEOUT = 600;
+    private static final int DEFAULT_CONFIGURATION_FREQUENCY = 5;
     private int retries = 0;
     private PostInitData configurationData;
     private static final PostInitData DEFAULT_CONFIGURATION_DATA;
@@ -72,13 +74,16 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     static {
         List<PostInitItem> items = new ArrayList<>();
         items.add(PostInitItem.builder()
-                .name("entando-post-init-01")
-                .url("docker://docker.io/entando/post-init-01")
+                .name("entando-postinit-01")
+                .url("docker://registry.hub.docker.com/entando/entando-postinit-01")
                 .version("1.0.0")
                 .action(ACTION_INSTALL_OR_UPDATE)
                 .priority(1)
                 .build());
-        DEFAULT_CONFIGURATION_DATA = PostInitData.builder().frequency(3).items(items).build();
+        DEFAULT_CONFIGURATION_DATA = PostInitData.builder()
+                .frequency(DEFAULT_CONFIGURATION_FREQUENCY)
+                .maxAppWait(DEFAULT_CONFIGURATION_TIMEOUT)
+                .items(items).build();
 
     }
 
@@ -110,6 +115,11 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     @Override
+    public int getMaxAppWaitInSeconds() {
+        return configurationData.getMaxAppWait();
+    }
+
+    @Override
     public Optional<Boolean> isEcrActionAllowed(String bundleCode, String action) {
         return configurationData.getItems().stream()
                 .filter(item -> StringUtils.equals(calculateBundleCode(item), bundleCode))
@@ -120,7 +130,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     @Override
     public void install() {
-        log.info("Post init phase install executing");
+        log.debug("Post init install started");
 
         finished = false;
         status = PostInitStatus.STARTED;
@@ -129,6 +139,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         Optional<String> appStatus = retrieveApplicationStatus();
         if (appStatus.isPresent() && EntandoDeploymentPhase.SUCCESSFUL.toValue().toLowerCase()
                 .equals(appStatus.get())) {
+            log.info("Application is ready, starting the post-init installation process");
             // sort bundle ootb to manage priority
             Comparator<PostInitItem> compareByPriorityAndThenName = Comparator
                     .comparingInt(PostInitItem::getPriority).reversed()
@@ -149,7 +160,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
                 for (PostInitItem itemFromConfig : bundleToInstall) {
                     final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
-                    log.info("Post init executing '{}' on bundle '{}'", item.getAction(), item.getName());
+                    log.info("Post init installing action '{}' on bundle '{}'", item.getAction(), item.getName());
 
                     String bundleCode = calculateBundleCode(item);
 
@@ -184,13 +195,13 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                             });
                 }
 
-                log.info("Post init phase install executed successfully");
+                log.info("Post init install executed successfully");
                 status = PostInitStatus.SUCCESSFUL;
                 retries = MAX_RETIES;
                 finished = true;
 
             } catch (BundleNotFoundException | EntandoGeneralException | InvalidBundleException ex) {
-                log.info("Error post init bundle install:'{}'", ex.getMessage());
+                log.info("Error Post init bundle install:'{}'", ex.getMessage());
                 status = PostInitStatus.FAILED;
                 retries = MAX_RETIES;
                 finished = true;
@@ -204,7 +215,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
             }
 
         } else {
-            log.info("Error post application status unknown");
+            log.debug("Error Post init: EntandoApp not yet ready");
             status = PostInitStatus.UNKNOWN;
             finished = true;
         }
@@ -358,7 +369,10 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
         @Getter
         @Setter
-        private int frequency;
+        private int frequency = DEFAULT_CONFIGURATION_FREQUENCY;
+        @Getter
+        @Setter
+        private int maxAppWait = DEFAULT_CONFIGURATION_TIMEOUT;
         @Getter
         private List<PostInitItem> items = new ArrayList<>();
     }

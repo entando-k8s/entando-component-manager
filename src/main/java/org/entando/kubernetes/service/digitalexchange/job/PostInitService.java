@@ -38,6 +38,13 @@ public interface PostInitService {
     int getFrequencyInSeconds();
 
     /**
+     * This method retrieves the configuration value of the global timeout of post-init operation.
+     *
+     * @return the configuration value of the global timeout of post-init operation
+     */
+    int getMaxAppWaitInSeconds();
+
+    /**
      * This method checks, with a white list strategy,  if some ECR action (list, refresh, uninstall ...) is allowed for
      * a post init bundle.
      *

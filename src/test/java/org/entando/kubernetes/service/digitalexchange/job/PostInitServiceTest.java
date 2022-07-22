@@ -179,11 +179,11 @@ class PostInitServiceTest {
     void postInit_errorInputConfig_ShouldNotInstall() throws Exception {
         initServiceToTest("{%/()}", bundleService, installService, kubernetesService,
                 entandoBundleJobService);
-        assertThat(serviceToTest.getFrequencyInSeconds()).isEqualTo(3);
+        assertThat(serviceToTest.getFrequencyInSeconds()).isEqualTo(5);
 
         initServiceToTest(" ", bundleService, installService, kubernetesService,
                 entandoBundleJobService);
-        assertThat(serviceToTest.getFrequencyInSeconds()).isEqualTo(3);
+        assertThat(serviceToTest.getFrequencyInSeconds()).isEqualTo(5);
 
     }
 
