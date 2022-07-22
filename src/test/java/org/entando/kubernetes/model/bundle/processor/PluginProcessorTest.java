@@ -10,8 +10,11 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
@@ -20,6 +23,7 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
@@ -31,6 +35,7 @@ import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.utils.TestUtils;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +92,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
     }
 
-    private void execTestCreatePlugin(PluginDescriptor descriptor)
+    private List<? extends Installable> execTestCreatePlugin(PluginDescriptor descriptor)
             throws IOException, ExecutionException, InterruptedException {
 
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
@@ -101,6 +106,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
                 BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+        return installables;
     }
 
 
@@ -211,9 +217,27 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Test
     void shouldComposeTheExpectedFullDeploymentName() {
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
-        final String fullDepName = processor.generateFullDeploymentName(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+        final String fullDepName = processor.generateFullDeploymentName(
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
                 "24f085aa-entando-the-lucas");
         assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
                 BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+    }
+
+    @Test
+    void shouldAddTheCmEndpointEnvVar() throws Exception {
+
+        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
+                "http://www.myentando.com/auth/realms/entando",
+                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange"));
+
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+
+        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+
+        final PluginDescriptor representation = (PluginDescriptor) installables.get(0).getRepresentation();
+        final EnvironmentVariable environmentVariable = representation.getEnvironmentVariables().get(0);
+        assertThat(environmentVariable.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+        assertThat(environmentVariable.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
     }
 }
