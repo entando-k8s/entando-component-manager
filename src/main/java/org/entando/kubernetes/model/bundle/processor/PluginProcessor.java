@@ -1,12 +1,13 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
@@ -15,6 +16,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.installable.Installable;
@@ -30,6 +32,8 @@ import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriBuilder;
 
 /**
  * Processor to perform a deployment on the Kubernetes Cluster.
@@ -41,15 +45,53 @@ import org.springframework.util.StringUtils;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
 
     public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn-";
+    public static final String SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI =
+            "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI";
+    public static final String SERVER_SERVLET_CONTEXT_PATH = "SERVER_SERVLET_CONTEXT_PATH";
+    public static final String ENTANDO_ECR_INGRESS_URL = "ENTANDO_ECR_INGRESS_URL";
+
+
+    private final String cmEndpoint;
 
     private final KubernetesService kubernetesService;
     private final PluginDescriptorValidator descriptorValidator;
     private final PluginDataRepository pluginPathRepository;
+
+    public PluginProcessor(KubernetesService kubernetesService,
+            PluginDescriptorValidator descriptorValidator,
+            PluginDataRepository pluginPathRepository) {
+        this.kubernetesService = kubernetesService;
+        this.descriptorValidator = descriptorValidator;
+        this.pluginPathRepository = pluginPathRepository;
+        this.cmEndpoint = composeCmEndpoint();
+    }
+
+
+    private String composeCmEndpoint() {
+
+        String env = System.getenv(SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI);
+        if (ObjectUtils.isEmpty(env)) {
+            return "";
+        }
+
+        final String contextPath = System.getenv(SERVER_SERVLET_CONTEXT_PATH);
+        try {
+            final URL cmUrl = new URL(env);
+            return new DefaultUriBuilderFactory().builder()
+                    .scheme(cmUrl.getProtocol())
+                    .host(cmUrl.getHost())
+                    .port(cmUrl.getPort())
+                    .path(contextPath)
+                    .build()
+                    .toString();
+        } catch (MalformedURLException e) {
+            throw new EntandoComponentManagerException("Cannot compose " + ENTANDO_ECR_INGRESS_URL);
+        }
+    }
 
     @Override
     public ComponentType getSupportedComponentType() {
@@ -81,13 +123,25 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             final List<String> descriptorList = getDescriptorList(bundleReader);
 
             for (String filename : descriptorList) {
+                // parse descriptor
                 PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
+                // validate
                 descriptorValidator.validateOrThrow(pluginDescriptor);
+                // add CM endpoint env var
+                final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
+                        pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
+                environmentVariables.add(new EnvironmentVariable().setName(ENTANDO_ECR_INGRESS_URL)
+                                .setValue(cmEndpoint));
+                pluginDescriptor.setEnvironmentVariables(environmentVariables);
+                // log
                 logDescriptorWarnings(pluginDescriptor);
+                // get install action
                 InstallAction action = extractInstallAction(pluginDescriptor.getComponentKey().getKey(),
                         conflictStrategy,
                         installPlan);
+                // add to installables
                 installableList.add(new PluginInstallable(kubernetesService, pluginDescriptor, action,
                         pluginPathRepository));
             }
@@ -122,12 +176,16 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         try {
             List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
             for (String fileName : contentDescriptorList) {
-
+                // parse descriptor
                 PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
                         .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+                // ensure version
                 descriptorValidator.ensureDescriptorVersionIsSet(pluginDescriptor);
+                // set plugin metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
+                // log
                 logDescriptorWarnings(pluginDescriptor);
+                // add plugin id to the list
                 idList.add(pluginDescriptor.getComponentKey().getKey());
             }
 
