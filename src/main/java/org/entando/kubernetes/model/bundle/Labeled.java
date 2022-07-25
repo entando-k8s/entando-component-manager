@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 
 
@@ -38,6 +39,7 @@ public interface Labeled {
     static List<String> getPbcLabelsFrom(EntandoBundleEntity bundleEntity) {
         return Optional.ofNullable(bundleEntity)
                 .map(EntandoBundleEntity::getPbcList)
+                .filter(ObjectUtils::isNotEmpty)
                 .map(pbcs -> Arrays.asList(pbcs.split(",")))
                 .orElse(null);
     }
