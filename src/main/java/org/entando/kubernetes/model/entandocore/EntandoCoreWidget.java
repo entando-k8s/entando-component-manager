@@ -3,18 +3,17 @@ package org.entando.kubernetes.model.entandocore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Data
 public class EntandoCoreWidget {
-
-    private static final Logger logger = LoggerFactory.getLogger(EntandoCoreWidget.class);
+    
+    public static final String GLOBAL_CONFIG_MFE_PREFIX = "global:";
 
     private String code;
     private Map<String, String> titles;
@@ -43,6 +42,9 @@ public class EntandoCoreWidget {
                     new MfeParam(p.getName(), p.getDescription())
             ).collect(Collectors.toList());
         }
+        Optional.ofNullable(descriptor.getConfigMfe()).ifPresent(config -> 
+                this.configMfe = (config.startsWith(GLOBAL_CONFIG_MFE_PREFIX) ? config.substring(GLOBAL_CONFIG_MFE_PREFIX.length()) : null)
+        );
         this.configMfe = descriptor.getConfigMfe();
         this.parentCode = descriptor.getParentCode();
         this.paramsDefaults = descriptor.getParamsDefaults();
