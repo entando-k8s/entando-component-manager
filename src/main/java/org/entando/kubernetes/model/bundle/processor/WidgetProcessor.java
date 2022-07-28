@@ -65,8 +65,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     private final WidgetDescriptorValidator descriptorValidator;
     @Setter
     private Map<String, String> pluginIngressPathMap;
-    private static final ObjectMapper jsonMapper = new ObjectMapper();
 
+    public static final String CONFIG_WIDGET_GLOBAL_PREFIX = "global:";
 
     /**
      * Map of descriptors of type widgetConfig.
@@ -244,7 +244,16 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             return;
         }
 
-        if (widgetConfigDescriptorsMap != null && widgetConfigDescriptorsMap.containsKey(configMfe)) {
+        if (configMfe.startsWith(CONFIG_WIDGET_GLOBAL_PREFIX)) {
+            // if global config widget => not present in the current bundle
+            widgetDescriptor.setConfigUi(new ConfigUi(
+                    configMfe,  // in this case the configMfe is exactly the custom-element
+                    null
+            ));
+
+        } else if (widgetConfigDescriptorsMap != null && widgetConfigDescriptorsMap.containsKey(configMfe)) {
+            // check for config widget availability
+
             WidgetDescriptor configWidgetDescriptor = widgetConfigDescriptorsMap.get(configMfe);
 
             widgetDescriptor.setConfigUi(new ConfigUi(

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.processor.WidgetProcessor;
 
 @Data
 public class EntandoCoreWidget {
@@ -22,7 +23,8 @@ public class EntandoCoreWidget {
         this.customUi = descriptor.getCustomUi();
         if (descriptor.getConfigUi() != null) {
             this.configUi = new HashMap<>();
-            this.configUi.put("customElement", descriptor.getConfigUi().getCustomElement());
+            this.configUi.put("customElement", descriptor.getConfigUi().getCustomElement()
+                    .replaceFirst(WidgetProcessor.CONFIG_WIDGET_GLOBAL_PREFIX, ""));
             this.configUi.put("resources", descriptor.getConfigUi().getResources());
         }
         this.bundleId = descriptor.getDescriptorMetadata().getBundleCode();
