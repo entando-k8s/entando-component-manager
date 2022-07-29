@@ -78,6 +78,8 @@ public class BundleUtilities {
     public static final int PLUGIN_HASH_LENGTH = 8;
 
     public static final String BUNDLES_FOLDER = "bundles";
+    
+    public static final String GLOBAL_PREFIX = "global:";
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
@@ -554,7 +556,7 @@ public class BundleUtilities {
      */
     public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
             String bundleUrl) {
-
+        
         String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleUrl);
         String composedCode = code;
 

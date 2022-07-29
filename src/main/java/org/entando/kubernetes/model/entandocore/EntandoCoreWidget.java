@@ -9,11 +9,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Data
 public class EntandoCoreWidget {
-
-    public static final String GLOBAL_CONFIG_MFE_PREFIX = "global:";
 
     private String code;
     private Map<String, String> titles;
@@ -27,6 +26,7 @@ public class EntandoCoreWidget {
     private Map<String, String> paramsDefaults;
 
     public EntandoCoreWidget(final WidgetDescriptor descriptor) {
+        String globalPrefix = BundleUtilities.GLOBAL_PREFIX;
         this.code = descriptor.getCode();
         this.titles = descriptor.getTitles();
         this.group = descriptor.getGroup();
@@ -42,9 +42,7 @@ public class EntandoCoreWidget {
                     new MfeParam(p.getName(), p.getDescription())
             ).collect(Collectors.toList());
         }
-        Optional.ofNullable(descriptor.getConfigMfe()).ifPresent(config -> 
-                this.configMfe = (config.startsWith(GLOBAL_CONFIG_MFE_PREFIX) ? config.substring(GLOBAL_CONFIG_MFE_PREFIX.length()) : null)
-        );
+        this.configMfe = descriptor.getConfigMfe();
         this.parentCode = descriptor.getParentCode();
         this.paramsDefaults = descriptor.getParamsDefaults();
     }
