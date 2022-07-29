@@ -2,7 +2,6 @@ package org.entando.kubernetes.client.model.entandocore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -73,10 +72,14 @@ class EntandoCoreWidgetTest {
         Assertions.assertEquals("key2", ecwParameters.get(1).getName());
         Assertions.assertEquals("description of key 1", ecwParameters.get(0).getDescription());
         Assertions.assertEquals("description of key 2", ecwParameters.get(1).getDescription());
-        Assertions.assertEquals("configMfe", ecw.getConfigMfe());
+        assertThat(ecw.getConfigMfe()).isNull();
 
         assertThat(ecw.getParentCode()).isNull();
         assertThat(ecw.getParamsDefaults()).isNull();
+        
+        wd.setConfigMfe(EntandoCoreWidget.GLOBAL_CONFIG_MFE_PREFIX + "configMfe");
+        ecw = new EntandoCoreWidget(wd);
+        Assertions.assertEquals("configMfe", ecw.getConfigMfe());
     }
 
     @Test

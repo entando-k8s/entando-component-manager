@@ -138,6 +138,8 @@ class WidgetDescriptorValidatorTest {
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
         descriptor.setParentCode("a-widget-code");
         descriptor.setParentName(null);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode("a-widget-code-12345678");
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
         descriptor.setParentCode(null);
         descriptor.setParentName("a-widget-name");
@@ -195,7 +197,7 @@ class WidgetDescriptorValidatorTest {
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setParentCode("a-good_format");
-        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setParentCode("a-good_format-99999999");
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));

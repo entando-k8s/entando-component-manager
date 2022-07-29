@@ -1,6 +1,6 @@
 descriptorVersion: v5
-code: my_page
-parentCode: my_homepage
+name: my_page
+parentCode: my_homepage-12345678
 titles:
   en: Test page
   it: Test page

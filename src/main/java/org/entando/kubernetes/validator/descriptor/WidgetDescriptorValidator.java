@@ -162,15 +162,16 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     private WidgetDescriptor validateApiClaims(WidgetDescriptor descriptor) {
         Optional.ofNullable(descriptor.getApiClaims()).orElseGet(ArrayList::new)
                 .forEach(apiClaim -> {
+                    String codeArg = (!ObjectUtils.isEmpty(descriptor.getCode()) ? descriptor.getCode() : descriptor.getName());
                     if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.INTERNAL_API)
                             && !ObjectUtils.isEmpty(apiClaim.getBundleId())) {
                         throw new InvalidBundleException(
-                                String.format(INTERNAL_API_CLAIM_WITH_BUNDLE_ID, descriptor.getCode()));
+                                String.format(INTERNAL_API_CLAIM_WITH_BUNDLE_ID, codeArg));
                     }
                     if (apiClaim.getType().equals(WidgetDescriptor.ApiClaim.EXTERNAL_API)
                             && ObjectUtils.isEmpty(apiClaim.getBundleId())) {
                         throw new InvalidBundleException(
-                                String.format(EXTERNAL_API_CLAIM_WITHOUT_BUNDLE_ID, descriptor.getCode()));
+                                String.format(EXTERNAL_API_CLAIM_WITHOUT_BUNDLE_ID, codeArg));
                     }
                 });
 
@@ -186,16 +187,16 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     private WidgetDescriptor validateParentNameAndParentCode(WidgetDescriptor descriptor) {
         String parentCode = descriptor.getParentCode();
         String parentName = descriptor.getParentName();
-
         if (!ObjectUtils.isEmpty(parentCode)) {
+            String codeArg = (!ObjectUtils.isEmpty(descriptor.getCode()) ? descriptor.getCode() : descriptor.getName());
             // mutual exclusion
             if (!ObjectUtils.isEmpty(parentName)) {
                 throw new InvalidBundleException(
-                        String.format(PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT, descriptor.getCode()));
+                        String.format(PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT, codeArg));
             }
             // check the format
             if (!BUNDLE_CODE_PATTERN.matcher(parentCode).matches()) {
-                throw new InvalidBundleException(String.format(WRONG_PARENT_CODE_FORMAT, descriptor.getCode()));
+                throw new InvalidBundleException(String.format(WRONG_PARENT_CODE_FORMAT, codeArg));
             }
         }
         return descriptor;
@@ -212,7 +213,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     public static final String PARENT_NAME_AND_PARENT_CODE_BOTH_PRESENT =
             "The %s descriptor contains both a parentName and a parentCode. They are mutually exclusive";
     public static final String WRONG_PARENT_CODE_FORMAT =
-            "The %s descriptor contains a parentCode that not respects the format " + BUNDLE_CODE_REGEX;
+            "The %s descriptor contains a parentCode that doesn't respects the format " + BUNDLE_CODE_REGEX;
     public static final String FTL_NOT_AVAILABLE =
             "The %s descriptor does NOT contains any FTL. In widget descriptor v1 one of \"customUi\" and "
                     + "\"customUiPath\" must be populated";

@@ -66,6 +66,8 @@ class PageDescriptorValidatorTest {
                 .readValue(new File("src/test/resources/bundle-v5/page/another_page_descriptor_v5.yaml"),
                         PageDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode("my_homepage");
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
     
     @Test
@@ -94,6 +96,9 @@ class PageDescriptorValidatorTest {
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
         
         descriptor.setParentName(null);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        
+        descriptor.setParentCode("parentCode-12345678");
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
     }
     

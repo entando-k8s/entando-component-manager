@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescriptor> {
 
-    private static final String CODE_REGEX = "^[\\w|-]+$";
+    private static final String CODE_REGEX = "^[\\w|-]+-[0-9a-fA-F]{8}$";
     private static final Pattern PATTERN_REGEX = Pattern.compile(CODE_REGEX);
 
     public static final String NAME_AND_CODE_BOTH_PRESENT
@@ -94,12 +94,8 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
             throw new InvalidBundleException(
                     String.format(NAME_OR_CODE_REQUIRED, descriptorCodeForMessage));
         }
-        if (!isEmpty(pageDescriptor.getCode())) {
-            if (!PATTERN_REGEX.matcher(pageDescriptor.getCode()).matches()) {
-                throw new InvalidBundleException(String.format(WRONG_FORMAT, pageDescriptor.getCode(), "code"));
-            }
-        } else if (!PATTERN_REGEX.matcher(pageDescriptor.getName()).matches()) {
-            throw new InvalidBundleException(String.format(WRONG_FORMAT, pageDescriptor.getName(), "name"));
+        if (!isEmpty(pageDescriptor.getCode()) && !PATTERN_REGEX.matcher(pageDescriptor.getCode()).matches()) {
+            throw new InvalidBundleException(String.format(WRONG_FORMAT, pageDescriptor.getCode(), "code"));
         }
         return pageDescriptor;
     }
@@ -113,12 +109,8 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
             throw new InvalidBundleException(
                     String.format(PARENT_NAME_OR_PARENT_CODE_REQUIRED, descriptorCodeForMessage));
         }
-        if (!isEmpty(pageDescriptor.getParentCode())) {
-            if (!PATTERN_REGEX.matcher(pageDescriptor.getParentCode()).matches()) {
-                throw new InvalidBundleException(String.format(WRONG_FORMAT, descriptorCodeForMessage, "parentCode"));
-            }
-        } else if (!PATTERN_REGEX.matcher(pageDescriptor.getParentName()).matches()) {
-            throw new InvalidBundleException(String.format(WRONG_FORMAT, descriptorCodeForMessage, "parentName"));
+        if (!isEmpty(pageDescriptor.getParentCode()) && !PATTERN_REGEX.matcher(pageDescriptor.getParentCode()).matches()) {
+            throw new InvalidBundleException(String.format(WRONG_FORMAT, descriptorCodeForMessage, "parentCode"));
         }
         return pageDescriptor;
     }

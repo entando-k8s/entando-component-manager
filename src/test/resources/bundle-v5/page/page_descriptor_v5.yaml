@@ -12,6 +12,8 @@ seo: false
 charset: utf-8
 status: published
 widgets:
+  - code: widgetootb
+    pos: 2
   - name: widget1
     config:
       param: value
