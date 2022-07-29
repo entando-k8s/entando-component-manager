@@ -58,7 +58,7 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
         final Map<String, Function<PageDescriptor, Object>> objectsThatMustNotBeNull
                 = getObjectsThatMustNotBeNullForEveryVersion();
         objectsThatMustNotBeNull.put("code", PageDescriptor::getCode);
-        objectsThatMustNotBeNull.put("parentCode", PageDescriptor::getTitles);
+        objectsThatMustNotBeNull.put("parentCode", PageDescriptor::getParentCode);
 
         addValidationConfigMap(DescriptorVersion.V1,
                 Collections.singletonList(super::validateDescriptorFormatOrThrow),

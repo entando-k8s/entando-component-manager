@@ -106,16 +106,11 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
         assertThrows(InvalidBundleException.class, () -> pageConfigurationProcessor.process(bundleReader));
         
         descriptor.setCode(null);
-        descriptor.setName("%$code");
-        initBundleReader(descriptor);
+        descriptor.setParentCode("parent");
         assertThrows(InvalidBundleException.class, () -> pageConfigurationProcessor.process(bundleReader));
         
-        descriptor.setName("name");
+        descriptor.setParentCode("parent-12345678");
         descriptor.setParentName("parent");
-        assertThrows(InvalidBundleException.class, () -> pageConfigurationProcessor.process(bundleReader));
-        
-        descriptor.setParentCode(null);
-        descriptor.setParentName("%&parent");
         assertThrows(InvalidBundleException.class, () -> pageConfigurationProcessor.process(bundleReader));
     }
     
@@ -128,7 +123,7 @@ class PageConfigurationProcessorTest extends BaseProcessorTest {
                         .pos(0).code("my-code").build());
         PageDescriptor pageConfigurationDescriptor = PageDescriptor.builder()
                 .code("my-page")
-                .parentCode("homepage")
+                .parentCode("homepage-12345678")
                 .charset("utf-8")
                 .displayedInMenu(true)
                 .pageModel("service")

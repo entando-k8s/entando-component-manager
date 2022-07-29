@@ -11,7 +11,6 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.Co
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget.MfeParam;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -73,14 +72,10 @@ class EntandoCoreWidgetTest {
         Assertions.assertEquals("key2", ecwParameters.get(1).getName());
         Assertions.assertEquals("description of key 1", ecwParameters.get(0).getDescription());
         Assertions.assertEquals("description of key 2", ecwParameters.get(1).getDescription());
-        assertThat(ecw.getConfigMfe()).isNull();
+        Assertions.assertEquals("configMfe", ecw.getConfigMfe());
 
         assertThat(ecw.getParentCode()).isNull();
         assertThat(ecw.getParamsDefaults()).isNull();
-        
-        wd.setConfigMfe(BundleUtilities.GLOBAL_PREFIX + "configMfe");
-        ecw = new EntandoCoreWidget(wd);
-        Assertions.assertEquals("configMfe", ecw.getConfigMfe());
     }
 
     @Test

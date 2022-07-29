@@ -116,9 +116,9 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 composeAndSetCustomUi(widgetDescriptor, fileName, bundleReader);
                 composeAndSetConfigUi(widgetDescriptor, bundleReader);
                 Optional.ofNullable(widgetDescriptor.getConfigMfe()).ifPresent(config
-                        -> widgetDescriptor.setConfigMfe((config.startsWith(BundleUtilities.GLOBAL_PREFIX) ? config.substring(BundleUtilities.GLOBAL_PREFIX.length()) : null))
+                        -> widgetDescriptor.setConfigMfe((config.startsWith(BundleUtilities.GLOBAL_PREFIX) 
+                                ? config.substring(BundleUtilities.GLOBAL_PREFIX.length()) : null))
                 );
-                
                 if (WidgetDescriptor.TYPE_WIDGET_APPBUILDER.equals(widgetDescriptor.getType())) {
                     composeAndSetAppBuilderMetadata(widgetDescriptor, bundleReader, fileName, pluginIngressPathMap);
                 }
