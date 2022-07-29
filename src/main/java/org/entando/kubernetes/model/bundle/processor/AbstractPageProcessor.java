@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -93,16 +92,22 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
     
     private void composeAndSetCode(PageDescriptor pageDescriptor, BundleReader bundleReader) {
         if (!pageDescriptor.isVersion1()) {
-            // set the code and the parenCode
+            // set the code and the parentCode
             if (StringUtils.isBlank(pageDescriptor.getCode())) {
                 final String pageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getCode(),
                         pageDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl());
                 pageDescriptor.setCode(pageCode);
             }
-            if (StringUtils.isBlank(pageDescriptor.getParentCode())) {
-                final String paretPageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getParentCode(),
-                        pageDescriptor.getParentName(), pageDescriptor, bundleReader.getBundleUrl());
-                pageDescriptor.setParentCode(paretPageCode);
+            String parentName = pageDescriptor.getParentName();
+            if (!StringUtils.isBlank(parentName)) {
+                String parentPageCode = null;
+                if (parentName.startsWith(BundleUtilities.GLOBAL_PREFIX)) {
+                    parentPageCode = parentName.substring(BundleUtilities.GLOBAL_PREFIX.length());
+                } else {
+                    parentPageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getParentCode(),
+                            pageDescriptor.getParentName(), pageDescriptor, bundleReader.getBundleUrl());
+                }
+                pageDescriptor.setParentCode(parentPageCode);
             }
         }
     }
@@ -110,8 +115,14 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
     private void composeAndSetWidgetCode(WidgetConfigurationDescriptor widgetDescriptor, PageDescriptor pageDescriptor, BundleReader bundleReader) {
         if (!pageDescriptor.isVersion1() && StringUtils.isBlank(widgetDescriptor.getCode())) {
             // set the code
-            final String widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
+            String widgetCode = null;
+            String widgetName = widgetDescriptor.getName();
+            if (widgetName.startsWith(BundleUtilities.GLOBAL_PREFIX)) {
+                widgetCode = widgetName.substring(BundleUtilities.GLOBAL_PREFIX.length());
+            } else {
+                widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
                     widgetDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl());
+            }
             widgetDescriptor.setCode(widgetCode);
         }
     }
