@@ -3,13 +3,11 @@ package org.entando.kubernetes.model.entandocore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Data
 public class EntandoCoreWidget {
@@ -26,7 +24,6 @@ public class EntandoCoreWidget {
     private Map<String, String> paramsDefaults;
 
     public EntandoCoreWidget(final WidgetDescriptor descriptor) {
-        String globalPrefix = BundleUtilities.GLOBAL_PREFIX;
         this.code = descriptor.getCode();
         this.titles = descriptor.getTitles();
         this.group = descriptor.getGroup();

@@ -65,12 +65,9 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
         objectsThatMustBeNull.put("code", WidgetDescriptor::getCode);
         objectsThatMustBeNull.put("configUi", WidgetDescriptor::getConfigUi);
-        //objectsThatMustBeNull.put("customUi", WidgetDescriptor::getCustomUi);
-        //objectsThatMustBeNull.put("customUiPath", WidgetDescriptor::getCustomUiPath);
 
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustNotBeNull
                 = getObjectsThatMustNotBeNullForEveryVersion();
-        //objectsThatMustNotBeNull.put("customElement", WidgetDescriptor::getCustomElement);
         objectsThatMustNotBeNull.put("name", WidgetDescriptor::getName);
         objectsThatMustNotBeNull.put("type", WidgetDescriptor::getType);
 
