@@ -32,9 +32,6 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
         this.engineService = engineService;
         this.descriptorValidator = descriptorValidator;
     }
-
-    @Override
-    public abstract ComponentType getSupportedComponentType();
     
     @Override
     public Class<PageDescriptor> getDescriptorClass() {
