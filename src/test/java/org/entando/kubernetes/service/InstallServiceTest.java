@@ -82,6 +82,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
+import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -119,6 +120,7 @@ public class InstallServiceTest {
     private ComponentDataRepository componentDataRepository;
     private WidgetTemplateGeneratorService templateGeneratorService;
     private WidgetDescriptorValidator widgetDescriptorValidator;
+    private PageDescriptorValidator pageDescriptorValidator;
     private BundleDescriptorValidator bundleDescriptorValidator;
 
     @BeforeEach
@@ -144,6 +146,7 @@ public class InstallServiceTest {
         componentDataRepository = mock(ComponentDataRepository.class);
         templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
         widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
+        pageDescriptorValidator = mock(PageDescriptorValidator.class);
         bundleDescriptorValidator = mock(BundleDescriptorValidator.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
@@ -176,7 +179,7 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new GroupProcessor(coreClient));
         reportableComponentProcessorList.add(new LabelProcessor(coreClient));
         reportableComponentProcessorList.add(new LanguageProcessor(coreClient));
-        reportableComponentProcessorList.add(new PageProcessor(coreClient));
+        reportableComponentProcessorList.add(new PageProcessor(coreClient, pageDescriptorValidator));
         reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
         reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator,
                 pluginDataRepository));

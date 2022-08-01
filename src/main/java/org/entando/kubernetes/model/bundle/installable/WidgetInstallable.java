@@ -160,6 +160,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 representation.getContextParams(),
                 representation.getCustomElement(),
                 representation.getExt(),
+                representation.getParamsDefaults(),
                 representation.getDescriptorMetadata(),
                 representation.getParentName(),
                 representation.getParentCode()

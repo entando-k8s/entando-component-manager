@@ -48,6 +48,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private List<String> contextParams;
     private String customElement;
     private WidgetExt ext;
+    private Map<String, String> paramsDefaults;
 
     public static final String TYPE_WIDGET_STANDARD = "widget";
     public static final String TYPE_WIDGET_CONFIG = "widget-config";

@@ -131,11 +131,40 @@ class WidgetDescriptorValidatorTest {
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setConfigUi(null);
+
+        descriptor.setCustomElement(null);
+        descriptor.setCustomUiPath(null);
+        descriptor.setCustomUi(null);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode("a-widget-code");
+        descriptor.setParentName(null);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode("a-widget-code-12345678");
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode(null);
+        descriptor.setParentName("a-widget-name");
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode(null);
+        descriptor.setParentName(null);
+
+        descriptor.setCustomElement(null);
+        descriptor.setCustomUiPath("myuipath");
+        descriptor.setCustomUi(null);
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+
+        descriptor.setCustomElement(null);
+        descriptor.setCustomUiPath(null);
         descriptor.setCustomUi("myui");
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+
+        descriptor.setCustomElement("element");
+        descriptor.setCustomUiPath("myuipath");
+        descriptor.setCustomUi(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
-        descriptor.setCustomUi(null);
-        descriptor.setCustomUiPath("myuipath");
+        descriptor.setCustomElement("element");
+        descriptor.setCustomUiPath(null);
+        descriptor.setCustomUi("myui");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
@@ -163,9 +192,15 @@ class WidgetDescriptorValidatorTest {
 
     @Test
     void shouldThrowExceptionWhileValidatingAWidgetDescriptorWithParentCodeWithInvalidFormat() {
-        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5()
-                .setParentCode("wrong-format");
-
+        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
+        descriptor.setParentCode("wrong!format");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+
+        descriptor.setParentCode("a-good_format");
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+
+        descriptor.setParentCode("a-good_format-99999999");
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
     }
+    
 }

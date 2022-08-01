@@ -36,6 +36,7 @@ import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
+import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,6 +76,7 @@ class AppConfigurationTest {
         KubernetesService k8sService = mock(KubernetesService.class);
         WidgetTemplateGeneratorService templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
         WidgetDescriptorValidator widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
+        PageDescriptorValidator pageDescriptorValidator = mock(PageDescriptorValidator.class);
         PluginDataRepository pluginDataRepository = mock(PluginDataRepository.class);
         PluginDescriptorValidator pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
 
@@ -88,7 +90,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
         processors.put(ComponentType.LANGUAGE.toString(), new LanguageProcessor(coreClient));
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
-        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient));
+        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient, pageDescriptorValidator));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
         processors.put(ComponentType.PLUGIN.toString(),
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository));
@@ -97,7 +99,7 @@ class AppConfigurationTest {
                         widgetDescriptorValidator));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
-        processors.put(ComponentType.PAGE_CONFIGURATION.toString(), new PageConfigurationProcessor(coreClient));
+        processors.put(ComponentType.PAGE_CONFIGURATION.toString(), new PageConfigurationProcessor(coreClient, pageDescriptorValidator));
 
         return processors;
     }
@@ -128,6 +130,7 @@ class AppConfigurationTest {
         PluginDescriptorValidator pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
         WidgetTemplateGeneratorService templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
         WidgetDescriptorValidator widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
+        PageDescriptorValidator pageDescriptorValidator = mock(PageDescriptorValidator.class);
         PluginDataRepository pluginDataRepository = mock(PluginDataRepository.class);
 
         Map<String, ReportableComponentProcessor> processors = new HashMap<>();
@@ -140,7 +143,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
         processors.put(ComponentType.LANGUAGE.toString(), new LanguageProcessor(coreClient));
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
-        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient));
+        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient, pageDescriptorValidator));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
         processors.put(ComponentType.PLUGIN.toString(),
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository));
