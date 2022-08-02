@@ -19,6 +19,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -218,13 +219,14 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      */
     private void composeAndSetCustomUi(WidgetDescriptor widgetDescriptor, String fileName, BundleReader bundleReader)
             throws IOException {
-
-        if (widgetDescriptor.isVersion1()) {
-            if (widgetDescriptor.getCustomUiPath() != null) {
-                String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
-                widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
-            }
-        } else {
+        if (!StringUtils.isBlank(widgetDescriptor.getCustomUi())) {
+            return;
+        }
+        if (!StringUtils.isBlank(widgetDescriptor.getCustomUiPath())) {
+            String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
+            widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
+        }
+        if (!widgetDescriptor.isVersion1()) {
             String ftl = templateGeneratorService.generateWidgetTemplate(fileName, widgetDescriptor, bundleReader);
             widgetDescriptor.setCustomUi(ftl);
         }
