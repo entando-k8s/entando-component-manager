@@ -548,6 +548,11 @@ public class BundleUtilities {
 
         return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
     }
+    
+    public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
+            String bundleUrl) {
+        return composeDescriptorCode(code, name, descriptor, bundleUrl, "-");
+    }
 
     /**
      * generic method to compose the descriptor code concatenating the bundle id to the descriptor name.
@@ -555,26 +560,26 @@ public class BundleUtilities {
      * @return the composed descriptor code
      */
     public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
-            String bundleUrl) {
-        
+            String bundleUrl, String separator) {
         String bundleIdHash = BundleUtilities.removeProtocolAndGetBundleId(bundleUrl);
         String composedCode = code;
-
         if (descriptor.isVersion1() || !descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
             if (!code.endsWith(bundleIdHash)) {
-                composedCode += "-" + bundleIdHash;
+                composedCode += separator + bundleIdHash;
             }
         } else {
-            composedCode = composeBundleCode(name, bundleIdHash);
+            composedCode = composeBundleCode(name, bundleIdHash, separator);
         }
-
         return composedCode;
     }
-
+    
     public static String composeBundleCode(String bundleName, String bundleId) {
-        return bundleName + "-" + bundleId;
+        return composeBundleCode(bundleName, bundleId, "-");
     }
-
+    
+    public static String composeBundleCode(String bundleName, String bundleId, String separator) {
+        return bundleName + separator + bundleId;
+    }
 
     /**
      * This method decodes the input URL with base64 algorithm and validates it.

@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
-import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
@@ -92,7 +91,7 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
             // set the code and the parentCode
             if (StringUtils.isBlank(pageDescriptor.getCode())) {
                 final String pageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getCode(),
-                        pageDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl());
+                        pageDescriptor.getName(), pageDescriptor, bundleReader.getBundleUrl(), "_");
                 pageDescriptor.setCode(pageCode);
             }
             String parentName = pageDescriptor.getParentName();
@@ -102,7 +101,7 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
                     parentPageCode = parentName.substring(BundleUtilities.GLOBAL_PREFIX.length());
                 } else {
                     parentPageCode = BundleUtilities.composeDescriptorCode(pageDescriptor.getParentCode(),
-                            pageDescriptor.getParentName(), pageDescriptor, bundleReader.getBundleUrl());
+                            pageDescriptor.getParentName(), pageDescriptor, bundleReader.getBundleUrl(), "_");
                 }
                 pageDescriptor.setParentCode(parentPageCode);
             }
