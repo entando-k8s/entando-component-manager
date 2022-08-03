@@ -155,14 +155,14 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                             EntandoBundle::getCode,
                             Function.identity(),
                             (item1, item2) -> item1));
-
+            
             try {
 
                 for (PostInitItem itemFromConfig : bundleToInstall) {
                     final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
                     log.info("Post init installing action '{}' on bundle '{}'", item.getAction(), item.getName());
 
-                    String bundleCode = calculateBundleCode(item);
+                    final String bundleCode = calculateBundleCode(item);
 
                     EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
                             .orElseGet(() -> deployPostInitBundle(item));
@@ -200,8 +200,16 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 retries = MAX_RETIES;
                 finished = true;
 
-            } catch (BundleNotFoundException | EntandoGeneralException | InvalidBundleException ex) {
-                log.info("Error Post init bundle install:'{}'", ex.getMessage());
+            } catch (BundleNotFoundException ex) {
+                log.info("Error Post init bundle install not found with bundle code:'{}'", getArgBundleIdentifier(ex));
+                log.debug("BundleNotFoundException error:", ex);
+                status = PostInitStatus.FAILED;
+                retries = MAX_RETIES;
+                finished = true;
+
+            } catch (EntandoGeneralException | InvalidBundleException ex) {
+                log.info("Error Post init bundle install with error message:'{}'", ex.getMessage());
+                log.debug("EntandoGeneralException | InvalidBundleException error:", ex);
                 status = PostInitStatus.FAILED;
                 retries = MAX_RETIES;
                 finished = true;
@@ -219,6 +227,10 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
             status = PostInitStatus.UNKNOWN;
             finished = true;
         }
+    }
+
+    private String getArgBundleIdentifier(BundleNotFoundException ex) {
+        return ex.getArgs() != null && ex.getArgs().length > 0 ? (String) ex.getArgs()[0] : "not present";
     }
 
     private PostInitItem checkActionOrSwitchToDefault(PostInitItem item) {
