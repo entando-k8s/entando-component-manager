@@ -45,7 +45,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentJobRepository compJobRepo;
     private final @NonNull InstalledEntandoBundleRepository installedComponentRepository;
     private final @NonNull EntandoBundleComponentUsageService usageService;
-    private final @NonNull PostInitService postInitService;
+    private final @NonNull PostInitConfigurationService postInitConfigurationService;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
 
     public EntandoBundleJobEntity uninstall(String componentId) {
@@ -60,7 +60,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     }
 
     private void verifyBundleUninstallIsAllowedOrThrow(String bundleCode) {
-        Optional<Boolean> isAllowed = postInitService.isEcrActionAllowed(bundleCode, ECR_ACTION_UNINSTALL);
+        Optional<Boolean> isAllowed = postInitConfigurationService.isEcrActionAllowed(bundleCode, ECR_ACTION_UNINSTALL);
         if (isAllowed.isPresent() && Boolean.FALSE.equals(isAllowed.get())) {
             throw new InvalidBundleException(
                     String.format("Action '%s' not allowed for bundle '%s'", ECR_ACTION_UNINSTALL, bundleCode));

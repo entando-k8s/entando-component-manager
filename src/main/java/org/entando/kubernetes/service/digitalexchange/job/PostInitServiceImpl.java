@@ -1,12 +1,9 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
 import static org.awaitility.Awaitility.await;
+import static org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationService.ACTION_INSTALL_OR_UPDATE;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -17,13 +14,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
@@ -40,57 +30,32 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
-import org.entando.kubernetes.validator.ValidationFunctions;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationService.PostInitItem;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class PostInitServiceImpl implements PostInitService, InitializingBean {
+public class PostInitServiceImpl implements PostInitService {
 
-    public static final String ACTION_INSTALL_OR_UPDATE = "install-or-update";
     public static final String DEFAULT_ACTION = "deploy-only";
     public static final String ECR_ACTION_UNINSTALL = "uninstall";
     private final EntandoBundleService bundleService;
     private final EntandoBundleInstallService installService;
     private final EntandoBundleJobService entandoBundleJobService;
     private final KubernetesService kubernetesService;
-    private final String postInitConfigurationData;
-    private static final ObjectMapper mapper = new ObjectMapper();
-
+    private final PostInitConfigurationService postInitConfigurationService;
     private PostInitStatus status;
     private boolean finished;
     private static final int MAX_RETIES = 5000;
-    private static final int DEFAULT_CONFIGURATION_TIMEOUT = 600;
-    private static final int DEFAULT_CONFIGURATION_FREQUENCY = 5;
     private int retries = 0;
-    private PostInitData configurationData;
-    private static final PostInitData DEFAULT_CONFIGURATION_DATA;
     private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(360);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(6);
 
 
-    static {
-        List<PostInitItem> items = new ArrayList<>();
-        items.add(PostInitItem.builder()
-                .name("entando-epc-bootstrap")
-                .url("docker://registry.hub.docker.com/entando/entando-bootstrap-bundle")
-                .version("1.0.0")
-                .action(ACTION_INSTALL_OR_UPDATE)
-                .priority(1)
-                .build());
-        DEFAULT_CONFIGURATION_DATA = PostInitData.builder()
-                .frequency(DEFAULT_CONFIGURATION_FREQUENCY)
-                .maxAppWait(DEFAULT_CONFIGURATION_TIMEOUT)
-                .items(items).build();
-
-    }
-
-    public PostInitServiceImpl(@Value("${entando.ecr.postinit:#{null}}") String postInitConfigurationData,
+    public PostInitServiceImpl(PostInitConfigurationService postInitConfigurationService,
             EntandoBundleService bundleService, EntandoBundleInstallService installService,
             KubernetesService kubernetesService, EntandoBundleJobService entandoBundleJobService) {
-        this.postInitConfigurationData = postInitConfigurationData;
+        this.postInitConfigurationService = postInitConfigurationService;
         this.bundleService = bundleService;
         this.installService = installService;
         this.kubernetesService = kubernetesService;
@@ -98,34 +63,8 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        configurationData = parsePostInitConfiguration().orElse(DEFAULT_CONFIGURATION_DATA);
-        status = PostInitStatus.UNKNOWN;
-        finished = false;
-    }
-
-    @Override
     public boolean shouldRetry() {
         return retries < MAX_RETIES;
-    }
-
-    @Override
-    public int getFrequencyInSeconds() {
-        return configurationData.getFrequency();
-    }
-
-    @Override
-    public int getMaxAppWaitInSeconds() {
-        return configurationData.getMaxAppWait();
-    }
-
-    @Override
-    public Optional<Boolean> isEcrActionAllowed(String bundleCode, String action) {
-        return configurationData.getItems().stream()
-                .filter(item -> StringUtils.equals(calculateBundleCode(item), bundleCode))
-                .findFirst()
-                .map(item -> Boolean.valueOf(ecrActionAllowed(item, action)))
-                .or(Optional::empty);
     }
 
     @Override
@@ -145,7 +84,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                     .comparingInt(PostInitItem::getPriority).reversed()
                     .thenComparing(PostInitItem::getName);
 
-            List<PostInitItem> bundleToInstall = configurationData.getItems().stream()
+            List<PostInitItem> bundleToInstall = postInitConfigurationService.getConfigurationData().getItems().stream()
                     .sorted(compareByPriorityAndThenName)
                     .collect(Collectors.toList());
 
@@ -162,7 +101,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                     final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
                     log.info("Post init installing action '{}' on bundle '{}'", item.getAction(), item.getName());
 
-                    final String bundleCode = calculateBundleCode(item);
+                    final String bundleCode = PostInitServiceUtility.calculateBundleCode(item);
 
                     EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
                             .orElseGet(() -> deployPostInitBundle(item));
@@ -279,20 +218,6 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     }
 
-    private String calculateBundleCode(PostInitItem item) {
-        String bundleId = BundleUtilities.removeProtocolAndGetBundleId(item.getUrl());
-
-        // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
-        if (StringUtils.length(item.getName()) > 200
-                || !ValidationFunctions.VALID_CHARS_RFC_1123_REGEX_PATTERN.matcher(item.getName()).matches()
-                || !ValidationFunctions.HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN.matcher(item.getName())
-                .matches()) {
-            throw new InvalidBundleException("Error bundle name not valid (RFC 1123) " + item.getName());
-        }
-        String bundleName = item.getName();
-        return BundleUtilities.composeBundleCode(bundleName, bundleId);
-    }
-
     private Optional<InstallAction> computeInstallStrategy(EntandoBundle bundle, PostInitItem item) {
         if (isFirstInstall(bundle) && isInstallActionPlanned(item)) {
             log.info("Computed strategy: install `{}`", item.getName());
@@ -303,14 +228,6 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     private boolean isFirstInstall(EntandoBundle bundle) {
         return !bundle.isInstalled();
-    }
-
-    private boolean ecrActionAllowed(PostInitItem item, String action) {
-        boolean isActionAllowed =
-                item.getEcrActions() != null && Arrays.stream(item.getEcrActions()).anyMatch(action::equals);
-        log.trace("For bundle:'{}' action '{}' is allowed ? '{}'", item.getName(), action, isActionAllowed);
-        return isActionAllowed;
-
     }
 
     private boolean isActionPlanned(PostInitItem item, String action) {
@@ -350,19 +267,6 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
 
-    private Optional<PostInitData> parsePostInitConfiguration() {
-        if (StringUtils.isBlank(postInitConfigurationData)) {
-            return Optional.empty();
-        } else {
-            try {
-                return Optional.ofNullable(mapper.readValue(postInitConfigurationData, PostInitData.class));
-            } catch (JsonProcessingException ex) {
-                log.warn("Error processing json input configuration data:'{}'", postInitConfigurationData, ex);
-                return Optional.empty();
-            }
-        }
-    }
-
     @Override
     public PostInitStatus getStatus() {
         return status;
@@ -373,33 +277,4 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         return finished;
     }
 
-    @ToString
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PostInitData {
-
-        @Getter
-        @Setter
-        private int frequency = DEFAULT_CONFIGURATION_FREQUENCY;
-        @Getter
-        @Setter
-        private int maxAppWait = DEFAULT_CONFIGURATION_TIMEOUT;
-        @Getter
-        private List<PostInitItem> items = new ArrayList<>();
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PostInitItem {
-
-        private String name;
-        private String[] ecrActions;
-        private String action;
-        private String url;
-        private String version;
-        private int priority;
-    }
 }

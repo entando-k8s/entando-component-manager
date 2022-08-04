@@ -60,7 +60,7 @@ public class ImageValidator {
 
     private SplitResult splitTransport(String url) {
         String[] split = StringUtils.split(url, "://", 2);
-        if (split.length == 2 && StringUtils.equalsIgnoreCase(split[0], DOCKER_TRANSPORT)) {
+        if (split != null && split.length == 2 && StringUtils.equalsIgnoreCase(split[0], DOCKER_TRANSPORT)) {
             transport = DOCKER_TRANSPORT;
             return new SplitResult(true, split[1]);
         } else {
