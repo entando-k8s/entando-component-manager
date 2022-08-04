@@ -28,8 +28,8 @@ import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
-import org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.PostInitData;
-import org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.PostInitItem;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationService.PostInitData;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationService.PostInitItem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -49,6 +49,7 @@ class PostInitServiceTest {
     private KubernetesService kubernetesService;
     private EntandoBundleJobService entandoBundleJobService;
     private PostInitServiceImpl serviceToTest;
+    private PostInitConfigurationServiceImpl serviceConfigToTest;
 
     private static final String POST_INIT_BUNDLE_VERSION = "0.0.2";
     private static final String POST_INIT_BUNDLE_NAME = "test-bundle-entando-post-init-01";
@@ -176,18 +177,6 @@ class PostInitServiceTest {
     }
 
     @Test
-    void postInit_errorInputConfig_ShouldNotInstall() throws Exception {
-        initServiceToTest("{%/()}", bundleService, installService, kubernetesService,
-                entandoBundleJobService);
-        assertThat(serviceToTest.getFrequencyInSeconds()).isEqualTo(5);
-
-        initServiceToTest(" ", bundleService, installService, kubernetesService,
-                entandoBundleJobService);
-        assertThat(serviceToTest.getFrequencyInSeconds()).isEqualTo(5);
-
-    }
-
-    @Test
     void postInit_errorInputName_ShouldNotInstall() throws Exception {
         EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
 
@@ -217,37 +206,6 @@ class PostInitServiceTest {
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
         verify(installServiceSpy, times(0)).install(any(), any(), any());
-
-    }
-
-    @Test
-    void isBundleOperationAllowed_shouldWork() throws Exception {
-        initServiceToTest(convertConfigDataToString(convertConfigDataToString()));
-
-        Optional<Boolean> resp = serviceToTest.isEcrActionAllowed("ciccio", "test");
-        assertThat(resp.isEmpty()).isTrue();
-
-        String bundleCode = BundleUtilities.composeBundleCode(POST_INIT_BUNDLE_NAME,
-                BundleUtilities.removeProtocolAndGetBundleId(POST_INIT_BUNDLE_PUBLICATION_URL));
-        resp = serviceToTest.isEcrActionAllowed(bundleCode, "test");
-        assertThat(resp.get()).isFalse();
-
-        PostInitData data = convertConfigDataToString();
-        PostInitItem item = data.getItems().get(0);
-        item.setEcrActions(new String[0]);
-        initServiceToTest(convertConfigDataToString(data));
-        resp = serviceToTest.isEcrActionAllowed(bundleCode, "uninstall");
-        assertThat(resp.get()).isFalse();
-
-        item.setEcrActions(new String[]{"undeploy"});
-        initServiceToTest(convertConfigDataToString(data));
-        resp = serviceToTest.isEcrActionAllowed(bundleCode, "uninstall");
-        assertThat(resp.get()).isFalse();
-
-        item.setEcrActions(new String[]{"uninstall"});
-        initServiceToTest(convertConfigDataToString(data));
-        resp = serviceToTest.isEcrActionAllowed(bundleCode, "uninstall");
-        assertThat(resp.get()).isTrue();
 
     }
 
@@ -320,18 +278,24 @@ class PostInitServiceTest {
 
 
     private void initServiceToTest(String configData) throws Exception {
-        serviceToTest = new PostInitServiceImpl(configData, bundleService, installService, kubernetesService,
+        serviceConfigToTest = new PostInitConfigurationServiceImpl(configData);
+        serviceConfigToTest.afterPropertiesSet();
+
+        serviceToTest = new PostInitServiceImpl(serviceConfigToTest, bundleService, installService, kubernetesService,
                 entandoBundleJobService);
-        serviceToTest.afterPropertiesSet();
+
     }
 
     private void initServiceToTest(String configData, EntandoBundleService bundleService,
             EntandoBundleInstallService installService,
             KubernetesService kubernetesService, EntandoBundleJobService entandoBundleJobService)
             throws Exception {
-        serviceToTest = new PostInitServiceImpl(configData, bundleService, installService, kubernetesService,
+        serviceConfigToTest = new PostInitConfigurationServiceImpl(configData);
+        serviceConfigToTest.afterPropertiesSet();
+
+        serviceToTest = new PostInitServiceImpl(serviceConfigToTest, bundleService, installService, kubernetesService,
                 entandoBundleJobService);
-        serviceToTest.afterPropertiesSet();
+
     }
 
     private String convertConfigDataToString(PostInitData configData) throws JsonProcessingException {

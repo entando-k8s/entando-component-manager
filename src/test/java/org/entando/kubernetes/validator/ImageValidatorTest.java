@@ -38,6 +38,7 @@ class ImageValidatorTest {
     @Test
     void validationShouldThrowError() {
         Stream.of(
+                null,
                 "docker://docker.io-/library/nginx:12",
                 "docker://docker.io/library-/nginx:12",
                 "docker://docker.io/library/-nginx:12",

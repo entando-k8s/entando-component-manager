@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationService;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitProcessListener;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,8 +60,9 @@ public class AppConfiguration {
     }
 
     @Bean
-    public ApplicationListener<ApplicationReadyEvent> ecrPostInitProcessListener(PostInitService service) {
-        return new PostInitProcessListener(service);
+    public ApplicationListener<ApplicationReadyEvent> ecrPostInitProcessListener(PostInitService service,
+            PostInitConfigurationService config) {
+        return new PostInitProcessListener(service, config);
     }
 
     @Bean
