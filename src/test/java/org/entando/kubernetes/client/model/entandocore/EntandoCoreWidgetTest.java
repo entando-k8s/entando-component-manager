@@ -42,6 +42,7 @@ class EntandoCoreWidgetTest {
         wd.setConfigUi(testConfigUiDescriptor());
 
         EntandoCoreWidget ecw = new EntandoCoreWidget(wd);
+        assertThat(ecw.getConfigUiName()).isNull();
         assertThat(ecw.getConfigUi()).isNotNull();
         assertThat(ecw.getConfigUi().keySet()).containsExactlyInAnyOrder("customElement", "resources");
         assertThat(ecw.getConfigUi().get("customElement")).isEqualTo("myCustomElement");
@@ -63,7 +64,7 @@ class EntandoCoreWidgetTest {
                 new WidgetDescriptor.Param("key2", "description of key 2")
         );
         wd.setParams(parameters);
-        wd.setConfigMfe("configMfe");
+        wd.setConfigMfe("global:configMfe");
 
         EntandoCoreWidget ecw = new EntandoCoreWidget(wd);
         List<MfeParam> ecwParameters = ecw.getParams();
@@ -72,7 +73,7 @@ class EntandoCoreWidgetTest {
         Assertions.assertEquals("key2", ecwParameters.get(1).getName());
         Assertions.assertEquals("description of key 1", ecwParameters.get(0).getDescription());
         Assertions.assertEquals("description of key 2", ecwParameters.get(1).getDescription());
-        Assertions.assertEquals("configMfe", ecw.getConfigMfe());
+        Assertions.assertEquals("configMfe", ecw.getConfigUiName());
 
         assertThat(ecw.getParentCode()).isNull();
         assertThat(ecw.getParamsDefaults()).isNull();
