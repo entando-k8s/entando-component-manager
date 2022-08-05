@@ -37,6 +37,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
@@ -605,4 +606,21 @@ public class EntandoBundleServiceTest {
         assertThat(entandoBundle.get().getTitle()).isEqualTo(titleOk);
     }
 
+    @Test
+    void listPostInitBundles_shouldReturnFilteredValue() {
+        List<EntandoBundleEntity> listKo = new ArrayList<>();
+        String url = "docker://docker.io/entando/test";
+        IntStream.range(1, 4).forEach(i -> {
+            EntandoBundleEntity entity = getTestComponent();
+            entity.setRepoUrl(url + i);
+            entity.setOperationStarter(i % 2 == 0 ? OperatorStarter.POST_INIT : OperatorStarter.REST_CLIENT);
+            listKo.add(entity);
+        });
+        when(installedComponentRepository.findAll()).thenReturn(listKo);
+
+        PagedMetadata<EntandoBundle> list = service.listInstalledOrRemovedPostInitBundles();
+        assertThat(list.getBody()).isNotEmpty();
+        assertThat(list.getBody()).hasSize(1);
+
+    }
 }
