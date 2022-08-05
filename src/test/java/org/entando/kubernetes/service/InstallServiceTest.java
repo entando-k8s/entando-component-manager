@@ -459,7 +459,6 @@ public class InstallServiceTest {
         assertThat(value.getPbcList()).isEqualTo(BundleInfoStubHelper.GROUPS_NAME.stream().collect(Collectors.joining(",")));
     }
 
-
     private List<Double> getJobProgress() {
         List<Double> allProgresses = Mockito.mockingDetails(jobRepository).getInvocations()
                 .stream().filter(i -> i.getMethod().getName().equals("save"))

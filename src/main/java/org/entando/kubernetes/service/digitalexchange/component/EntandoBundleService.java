@@ -28,6 +28,13 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 
 public interface EntandoBundleService {
 
+    /**
+     * This method retrieves the EntandoBundles installed or removed from post-init operation.
+     *
+     * @return the list of EntandoBundles installed or removed from post-init operation
+     */
+    PagedMetadata<EntandoBundle> listInstalledOrRemovedPostInitBundles();
+
     PagedMetadata<EntandoBundle> listBundles();
 
     PagedMetadata<EntandoBundle> listBundles(PagedListRequest request);
