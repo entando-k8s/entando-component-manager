@@ -16,6 +16,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
@@ -207,7 +208,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 bundleDescriptor.getName(), bundleDescriptor, bundleReader.getBundleUrl());
         final String signedPluginDeplName = this.signPluginDeploymentName(pluginDescriptor);
         final String endpoint = BundleUtilities.extractIngressPathFromDescriptor(pluginDescriptor, bundleCode);
-        final String customEndpoint = BundleUtilities.composeIngressPathFromIngressPathProperty(pluginDescriptor);
+        final String customEndpoint = pluginDescriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)
+                ? BundleUtilities.composeIngressPathFromIngressPathProperty(pluginDescriptor)
+                : null;
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,

@@ -78,7 +78,7 @@ public class BundleUtilities {
     public static final int PLUGIN_HASH_LENGTH = 8;
 
     public static final String BUNDLES_FOLDER = "bundles";
-    
+
     public static final String GLOBAL_PREFIX = "global:";
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
@@ -175,8 +175,7 @@ public class BundleUtilities {
     public static String extractIngressPathFromDescriptor(PluginDescriptor descriptor, String bundleCode) {
 
         // if v5
-        if (!ObjectUtils.isEmpty(descriptor.getDescriptorVersion())
-                && descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
+        if (descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
             return composeIngressPathForV5(descriptor, bundleCode);
         }
 
@@ -216,14 +215,7 @@ public class BundleUtilities {
         return ingressPath;
     }
 
-    /**
-     * compose the plugin ingress path starting by its docker image.
-     *
-     * @param descriptor the PluginDescriptor from which take the docker image
-     * @return the composed ingress path
-     */
-    public static String composeIngressPathForV1(PluginDescriptor descriptor) {
-
+    public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
         DockerImage image = descriptor.getDockerImage();
 
         List<String> ingressSegmentList = new ArrayList<>(Arrays.asList(image.getOrganization(), image.getName()));
@@ -236,6 +228,20 @@ public class BundleUtilities {
                 .map(BundleUtilities::makeKubernetesCompatible).collect(Collectors.toList());
 
         return "/" + String.join("/", kubeCompatiblesSegmentList);
+    }
+
+    /**
+     * compose the plugin ingress path starting by its docker image.
+     *
+     * @param descriptor the PluginDescriptor from which take the docker image
+     * @return the composed ingress path
+     */
+    public static String composeIngressPathForV1(PluginDescriptor descriptor) {
+
+        // compose from ingress path property's value
+        return Optional.ofNullable(composeIngressPathFromIngressPathProperty(descriptor))
+                // otherwise compose from docker image
+                .orElseGet(() -> composeIngressPathFromDockerImage(descriptor));
     }
 
     /**
@@ -548,7 +554,7 @@ public class BundleUtilities {
 
         return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
     }
-    
+
     public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
             String bundleUrl) {
         return composeDescriptorCode(code, name, descriptor, bundleUrl, "-");
@@ -572,11 +578,11 @@ public class BundleUtilities {
         }
         return composedCode;
     }
-    
+
     public static String composeBundleCode(String bundleName, String bundleId) {
         return composeBundleCode(bundleName, bundleId, "-");
     }
-    
+
     public static String composeBundleCode(String bundleName, String bundleId, String separator) {
         return bundleName + separator + bundleId;
     }

@@ -9,7 +9,7 @@
 <@wp.currentWidget param="config" configParam="title" var="widget_title" />
 
 <#assign apiClaim_ext_DASH_api>my-path</#assign>
-<#assign apiClaim_int_DASH_api>/entando/todomvcv3</#assign>
+<#assign apiClaim_int_DASH_api>/myhostname.io/entando-plugin</#assign>
 
 <script>
 window.entando = {

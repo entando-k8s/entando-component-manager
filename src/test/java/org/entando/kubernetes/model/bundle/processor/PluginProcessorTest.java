@@ -10,9 +10,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -44,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.testcontainers.shaded.org.apache.commons.lang3.ObjectUtils;
 
 @Tag("unit")
 class PluginProcessorTest extends BaseProcessorTest {
@@ -74,22 +73,66 @@ class PluginProcessorTest extends BaseProcessorTest {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
         descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
 
-        execTestCreatePlugin(descriptor);
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+    }
+
+    @Test
+    void testCreatePluginV2WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
+        descriptor.setIngressPath("custom/ingress");
+        descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
+
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
-        execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV3());
+        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV3());
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
+    }
+
+    @Test
+    void testCreatePluginV3WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV3();
+        descriptor.setIngressPath("custom/ingress");
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV4() throws IOException, ExecutionException, InterruptedException {
-        execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV4());
+        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV4());
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
+    }
+
+    @Test
+    void testCreatePluginV4WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4();
+        descriptor.setIngressPath("custom/ingress");
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV5() throws IOException, ExecutionException, InterruptedException {
-        execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/my-component-77b2b10e/my-bundle", null);
+    }
+
+    @Test
+    void testCreatePluginV5WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5().setIngressPath("custom/ingress");
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/my-component-77b2b10e/my-bundle", "/custom/ingress");
     }
 
     private List<? extends Installable> execTestCreatePlugin(PluginDescriptor descriptor)
@@ -239,5 +282,16 @@ class PluginProcessorTest extends BaseProcessorTest {
         final EnvironmentVariable environmentVariable = representation.getEnvironmentVariables().get(0);
         assertThat(environmentVariable.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
         assertThat(environmentVariable.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
+    }
+
+    private void assertOnEndpoints(Installable installable, String endpoint, String customEndpoint) {
+        var metadata = ((PluginDescriptor) installable.getRepresentation()).getDescriptorMetadata();
+        assertThat(metadata.getEndpoint()).isEqualTo(endpoint);
+
+        if (ObjectUtils.isEmpty(customEndpoint)) {
+            assertThat(metadata.getCustomEndpoint()).isNull();
+        } else {
+            assertThat(metadata.getCustomEndpoint()).isEqualTo(customEndpoint);
+        }
     }
 }
