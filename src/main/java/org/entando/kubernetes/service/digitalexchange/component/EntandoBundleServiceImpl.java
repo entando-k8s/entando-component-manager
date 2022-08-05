@@ -43,6 +43,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -86,6 +87,23 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         this.installedComponentRepo = installedComponentRepo;
         this.bundleStatusHelper = bundleStatusHelper;
         this.entandoDeBundleComposer = entandoDeBundleComposer;
+    }
+
+    @Override
+    public PagedMetadata<EntandoBundle> listInstalledOrRemovedPostInitBundles() {
+        List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAll();
+        List<EntandoBundle> postInitBundles = installedBundles.stream()
+                .filter(this::isPostInitBundle)
+                .map(this::convertToBundleFromEntity)
+                .collect(Collectors.toList());
+        PagedListRequest request = new PagedListRequest();
+        List<EntandoBundle> sublist = request.getSublist(postInitBundles);
+
+        return new PagedMetadata<>(request, sublist, postInitBundles.size());
+    }
+
+    private boolean isPostInitBundle(EntandoBundleEntity entity) {
+        return OperatorStarter.POST_INIT.equals(entity.getOperationStarter());
     }
 
     @Override
