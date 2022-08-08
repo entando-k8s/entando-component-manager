@@ -132,16 +132,9 @@ public class PostInitServiceImpl implements PostInitService {
                 retries = MAX_RETIES;
                 finished = true;
 
-            } catch (BundleNotFoundException ex) {
-                log.info("Error Post init bundle install not found with bundle code:'{}'", getArgBundleIdentifier(ex));
-                log.debug("BundleNotFoundException error:", ex);
-                status = PostInitStatus.FAILED;
-                retries = MAX_RETIES;
-                finished = true;
-
-            } catch (EntandoGeneralException | InvalidBundleException ex) {
+            } catch (BundleNotFoundException | EntandoGeneralException | InvalidBundleException ex) {
                 log.info("Error Post init bundle install with error message:'{}'", ex.getMessage());
-                log.debug("EntandoGeneralException | InvalidBundleException error:", ex);
+                log.debug("Bundle or generic error:", ex);
                 status = PostInitStatus.FAILED;
                 retries = MAX_RETIES;
                 finished = true;
@@ -159,10 +152,6 @@ public class PostInitServiceImpl implements PostInitService {
             status = PostInitStatus.UNKNOWN;
             finished = true;
         }
-    }
-
-    private String getArgBundleIdentifier(BundleNotFoundException ex) {
-        return ex.getArgs() != null && ex.getArgs().length > 0 ? (String) ex.getArgs()[0] : "not present";
     }
 
     private Consumer<PostInitItem> computeActionToExecute(PostInitItem item) {
