@@ -131,5 +131,6 @@ public class EntandoBundleEntity {
 
     public enum OperatorStarter {
         REST_CLIENT, POST_INIT;
+
     }
 }

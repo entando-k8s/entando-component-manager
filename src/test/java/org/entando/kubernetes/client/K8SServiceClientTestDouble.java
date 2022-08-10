@@ -123,6 +123,22 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> type) {
+        return inMemoryBundles.stream()
+                .filter(b -> b.getMetadata().getNamespace().equals("entando-de-bundles"))
+                .collect(Collectors.toList());
+
+    }
+
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> bundleType) {
+        return inMemoryBundles.stream()
+                .filter(b -> b.getMetadata().getNamespace().equals(namespace))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals(namespace))
@@ -131,6 +147,13 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+        return inMemoryBundles.stream()
+                .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> type) {
         return inMemoryBundles.stream()
                 .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
                 .collect(Collectors.toList());
