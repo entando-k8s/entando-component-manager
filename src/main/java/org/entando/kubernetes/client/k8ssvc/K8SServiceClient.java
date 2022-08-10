@@ -13,6 +13,10 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public interface K8SServiceClient extends ECMClient {
 
+    String BUNDLE_TYPE_ANNOTATION = "bundle.entando.org/type";
+    String BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE = "postinit";
+    String BUNDLE_TYPE_ANNOTATION_STANDARD_VALUE = "standard";
+
     List<EntandoAppPluginLink> getAppLinks(String entandoAppName);
 
     EntandoPlugin getPluginForLink(EntandoAppPluginLink el);
@@ -31,9 +35,15 @@ public interface K8SServiceClient extends ECMClient {
 
     List<EntandoDeBundle> getBundlesInObservedNamespaces();
 
+    List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> type);
+
     List<EntandoDeBundle> getBundlesInNamespace(String namespace);
 
+    List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> bundleType);
+
     List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces);
+
+    List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> bundleType);
 
     Optional<EntandoDeBundle> getBundleWithName(String name);
 

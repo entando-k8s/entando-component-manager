@@ -289,7 +289,7 @@ public class PostInitServiceImpl implements PostInitService {
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(item.getUrl()))
                 .gitRepoAddress(item.getUrl())
                 .build();
-        return bundleService.deployDeBundle(bundleInfo);
+        return bundleService.deployDeBundle(bundleInfo, OperatorStarter.POST_INIT);
     }
 
     private Optional<String> retrieveApplicationStatus() {
