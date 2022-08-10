@@ -99,7 +99,7 @@ class PostInitServiceTest {
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
         when(bundleService.listInstalledOrRemovedPostInitBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleService.deployDeBundle(any(), any())).thenReturn(new EntandoBundle());
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.empty());
 
         serviceToTest.install();
@@ -142,7 +142,7 @@ class PostInitServiceTest {
         when(bundleServiceSpy.listInstalledOrRemovedPostInitBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
 
-        when(bundleServiceSpy.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleServiceSpy.deployDeBundle(any(), any())).thenReturn(new EntandoBundle());
         when(installServiceSpy.install(any(), any(), any(), any())).thenReturn(
                 EntandoBundleJobEntity.builder().id(UUID.randomUUID()).build());
         when(entandoBundleJobService.getById(any())).thenReturn(
@@ -152,7 +152,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(1)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(1)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(1)).install(any(), any(), any(), any());
 
     }
@@ -175,7 +175,7 @@ class PostInitServiceTest {
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
         when(bundleServiceSpy.listInstalledOrRemovedPostInitBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleServiceSpy.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleServiceSpy.deployDeBundle(any(), any())).thenReturn(new EntandoBundle());
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
         EntandoDeBundleSpecBuilder deBundleBuilder = new EntandoDeBundleSpecBuilder();
@@ -188,7 +188,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(1)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(1)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
     }
 
@@ -215,7 +215,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.FAILED);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(0)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(0)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
     }
 
@@ -252,7 +252,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(0)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(0)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
     }
 
@@ -295,7 +295,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(0)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(0)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
         verify(uninstallServiceSpy, times(1)).uninstall(any());
     }
@@ -339,7 +339,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.FAILED);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(0)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(0)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
         verify(uninstallServiceSpy, times(1)).uninstall(any());
     }
@@ -383,7 +383,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(0)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(0)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
         verify(uninstallServiceSpy, times(1)).uninstall(any());
         verify(bundleServiceSpy, times(1)).undeployDeBundle(any());
@@ -424,7 +424,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(0)).deployDeBundle(any());
+        verify(bundleServiceSpy, times(0)).deployDeBundle(any(), any());
         verify(installServiceSpy, times(0)).install(any(), any(), any());
         verify(uninstallServiceSpy, times(0)).uninstall(any());
         verify(bundleServiceSpy, times(1)).undeployDeBundle(any());
@@ -480,7 +480,7 @@ class PostInitServiceTest {
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
         when(bundleService.listInstalledOrRemovedPostInitBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleService.deployDeBundle(any(), any())).thenReturn(new EntandoBundle());
 
         EntandoBundleJobEntity job = EntandoBundleJobEntity.builder().id(UUID.randomUUID())
                 .status(JobStatus.INSTALL_COMPLETED).build();
@@ -510,7 +510,7 @@ class PostInitServiceTest {
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
         when(bundleService.listInstalledOrRemovedPostInitBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleService.deployDeBundle(any(), any())).thenReturn(new EntandoBundle());
 
         EntandoBundleJobEntity job = EntandoBundleJobEntity.builder().id(UUID.randomUUID())
                 .status(JobStatus.INSTALL_ERROR).build();

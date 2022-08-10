@@ -23,6 +23,7 @@ import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 
@@ -61,6 +62,8 @@ public interface EntandoBundleService {
     EntandoBundleEntity convertToEntityFromEcr(EntandoDeBundle bundle);
 
     EntandoBundle deployDeBundle(BundleInfo bundleInfo);
+
+    EntandoBundle deployDeBundle(BundleInfo bundleInfo, OperatorStarter operator);
 
     String undeployDeBundle(String bundleName);
 
