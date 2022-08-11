@@ -29,6 +29,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @Profile("!test")
@@ -45,7 +46,7 @@ public class AppConfiguration {
     public int bundleDecompressTimeoutSeconds;
     @Value("${entando.container.registry.credentials:#{null}}")
     public String containerRegistryCredentials = null;
-    
+
     @Getter
     public static boolean truncatePluginBaseNameIfLonger;   // NOSONAR
 
@@ -102,5 +103,10 @@ public class AppConfiguration {
                 ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
                 kubernetesServiceClient::getAnalysisReport
         );
+    }
+
+    @Bean
+    public RestTemplate simpleRestTemplate() {
+        return new RestTemplate();
     }
 }
