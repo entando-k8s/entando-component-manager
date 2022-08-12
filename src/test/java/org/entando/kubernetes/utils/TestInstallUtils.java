@@ -116,7 +116,8 @@ public class TestInstallUtils {
 
         mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .servletPath(INSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -127,9 +128,14 @@ public class TestInstallUtils {
     public static String simulateSuccessfullyCompletedInstallV5(MockMvc mockMvc, EntandoCoreClient coreClient,
             K8SServiceClient k8sServiceClient, String bundleName) {
 
+        stubFor(WireMock.get(urlEqualTo("/entando-app/api/users/myGroupPermissions"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"payload\":[{\"group\":\"administrators\",\"permissions\":[\"superuser\"]}],\"metaData\":{},\"errors\":[]}")));
+
         mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT_V5.build()))
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT_V5.build())
+                        .servletPath(INSTALL_COMPONENT_ENDPOINT_V5.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -142,7 +148,8 @@ public class TestInstallUtils {
 
         mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                .servletPath(INSTALL_PLANS_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -155,7 +162,8 @@ public class TestInstallUtils {
 
         mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT_V5.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT_V5.build())
+                .servletPath(INSTALL_PLANS_ENDPOINT_V5.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -175,7 +183,8 @@ public class TestInstallUtils {
         MvcResult result = mockMvc.perform(
                 put(INSTALL_PLANS_ENDPOINT.build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(installWithPlansReq)))
+                        .content(objectMapper.writeValueAsString(installWithPlansReq))
+                .servletPath(INSTALL_PLANS_ENDPOINT.build().toString()))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -196,7 +205,8 @@ public class TestInstallUtils {
         MvcResult result = mockMvc.perform(
                         put(INSTALL_PLANS_ENDPOINT_V5.build())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(installWithPlansRequest)))
+                                .content(objectMapper.writeValueAsString(installWithPlansRequest))
+                                .servletPath(INSTALL_PLANS_ENDPOINT_V5.build().toString()))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -296,7 +306,8 @@ public class TestInstallUtils {
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(new ObjectMapper().writeValueAsString(request)))
+                .content(new ObjectMapper().writeValueAsString(request))
+                        .servletPath(INSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -736,7 +747,8 @@ public class TestInstallUtils {
     @SneakyThrows
     public static JobStatus getJobStatus(MockMvc mockMvc, String jobId) {
         MockHttpServletResponse response = mockMvc.perform(get("/jobs/" + jobId)
-                .with(user("user")))
+                .with(user("user"))
+                        .servletPath("/jobs/"))
                 .andReturn().getResponse();
         return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.status"));
     }
@@ -744,15 +756,19 @@ public class TestInstallUtils {
     @SneakyThrows
     public static JobStatus getComponentLastJobStatusOfType(MockMvc mockMvc, String component,
             Set<JobStatus> possibleStatues) {
+
         List<String> allowedValues = possibleStatues.stream().map(JobStatus::name).collect(Collectors.toList());
-        MockHttpServletResponse response = mockMvc.perform(get("/jobs"
+        String url = "/jobs"
                 + "?sort=startedAt"
                 + "&direction=DESC"
                 + "&pageSize=1"
                 + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
                 .join(",", allowedValues)
-                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component)
-                .with(user("user")))
+                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component;
+
+        MockHttpServletResponse response = mockMvc.perform(get(url)
+                .with(user("user"))
+                .servletPath("/jobs"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.payload").value(hasSize(1)))
@@ -762,7 +778,8 @@ public class TestInstallUtils {
     }
 
     public static EntandoBundleJobEntity getJob(MockMvc mockMvc, String jobId) throws Exception {
-        String responseContent = mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+        String responseContent = mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId)
+                .servletPath(JOBS_ENDPOINT + "/" + jobId))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         String status = JsonPath.read(responseContent, "$.payload.status");
@@ -780,7 +797,8 @@ public class TestInstallUtils {
 
     public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String bundleName, String jobId, JobStatus expectedStatus)
             throws Exception {
-        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId)
+                .servletPath(JOBS_ENDPOINT + "/" + jobId))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value(bundleName))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
@@ -788,7 +806,8 @@ public class TestInstallUtils {
 
     public static void verifyJobHasComponentAndStatusV5(MockMvc mockMvc, String jobId, JobStatus expectedStatus)
             throws Exception {
-        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId)
+                .servletPath(JOBS_ENDPOINT + "/" + jobId))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME_V5))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
@@ -814,7 +833,8 @@ public class TestInstallUtils {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .servletPath(INSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -838,7 +858,8 @@ public class TestInstallUtils {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .servletPath(UNINSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -863,7 +884,8 @@ public class TestInstallUtils {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT_V5.build()))
+        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT_V5.build())
+                        .servletPath(UNINSTALL_COMPONENT_ENDPOINT_V5.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -882,7 +904,8 @@ public class TestInstallUtils {
 
         mockFailingInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .servletPath(INSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -895,7 +918,8 @@ public class TestInstallUtils {
 
         mockFailingInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .servletPath(INSTALL_PLANS_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -944,7 +968,8 @@ public class TestInstallUtils {
 
         mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                .servletPath(INSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -957,7 +982,8 @@ public class TestInstallUtils {
 
         mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
 
-        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .servletPath(INSTALL_PLANS_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -1029,7 +1055,8 @@ public class TestInstallUtils {
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .servletPath(UNINSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -1074,7 +1101,8 @@ public class TestInstallUtils {
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .servletPath(INSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -1108,7 +1136,8 @@ public class TestInstallUtils {
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteLabel(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFolder(any());
 
-        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                .servletPath(UNINSTALL_COMPONENT_ENDPOINT.build().toString()))
                 .andExpect(status().isCreated())
                 .andReturn();
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
@@ -1132,7 +1161,8 @@ public class TestInstallUtils {
     }
 
     public static PagedMetadata<EntandoBundleJobEntity> getInstallJob(MockMvc mockMvc) throws Exception {
-        return new ObjectMapper().readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvcV1&type=INSTALL"))
+        return new ObjectMapper().readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvcV1&type=INSTALL")
+                        .servletPath(JOBS_ENDPOINT + "?component=todomvcV1&type=INSTALL"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
                 new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {
@@ -1142,12 +1172,16 @@ public class TestInstallUtils {
     public static PagedMetadata<EntandoBundleJobEntity> getUninstallJob(MockMvc mockMvc) throws Exception {
         List<String> allowedValues = JobType.UNINSTALL.getStatuses().stream().map(JobStatus::name)
                 .collect(Collectors.toList());
-        return new ObjectMapper().readValue(mockMvc.perform(get("/jobs"
-                        + "?sort=startedAt"
-                        + "&direction=DESC"
-                        + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
-                        .join(",", allowedValues)
-                        + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
+
+        String url = "/jobs"
+                + "?sort=startedAt"
+                + "&direction=DESC"
+                + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
+                .join(",", allowedValues)
+                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc";
+
+        return new ObjectMapper().readValue(mockMvc.perform(get(url)
+                        .servletPath("/jobs"))
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
                 new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {
