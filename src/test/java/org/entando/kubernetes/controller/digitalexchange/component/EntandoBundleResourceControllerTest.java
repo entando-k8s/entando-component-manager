@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
 import org.entando.kubernetes.model.common.RestNamedId;
 import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
@@ -43,10 +44,13 @@ class EntandoBundleResourceControllerTest {
 
     @Mock
     private EntandoBundleService bundleService;
+    @Mock
+    private AuthorizationChecker authorizationChecker;
 
     @BeforeEach
     public void setup() {
-        controller = new EntandoBundleResourceController(bundleService, null);
+        controller = new EntandoBundleResourceController(bundleService, null,
+                authorizationChecker);
     }
 
 
@@ -58,7 +62,7 @@ class EntandoBundleResourceControllerTest {
 
         // when the user sends the request
         // then a KubernetesClientException is thrown
-        assertThrows(KubernetesClientException.class, () -> controller.deployBundle(null));
+        assertThrows(KubernetesClientException.class, () -> controller.deployBundle("jwt", null));
     }
 
     @Test
@@ -70,7 +74,7 @@ class EntandoBundleResourceControllerTest {
         final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
 
         // when the user sends the request
-        final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.deployBundle(bundleInfo);
+        final ResponseEntity<SimpleRestResponse<EntandoBundle>> response = controller.deployBundle("jwt", bundleInfo);
 
         // then the expected EntandoBundle is returned
         SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);
@@ -85,7 +89,7 @@ class EntandoBundleResourceControllerTest {
 
         // when the user requests for the undeploy of the bundle
         final ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> response = controller.undeployBundle(
-                BundleInfoStubHelper.NAME);
+                "jwt", BundleInfoStubHelper.NAME);
 
         // then the expected successful DeletedObjectResponse is returned
         SimpleRestResponseAssertionHelper.assertOnSuccessfulResponse(response, HttpStatus.OK);

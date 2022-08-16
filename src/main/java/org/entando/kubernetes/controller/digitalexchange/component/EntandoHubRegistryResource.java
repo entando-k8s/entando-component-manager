@@ -20,6 +20,7 @@ import java.util.List;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping(value = "/registries")
@@ -41,15 +43,21 @@ public interface EntandoHubRegistryResource {
     @Operation(description = "Add new Entando Hub registry")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> addRegistry(@RequestBody EntandoHubRegistry entandoHubRegistry);
+    ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> addRegistry(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @RequestBody EntandoHubRegistry entandoHubRegistry);
 
     @Operation(description = "Update an Entando Hub registry")
     @ApiResponse(responseCode = "200", description = "OK")
     @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> updateRegistry(@RequestBody EntandoHubRegistry entandoHubRegistry);
+    ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> updateRegistry(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @RequestBody EntandoHubRegistry entandoHubRegistry);
 
     @Operation(description = "Delete an Entando Hub registry")
     @ApiResponse(responseCode = "200", description = "OK")
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> deleteRegistry(@PathVariable("id") String id);
+    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> deleteRegistry(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @PathVariable("id") String id);
 }

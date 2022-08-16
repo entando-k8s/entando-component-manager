@@ -30,6 +30,7 @@ import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping(value = "/components")
@@ -57,12 +59,16 @@ public interface EntandoBundleResource {
     @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(@RequestBody BundleInfo bundleInfo);
+    ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestBody BundleInfo bundleInfo);
 
     @Operation(description = "Undeploy an EntandoDeBundle from Kubernetes")
     @ApiResponse(responseCode = "200", description = "OK")
     @DeleteMapping(value = "/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(@PathVariable String component);
+    ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @PathVariable String component);
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")

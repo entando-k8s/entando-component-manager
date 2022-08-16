@@ -52,6 +52,7 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +72,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-@AutoConfigureWireMock(port = 8098)
+@AutoConfigureWireMock(port = 8089)
 @AutoConfigureMockMvc
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
@@ -121,6 +122,9 @@ public class UpdateFlowTest {
     @MockBean
     private EntandoCoreClient coreClient;
 
+    @Autowired
+    private AuthorizationChecker authorizationChecker;
+
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
     @BeforeEach
@@ -131,6 +135,7 @@ public class UpdateFlowTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8089);
     }
 
     @AfterEach
@@ -142,6 +147,7 @@ public class UpdateFlowTest {
 
     @Test
     void shouldCreateOrUpdateComponentsDuringInstall() throws Exception {
+
         simulateSuccessfullyCompletedUpdate();
 
         verifyPluginInstallRequests(k8SServiceClient);

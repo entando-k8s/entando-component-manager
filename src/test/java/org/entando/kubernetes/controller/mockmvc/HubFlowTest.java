@@ -24,7 +24,9 @@ import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -36,6 +38,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -73,6 +76,9 @@ class HubFlowTest {
     @MockBean
     private K8SServiceClient k8SServiceClient;
 
+    @Autowired
+    private AuthorizationChecker authorizationChecker;
+
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
     @BeforeEach
@@ -83,6 +89,8 @@ class HubFlowTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+
+        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8092);
     }
 
     @AfterEach
@@ -96,8 +104,11 @@ class HubFlowTest {
     void shouldSuccessfullyDeployAnEntandoDeBundle() throws Exception {
         when(k8SServiceClient.deployDeBundle(any())).thenAnswer(i -> i.getArguments()[0]);
 
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
         mockMvc.perform(post(DEPLOY_COMPONENT_ENDPOINT.build()).contentType(APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(BundleInfoStubHelper.stubBunbleInfo())))
+                        .content(new ObjectMapper().writeValueAsString(BundleInfoStubHelper.stubBunbleInfo()))
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().json("{\"payload\":{\"code\":\"something-77b2b10e\",\"title\":"
                         + "\"my-bundle\",\"description\":\"bundle description\",\"repoUrl\":\"http://www.github.com/entan"

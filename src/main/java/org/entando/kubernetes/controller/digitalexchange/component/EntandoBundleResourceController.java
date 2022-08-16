@@ -35,14 +35,17 @@ import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.model.web.response.PagedRestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.validator.ValidationFunctions;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -52,9 +55,11 @@ import org.zalando.problem.Status;
 @RequiredArgsConstructor
 public class EntandoBundleResourceController implements EntandoBundleResource {
 
+    private static final String REPO_URL_PATH_PARAM = "repoUrl";
+
     private final EntandoBundleService bundleService;
     private final EntandoBundleComponentUsageService usageService;
-    private static final String REPO_URL_PATH_PARAM = "repoUrl";
+    private final AuthorizationChecker authorizationChecker;
 
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
@@ -64,13 +69,21 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(BundleInfo bundleInfo) {
+    public ResponseEntity<SimpleRestResponse<EntandoBundle>> deployBundle(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            BundleInfo bundleInfo) {
+
+        this.authorizationChecker.checkPermissions(authorizationHeader);
         final EntandoBundle entandoBundle = bundleService.deployDeBundle(bundleInfo);
         return ResponseEntity.ok(new SimpleRestResponse<>(entandoBundle));
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(String component) {
+    public ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            String component) {
+
+        this.authorizationChecker.checkPermissions(authorizationHeader);
         final String deleteRegistryName = bundleService.undeployDeBundle(component);
         return ResponseEntity.ok(new SimpleRestResponse<>(new DeletedObjectResponse(deleteRegistryName)));
     }

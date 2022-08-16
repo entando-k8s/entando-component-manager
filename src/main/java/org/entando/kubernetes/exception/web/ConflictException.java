@@ -2,7 +2,7 @@ package org.entando.kubernetes.exception.web;
 
 import org.springframework.http.HttpStatus;
 
-public class ConflictException extends HttpException {
+public class ConflictException extends WebHttpException {
 
     public ConflictException(final String message) {
         this(message, null);

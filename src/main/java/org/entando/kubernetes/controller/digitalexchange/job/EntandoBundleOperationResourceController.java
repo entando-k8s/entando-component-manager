@@ -22,15 +22,18 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.web.response.RestError;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.validator.InstallPlanValidator;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
@@ -43,11 +46,15 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleInstallService installService;
     private final @NonNull EntandoBundleUninstallService uninstallService;
     private final @NonNull InstallPlanValidator installPlanValidator;
+    private final @NonNull AuthorizationChecker authorizationChecker;
 
     @Override
     public ResponseEntity<SimpleRestResponse<InstallPlan>> installPlans(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallPlansRequest installPlansRequest) {
+
+        this.authorizationChecker.checkPermissions(authorizationHeader);
 
         final InstallPlansRequest request = Optional.ofNullable(installPlansRequest).orElse(new InstallPlansRequest());
 
@@ -64,8 +71,11 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallRequest installRequest) {
+
+        this.authorizationChecker.checkPermissions(authorizationHeader);
 
         final InstallRequest request = Optional.ofNullable(installRequest).orElse(new InstallRequest());
         EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
@@ -82,8 +92,11 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> installWithInstallPlan(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
             @PathVariable("component") String componentId,
             @RequestBody(required = false) InstallWithPlansRequest installRequest) {
+
+        this.authorizationChecker.checkPermissions(authorizationHeader);
 
         final InstallWithPlansRequest request = Optional.ofNullable(installRequest).orElse(new InstallWithPlansRequest());
 
@@ -120,7 +133,10 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> uninstall(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
             @PathVariable("component") String componentId, HttpServletRequest request) {
+
+        this.authorizationChecker.checkPermissions(authorizationHeader);
 
         try {
             EntandoBundleJobEntity uninstallJob = uninstallService.uninstall(componentId);

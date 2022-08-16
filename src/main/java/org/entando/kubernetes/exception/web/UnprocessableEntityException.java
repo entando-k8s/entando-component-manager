@@ -2,7 +2,7 @@ package org.entando.kubernetes.exception.web;
 
 import org.springframework.http.HttpStatus;
 
-public class UnprocessableEntityException extends HttpException {
+public class UnprocessableEntityException extends WebHttpException {
 
     public UnprocessableEntityException(final String message) {
         this(message, null);

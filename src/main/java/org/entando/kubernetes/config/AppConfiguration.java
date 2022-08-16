@@ -45,7 +45,7 @@ public class AppConfiguration {
     public int bundleDecompressTimeoutSeconds;
     @Value("${entando.container.registry.credentials:#{null}}")
     public String containerRegistryCredentials = null;
-    
+
     @Getter
     public static boolean truncatePluginBaseNameIfLonger;   // NOSONAR
 

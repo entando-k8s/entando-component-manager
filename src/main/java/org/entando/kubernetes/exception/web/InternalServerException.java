@@ -2,7 +2,7 @@ package org.entando.kubernetes.exception.web;
 
 import org.springframework.http.HttpStatus;
 
-public class InternalServerException extends HttpException {
+public class InternalServerException extends WebHttpException {
 
     public InternalServerException(final String message) {
         this(message, null);

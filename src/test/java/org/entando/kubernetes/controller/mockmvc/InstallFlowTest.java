@@ -100,6 +100,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -185,13 +186,20 @@ public class InstallFlowTest {
 
     @Test
     public void shouldReturnNotFoundWhenBundleDoesntExists() throws Exception {
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andDo(print()).andExpect(status().isNotFound());
     }
 
     @Test
     void shouldReturnNotFoundWhenBundleDoesntExistsAndInstallWithPlanIsRequested() throws Exception {
-        mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
+
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andDo(print()).andExpect(status().isNotFound());
     }
 
@@ -605,7 +613,8 @@ public class InstallFlowTest {
         String jobId = simulateInProgressInstall();
 
         // I should get a conflict when trying to install or uninstall the same component
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
         waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
@@ -628,7 +637,10 @@ public class InstallFlowTest {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -665,7 +677,10 @@ public class InstallFlowTest {
         mockBundle(k8SServiceClient);
         mockPlugins(k8SServiceClient);
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
         waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
@@ -726,10 +741,12 @@ public class InstallFlowTest {
         simulateInProgressUninstall();
 
         // I should get a conflict error when trying to install/uninstall the same component
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andDo(print())
                 .andExpect(status().isConflict());
-        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
         waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
     }
@@ -741,9 +758,11 @@ public class InstallFlowTest {
         simulateInProgressUninstall();
 
         // I should get a conflict error when trying to install/uninstall the same component
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
-        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
         waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
     }
@@ -766,7 +785,10 @@ public class InstallFlowTest {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -793,7 +815,10 @@ public class InstallFlowTest {
                         .withBody("{ \"access_token\": \"iddqd\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build()))
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -824,8 +849,11 @@ public class InstallFlowTest {
         mockAnalysisReportV1(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
         InstallPlan expected = TestInstallUtils.mockInstallPlanV1();
-        MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
+        MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -923,7 +951,8 @@ public class InstallFlowTest {
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
 
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isServiceUnavailable());
     }
 
@@ -936,7 +965,10 @@ public class InstallFlowTest {
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
                 .throwIfAnotherOperationIsRunningOrStartOperation();
 
-        mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
+        mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isServiceUnavailable());
     }
 
@@ -955,9 +987,13 @@ public class InstallFlowTest {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
                         .withBody(readFromDEPackage("bundle-invalid-secret.tgz"))));
 
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
         final UriBuilder uriBuilder = UriComponentsBuilder.newInstance()
                 .pathSegment("components", compId, "install");
-        mockMvc.perform(post(uriBuilder.build())).andExpect(status().isCreated());
+        mockMvc.perform(post(uriBuilder.build())
+                .header(HttpHeaders.AUTHORIZATION, "jwt"))
+                .andExpect(status().isCreated());
 
         waitForInstallStatus(mockMvc, compId, JobStatus.INSTALL_ERROR);
     }

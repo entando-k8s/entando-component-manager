@@ -44,6 +44,7 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.repository.PluginDataRepository;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -104,6 +106,9 @@ class InstallFlowTestBundleVFive {
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
 
+    @Autowired
+    private AuthorizationChecker authorizationChecker;
+
     @MockBean
     private K8SServiceClient k8SServiceClient;
 
@@ -147,6 +152,8 @@ class InstallFlowTestBundleVFive {
         pluginDataRepository.save(pluginData);
         pluginDataRepository.save(pluginData2);
         pluginDataRepository.save(pluginData3);
+
+        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8091);
     }
 
     @AfterEach
@@ -249,8 +256,11 @@ class InstallFlowTestBundleVFive {
         mockAnalysisReportV5(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient, getTestBundleV5());
 
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
+
         InstallPlan expected = TestInstallUtils.mockInstallPlanV5();
-        MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build()))
+        MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
+                .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isOk())
                 .andReturn();
 
