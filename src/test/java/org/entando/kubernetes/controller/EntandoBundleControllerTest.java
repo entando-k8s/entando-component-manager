@@ -32,7 +32,6 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleSer
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.http.ResponseEntity;
 
 @Tag("in-process")
@@ -77,7 +76,7 @@ public class EntandoBundleControllerTest {
         ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().size()).isZero();
+        assertThat(Objects.requireNonNull(resp.getBody()).getPayload()).isEmpty();
     }
 
     @Test
@@ -98,7 +97,7 @@ public class EntandoBundleControllerTest {
         ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(resp.getBody()).getPayload().size()).isZero();
+        assertThat(Objects.requireNonNull(resp.getBody()).getPayload()).isEmpty();
     }
 
     @Test
@@ -138,7 +137,7 @@ public class EntandoBundleControllerTest {
         assertThat(resp.getBody()).isNotNull();
         List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
 
-        assertThat(usageList.size()).isEqualTo(2);
+        assertThat(usageList).hasSize(2);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
                         .equals("my-magic-widget"))
@@ -192,7 +191,7 @@ public class EntandoBundleControllerTest {
         assertThat(resp.getBody()).isNotNull();
         List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
 
-        assertThat(usageList.size()).isEqualTo(2);
+        assertThat(usageList).hasSize(2);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
                         .equals("my-magic-widget"))

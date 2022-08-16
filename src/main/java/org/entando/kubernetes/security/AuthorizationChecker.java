@@ -87,9 +87,10 @@ public class AuthorizationChecker {
      */
     private String extractRequiredPermission(ResponseEntity<SimpleRestResponse<List<MyGroupPermission>>> response) {
 
-        return response.getBody() == null || response.getBody().getPayload() == null
+        final var body = response.getBody();
+        return body == null || body.getPayload() == null
                 ? null
-                : response.getBody().getPayload().stream()
+                : body.getPayload().stream()
                         .map(MyGroupPermission::getPermissions)
                         .flatMap(Collection::stream)
                         .filter(ECR_PERMISSION_LIST::contains)

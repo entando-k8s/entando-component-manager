@@ -155,7 +155,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                             EntandoBundle::getCode,
                             Function.identity(),
                             (item1, item2) -> item1));
-            
+
             try {
 
                 for (PostInitItem itemFromConfig : bundleToInstall) {

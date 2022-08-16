@@ -1163,7 +1163,7 @@ public class TestInstallUtils {
     }
 
 
-    // FIXME refactor this code in order to overcome the reflection approach. May be using a custom client class instead of the simple RestTemplate
+    // FIXME refactor this code in order to overcome the reflection approach. https://www.baeldung.com/spring-dynamicpropertysource
     /**
      * inject the de app url pointing the wiremock server port.
      */
