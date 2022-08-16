@@ -104,9 +104,4 @@ public class AppConfiguration {
                 kubernetesServiceClient::getAnalysisReport
         );
     }
-
-    @Bean
-    public RestTemplate simpleRestTemplate() {
-        return new RestTemplate();
-    }
 }

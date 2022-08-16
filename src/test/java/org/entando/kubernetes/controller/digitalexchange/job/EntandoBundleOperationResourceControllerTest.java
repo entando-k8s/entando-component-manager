@@ -7,8 +7,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import lombok.NonNull;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
@@ -35,13 +37,16 @@ class EntandoBundleOperationResourceControllerTest {
     private EntandoBundleUninstallService uninstallService;
     @Mock
     private InstallPlanValidator installPlanValidator;
+    @Mock
+    private AuthorizationChecker authorizationChecker;
 
     private EntandoBundleOperationResourceController entandoBundleOperationResourceController;
 
     @BeforeEach
     public void setup() {
         entandoBundleOperationResourceController = new EntandoBundleOperationResourceController(
-                kubernetesService, jobService, installService, uninstallService, installPlanValidator);
+                kubernetesService, jobService, installService, uninstallService, installPlanValidator,
+                authorizationChecker);
     }
 
     @Test
@@ -50,7 +55,8 @@ class EntandoBundleOperationResourceControllerTest {
         when(installPlanValidator.validateInstallPlanOrThrow(any())).thenThrow(EntandoComponentManagerException.class);
 
         try {
-            entandoBundleOperationResourceController.installWithInstallPlan("bundleId", new InstallWithPlansRequest());
+            entandoBundleOperationResourceController.installWithInstallPlan("jwt", "bundleId",
+                    new InstallWithPlansRequest());
         } catch (EntandoComponentManagerException e) {
             e.printStackTrace();
         }

@@ -12,7 +12,7 @@ import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
-import org.entando.kubernetes.exception.web.HttpException;
+import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -608,7 +608,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                             String.format("Empty response received for usage of component type %s with code %s",
                                     componentType, code)));
         } else {
-            throw new HttpException(usage.getStatusCode(),
+            throw new WebHttpException(usage.getStatusCode(),
                     String.format("Some error occurred while retrieving %s %s usage", componentType, code));
         }
     }

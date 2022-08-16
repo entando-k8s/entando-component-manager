@@ -18,7 +18,7 @@ import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
-import org.entando.kubernetes.exception.web.HttpException;
+import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.FragmentDescriptor;
@@ -135,7 +135,7 @@ class EntandoCoreClientTest {
     void getUsageReceiving3xxStatusCodeShouldBeManagedInTheCoreClient() {
         coreMockServer = coreMockServer
                 .withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_MODIFIED);
-        assertThrows(HttpException.class, () -> this.client.getContentModelUsage("12345"));
+        assertThrows(WebHttpException.class, () -> this.client.getContentModelUsage("12345"));
     }
 
     @Test

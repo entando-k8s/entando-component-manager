@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.assertionhelper.EntandoHubRegistryAssertionHelper;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.web.NotFoundException;
+import org.entando.kubernetes.exception.web.NotFoundExceptionWeb;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
@@ -120,7 +120,7 @@ class EntandoHubRegistryServiceImplTest {
         when(repository.findById(registryToSave.getId())).thenReturn(Optional.empty());
 
         final EntandoHubRegistry entandoHubRegistry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
-        Assertions.assertThrows(NotFoundException.class, () -> this.service.updateRegistry(entandoHubRegistry));
+        Assertions.assertThrows(NotFoundExceptionWeb.class, () -> this.service.updateRegistry(entandoHubRegistry));
     }
 
     @Test

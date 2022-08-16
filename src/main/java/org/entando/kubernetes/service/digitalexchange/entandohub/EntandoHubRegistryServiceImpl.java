@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.exception.EntandoClientDataException;
-import org.entando.kubernetes.exception.web.NotFoundException;
+import org.entando.kubernetes.exception.web.NotFoundExceptionWeb;
 import org.entando.kubernetes.model.assembler.EntandoHubRegistryAssembler;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
@@ -78,7 +78,7 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
                             .setUrl(entandoHubRegistry.getUrlAsURL());
                     return EntandoHubRegistryAssembler.toEntandoHubRegistry(repository.save(entity));
                 })
-                .orElseThrow(() -> new NotFoundException("No registry found for the received ID"));
+                .orElseThrow(() -> new NotFoundExceptionWeb("No registry found for the received ID"));
     }
 
     @Override

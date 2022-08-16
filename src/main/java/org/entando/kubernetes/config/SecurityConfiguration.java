@@ -1,9 +1,8 @@
 package org.entando.kubernetes.config;
 
-import org.entando.kubernetes.security.AuthorizationFilter;
 import org.entando.kubernetes.security.oauth2.JwtAuthorityExtractor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -11,8 +10,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.web.client.RestTemplate;
 import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
 
 @EnableWebSecurity
@@ -25,8 +24,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private final SecurityProblemSupport problemSupport;
     @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}")
     private String issuerUri;
-    @Autowired
-    private AuthorizationFilter authorizationFilter;
 
     public SecurityConfiguration(JwtAuthorityExtractor jwtAuthorityExtractor, SecurityProblemSupport problemSupport) {
         this.problemSupport = problemSupport;
@@ -37,7 +34,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         // @formatter:off
         http
-                .addFilterBefore(authorizationFilter, BearerTokenAuthenticationFilter.class)
                 .csrf()
                 .disable()
                 .exceptionHandling()
@@ -76,5 +72,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .oauth2Client();
         // @formatter:on
+    }
+
+    @Bean
+    public RestTemplate simpleRestTemplate() {
+        return new RestTemplate();
     }
 }

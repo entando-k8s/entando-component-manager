@@ -25,12 +25,14 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.http.ResponseEntity;
 
 @Tag("in-process")
@@ -40,13 +42,15 @@ public class EntandoBundleControllerTest {
     private EntandoBundleComponentUsageService usageService;
     private EntandoCoreClient coreClient;
     private EntandoBundleService bundleService;
+    private AuthorizationChecker authorizationChecker;
 
     @BeforeEach
     public void setup() {
         bundleService = mock(EntandoBundleServiceImpl.class);
         coreClient = mock(EntandoCoreClient.class);
+        authorizationChecker = mock(AuthorizationChecker.class);
         usageService = new EntandoBundleComponentUsageService(coreClient);
-        controller = new EntandoBundleResourceController(bundleService, usageService);
+        controller = new EntandoBundleResourceController(bundleService, usageService, authorizationChecker);
     }
 
     @Test
@@ -63,7 +67,6 @@ public class EntandoBundleControllerTest {
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(bundle));
 
         assertThrows(EntandoComponentManagerException.class, () -> controller.getBundleUsageSummary("any"));
-
     }
 
     @Test

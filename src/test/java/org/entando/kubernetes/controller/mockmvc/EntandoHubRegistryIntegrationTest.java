@@ -23,7 +23,9 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
+import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
+import org.entando.kubernetes.utils.TestInstallUtils;
 import org.hamcrest.core.IsNull;
 import org.hamcrest.text.IsEmptyString;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,6 +50,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import wiremock.com.jayway.jsonpath.JsonPath;
 
+@AutoConfigureWireMock(port = 8103)
 @AutoConfigureMockMvc
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
@@ -71,6 +76,8 @@ class EntandoHubRegistryIntegrationTest {
     private WebApplicationContext context;
     @Autowired
     private EntandoHubRegistryRepository entandoHubRegistryRepository;
+    @Autowired
+    private AuthorizationChecker authorizationChecker;
 
     @BeforeEach
     public void setup() {
@@ -79,6 +86,9 @@ class EntandoHubRegistryIntegrationTest {
                 .apply(springSecurity())
                 .build();
         entandoHubRegistryRepository.saveAll(entityToSaveList);
+
+        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8103);
+        TestInstallUtils.stubPermissionRequestReturningSuperuser();
     }
 
     @AfterEach
@@ -138,6 +148,7 @@ class EntandoHubRegistryIntegrationTest {
         // when the user sends the request
         final ResultActions resultAdd = mockMvc.perform(
                 post(baseUrl)
+                        .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .content(mapper.writeValueAsString(registryToAdd))
                         .contentType(MediaType.APPLICATION_JSON_VALUE));
 
@@ -211,6 +222,7 @@ class EntandoHubRegistryIntegrationTest {
                 .setUrl(newUrl);
         final ResultActions resultUpdate = mockMvc.perform(
                 put(baseUrl)
+                        .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .content(mapper.writeValueAsString(registryToUpdate))
                         .contentType(MediaType.APPLICATION_JSON_VALUE));
 
@@ -239,7 +251,8 @@ class EntandoHubRegistryIntegrationTest {
         final String nameToDelete = JsonPath.parse(response).read("$.payload.[0].name").toString();
 
         // then a successful response is returned
-        final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + idToDelete));
+        final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + idToDelete)
+                .header(HttpHeaders.AUTHORIZATION, "jwt"));
         resultDelete
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.name", is(nameToDelete)));
@@ -258,7 +271,8 @@ class EntandoHubRegistryIntegrationTest {
 
         // when the user sends a request to delete a registry not present
         // then a successful response is returned
-        final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + UUID.randomUUID()));
+        final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + UUID.randomUUID())
+                .header(HttpHeaders.AUTHORIZATION, "jwt"));
         resultDelete
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.name", IsEmptyString.emptyString()));
@@ -315,7 +329,8 @@ class EntandoHubRegistryIntegrationTest {
         ResultActions result = mockMvc.perform(
                 httpMethodFn.apply(baseUrl)
                         .content(mapper.writeValueAsString(registry))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE));
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"));
 
         // then an error is returned
         result.andExpect(httpStatusResMatched)
