@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import org.apache.commons.io.IOUtils;
-import org.entando.kubernetes.exception.web.InternalServerExceptionWeb;
+import org.entando.kubernetes.exception.web.InternalServerException;
 import org.springframework.core.io.ClassPathResource;
 
 public class FileUtils {
@@ -13,7 +13,7 @@ public class FileUtils {
         try (InputStream is = new ClassPathResource(filename).getInputStream()) {
             return IOUtils.toString(is, Charset.defaultCharset());
         } catch (IOException e) {
-            throw new InternalServerExceptionWeb("Error reading file", e);
+            throw new InternalServerException("Error reading file", e);
         }
     }
 }
