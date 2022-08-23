@@ -1,4 +1,4 @@
-FROM entando/entando-java-base:7.0.0-ENG-4132-PR-3
+FROM entando/entando-java-base:11.0.16-ENG-4132-PR-3
 ARG VERSION
 ### Required OpenShift Labels
 LABEL name="Entando Component Manager" \
@@ -10,6 +10,18 @@ LABEL name="Entando Component Manager" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
 
 COPY target/generated-resources/licenses /licenses
+
+### start git section -- copy and install
+USER 0
+RUN microdnf update \
+ && microdnf install -y yum git git-lfs gettext nss_wrapper \
+ && git lfs install \
+ && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash \
+# && microdnf remove -y yum not work
+ && rpm -e yum \
+ && microdnf clean -y all
+USER 1001
+### end git section --
 
 ### start crane section -- copy and install
 ENV ENTANDO_CRANE_VERSION=v0.10.0
