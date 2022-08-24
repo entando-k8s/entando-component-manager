@@ -13,13 +13,17 @@ COPY target/generated-resources/licenses /licenses
 
 ### start git section -- copy and install
 USER 0
-RUN microdnf update \
+RUN touch /tmp/passwd /tmp/group \
+ && chgrp 0 /tmp/passwd /tmp/group \
+ && chmod g+rw /tmp/passwd /tmp/group \
+ && microdnf update \
  && microdnf install -y yum git git-lfs gettext nss_wrapper tar \
  && git lfs install \
  && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash \
 # && microdnf remove -y yum not work
  && rpm -e yum \
- && microdnf clean -y all
+ && microdnf clean -y all \
+ && chmod -Rf g+rw /opt
 USER 1001
 ### end git section --
 
