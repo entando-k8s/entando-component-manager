@@ -76,12 +76,13 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
             // bundle descriptor v1 and resource folder
             if (bundleReader.isBundleV1() && bundleReader.containsResourceFolder()) {
 
-                collectResourceFiles(installables, bundleReader, conflictStrategy, installPlan);
+                collectResourceFilesV1(installables, bundleReader, conflictStrategy, installPlan);
 
-                // otherwise if bundle descriptor v5 and widget folder
+                // otherwise if bundle descriptor v5 and widgets or resources folder
             } else if (bundleReader.readBundleDescriptor().isVersionEqualOrGreaterThan(DescriptorVersion.V5)
-                    && bundleReader.containsWidgetFolder()) {
+                    && (bundleReader.containsWidgetFolder() || bundleReader.containsResourceFolder())) {
 
+                collectResourceFilesV5Onward(installables, bundleReader, conflictStrategy, installPlan);
                 collectWidgetFiles(installables, bundleReader, conflictStrategy, installPlan);
             }
         } catch (IOException e) {
@@ -100,7 +101,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
     }
 
 
-    private void collectResourceFiles(List<Installable<FileDescriptor>> installables,
+    private void collectResourceFilesV1(List<Installable<FileDescriptor>> installables,
             BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
 
         installables.addAll(processFilesBundleV1(bundleReader, conflictStrategy, installPlan));
@@ -117,6 +118,14 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
         }
     }
 
+    private void collectResourceFilesV5Onward(List<Installable<FileDescriptor>> installables,
+            BundleReader bundleReader, InstallAction conflictStrategy, InstallPlan installPlan) throws IOException {
+
+        List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted().collect(Collectors.toList());
+        installables.addAll(
+                processFilesBundleV5Onward(bundleReader, resourceFiles,
+                        BundleProperty.RESOURCES_FOLDER_PATH, conflictStrategy, installPlan));
+    }
 
     /**
      * for each file in the resourceFile list, generate the relative descriptor and Installable and return them. this

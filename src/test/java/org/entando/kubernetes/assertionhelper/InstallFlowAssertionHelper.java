@@ -243,13 +243,22 @@ public class InstallFlowAssertionHelper {
 
     private void verifyFileInstallRequestsV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(11)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(14)).createFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
                 .stream().sorted(Comparator.comparing(fd -> (fd.getFolder() + fd.getFilename())))
                 .collect(Collectors.toList());
 
         int i = 0;
+        validateResourceFile(allPassedFiles, i++, "my-js.js",
+                "bundles/something-ece8f6f0/resources/js",
+                "/bundle-v5/resources/js/my-js.js");
+        validateResourceFile(allPassedFiles, i++, "my-text.txt",
+                "bundles/something-ece8f6f0/resources/txt",
+                "/bundle-v5/resources/txt/my-text.txt");
+        validateResourceFile(allPassedFiles, i++, "my-style.css",
+                "bundles/something-ece8f6f0/resources",
+                "/bundle-v5/resources/my-style.css");
         validateResourceFile(allPassedFiles, i++, "css-res.css",
                 "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/assets",
                 "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/assets/css-res.css");
@@ -698,7 +707,7 @@ public class InstallFlowAssertionHelper {
 
     public void verifyFileInstallRequestsWithInstallPlanRequestV5(EntandoCoreClient coreClient) {
         ArgumentCaptor<FileDescriptor> fileArgCaptor = ArgumentCaptor.forClass(FileDescriptor.class);
-        verify(coreClient, times(10)).createFile(fileArgCaptor.capture());
+        verify(coreClient, times(13)).createFile(fileArgCaptor.capture());
         verify(coreClient, times(0)).updateFile(fileArgCaptor.capture());
 
         List<FileDescriptor> allPassedFiles = fileArgCaptor.getAllValues()
@@ -706,6 +715,15 @@ public class InstallFlowAssertionHelper {
                 .collect(Collectors.toList());
 
         int i = 0;
+        validateResourceFile(allPassedFiles, i++, "my-js.js",
+                "bundles/something-ece8f6f0/resources/js",
+                "/bundle-v5/resources/js/my-js.js");
+        validateResourceFile(allPassedFiles, i++, "my-text.txt",
+                "bundles/something-ece8f6f0/resources/txt",
+                "/bundle-v5/resources/txt/my-text.txt");
+        validateResourceFile(allPassedFiles, i++, "my-style.css",
+                "bundles/something-ece8f6f0/resources",
+                "/bundle-v5/resources/my-style.css");
         validateResourceFile(allPassedFiles, i++, "css-res.css",
                 "bundles/something-ece8f6f0/widgets/my_widget_app_builder_descriptor_v5-ece8f6f0/assets",
                 "/bundle-v5/widgets/my_widget_app_builder_descriptor_v5/assets/css-res.css");
