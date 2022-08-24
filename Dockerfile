@@ -14,7 +14,7 @@ COPY target/generated-resources/licenses /licenses
 ### start git section -- copy and install
 USER 0
 RUN microdnf update \
- && microdnf install -y yum git git-lfs gettext nss_wrapper \
+ && microdnf install -y yum git git-lfs gettext nss_wrapper tar \
  && git lfs install \
  && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash \
 # && microdnf remove -y yum not work
