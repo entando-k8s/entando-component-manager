@@ -4,7 +4,6 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -44,6 +43,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
+import org.entando.kubernetes.validator.GitUrlValidator;
 import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.util.Assert;
@@ -491,11 +491,8 @@ public class BundleUtilities {
             return imageValidator.composeCommonUrlWithoutTransportWithoutTagOrThrow(
                     "The image fully qualified URL of the bundle is invalid");
         } else {
-            URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
-                    "The repository URL of the bundle is null",
-                    "The repository URL of the bundle is invalid");
-            final int index = bundleUrl.toString().indexOf(bundleUrl.getHost());
-            return bundleUrl.toString().substring(index);
+            GitUrlValidator gitValidator = GitUrlValidator.parse(url);
+            return gitValidator.composeCommonUrlWithoutTransportOrThrow();
         }
     }
 
