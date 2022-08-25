@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-spring-boot-parent</artifactId>
-        <version>7.1.0</version>
+        <version>7.1.1-ENG-4147-PR-35</version>
     </parent>
 
     <groupId>org.entando</groupId>
@@ -47,7 +47,7 @@
         <postDeploymentTestGroups/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
-        <entando-k8s-custom-model.version>7.1.0</entando-k8s-custom-model.version>
+        <entando-k8s-custom-model.version>7.1.1-ENG-4147-PR-69</entando-k8s-custom-model.version>
         <liquibase.version>4.3.1</liquibase.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
