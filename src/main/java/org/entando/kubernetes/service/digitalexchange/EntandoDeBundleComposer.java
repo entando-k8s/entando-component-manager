@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -27,12 +26,13 @@ import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
-import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
+import org.entando.kubernetes.validator.GitUrlValidator;
+import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -116,13 +116,18 @@ public class EntandoDeBundleComposer {
 
         try {
             final String httpProtocolUrl;
-            if (bundleUrl.startsWith(BundleDownloaderConstants.DOCKER_PROTOCOL)) {
-                httpProtocolUrl = bundleUrl + ":" + version;
-                bundleUrl = bundleUrl + ":" + version;
-            } else {
-                httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(bundleUrl);
 
+            ImageValidator containerImageValidator = ImageValidator.parse(bundleUrl, version);
+            if (containerImageValidator.isTransportValid()) {
+                httpProtocolUrl = containerImageValidator.composeCommonUrlWithoutTransportOrThrow(
+                        "Bundle url is not valid");
+                bundleUrl = containerImageValidator.composeCommonUrlWithoutTransportOrThrow(
+                        "Bundle url is not valid");
+            } else {
+                GitUrlValidator gitValidator = GitUrlValidator.parse(bundleUrl);
+                httpProtocolUrl = gitValidator.composeCommonUrlOrThrow();
             }
+
             ValidationFunctions.composeCommonUrlOrThrow(httpProtocolUrl,
                     "Bundle url is empty", "Bundle url is not valid");
 

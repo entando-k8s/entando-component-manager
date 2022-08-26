@@ -86,7 +86,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         log.info("Docker saveBundleStrategy");
         try {
-            String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(tag);
+            String fullyQualifiedImageUrl = ImageValidator.generateFullyQualifiedWithTag(tag);
             ImageValidator.parse(fullyQualifiedImageUrl).isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
 
             saveContainerImage(fullyQualifiedImageUrl, targetPath);
@@ -407,20 +407,6 @@ public class DockerBundleDownloader extends BundleDownloader {
         }
         throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE);
     }
-
-    private String generateFullyQualifiedWithTag(EntandoDeBundleTag tag) {
-        String fullyQualified = tag.getTarball();
-        if (tag.getVersion() != null) {
-            String sep = ":";
-            if (StringUtils.startsWithIgnoreCase(tag.getVersion(), "sha256:")) {
-                sep = "@";
-            }
-            fullyQualified = fullyQualified + sep + tag.getVersion();
-
-        }
-        return fullyQualified;
-    }
-
 
     @Getter
     @Setter

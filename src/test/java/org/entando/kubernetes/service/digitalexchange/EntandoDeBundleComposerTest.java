@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -66,6 +65,8 @@ class EntandoDeBundleComposerTest {
 
         Stream.of(
                         BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                        //"https://www.github.com:4445/entando/mybundle.git",
+                        "git@www.github.com:entando/mybundle.git",
                         "git@www.github.com/entando/mybundle.git",
                         "git://www.github.com/entando/mybundle.git",
                         "ssh://www.github.com/entando/mybundle.git")

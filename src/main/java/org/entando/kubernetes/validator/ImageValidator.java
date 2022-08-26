@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 
 @Getter
 public class ImageValidator {
@@ -56,6 +57,16 @@ public class ImageValidator {
      */
     public static ImageValidator parse(String url) {
         return new ImageValidator(url);
+    }
+
+    public static ImageValidator parse(EntandoDeBundleTag tag) {
+        String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(tag);
+        return new ImageValidator(fullyQualifiedImageUrl);
+    }
+
+    public static ImageValidator parse(String url, String version) {
+        String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(url, version);
+        return new ImageValidator(fullyQualifiedImageUrl);
     }
 
     private SplitResult splitTransport(String url) {
@@ -282,6 +293,24 @@ public class ImageValidator {
         }
         return url;
     }
+
+    public static String generateFullyQualifiedWithTag(EntandoDeBundleTag tag) {
+        return generateFullyQualifiedWithTag(tag.getTarball(), tag.getVersion());
+    }
+
+    public static String generateFullyQualifiedWithTag(String url, String version) {
+        String fullyQualified = url;
+        if (version != null) {
+            String sep = ":";
+            if (StringUtils.startsWithIgnoreCase(version, "sha256:")) {
+                sep = "@";
+            }
+            fullyQualified = fullyQualified + sep + version;
+
+        }
+        return fullyQualified;
+    }
+
 
     @AllArgsConstructor
     @Getter

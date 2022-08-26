@@ -55,17 +55,46 @@ public class GitUrlValidator {
      *     EntandoValidationException exception
      */
     public boolean isTransportValid(String invalidError) {
-        if (BUNDLE_PROTOCOL_REGEX_PATTERN.matcher(originalUrl).matches()) {
+        if (isValid) {
             return true;
         } else {
             throw new EntandoValidationException(invalidError);
         }
     }
 
+    /**
+     * This method checks if the all sections are correct and then compose the common url with transport.
+     *
+     * @return returns the common Url to use to generate PluginID if all sections are correct otherwise raises an
+     *     EntandoValidationException exception
+     */
+    public String composeCommonUrlOrThrow() {
+        String url = null;
+        if (isOverSSH) {
+            // done just for validation with URL class
+            url = convertGitOverSshUrlToGitOverHttp(originalUrl);
+        } else {
+            url = originalUrl;
+        }
+        URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
+                "The repository URL of the bundle is null",
+                "The repository URL of the bundle is invalid");
+
+        return bundleUrl.toString();
+    }
+
+
+    /**
+     * This method checks if the all sections are correct and then compose the common url without transport.
+     *
+     * @return returns the common Url to use to generate PluginID if all sections are correct otherwise raises an
+     *     EntandoValidationException exception
+     */
     public String composeCommonUrlWithoutTransportOrThrow() {
         String url = null;
         if (isOverSSH) {
-            url = gitSshProtocolToHttp(originalUrl);
+            // done just for validation with URL class
+            url = convertGitOverSshUrlToGitOverHttp(originalUrl);
         } else {
             url = originalUrl;
         }
@@ -76,7 +105,7 @@ public class GitUrlValidator {
         return bundleUrl.toString().substring(index);
     }
 
-    private String gitSshProtocolToHttp(String url) {
+    private String convertGitOverSshUrlToGitOverHttp(String url) {
         String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
         return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
     }
