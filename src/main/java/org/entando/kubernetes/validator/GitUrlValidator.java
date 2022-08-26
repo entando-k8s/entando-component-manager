@@ -1,14 +1,19 @@
 package org.entando.kubernetes.validator;
 
-import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.BUNDLE_PROTOCOL_REGEX_PATTERN;
 import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.COLONS_REGEX_PATTERN;
 import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.GIT_AND_SSH_PROTOCOL_REGEX_PATTERN;
 import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.HTTP_OVER_GIT_REPLACER;
 
 import java.net.URL;
+import java.util.regex.Pattern;
 import org.entando.kubernetes.exception.EntandoValidationException;
 
 public class GitUrlValidator {
+
+    public static final String GIT_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/)).*$";
+    public static final Pattern GIT_PROTOCOL_REGEX_PATTERN = Pattern.compile(GIT_PROTOCOL_REGEX);
+    public static final String GIT_OVER_SSH_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)).*$";
+    public static final Pattern GIT_OVER_SSH_PROTOCOL_REGEX_PATTERN = Pattern.compile(GIT_OVER_SSH_PROTOCOL_REGEX);
 
     private final String originalUrl;
     private boolean isOverSSH = false;
@@ -16,8 +21,8 @@ public class GitUrlValidator {
 
     private GitUrlValidator(String url) {
         originalUrl = url;
-        if (BUNDLE_PROTOCOL_REGEX_PATTERN.matcher(url).matches()) {
-            if (GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).matches()) {
+        if (GIT_PROTOCOL_REGEX_PATTERN.matcher(url).matches()) {
+            if (GIT_OVER_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).matches()) {
                 isOverSSH = true;
             }
             isValid = true;

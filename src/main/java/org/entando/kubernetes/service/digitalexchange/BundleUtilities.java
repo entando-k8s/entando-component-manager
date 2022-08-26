@@ -517,17 +517,6 @@ public class BundleUtilities {
         return getBundleId(url);
     }
 
-    /**
-     * if the received url string starts with a git or ssh protocol, it replaces the protocol with a simple http:// .
-     *
-     * @param url the string url to check and possibly replace
-     * @return the url with the replaces protocol or the original string itself
-     */
-    public static String gitSshProtocolToHttp(String url) {
-        String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
-        return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
-    }
-
 
     /**
      * build the full path of a resource inside a bundle.

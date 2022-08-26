@@ -6,7 +6,6 @@ import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.exception.EntandoValidationException;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @UtilityClass
 public class ValidationFunctions {
@@ -34,9 +33,8 @@ public class ValidationFunctions {
      * @return the received url
      */
     public static String composeUrlForcingHttpProtocolOrThrow(String stringUrl, String nullError, String invalidError) {
-        final String httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(stringUrl);
-        composeUrlOrThrow(httpProtocolUrl, nullError, invalidError);
-        return stringUrl;
+        GitUrlValidator gitValidator = GitUrlValidator.parse(stringUrl);
+        return gitValidator.composeCommonUrlOrThrow();
     }
 
     public static String composeCommonUrlOrThrow(String stringUrl, String nullError, String invalidError) {

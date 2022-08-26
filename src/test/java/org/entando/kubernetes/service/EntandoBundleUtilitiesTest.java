@@ -44,6 +44,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
+import org.entando.kubernetes.validator.GitUrlValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -428,23 +429,24 @@ public class EntandoBundleUtilitiesTest {
                 "git@github.com:entando:my_bundle.git", "http://github.com/entando:my_bundle.git");
 
         testCasesMap.forEach((key, value) -> {
-            String actual = BundleUtilities.gitSshProtocolToHttp(key);
+            GitUrlValidator gitUrlValidator = GitUrlValidator.parse(key);
+            String actual = gitUrlValidator.composeCommonUrlOrThrow();
             Assertions.assertThat(actual).isEqualTo(value);
         });
     }
 
     @Test
-    void shouldReturnTheSameStringWhenProtocolIsNotOneOfTheExpected() {
+    void shouldThrowExceptionWhenProtocolIsNotOneOfTheExpected() {
         List<String> testCasesList = List.of(
-                "got@github.com/entando/my_bundle.git",
                 "got://github.com/entando/my_bundle.git",
+                "got@github.com/entando/my_bundle.git",
                 "sssh://github.com/entando/my_bundle.git",
-                "https://github.com/entando/my_bundle.git",
+                //"https://github.com/entando/my_bundle.git",
                 "ftp://github.com/entando/my_bundle.git");
 
         testCasesList.forEach(url -> {
-            String actual = BundleUtilities.gitSshProtocolToHttp(url);
-            Assertions.assertThat(actual).isEqualTo(url);
+            GitUrlValidator gitUrlValidator = GitUrlValidator.parse(url);
+            assertThrows(EntandoValidationException.class, () -> gitUrlValidator.composeCommonUrlOrThrow());
         });
     }
 
