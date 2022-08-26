@@ -491,6 +491,7 @@ public class BundleUtilities {
             return imageValidator.composeCommonUrlWithoutTransportWithoutTagOrThrow(
                     "The image fully qualified URL of the bundle is invalid");
         } else {
+            url = gitSshProtocolToHttp(url);
             URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
                     "The repository URL of the bundle is null",
                     "The repository URL of the bundle is invalid");
@@ -528,7 +529,11 @@ public class BundleUtilities {
      */
     public static String gitSshProtocolToHttp(String url) {
         String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
-        return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
+        if (StringUtils.equals(url, repoUrl)) {
+            return url;
+        } else {
+            return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
+        }
     }
 
 
