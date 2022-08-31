@@ -71,8 +71,9 @@ public class ReportableStubHelper {
                         ReportableRemoteHandler.ENTANDO_ENGINE),
                 new Reportable(ComponentType.PAGE_TEMPLATE, Arrays.asList(PAGE_TEMPL_CODE_1, PAGE_TEMPL_CODE_2),
                         ReportableRemoteHandler.ENTANDO_ENGINE),
-                new Reportable(ComponentType.PLUGIN, Arrays.asList(PLUGIN_CODE_1, PLUGIN_CODE_2),
-                        ReportableRemoteHandler.ENTANDO_K8S_SERVICE),
+                new Reportable(ComponentType.PLUGIN, ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                        Arrays.asList(new Reportable.Component(PLUGIN_CODE_1, "6.0.0"),
+                                new Reportable.Component(PLUGIN_CODE_2, "3.0.0"))),
                 new Reportable(ComponentType.WIDGET, Arrays.asList(WIDGET_CODE_1, WIDGET_CODE_2),
                         ReportableRemoteHandler.ENTANDO_ENGINE)
         );

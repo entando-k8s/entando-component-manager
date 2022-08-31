@@ -26,6 +26,7 @@ import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
@@ -398,14 +399,30 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         Map<String, Status> pluginStatusMap = reportableList.stream()
                 .filter(reportable -> reportable.getComponentType() == ComponentType.PLUGIN)
-                .flatMap(reportable -> reportable.getCodes().stream())
-                .map(name ->
-                        getPluginByName(name)
-                                .map(plugin -> new SimpleEntry<>(name, Status.DIFF))
-                                .orElseGet(() -> new SimpleEntry<>(name, Status.NEW)))
+                .flatMap(reportable -> reportable.getComponents().stream())
+                .map(comp ->
+                        getPluginByName(comp.getCode())
+                                .map(plugin -> composeReportableEntry(plugin, comp))
+                                .orElseGet(() -> new SimpleEntry<>(comp.getCode(), Status.NEW)))
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
         return new AnalysisReport().setPlugins(pluginStatusMap);
+    }
+
+    /**
+     * check if the received EntandoPlugin and Reportable.Component correspond to the same plugin version.
+     *
+     * @param plugin the EntandoPlugin of which check the version
+     * @param component the Reportable.Component of which check the version
+     * @return the SimpleEntry resulting from the comparison
+     */
+    private SimpleEntry<String, Status> composeReportableEntry(EntandoPlugin plugin, Reportable.Component component) {
+        Status status = Status.EQUAL;
+        final DockerImage dockerImage = DockerImage.fromString(plugin.getSpec().getImage());
+        if (! dockerImage.getVersion().equals(component.getVersion())) {
+            status = Status.DIFF;
+        }
+        return new SimpleEntry<>(component.getCode(), status);
     }
 
     @Override

@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
-import org.springframework.util.StringUtils;
+import org.entando.kubernetes.model.bundle.reportable.Reportable.Component;
+import org.springframework.util.CollectionUtils;
 
 public final class AnalysisReportClientRequestFactory {
 
@@ -55,8 +57,11 @@ public final class AnalysisReportClientRequestFactory {
 
         if (null != reportableList) {
             reportableList.forEach(reportable -> {
-                if (! StringUtils.isEmpty(reportable.getCodes())) {
-                    strategy.get(reportable.getComponentType()).accept(reportable.getCodes());
+                if (!CollectionUtils.isEmpty(reportable.getComponents())) {
+                    List<String> compCodes = reportable.getComponents().stream()
+                            .map(Component::getCode)
+                            .collect(Collectors.toList());
+                    strategy.get(reportable.getComponentType()).accept(compCodes);
                 }
             });
         }

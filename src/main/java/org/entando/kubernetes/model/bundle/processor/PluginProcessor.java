@@ -177,7 +177,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
 
-        List<String> idList = new ArrayList<>();
+        List<Reportable.Component> compList = new ArrayList<>();
 
         try {
             List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
@@ -192,11 +192,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 // log
                 logDescriptorWarnings(pluginDescriptor);
                 // add plugin id to the list
-                idList.add(pluginDescriptor.getComponentKey().getKey());
+                compList.add(new Reportable.Component(pluginDescriptor.getComponentKey().getKey(),
+                        pluginDescriptor.getDockerImage().getVersion()));
             }
 
-            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    this.getReportableRemoteHandler());
+            return new Reportable(componentProcessor.getSupportedComponentType(), this.getReportableRemoteHandler(),
+                    compList);
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s components",

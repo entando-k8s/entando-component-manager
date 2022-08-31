@@ -19,11 +19,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -316,10 +311,33 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    void shouldGetAnalysisReport() {
+    void shouldGetAnalysisReportWithPluginsNonExistingOnK8S() {
 
         Map<String, Status> pluginMap = Map.of(
                 ReportableStubHelper.PLUGIN_CODE_1, Status.NEW,
+                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+
+        AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
+
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
+    }
+
+    @Test
+    void shouldGetAnalysisReportWithPluginsExistingOnK8S() {
+
+        String singlePluginResponse = mockServer.readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
+
+        mockServer.getInnerServer().stubFor(get(urlMatching("/plugins/" + ReportableStubHelper.PLUGIN_CODE_1))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singlePluginResponse)));
+
+        Map<String, Status> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_1, Status.EQUAL,
                 ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
 
         AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
@@ -428,16 +446,4 @@ public class K8SServiceClientTest {
                 .build();
 
     }
-
-    private String readResourceAsString(String resourcePath) {
-
-        try {
-            Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            return new String(Files.readAllBytes(rp));
-        } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
 }
