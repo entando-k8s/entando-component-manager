@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class InstallPlanClientRequestFactoryTest {
 
-    private final List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
+    private final List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithTag();
 
     /**********************************************************************************************************
      * ENGINE REQUEST.

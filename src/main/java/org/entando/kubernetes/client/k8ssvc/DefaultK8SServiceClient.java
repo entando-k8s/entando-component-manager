@@ -419,7 +419,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private SimpleEntry<String, Status> composeReportableEntry(EntandoPlugin plugin, Reportable.Component component) {
         Status status = Status.EQUAL;
         final DockerImage dockerImage = DockerImage.fromString(plugin.getSpec().getImage());
-        if (! dockerImage.getVersion().equals(component.getVersion())) {
+
+        if (dockerImage.getSha256() == null
+                || ! dockerImage.getSha256().equals(component.getVersion())) {
+
             status = Status.DIFF;
         }
         return new SimpleEntry<>(component.getCode(), status);

@@ -30,6 +30,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
@@ -57,6 +58,8 @@ class PluginProcessorTest extends BaseProcessorTest {
     private PluginDataRepository pluginDataRepository;
     @Mock
     private BundleReader bundleReader;
+    @Mock
+    private CraneCommand craneCommand;
 
     private PluginProcessor processor;
 
@@ -65,7 +68,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
     }
 
     @Test
@@ -236,7 +239,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PluginProcessor(null, null, null), "plugin");
+                new PluginProcessor(null, null, null, craneCommand), "plugin");
     }
 
     @Test
@@ -276,7 +279,7 @@ class PluginProcessorTest extends BaseProcessorTest {
                 "ENTANDO_APP_HOST_NAME", "www.myentando.com",
                 "ENTANDO_APP_USE_TLS", "true"));
 
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
 
         final List<? extends Installable> installablesHttps = execTestCreatePlugin(
                 PluginStubHelper.stubPluginDescriptorV5());

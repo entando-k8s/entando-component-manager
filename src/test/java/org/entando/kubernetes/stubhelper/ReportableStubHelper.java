@@ -1,5 +1,6 @@
 package org.entando.kubernetes.stubhelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -40,10 +41,28 @@ public class ReportableStubHelper {
     public static final String DIRECTORY_CODE_2 = "DirTWO";
     public static final String HASH = "";
 
+    public static List<Reportable> stubAllReportableListWithSha() {
 
-    public static List<Reportable> stubAllReportableList() {
+        var reportableList = stubAllReportableList();
+        reportableList.add(new Reportable(ComponentType.PLUGIN, ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                Arrays.asList(new Reportable.Component(PLUGIN_CODE_1, PluginStubHelper.PLUGIN_IMAGE_SHA),
+                        new Reportable.Component(PLUGIN_CODE_2,
+                                "sha256:AAAAf3443c577db1b1df3b47593b07895acab5ef582e5a661c2c1ade6f19ZZZZ"))));
+        return reportableList;
+    }
 
-        return Arrays.asList(
+    public static List<Reportable> stubAllReportableListWithTag() {
+
+        var reportableList = stubAllReportableList();
+        reportableList.add(new Reportable(ComponentType.PLUGIN, ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                Arrays.asList(new Reportable.Component(PLUGIN_CODE_1, "6.0.0"),
+                        new Reportable.Component(PLUGIN_CODE_2, "3.0.0"))));
+        return reportableList;
+    }
+
+    private static List<Reportable> stubAllReportableList() {
+
+        return new ArrayList<>(Arrays.asList(
                 new Reportable(ComponentType.ASSET, Arrays.asList(ASSET_CODE_1, ASSET_CODE_2),
                         ReportableRemoteHandler.ENTANDO_CMS),
                 new Reportable(ComponentType.CATEGORY, Arrays.asList(CATEGORY_CODE_1, CATEGORY_CODE_2),
@@ -71,12 +90,7 @@ public class ReportableStubHelper {
                         ReportableRemoteHandler.ENTANDO_ENGINE),
                 new Reportable(ComponentType.PAGE_TEMPLATE, Arrays.asList(PAGE_TEMPL_CODE_1, PAGE_TEMPL_CODE_2),
                         ReportableRemoteHandler.ENTANDO_ENGINE),
-                new Reportable(ComponentType.PLUGIN, ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
-                        Arrays.asList(new Reportable.Component(PLUGIN_CODE_1, "6.0.0"),
-                                new Reportable.Component(PLUGIN_CODE_2, "3.0.0"))),
                 new Reportable(ComponentType.WIDGET, Arrays.asList(WIDGET_CODE_1, WIDGET_CODE_2),
-                        ReportableRemoteHandler.ENTANDO_ENGINE)
-        );
+                        ReportableRemoteHandler.ENTANDO_ENGINE)));
     }
-
 }

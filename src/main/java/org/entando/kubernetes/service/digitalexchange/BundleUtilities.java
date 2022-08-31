@@ -221,7 +221,7 @@ public class BundleUtilities {
         List<String> ingressSegmentList = new ArrayList<>(Arrays.asList(image.getOrganization(), image.getName()));
 
         if (descriptor.isVersionLowerThan3()) {
-            ingressSegmentList.add(image.getVersion());
+            ingressSegmentList.add(image.getTag());
         }
 
         List<String> kubeCompatiblesSegmentList = ingressSegmentList.stream()
@@ -264,8 +264,14 @@ public class BundleUtilities {
         Map<String, String> labels = new HashMap<>();
         labels.put("organization", dockerImage.getOrganization());
         labels.put("name", dockerImage.getName());
-        labels.put("version", dockerImage.getVersion());
+        labels.put("version", dockerImage.getTag());
         return labels;
+    }
+
+    public static Map<String, String> getAnnotationsFromImage(DockerImage dockerImage) {
+        Map<String, String> annotations = new HashMap<>();
+        annotations.put("entando.org/image-tag", dockerImage.getTag());
+        return annotations;
     }
 
 
@@ -292,10 +298,11 @@ public class BundleUtilities {
                 .withNewMetadata()
                 .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
+                .withAnnotations(getAnnotationsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getDbms().toUpperCase()))
-                .withImage(descriptor.getImage())
+                .withImage(descriptor.getDockerImage().toString())
                 .withIngressPath(descriptor.getDescriptorMetadata().getEndpoint())
                 .withCustomIngressPath(descriptor.getDescriptorMetadata().getCustomEndpoint())
                 .withRoles(extractRolesFromDescriptor(descriptor))
@@ -318,6 +325,7 @@ public class BundleUtilities {
                 .withNewMetadata()
                 .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
+                .withAnnotations(getAnnotationsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getSpec().getDbms().toUpperCase()))
