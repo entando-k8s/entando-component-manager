@@ -77,7 +77,9 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 .setPluginCode(metadata.getPluginCode())
                 .setEndpoint(metadata.getEndpoint())
                 .setCustomEndpoint(metadata.getCustomEndpoint())
-                .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null);
+                .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null)
+                .setDockerTag(representation.getDockerImage().getTag())
+                .setDockerSha256(representation.getDockerImage().getSha256());
     }
 
     @Override

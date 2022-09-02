@@ -116,17 +116,16 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
-        // with tag
-        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
-        assertOnConvertedEntandoPluginWithTag(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
-
         // with sha
-        d.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
-        p = BundleUtilities.generatePluginFromDescriptor(d);
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
         assertOnConvertedEntandoPluginWithSha(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
 
+        // with tag
+        d.getDockerImage().setSha256(null);
+        p = BundleUtilities.generatePluginFromDescriptor(d);
+        assertOnConvertedEntandoPluginWithTag(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }
 
     private void assertOnConvertedEntandoPluginWithTag(EntandoPlugin p, String expectedPluginName, String ingressPath) {

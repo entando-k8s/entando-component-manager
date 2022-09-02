@@ -69,6 +69,8 @@ class PluginInstallableTest {
         assertThat(pluginDataEntity.getPluginName()).isEqualTo(metadata.getPluginName());
         assertThat(pluginDataEntity.getPluginCode()).isEqualTo(metadata.getPluginCode());
         assertThat(pluginDataEntity.getEndpoint()).isEqualTo(metadata.getEndpoint());
+        assertThat(pluginDataEntity.getDockerTag()).isEqualTo(descriptor.getDockerImage().getTag());
+        assertThat(pluginDataEntity.getDockerSha256()).isEqualTo(descriptor.getDockerImage().getSha256());
     }
 
     @Test
@@ -108,6 +110,8 @@ class PluginInstallableTest {
         assertThat(pluginDataEntity.getPluginName()).isEqualTo(metadata.getPluginName());
         assertThat(pluginDataEntity.getPluginCode()).isEqualTo(metadata.getPluginCode());
         assertThat(pluginDataEntity.getEndpoint()).isEqualTo(metadata.getEndpoint());
+        assertThat(pluginDataEntity.getDockerTag()).isEqualTo(descriptor.getDockerImage().getTag());
+        assertThat(pluginDataEntity.getDockerSha256()).isEqualTo(descriptor.getDockerImage().getSha256());
     }
 
     @Test
@@ -141,7 +145,9 @@ class PluginInstallableTest {
                 .setPluginName(PluginStubHelper.EXPECTED_PLUGIN_NAME)
                 .setPluginCode(
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA + "-" + PluginStubHelper.EXPECTED_PLUGIN_NAME)
-                .setEndpoint("my-endpoint");
+                .setEndpoint("my-endpoint")
+                .setDockerTag("MY-TAG")
+                .setDockerSha256("MY-SHA");
         pluginDataRepository.save(startingPluginDataEntity);
     }
 }

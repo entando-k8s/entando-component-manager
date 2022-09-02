@@ -73,6 +73,7 @@ public class PluginStubHelper {
         PluginDescriptor pluginDescriptorV5 = stubPluginDescriptorV2()
                 .setName(BUNDLE_NAME);
         pluginDescriptorV5.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        pluginDescriptorV5.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
         return pluginDescriptorV5;
     }
 
