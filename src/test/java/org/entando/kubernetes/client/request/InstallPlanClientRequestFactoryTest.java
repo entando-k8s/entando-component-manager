@@ -9,6 +9,7 @@ import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("unit")
 class InstallPlanClientRequestFactoryTest {
 
     private final List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithTag();
