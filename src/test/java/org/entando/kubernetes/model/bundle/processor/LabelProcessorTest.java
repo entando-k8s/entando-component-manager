@@ -78,9 +78,14 @@ class LabelProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+    void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() throws IOException {
+
+        final String fileName = "labels/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setLabels(singletonList(fileName));
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new LabelProcessor(new EntandoCoreClientTestDouble()), "label");
+                new LabelProcessor(new EntandoCoreClientTestDouble()), "label", spec);
     }
+
 }

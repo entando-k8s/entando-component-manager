@@ -380,14 +380,14 @@ public class BundleUtilities {
     public static String determineBundleResourceRootFolder(BundleReader bundleReader) {
 
         var resourceFolder = "/";
-        BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptorNg();
+        BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptor();
         var bundleType = bundleDescriptor.getBundleType();
 
         if (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE) {
             if (bundleDescriptor.isVersion1()) {
                 resourceFolder += bundleReader.getBundleName();
             } else {
-                resourceFolder += bundleReader.getCodeNg();
+                resourceFolder += bundleReader.getCode();
             }
         }
 

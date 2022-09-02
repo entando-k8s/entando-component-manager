@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -119,34 +118,30 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
 
-        try {
-            final List<String> descriptorList = getDescriptorList(bundleReader);
+        final List<String> descriptorList = getDescriptorList(bundleReader);
 
-            for (String filename : descriptorList) {
-                // parse descriptor
-                PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                // set metadata
-                setPluginMetadata(pluginDescriptor, bundleReader);
-                // validate
-                descriptorValidator.validateOrThrow(pluginDescriptor);
-                // add CM endpoint env var
-                final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
-                        pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
-                environmentVariables.add(new EnvironmentVariable().setName(ENTANDO_ECR_INGRESS_URL)
-                                .setValue(cmEndpoint));
-                pluginDescriptor.setEnvironmentVariables(environmentVariables);
-                // log
-                logDescriptorWarnings(pluginDescriptor);
-                // get install action
-                InstallAction action = extractInstallAction(pluginDescriptor.getComponentKey().getKey(),
-                        conflictStrategy,
-                        installPlan);
-                // add to installables
-                installableList.add(new PluginInstallable(kubernetesService, pluginDescriptor, action,
-                        pluginPathRepository));
-            }
-        } catch (IOException e) {
-            throw makeMeaningfulException(e);
+        for (String filename : descriptorList) {
+            // parse descriptor
+            PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+            // set metadata
+            setPluginMetadata(pluginDescriptor, bundleReader);
+            // validate
+            descriptorValidator.validateOrThrow(pluginDescriptor);
+            // add CM endpoint env var
+            final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
+                    pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
+            environmentVariables.add(new EnvironmentVariable().setName(ENTANDO_ECR_INGRESS_URL)
+                    .setValue(cmEndpoint));
+            pluginDescriptor.setEnvironmentVariables(environmentVariables);
+            // log
+            logDescriptorWarnings(pluginDescriptor);
+            // get install action
+            InstallAction action = extractInstallAction(pluginDescriptor.getComponentKey().getKey(),
+                    conflictStrategy,
+                    installPlan);
+            // add to installables
+            installableList.add(new PluginInstallable(kubernetesService, pluginDescriptor, action,
+                    pluginPathRepository));
         }
 
         return installableList;
@@ -173,32 +168,27 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         List<String> idList = new ArrayList<>();
 
-        try {
-            List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
-            for (String fileName : contentDescriptorList) {
-                // parse descriptor
-                PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
-                        .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
-                // ensure version
-                descriptorValidator.ensureDescriptorVersionIsSet(pluginDescriptor);
-                // set plugin metadata
-                setPluginMetadata(pluginDescriptor, bundleReader);
-                // log
-                logDescriptorWarnings(pluginDescriptor);
-                // add plugin id to the list
-                idList.add(pluginDescriptor.getComponentKey().getKey());
-            }
-
-            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    this.getReportableRemoteHandler());
-
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s components",
-                    componentProcessor.getSupportedComponentType().getTypeName()), e);
+        List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
+        for (String fileName : contentDescriptorList) {
+            // parse descriptor
+            PluginDescriptor pluginDescriptor = (PluginDescriptor) bundleReader
+                    .readDescriptorFile(fileName, componentProcessor.getDescriptorClass());
+            // ensure version
+            descriptorValidator.ensureDescriptorVersionIsSet(pluginDescriptor);
+            // set plugin metadata
+            setPluginMetadata(pluginDescriptor, bundleReader);
+            // log
+            logDescriptorWarnings(pluginDescriptor);
+            // add plugin id to the list
+            idList.add(pluginDescriptor.getComponentKey().getKey());
         }
+
+        return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                this.getReportableRemoteHandler());
+
     }
 
-    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) throws IOException {
+    private void setPluginMetadata(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
 
         final BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptor();
 

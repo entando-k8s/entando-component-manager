@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
@@ -142,8 +143,11 @@ class PageProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+        final String fileName = "pages/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setPages(singletonList(fileName));
+
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PageProcessor(new EntandoCoreClientTestDouble(), validator), "page");
+                new PageProcessor(new EntandoCoreClientTestDouble(), validator), spec, fileName);
     }
-    
 }

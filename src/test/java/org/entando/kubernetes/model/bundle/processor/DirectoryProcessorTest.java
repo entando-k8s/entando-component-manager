@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -10,7 +11,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.entando.kubernetes.TestEntitiesGenerator;
+import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -114,7 +117,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
-        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);
@@ -135,7 +138,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                 .collect(Collectors.toList());
 
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);
@@ -158,7 +161,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                 .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
-        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getBundleName()).thenReturn(bundleDescriptor.getCode());
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
 
@@ -187,8 +190,8 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getCodeNg()).thenReturn(bundleDescriptor.getCode() + "-"
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode() + "-"
                 + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 
@@ -198,17 +201,25 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         assertThat(reportable.getCodes()).containsAll(expectedCodeList);
     }
 
-    /*
+
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() throws IOException {
+        final String errorMessage = "exception test";
 
         when(baseBundleReader.isBundleV1()).thenReturn(true);
         when(baseBundleReader.containsResourceFolder()).thenReturn(true);
+        when(baseBundleReader.readBundleDescriptor()).thenThrow(
+                new EntandoComponentManagerException(errorMessage));
 
-        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new DirectoryProcessor(new EntandoCoreClientTestDouble()), "directory");
+        EntandoComponentManagerException thrown = assertThrows(
+                EntandoComponentManagerException.class,
+                () -> new DirectoryProcessor(new EntandoCoreClientTestDouble()).process(baseBundleReader, null, null)
+        );
+
+        assertThat(thrown.getMessage()).isEqualTo(errorMessage);
+
     }
-    */
+
 
     @Test
     void shouldReturnTheExpectedNonRootDirectoryDescriptorFromTheEntandoBundleComponentJobEntity() {

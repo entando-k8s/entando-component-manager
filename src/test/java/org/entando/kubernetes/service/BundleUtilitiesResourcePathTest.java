@@ -34,9 +34,9 @@ class BundleUtilitiesResourcePathTest {
         when(bundleDescriptor.isVersion1()).thenReturn(false);
         when(bundleReader.isBundleV1()).thenReturn(false);
         when(bundleReader.getBundleName()).thenReturn(BUNDLE_NAME);
-        when(bundleReader.getCodeNg()).thenReturn(BUNDLE_NAME + "-" + BUNDLE_ID);
+        when(bundleReader.getCode()).thenReturn(BUNDLE_NAME + "-" + BUNDLE_ID);
 
-        when(bundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.WIDGET_FOLDER_PATH, file, BUNDLE_ID);
         assertThat(path).isEqualTo(expectedResource);
     }

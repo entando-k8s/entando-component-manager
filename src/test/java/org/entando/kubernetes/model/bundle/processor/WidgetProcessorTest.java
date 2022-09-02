@@ -57,23 +57,26 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+        final String fileName = "widgets/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setWidgets(singletonList(fileName));
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new WidgetProcessor(componentDataRepository, new EntandoCoreClientTestDouble(),
                         new WidgetTemplateGeneratorServiceDouble(),
-                        validator), "widget");
+                        validator), spec, fileName);
     }
+
 
     @Test
     void canProcessDescriptorV1() throws IOException {
-        
+
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
-        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
         var installableList = execWidgetProcessor(widgDescrFile, null, bundleDescriptor);
 
@@ -94,7 +97,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
     void canProcessDescriptorV5() throws IOException {
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         String bundleCode = "bundle-v5";
-        when(bundleReader.getCodeNg()).thenReturn(bundleCode);
+        when(bundleReader.getCode()).thenReturn(bundleCode);
         String widgetConfigFolder = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5";
         when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "js")).thenReturn(
                 List.of(
@@ -114,8 +117,6 @@ class WidgetProcessorTest extends BaseProcessorTest {
         String widgConfigDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5.yaml";
         String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
 
-        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(bundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
         var installableList = execWidgetProcessor(widgDescrFile, widgConfigDescrFile,
                 bundleDescriptor);
 
@@ -148,7 +149,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
     void canProcess_WdigetAppBuilder_DescriptorV5() throws IOException {
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         String bundleCode = "bundle-v5";
-        when(bundleReader.getCodeNg()).thenReturn(bundleCode);
+        when(bundleReader.getCode()).thenReturn(bundleCode);
         String widgetConfigFolder = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5";
         when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "js")).thenReturn(
                 List.of(
@@ -166,8 +167,6 @@ class WidgetProcessorTest extends BaseProcessorTest {
         spec.setWidgets(singletonList(STANDARD_WIDGET_DESCRIPTOR));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
-        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(bundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
         String widgConfigDescrFile =
                 "src/test/resources/" + bundleCode + "/widgets/my_widget_config_descriptor_v5.yaml";
         String widgDescrFile = "src/test/resources/" + bundleCode + "/widgets/my_widget_app_builder_descriptor_v5.yaml";
@@ -183,7 +182,8 @@ class WidgetProcessorTest extends BaseProcessorTest {
         //~
         WidgetDescriptor descriptor = yamlMapper.readValue(new File(widgetDescFile), WidgetDescriptor.class);
 
-        when(bundleReader.readDescriptorFileNg(any(), any())).thenReturn(descriptor);
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(bundleReader.readDescriptorFile(any(), any())).thenReturn(descriptor);
         when(validator.validateOrThrow(any())).thenReturn(true);
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
@@ -306,7 +306,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(bundleReader.readDescriptorFileNg(any(), any())).thenReturn(widgetDescriptor);
+        when(bundleReader.readDescriptorFile(any(), any())).thenReturn(widgetDescriptor);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(validator.validateOrThrow(any())).thenThrow(InvalidBundleException.class);
 
@@ -328,7 +328,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(bundleReader.readDescriptorFileNg(any(), any())).thenReturn(widgetDescriptor);
+        when(bundleReader.readDescriptorFile(any(), any())).thenReturn(widgetDescriptor);
         when(validator.validateOrThrow(any())).thenReturn(true);
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,

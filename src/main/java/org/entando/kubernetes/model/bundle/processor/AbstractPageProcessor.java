@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -51,21 +50,19 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
     public List<Installable<PageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallPlan installPlan) {
         List<Installable<PageDescriptor>> installables = new LinkedList<>();
-        try {
-            final List<String> descriptorList = getDescriptorList(bundleReader);
-            for (String fileName : descriptorList) {
-                PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
-                this.descriptorValidator.validateOrThrow(pageDescriptor);
-                this.composeAndSetCode(pageDescriptor, bundleReader);
-                Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
-                        -> widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader))
-                );
-                InstallAction action = extractInstallAction(pageDescriptor.getCode(), conflictStrategy, installPlan);
-                installables.add(this.getInstallable(pageDescriptor, action));
-            }
-        } catch (IOException e) {
-            throw makeMeaningfulException(e);
+
+        final List<String> descriptorList = getDescriptorList(bundleReader);
+        for (String fileName : descriptorList) {
+            PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
+            this.descriptorValidator.validateOrThrow(pageDescriptor);
+            this.composeAndSetCode(pageDescriptor, bundleReader);
+            Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
+                    -> widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader))
+            );
+            InstallAction action = extractInstallAction(pageDescriptor.getCode(), conflictStrategy, installPlan);
+            installables.add(this.getInstallable(pageDescriptor, action));
         }
+
         return installables;
     }
 

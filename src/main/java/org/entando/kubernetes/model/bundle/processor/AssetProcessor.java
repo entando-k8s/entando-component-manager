@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,20 +64,15 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
 
         List<Installable<AssetDescriptor>> installables = new LinkedList<>();
 
-        try {
-            final List<String> descriptorList = getDescriptorList(bundleReader);
+        final List<String> descriptorList = getDescriptorList(bundleReader);
 
-            for (String fileName : descriptorList) {
-                String assetDirectory = Paths.get(fileName).getParent().toString();
-                AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
-                InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(),
-                        conflictStrategy, installPlan);
-                installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
-                        assetDirectory, assetDescriptor.getName()), action));
-            }
-
-        } catch (IOException e) {
-            throw makeMeaningfulException(e);
+        for (String fileName : descriptorList) {
+            String assetDirectory = Paths.get(fileName).getParent().toString();
+            AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
+            InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(),
+                    conflictStrategy, installPlan);
+            installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
+                    assetDirectory, assetDescriptor.getName()), action));
         }
 
         return installables;

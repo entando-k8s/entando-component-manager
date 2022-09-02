@@ -19,7 +19,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
-import org.codehaus.plexus.util.FileUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -244,7 +243,8 @@ public class EntandoBundleReaderTest {
 
     @Test
     void shouldReadPluginFromBundleV1() throws IOException {
-        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
+        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV1.yaml",
+                PluginDescriptor.class);
         assertThat(descriptor.getSpec().getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getSpec().getHealthCheckPath()).isEqualTo("/api/v1/todos");
         assertThat(descriptor.getSpec().getImage()).isEqualTo("entando/todomvcV1:1.0.0");
@@ -330,7 +330,8 @@ public class EntandoBundleReaderTest {
 
         // using a descriptor with only base fields
         // should parse the descriptor without errors
-        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2.yaml", PluginDescriptor.class);
+        PluginDescriptor descriptor = bundleReader.readDescriptorFile("plugins/todomvcV2.yaml",
+                PluginDescriptor.class);
         assertThat(descriptor.getDbms()).isEqualTo("mysql");
         assertThat(descriptor.getHealthCheckPath()).isEqualTo("/api/v1/todos");
         assertThat(descriptor.getImage()).isEqualTo("entando/todomvcV2:1.0.0");

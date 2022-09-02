@@ -63,9 +63,9 @@ class WidgetTemplateGeneratorServiceImplTest {
                 WidgetStubHelper.CSS_RESOURCES);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         BundleDescriptor bundleDescriptor = mock(BundleDescriptor.class);
-        when(bundleReader.getCodeNg()).thenReturn(
+        when(bundleReader.getCode()).thenReturn(
                 BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        when(bundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
         String expected = ("<script src=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
@@ -159,9 +159,9 @@ class WidgetTemplateGeneratorServiceImplTest {
 
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         BundleDescriptor bundleDescriptor = mock(BundleDescriptor.class);
-        when(bundleReader.getCodeNg()).thenReturn(
+        when(bundleReader.getCode()).thenReturn(
                 BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        when(bundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
 
         File expectedOnFile = new File("src/test/resources/widget.ftl");
