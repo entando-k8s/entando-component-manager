@@ -41,8 +41,6 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
 
 /**
  * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
@@ -193,13 +191,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     }
 
     private WidgetDescriptor makeWidgetDescriptorFromFile(BundleReader bundleReader, String fileName,
-            Map<String, String> pluginIngressPathMap) throws IOException {
-        var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
+            Map<String, String> pluginIngressPathMap) {
+        var widgetDescriptor = bundleReader.readDescriptorFileNg(fileName, WidgetDescriptor.class);
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
         widgetDescriptor.applyFallbacks();
         widgetDescriptor.setDescriptorMetadata(
                 DescriptorMetadata.builder().pluginIngressPathMap(pluginIngressPathMap).filename(fileName).bundleCode(
-                                bundleReader.getCode()).bundleId(bundleId).templateGeneratorService(templateGeneratorService)
+                                bundleReader.getCodeNg()).bundleId(bundleId).templateGeneratorService(templateGeneratorService)
                         .build());
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
@@ -267,16 +265,10 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             Map<String, String> pluginIngressPathMap) {
         String[] assets = collectResourcesPaths(descriptor.getDescriptorMetadata().getFilename(),
                 bundleReader).toArray(new String[0]);
-        try {
-            descriptor.setDescriptorMetadata(
-                    new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCode(), assets,
-                            null, bundleReader.calculateBundleId(), templateGeneratorService));
-        } catch (IOException ex) {
-            log.error("Error reading descriptor for WidgetDescriptor:'{}'", descriptor.getCode(), ex);
-            throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR,
-                    String.format("Error reading descriptor for WidgetDescriptor:'%s' error:'%s'",
-                            descriptor.getCode(), ex.getMessage()));
-        }
+
+        descriptor.setDescriptorMetadata(
+                new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCodeNg(), assets,
+                        null, bundleReader.calculateBundleId(), templateGeneratorService));
 
     }
 

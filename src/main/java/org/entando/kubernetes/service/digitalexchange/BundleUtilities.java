@@ -29,6 +29,7 @@ import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
@@ -375,18 +376,18 @@ public class BundleUtilities {
      *
      * @param bundleReader the reader of the current bundle
      * @return the resource root folder for the current bundle
-     * @throws IOException if a read error occurs during the bundle reading
      */
-    public static String determineBundleResourceRootFolder(BundleReader bundleReader) throws IOException {
+    public static String determineBundleResourceRootFolder(BundleReader bundleReader) {
 
         var resourceFolder = "/";
-        var bundleType = bundleReader.readBundleDescriptor().getBundleType();
+        BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptorNg();
+        var bundleType = bundleDescriptor.getBundleType();
 
         if (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE) {
-            if (bundleReader.readBundleDescriptor().isVersion1()) {
+            if (bundleDescriptor.isVersion1()) {
                 resourceFolder += bundleReader.getBundleName();
             } else {
-                resourceFolder += bundleReader.getCode();
+                resourceFolder += bundleReader.getCodeNg();
             }
         }
 
@@ -398,9 +399,8 @@ public class BundleUtilities {
      *
      * @param bundleReader the BundleReader to use to compose the signed bundle folder name
      * @return the composed signed bundle folder name
-     * @throws IOException if an error occurrs during the reading of the bundle
      */
-    public static String composeSignedBundleFolder(BundleReader bundleReader) throws IOException {
+    public static String composeSignedBundleFolder(BundleReader bundleReader) {
         final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
         return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
     }
@@ -601,7 +601,7 @@ public class BundleUtilities {
                 "Repo url is empty", "Repo url is not valid");
     }
 
-    public static String composeBundleResourceRootFolter(BundleReader bundleReader) throws IOException {
+    public static String composeBundleResourceRootFolter(BundleReader bundleReader) {
         if (bundleReader.isBundleV1() && bundleReader.containsResourceFolder()) {
             return determineBundleResourceRootFolder(bundleReader);
         } else {

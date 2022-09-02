@@ -59,10 +59,53 @@ public class BundleReader {
         this.entandoDeBundle = entandoDeBundle;
     }
 
+    public BundleDescriptor readBundleDescriptorNg() {
+        return readBundleDescriptorNg(null);
+    }
+
+    public BundleDescriptor readBundleDescriptorNg(BundleDescriptorValidator bundleValidator) {
+        if (this.bundleDescriptor == null) {
+            // read and assign
+            this.bundleDescriptor = readDescriptorFileNg(BundleProperty.DESCRIPTOR_FILENAME.getValue(),
+                    BundleDescriptor.class);
+
+            // validate the bundle
+            if (bundleValidator != null) {
+                bundleValidator.validateOrThrow(bundleDescriptor);
+            }
+
+            this.bundleName = (!bundleDescriptor.isVersion1() && bundleDescriptor.isVersionEqualOrGreaterThan(
+                    DescriptorVersion.V5))
+                    ? bundleDescriptor.getName()
+                    : bundleDescriptor.getCode();
+
+            // ensure the right code is used
+            final String code = BundleUtilities.composeDescriptorCode(bundleDescriptor.getCode(),
+                    bundleDescriptor.getName(), bundleDescriptor, getBundleUrl());
+            bundleDescriptor.setCode(code);
+        }
+
+        return this.bundleDescriptor;
+    }
+
+    /**
+     * Read bundle descriptor.
+     *
+     * @deprecated This method is no longer acceptable to read bundle descriptor.
+     * <p>Use {@link BundleReader#readBundleDescriptorNg()} instead.</p>
+     */
+    @Deprecated
     public BundleDescriptor readBundleDescriptor() throws IOException {
         return readBundleDescriptor(null);
     }
 
+    /**
+     * Read bundle descriptor.
+     *
+     * @deprecated This method is no longer acceptable to read bundle descriptor.
+     * <p>Use {@link BundleReader#readBundleDescriptorNg(BundleDescriptorValidator)} instead.</p>
+     */
+    @Deprecated
     public BundleDescriptor readBundleDescriptor(BundleDescriptorValidator bundleValidator) throws IOException {
         if (this.bundleDescriptor == null) {
             // read and assign
@@ -88,7 +131,6 @@ public class BundleReader {
         return this.bundleDescriptor;
     }
 
-
     public boolean containsResourceFolder() {
         return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
@@ -97,8 +139,13 @@ public class BundleReader {
         return bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
 
+    @Deprecated
     public String getCode() throws IOException {
         return readBundleDescriptor().getCode();
+    }
+
+    public String getCodeNg() {
+        return readBundleDescriptorNg().getCode();
     }
 
     public List<String> getResourceFolders() {
@@ -170,6 +217,22 @@ public class BundleReader {
 
     }
 
+
+    public <T> T readDescriptorFileNg(final String fileName, final Class<T> clazz) {
+        try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile())) {
+            return readDescriptorFile(fis, clazz);
+        } catch (IOException e) {
+            throw new EntandoComponentManagerException(String.format("Error reading descriptor file %s", fileName), e);
+        }
+    }
+
+    /**
+     * Read bundle descriptor.
+     *
+     * @deprecated This method is no longer acceptable to read bundle descriptor.
+     * <p>Use {@link BundleReader#readDescriptorFileNg(String, Class)} instead.</p>
+     */
+    @Deprecated
     public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
         try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile())) {
             return readDescriptorFile(fis, clazz);

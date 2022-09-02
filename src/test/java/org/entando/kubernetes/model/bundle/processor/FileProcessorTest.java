@@ -150,6 +150,10 @@ class FileProcessorTest extends BaseProcessorTest {
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/js/main.js"));
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+
         execShouldOmitBundleCodeRootFolderIfSystemLevelBundle(false, BundleProperty.WIDGET_FOLDER_PATH,
                 mockBundleReader::containsWidgetFolder, mockBundleReader::getWidgetsFiles);
     }
@@ -187,7 +191,7 @@ class FileProcessorTest extends BaseProcessorTest {
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
         bundleDescriptor.setDescriptorVersion(
                 isV1 ? DescriptorVersion.V1.getVersion() : DescriptorVersion.V5.getVersion());
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
         when(containsFolderFn.getAsBoolean()).thenReturn(true);
 
         List<String> resourceFiles = Arrays.asList(bundleProperty.getValue() + "ootb-widgets/static/css/main.css",
@@ -232,7 +236,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.containsResourceFolder()).thenReturn(true);
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
+        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFolderV1);
 
         Reportable reportable = fileProcessor.getReportable(mockBundleReader, fileProcessor);
@@ -251,7 +255,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
+        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
 
         Reportable reportable = fileProcessor.getReportable(mockBundleReader, fileProcessor);
@@ -270,7 +274,7 @@ class FileProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.getBundleName()).thenReturn(BundleStubHelper.BUNDLE_NAME);
         when(mockBundleReader.containsResourceFolder()).thenReturn(true);
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFolderV1);
 
         List<String> expectedCodeList = Stream
@@ -300,8 +304,8 @@ class FileProcessorTest extends BaseProcessorTest {
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getCode()).thenReturn(
+        when(mockBundleReader.readBundleDescriptorNg()).thenReturn(bundleDescriptor);
+        when(mockBundleReader.getCodeNg()).thenReturn(
                 bundleDescriptor.getCode() + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
 
