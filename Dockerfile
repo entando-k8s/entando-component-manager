@@ -43,8 +43,7 @@ USER 0
 RUN mkdir /opt/certs; \
     chmod ug+w /opt/certs; \
     touch /opt/certs/ca-certs-custom.pem; \
-    chown -R 1001:1001 /opt/certs; \
-    ln -s /opt/certs/ca-certs-custom.pem /etc/ssl/certs/ca-certs-custom.pem;
+    chown -R 1001:1001 /opt/certs;
 USER 1001
 ### end certs section --
 
