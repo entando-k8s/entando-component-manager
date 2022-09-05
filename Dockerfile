@@ -20,7 +20,6 @@ RUN touch /tmp/passwd /tmp/group \
  && microdnf install -y yum git git-lfs gettext nss_wrapper tar \
  && git lfs install \
  && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash \
-# && microdnf remove -y yum not work
  && rpm -e yum \
  && microdnf clean -y all \
  && chmod -Rf g+rw /opt
