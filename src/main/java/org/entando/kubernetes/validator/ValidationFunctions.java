@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @UtilityClass
@@ -22,6 +24,8 @@ public class ValidationFunctions {
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";
     public static final List<String> VALID_PROTOCOLS = List.of(GIT_PROTOCOL, HTTP_PROTOCOL, HTTPS_PROTOCOL);
+
+    public static final int MAX_BUNDLE_NAME_LENGTH = 200;
 
     /**
      * if the url uses the git or ssh protocol, replace it with http validate the received url using url regex. checks
@@ -85,5 +89,23 @@ public class ValidationFunctions {
         }
 
         return url;
+    }
+
+    /**
+     * Validate the received bundleName using url regex. Checks that the bundle name length, start char and valid chars
+     * as requested from RFC 1123. If check fails, throw an InvalidBundleException.
+     *
+     * @param bundleName the string containing the bundle name to validate
+     * @return the validity boolean check
+     */
+    public static boolean bundleNameValidOrThrow(String bundleName) {
+        // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
+        if (StringUtils.length(bundleName) > MAX_BUNDLE_NAME_LENGTH
+                || !VALID_CHARS_RFC_1123_REGEX_PATTERN.matcher(bundleName).matches()
+                || !HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN.matcher(bundleName)
+                .matches()) {
+            throw new InvalidBundleException("Error bundle name not valid (RFC 1123) " + bundleName);
+        }
+        return true;
     }
 }

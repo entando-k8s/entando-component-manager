@@ -13,9 +13,9 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 
 public interface K8SServiceClient extends ECMClient {
 
-    String BUNDLE_TYPE_ANNOTATION = "bundle.entando.org/type";
-    String BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE = "postinit";
-    String BUNDLE_TYPE_ANNOTATION_STANDARD_VALUE = "standard";
+    String ECR_INSTALL_CAUSE_ANNOTATION = "ecr.entando.org/install-cause";
+    String ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE = "postinit";
+    String ECR_INSTALL_CAUSE_ANNOTATION_STANDARD_VALUE = "standard";
 
     List<EntandoAppPluginLink> getAppLinks(String entandoAppName);
 
@@ -35,15 +35,15 @@ public interface K8SServiceClient extends ECMClient {
 
     List<EntandoDeBundle> getBundlesInObservedNamespaces();
 
-    List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> type);
+    List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> ecrInstallCause);
 
     List<EntandoDeBundle> getBundlesInNamespace(String namespace);
 
-    List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> bundleType);
+    List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> ecrInstallCause);
 
     List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces);
 
-    List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> bundleType);
+    List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> ecrInstallCause);
 
     Optional<EntandoDeBundle> getBundleWithName(String name);
 

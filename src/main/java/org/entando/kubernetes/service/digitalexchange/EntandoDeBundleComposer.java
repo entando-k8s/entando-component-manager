@@ -1,8 +1,8 @@
 package org.entando.kubernetes.service.digitalexchange;
 
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.BUNDLE_TYPE_ANNOTATION;
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE;
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.BUNDLE_TYPE_ANNOTATION_STANDARD_VALUE;
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION;
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE;
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION_STANDARD_VALUE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +36,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
-import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,10 +63,10 @@ public class EntandoDeBundleComposer {
      * @return the composed EntandoDeBundle
      */
     public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo) {
-        return composeEntandoDeBundle(bundleInfo, OperatorStarter.REST_CLIENT);
+        return composeEntandoDeBundle(bundleInfo, EcrInstallCause.STANDARD);
     }
 
-    public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo, OperatorStarter operator) {
+    public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo, EcrInstallCause installCause) {
         if (bundleInfo == null) {
             throw new EntandoComponentManagerException("The received BundleInfo is null");
         }
@@ -87,7 +87,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoComponentManagerException("Null bundle descriptor");
         }
 
-        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo, operator);
+        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo, installCause);
     }
 
     private String selectVersionToFetch(List<String> tagList) {
@@ -144,7 +144,7 @@ public class EntandoDeBundleComposer {
     }
 
     private EntandoDeBundle createEntandoDeBundle(BundleDescriptor bundleDescriptor, List<String> tagList,
-            BundleInfo bundleInfo, OperatorStarter operator) {
+            BundleInfo bundleInfo, EcrInstallCause installCause) {
 
         final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleInfo.getGitRepoAddress());
         final List<String> versionList = deBundleTags.stream()
@@ -152,7 +152,7 @@ public class EntandoDeBundleComposer {
                 .collect(Collectors.toList());
 
         Map<String, String> annotations = createAnnotationsFrom(bundleInfo.getBundleGroups());
-        addBundleTypeToAnnotations(annotations, operator);
+        addEcrInstallCauseToAnnotations(annotations, installCause);
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
@@ -174,11 +174,11 @@ public class EntandoDeBundleComposer {
                 .build();
     }
 
-    private void addBundleTypeToAnnotations(Map<String, String> annotations, OperatorStarter operator) {
+    private void addEcrInstallCauseToAnnotations(Map<String, String> annotations, EcrInstallCause installCause) {
         String annotationValue =
-                OperatorStarter.POST_INIT.equals(operator) ? BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE
-                        : BUNDLE_TYPE_ANNOTATION_STANDARD_VALUE;
-        annotations.put(BUNDLE_TYPE_ANNOTATION, annotationValue);
+                EcrInstallCause.POST_INIT.equals(installCause) ? ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE
+                        : ECR_INSTALL_CAUSE_ANNOTATION_STANDARD_VALUE;
+        annotations.put(ECR_INSTALL_CAUSE_ANNOTATION, annotationValue);
 
     }
 

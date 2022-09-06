@@ -47,7 +47,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobProgress;
 import org.entando.kubernetes.model.job.JobResult;
@@ -144,16 +144,16 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        return this.install(bundle, tag, InstallAction.CREATE, OperatorStarter.REST_CLIENT);
+        return this.install(bundle, tag, InstallAction.CREATE, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallAction conflictStrategy) {
-        return this.install(bundle, tag, conflictStrategy, OperatorStarter.REST_CLIENT);
+        return this.install(bundle, tag, conflictStrategy, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            InstallAction conflictStrategy, OperatorStarter starter) {
+            InstallAction conflictStrategy, EcrInstallCause starter) {
 
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
@@ -180,11 +180,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallPlan installPlan) {
-        return installWithInstallPlan(bundle, tag, installPlan, OperatorStarter.REST_CLIENT);
+        return installWithInstallPlan(bundle, tag, installPlan, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,
-            InstallPlan installPlan, OperatorStarter starter) {
+            InstallPlan installPlan, EcrInstallCause starter) {
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
         try {
@@ -230,7 +230,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private CompletableFuture<Void> submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
-            EntandoDeBundleTag tag, InstallAction conflictStrategy, OperatorStarter starter, InstallPlan installPlan) {
+            EntandoDeBundleTag tag, InstallAction conflictStrategy, EcrInstallCause starter, InstallPlan installPlan) {
 
         return CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
@@ -459,7 +459,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job,
-            BundleDescriptor bundleDescriptor, OperatorStarter starter) {
+            BundleDescriptor bundleDescriptor, EcrInstallCause starter) {
 
         EntandoBundleEntity installedComponent = bundleRepository
                 .findByBundleCode(bundle.getMetadata().getName())
@@ -471,7 +471,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
         installedComponent.setExt(bundleDescriptor.getExt());
         installedComponent.setInstalled(true);
-        installedComponent.setOperationStarter(starter);
+        installedComponent.setEcrInstallCause(starter);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");
     }

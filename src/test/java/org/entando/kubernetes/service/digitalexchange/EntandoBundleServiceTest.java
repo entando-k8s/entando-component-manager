@@ -37,7 +37,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
@@ -616,7 +616,7 @@ public class EntandoBundleServiceTest {
         IntStream.range(1, 4).forEach(i -> {
             EntandoBundleEntity entity = getTestComponent();
             entity.setRepoUrl(url + i);
-            entity.setOperationStarter(i % 2 == 0 ? OperatorStarter.POST_INIT : OperatorStarter.REST_CLIENT);
+            entity.setEcrInstallCause(i % 2 == 0 ? EcrInstallCause.POST_INIT : EcrInstallCause.STANDARD);
             listKo.add(entity);
         });
         when(installedComponentRepository.findAll()).thenReturn(listKo);

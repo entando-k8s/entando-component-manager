@@ -9,12 +9,12 @@ databaseChangeLog:
         - not:
             - columnExists:
                 tableName: installed_entando_bundles
-                columnName: operation_starter
+                columnName: ecr_install_cause
       changes:
         - addColumn:
             tableName: installed_entando_bundles
             columns:
               - column:
-                  name: operation_starter
+                  name: ecr_install_cause
                   type: VARCHAR(64)
-                  defaultValue: "REST_CLIENT"
+                  defaultValue: "STANDARD"
