@@ -17,6 +17,7 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
 
     private static final long START_DELAY = 1;
     private final PostInitService service;
+    private final PostInitConfigurationService configuration;
     private Instant startTime;
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -53,9 +54,9 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
         private boolean isMaxWaitExpired() {
             Instant finishTime = Instant.now();
             long timeElapsed = Duration.between(startTime, finishTime).toSeconds();
-            boolean maxWaitExpired = timeElapsed >= service.getMaxAppWaitInSeconds();
+            boolean maxWaitExpired = timeElapsed >= configuration.getMaxAppWaitInSeconds();
             log.trace("isMaxWaitExpired ? '{}' elapsed time:'{}'s, maxAppWait:'{}'s", maxWaitExpired, timeElapsed,
-                    service.getMaxAppWaitInSeconds());
+                    configuration.getMaxAppWaitInSeconds());
             return maxWaitExpired;
         }
 
@@ -65,7 +66,8 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
     public void onApplicationEvent(ApplicationReadyEvent event) {
         log.info("Waiting for the EntandoApp to get ready");
         startTime = Instant.now();
-        executor.scheduleWithFixedDelay(repeatedTask, START_DELAY, service.getFrequencyInSeconds(), TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(repeatedTask, START_DELAY, configuration.getFrequencyInSeconds(),
+                TimeUnit.SECONDS);
 
     }
 

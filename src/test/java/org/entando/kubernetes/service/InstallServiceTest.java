@@ -31,7 +31,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
@@ -75,7 +74,7 @@ import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleSer
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
-import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
+import org.entando.kubernetes.service.digitalexchange.job.PostInitConfigurationService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
@@ -107,7 +106,7 @@ public class InstallServiceTest {
     private EntandoBundleJobRepository jobRepository;
     private EntandoBundleComponentJobRepository compJobRepo;
     private InstalledEntandoBundleRepository installRepo;
-    private PostInitService postInitService;
+    private PostInitConfigurationService postInitConfigurationService;
     private Map<ComponentType, ComponentProcessor<?>> processorMap;
     private List<ReportableComponentProcessor> reportableComponentProcessorList;
     private Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
@@ -135,7 +134,7 @@ public class InstallServiceTest {
         jobRepository = Mockito.spy(EntandoBundleJobRepositoryTestDouble.class);
         compJobRepo = Mockito.spy(EntandoBundleComponentJobRepositoryTestDouble.class);
         installRepo = mock(InstalledEntandoBundleRepository.class);
-        postInitService = mock(PostInitService.class);
+        postInitConfigurationService = mock(PostInitConfigurationService.class);
         coreClient = mock(EntandoCoreClient.class);
         kubernetesService = mock(KubernetesService.class);
         usageService = mock(EntandoBundleComponentUsageService.class);
@@ -157,7 +156,7 @@ public class InstallServiceTest {
                 bundleDescriptorValidator);
 
         uninstallService = new EntandoBundleUninstallService(
-                jobRepository, compJobRepo, installRepo, usageService, postInitService, processorMap);
+                jobRepository, compJobRepo, installRepo, usageService, postInitConfigurationService, processorMap);
 
         when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(true);
     }
@@ -300,7 +299,7 @@ public class InstallServiceTest {
         bundleEntity.setJob(jobEntity);
 
         when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
-        when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.FALSE));
+        when(postInitConfigurationService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.FALSE));
 
         assertThrows(EntandoComponentManagerException.class, () -> uninstallService.uninstall(BUNDLE_ID));
 
@@ -330,7 +329,7 @@ public class InstallServiceTest {
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
 
         when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
-        when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
+        when(postInitConfigurationService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getUsage(ComponentType.CONTENT_TYPE, "A"))
                 .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));
@@ -459,7 +458,6 @@ public class InstallServiceTest {
         final EntandoBundleEntity value = captor.getValue();
         assertThat(value.getPbcList()).isEqualTo(BundleInfoStubHelper.GROUPS_NAME.stream().collect(Collectors.joining(",")));
     }
-
 
     private List<Double> getJobProgress() {
         List<Double> allProgresses = Mockito.mockingDetails(jobRepository).getInvocations()

@@ -1,11 +1,14 @@
 package org.entando.kubernetes.service.digitalexchange;
 
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION;
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE;
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION_STANDARD_VALUE;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +36,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -59,7 +63,10 @@ public class EntandoDeBundleComposer {
      * @return the composed EntandoDeBundle
      */
     public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo) {
+        return composeEntandoDeBundle(bundleInfo, EcrInstallCause.STANDARD);
+    }
 
+    public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo, EcrInstallCause installCause) {
         if (bundleInfo == null) {
             throw new EntandoComponentManagerException("The received BundleInfo is null");
         }
@@ -80,7 +87,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoComponentManagerException("Null bundle descriptor");
         }
 
-        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo);
+        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo, installCause);
     }
 
     private String selectVersionToFetch(List<String> tagList) {
@@ -137,18 +144,21 @@ public class EntandoDeBundleComposer {
     }
 
     private EntandoDeBundle createEntandoDeBundle(BundleDescriptor bundleDescriptor, List<String> tagList,
-            BundleInfo bundleInfo) {
+            BundleInfo bundleInfo, EcrInstallCause installCause) {
 
         final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleInfo.getGitRepoAddress());
         final List<String> versionList = deBundleTags.stream()
                 .map(EntandoDeBundleTag::getVersion)
                 .collect(Collectors.toList());
 
+        Map<String, String> annotations = createAnnotationsFrom(bundleInfo.getBundleGroups());
+        addEcrInistallCauseToAnnotations(annotations, installCause);
+
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName(bundleDescriptor.getCode())
                 .withLabels(createLabelsFrom(bundleDescriptor))
-                .withAnnotations(createAnnotationsFrom(bundleInfo.getBundleGroups()))
+                .withAnnotations(annotations)
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
@@ -164,6 +174,13 @@ public class EntandoDeBundleComposer {
                 .build();
     }
 
+    private void addEcrInistallCauseToAnnotations(Map<String, String> annotations, EcrInstallCause installCause) {
+        String annotationValue =
+                EcrInstallCause.POST_INIT.equals(installCause) ? ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE
+                        : ECR_INSTALL_CAUSE_ANNOTATION_STANDARD_VALUE;
+        annotations.put(ECR_INSTALL_CAUSE_ANNOTATION, annotationValue);
+
+    }
 
     private String getLatestSemverVersion(List<EntandoDeBundleTag> deBundleTags) {
 
@@ -211,7 +228,10 @@ public class EntandoDeBundleComposer {
                 .collect(Collectors.toList());
 
         try {
-            return Map.of(PBC_ANNOTATIONS_KEY, objectMapper.writeValueAsString(pbcList));
+            Map<String, String> annotations = new HashMap<>();
+            annotations.put(PBC_ANNOTATIONS_KEY, objectMapper.writeValueAsString(pbcList));
+            return annotations;
+
         } catch (JsonProcessingException e) {
             throw new EntandoComponentManagerException("An error occurred while serializing bundle's pbc names", e);
         }

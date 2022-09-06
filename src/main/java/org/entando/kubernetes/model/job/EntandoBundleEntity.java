@@ -24,6 +24,8 @@ import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
@@ -98,6 +100,11 @@ public class EntandoBundleEntity {
     @Column(name = "installed")
     private boolean installed;
 
+    @Size(max = 64)
+    @Column(name = "ecr_install_cause")
+    @Enumerated(EnumType.STRING)
+    private EntandoBundleEntity.EcrInstallCause ecrInstallCause;
+
     @Column(name = "signature")
     private String signature;
 
@@ -120,5 +127,10 @@ public class EntandoBundleEntity {
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();
+    }
+
+    public enum EcrInstallCause {
+        STANDARD, POST_INIT;
+
     }
 }

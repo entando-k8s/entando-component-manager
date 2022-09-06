@@ -47,6 +47,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobProgress;
 import org.entando.kubernetes.model.job.JobResult;
@@ -143,11 +144,16 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        return this.install(bundle, tag, InstallAction.CREATE);
+        return this.install(bundle, tag, InstallAction.CREATE, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallAction conflictStrategy) {
+        return this.install(bundle, tag, conflictStrategy, EcrInstallCause.STANDARD);
+    }
+
+    public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallAction conflictStrategy, EcrInstallCause starter) {
 
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
@@ -159,7 +165,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     : new InstallPlan();
 
             EntandoBundleJobEntity job = createInstallJob(bundle, tag, installPlan);
-            submitInstallAsync(job, bundle, tag, conflictStrategy, installPlan)
+            submitInstallAsync(job, bundle, tag, conflictStrategy, starter, installPlan)
                     .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
 
             return job;
@@ -174,12 +180,16 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallPlan installPlan) {
+        return installWithInstallPlan(bundle, tag, installPlan, EcrInstallCause.STANDARD);
+    }
 
+    public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,
+            InstallPlan installPlan, EcrInstallCause starter) {
         this.bundleOperationsConcurrencyManager.throwIfAnotherOperationIsRunningOrStartOperation();
 
         try {
             EntandoBundleJobEntity job = createInstallJob(bundle, tag, installPlan);
-            submitInstallAsync(job, bundle, tag, InstallAction.CREATE, installPlan)
+            submitInstallAsync(job, bundle, tag, InstallAction.CREATE, starter, installPlan)
                     .thenAccept(unused -> this.bundleOperationsConcurrencyManager.operationTerminated());
 
             return job;
@@ -220,7 +230,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private CompletableFuture<Void> submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
-            EntandoDeBundleTag tag, InstallAction conflictStrategy, InstallPlan installPlan) {
+            EntandoDeBundleTag tag, InstallAction conflictStrategy, EcrInstallCause starter, InstallPlan installPlan) {
 
         return CompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
@@ -285,7 +295,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     parentJobResult = rollback(scheduler, parentJobResult);
                 } else {
 
-                    saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor());
+                    saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor(), starter);
                     parentJobResult.clearException();
                     parentJobResult.setStatus(JobStatus.INSTALL_COMPLETED);
                     parentJobResult.setProgress(1.0);
@@ -449,7 +459,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job,
-            BundleDescriptor bundleDescriptor) {
+            BundleDescriptor bundleDescriptor, EcrInstallCause starter) {
 
         EntandoBundleEntity installedComponent = bundleRepository
                 .findByBundleCode(bundle.getMetadata().getName())
@@ -461,6 +471,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
         installedComponent.setExt(bundleDescriptor.getExt());
         installedComponent.setInstalled(true);
+        installedComponent.setEcrInstallCause(starter);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");
     }

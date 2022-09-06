@@ -37,6 +37,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.request.Filter;
@@ -421,7 +422,7 @@ public class EntandoBundleServiceTest {
     void shouldSuccessfullyDeployADeBundle() {
         final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
         final EntandoDeBundle deBundle = TestEntitiesGenerator.getTestBundle();
-        when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenReturn(deBundle);
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any(), any())).thenReturn(deBundle);
 
         final EntandoBundle bundle = service.deployDeBundle(bundleInfo);
         BundleAssertionHelper.assertOnBundleAndDeBundle(bundle, deBundle, BundleType.STANDARD_BUNDLE, null, null, null,
@@ -430,7 +431,8 @@ public class EntandoBundleServiceTest {
 
     @Test
     void shouldThrowExceptionWhileDeployingABundleAndTheComposerThrowsIt() {
-        when(entandoDeBundleComposer.composeEntandoDeBundle(any())).thenThrow(EntandoComponentManagerException.class);
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any(), any())).thenThrow(
+                EntandoComponentManagerException.class);
         assertThrows(EntandoComponentManagerException.class, () -> service.deployDeBundle(null));
     }
 
@@ -439,6 +441,8 @@ public class EntandoBundleServiceTest {
         K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
         service = new EntandoBundleServiceImpl(mockK8SServiceClient, availableDigitalExchanges, jobRepository,
                 componentJobRepository, installedComponentRepository, bundleStatusHelper, entandoDeBundleComposer);
+        when(entandoDeBundleComposer.composeEntandoDeBundle(any(), any())).thenReturn(
+                TestEntitiesGenerator.getTestBundle());
         when(mockK8SServiceClient.deployDeBundle(any())).thenThrow(RestClientResponseException.class);
         assertThrows(RestClientResponseException.class, () -> service.deployDeBundle(null));
     }
@@ -605,4 +609,21 @@ public class EntandoBundleServiceTest {
         assertThat(entandoBundle.get().getTitle()).isEqualTo(titleOk);
     }
 
+    @Test
+    void listPostInitBundles_shouldReturnFilteredValue() {
+        List<EntandoBundleEntity> listKo = new ArrayList<>();
+        String url = "docker://docker.io/entando/test";
+        IntStream.range(1, 4).forEach(i -> {
+            EntandoBundleEntity entity = getTestComponent();
+            entity.setRepoUrl(url + i);
+            entity.setEcrInstallCause(i % 2 == 0 ? EcrInstallCause.POST_INIT : EcrInstallCause.STANDARD);
+            listKo.add(entity);
+        });
+        when(installedComponentRepository.findAll()).thenReturn(listKo);
+
+        PagedMetadata<EntandoBundle> list = service.listInstalledOrRemovedPostInitBundles();
+        assertThat(list.getBody()).isNotEmpty();
+        assertThat(list.getBody()).hasSize(1);
+
+    }
 }

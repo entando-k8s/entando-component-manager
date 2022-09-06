@@ -56,10 +56,11 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class DefaultK8SServiceClient implements K8SServiceClient {
-
+    
     public static final String APPS_ENDPOINT = "apps";
     public static final String PLUGINS_ENDPOINT = "plugins";
     public static final String BUNDLES_ENDPOINT = "bundles";
+    public static final String ECR_INSTALL_CAUSE_FILTER = "installCause";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
     public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
 
@@ -250,10 +251,17 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+        return getBundlesInObservedNamespaces(Optional.empty());
+    }
 
+    @Override
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> ecrInstallCause) {
         LOGGER.info("### fetching bundles from all namespaces");
+        final Hop hopRoot = Hop.rel(BUNDLES_ENDPOINT);
+        Hop hop = ecrInstallCause.map(t -> hopRoot.withParameter(ECR_INSTALL_CAUSE_FILTER, t))
+                .orElse(hopRoot);
 
-        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
+        return tryOrThrow(() -> traverson.follow(hop)
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -261,12 +269,22 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .collect(Collectors.toList()));
     }
 
+
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+        return getBundlesInNamespace(namespace, Optional.empty());
+    }
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> ecrInstallCause) {
 
         LOGGER.info("### fetching bundles from " + namespace + " namespace");
 
-        return tryOrThrow(() -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace))
+        final Hop hopRoot = Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace);
+        Hop hop = ecrInstallCause.map(t -> hopRoot.withParameter(ECR_INSTALL_CAUSE_FILTER, t))
+                .orElse(hopRoot);
+
+        return tryOrThrow(() -> traverson.follow(hop)
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -276,9 +294,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+        return getBundlesInNamespaces(namespaces, Optional.empty());
+    }
+
+    @Override
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> ecrInstallCause) {
         @SuppressWarnings("unchecked")
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
-                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n))
+                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, ecrInstallCause))
                         .exceptionally(ex -> {
                             LOGGER.log(Level.SEVERE, "An error occurred while retrieving bundle from a namespace", ex);
                             return Collections.emptyList();
@@ -402,10 +425,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle) {
 
-        String logMessage = String.format("### deploy bundle %s",
+        String type =
+                entandoDeBundle.getMetadata().getAnnotations() != null ? entandoDeBundle.getMetadata().getAnnotations()
+                        .get(ECR_INSTALL_CAUSE_ANNOTATION) : null;
+        String logMessage = String.format("### deploy bundle %s of type %s",
                 ObjectUtils.isEmpty(entandoDeBundle.getMetadata().getName())
                         ? entandoDeBundle.getSpec().getDetails().getName()
-                        : entandoDeBundle.getMetadata().getName());
+                        : entandoDeBundle.getMetadata().getName(),
+                type);
 
         Link deployBundleHref = traverson.follow(BUNDLES_ENDPOINT).asLink();
 

@@ -23,10 +23,12 @@ class PostInitProcessListenerTest {
 
     private PostInitProcessListener postInitProcessListener;
     private PostInitService postInitService;
+    private PostInitConfigurationService postInitConfigurationService;
 
     @BeforeEach
     public void setup() throws Exception {
         postInitService = Mockito.mock(PostInitServiceImpl.class);
+        postInitConfigurationService = Mockito.mock(PostInitConfigurationServiceImpl.class);
 
     }
 
@@ -37,13 +39,13 @@ class PostInitProcessListenerTest {
 
     @Test
     void testTimerTask_ShouldWaitTimeout() {
-        when(postInitService.getFrequencyInSeconds()).thenReturn(POST_INIT_CONFIG_FREQUENCY);
-        when(postInitService.getMaxAppWaitInSeconds()).thenReturn(POST_INIT_CONFIG_TIMEOUT);
+        when(postInitConfigurationService.getFrequencyInSeconds()).thenReturn(POST_INIT_CONFIG_FREQUENCY);
+        when(postInitConfigurationService.getMaxAppWaitInSeconds()).thenReturn(POST_INIT_CONFIG_TIMEOUT);
         when(postInitService.isCompleted()).thenReturn(true);
         when(postInitService.shouldRetry()).thenReturn(true);
 
         ApplicationReadyEvent event = Mockito.mock(ApplicationReadyEvent.class);
-        postInitProcessListener = new PostInitProcessListener(postInitService);
+        postInitProcessListener = new PostInitProcessListener(postInitService, postInitConfigurationService);
         postInitProcessListener.onApplicationEvent(event);
 
         try {

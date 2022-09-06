@@ -11,7 +11,7 @@ public class BundleNotFoundException extends EntandoComponentManagerException im
     private final transient Object[] args;
 
     public BundleNotFoundException(String bundleId) {
-        super();
+        super(String.format("bundle not found with identifier:'%s' ", bundleId));
         this.args = new Object[]{bundleId};
     }
 

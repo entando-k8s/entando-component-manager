@@ -14,6 +14,8 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE;
+
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -43,6 +45,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -86,6 +89,52 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         this.installedComponentRepo = installedComponentRepo;
         this.bundleStatusHelper = bundleStatusHelper;
         this.entandoDeBundleComposer = entandoDeBundleComposer;
+    }
+
+    @Override
+    public PagedMetadata<EntandoBundle> listInstalledOrRemovedPostInitBundles() {
+
+        // postInit bundle installed
+        List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAll();
+        List<EntandoBundle> postInitInstalledBundles = installedBundles.stream()
+                .filter(this::isPostInitBundle)
+                .map(this::convertToBundleFromEntity)
+                .collect(Collectors.toList());
+
+        // ALL postInit bundle from CR List
+        List<EntandoBundle> allPostInitBundles = listPostInitBundlesFromEcr();
+
+        // MERGE postinitInstalled and CR postinit not installed
+        Set<String> keySetInstalled = postInitInstalledBundles.stream().map(EntandoBundle::getCode)
+                .collect(Collectors.toSet());
+        List<EntandoBundle> postInitBundles = allPostInitBundles.stream()
+                .filter(b -> !keySetInstalled.contains(b.getCode())).collect(Collectors.toList());
+        postInitBundles.addAll(postInitInstalledBundles);
+
+        PagedListRequest request = new PagedListRequest();
+        List<EntandoBundle> sublist = request.getSublist(postInitBundles);
+
+        return new PagedMetadata<>(request, sublist, postInitBundles.size());
+    }
+
+    private List<EntandoBundle> listPostInitBundlesFromEcr() {
+        List<EntandoDeBundle> bundles;
+        if (accessibleDigitalExchanges.isEmpty()) {
+            bundles = k8SServiceClient.getBundlesInObservedNamespaces(
+                    Optional.of(ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE));
+        } else {
+            bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges,
+                    Optional.of(ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE));
+        }
+
+        return bundles.stream()
+                .map(this::convertToBundleFromEcr)
+                .collect(Collectors.toList());
+    }
+
+
+    private boolean isPostInitBundle(EntandoBundleEntity entity) {
+        return EcrInstallCause.POST_INIT.equals(entity.getEcrInstallCause());
     }
 
     @Override
@@ -399,10 +448,16 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public EntandoBundle deployDeBundle(BundleInfo bundleInfo) {
+        return deployDeBundle(bundleInfo, EcrInstallCause.STANDARD);
+    }
 
-        final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo);
+    @Override
+    public EntandoBundle deployDeBundle(BundleInfo bundleInfo, EcrInstallCause installCause) {
+        final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo,
+                installCause);
         EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
         return convertToBundleFromEcr(deployedBundle);
+
     }
 
     @Override
