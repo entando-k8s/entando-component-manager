@@ -14,7 +14,7 @@
 
 package org.entando.kubernetes.service.digitalexchange.component;
 
-import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE;
+import static org.entando.kubernetes.client.k8ssvc.K8SServiceClient.ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE;
 
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
-import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -121,10 +121,10 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         List<EntandoDeBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces(
-                    Optional.of(BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE));
+                    Optional.of(ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE));
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges,
-                    Optional.of(BUNDLE_TYPE_ANNOTATION_POSTINIT_VALUE));
+                    Optional.of(ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE));
         }
 
         return bundles.stream()
@@ -134,7 +134,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
 
     private boolean isPostInitBundle(EntandoBundleEntity entity) {
-        return OperatorStarter.POST_INIT.equals(entity.getOperationStarter());
+        return EcrInstallCause.POST_INIT.equals(entity.getEcrInstallCause());
     }
 
     @Override
@@ -448,11 +448,11 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public EntandoBundle deployDeBundle(BundleInfo bundleInfo) {
-        return deployDeBundle(bundleInfo, OperatorStarter.REST_CLIENT);
+        return deployDeBundle(bundleInfo, EcrInstallCause.REST_CLIENT);
     }
 
     @Override
-    public EntandoBundle deployDeBundle(BundleInfo bundleInfo, OperatorStarter operator) {
+    public EntandoBundle deployDeBundle(BundleInfo bundleInfo, EcrInstallCause operator) {
         final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo, operator);
         EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
         return convertToBundleFromEcr(deployedBundle);

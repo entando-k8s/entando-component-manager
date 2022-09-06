@@ -101,9 +101,9 @@ public class EntandoBundleEntity {
     private boolean installed;
 
     @Size(max = 64)
-    @Column(name = "operation_starter")
+    @Column(name = "ecr_install_cause")
     @Enumerated(EnumType.STRING)
-    private OperatorStarter operationStarter;
+    private EntandoBundleEntity.EcrInstallCause ecrInstallCause;
 
     @Column(name = "signature")
     private String signature;
@@ -129,7 +129,7 @@ public class EntandoBundleEntity {
         this.id = UUID.randomUUID();
     }
 
-    public enum OperatorStarter {
+    public enum EcrInstallCause {
         REST_CLIENT, POST_INIT;
 
     }

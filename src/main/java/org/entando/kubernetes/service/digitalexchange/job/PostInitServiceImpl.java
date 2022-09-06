@@ -26,7 +26,7 @@ import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.common.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
-import org.entando.kubernetes.model.job.EntandoBundleEntity.OperatorStarter;
+import org.entando.kubernetes.model.job.EntandoBundleEntity.EcrInstallCause;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.service.KubernetesService;
@@ -224,7 +224,7 @@ public class PostInitServiceImpl implements PostInitService {
                     EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
 
                     EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy,
-                            OperatorStarter.POST_INIT);
+                            EcrInstallCause.POST_INIT);
 
                     Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
 
@@ -289,7 +289,7 @@ public class PostInitServiceImpl implements PostInitService {
                 .bundleId(BundleUtilities.removeProtocolAndGetBundleId(item.getUrl()))
                 .gitRepoAddress(item.getUrl())
                 .build();
-        return bundleService.deployDeBundle(bundleInfo, OperatorStarter.POST_INIT);
+        return bundleService.deployDeBundle(bundleInfo, EcrInstallCause.POST_INIT);
     }
 
     private Optional<String> retrieveApplicationStatus() {
