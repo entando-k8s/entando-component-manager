@@ -448,12 +448,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public EntandoBundle deployDeBundle(BundleInfo bundleInfo) {
-        return deployDeBundle(bundleInfo, EcrInstallCause.REST_CLIENT);
+        return deployDeBundle(bundleInfo, EcrInstallCause.STANDARD);
     }
 
     @Override
-    public EntandoBundle deployDeBundle(BundleInfo bundleInfo, EcrInstallCause operator) {
-        final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo, operator);
+    public EntandoBundle deployDeBundle(BundleInfo bundleInfo, EcrInstallCause installCause) {
+        final EntandoDeBundle entandoDeBundle = entandoDeBundleComposer.composeEntandoDeBundle(bundleInfo,
+                installCause);
         EntandoDeBundle deployedBundle = k8SServiceClient.deployDeBundle(entandoDeBundle);
         return convertToBundleFromEcr(deployedBundle);
 

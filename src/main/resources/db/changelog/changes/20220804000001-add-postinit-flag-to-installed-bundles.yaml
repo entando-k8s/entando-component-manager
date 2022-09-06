@@ -17,4 +17,4 @@ databaseChangeLog:
               - column:
                   name: ecr_install_cause
                   type: VARCHAR(64)
-                  defaultValue: "REST_CLIENT"
+                  defaultValue: "STANDARD"

@@ -616,7 +616,7 @@ public class EntandoBundleServiceTest {
         IntStream.range(1, 4).forEach(i -> {
             EntandoBundleEntity entity = getTestComponent();
             entity.setRepoUrl(url + i);
-            entity.setEcrInstallCause(i % 2 == 0 ? EcrInstallCause.POST_INIT : EcrInstallCause.REST_CLIENT);
+            entity.setEcrInstallCause(i % 2 == 0 ? EcrInstallCause.POST_INIT : EcrInstallCause.STANDARD);
             listKo.add(entity);
         });
         when(installedComponentRepository.findAll()).thenReturn(listKo);

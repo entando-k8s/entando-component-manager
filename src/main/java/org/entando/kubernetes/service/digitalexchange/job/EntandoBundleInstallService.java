@@ -144,12 +144,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
-        return this.install(bundle, tag, InstallAction.CREATE, EcrInstallCause.REST_CLIENT);
+        return this.install(bundle, tag, InstallAction.CREATE, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallAction conflictStrategy) {
-        return this.install(bundle, tag, conflictStrategy, EcrInstallCause.REST_CLIENT);
+        return this.install(bundle, tag, conflictStrategy, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity install(EntandoDeBundle bundle, EntandoDeBundleTag tag,
@@ -180,7 +180,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,
             InstallPlan installPlan) {
-        return installWithInstallPlan(bundle, tag, installPlan, EcrInstallCause.REST_CLIENT);
+        return installWithInstallPlan(bundle, tag, installPlan, EcrInstallCause.STANDARD);
     }
 
     public EntandoBundleJobEntity installWithInstallPlan(EntandoDeBundle bundle, EntandoDeBundleTag tag,

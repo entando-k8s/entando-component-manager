@@ -130,7 +130,7 @@ public class EntandoBundleEntity {
     }
 
     public enum EcrInstallCause {
-        REST_CLIENT, POST_INIT;
+        STANDARD, POST_INIT;
 
     }
 }

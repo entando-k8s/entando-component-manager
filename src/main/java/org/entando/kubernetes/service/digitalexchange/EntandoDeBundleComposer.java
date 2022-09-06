@@ -63,10 +63,10 @@ public class EntandoDeBundleComposer {
      * @return the composed EntandoDeBundle
      */
     public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo) {
-        return composeEntandoDeBundle(bundleInfo, EcrInstallCause.REST_CLIENT);
+        return composeEntandoDeBundle(bundleInfo, EcrInstallCause.STANDARD);
     }
 
-    public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo, EcrInstallCause operator) {
+    public EntandoDeBundle composeEntandoDeBundle(BundleInfo bundleInfo, EcrInstallCause installCause) {
         if (bundleInfo == null) {
             throw new EntandoComponentManagerException("The received BundleInfo is null");
         }
@@ -87,7 +87,7 @@ public class EntandoDeBundleComposer {
             throw new EntandoComponentManagerException("Null bundle descriptor");
         }
 
-        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo, operator);
+        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo, installCause);
     }
 
     private String selectVersionToFetch(List<String> tagList) {
@@ -144,7 +144,7 @@ public class EntandoDeBundleComposer {
     }
 
     private EntandoDeBundle createEntandoDeBundle(BundleDescriptor bundleDescriptor, List<String> tagList,
-            BundleInfo bundleInfo, EcrInstallCause operator) {
+            BundleInfo bundleInfo, EcrInstallCause installCause) {
 
         final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleInfo.getGitRepoAddress());
         final List<String> versionList = deBundleTags.stream()
@@ -152,7 +152,7 @@ public class EntandoDeBundleComposer {
                 .collect(Collectors.toList());
 
         Map<String, String> annotations = createAnnotationsFrom(bundleInfo.getBundleGroups());
-        addEcrInistallCauseToAnnotations(annotations, operator);
+        addEcrInistallCauseToAnnotations(annotations, installCause);
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
@@ -174,9 +174,9 @@ public class EntandoDeBundleComposer {
                 .build();
     }
 
-    private void addEcrInistallCauseToAnnotations(Map<String, String> annotations, EcrInstallCause operator) {
+    private void addEcrInistallCauseToAnnotations(Map<String, String> annotations, EcrInstallCause installCause) {
         String annotationValue =
-                EcrInstallCause.POST_INIT.equals(operator) ? ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE
+                EcrInstallCause.POST_INIT.equals(installCause) ? ECR_INSTALL_CAUSE_ANNOTATION_POSTINIT_VALUE
                         : ECR_INSTALL_CAUSE_ANNOTATION_STANDARD_VALUE;
         annotations.put(ECR_INSTALL_CAUSE_ANNOTATION, annotationValue);
 
