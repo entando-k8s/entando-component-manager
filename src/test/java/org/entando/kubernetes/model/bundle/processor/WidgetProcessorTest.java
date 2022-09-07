@@ -57,23 +57,27 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+        final String fileName = "widgets/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setWidgets(singletonList(fileName));
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new WidgetProcessor(componentDataRepository, new EntandoCoreClientTestDouble(),
                         new WidgetTemplateGeneratorServiceDouble(),
-                        validator), "widget");
+                        validator), spec, fileName);
     }
+
 
     @Test
     void canProcessDescriptorV1() throws IOException {
 
-        String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
         spec.setWidgets(singletonList("widgets/my_widget_descriptor.yaml"));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
+        String widgDescrFile = "src/test/resources/bundle/widgets/my_widget_descriptor.yaml";
         var installableList = execWidgetProcessor(widgDescrFile, null, bundleDescriptor);
 
         assertThat(installableList).hasSize(1);
@@ -156,9 +160,6 @@ class WidgetProcessorTest extends BaseProcessorTest {
         when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "css")).thenReturn(
                 List.of("widgets/my_widget_config_descriptor_v5/assets/css-res.css")
         );
-        String widgConfigDescrFile =
-                "src/test/resources/" + bundleCode + "/widgets/my_widget_config_descriptor_v5.yaml";
-        String widgDescrFile = "src/test/resources/" + bundleCode + "/widgets/my_widget_app_builder_descriptor_v5.yaml";
         when(bundleReader.calculateBundleId()).thenReturn(
                 BundleUtilities.removeProtocolAndGetBundleId(BundleInfoStubHelper.GIT_REPO_ADDRESS));
 
@@ -166,6 +167,9 @@ class WidgetProcessorTest extends BaseProcessorTest {
         spec.setWidgets(singletonList(STANDARD_WIDGET_DESCRIPTOR));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
+        String widgConfigDescrFile =
+                "src/test/resources/" + bundleCode + "/widgets/my_widget_config_descriptor_v5.yaml";
+        String widgDescrFile = "src/test/resources/" + bundleCode + "/widgets/my_widget_app_builder_descriptor_v5.yaml";
         var installableList = execWidgetProcessor(widgDescrFile, widgConfigDescrFile, bundleDescriptor);
         assertThat(installableList).hasSize(1);
         assertThat(installableList.get(0).getRepresentation().getExt()).isNotNull();

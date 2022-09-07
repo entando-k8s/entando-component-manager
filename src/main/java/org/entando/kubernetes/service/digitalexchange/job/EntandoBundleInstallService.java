@@ -2,7 +2,6 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -352,11 +351,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private Queue<Installable> getBundleInstallableComponents(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallPlan installPlan) {
 
-        try {
-            bundleReader.readBundleDescriptor(bundleDescriptorValidator);
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException("An error occurred while reading the root bundle descriptor");
-        }
+        bundleReader.readBundleDescriptor(bundleDescriptorValidator);
 
         return getInstallableComponentsByPriority(bundleReader, conflictStrategy, installPlan);
     }

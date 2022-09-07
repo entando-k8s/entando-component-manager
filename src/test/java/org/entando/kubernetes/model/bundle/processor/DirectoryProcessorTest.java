@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -178,7 +180,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
 
         // prefix each expected file path with the bundle code
         List<String> expectedCodeList = Stream
-                .of("widgets/my-widget-"  + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                .of("widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/css",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/js")
@@ -199,15 +201,25 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         assertThat(reportable.getCodes()).containsAll(expectedCodeList);
     }
 
+
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() throws IOException {
+        final String errorMessage = "exception test";
 
         when(baseBundleReader.isBundleV1()).thenReturn(true);
         when(baseBundleReader.containsResourceFolder()).thenReturn(true);
+        when(baseBundleReader.readBundleDescriptor()).thenThrow(
+                new EntandoComponentManagerException(errorMessage));
 
-        super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new DirectoryProcessor(new EntandoCoreClientTestDouble()), "directory");
+        EntandoComponentManagerException thrown = assertThrows(
+                EntandoComponentManagerException.class,
+                () -> new DirectoryProcessor(new EntandoCoreClientTestDouble()).process(baseBundleReader, null, null)
+        );
+
+        assertThat(thrown.getMessage()).isEqualTo(errorMessage);
+
     }
+
 
     @Test
     void shouldReturnTheExpectedNonRootDirectoryDescriptorFromTheEntandoBundleComponentJobEntity() {

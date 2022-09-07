@@ -2,10 +2,8 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -129,8 +127,7 @@ public class EntandoDeBundleComposer {
             Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundleUrl);
             final BundleReader bundleReader = new BundleReader(pathToDownloadedBundle, httpProtocolUrl);
             return bundleReader.readBundleDescriptor();
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException("Error during bundle descriptor reading");
+
         } finally {
             bundleDownloader.cleanTargetDirectory();
         }

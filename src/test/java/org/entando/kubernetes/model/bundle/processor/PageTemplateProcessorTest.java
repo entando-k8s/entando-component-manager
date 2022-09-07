@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.utils.FileUtils.readFromFile;
 import static org.mockito.Mockito.when;
@@ -55,7 +56,8 @@ class PageTemplateProcessorTest extends BaseProcessorTest {
                 readFromFile("bundle/pagemodels/my_page_model_descriptor.yaml"),
                 PageTemplateDescriptor.class);
 
-        when(bundleReader.readDescriptorFile("/pagemodels/my_page_model_descriptor.yaml", PageTemplateDescriptor.class))
+        when(bundleReader.readDescriptorFile("/pagemodels/my_page_model_descriptor.yaml",
+                PageTemplateDescriptor.class))
                 .thenReturn(pageTe);
 
         BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
@@ -101,8 +103,12 @@ class PageTemplateProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+        final String fileName = "page-templates/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setPageTemplates(singletonList(fileName));
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PageTemplateProcessor(new EntandoCoreClientTestDouble()), "pageTemplate");
+                new PageTemplateProcessor(new EntandoCoreClientTestDouble()), spec, fileName);
     }
+
 }

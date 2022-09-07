@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.bundle.processor;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -59,18 +58,13 @@ public class ContentProcessor extends BaseComponentProcessor<ContentDescriptor>
 
         List<Installable<ContentDescriptor>> installables = new LinkedList<>();
 
-        try {
-            final List<String> descriptorList = getDescriptorList(bundleReader);
+        final List<String> descriptorList = getDescriptorList(bundleReader);
 
-            for (String fileName : descriptorList) {
-                ContentDescriptor contentDescriptor = bundleReader
-                        .readDescriptorFile(fileName, ContentDescriptor.class);
-                InstallAction action = extractInstallAction(contentDescriptor.getId(), conflictStrategy, installPlan);
-                installables.add(new ContentInstallable(engineService, contentDescriptor, action));
-            }
-
-        } catch (IOException e) {
-            throw makeMeaningfulException(e);
+        for (String fileName : descriptorList) {
+            ContentDescriptor contentDescriptor = bundleReader
+                    .readDescriptorFile(fileName, ContentDescriptor.class);
+            InstallAction action = extractInstallAction(contentDescriptor.getId(), conflictStrategy, installPlan);
+            installables.add(new ContentInstallable(engineService, contentDescriptor, action));
         }
 
         return installables;

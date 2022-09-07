@@ -150,6 +150,10 @@ class FileProcessorTest extends BaseProcessorTest {
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/js/main.js"));
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+
         execShouldOmitBundleCodeRootFolderIfSystemLevelBundle(false, BundleProperty.WIDGET_FOLDER_PATH,
                 mockBundleReader::containsWidgetFolder, mockBundleReader::getWidgetsFiles);
     }

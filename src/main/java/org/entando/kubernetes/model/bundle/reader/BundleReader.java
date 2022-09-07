@@ -59,11 +59,11 @@ public class BundleReader {
         this.entandoDeBundle = entandoDeBundle;
     }
 
-    public BundleDescriptor readBundleDescriptor() throws IOException {
+    public BundleDescriptor readBundleDescriptor() {
         return readBundleDescriptor(null);
     }
 
-    public BundleDescriptor readBundleDescriptor(BundleDescriptorValidator bundleValidator) throws IOException {
+    public BundleDescriptor readBundleDescriptor(BundleDescriptorValidator bundleValidator) {
         if (this.bundleDescriptor == null) {
             // read and assign
             this.bundleDescriptor = readDescriptorFile(BundleProperty.DESCRIPTOR_FILENAME.getValue(),
@@ -88,7 +88,6 @@ public class BundleReader {
         return this.bundleDescriptor;
     }
 
-
     public boolean containsResourceFolder() {
         return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
@@ -97,7 +96,7 @@ public class BundleReader {
         return bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
 
-    public String getCode() throws IOException {
+    public String getCode() {
         return readBundleDescriptor().getCode();
     }
 
@@ -170,7 +169,8 @@ public class BundleReader {
 
     }
 
-    public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) throws IOException {
+
+    public <T> T readDescriptorFile(final String fileName, final Class<T> clazz) {
         try (InputStream fis = new FileInputStream(bundleBasePath.resolve(fileName).toFile())) {
             return readDescriptorFile(fis, clazz);
         } catch (IOException e) {
@@ -262,11 +262,7 @@ public class BundleReader {
     }
 
     public boolean isBundleV1() {
-        try {
-            return this.readBundleDescriptor().isVersion1();
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException("An error occurred while reading the bundle descriptor");
-        }
+        return this.readBundleDescriptor().isVersion1();
     }
 
     public String calculateBundleId() {

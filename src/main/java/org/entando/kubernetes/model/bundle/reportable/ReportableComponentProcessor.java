@@ -29,25 +29,19 @@ public interface ReportableComponentProcessor {
      *
      * @param bundleReader bundle reader capable of reading the bundle using it's descriptor
      * @return Should return a list of String representing the identifier of every read component
-     * @throws EntandoComponentManagerException in case of any error while reading any the file from the Zip package
      */
     default Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
 
         List<String> idList = new ArrayList<>();
 
-        try {
-            List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
-            for (String fileName : contentDescriptorList) {
-                idList.addAll(this.readDescriptorKeys(bundleReader, fileName, componentProcessor));
-            }
-
-            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    this.getReportableRemoteHandler());
-
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s type",
-                    componentProcessor.getSupportedComponentType().getTypeName()), e);
+        List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
+        for (String fileName : contentDescriptorList) {
+            idList.addAll(this.readDescriptorKeys(bundleReader, fileName, componentProcessor));
         }
+
+        return new Reportable(componentProcessor.getSupportedComponentType(), idList,
+                this.getReportableRemoteHandler());
+
     }
 
     /**
@@ -66,8 +60,9 @@ public interface ReportableComponentProcessor {
                         .stream().map(descriptor -> descriptor.getComponentKey().getKey())
                         .collect(Collectors.toList());
             } else {
-                return Arrays.asList(bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
-                        .getComponentKey().getKey());
+                return Arrays.asList(
+                        bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
+                                .getComponentKey().getKey());
             }
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format(

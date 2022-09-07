@@ -41,8 +41,6 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
 
 /**
  * Processor to create Widgets, can handle descriptors with custom UI embedded or a separate custom UI file.
@@ -173,27 +171,23 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         final var res = new LinkedList<Installable<WidgetDescriptor>>();
 
-        try {
-            final var descriptorList = getDescriptorList(bundleReader);
+        final var descriptorList = getDescriptorList(bundleReader);
 
-            for (final String fileName : descriptorList) {
-                final WidgetDescriptor widgetDescriptor =
-                        makeWidgetDescriptorFromFile(bundleReader, fileName, pluginIngressPathMap);
-                if (widgetDescriptor.getType().equals(TYPE_WIDGET_CONFIG)) {
-                    InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy,
-                            installPlan);
-                    res.add(new WidgetInstallable(engineService, widgetDescriptor, action, componentDataRepository));
-                }
+        for (final String fileName : descriptorList) {
+            final WidgetDescriptor widgetDescriptor =
+                    makeWidgetDescriptorFromFile(bundleReader, fileName, pluginIngressPathMap);
+            if (widgetDescriptor.getType().equals(TYPE_WIDGET_CONFIG)) {
+                InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy,
+                        installPlan);
+                res.add(new WidgetInstallable(engineService, widgetDescriptor, action, componentDataRepository));
             }
-        } catch (IOException e) {
-            throw makeMeaningfulException(e);
         }
 
         return res;
     }
 
     private WidgetDescriptor makeWidgetDescriptorFromFile(BundleReader bundleReader, String fileName,
-            Map<String, String> pluginIngressPathMap) throws IOException {
+            Map<String, String> pluginIngressPathMap) {
         var widgetDescriptor = bundleReader.readDescriptorFile(fileName, WidgetDescriptor.class);
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
         widgetDescriptor.applyFallbacks();
@@ -267,16 +261,10 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             Map<String, String> pluginIngressPathMap) {
         String[] assets = collectResourcesPaths(descriptor.getDescriptorMetadata().getFilename(),
                 bundleReader).toArray(new String[0]);
-        try {
-            descriptor.setDescriptorMetadata(
-                    new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCode(), assets,
-                            null, bundleReader.calculateBundleId(), templateGeneratorService));
-        } catch (IOException ex) {
-            log.error("Error reading descriptor for WidgetDescriptor:'{}'", descriptor.getCode(), ex);
-            throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR,
-                    String.format("Error reading descriptor for WidgetDescriptor:'%s' error:'%s'",
-                            descriptor.getCode(), ex.getMessage()));
-        }
+
+        descriptor.setDescriptorMetadata(
+                new DescriptorMetadata(pluginIngressPathMap, fileName, bundleReader.getCode(), assets,
+                        null, bundleReader.calculateBundleId(), templateGeneratorService));
 
     }
 
@@ -352,19 +340,14 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     @Override
     public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
-        try {
-            WidgetDescriptor widgetDescriptor =
-                    (WidgetDescriptor) bundleReader.readDescriptorFile(fileName,
-                            componentProcessor.getDescriptorClass());
-            widgetDescriptor.applyFallbacks();
 
-            composeAndSetCode(widgetDescriptor, bundleReader);
+        WidgetDescriptor widgetDescriptor =
+                (WidgetDescriptor) bundleReader.readDescriptorFile(fileName,
+                        componentProcessor.getDescriptorClass());
+        widgetDescriptor.applyFallbacks();
 
-            return List.of(widgetDescriptor.getComponentKey().getKey());
-        } catch (IOException e) {
-            throw new EntandoComponentManagerException(String.format(
-                    "Error parsing content type %s from widget descriptor %s",
-                    componentProcessor.getSupportedComponentType(), fileName), e);
-        }
+        composeAndSetCode(widgetDescriptor, bundleReader);
+
+        return List.of(widgetDescriptor.getComponentKey().getKey());
     }
 }

@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.utils.FileUtils.readFromFile;
 import static org.mockito.Mockito.when;
@@ -46,8 +47,12 @@ class ContentProcessorTest extends BaseProcessorTest {
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
 
+        final String fileName = "contents/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setContents(singletonList(fileName));
+
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new ContentProcessor(new EntandoCoreClientTestDouble()), "content");
+                new ContentProcessor(new EntandoCoreClientTestDouble()), spec, fileName);
     }
 
     @Test

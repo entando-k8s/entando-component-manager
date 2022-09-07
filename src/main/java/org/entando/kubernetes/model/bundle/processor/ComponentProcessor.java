@@ -2,7 +2,6 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import static java.util.Optional.ofNullable;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,10 +94,9 @@ public interface ComponentProcessor<T extends Descriptor> {
      *
      * @param bundleReader the BundleReader to use to read the bundle descriptor
      * @return the list of the desired component descriptors filenames read from the bundle descriptor
-     * @throws IOException                      if an error occurs during the bundle reading
      * @throws EntandoComponentManagerException if the param getComponentSelectionFnOpt is empty
      */
-    default List<String> getDescriptorList(BundleReader bundleReader) throws IOException {
+    default List<String> getDescriptorList(BundleReader bundleReader) {
 
         if (this.getComponentSelectionFn().isEmpty()) {
             throw new EntandoComponentManagerException(

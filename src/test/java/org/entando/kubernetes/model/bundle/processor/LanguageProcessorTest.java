@@ -96,8 +96,12 @@ class LanguageProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
+        final String fileName = "languages/notexist.yaml";
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setLanguages(singletonList(fileName));
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new LanguageProcessor(new EntandoCoreClientTestDouble()), "language");
+                new LanguageProcessor(new EntandoCoreClientTestDouble()), "language", spec);
     }
+
 }

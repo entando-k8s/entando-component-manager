@@ -69,17 +69,13 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
             InstallPlan installPlan) {
         final List<Installable<DirectoryDescriptor>> installables = new LinkedList<>();
 
-        try {
-            String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(bundleReader);
+        String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(bundleReader);
 
-            if (!ObjectUtils.isEmpty(bundleRootFolder)) {
-                InstallAction rootDirectoryAction = extractInstallAction(bundleRootFolder, conflictStrategy,
-                        installPlan);
-                installables.add(new DirectoryInstallable(engineService,
-                        new DirectoryDescriptor(bundleRootFolder, true), rootDirectoryAction));
-            }
-        } catch (IOException e) {
-            throw makeMeaningfulException(e);
+        if (!ObjectUtils.isEmpty(bundleRootFolder)) {
+            InstallAction rootDirectoryAction = extractInstallAction(bundleRootFolder, conflictStrategy,
+                    installPlan);
+            installables.add(new DirectoryInstallable(engineService,
+                    new DirectoryDescriptor(bundleRootFolder, true), rootDirectoryAction));
         }
 
         return installables;
