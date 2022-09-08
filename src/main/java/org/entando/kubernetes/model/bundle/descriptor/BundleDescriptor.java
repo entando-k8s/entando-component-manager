@@ -30,7 +30,8 @@ public class BundleDescriptor extends VersionedDescriptor {
     @JsonDeserialize(using = KeepAsJsonDeserializer.class)
     @JsonRawValue
     private String ext;
-
+    private String thumbnail;
+    
     @Override
     public ComponentKey getComponentKey() {
         return ObjectUtils.isEmpty(code)
