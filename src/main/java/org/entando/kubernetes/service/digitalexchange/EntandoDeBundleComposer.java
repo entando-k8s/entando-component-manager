@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +15,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -156,14 +156,20 @@ public class EntandoDeBundleComposer {
                 .withDescription(bundleDescriptor.getDescription())
                 .addNewDistTag(BundleUtilities.LATEST_VERSION, getLatestSemverVersion(deBundleTags))
                 .withVersions(versionList)
-                .withThumbnail(bundleInfo.getDescriptionImage())
-                // TODO add thumbnail
+                .withThumbnail(retrieveThumbnail(bundleDescriptor, bundleInfo))
                 .endDetails()
                 .withTags(deBundleTags)
                 .endSpec()
                 .build();
     }
 
+    private String retrieveThumbnail(BundleDescriptor bundleDescriptor, BundleInfo bundleInfo) {
+        if (StringUtils.isNotBlank(bundleInfo.getDescriptionImage())) {
+            return bundleInfo.getDescriptionImage();
+        } else {
+            return bundleDescriptor.getThumbnail();
+        }
+    }
 
     private String getLatestSemverVersion(List<EntandoDeBundleTag> deBundleTags) {
 
