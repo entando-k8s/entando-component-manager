@@ -268,20 +268,44 @@ class PluginProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void shouldAddTheCmEndpointEnvVar() throws Exception {
+    void shouldAddTheCmEndpointEnvVarHttps() throws Exception {
 
         TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
-                "http://www.myentando.com/auth/realms/entando",
-                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange"));
+                "http://www.mykc.com/auth/realms/entando",
+                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
+                "ENTANDO_APP_HOST_NAME", "www.myentando.com",
+                "ENTANDO_APP_USE_TLS", "true"));
 
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
 
-        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+        final List<? extends Installable> installablesHttps = execTestCreatePlugin(
+                PluginStubHelper.stubPluginDescriptorV5());
 
-        final PluginDescriptor representation = (PluginDescriptor) installables.get(0).getRepresentation();
-        final EnvironmentVariable environmentVariable = representation.getEnvironmentVariables().get(0);
-        assertThat(environmentVariable.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
-        assertThat(environmentVariable.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
+        final PluginDescriptor representationHttps = (PluginDescriptor) installablesHttps.get(0).getRepresentation();
+        final EnvironmentVariable environmentVariableHttps = representationHttps.getEnvironmentVariables().get(0);
+        assertThat(environmentVariableHttps.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+        assertThat(environmentVariableHttps.getValue()).isEqualTo("https://www.myentando.com/digital-exchange");
+    }
+
+    @Test
+    void shouldAddTheCmEndpointEnvVarHttp() throws Exception {
+
+        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
+                "http://www.mykc.com/auth/realms/entando",
+                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
+                "ENTANDO_APP_HOST_NAME", "www.myentando.com",
+                "ENTANDO_APP_USE_TLS", "false"));
+
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+
+        final List<? extends Installable> installablesHttp = execTestCreatePlugin(
+                PluginStubHelper.stubPluginDescriptorV5());
+
+        final PluginDescriptor representationHttp = (PluginDescriptor) installablesHttp.get(0).getRepresentation();
+        final EnvironmentVariable environmentVariableHttp = representationHttp.getEnvironmentVariables().get(0);
+        assertThat(environmentVariableHttp.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+        assertThat(environmentVariableHttp.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
+
     }
 
     private void assertOnEndpoints(Installable installable, String endpoint, String customEndpoint) {

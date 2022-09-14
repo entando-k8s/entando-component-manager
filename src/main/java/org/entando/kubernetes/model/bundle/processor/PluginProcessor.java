@@ -1,8 +1,6 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +8,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -32,7 +32,6 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 /**
@@ -49,11 +48,10 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         EntandoK8SServiceReportableProcessor {
 
     public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn-";
-    public static final String SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI =
-            "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI";
     public static final String SERVER_SERVLET_CONTEXT_PATH = "SERVER_SERVLET_CONTEXT_PATH";
     public static final String ENTANDO_ECR_INGRESS_URL = "ENTANDO_ECR_INGRESS_URL";
-
+    public static final String ENTANDO_APP_HOST_NAME = "ENTANDO_APP_HOST_NAME";
+    public static final String ENTANDO_APP_USE_TLS = "ENTANDO_APP_USE_TLS";
 
     private final String cmEndpoint;
 
@@ -73,24 +71,31 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     private String composeCmEndpoint() {
 
-        String env = System.getenv(SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI);
-        if (ObjectUtils.isEmpty(env)) {
-            return "";
-        }
+        final String entandoHost = System.getenv(ENTANDO_APP_HOST_NAME);
+        final String ecrContextPath = System.getenv(SERVER_SERVLET_CONTEXT_PATH);
 
-        final String contextPath = System.getenv(SERVER_SERVLET_CONTEXT_PATH);
-        try {
-            final URL cmUrl = new URL(env);
-            return new DefaultUriBuilderFactory().builder()
-                    .scheme(cmUrl.getProtocol())
-                    .host(cmUrl.getHost())
-                    .port(cmUrl.getPort())
-                    .path(contextPath)
+        log.trace("try to composed with entandoHost:'{}' ecrContextPath:'{}'", entandoHost, ecrContextPath);
+        if (StringUtils.isBlank(entandoHost)) {
+            log.warn("Cannot compose:'{}'", ENTANDO_ECR_INGRESS_URL);
+            return "";
+        } else {
+            String ecmUrl = new DefaultUriBuilderFactory().builder()
+                    .scheme(retrieveProtocol())
+                    .host(entandoHost)
+                    // port not evaluated, ingressHosName cannot contain port (regexp validation in CRD)
+                    .path(ecrContextPath)
                     .build()
                     .toString();
-        } catch (MalformedURLException e) {
-            throw new EntandoComponentManagerException("Cannot compose " + ENTANDO_ECR_INGRESS_URL);
+
+            log.debug("composed url:'{}' for plugin env var:'{}'", ecmUrl, ENTANDO_ECR_INGRESS_URL);
+
+            return ecmUrl;
         }
+    }
+
+    private String retrieveProtocol() {
+        boolean useTls = BooleanUtils.toBoolean(System.getenv(ENTANDO_APP_USE_TLS));
+        return useTls ? "https" : "http";
     }
 
     @Override
@@ -244,7 +249,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         String deploymentBaseName;
         String inputValueForSha;
 
-        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
+        if (StringUtils.isNotBlank(descriptor.getDeploymentBaseName())) {
             deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
             inputValueForSha = descriptor.getDeploymentBaseName();
         } else {
