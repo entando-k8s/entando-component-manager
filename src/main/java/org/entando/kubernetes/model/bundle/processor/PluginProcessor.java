@@ -76,7 +76,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         log.trace("try to composed with entandoHost:'{}' ecrContextPath:'{}'", entandoHost, ecrContextPath);
         if (StringUtils.isBlank(entandoHost)) {
-            log.warn("Cannot compose:'{}'", ENTANDO_ECR_INGRESS_URL);
+            log.error("Error condition unable to compose:'{}' because env var:'{}' is blank", ENTANDO_ECR_INGRESS_URL,
+                    ENTANDO_APP_HOST_NAME);
             return "";
         } else {
             String ecmUrl = new DefaultUriBuilderFactory().builder()
