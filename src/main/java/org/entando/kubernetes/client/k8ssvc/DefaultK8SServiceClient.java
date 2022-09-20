@@ -203,6 +203,15 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
+    public void removeIngressPathForPlugin(String pluginCode) {
+        Link deleteIngressPathsHref = traverson.follow(PLUGINS_ENDPOINT)
+                .follow(Hop.rel("delete-plugin-ingress-path").withParameter("name", pluginCode))
+                .asLink();
+        tryOrThrow(() -> restTemplate.delete(deleteIngressPathsHref.toUri()),
+                String.format("remove ingress path from plugin %s", pluginCode));
+    }
+
+    @Override
     public EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
         URI linkToCall = tryOrThrow(() -> {
             Link linkToApp = traverson.follow("apps")

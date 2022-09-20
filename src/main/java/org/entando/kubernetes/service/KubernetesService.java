@@ -92,6 +92,9 @@ public class KubernetesService {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlinkAndScaleDown);
     }
 
+    public void removeIngressPathForPlugin(String pluginId) {
+        k8sServiceClient.removeIngressPathForPlugin(pluginId);
+    }
 
     public EntandoAppPluginLink linkPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = createNewPlugin(plugin);

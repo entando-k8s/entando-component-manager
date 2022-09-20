@@ -90,6 +90,9 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 return; //Do nothing
             }
 
+            log.info("Removing ingress path to plugin with code:'{}'", pluginCode);
+            kubernetesService.removeIngressPathForPlugin(pluginCode);
+
             log.info("Removing link to plugin {}", pluginCode);
             kubernetesService.unlinkAndScaleDownPlugin(pluginCode);
 

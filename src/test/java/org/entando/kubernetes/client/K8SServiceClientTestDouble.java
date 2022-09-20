@@ -85,6 +85,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
+    public void removeIngressPathForPlugin(String pluginCode) {
+        //Don't do anything atm
+    }
+
+    @Override
     public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
         // TODO?
         return null;
