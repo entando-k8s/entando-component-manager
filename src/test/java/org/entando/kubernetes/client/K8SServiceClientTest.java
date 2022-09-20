@@ -167,7 +167,7 @@ public class K8SServiceClientTest {
 
         client.removeIngressPathForPlugin(pluginName);
 
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/plugins/" + pluginName + "/ingress")));
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/plugins/ingress/" + pluginName)));
 
     }
 

@@ -204,6 +204,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public void removeIngressPathForPlugin(String pluginCode) {
+        URI deleteUri = UriComponentsBuilder.fromUri(URI.create(k8sServiceUrl)).path(PLUGINS_ENDPOINT).path("ingress")
+                .path(pluginCode).build().toUri();
+
         Link deleteIngressPathsHref = traverson.follow(PLUGINS_ENDPOINT)
                 .follow(Hop.rel("delete-plugin-ingress-path").withParameter("name", pluginCode))
                 .asLink();
