@@ -162,14 +162,12 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldDeleteThePluginIngressPath() {
-        //EntandoPlugin testPlugin = getTestEntandoPluginWithIngressPath();
-        //testPlugin.getMetadata().getName();
+    void shouldDeleteThePluginIngressPath() {
         String pluginName = "pn-439a8698-2c7d460c-entando-api";
 
         client.removeIngressPathForPlugin(pluginName);
 
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/plugins/" + pluginName + "/ingress")));
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/plugins/ingress/" + pluginName)));
 
     }
 

@@ -127,7 +127,7 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(singlePluginResponse)));
-        wireMockServer.stubFor(delete(urlMatching("/plugins/[a-z0-9A-Z\\-]+/ingress"))
+        wireMockServer.stubFor(delete(urlMatching("/plugins/ingress/[a-z0-9A-Z\\-]+?"))
                 .withRequestBody(new AnythingPattern())
                 .willReturn(aResponse()
                         .withStatus(204)));
