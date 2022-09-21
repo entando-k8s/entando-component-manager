@@ -37,6 +37,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     public static final int MIN_FULL_DEPLOYMENT_NAME_LENGTH = 50;
     public static final int MAX_FULL_DEPLOYMENT_NAME_LENGTH = 200;
     public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = MAX_FULL_DEPLOYMENT_NAME_LENGTH;
+    public static final int ROLES_MAX_LENGTH = 4000;
 
     private final int fullDeploymentNameMaxlength;
 
@@ -136,6 +137,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         List<DescriptorValidationFunction<PluginDescriptor>> validationFunctionList = new ArrayList<>();
         validationFunctionList.add(this::validateDescriptorFormatOrThrow);
         validationFunctionList.add(this::validateCustomIngressPathOrThrow);
+        validationFunctionList.add(this::validateRolesLengthOrThrow);
         validationFunctionList.add(this::validateSecurityLevelOrThrow);
         validationFunctionList.add(this::validateFullDeploymentNameLength);
 
@@ -208,6 +210,19 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
                 throw new InvalidBundleException(String.format(INVALID_CUSTOM_INGRESS_PATH, descriptor.getName(),
                         ingressPath));
+            }
+        }
+        return descriptor;
+    }
+
+    private PluginDescriptor validateRolesLengthOrThrow(PluginDescriptor descriptor) {
+        List<String> rolesList = descriptor.getRoles();
+        if (rolesList != null && !rolesList.isEmpty()) {
+
+            String roles = rolesList.stream().collect(Collectors.joining(","));
+            if (roles.length() >= ROLES_MAX_LENGTH) {
+                throw new InvalidBundleException(
+                        String.format(INVALID_ROLES_MAX_LENGTH_EXCEEDED_ERROR, roles, ROLES_MAX_LENGTH));
             }
         }
         return descriptor;
@@ -327,5 +342,8 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
             "The plugin \"%s\" contains an invalid custom ingress path: \"%s\". Custom ingress paths cannot mime the "
                     + "standard format in which the first subpath matches with the regex \""
                     + BundleUtilities.DESCRIPTOR_CODE_REGEX + "\"";
+
+    public static final String INVALID_ROLES_MAX_LENGTH_EXCEEDED_ERROR =
+            "The roles (joined with comma) \"%s\" exceeds the max allowed length \"%d\".";
 
 }
