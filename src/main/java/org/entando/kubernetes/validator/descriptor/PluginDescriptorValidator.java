@@ -220,7 +220,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         if (rolesList != null && !rolesList.isEmpty()) {
 
             String roles = rolesList.stream().collect(Collectors.joining(","));
-            if (roles.length() >= ROLES_MAX_LENGTH) {
+            if (roles.length() > ROLES_MAX_LENGTH) {
                 throw new InvalidBundleException(
                         String.format(INVALID_ROLES_MAX_LENGTH_EXCEEDED_ERROR, roles, ROLES_MAX_LENGTH));
             }
