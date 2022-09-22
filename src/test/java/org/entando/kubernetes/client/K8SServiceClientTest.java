@@ -9,7 +9,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -228,7 +227,7 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldGetBundlesFromAllObservedNamespaces() {
-        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
+        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces(Optional.empty());
         assertThat(bundles).hasSize(1);
         assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
         assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("@entando/my-bundle");
@@ -242,7 +241,7 @@ public class K8SServiceClientTest {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
+        List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles", Optional.empty());
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
         assertThat(bundles).hasSize(1);
     }
@@ -265,7 +264,8 @@ public class K8SServiceClientTest {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
+        List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"),
+                Optional.empty());
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third")));

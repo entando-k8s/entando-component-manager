@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -43,12 +44,14 @@ public class EntandoDeBundleComposer {
 
     public static final String PBC_ANNOTATIONS_KEY = "entando.org/pbc";
     private final BundleDownloaderFactory downloaderFactory;
+    private final K8SServiceClient k8SServiceClient;
     private static final String MAIN_VERSION = "main";
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
-    public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory) {
+    public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory, K8SServiceClient k8SServiceClient) {
         this.downloaderFactory = downloaderFactory;
+        this.k8SServiceClient = k8SServiceClient;
     }
 
     /**
@@ -139,6 +142,8 @@ public class EntandoDeBundleComposer {
     private EntandoDeBundle createEntandoDeBundle(BundleDescriptor bundleDescriptor, List<String> tagList,
             BundleInfo bundleInfo) {
 
+        final Optional<EntandoDeBundle> oldBundle = k8SServiceClient.getBundlesInObservedNamespaces(
+                Optional.of(bundleInfo.getGitRepoAddress())).stream().findFirst();
         final List<EntandoDeBundleTag> deBundleTags = createTagsFrom(tagList, bundleInfo.getGitRepoAddress());
         final List<String> versionList = deBundleTags.stream()
                 .map(EntandoDeBundleTag::getVersion)
@@ -146,13 +151,13 @@ public class EntandoDeBundleComposer {
 
         return new EntandoDeBundleBuilder()
                 .withNewMetadata()
-                .withName(bundleDescriptor.getCode())
+                .withName(retrieveMetadataName(bundleDescriptor.getCode(), oldBundle))
                 .withLabels(createLabelsFrom(bundleDescriptor))
                 .withAnnotations(createAnnotationsFrom(bundleInfo.getBundleGroups()))
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
-                .withName(bundleInfo.getName())
+                .withName(retrieveSpecName(bundleInfo, oldBundle))
                 .withDescription(bundleDescriptor.getDescription())
                 .addNewDistTag(BundleUtilities.LATEST_VERSION, getLatestSemverVersion(deBundleTags))
                 .withVersions(versionList)
@@ -161,6 +166,15 @@ public class EntandoDeBundleComposer {
                 .withTags(deBundleTags)
                 .endSpec()
                 .build();
+    }
+
+    private String retrieveMetadataName(String bundleCode, Optional<EntandoDeBundle> oldBundle) {
+        return oldBundle.map(b -> b.getMetadata().getName()).orElse(bundleCode);
+    }
+
+    private String retrieveSpecName(BundleInfo bundleInfo, Optional<EntandoDeBundle> oldBundle) {
+        return Optional.ofNullable(bundleInfo.getName())
+                .orElse(oldBundle.map(b -> b.getSpec().getDetails().getName()).orElse(null));
     }
 
     private String retrieveThumbnail(BundleDescriptor bundleDescriptor, BundleInfo bundleInfo) {

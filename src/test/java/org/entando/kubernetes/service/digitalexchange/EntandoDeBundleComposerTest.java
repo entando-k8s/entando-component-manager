@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -19,6 +18,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
@@ -52,13 +52,15 @@ class EntandoDeBundleComposerTest {
             null).bundleDownloaderFactory();
     private EntandoDeBundleComposer deBundleComposer;
     private ObjectMapper objectMapper = new ObjectMapper();
+    private K8SServiceClientTestDouble k8SServiceClient;
 
     EntandoDeBundleComposerTest() throws MalformedURLException {
     }
 
     @BeforeEach
     public void setup() {
-        deBundleComposer = new EntandoDeBundleComposer(bundleDownloaderFactory);
+        k8SServiceClient = new K8SServiceClientTestDouble();
+        deBundleComposer = new EntandoDeBundleComposer(bundleDownloaderFactory, k8SServiceClient);
     }
 
     @Test
