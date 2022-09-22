@@ -9,7 +9,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -157,7 +156,18 @@ public class K8SServiceClientTest {
         EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
         client.unlinkAndScaleDown(getTestEntandoAppPluginLink());
         String name = testLink.getMetadata().getName();
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/delete-and-scale-down/" + name)));
+        mockServer.getInnerServer()
+                .verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/delete-and-scale-down/" + name)));
+
+    }
+
+    @Test
+    void shouldDeleteThePluginIngressPath() {
+        String pluginName = "pn-439a8698-2c7d460c-entando-api";
+
+        client.removeIngressPathForPlugin(pluginName);
+
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/plugins/ingress/" + pluginName)));
 
     }
 
