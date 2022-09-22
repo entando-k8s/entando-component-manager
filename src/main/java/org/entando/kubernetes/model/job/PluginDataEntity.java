@@ -24,7 +24,6 @@ import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -68,7 +67,6 @@ public class PluginDataEntity {
     @Column(name = "custom_endpoint")
     private String customEndpoint;
 
-    @Size(min = 1, max = 255)
     @Column(name = "roles")
     @Convert(converter = PluginRolesConverter.class)
     private Set<String> roles = new HashSet<>();
