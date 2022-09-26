@@ -27,13 +27,13 @@ public class DockerImage {
     private String tag;
     private String sha256;
 
-    public static DockerImage fromString(String s) {
+    public static DockerImage fromString(String imageAddress) {
 
-        if (s == null) {
-            throw new MalformedDockerImageException("Impossible to read DockerImage from a null value");
+        if (imageAddress == null) {
+            throw new MalformedDockerImageException("Impossible to read DockerImage from a null image address");
         }
 
-        var m = IMAGE_PATTERN.matcher(s);
+        var m = IMAGE_PATTERN.matcher(imageAddress);
         if (m.matches()) {
             String name = m.group(NAME_GROUP);
             String organization = m.group(ORG_GROUP);
@@ -52,7 +52,7 @@ public class DockerImage {
                     .build();
         }
 
-        throw new MalformedDockerImageException("Impossible to read DockerImage from " + s);
+        throw new MalformedDockerImageException("Impossible to read DockerImage from " + imageAddress);
     }
 
     public String toString() {

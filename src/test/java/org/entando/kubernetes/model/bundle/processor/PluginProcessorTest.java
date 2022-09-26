@@ -299,7 +299,7 @@ class PluginProcessorTest extends BaseProcessorTest {
                 "ENTANDO_APP_HOST_NAME", "www.myentando.com",
                 "ENTANDO_APP_USE_TLS", "false"));
 
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
 
         final List<? extends Installable> installablesHttp = execTestCreatePlugin(
                 PluginStubHelper.stubPluginDescriptorV5());
