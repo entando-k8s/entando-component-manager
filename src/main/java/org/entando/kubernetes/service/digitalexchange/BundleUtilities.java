@@ -552,7 +552,7 @@ public class BundleUtilities {
         final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
         Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
 
-        if (!bundleReader.isBundleV1()) {
+        if (!bundleReader.isBundleV1() && folderProp == BundleProperty.WIDGET_FOLDER_PATH) {
             final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
             fileFolder = Paths.get(signedFolder, fileFolder.subpath(0, 1).relativize(fileFolder).toString());
         }

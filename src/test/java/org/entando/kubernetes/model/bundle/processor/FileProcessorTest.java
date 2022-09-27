@@ -58,7 +58,10 @@ class FileProcessorTest extends BaseProcessorTest {
             "resources/ootb-widgets/static/js/main.ootb.chunk.js");
     private List<String> resourceFolderV5 = Arrays.asList("widgets/ootb-widgets/css/main.css",
             "widgets/ootb-widgets/static/css/sitemap.css",
-            "widgets/ootb-widgets/static/js/2.ootb.chunk.js");
+            "widgets/ootb-widgets/static/js/2.ootb.chunk.js",
+            "resources/txt/my-text.txt",
+            "resources/js/my-js.js",
+            "resources/my-style.css");
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -109,7 +112,7 @@ class FileProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = fileProcessor.process(bundleReader);
 
-        assertThat(installables).hasSize(11);
+        assertThat(installables).hasSize(14);
 
         var expectedNames = Stream.of(
                 "bundles/something-4f58c204/widgets/my_widget_app_builder_descriptor_v5-4f58c204/assets/css-res.css",
@@ -122,7 +125,10 @@ class FileProcessorTest extends BaseProcessorTest {
                 "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/assets/css-res.css",
                 "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/js-res-1.js",
                 "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/media/generic-file.txt",
-                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/static/js/js-res-2.js"
+                "bundles/something-4f58c204/widgets/my_widget_descriptor_v5-4f58c204/static/js/js-res-2.js",
+                "bundles/something-4f58c204/resources/js/my-js.js",
+                "bundles/something-4f58c204/resources/txt/my-text.txt",
+                "bundles/something-4f58c204/resources/my-style.css"
         ).sorted().collect(Collectors.toList());
 
         for (int i = 0, e = expectedNames.size(); i < e; i++) {
