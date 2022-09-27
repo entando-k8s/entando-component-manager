@@ -89,7 +89,7 @@ public class BundleReader {
     }
 
 
-    public boolean containsResourceFolder() {
+    public boolean containsBundleResourceFolder() {
         return bundleBasePath.resolve(BundleProperty.RESOURCES_FOLDER_PATH.getValue()).toFile().isDirectory();
     }
 
