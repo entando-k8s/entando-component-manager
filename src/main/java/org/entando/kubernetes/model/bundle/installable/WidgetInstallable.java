@@ -110,7 +110,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     }
 
     private void deleteWidgetDefinitionFromEcr() {
-        retrieveWidgetFromDbAndUpdate().ifPresent(componentDataRepository::delete);
+        retrieveWidgetFromDb().ifPresent(componentDataRepository::delete);
     }
 
     @Override
@@ -123,9 +123,13 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         return representation.getCode();
     }
 
-    private Optional<ComponentDataEntity> retrieveWidgetFromDbAndUpdate() {
+    private Optional<ComponentDataEntity> retrieveWidgetFromDb() {
         return componentDataRepository.findByComponentTypeAndComponentCode(ComponentType.WIDGET,
-                representation.getCode()).map(this::upgradeEntity);
+                representation.getCode());
+    }
+
+    private Optional<ComponentDataEntity> retrieveWidgetFromDbAndUpdate() {
+        return retrieveWidgetFromDb().map(this::upgradeEntity);
     }
 
     private ComponentDataEntity upgradeEntity(ComponentDataEntity entity) {
