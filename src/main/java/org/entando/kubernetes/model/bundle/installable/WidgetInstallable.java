@@ -58,7 +58,8 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
             finalizeMetadataSystemParams(representation);
         }
-        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElseGet(this::convertDescriptorToEntity);
+        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDbAndUpdate().orElseGet(
+                this::convertDescriptorToEntity);
         componentDataRepository.save(widgetComponentEntity);
     }
 
@@ -109,7 +110,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     }
 
     private void deleteWidgetDefinitionFromEcr() {
-        retrieveWidgetFromDb().ifPresent(componentDataRepository::delete);
+        retrieveWidgetFromDbAndUpdate().ifPresent(componentDataRepository::delete);
     }
 
     @Override
@@ -122,9 +123,20 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         return representation.getCode();
     }
 
-    private Optional<ComponentDataEntity> retrieveWidgetFromDb() {
+    private Optional<ComponentDataEntity> retrieveWidgetFromDbAndUpdate() {
         return componentDataRepository.findByComponentTypeAndComponentCode(ComponentType.WIDGET,
-                representation.getCode());
+                representation.getCode()).map(this::upgradeEntity);
+    }
+
+    private ComponentDataEntity upgradeEntity(ComponentDataEntity entity) {
+        entity.setBundleId(representation.getDescriptorMetadata().getBundleId());
+        entity.setComponentType(ComponentType.WIDGET);
+        entity.setComponentSubType(representation.getType());
+        entity.setComponentName(representation.getName());
+        entity.setComponentCode(representation.getCode());
+        entity.setComponentGroup(representation.getGroup());
+        entity.setComponentDescriptor(mkWidgetCleanedUpDescriptor());
+        return entity;
     }
 
     private ComponentDataEntity convertDescriptorToEntity() {
