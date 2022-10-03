@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LiquibaseBeanPostProcessor implements BeanPostProcessor {
 
-    @Value("${spring.liquibase.lock.fallback.minutes:10}")
+    @Value("${entando.liquibase.lock.fallback.minutes:10}")
     private int lockFallbackMinutes;
 
     private final DataSource dataSource;
