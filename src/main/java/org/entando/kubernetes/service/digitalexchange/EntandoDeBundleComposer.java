@@ -1,10 +1,12 @@
 package org.entando.kubernetes.service.digitalexchange;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -153,7 +155,7 @@ public class EntandoDeBundleComposer {
                 .withNewMetadata()
                 .withName(retrieveMetadataName(bundleDescriptor.getCode(), oldBundle))
                 .withLabels(createLabelsFrom(bundleDescriptor))
-                .withAnnotations(createAnnotationsFrom(bundleInfo.getBundleGroups()))
+                .withAnnotations(createAnnotationsFrom(retrieveBundleGroup(bundleInfo, oldBundle)))
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
@@ -166,6 +168,12 @@ public class EntandoDeBundleComposer {
                 .withTags(deBundleTags)
                 .endSpec()
                 .build();
+    }
+
+    private List<BundleGroup> retrieveBundleGroup(BundleInfo bundleInfo, Optional<EntandoDeBundle> oldBundle) {
+        return Optional.ofNullable(bundleInfo.getBundleGroups())
+                .orElse(oldBundle.map(b -> createBundleGroupFrom(b.getMetadata().getAnnotations()))
+                        .orElse(Collections.emptyList()));
     }
 
     private String retrieveMetadataName(String bundleCode, Optional<EntandoDeBundle> oldBundle) {
@@ -235,6 +243,19 @@ public class EntandoDeBundleComposer {
         } catch (JsonProcessingException e) {
             throw new EntandoComponentManagerException("An error occurred while serializing bundle's pbc names", e);
         }
+    }
+
+    private List<BundleGroup> createBundleGroupFrom(Map<String, String> annotations) {
+
+        return Optional.ofNullable(annotations.get(PBC_ANNOTATIONS_KEY)).map(s -> {
+            try {
+                List<String> pbcList = objectMapper.readValue(s, new TypeReference<List<String>>() {
+                });
+                return pbcList.stream().map(pbc -> new BundleGroup(null, pbc)).collect(Collectors.toList());
+            } catch (JsonProcessingException e) {
+                return null;
+            }
+        }).orElse(null);
     }
 
     /**

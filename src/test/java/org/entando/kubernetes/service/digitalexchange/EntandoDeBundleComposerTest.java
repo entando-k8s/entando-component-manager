@@ -2,9 +2,12 @@ package org.entando.kubernetes.service.digitalexchange;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -12,6 +15,8 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.entando.kubernetes.client.K8SServiceClientTestDouble;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
@@ -27,6 +33,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
@@ -127,6 +134,41 @@ class EntandoDeBundleComposerTest {
         // and no bundle groups have been added
         final List<String> pbcAnnotations = extractPbcAnnotationsFrom(deBundle);
         assertThat(pbcAnnotations).hasSize(0);
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleWithBundleGroupsFromKubeCr() throws JsonProcessingException {
+
+        // given a bundle info with null bundle groups name
+        final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setBundleGroups(null);
+
+
+        final EntandoDeBundle bundle = BundleStubHelper.stubEntandoDeBundle();
+        Map<String, String> annotations = new HashMap<>();
+        annotations.put(pbcAnnotationsPrefix, objectMapper.writeValueAsString(BundleInfoStubHelper.GROUPS_NAME));
+        bundle.getMetadata().setAnnotations(annotations);
+        bundle.getMetadata().setName("something-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+
+        bundle.setSpec(new EntandoDeBundleSpecBuilder()
+                .withNewDetails()
+                .withDescription("A bundle containing some demo components for Entano6")
+                .withName(BundleInfoStubHelper.NAME).endDetails().build());
+
+        K8SServiceClient k8SServiceClientLocal = mock(K8SServiceClient.class);
+        when(k8SServiceClientLocal.getBundlesInObservedNamespaces(any())).thenReturn(Collections.singletonList(bundle));
+        EntandoDeBundleComposer deBundleComposerLocal = new EntandoDeBundleComposer(bundleDownloaderFactory,
+                k8SServiceClientLocal);
+
+        // when the debundle gets composed
+        final EntandoDeBundle deBundle = deBundleComposerLocal.composeEntandoDeBundle(bundleInfo);
+
+        // then the result is the expected one
+        assertOnComposedEntandoDeBundle(deBundle, bundleInfo.getGitRepoAddress());
+
+        // and no bundle groups have been added
+        final List<String> pbcAnnotations = extractPbcAnnotationsFrom(deBundle);
+        assertThat(pbcAnnotations).hasSize(BundleInfoStubHelper.GROUPS_NAME.size());
+        assertThat(pbcAnnotations).contains(BundleInfoStubHelper.GROUPS_NAME.toArray(new String[]{}));
     }
 
     private void assertOnComposedEntandoDeBundle(EntandoDeBundle deBundle, String bundleUrl) {
