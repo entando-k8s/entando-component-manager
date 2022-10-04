@@ -650,7 +650,7 @@ public class TestInstallUtils {
      */
     public static void mockBundle(K8SServiceClient k8SServiceClient, EntandoDeBundle deBundle) {
         List<EntandoDeBundle> bundles = List.of(deBundle);
-        when(k8SServiceClient.getBundlesInObservedNamespaces()).thenReturn(bundles);
+        when(k8SServiceClient.getBundlesInObservedNamespaces(Optional.empty())).thenReturn(bundles);
         when(k8SServiceClient.getBundleWithName(any())).thenReturn(Optional.of(bundles.get(0)));
     }
 

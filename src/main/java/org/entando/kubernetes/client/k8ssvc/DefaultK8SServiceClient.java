@@ -258,11 +258,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> repoUrlFilter) {
 
         LOGGER.info("### fetching bundles from all namespaces");
-
-        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
+        return tryOrThrow(() -> repoUrlFilter
+                .map(filter -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("repoUrl", filter)))
+                .orElse(traverson.follow(BUNDLES_ENDPOINT))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -271,11 +272,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter) {
 
         LOGGER.info("### fetching bundles from " + namespace + " namespace");
-
-        return tryOrThrow(() -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace))
+        Hop baseHop = Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace);
+        return tryOrThrow(() -> traverson.follow(
+                        repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -284,10 +286,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter) {
         @SuppressWarnings("unchecked")
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
-                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n))
+                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, repoUrlFilter))
                         .exceptionally(ex -> {
                             LOGGER.log(Level.SEVERE, "An error occurred while retrieving bundle from a namespace", ex);
                             return Collections.emptyList();

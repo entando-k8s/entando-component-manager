@@ -145,7 +145,7 @@ public class KubernetesService {
     }
 
     public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
-        return k8sServiceClient.getBundlesInObservedNamespaces();
+        return k8sServiceClient.getBundlesInObservedNamespaces(Optional.empty());
     }
 
     public Optional<EntandoDeBundle> fetchBundleByName(String name) {
