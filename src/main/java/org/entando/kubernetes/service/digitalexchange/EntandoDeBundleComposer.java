@@ -252,7 +252,11 @@ public class EntandoDeBundleComposer {
                 List<String> pbcList = objectMapper.readValue(s, new TypeReference<List<String>>() {
                 });
                 return pbcList.stream().map(pbc -> new BundleGroup(null, pbc)).collect(Collectors.toList());
-            } catch (JsonProcessingException e) {
+            } catch (JsonProcessingException ex) {
+                log.info("Converting CR annotation:'{}' fo json caught error:'{}', set bundle groups to null",
+                        PBC_ANNOTATIONS_KEY,
+                        ex.getMessage());
+                log.debug("Exception converting value:'{}' to json", s, ex);
                 return null;
             }
         }).orElse(null);
