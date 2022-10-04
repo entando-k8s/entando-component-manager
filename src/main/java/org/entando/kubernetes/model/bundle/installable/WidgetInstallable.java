@@ -58,7 +58,8 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_APPBUILDER)) {
             finalizeMetadataSystemParams(representation);
         }
-        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDb().orElseGet(this::convertDescriptorToEntity);
+        ComponentDataEntity widgetComponentEntity = retrieveWidgetFromDbAndUpdate().orElseGet(
+                this::convertDescriptorToEntity);
         componentDataRepository.save(widgetComponentEntity);
     }
 
@@ -125,6 +126,21 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     private Optional<ComponentDataEntity> retrieveWidgetFromDb() {
         return componentDataRepository.findByComponentTypeAndComponentCode(ComponentType.WIDGET,
                 representation.getCode());
+    }
+
+    private Optional<ComponentDataEntity> retrieveWidgetFromDbAndUpdate() {
+        return retrieveWidgetFromDb().map(this::upgradeEntity);
+    }
+
+    private ComponentDataEntity upgradeEntity(ComponentDataEntity entity) {
+        entity.setBundleId(representation.getDescriptorMetadata().getBundleId());
+        entity.setComponentType(ComponentType.WIDGET);
+        entity.setComponentSubType(representation.getType());
+        entity.setComponentName(representation.getName());
+        entity.setComponentCode(representation.getCode());
+        entity.setComponentGroup(representation.getGroup());
+        entity.setComponentDescriptor(mkWidgetCleanedUpDescriptor());
+        return entity;
     }
 
     private ComponentDataEntity convertDescriptorToEntity() {
