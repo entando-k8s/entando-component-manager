@@ -19,7 +19,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
-import org.codehaus.plexus.util.FileUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -124,7 +123,7 @@ public class EntandoBundleReaderTest {
         List<String> expectedResourceFolders = Arrays.asList(
                 "resources/js", "resources/css", "resources/vendor", "resources/vendor/jquery"
         );
-        assertThat(bundleReader.containsResourceFolder()).isTrue();
+        assertThat(bundleReader.containsBundleResourceFolder()).isTrue();
         assertThat(bundleReader.getResourceFolders()).hasSize(expectedResourceFolders.size());
         assertThat(bundleReader.getResourceFolders()).containsAll(expectedResourceFolders);
     }
