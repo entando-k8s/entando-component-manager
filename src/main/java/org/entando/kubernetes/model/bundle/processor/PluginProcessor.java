@@ -29,6 +29,7 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -58,13 +59,17 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     private final KubernetesService kubernetesService;
     private final PluginDescriptorValidator descriptorValidator;
     private final PluginDataRepository pluginPathRepository;
+    private final CraneCommand craneCommand;
 
     public PluginProcessor(KubernetesService kubernetesService,
             PluginDescriptorValidator descriptorValidator,
-            PluginDataRepository pluginPathRepository) {
+            PluginDataRepository pluginPathRepository,
+            CraneCommand craneCommand) {
+
         this.kubernetesService = kubernetesService;
         this.descriptorValidator = descriptorValidator;
         this.pluginPathRepository = pluginPathRepository;
+        this.craneCommand = craneCommand;
         this.cmEndpoint = composeCmEndpoint();
     }
 
@@ -131,6 +136,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             for (String filename : descriptorList) {
                 // parse descriptor
                 PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                pluginDescriptor.getDockerImage()
+                        .setSha256(craneCommand.getImageDigest(pluginDescriptor.getDockerImage().toString()));
                 // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
@@ -177,7 +184,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     @Override
     public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
 
-        List<String> idList = new ArrayList<>();
+        List<Reportable.Component> compList = new ArrayList<>();
 
         try {
             List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
@@ -192,11 +199,13 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 // log
                 logDescriptorWarnings(pluginDescriptor);
                 // add plugin id to the list
-                idList.add(pluginDescriptor.getComponentKey().getKey());
+                final String sha256 = craneCommand.getImageDigest(pluginDescriptor.getDockerImage().toString());
+                compList.add(
+                        new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCode(), sha256));
             }
 
-            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    this.getReportableRemoteHandler());
+            return new Reportable(componentProcessor.getSupportedComponentType(), this.getReportableRemoteHandler(),
+                    compList);
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s components",
