@@ -20,8 +20,8 @@ class CraneCommandTest {
 
     @Test
     void shouldReturnTheExpectedDigest() {
-        assertThat(target.getImageDigest("ubuntu:22.10")).isEqualTo(
-                "sha256:3cc2e19d3538681fb614683187329b47520424b80d7b31c97cdeb2403d82cae9");
+        assertThat(target.getImageDigest("entando/entando-component-manager:7.0.0")).isEqualTo(
+                "sha256:bb52b0dfd55d98b92e7a0540d1e0237a7ed594dcb2cce3bced597e3d7c567c2c");
     }
 
     @Test
