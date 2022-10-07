@@ -28,20 +28,9 @@ public class DockerImage {
         }
 
         String[] segments = imageAddress.split("/");
-        DockerImageBuilder builder = DockerImage.builder();
-
-        builder = setNameTagAndSha(imageAddress, segments, builder);
-        builder = setOrganization(imageAddress, segments, builder);
-        builder = setRegistry(segments, builder);
-
-        return builder.build();
-
-    }
-
-    private static DockerImageBuilder setNameTagAndSha(String imageAddress, String[] segments,
-            DockerImageBuilder builder) {
-
-        String name;
+        String registry = null;
+        String name = null;
+        String organization = null;
         String tag = null;
         String sha = null;
 
@@ -65,42 +54,44 @@ public class DockerImage {
             }
         }
 
-        return builder.name(name)
-                .tag(tag)
-                .sha256(sha);
-    }
-
-    private static DockerImageBuilder setOrganization(String imageAddress, String[] segments, DockerImageBuilder builder) {
-
+        // extract organization
         if (segments.length >= 2) {
-            StringBuilder org = new StringBuilder("");
-            for (int i = 0; i < segments.length - 1; i++) {
-                if (i > 1 || (i == 1 && !StringUtils.contains(segments[0], "."))) {
-                    org.append("/");
-                }
-                if ((i == 0 && !StringUtils.contains(segments[i], ".")) || i > 0) {
-                    org.append(segments[i]);
-                }
-            }
-            if (StringUtils.isBlank(org.toString())) {
-                log.debug("Docker organization is required:'{}'", imageAddress);
-                throw new MalformedDockerImageException(ERROR_MSG + imageAddress);
-            }
-
-            return builder.organization(org.toString());
-
+            organization = joinOrganizationPath(segments, imageAddress);
         } else {
             log.debug("Docker organization is required:'{}'", imageAddress);
             throw new MalformedDockerImageException(ERROR_MSG + imageAddress);
         }
-    }
 
-    private static DockerImageBuilder setRegistry(String[] segments, DockerImageBuilder builder) {
+        // extract registry
         if (segments.length >= 2 && StringUtils.contains(segments[0], ".")) {
-            builder.registry(segments[0]);
+            registry = segments[0];
         }
 
-        return builder;
+        return DockerImage.builder()
+                .name(name)
+                .tag(tag)
+                .sha256(sha)
+                .organization(organization)
+                .registry(registry)
+                .build();
+
+    }
+
+    private static String joinOrganizationPath(String[] paths, String imageAddress) {
+        StringBuilder org = new StringBuilder("");
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (i > 1 || (i == 1 && !StringUtils.contains(paths[0], "."))) {
+                org.append("/");
+            }
+            if ((i == 0 && !StringUtils.contains(paths[i], ".")) || i > 0) {
+                org.append(paths[i]);
+            }
+        }
+        if (StringUtils.isBlank(org.toString())) {
+            log.debug("Docker organization is required:'{}'", imageAddress);
+            throw new MalformedDockerImageException(ERROR_MSG + imageAddress);
+        }
+        return org.toString();
     }
 
 
@@ -119,4 +110,3 @@ public class DockerImage {
         }
     }
 }
-
