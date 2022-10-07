@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -97,6 +98,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
     }
+
 
     @Test
     void testCreatePluginV3WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
@@ -191,7 +193,6 @@ class PluginProcessorTest extends BaseProcessorTest {
         verify(kubernetesService, times(2)).linkPluginAndWaitForSuccess(captor.capture());
     }
 
-
     private void initBundleReaderShortImagesName() throws IOException {
 
         PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
@@ -258,6 +259,25 @@ class PluginProcessorTest extends BaseProcessorTest {
         descriptorV2.setDeploymentBaseName(deploymentBaseName);
         final String fullDepName = processor.signPluginDeploymentName(descriptorV2);
         assertThat(fullDepName).isEqualTo(String.format("%s-%s", "50fe6023", deploymentBaseName.toLowerCase()));
+    }
+
+    @Test
+    void shouldUseSignPluginCorrectly() {
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2()
+                .setImage("staging/entando/the-lucas:0.0.1-SNAPSHOT")
+                .setDeploymentBaseName(null);
+
+        Stream.of(new String[]{"org1/org2/name", "abd00576-org1-org2-name"},
+                        new String[]{"org1/org2/org3/name", "061fe78c-org1-org2-org3-name"},
+                        new String[]{"example.org/org1/name", "bb388b64-org1-name"},
+                        new String[]{"example.org/org1/org2/name", "abd00576-org1-org2-name"},
+                        new String[]{"org1/name", "bb388b64-org1-name"})
+                .forEach(i -> {
+                    descriptor.setImage(i[0]);
+                    descriptor.setDockerImage(null);
+
+                    assertThat(processor.signPluginDeploymentName(descriptor)).isEqualTo(i[1]);
+                });
     }
 
     @Test
