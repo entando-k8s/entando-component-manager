@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class CraneCommand {
 
     public static final String CRANE_CMD = "crane";
+    private static final String LOG_CMD_TO_EXECUTE = "Command to execute:'{}' with param to execute:'{}' and execution timeout:'{}'";
 
     private static final String ERROR_GETTING_IMAGE_DIGEST =
             "An error occurred while fetching the docker image digest using " + CRANE_CMD;
@@ -29,6 +30,13 @@ public class CraneCommand {
 
         ProcessHandler processHandler = null;
         try {
+            System.out.println("----------------------------------------------------------------------------------");
+            log.info(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
+                    String.join(" ", params), 10);
+            System.out.println("----------------------------------------------------------------------------------");
+            printShellEnvironment();
+            System.out.println("----------------------------------------------------------------------------------");
+
             processHandler = ProcessHandlerBuilder.buildCommand(CRANE_CMD, params, false)
                     .start()
                     .waitFor(10);
@@ -43,7 +51,9 @@ public class CraneCommand {
 
         int exitStatus = processHandler.exitValue();
         if (exitStatus != 0) {
-            String err = String.format(ERROR_GETTING_IMAGE_DIGEST + " - exit status: '%s'", exitStatus);
+            String output = readProcessOutput(processHandler, "??");
+            String err = String.format(ERROR_GETTING_IMAGE_DIGEST + " - exit status: '%s', output: \n%s",
+                    exitStatus, output);
             log.warn(err);
             throw new CraneException(err);
         }
@@ -65,6 +75,25 @@ public class CraneCommand {
         log.info("Docker image: {} - Digest: {}", image, outputLines.get(0));
 
         return outputLines.get(0);
+    }
+
+    private void printShellEnvironment() {
+        var env = System.getenv();
+        for (String envName : env.keySet()) {
+            if (envName.startsWith("SSL")) {
+                System.out.format("%s=%s%n", envName, env.get(envName));
+            }
+        }
+    }
+
+    private static String readProcessOutput(ProcessHandler processHandler, String fallback) {
+        String output;
+        try {
+            output = String.join("\n", processHandler.getOutputLines());
+        } catch (IOException e) {
+            output = fallback;
+        }
+        return output;
     }
 
 
