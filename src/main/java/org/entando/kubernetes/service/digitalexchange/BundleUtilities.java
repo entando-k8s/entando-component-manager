@@ -81,6 +81,9 @@ public class BundleUtilities {
 
     public static final String GLOBAL_PREFIX = "global:";
 
+    public static final String ENTANDO_DEFAULT_IMAGE_REGISTRY = "ENTANDO_DEFAULT_IMAGE_REGISTRY";
+
+
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
         if (Strings.isNullOrEmpty(versionReference)) {
@@ -620,5 +623,46 @@ public class BundleUtilities {
         } else {
             return composeSignedBundleFolder(bundleReader);
         }
+    }
+
+    /**
+     * Returns the registry of an imageAddress or null if not present, or it's not an image address.
+     */
+    public static String extractImageAddressRegistry(String imageAddress) {
+        if (Strings.isNullOrEmpty(imageAddress)) {
+            return null;
+        }
+        try {
+            return DockerImage.fromString(imageAddress).getRegistry();
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Determine the full qualified image address of an oci-based component.
+     */
+    public static String determineComponentFqImageAddress(
+            String componentImageAddress,
+            String bundleImageAddress,
+            String fallback) {
+        //~
+        String componentImageRegistry = extractImageAddressRegistry(componentImageAddress);
+        if (!Strings.isNullOrEmpty(componentImageRegistry)) {
+            return componentImageAddress;
+        }
+
+        String parentBundleRegistry = extractImageAddressRegistry(bundleImageAddress);
+        if (Strings.isNullOrEmpty(parentBundleRegistry)) {
+            parentBundleRegistry = fallback;
+        }
+
+        return (Strings.isNullOrEmpty(parentBundleRegistry))
+                ? componentImageAddress
+                : Paths.get(parentBundleRegistry, componentImageAddress).toString();
+    }
+
+    public static String readDefaultImageRegistry() {
+        return Optional.ofNullable(System.getenv(ENTANDO_DEFAULT_IMAGE_REGISTRY)).orElse("");
     }
 }

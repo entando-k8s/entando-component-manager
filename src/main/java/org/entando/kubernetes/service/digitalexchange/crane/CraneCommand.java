@@ -28,14 +28,10 @@ public class CraneCommand {
 
         List<String> params = Arrays.asList("digest", image);
 
-        ProcessHandler processHandler = null;
+        ProcessHandler processHandler;
         try {
-            System.out.println("----------------------------------------------------------------------------------");
-            log.info(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
+            log.debug(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
                     String.join(" ", params), 10);
-            System.out.println("----------------------------------------------------------------------------------");
-            printShellEnvironment();
-            System.out.println("----------------------------------------------------------------------------------");
 
             processHandler = ProcessHandlerBuilder.buildCommand(CRANE_CMD, params, false)
                     .start()
@@ -51,9 +47,12 @@ public class CraneCommand {
 
         int exitStatus = processHandler.exitValue();
         if (exitStatus != 0) {
-            String output = readProcessOutput(processHandler, "??");
-            String err = String.format(ERROR_GETTING_IMAGE_DIGEST + " - exit status: '%s', output: \n%s",
-                    exitStatus, output);
+            String stdout = readProcessOutput(processHandler, false, "??");
+            String stderr = readProcessOutput(processHandler, true, "??");
+            String err = String.format(ERROR_GETTING_IMAGE_DIGEST + " - exit status: '%s'\n"
+                            + "> stdout:\n%s\n"
+                            + "> stderr:\n%s\n",
+                    exitStatus, stdout, stderr);
             log.warn(err);
             throw new CraneException(err);
         }
@@ -77,23 +76,17 @@ public class CraneCommand {
         return outputLines.get(0);
     }
 
-    private void printShellEnvironment() {
-        var env = System.getenv();
-        for (String envName : env.keySet()) {
-            if (envName.startsWith("SSL")) {
-                System.out.format("%s=%s%n", envName, env.get(envName));
-            }
-        }
-    }
-
-    private static String readProcessOutput(ProcessHandler processHandler, String fallback) {
-        String output;
+    private static String readProcessOutput(ProcessHandler processHandler, boolean stderr, String fallback) {
+        String res;
         try {
-            output = String.join("\n", processHandler.getOutputLines());
+            res = String.join("\n", (stderr)
+                    ? processHandler.getErrorLines()
+                    : processHandler.getOutputLines()
+            );
         } catch (IOException e) {
-            output = fallback;
+            res = fallback;
         }
-        return output;
+        return res;
     }
 
 

@@ -1,5 +1,8 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.determineComponentFqImageAddress;
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.readDefaultImageRegistry;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,8 +139,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
             for (String filename : descriptorList) {
                 // parse descriptor
                 PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                pluginDescriptor.getDockerImage()
-                        .setSha256(craneCommand.getImageDigest(pluginDescriptor.getDockerImage().toString()));
+                pluginDescriptor.getDockerImage().setSha256(
+                        craneCommand.getImageDigest(getFqImageAddress(pluginDescriptor, bundleReader))
+                );
                 // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
@@ -146,7 +150,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
                         pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
                 environmentVariables.add(new EnvironmentVariable().setName(ENTANDO_ECR_INGRESS_URL)
-                                .setValue(cmEndpoint));
+                        .setValue(cmEndpoint));
                 pluginDescriptor.setEnvironmentVariables(environmentVariables);
                 // log
                 logDescriptorWarnings(pluginDescriptor);
@@ -174,11 +178,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return new PluginDescriptor()
-                .setDescriptorMetadata(
-                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
+    private static String getFqImageAddress(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+        return determineComponentFqImageAddress(
+                pluginDescriptor.getDockerImage().toString(),
+                bundleReader.getBundleUrl(),
+                readDefaultImageRegistry()
+        );
     }
 
     @Override
@@ -199,7 +204,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 // log
                 logDescriptorWarnings(pluginDescriptor);
                 // add plugin id to the list
-                final String sha256 = craneCommand.getImageDigest(pluginDescriptor.getDockerImage().toString());
+                final String sha256 = craneCommand.getImageDigest(
+                        getFqImageAddress(pluginDescriptor, bundleReader)
+                );
                 compList.add(
                         new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCode(), sha256));
             }
@@ -271,6 +278,13 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         return String.join("-",
                 DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
                 deploymentBaseName);
+    }
+
+    @Override
+    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return new PluginDescriptor()
+                .setDescriptorMetadata(
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
     }
 
     /**
