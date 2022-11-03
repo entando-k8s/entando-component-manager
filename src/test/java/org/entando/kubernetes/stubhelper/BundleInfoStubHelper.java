@@ -11,7 +11,9 @@ public class BundleInfoStubHelper {
     public static final String NAME = "my-bundle";
     public static final String DESCRIPTION = "desc";
     public static final String GIT_REPO_ADDRESS = "http://www.github.com/entando/mybundle.git";
+    public static final String DOCKER_REPO_ADDRESS = "docker://my.custom.registry.net/entando/mybundle";
     public static final String GIT_REPO_ADDRESS_8_CHARS_SHA = "77b2b10e";
+    public static final String DOCKER_REPO_ADDRESS_8_CHARS_SHA = "89f28dad";
     public static final String DESCR_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARkAAAEZCAYAAACjEFEXAAAPLElEQVR4nOzdD2yc5X3A8V";
     public static final List<String> GROUPS_ID = List.of("46", "67");
     public static final String GROUP_NAME_1 = "group one";

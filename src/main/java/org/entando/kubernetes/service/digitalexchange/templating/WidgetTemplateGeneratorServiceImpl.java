@@ -264,10 +264,27 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         String apiBundleId = (apiClaim.getType().equals(ApiClaim.INTERNAL_API))
                 ? currentBundleId : apiClaim.getBundleId();
 
+        System.out.println("##############################################################################");
+        System.out.println("> X1" + apiBundleId);
+        System.out.println("> X2" + apiClaim.getPluginName());
+        System.out.println("> X3" + apiPathRepository.count());
+
+        apiPathRepository.findAll().forEach(p -> {
+            System.out.println("--------------------------------------------");
+            System.out.println("> C" + p.getPluginName());
+            System.out.println("> D" + p.getBundleId());
+            System.out.println("> E" + p.getPluginName());
+        });
+
+        System.out.println("--------------------------------------------");
+
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
         String ingressPath = apiPathRepository
                 .findByBundleIdAndPluginName(apiBundleId, apiClaim.getPluginName())
                 .map(PluginDataEntity::getEndpoint)
                 .orElse("");
+
         return ingressPath;
     }
 
