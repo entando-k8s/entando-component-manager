@@ -136,14 +136,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            String bundleId = bundleReader.calculateBundleId();
 
             for (String filename : descriptorList) {
+                log.debug("[{}] Processing descriptor {}", bundleId, filename);
+
                 // parse descriptor
-                PluginDescriptor pluginDescriptor = mkAdjustedPluginDescriptor(
+                PluginDescriptor pluginDescriptor = parseAndNormalizePluginDescriptor(
                         bundleReader,
                         filename,
                         craneCommand
                 );
+
                 // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
@@ -183,28 +187,26 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     /**
      * Reads the plugin descriptor and in case adjust its registry address if not present in the plugin image url.
      */
-    private static PluginDescriptor mkAdjustedPluginDescriptor(BundleReader bundleReader, String filename,
+    private static PluginDescriptor parseAndNormalizePluginDescriptor(BundleReader bundleReader, String filename,
             CraneCommand craneCommand) throws IOException {
         var pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
 
-        System.out.println("--------------------------------------------------------------------------");
-        System.out.println("> 1 | " + pluginDescriptor.getImage());
-        System.out.println("> 2 | " + bundleReader.getBundleUrl());
+        log.debug("Actual docker image on descriptor: {}", pluginDescriptor.getDockerImage());
 
-        String fqImageAddress = getFqImageAddress(pluginDescriptor, bundleReader);
-        System.out.println("> 3 | " + fqImageAddress);
-
+        String fqImageAddress = determineFqImageAddress(pluginDescriptor, bundleReader);
         pluginDescriptor.setDockerImage(DockerImage.fromString(fqImageAddress));
-        System.out.println("> 4 | " + pluginDescriptor.getImage());
-        System.out.println("--------------------------------------------------------------------------");
+
+        log.debug("Effective docker image: {}", pluginDescriptor.getDockerImage());
 
         String imageDigest = craneCommand.getImageDigest(fqImageAddress);
         pluginDescriptor.getDockerImage().setSha256(imageDigest);
 
+        log.debug("Effective docker image DIGEST: {}", imageDigest);
+
         return pluginDescriptor;
     }
 
-    private static String getFqImageAddress(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+    private static String determineFqImageAddress(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
         return determineComponentFqImageAddress(
                 pluginDescriptor.getDockerImage().toString(),
                 bundleReader.getBundleUrl(),
@@ -231,7 +233,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 logDescriptorWarnings(pluginDescriptor);
                 // add plugin id to the list
                 final String sha256 = craneCommand.getImageDigest(
-                        getFqImageAddress(pluginDescriptor, bundleReader)
+                        determineFqImageAddress(pluginDescriptor, bundleReader)
                 );
                 compList.add(
                         new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCode(), sha256));

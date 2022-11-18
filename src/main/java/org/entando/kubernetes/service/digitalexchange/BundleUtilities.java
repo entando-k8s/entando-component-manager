@@ -640,6 +640,7 @@ public class BundleUtilities {
                 return DockerImage.fromString(imageAddress).getRegistry();
             }
         } catch (Exception ex) {
+            log.debug("Error detected while parsing the imageAddress \"{}\"", imageAddress);
             return null;
         }
     }

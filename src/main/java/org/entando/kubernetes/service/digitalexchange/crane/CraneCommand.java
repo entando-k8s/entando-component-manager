@@ -47,8 +47,8 @@ public class CraneCommand {
 
         int exitStatus = processHandler.exitValue();
         if (exitStatus != 0) {
-            String stdout = readProcessOutput(processHandler, false, "??");
-            String stderr = readProcessOutput(processHandler, true, "??");
+            String stdout = readProcessOutput(processHandler, false, "??", image);
+            String stderr = readProcessOutput(processHandler, true, "??", image);
             String err = String.format(ERROR_GETTING_IMAGE_DIGEST + " - exit status: '%s'\n"
                             + "> stdout:\n%s\n"
                             + "> stderr:\n%s\n",
@@ -76,7 +76,9 @@ public class CraneCommand {
         return outputLines.get(0);
     }
 
-    private static String readProcessOutput(ProcessHandler processHandler, boolean stderr, String fallback) {
+    private static String readProcessOutput(ProcessHandler processHandler, boolean stderr, String fallback,
+            String forImage) {
+        //~
         String res;
         try {
             res = String.join("\n", (stderr)
@@ -84,6 +86,8 @@ public class CraneCommand {
                     : processHandler.getOutputLines()
             );
         } catch (IOException e) {
+            log.debug("Error detected while reading the {} of the digest extraction process for image \"{}\"",
+                    forImage, (stderr) ? "stderr" : "stdout");
             res = fallback;
         }
         return res;
