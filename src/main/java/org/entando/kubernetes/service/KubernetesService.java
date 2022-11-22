@@ -88,6 +88,10 @@ public class KubernetesService {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
     }
 
+    public boolean isPluginLinked(String pluginId) {
+        return getCurrentAppLinkToPlugin(pluginId).isPresent();
+    }
+
     public void unlinkAndScaleDownPlugin(String pluginId) {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlinkAndScaleDown);
     }

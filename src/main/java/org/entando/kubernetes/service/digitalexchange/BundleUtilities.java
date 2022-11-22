@@ -81,6 +81,10 @@ public class BundleUtilities {
 
     public static final String GLOBAL_PREFIX = "global:";
 
+    public static final String ENTANDO_DOCKER_REGISTRY_OVERRIDE = "ENTANDO_DOCKER_REGISTRY_OVERRIDE";
+    public static final String DOCKER_IMAGE_TRANSPORT_PREFIX = "docker://";
+
+
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
         if (Strings.isNullOrEmpty(versionReference)) {
@@ -620,5 +624,51 @@ public class BundleUtilities {
         } else {
             return composeSignedBundleFolder(bundleReader);
         }
+    }
+
+    /**
+     * Returns the registry of an imageAddress or null if not present, or it's not an image address.
+     */
+    public static String extractImageAddressRegistry(String imageAddress) {
+        if (Strings.isNullOrEmpty(imageAddress)) {
+            return null;
+        }
+        try {
+            if (imageAddress.startsWith(DOCKER_IMAGE_TRANSPORT_PREFIX)) {
+                return DockerImage.fromString(imageAddress.substring(DOCKER_IMAGE_TRANSPORT_PREFIX.length())).getRegistry();
+            } else {
+                return DockerImage.fromString(imageAddress).getRegistry();
+            }
+        } catch (Exception ex) {
+            log.debug("Error detected while parsing the imageAddress \"{}\"", imageAddress);
+            return null;
+        }
+    }
+
+    /**
+     * Determine the full qualified image address of an oci-based component.
+     */
+    public static String determineComponentFqImageAddress(
+            String componentImageAddress,
+            String bundleImageAddress,
+            String fallback) {
+        //~
+        String componentImageRegistry = extractImageAddressRegistry(componentImageAddress);
+        if (!Strings.isNullOrEmpty(componentImageRegistry)) {
+            return componentImageAddress;
+        }
+
+        String parentBundleRegistry = extractImageAddressRegistry(bundleImageAddress);
+        if (Strings.isNullOrEmpty(parentBundleRegistry)) {
+            parentBundleRegistry = fallback;
+        }
+
+        return (Strings.isNullOrEmpty(parentBundleRegistry))
+                ? componentImageAddress
+                : Paths.get(parentBundleRegistry, componentImageAddress).toString();
+    }
+
+    public static String readDefaultImageRegistryOverride() {
+        return Optional.ofNullable(System.getenv(ENTANDO_DOCKER_REGISTRY_OVERRIDE)).orElse("");
     }
 }

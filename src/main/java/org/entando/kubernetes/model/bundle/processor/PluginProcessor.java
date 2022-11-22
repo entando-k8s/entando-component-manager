@@ -1,5 +1,8 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.determineComponentFqImageAddress;
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.readDefaultImageRegistryOverride;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,7 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
@@ -132,12 +136,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            String bundleId = bundleReader.calculateBundleId();
 
             for (String filename : descriptorList) {
+                log.debug("[{}] Processing descriptor {}", bundleId, filename);
+
                 // parse descriptor
-                PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
-                pluginDescriptor.getDockerImage()
-                        .setSha256(craneCommand.getImageDigest(pluginDescriptor.getDockerImage().toString()));
+                PluginDescriptor pluginDescriptor = parseAndNormalizePluginDescriptor(
+                        bundleReader,
+                        filename,
+                        craneCommand
+                );
+
                 // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
@@ -146,7 +156,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
                         pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
                 environmentVariables.add(new EnvironmentVariable().setName(ENTANDO_ECR_INGRESS_URL)
-                                .setValue(cmEndpoint));
+                        .setValue(cmEndpoint));
                 pluginDescriptor.setEnvironmentVariables(environmentVariables);
                 // log
                 logDescriptorWarnings(pluginDescriptor);
@@ -174,11 +184,34 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return new PluginDescriptor()
-                .setDescriptorMetadata(
-                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
+    /**
+     * Reads the plugin descriptor and in case adjust its registry address if not present in the plugin image url.
+     */
+    private static PluginDescriptor parseAndNormalizePluginDescriptor(BundleReader bundleReader, String filename,
+            CraneCommand craneCommand) throws IOException {
+        var pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+
+        log.debug("Actual docker image on descriptor: {}", pluginDescriptor.getDockerImage());
+
+        String fqImageAddress = determineFqImageAddress(pluginDescriptor, bundleReader);
+        pluginDescriptor.setDockerImage(DockerImage.fromString(fqImageAddress));
+
+        log.debug("Effective docker image: {}", pluginDescriptor.getDockerImage());
+
+        String imageDigest = craneCommand.getImageDigest(fqImageAddress);
+        pluginDescriptor.getDockerImage().setSha256(imageDigest);
+
+        log.debug("Effective docker image DIGEST: {}", imageDigest);
+
+        return pluginDescriptor;
+    }
+
+    private static String determineFqImageAddress(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+        return determineComponentFqImageAddress(
+                pluginDescriptor.getDockerImage().toString(),
+                bundleReader.getBundleUrl(),
+                readDefaultImageRegistryOverride()
+        );
     }
 
     @Override
@@ -199,7 +232,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 // log
                 logDescriptorWarnings(pluginDescriptor);
                 // add plugin id to the list
-                final String sha256 = craneCommand.getImageDigest(pluginDescriptor.getDockerImage().toString());
+                final String sha256 = craneCommand.getImageDigest(
+                        determineFqImageAddress(pluginDescriptor, bundleReader)
+                );
                 compList.add(
                         new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCode(), sha256));
             }
@@ -271,6 +306,13 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         return String.join("-",
                 DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
                 deploymentBaseName);
+    }
+
+    @Override
+    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return new PluginDescriptor()
+                .setDescriptorMetadata(
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
     }
 
     /**
