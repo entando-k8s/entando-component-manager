@@ -151,7 +151,7 @@ class EntandoDeBundleComposerTest {
 
         bundle.setSpec(new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
-                .withDescription("A bundle containing some demo components for Entano6")
+                .withDescription("A bundle containing some demo components for Entando6")
                 .withName(BundleInfoStubHelper.NAME).endDetails().build());
 
         K8SServiceClient k8SServiceClientLocal = mock(K8SServiceClient.class);
@@ -177,7 +177,7 @@ class EntandoDeBundleComposerTest {
         assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
         final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-        assertThat(details.getName()).isEqualTo(BundleInfoStubHelper.NAME);
+        assertThat(details.getName()).isEqualTo("something");
         assertThat(details.getDescription()).isEqualTo("bundle description");
 
         assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);

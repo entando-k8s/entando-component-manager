@@ -156,7 +156,7 @@ class EntandoBundleResourceControllerIntegrationTest {
                                 .setVersion(BundleStubHelper.V1_2_0);
                         EntandoBundle entandoBundle = new EntandoBundle()
                                 .setCode("something-77b2b10e")
-                                .setTitle(BundleInfoStubHelper.NAME)
+                                .setTitle("something")
                                 .setDescription("bundle description")
                                 .setRepoUrl(bundleUrl)
                                 .setBundleType(BundleType.STANDARD_BUNDLE)
