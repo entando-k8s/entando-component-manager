@@ -186,10 +186,10 @@ public class EntandoDeBundleComposer {
     }
 
     private String retrieveThumbnail(BundleDescriptor bundleDescriptor, BundleInfo bundleInfo) {
-        if (StringUtils.isNotBlank(bundleInfo.getDescriptionImage())) {
-            return bundleInfo.getDescriptionImage();
-        } else {
+        if (StringUtils.isNotBlank(bundleDescriptor.getThumbnail())) {
             return bundleDescriptor.getThumbnail();
+        } else {
+            return bundleInfo.getDescriptionImage();
         }
     }
 

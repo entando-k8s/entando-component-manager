@@ -248,6 +248,53 @@ class EntandoDeBundleComposerTest {
         assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
     }
 
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleWithThumbnailFromDescriptorForBundleV5() {
+        final String DESCR_IMAGE = "data:image/png;base64,dGhpcyBpcyBub3QgYW4gaW1hZ2UK";
+        List<String> tagList = new ArrayList<>();
+        tagList.addAll(BundleStubHelper.TAG_LIST);
+
+        bundleDownloaderFactory.setDefaultSupplier(() -> {
+            Path bundleFolder;
+            GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
+            try {
+                bundleFolder = new ClassPathResource("bundle-v5").getFile().toPath();
+                when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
+                when(git.fetchRemoteTags(anyString())).thenReturn(tagList);
+            } catch (IOException e) {
+                throw new RuntimeException("Impossible to read the bundle folder from test resources");
+            }
+            return git;
+        });
+
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+        assertThat(deBundle.getSpec().getDetails().getThumbnail()).isEqualTo(DESCR_IMAGE);
+
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleWithThumbnailFromDescriptorForBundleV1() {
+        List<String> tagList = new ArrayList<>();
+        tagList.addAll(BundleStubHelper.TAG_LIST);
+
+        bundleDownloaderFactory.setDefaultSupplier(() -> {
+            Path bundleFolder;
+            GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
+            try {
+                bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+                when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
+                when(git.fetchRemoteTags(anyString())).thenReturn(tagList);
+            } catch (IOException e) {
+                throw new RuntimeException("Impossible to read the bundle folder from test resources");
+            }
+            return git;
+        });
+
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+        assertThat(deBundle.getSpec().getDetails().getThumbnail()).isEqualTo(bundleInfo.getDescriptionImage());
+
+    }
+
 
     private void assertOnFullLabelsDeBundleMap(Map<String, String> labelsMap) {
         assertThat(labelsMap.get("plugin")).isEqualTo("true");
