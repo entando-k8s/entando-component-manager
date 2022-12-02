@@ -196,11 +196,15 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     public List<EntandoBundle> listBundlesFromEcr() {
+        return listBundlesFromEcr(Optional.empty());
+    }
+
+    public List<EntandoBundle> listBundlesFromEcr(Optional<String> repoUrlFilter) {
         List<EntandoDeBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
-            bundles = k8SServiceClient.getBundlesInObservedNamespaces();
+            bundles = k8SServiceClient.getBundlesInObservedNamespaces(repoUrlFilter);
         } else {
-            bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges);
+            bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges, repoUrlFilter);
         }
 
         return bundles.stream()
@@ -246,7 +250,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
         List<EntandoBundleEntity> installedBundleEntities = installedComponentRepo.findAllByRepoUrlIn(repoUrlList);
 
-        List<EntandoBundle> deployedBundles = listBundlesFromEcr();
+        List<EntandoBundle> deployedBundles = listBundlesFromEcr(Optional.empty());
         List<EntandoBundleEntity> installedButNotDeployed = filterInstalledButNotAvailableOnEcr(deployedBundles,
                 installedBundleEntities);
 

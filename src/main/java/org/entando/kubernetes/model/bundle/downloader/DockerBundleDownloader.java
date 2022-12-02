@@ -19,6 +19,7 @@ import net.minidev.json.parser.JSONParser;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.validator.ImageValidator;
 
 @Slf4j
@@ -29,7 +30,6 @@ public class DockerBundleDownloader extends BundleDownloader {
     private static final String ERROR_WHILE_SETTING_REPOSITORY_CREDENTIALS = "An error occurred while setting image repository credentials";
     private static final String LOG_CMD_TO_EXECUTE = "Command to execute:'{}' with param to execute:'{}' and execution timeout:'{}'";
     private static final String IMAGE_TAR = "image.tar";
-    private static final String CRANE_CMD = "crane";
     private static final String TAR_CMD_PATH = "/usr/bin/tar"; //NOSONAR
 
     private final int downloadTimeoutSeconds;
@@ -153,8 +153,8 @@ public class DockerBundleDownloader extends BundleDownloader {
         params.add(fullyQualifiedImageUrlWithoutTag);
 
         log.info("Executing crane tags list");
-        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
-                downloadTimeoutSeconds);
+        log.debug(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
+                params.stream().collect(Collectors.joining(" ")), downloadTimeoutSeconds);
 
         try {
             var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
@@ -164,7 +164,7 @@ public class DockerBundleDownloader extends BundleDownloader {
                     .build();
 
             ExecResult result = methodRetryer.execute(ExecProcessInputParameters.builder()
-                    .command(CRANE_CMD)
+                    .command(CraneCommand.CRANE_CMD)
                     .params(params)
                     .timeout(downloadTimeoutSeconds)
                     .inheritIO(false)
@@ -215,8 +215,8 @@ public class DockerBundleDownloader extends BundleDownloader {
         params.add(tarImage.toAbsolutePath().toString());
 
         log.info("Executing crane image download");
-        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, params.stream().collect(Collectors.joining(" ")),
-                downloadTimeoutSeconds);
+        log.debug(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
+                params.stream().collect(Collectors.joining(" ")), downloadTimeoutSeconds);
 
         var methodRetryer = MethodRetryer.<ExecProcessInputParameters, ExecResult>builder()
                 .retries(downloadRetries)
@@ -224,7 +224,7 @@ public class DockerBundleDownloader extends BundleDownloader {
                 .execMethod(this::genericExecuteCommand).build();
 
         ExecResult result = methodRetryer.execute(ExecProcessInputParameters.builder()
-                .command(CRANE_CMD)
+                .command(CraneCommand.CRANE_CMD)
                 .params(params)
                 .timeout(downloadTimeoutSeconds)
                 .inheritIO(true)
@@ -326,13 +326,14 @@ public class DockerBundleDownloader extends BundleDownloader {
         List<String> params = composeCraneAuthParamsList(credentials, credentials.getPassword());
 
         log.info("Executing crane repository credentials load");
-        log.debug(LOG_CMD_TO_EXECUTE, CRANE_CMD, composeCraneAuthParamsList(credentials, "******").stream()
+        log.debug(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
+                composeCraneAuthParamsList(credentials, "******").stream()
                         .collect(Collectors.joining(" ")),
                 downloadTimeoutSeconds);
 
         ProcessHandler processHandler = null;
         try {
-            processHandler = ProcessHandlerBuilder.buildCommand(CRANE_CMD, params)
+            processHandler = ProcessHandlerBuilder.buildCommand(CraneCommand.CRANE_CMD, params)
                     .start()
                     .waitFor(downloadTimeoutSeconds);
         } catch (InterruptedException ex) {
@@ -370,7 +371,7 @@ public class DockerBundleDownloader extends BundleDownloader {
     }
 
     private void killPendingProcess() {
-        ProcessHandlerUtils.killProcessContainsName(CRANE_CMD);
+        ProcessHandlerUtils.killProcessContainsName(CraneCommand.CRANE_CMD);
         ProcessHandlerUtils.killProcessStartWithName(TAR_CMD_PATH);
     }
 

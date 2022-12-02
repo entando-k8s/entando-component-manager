@@ -49,6 +49,10 @@
       "href": "http://localhost:9080/plugins/{name}",
       "templated": true
     },
+    "delete-plugin-ingress-path": {
+      "href": "http://localhost:9080/plugins/ingress/{name}",
+      "templated": true
+    },
     "plugins-in-namespace": {
       "href": "http://localhost:9080/plugins?namespace={namespace}",
       "templated": true

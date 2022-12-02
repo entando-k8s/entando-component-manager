@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import ch.qos.logback.classic.Level;
@@ -53,6 +54,8 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -125,6 +128,9 @@ public class UpdateFlowTest {
     @Autowired
     private AuthorizationChecker authorizationChecker;
 
+    @MockBean
+    private CraneCommand craneCommand;
+
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
     @BeforeEach
@@ -136,6 +142,7 @@ public class UpdateFlowTest {
                 .apply(springSecurity())
                 .build();
         TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8089);
+        when(craneCommand.getImageDigest(anyString())).thenReturn(PluginStubHelper.PLUGIN_IMAGE_SHA);
     }
 
     @AfterEach

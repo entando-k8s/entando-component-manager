@@ -23,17 +23,19 @@ public interface K8SServiceClient extends ECMClient {
 
     void unlinkAndScaleDown(EntandoAppPluginLink el);
 
+    void removeIngressPathForPlugin(String pluginCode);
+
     EntandoPlugin updatePlugin(EntandoPlugin plugin);
 
     EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin);
 
     Optional<EntandoAppPluginLink> getLinkByName(String linkName);
 
-    List<EntandoDeBundle> getBundlesInObservedNamespaces();
+    List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> repoUrlFilter);
 
-    List<EntandoDeBundle> getBundlesInNamespace(String namespace);
+    List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter);
 
-    List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces);
+    List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter);
 
     Optional<EntandoDeBundle> getBundleWithName(String name);
 

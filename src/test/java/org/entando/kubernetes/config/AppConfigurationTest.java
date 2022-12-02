@@ -35,6 +35,7 @@ import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
@@ -51,6 +52,8 @@ class AppConfigurationTest {
     private AppConfiguration appConfig;
     @Mock
     private ComponentDataRepository componentDataRepository;
+    @Mock
+    private CraneCommand craneCommand;
 
     @BeforeEach
     void setup() {
@@ -93,7 +96,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient, pageDescriptorValidator));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
         processors.put(ComponentType.PLUGIN.toString(),
-                new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository));
+                new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository, craneCommand));
         processors.put(ComponentType.WIDGET.toString(),
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                         widgetDescriptorValidator));
@@ -146,7 +149,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient, pageDescriptorValidator));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
         processors.put(ComponentType.PLUGIN.toString(),
-                new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository));
+                new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository, craneCommand));
         processors.put(ComponentType.WIDGET.toString(),
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                         widgetDescriptorValidator));

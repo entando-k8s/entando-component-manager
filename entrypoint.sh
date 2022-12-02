@@ -9,4 +9,17 @@ if [ -d /etc/ecr-git-config ]; then
   cp -Rf /etc/ecr-git-config /opt/.ssh
   chmod 400 /opt/.ssh/id_rsa
 fi
+
+if [ ! -z "$JAVA_TOOL_OPTIONS" ]; then
+  trustStore=`echo "${JAVA_TOOL_OPTIONS}" | sed -e 's/.*trustStore=\(.*\) .*/\1/'`
+  trustStorePassword=`echo "${JAVA_TOOL_OPTIONS}" | sed -e 's/.*trustStorePassword=\(.*\)/\1/'`
+
+  keytool -importkeystore -srckeystore $trustStore -srcstorepass $trustStorePassword -deststorepass $trustStorePassword -destkeystore /tmp/intermediate.p12 -srcstoretype JKS -deststoretype PKCS12
+  openssl pkcs12 -in /tmp/intermediate.p12 -out /opt/certs/ca-certs-custom.pem -password "pass:$trustStorePassword"
+  rm /tmp/intermediate.p12
+
+  export GIT_SSL_CAINFO=/opt/certs/ca-certs-custom.pem
+  export SSL_CERT_DIR=/etc/ssl/certs/:/opt/certs/
+fi
+
 exec $@

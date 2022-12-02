@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -92,7 +93,7 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload[0]", hasKey("latestVersion")))
                 .andExpect(jsonPath("metaData.page").value(1));
 
-        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
+        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces(any());
     }
 
     @Test
@@ -118,7 +119,7 @@ public class EntandoBundleApiTest {
                 .andExpect(jsonPath("payload[0]", hasKey("latestVersion")))
                 .andExpect(jsonPath("metaData.page").value(1));
 
-        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
+        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces(any());
 
         mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=page")
                 .accept(MediaType.APPLICATION_JSON))
@@ -138,7 +139,7 @@ public class EntandoBundleApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
 
-        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces();
+        verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces(any());
 
     }
 

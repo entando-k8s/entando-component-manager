@@ -268,6 +268,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
                 .findByBundleIdAndPluginName(apiBundleId, apiClaim.getPluginName())
                 .map(PluginDataEntity::getEndpoint)
                 .orElse("");
+
         return ingressPath;
     }
 

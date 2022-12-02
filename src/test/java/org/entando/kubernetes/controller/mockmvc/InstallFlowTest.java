@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,6 +85,8 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -160,6 +163,9 @@ public class InstallFlowTest {
     @MockBean
     private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
 
+    @MockBean
+    private CraneCommand craneCommand;
+
     private InstallFlowAssertionHelper installFlowAssertionHelper;
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
@@ -175,6 +181,8 @@ public class InstallFlowTest {
 
         installFlowAssertionHelper =
                 new InstallFlowAssertionHelper(k8SServiceClient, coreClient, jobRepository, componentJobRepository);
+
+        when(craneCommand.getImageDigest(anyString())).thenReturn(PluginStubHelper.PLUGIN_IMAGE_SHA);
     }
 
     @AfterEach

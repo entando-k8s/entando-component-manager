@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  ENTANDO_OPT_USE_PPL_TAG: "v1.4.0"
+  ENTANDO_OPT_USE_PPL_TAG: "v1.4.1"
   ENTANDO_OPT_DATA_REPO: "${{ secrets.ENTANDO_OPT_DATA_REPO }}"
   ENTANDO_OPT_DATA_REPO_TOKEN: "${{ secrets.ENTANDO_OPT_DATA_REPO_TOKEN }}"
   ENTANDO_OPT_ENVIRONMENT_NAMES: "${{ secrets.ENTANDO_OPT_ENVIRONMENT_NAMES }}"
@@ -174,7 +174,7 @@ jobs:
           export ENTANDO_OPT_IMAGE_REGISTRY_CREDENTIALS="${{ secrets.ENTANDO_OPT_IMAGE_REGISTRY_CREDENTIALS }}"
           export ENTANDO_OPT_DOCKER_USERNAME="${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}"
           export ENTANDO_OPT_DOCKER_PASSWORD="${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}"
-          export ENTANDO_TEST_TLS_CRT="${{ secrets.ENTANDO_TEST_TLS_CRT }}"
-          export ENTANDO_TEST_TLS_KEY="${{ secrets.ENTANDO_TEST_TLS_KEY }}"
+          export ENTANDO_OPT_TEST_TLS_CRT="${{ secrets.ENTANDO_OPT_TEST_TLS_CRT }}"
+          export ENTANDO_OPT_TEST_TLS_KEY="${{ secrets.ENTANDO_OPT_TEST_TLS_KEY }}"
 
           ~/ppl-run generic "POST-DEP-TESTS" --id "POST_DEP_TESTS" --lcd "$LOCAL_CLONE_DIR"

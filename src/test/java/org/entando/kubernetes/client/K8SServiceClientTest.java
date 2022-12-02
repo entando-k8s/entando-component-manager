@@ -9,7 +9,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,11 +19,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -157,7 +151,18 @@ public class K8SServiceClientTest {
         EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
         client.unlinkAndScaleDown(getTestEntandoAppPluginLink());
         String name = testLink.getMetadata().getName();
-        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/delete-and-scale-down/" + name)));
+        mockServer.getInnerServer()
+                .verify(1, deleteRequestedFor(urlEqualTo("/app-plugin-links/delete-and-scale-down/" + name)));
+
+    }
+
+    @Test
+    void shouldDeleteThePluginIngressPath() {
+        String pluginName = "pn-439a8698-2c7d460c-entando-api";
+
+        client.removeIngressPathForPlugin(pluginName);
+
+        mockServer.getInnerServer().verify(1, deleteRequestedFor(urlEqualTo("/plugins/ingress/" + pluginName)));
 
     }
 
@@ -228,7 +233,7 @@ public class K8SServiceClientTest {
 
     @Test
     public void shouldGetBundlesFromAllObservedNamespaces() {
-        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces();
+        List<EntandoDeBundle> bundles = client.getBundlesInObservedNamespaces(Optional.empty());
         assertThat(bundles).hasSize(1);
         assertThat(bundles.get(0).getMetadata().getName()).isEqualTo("my-bundle");
         assertThat(bundles.get(0).getSpec().getDetails().getName()).isEqualTo("@entando/my-bundle");
@@ -242,7 +247,7 @@ public class K8SServiceClientTest {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles");
+        List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles", Optional.empty());
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
         assertThat(bundles).hasSize(1);
     }
@@ -265,7 +270,8 @@ public class K8SServiceClientTest {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
-        List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"));
+        List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"),
+                Optional.empty());
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third")));
@@ -306,7 +312,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    void shouldGetAnalysisReport() {
+    void shouldGetAnalysisReportWithPluginsNonExistingOnK8S() {
 
         Map<String, Status> pluginMap = Map.of(
                 ReportableStubHelper.PLUGIN_CODE_1, Status.NEW,
@@ -314,7 +320,53 @@ public class K8SServiceClientTest {
 
         AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
 
-        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithTag();
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
+    }
+
+    @Test
+    void shouldGetAnalysisReportWithPluginsExistingOnK8S() {
+
+        String singlePluginResponse = mockServer.readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
+
+        mockServer.getInnerServer().stubFor(get(urlMatching("/plugins/" + ReportableStubHelper.PLUGIN_CODE_1))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singlePluginResponse)));
+
+        Map<String, Status> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_1, Status.DIFF,
+                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+
+        AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
+
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithTag();
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
+    }
+
+    @Test
+    void shouldGetAnalysisReportWithPluginsExistingOnK8SButUsingTagsInsteadOfSha() {
+
+        String singlePluginResponse = mockServer.readResourceAsString("/payloads/k8s-svc/plugins/plugin_with_sha.json");
+
+        mockServer.getInnerServer().stubFor(get(urlMatching("/plugins/" + ReportableStubHelper.PLUGIN_CODE_1))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singlePluginResponse)));
+
+        Map<String, Status> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_1, Status.EQUAL,
+                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+
+        AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
+
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithSha();
         AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
 
         AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
@@ -418,16 +470,4 @@ public class K8SServiceClientTest {
                 .build();
 
     }
-
-    private String readResourceAsString(String resourcePath) {
-
-        try {
-            Path rp = Paths.get(this.getClass().getResource(resourcePath).toURI());
-            return new String(Files.readAllBytes(rp));
-        } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
 }

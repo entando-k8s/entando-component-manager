@@ -34,11 +34,12 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
             logConflictStrategyAction();
 
-            if (shouldSkip()) {
-                return; //Do nothing
-            }
-
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+
+            if (shouldSkip()) {
+                fixPluginRegistrationIfNecessary();
+                return;
+            }
 
             if (shouldCreate()) {
                 installPlugin(plugin);
@@ -69,6 +70,30 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         pluginDataRepository.save(pluginDataEntity);
     }
 
+    /**
+     * Certain error conditions can lead to plugin present but not registered in the PluginDataRepository.
+     * In turn this causes a query plan SKIP that is inconsistent with the status of the PluginDataRepository.
+     * Therefore, in case of SKIP this function double-checks the actual presence of the plugin and in case
+     * it registers it on the PluginDataRepository.
+     */
+    private void fixPluginRegistrationIfNecessary() {
+        DescriptorMetadata meta = representation.getDescriptorMetadata();
+
+        boolean pluginNotRecordedInCM = pluginDataRepository.findByBundleIdAndPluginName(
+                meta.getBundleId(), meta.getPluginName()
+        ).isEmpty();
+
+        if (pluginNotRecordedInCM) {
+            boolean pluginLinkedInK8S = kubernetesService.isPluginLinked(meta.getPluginCode());
+
+            if (pluginLinkedInK8S) {
+                logInconsistentStateWarning(meta);
+                var pluginDataEntity = composePluginDataEntity(new PluginDataEntity());
+                pluginDataRepository.save(pluginDataEntity);
+            }
+        }
+    }
+
     private PluginDataEntity composePluginDataEntity(PluginDataEntity pluginData) {
         final DescriptorMetadata metadata = representation.getDescriptorMetadata();
 
@@ -77,7 +102,9 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 .setPluginCode(metadata.getPluginCode())
                 .setEndpoint(metadata.getEndpoint())
                 .setCustomEndpoint(metadata.getCustomEndpoint())
-                .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null);
+                .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null)
+                .setDockerTag(representation.getDockerImage().getTag())
+                .setDockerSha256(representation.getDockerImage().getSha256());
     }
 
     @Override
@@ -89,6 +116,9 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             if (shouldSkip()) {
                 return; //Do nothing
             }
+
+            log.info("Removing ingress path to plugin with code:'{}'", pluginCode);
+            kubernetesService.removeIngressPathForPlugin(pluginCode);
 
             log.info("Removing link to plugin {}", pluginCode);
             kubernetesService.unlinkAndScaleDownPlugin(pluginCode);
@@ -122,5 +152,12 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         }
 
         return pluginDataRepository.deleteByPluginCode(pluginCode) > 0;
+    }
+
+    private static void logInconsistentStateWarning(DescriptorMetadata meta) {
+        log.warn(
+                "Inconsistent state detected for bundle {} / plugin {}: in K8S but not in CM",
+                meta.getPluginId(), meta.getPluginName()
+        );
     }
 }

@@ -68,10 +68,17 @@ public class PluginDataEntity {
     @Column(name = "custom_endpoint")
     private String customEndpoint;
 
-    @Size(min = 1, max = 255)
     @Column(name = "roles")
     @Convert(converter = PluginRolesConverter.class)
     private Set<String> roles = new HashSet<>();
+
+    @Size(min = 1, max = 64)
+    @Column(name = "docker_tag")
+    private String dockerTag;
+
+    @Size(min = 71, max = 71)
+    @Column(name = "docker_sha256")
+    private String dockerSha256;
 
     @PrePersist
     public void generateId() {
