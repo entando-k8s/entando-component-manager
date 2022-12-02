@@ -81,6 +81,10 @@ public class BundleUtilities {
 
     public static final String GLOBAL_PREFIX = "global:";
 
+    public static final String ENTANDO_DOCKER_REGISTRY_OVERRIDE = "ENTANDO_DOCKER_REGISTRY_OVERRIDE";
+    public static final String DOCKER_IMAGE_TRANSPORT_PREFIX = "docker://";
+
+
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
 
         if (Strings.isNullOrEmpty(versionReference)) {
@@ -221,7 +225,7 @@ public class BundleUtilities {
         List<String> ingressSegmentList = new ArrayList<>(Arrays.asList(image.getOrganization(), image.getName()));
 
         if (descriptor.isVersionLowerThan3()) {
-            ingressSegmentList.add(image.getVersion());
+            ingressSegmentList.add(image.getTag());
         }
 
         List<String> kubeCompatiblesSegmentList = ingressSegmentList.stream()
@@ -264,8 +268,14 @@ public class BundleUtilities {
         Map<String, String> labels = new HashMap<>();
         labels.put("organization", dockerImage.getOrganization());
         labels.put("name", dockerImage.getName());
-        labels.put("version", dockerImage.getVersion());
+        labels.put("version", dockerImage.getTag());
         return labels;
+    }
+
+    public static Map<String, String> getAnnotationsFromImage(DockerImage dockerImage) {
+        Map<String, String> annotations = new HashMap<>();
+        annotations.put("entando.org/image-tag", dockerImage.getTag());
+        return annotations;
     }
 
 
@@ -292,10 +302,11 @@ public class BundleUtilities {
                 .withNewMetadata()
                 .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
+                .withAnnotations(getAnnotationsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getDbms().toUpperCase()))
-                .withImage(descriptor.getImage())
+                .withImage(descriptor.getDockerImage().toString())
                 .withIngressPath(descriptor.getDescriptorMetadata().getEndpoint())
                 .withCustomIngressPath(descriptor.getDescriptorMetadata().getCustomEndpoint())
                 .withRoles(extractRolesFromDescriptor(descriptor))
@@ -318,6 +329,7 @@ public class BundleUtilities {
                 .withNewMetadata()
                 .withName(descriptor.getDescriptorMetadata().getPluginCode())
                 .withLabels(getLabelsFromImage(descriptor.getDockerImage()))
+                .withAnnotations(getAnnotationsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
                 .withNewSpec()
                 .withDbms(DbmsVendor.valueOf(descriptor.getSpec().getDbms().toUpperCase()))
@@ -491,6 +503,7 @@ public class BundleUtilities {
             return imageValidator.composeCommonUrlWithoutTransportWithoutTagOrThrow(
                     "The image fully qualified URL of the bundle is invalid");
         } else {
+            url = gitSshProtocolToHttp(url);
             URL bundleUrl = ValidationFunctions.composeUrlOrThrow(url,
                     "The repository URL of the bundle is null",
                     "The repository URL of the bundle is invalid");
@@ -528,7 +541,11 @@ public class BundleUtilities {
      */
     public static String gitSshProtocolToHttp(String url) {
         String repoUrl = GIT_AND_SSH_PROTOCOL_REGEX_PATTERN.matcher(url).replaceFirst(HTTP_OVER_GIT_REPLACER);
-        return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
+        if (StringUtils.equals(url, repoUrl)) {
+            return url;
+        } else {
+            return COLONS_REGEX_PATTERN.matcher(repoUrl).replaceFirst("/");
+        }
     }
 
 
@@ -547,7 +564,7 @@ public class BundleUtilities {
         final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
         Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
 
-        if (!bundleReader.isBundleV1()) {
+        if (!bundleReader.isBundleV1() && folderProp == BundleProperty.WIDGET_FOLDER_PATH) {
             final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
             fileFolder = Paths.get(signedFolder, fileFolder.subpath(0, 1).relativize(fileFolder).toString());
         }
@@ -602,10 +619,56 @@ public class BundleUtilities {
     }
 
     public static String composeBundleResourceRootFolter(BundleReader bundleReader) throws IOException {
-        if (bundleReader.isBundleV1() && bundleReader.containsResourceFolder()) {
+        if (bundleReader.isBundleV1() && bundleReader.containsBundleResourceFolder()) {
             return determineBundleResourceRootFolder(bundleReader);
         } else {
             return composeSignedBundleFolder(bundleReader);
         }
+    }
+
+    /**
+     * Returns the registry of an imageAddress or null if not present, or it's not an image address.
+     */
+    public static String extractImageAddressRegistry(String imageAddress) {
+        if (Strings.isNullOrEmpty(imageAddress)) {
+            return null;
+        }
+        try {
+            if (imageAddress.startsWith(DOCKER_IMAGE_TRANSPORT_PREFIX)) {
+                return DockerImage.fromString(imageAddress.substring(DOCKER_IMAGE_TRANSPORT_PREFIX.length())).getRegistry();
+            } else {
+                return DockerImage.fromString(imageAddress).getRegistry();
+            }
+        } catch (Exception ex) {
+            log.debug("Error detected while parsing the imageAddress \"{}\"", imageAddress);
+            return null;
+        }
+    }
+
+    /**
+     * Determine the full qualified image address of an oci-based component.
+     */
+    public static String determineComponentFqImageAddress(
+            String componentImageAddress,
+            String bundleImageAddress,
+            String fallback) {
+        //~
+        String componentImageRegistry = extractImageAddressRegistry(componentImageAddress);
+        if (!Strings.isNullOrEmpty(componentImageRegistry)) {
+            return componentImageAddress;
+        }
+
+        String parentBundleRegistry = extractImageAddressRegistry(bundleImageAddress);
+        if (Strings.isNullOrEmpty(parentBundleRegistry)) {
+            parentBundleRegistry = fallback;
+        }
+
+        return (Strings.isNullOrEmpty(parentBundleRegistry))
+                ? componentImageAddress
+                : Paths.get(parentBundleRegistry, componentImageAddress).toString();
+    }
+
+    public static String readDefaultImageRegistryOverride() {
+        return Optional.ofNullable(System.getenv(ENTANDO_DOCKER_REGISTRY_OVERRIDE)).orElse("");
     }
 }

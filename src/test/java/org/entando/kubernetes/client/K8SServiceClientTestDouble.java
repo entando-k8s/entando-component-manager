@@ -85,6 +85,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
+    public void removeIngressPathForPlugin(String pluginCode) {
+        //Don't do anything atm
+    }
+
+    @Override
     public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
         // TODO?
         return null;
@@ -116,21 +121,21 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> repoUrlFilter) {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals("entando-de-bundles"))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter) {
         return inMemoryBundles.stream()
                 .filter(b -> b.getMetadata().getNamespace().equals(namespace))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter) {
         return inMemoryBundles.stream()
                 .filter(b -> namespaces.contains(b.getMetadata().getNamespace()))
                 .collect(Collectors.toList());

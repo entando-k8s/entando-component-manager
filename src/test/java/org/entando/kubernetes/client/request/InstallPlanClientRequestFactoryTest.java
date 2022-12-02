@@ -6,11 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("unit")
 class InstallPlanClientRequestFactoryTest {
 
-    private final List<Reportable> reportableList = ReportableStubHelper.stubAllReportableList();
+    private final List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithTag();
 
     /**********************************************************************************************************
      * ENGINE REQUEST.

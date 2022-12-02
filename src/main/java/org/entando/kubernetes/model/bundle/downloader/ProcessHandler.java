@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.downloader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,8 +77,16 @@ public class ProcessHandler {
      * @throws IOException if an I/O error occurs
      */
     public List<String> getOutputLines() throws IOException {
+        return collectProcessStreamLines(commandProcess.getInputStream());
+    }
+
+    public List<String> getErrorLines() throws IOException {
+        return collectProcessStreamLines(commandProcess.getErrorStream());
+    }
+
+    private List<String> collectProcessStreamLines(InputStream processStream) throws IOException {
         List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(processStream))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 lines.add(line.trim());

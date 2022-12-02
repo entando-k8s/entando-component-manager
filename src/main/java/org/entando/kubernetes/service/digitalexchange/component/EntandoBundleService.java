@@ -77,4 +77,13 @@ public interface EntandoBundleService {
      * @return the list of EntandoDeBundle CRs deployed (installed or not)
      */
     List<EntandoBundle> listBundlesFromEcr();
+    
+    /**
+     * This method retrieves from entando k8s service the list of EntandoDeBundle CRs deployed (installed or not).
+     *
+     * @param repoUrlFilter a valid repository URL used to filter the EntandoDeBundle CR
+     * @return the list of EntandoDeBundle CRs deployed (installed or not)
+     */
+    List<EntandoBundle> listBundlesFromEcr(Optional<String> repoUrlFilter);
+
 }

@@ -138,12 +138,14 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+        descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
-                "entando/todomvcV1:1.0.0", "/entando/todomvcv1/1-0-0", "/api/v1/todos",
+                "entando/todomvcV1@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
+                "/entando/todomvcv1/1-0-0", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.<Permission>emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
@@ -161,6 +163,7 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+        descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV1(descriptor);
@@ -168,7 +171,8 @@ public class EntandoBundleUtilitiesTest {
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugi"
                         + "n-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong"
-                        + "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong:1.0.0",
+                        + "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong@"
+                        + PluginStubHelper.PLUGIN_IMAGE_SHA,
                 "/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
                         + "d-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-to"
                         + "o-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong/1-0-0",
@@ -190,11 +194,13 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 null);
+        descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
+                "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc2, PluginSecurityLevel.forName("lenient"));
@@ -214,13 +220,14 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
-
+        descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
-                "entando/todomvcV2:1.0.0", PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
+                "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 Collections.<ExpectedRole>emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
 
@@ -235,11 +242,13 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+        descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV2:1.0.0",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
+                "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
@@ -255,11 +264,13 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcV3-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+        descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
         EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
 
-        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL, "entando/todomvcV3:1.0.0",
+        assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
+                "entando/todomvcV3@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
                 getRolesForTodoMvc2CompleteBundle(), getPermissionsForTodoMvc2PlusCompleteBundle(),
                 this::assertOnLabelsForTodoMvc3, PluginSecurityLevel.LENIENT);

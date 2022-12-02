@@ -26,6 +26,7 @@ import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
@@ -203,6 +204,15 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
+    public void removeIngressPathForPlugin(String pluginCode) {
+        Link deleteIngressPathsHref = traverson.follow(PLUGINS_ENDPOINT)
+                .follow(Hop.rel("delete-plugin-ingress-path").withParameter("name", pluginCode))
+                .asLink();
+        tryOrThrow(() -> restTemplate.delete(deleteIngressPathsHref.toUri()),
+                String.format("remove ingress path from plugin %s", pluginCode));
+    }
+
+    @Override
     public EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
         URI linkToCall = tryOrThrow(() -> {
             Link linkToApp = traverson.follow("apps")
@@ -249,11 +259,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInObservedNamespaces() {
+    public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> repoUrlFilter) {
 
         LOGGER.info("### fetching bundles from all namespaces");
-
-        return tryOrThrow(() -> traverson.follow(BUNDLES_ENDPOINT)
+        return tryOrThrow(() -> repoUrlFilter
+                .map(filter -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("repoUrl", filter)))
+                .orElse(traverson.follow(BUNDLES_ENDPOINT))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -262,11 +273,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespace(String namespace) {
+    public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter) {
 
         LOGGER.info("### fetching bundles from " + namespace + " namespace");
-
-        return tryOrThrow(() -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace))
+        Hop baseHop = Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace);
+        return tryOrThrow(() -> traverson.follow(
+                        repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop))
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
                 .getContent()
@@ -275,10 +287,10 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces) {
+    public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter) {
         @SuppressWarnings("unchecked")
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
-                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n))
+                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, repoUrlFilter))
                         .exceptionally(ex -> {
                             LOGGER.log(Level.SEVERE, "An error occurred while retrieving bundle from a namespace", ex);
                             return Collections.emptyList();
@@ -389,14 +401,33 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         Map<String, Status> pluginStatusMap = reportableList.stream()
                 .filter(reportable -> reportable.getComponentType() == ComponentType.PLUGIN)
-                .flatMap(reportable -> reportable.getCodes().stream())
-                .map(name ->
-                        getPluginByName(name)
-                                .map(plugin -> new SimpleEntry<>(name, Status.DIFF))
-                                .orElseGet(() -> new SimpleEntry<>(name, Status.NEW)))
+                .flatMap(reportable -> reportable.getComponents().stream())
+                .map(comp ->
+                        getPluginByName(comp.getCode())
+                                .map(plugin -> composeReportableEntry(plugin, comp))
+                                .orElseGet(() -> new SimpleEntry<>(comp.getCode(), Status.NEW)))
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
         return new AnalysisReport().setPlugins(pluginStatusMap);
+    }
+
+    /**
+     * check if the received EntandoPlugin and Reportable.Component correspond to the same plugin version.
+     *
+     * @param plugin the EntandoPlugin of which check the version
+     * @param component the Reportable.Component of which check the version
+     * @return the SimpleEntry resulting from the comparison
+     */
+    private SimpleEntry<String, Status> composeReportableEntry(EntandoPlugin plugin, Reportable.Component component) {
+        Status status = Status.EQUAL;
+        final DockerImage dockerImage = DockerImage.fromString(plugin.getSpec().getImage());
+
+        if (dockerImage.getSha256() == null
+                || ! dockerImage.getSha256().equals(component.getVersion())) {
+
+            status = Status.DIFF;
+        }
+        return new SimpleEntry<>(component.getCode(), status);
     }
 
     @Override

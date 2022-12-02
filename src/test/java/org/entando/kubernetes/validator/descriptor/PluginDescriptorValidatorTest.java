@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
@@ -20,7 +22,6 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
-import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -336,6 +337,23 @@ class PluginDescriptorValidatorTest {
                     descriptor.setIngressPath(ingress);
                     assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
                 });
+    }
+
+    @Test
+    void shouldCorrectlyValidateRoles() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+
+        // valid with format not compliant with bundle code
+        List<String> roles = Arrays.asList("role1", "roles2");
+        descriptor.setRoles(roles);
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+
+        // NOT valid with format compliant with bundle code
+        roles = IntStream.range(0, 401).mapToObj(i -> StringUtils.leftPad("" + i, 10, "0"))
+                .collect(Collectors.toList());
+        descriptor.setRoles(roles);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
     @Test

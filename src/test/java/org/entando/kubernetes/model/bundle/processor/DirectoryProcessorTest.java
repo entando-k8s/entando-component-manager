@@ -203,7 +203,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() throws IOException {
 
         when(baseBundleReader.isBundleV1()).thenReturn(true);
-        when(baseBundleReader.containsResourceFolder()).thenReturn(true);
+        when(baseBundleReader.containsBundleResourceFolder()).thenReturn(true);
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new DirectoryProcessor(new EntandoCoreClientTestDouble()), "directory");

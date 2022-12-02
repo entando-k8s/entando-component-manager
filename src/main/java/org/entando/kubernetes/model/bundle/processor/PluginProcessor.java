@@ -1,8 +1,9 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.determineComponentFqImageAddress;
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.readDefaultImageRegistryOverride;
+
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -17,6 +20,7 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
@@ -29,10 +33,10 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 /**
@@ -49,48 +53,59 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         EntandoK8SServiceReportableProcessor {
 
     public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn-";
-    public static final String SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI =
-            "SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI";
     public static final String SERVER_SERVLET_CONTEXT_PATH = "SERVER_SERVLET_CONTEXT_PATH";
     public static final String ENTANDO_ECR_INGRESS_URL = "ENTANDO_ECR_INGRESS_URL";
-
+    public static final String ENTANDO_APP_HOST_NAME = "ENTANDO_APP_HOST_NAME";
+    public static final String ENTANDO_APP_USE_TLS = "ENTANDO_APP_USE_TLS";
 
     private final String cmEndpoint;
 
     private final KubernetesService kubernetesService;
     private final PluginDescriptorValidator descriptorValidator;
     private final PluginDataRepository pluginPathRepository;
+    private final CraneCommand craneCommand;
 
     public PluginProcessor(KubernetesService kubernetesService,
             PluginDescriptorValidator descriptorValidator,
-            PluginDataRepository pluginPathRepository) {
+            PluginDataRepository pluginPathRepository,
+            CraneCommand craneCommand) {
+
         this.kubernetesService = kubernetesService;
         this.descriptorValidator = descriptorValidator;
         this.pluginPathRepository = pluginPathRepository;
+        this.craneCommand = craneCommand;
         this.cmEndpoint = composeCmEndpoint();
     }
 
 
     private String composeCmEndpoint() {
 
-        String env = System.getenv(SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI);
-        if (ObjectUtils.isEmpty(env)) {
-            return "";
-        }
+        final String entandoHost = System.getenv(ENTANDO_APP_HOST_NAME);
+        final String ecrContextPath = System.getenv(SERVER_SERVLET_CONTEXT_PATH);
 
-        final String contextPath = System.getenv(SERVER_SERVLET_CONTEXT_PATH);
-        try {
-            final URL cmUrl = new URL(env);
-            return new DefaultUriBuilderFactory().builder()
-                    .scheme(cmUrl.getProtocol())
-                    .host(cmUrl.getHost())
-                    .port(cmUrl.getPort())
-                    .path(contextPath)
+        log.trace("try to composed with entandoHost:'{}' ecrContextPath:'{}'", entandoHost, ecrContextPath);
+        if (StringUtils.isBlank(entandoHost)) {
+            log.error("Error condition unable to compose:'{}' because env var:'{}' is blank", ENTANDO_ECR_INGRESS_URL,
+                    ENTANDO_APP_HOST_NAME);
+            return "";
+        } else {
+            String ecmUrl = new DefaultUriBuilderFactory().builder()
+                    .scheme(retrieveProtocol())
+                    .host(entandoHost)
+                    // port not evaluated, ingressHosName cannot contain port (regexp validation in CRD)
+                    .path(ecrContextPath)
                     .build()
                     .toString();
-        } catch (MalformedURLException e) {
-            throw new EntandoComponentManagerException("Cannot compose " + ENTANDO_ECR_INGRESS_URL);
+
+            log.debug("composed url:'{}' for plugin env var:'{}'", ecmUrl, ENTANDO_ECR_INGRESS_URL);
+
+            return ecmUrl;
         }
+    }
+
+    private String retrieveProtocol() {
+        boolean useTls = BooleanUtils.toBoolean(System.getenv(ENTANDO_APP_USE_TLS));
+        return useTls ? "https" : "http";
     }
 
     @Override
@@ -121,10 +136,18 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            String bundleId = bundleReader.calculateBundleId();
 
             for (String filename : descriptorList) {
+                log.debug("[{}] Processing descriptor {}", bundleId, filename);
+
                 // parse descriptor
-                PluginDescriptor pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+                PluginDescriptor pluginDescriptor = parseAndNormalizePluginDescriptor(
+                        bundleReader,
+                        filename,
+                        craneCommand
+                );
+
                 // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
@@ -133,7 +156,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
                         pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
                 environmentVariables.add(new EnvironmentVariable().setName(ENTANDO_ECR_INGRESS_URL)
-                                .setValue(cmEndpoint));
+                        .setValue(cmEndpoint));
                 pluginDescriptor.setEnvironmentVariables(environmentVariables);
                 // log
                 logDescriptorWarnings(pluginDescriptor);
@@ -161,17 +184,40 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
-        return new PluginDescriptor()
-                .setDescriptorMetadata(
-                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
+    /**
+     * Reads the plugin descriptor and in case adjust its registry address if not present in the plugin image url.
+     */
+    private static PluginDescriptor parseAndNormalizePluginDescriptor(BundleReader bundleReader, String filename,
+            CraneCommand craneCommand) throws IOException {
+        var pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
+
+        log.debug("Actual docker image on descriptor: {}", pluginDescriptor.getDockerImage());
+
+        String fqImageAddress = determineFqImageAddress(pluginDescriptor, bundleReader);
+        pluginDescriptor.setDockerImage(DockerImage.fromString(fqImageAddress));
+
+        log.debug("Effective docker image: {}", pluginDescriptor.getDockerImage());
+
+        String imageDigest = craneCommand.getImageDigest(fqImageAddress);
+        pluginDescriptor.getDockerImage().setSha256(imageDigest);
+
+        log.debug("Effective docker image DIGEST: {}", imageDigest);
+
+        return pluginDescriptor;
+    }
+
+    private static String determineFqImageAddress(PluginDescriptor pluginDescriptor, BundleReader bundleReader) {
+        return determineComponentFqImageAddress(
+                pluginDescriptor.getDockerImage().toString(),
+                bundleReader.getBundleUrl(),
+                readDefaultImageRegistryOverride()
+        );
     }
 
     @Override
     public Reportable getReportable(BundleReader bundleReader, ComponentProcessor<?> componentProcessor) {
 
-        List<String> idList = new ArrayList<>();
+        List<Reportable.Component> compList = new ArrayList<>();
 
         try {
             List<String> contentDescriptorList = componentProcessor.getDescriptorList(bundleReader);
@@ -186,11 +232,15 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 // log
                 logDescriptorWarnings(pluginDescriptor);
                 // add plugin id to the list
-                idList.add(pluginDescriptor.getComponentKey().getKey());
+                final String sha256 = craneCommand.getImageDigest(
+                        determineFqImageAddress(pluginDescriptor, bundleReader)
+                );
+                compList.add(
+                        new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCode(), sha256));
             }
 
-            return new Reportable(componentProcessor.getSupportedComponentType(), idList,
-                    this.getReportableRemoteHandler());
+            return new Reportable(componentProcessor.getSupportedComponentType(), this.getReportableRemoteHandler(),
+                    compList);
 
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format("Error generating Reportable for %s components",
@@ -244,7 +294,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         String deploymentBaseName;
         String inputValueForSha;
 
-        if (StringUtils.hasLength(descriptor.getDeploymentBaseName())) {
+        if (StringUtils.isNotBlank(descriptor.getDeploymentBaseName())) {
             deploymentBaseName = BundleUtilities.makeKubernetesCompatible(descriptor.getDeploymentBaseName());
             inputValueForSha = descriptor.getDeploymentBaseName();
         } else {
@@ -256,6 +306,13 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         return String.join("-",
                 DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
                 deploymentBaseName);
+    }
+
+    @Override
+    public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
+        return new PluginDescriptor()
+                .setDescriptorMetadata(
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
     }
 
     /**

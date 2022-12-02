@@ -8,7 +8,6 @@ import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
-import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Metadata;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
@@ -37,6 +36,8 @@ public class PluginStubHelper {
     public static final String TEST_ENV_VAR_2_NAME = "env2Name";
     public static final String TEST_ENV_VAR_2_SECRET_NAME = BUNDLE_ID + "-env-2-secret-name";
     public static final String TEST_ENV_VAR_2_SECRET_KEY = "env2SecretKey";
+    public static final String PLUGIN_IMAGE_SHA = "sha256:f1acf3443c577db1b1df3b47593b07895acab5ef582e5a661c2c1ade6f19e431";
+    public static final String TEST_DESCRIPTOR_IMAGE_WITH_SHA = "entando/the-lucas@" + PLUGIN_IMAGE_SHA;
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {
@@ -72,6 +73,7 @@ public class PluginStubHelper {
         PluginDescriptor pluginDescriptorV5 = stubPluginDescriptorV2()
                 .setName(BUNDLE_NAME);
         pluginDescriptorV5.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        pluginDescriptorV5.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
         return pluginDescriptorV5;
     }
 

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220902000001
+      author: l.corsetti@entando.com
+      changes:
+        - addColumn:
+            tableName: plugin_data
+            columns:
+              - column:
+                  name: docker_tag
+                  type: VARCHAR(64)
+              - column:
+                  name: docker_sha256
+                  type: CHAR(72)

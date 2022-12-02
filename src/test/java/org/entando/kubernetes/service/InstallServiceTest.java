@@ -31,7 +31,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.entando.kubernetes.model.bundle.descriptor.LanguageDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
@@ -73,6 +72,7 @@ import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
@@ -122,6 +122,7 @@ public class InstallServiceTest {
     private WidgetDescriptorValidator widgetDescriptorValidator;
     private PageDescriptorValidator pageDescriptorValidator;
     private BundleDescriptorValidator bundleDescriptorValidator;
+    private CraneCommand craneCommand;
 
     @BeforeEach
     public void init() {
@@ -148,6 +149,7 @@ public class InstallServiceTest {
         widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
         pageDescriptorValidator = mock(PageDescriptorValidator.class);
         bundleDescriptorValidator = mock(BundleDescriptorValidator.class);
+        craneCommand = mock(CraneCommand.class);
 
         downloaderFactory.setDefaultSupplier(() -> bundleDownloader);
 
@@ -182,7 +184,7 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new PageProcessor(coreClient, pageDescriptorValidator));
         reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
         reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator,
-                pluginDataRepository));
+                pluginDataRepository, craneCommand));
         reportableComponentProcessorList.add(
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                         widgetDescriptorValidator));

@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -30,6 +31,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
@@ -57,6 +59,8 @@ class PluginProcessorTest extends BaseProcessorTest {
     private PluginDataRepository pluginDataRepository;
     @Mock
     private BundleReader bundleReader;
+    @Mock
+    private CraneCommand craneCommand;
 
     private PluginProcessor processor;
 
@@ -65,7 +69,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
     }
 
     @Test
@@ -73,7 +77,8 @@ class PluginProcessorTest extends BaseProcessorTest {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2();
         descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
 
-        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
     }
 
@@ -83,30 +88,35 @@ class PluginProcessorTest extends BaseProcessorTest {
         descriptor.setIngressPath("custom/ingress");
         descriptor.setDescriptorVersion(DescriptorVersion.V2.getVersion());
 
-        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
-        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV3());
+        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV3(),
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
     }
+
 
     @Test
     void testCreatePluginV3WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV3();
         descriptor.setIngressPath("custom/ingress");
-        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV4() throws IOException, ExecutionException, InterruptedException {
-        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV4());
+        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV4(),
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
     }
@@ -115,31 +125,37 @@ class PluginProcessorTest extends BaseProcessorTest {
     void testCreatePluginV4WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV4();
         descriptor.setIngressPath("custom/ingress");
-        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV5() throws IOException, ExecutionException, InterruptedException {
-        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+        final List<? extends Installable> installables = execTestCreatePlugin(
+                PluginStubHelper.stubPluginDescriptorV5(),
+                BundleInfoStubHelper.DOCKER_REPO_ADDRESS,
+                BundleInfoStubHelper.DOCKER_REPO_ADDRESS_8_CHARS_SHA
+        );
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/my-component-77b2b10e/my-bundle", null);
+        assertOnEndpoints(installables.get(1), "/my-component-89f28dad/my-bundle", null);
     }
 
     @Test
     void testCreatePluginV5WithCustomIngressPath() throws IOException, ExecutionException, InterruptedException {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5().setIngressPath("custom/ingress");
-        final List<? extends Installable> installables = execTestCreatePlugin(descriptor);
+        final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/my-component-77b2b10e/my-bundle", "/custom/ingress");
     }
 
-    private List<? extends Installable> execTestCreatePlugin(PluginDescriptor descriptor)
-            throws IOException, ExecutionException, InterruptedException {
-
+    private List<? extends Installable> execTestCreatePlugin(PluginDescriptor descriptor, String bundleAddress,
+            String repoSha) throws IOException, ExecutionException, InterruptedException {
+        // ~
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
-        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        when(bundleReader.getBundleUrl()).thenReturn(bundleAddress);
 
         when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
                 .thenReturn(descriptor);
@@ -148,7 +164,8 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = processor.process(bundleReader);
         assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+                        repoSha, "24f085aa"),
+                repoSha);
         return installables;
     }
 
@@ -167,7 +184,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         AppConfiguration.truncatePluginBaseNameIfLonger = false;
     }
 
-    private void assertOnInstallables(List<? extends Installable> installables, String firstName)
+    private void assertOnInstallables(List<? extends Installable> installables, String firstName, String repoSha)
             throws ExecutionException, InterruptedException {
 
         assertThat(installables).hasSize(2);
@@ -177,8 +194,7 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         assertThat(installables.get(1)).isInstanceOf(PluginInstallable.class);
         assertThat(installables.get(1).getComponentType()).isEqualTo(ComponentType.PLUGIN);
-        assertThat(installables.get(1).getName()).isEqualTo("pn-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA
-                + "-b9cd65aa-customdepbasename");
+        assertThat(installables.get(1).getName()).isEqualTo("pn-" + repoSha + "-b9cd65aa-customdepbasename");
 
         verify(kubernetesService, times(0)).linkPlugin(any());
 
@@ -187,7 +203,6 @@ class PluginProcessorTest extends BaseProcessorTest {
         installables.get(1).install().get();
         verify(kubernetesService, times(2)).linkPluginAndWaitForSuccess(captor.capture());
     }
-
 
     private void initBundleReaderShortImagesName() throws IOException {
 
@@ -236,7 +251,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
-                new PluginProcessor(null, null, null), "plugin");
+                new PluginProcessor(null, null, null, craneCommand), "plugin");
     }
 
     @Test
@@ -258,6 +273,25 @@ class PluginProcessorTest extends BaseProcessorTest {
     }
 
     @Test
+    void shouldUseSignPluginCorrectly() {
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV2()
+                .setImage("staging/entando/the-lucas:0.0.1-SNAPSHOT")
+                .setDeploymentBaseName(null);
+
+        Stream.of(new String[]{"org1/org2/name", "abd00576-org1-org2-name"},
+                        new String[]{"org1/org2/org3/name", "061fe78c-org1-org2-org3-name"},
+                        new String[]{"example.org/org1/name", "bb388b64-org1-name"},
+                        new String[]{"example.org/org1/org2/name", "abd00576-org1-org2-name"},
+                        new String[]{"org1/name", "bb388b64-org1-name"})
+                .forEach(i -> {
+                    descriptor.setImage(i[0]);
+                    descriptor.setDockerImage(null);
+
+                    assertThat(processor.signPluginDeploymentName(descriptor)).isEqualTo(i[1]);
+                });
+    }
+
+    @Test
     void shouldComposeTheExpectedFullDeploymentName() {
         when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
         final String fullDepName = processor.generateFullDeploymentName(
@@ -268,20 +302,46 @@ class PluginProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void shouldAddTheCmEndpointEnvVar() throws Exception {
+    void shouldAddTheCmEndpointEnvVarHttps() throws Exception {
 
         TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
-                "http://www.myentando.com/auth/realms/entando",
-                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange"));
+                "http://www.mykc.com/auth/realms/entando",
+                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
+                "ENTANDO_APP_HOST_NAME", "www.myentando.com",
+                "ENTANDO_APP_USE_TLS", "true"));
 
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository);
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
 
-        final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV5());
+        final List<? extends Installable> installablesHttps = execTestCreatePlugin(
+                PluginStubHelper.stubPluginDescriptorV5(), BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
 
-        final PluginDescriptor representation = (PluginDescriptor) installables.get(0).getRepresentation();
-        final EnvironmentVariable environmentVariable = representation.getEnvironmentVariables().get(0);
-        assertThat(environmentVariable.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
-        assertThat(environmentVariable.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
+        final PluginDescriptor representationHttps = (PluginDescriptor) installablesHttps.get(0).getRepresentation();
+        final EnvironmentVariable environmentVariableHttps = representationHttps.getEnvironmentVariables().get(0);
+        assertThat(environmentVariableHttps.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+        assertThat(environmentVariableHttps.getValue()).isEqualTo("https://www.myentando.com/digital-exchange");
+    }
+
+    @Test
+    void shouldAddTheCmEndpointEnvVarHttp() throws Exception {
+
+        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
+                "http://www.mykc.com/auth/realms/entando",
+                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
+                "ENTANDO_APP_HOST_NAME", "www.myentando.com",
+                "ENTANDO_APP_USE_TLS", "false"));
+
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
+
+        final List<? extends Installable> installablesHttp = execTestCreatePlugin(
+                PluginStubHelper.stubPluginDescriptorV5(), BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+
+        final PluginDescriptor representationHttp = (PluginDescriptor) installablesHttp.get(0).getRepresentation();
+        final EnvironmentVariable environmentVariableHttp = representationHttp.getEnvironmentVariables().get(0);
+        assertThat(environmentVariableHttp.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+        assertThat(environmentVariableHttp.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
+
     }
 
     private void assertOnEndpoints(Installable installable, String endpoint, String customEndpoint) {

@@ -88,10 +88,17 @@ public class KubernetesService {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlink);
     }
 
+    public boolean isPluginLinked(String pluginId) {
+        return getCurrentAppLinkToPlugin(pluginId).isPresent();
+    }
+
     public void unlinkAndScaleDownPlugin(String pluginId) {
         getCurrentAppLinkToPlugin(pluginId).ifPresent(k8sServiceClient::unlinkAndScaleDown);
     }
 
+    public void removeIngressPathForPlugin(String pluginId) {
+        k8sServiceClient.removeIngressPathForPlugin(pluginId);
+    }
 
     public EntandoAppPluginLink linkPlugin(EntandoPlugin plugin) {
         EntandoPlugin newPlugin = createNewPlugin(plugin);
@@ -142,7 +149,7 @@ public class KubernetesService {
     }
 
     public List<EntandoDeBundle> getBundlesInDefaultNamespace() {
-        return k8sServiceClient.getBundlesInObservedNamespaces();
+        return k8sServiceClient.getBundlesInObservedNamespaces(Optional.empty());
     }
 
     public Optional<EntandoDeBundle> fetchBundleByName(String name) {

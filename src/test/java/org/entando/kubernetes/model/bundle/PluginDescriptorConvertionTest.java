@@ -1,7 +1,6 @@
 package org.entando.kubernetes.model.bundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,7 +28,7 @@ class PluginDescriptorConvertionTest {
         DockerImage dockerImage = descriptor.getDockerImage();
         assertThat(dockerImage.getName()).isEqualTo("the-lucas");
         assertThat(dockerImage.getOrganization()).isEqualTo("entando");
-        assertThat(dockerImage.getVersion()).isEqualTo("0.0.1-SNAPSHOT");
+        assertThat(dockerImage.getTag()).isEqualTo("0.0.1-SNAPSHOT");
     }
 
     @Test
@@ -40,7 +39,7 @@ class PluginDescriptorConvertionTest {
                     DockerImage dockerImage = pluginDescriptor.getDockerImage();
                     assertThat(dockerImage.getName()).isEqualTo("the-lucas");
                     assertThat(dockerImage.getOrganization()).isEqualTo("entando");
-                    assertThat(dockerImage.getVersion()).isEqualTo("0.0.1-SNAPSHOT");
+                    assertThat(dockerImage.getTag()).isEqualTo("0.0.1-SNAPSHOT");
                 });
     }
 
@@ -75,9 +74,16 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
-        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
-        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+        // with tag
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
+        assertOnConvertedEntandoPluginWithTag(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+
+        // with sha
+        d.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
+        p = BundleUtilities.generatePluginFromDescriptor(d);
+        assertOnConvertedEntandoPluginWithSha(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }
 
@@ -109,10 +115,27 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
-        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
-        assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+        // with sha
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
+        assertOnConvertedEntandoPluginWithSha(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+
+        // with tag
+        d.getDockerImage().setSha256(null);
+        p = BundleUtilities.generatePluginFromDescriptor(d);
+        assertOnConvertedEntandoPluginWithTag(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
+    }
+
+    private void assertOnConvertedEntandoPluginWithTag(EntandoPlugin p, String expectedPluginName, String ingressPath) {
+        assertThat(p.getSpec().getImage()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_IMAGE);
+        assertOnConvertedEntandoPlugin(p, expectedPluginName, ingressPath);
+    }
+
+    private void assertOnConvertedEntandoPluginWithSha(EntandoPlugin p, String expectedPluginName, String ingressPath) {
+        assertThat(p.getSpec().getImage()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_IMAGE_WITH_SHA);
+        assertOnConvertedEntandoPlugin(p, expectedPluginName, ingressPath);
     }
 
     private void assertOnConvertedEntandoPlugin(EntandoPlugin p, String expectedPluginName) {
@@ -121,7 +144,6 @@ class PluginDescriptorConvertionTest {
 
     private void assertOnConvertedEntandoPlugin(EntandoPlugin p, String expectedPluginName, String ingressPath) {
         assertThat(p.getMetadata().getName()).isEqualTo(expectedPluginName);
-        assertThat(p.getSpec().getImage()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_IMAGE);
         assertThat(p.getSpec().getIngressPath()).isEqualTo(ingressPath);
         assertThat(p.getSpec().getHealthCheckPath()).isEqualTo(PluginStubHelper.TEST_DESCRIPTOR_HEALTH_PATH);
 

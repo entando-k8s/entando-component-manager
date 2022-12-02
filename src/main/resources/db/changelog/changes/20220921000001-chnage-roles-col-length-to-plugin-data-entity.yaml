@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20220921000001
+      author: dev@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: plugin_data
+        - and:
+            - columnExists:
+                tableName: plugin_data
+                columnName: roles
+      changes:
+        - modifyDataType:
+            tableName: plugin_data
+            columnName: roles
+            newDataType: VARCHAR(4000)

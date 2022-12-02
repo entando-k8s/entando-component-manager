@@ -1,4 +1,4 @@
-FROM entando/entando-ubi8-java11-base:6.4.0
+FROM entando/entando-java-base:11.0.2
 ARG VERSION
 ### Required OpenShift Labels
 LABEL name="Entando Component Manager" \
@@ -11,6 +11,21 @@ LABEL name="Entando Component Manager" \
 
 COPY target/generated-resources/licenses /licenses
 
+### start git section -- copy and install
+USER 0
+RUN touch /tmp/passwd /tmp/group \
+ && chgrp 0 /tmp/passwd /tmp/group \
+ && chmod g+rw /tmp/passwd /tmp/group \
+ && microdnf update \
+ && microdnf install -y yum git git-lfs gettext nss_wrapper tar \
+ && git lfs install \
+ && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash \
+ && rpm -e yum \
+ && microdnf clean -y all \
+ && chmod -Rf g+rw /opt
+USER 1001
+### end git section --
+
 ### start crane section -- copy and install
 ENV ENTANDO_CRANE_VERSION=v0.10.0
 USER 0
@@ -22,6 +37,15 @@ RUN mkdir /tmp/crane; \
     rm -R /tmp/crane;
 USER 1001
 ### end crane section --
+
+### start certs section --
+USER 0
+RUN mkdir /opt/certs; \
+    touch /opt/certs/ca-certs-custom.pem; \
+    chown -R root:root /opt/certs; \
+    chmod -R ug+rwx /opt/certs; 
+USER 1001
+### end certs section --
 
 ENV PORT=8080 \
     CLASSPATH=/opt/lib \
@@ -43,4 +67,4 @@ COPY pom.xml target/lib* /opt/lib/
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["java", "-XX:MaxRAMPercentage=80.0", "-jar", "app.jar"]
+CMD ["java", "-XX:MaxRAMPercentage=80.0", "-XshowSettings:vm", "-jar", "app.jar"]
