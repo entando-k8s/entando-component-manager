@@ -64,6 +64,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
     public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
 
+    public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
     private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
     private final String k8sServiceUrl;
     private Path tokenFilePath;
@@ -423,11 +424,28 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         final DockerImage dockerImage = DockerImage.fromString(plugin.getSpec().getImage());
 
         if (dockerImage.getSha256() == null
-                || ! dockerImage.getSha256().equals(component.getVersion())) {
+                || !dockerImage.getSha256().equals(component.getVersion())) {
 
             status = Status.DIFF;
         }
+        String pluginCode = plugin.getMetadata().getName();
+        boolean isPluginLinked = isPluginLinked(pluginCode);
+        if (!isPluginLinked) {
+            String log = String.format(
+                    "plugin with pluginCode:'{}' is linked:'{}' force status DIFF in install plan to reinstall",
+                    pluginCode, isPluginLinked);
+            LOGGER.info(log);
+            status = Status.DIFF;
+        }
         return new SimpleEntry<>(component.getCode(), status);
+    }
+
+    public boolean isPluginLinked(String pluginId) {
+        String appName = System.getenv(ENTANDO_APP_NAME);
+        return getAppLinks(appName)
+                .stream()
+                .filter(el -> el.getSpec().getEntandoPluginName().equals(pluginId))
+                .findFirst().isPresent();
     }
 
     @Override
