@@ -18,8 +18,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
@@ -31,6 +29,8 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -65,7 +65,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
 
     public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
-    private static final Logger LOGGER = Logger.getLogger(DefaultK8SServiceClient.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
     private Path tokenFilePath;
     private RestTemplate restTemplate;
@@ -293,7 +293,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
                 .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, repoUrlFilter))
                         .exceptionally(ex -> {
-                            LOGGER.log(Level.SEVERE, "An error occurred while retrieving bundle from a namespace", ex);
+                            LOGGER.error("An error occurred while retrieving bundle from a namespace", ex);
                             return Collections.emptyList();
                         }))
                 .toArray(CompletableFuture[]::new);
@@ -431,10 +431,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String pluginCode = plugin.getMetadata().getName();
         boolean isPluginLinked = isPluginLinked(pluginCode);
         if (!isPluginLinked) {
-            String log = String.format(
-                    "plugin with pluginCode:'{}' is linked:'{}' force status DIFF in install plan to reinstall",
-                    pluginCode, isPluginLinked);
-            LOGGER.info(log);
+            LOGGER.info("plugin with pluginCode:'{}' is linked:'{}' force status DIFF in install plan to reinstall",
+                    pluginCode,
+                    isPluginLinked);
             status = Status.DIFF;
         }
         return new SimpleEntry<>(component.getCode(), status);
@@ -444,8 +443,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String appName = System.getenv(ENTANDO_APP_NAME);
         return getAppLinks(appName)
                 .stream()
-                .filter(el -> el.getSpec().getEntandoPluginName().equals(pluginId))
-                .findFirst().isPresent();
+                .anyMatch(el -> el.getSpec().getEntandoPluginName().equals(pluginId));
     }
 
     @Override
