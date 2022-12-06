@@ -27,6 +27,7 @@ import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.MethodRetryer;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
@@ -91,6 +92,12 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
+    private final MethodRetryer retryer;
+    private final int retryNumber = Integer.valueOf(
+            Optional.ofNullable(System.getenv("ENTANDO_REST_RETRY_NUMBER")).orElse("3"));
+    private final long backOffPeriod = Integer.valueOf(
+            Optional.ofNullable(System.getenv("ENTANDO_REST_RETRY_BACKOFF")).orElse("5"));
+
 
     public DefaultEntandoCoreClient(
             @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
@@ -107,21 +114,32 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         this.restTemplate = new OAuth2RestTemplate(resourceDetails);
         this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
         this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
+        this.retryer = this.buildRetryer();
+
     }
 
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
-        restTemplate
-                .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
-                new EntandoCoreWidget(descriptor),
-                        Void.class);
+        Runnable r = () -> {
+            restTemplate
+                    .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
+                            new EntandoCoreWidget(descriptor),
+                            Void.class);
+        };
+        retryer.execute(r);
+
     }
 
     @Override
     public void updateWidget(WidgetDescriptor descriptor) {
-        restTemplate
-                .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build().toUri(),
-                        new EntandoCoreWidget(descriptor));
+        Runnable r = () -> {
+
+            restTemplate
+                    .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build()
+                                    .toUri(),
+                            new EntandoCoreWidget(descriptor));
+        };
+        retryer.execute(r);
     }
 
     @Override
@@ -629,5 +647,32 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return s != null && (s.is2xxSuccessful()
                 || s.equals(HttpStatus.NOT_FOUND)
                 || s.equals(HttpStatus.FORBIDDEN));
+    }
+
+    private boolean checkerError50x(Object obj, Exception ex) {
+        if (ex instanceof RestClientResponseException) {
+            RestClientResponseException e = (RestClientResponseException) ex;
+            if (e.getRawStatusCode() >= 500 && e.getRawStatusCode() < 510) {
+                log.info("Error in a REST call to entandoDeApp code:'{}'", e.getRawStatusCode());
+                log.debug("Error: ", e);
+                return false;
+            }
+        }
+        log.debug("Error in a REST call to entandoDeApp", ex);
+        return true;
+    }
+
+    private Object genericaResExecutor(Runnable c) throws Exception {
+        c.run();
+        return null;
+    }
+
+    private MethodRetryer buildRetryer() {
+        return MethodRetryer.<Runnable, Object>builder()
+                .retries(retryNumber)
+                .waitFor(backOffPeriod)
+                .execMethod(this::genericaResExecutor)
+                .checkerMethod(this::checkerError50x)
+                .build();
     }
 }
