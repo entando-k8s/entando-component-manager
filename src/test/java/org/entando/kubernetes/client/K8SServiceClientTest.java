@@ -63,7 +63,10 @@ public class K8SServiceClientTest {
     private DefaultK8SServiceClient client;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
+        //needed by DefaultK8SServiceClient constructor
+        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+
         mockServer = new EntandoK8SServiceMockServer();
         client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, true);
         client.setRestTemplate(noOAuthRestTemplate());
@@ -328,8 +331,8 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    void shouldGetAnalysisReportWithPluginsExistingOnK8S() throws Exception {
-        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+    void shouldGetAnalysisReportWithPluginsExistingOnK8S() {
+
         String singlePluginResponse = mockServer.readResourceAsString("/payloads/k8s-svc/plugins/plugin.json");
 
         mockServer.getInnerServer().stubFor(get(urlMatching("/plugins/" + ReportableStubHelper.PLUGIN_CODE_1))
@@ -351,8 +354,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    void shouldGetAnalysisReportWithPluginsExistingOnK8SButUsingTagsInsteadOfSha() throws Exception {
-        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+    void shouldGetAnalysisReportWithPluginsExistingOnK8SButUsingTagsInsteadOfSha() {
 
         String singlePluginResponse = mockServer.readResourceAsString("/payloads/k8s-svc/plugins/plugin_with_sha.json");
 
@@ -375,8 +377,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    void shouldGetAnalysisReportWithPluginsExistingOnK8SButNotLinked() throws Exception {
-        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+    void shouldGetAnalysisReportWithPluginsExistingOnK8SButNotLinked() {
 
         String singlePluginResponse = mockServer.readResourceAsString(
                 "/payloads/k8s-svc/plugins/plugin_with_no_link.json");

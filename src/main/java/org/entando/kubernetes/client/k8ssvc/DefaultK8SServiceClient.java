@@ -71,6 +71,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
+    private final String entandoAppName;
 
     public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, boolean normalizeK8sServiceUrl) {
         this.tokenFilePath = Paths.get(tokenFilePath);
@@ -83,6 +84,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         this.traverson = newTraverson();
         this.noAuthRestTemplate = newNoAuthRestTemplate();
+
+        this.entandoAppName = System.getenv(ENTANDO_APP_NAME);
 
     }
 
@@ -429,7 +432,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             status = Status.DIFF;
         }
         String pluginCode = plugin.getMetadata().getName();
-        boolean isPluginLinked = isPluginLinked(pluginCode);
+        boolean isPluginLinked = checkIfPluginIsLinked(pluginCode);
         if (!isPluginLinked) {
             LOGGER.info("plugin with pluginCode:'{}' is linked:'{}' force status DIFF in install plan to reinstall",
                     pluginCode,
@@ -439,9 +442,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return new SimpleEntry<>(component.getCode(), status);
     }
 
-    public boolean isPluginLinked(String pluginId) {
-        String appName = System.getenv(ENTANDO_APP_NAME);
-        return getAppLinks(appName)
+    public boolean checkIfPluginIsLinked(String pluginId) {
+        return getAppLinks(this.entandoAppName)
                 .stream()
                 .anyMatch(el -> el.getSpec().getEntandoPluginName().equals(pluginId));
     }
