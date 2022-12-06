@@ -22,10 +22,11 @@ public class MethodRetryer<I, O> {
 
     public O execute(I input) {
         O result = null;
+        Exception ex = null;
         boolean success = false;
         int executionNumber = 0;
         while (!success) {
-            Exception ex = null;
+            ex = null;
             try {
                 result = execMethod.exec(input);
             } catch (Exception e) {
@@ -35,18 +36,23 @@ public class MethodRetryer<I, O> {
             success = checkerMethod.test(result, ex);
             if (executionNumber >= retries) {
 
-                if (ex != null) {
-                    if (!(ex instanceof RuntimeException)) {
-                        ex = new RuntimeException(ex.getMessage(), ex);
-                    }
-                    throw (RuntimeException) ex;
-                }
+                manageErrorToThrowRuntime(ex);
                 break;
             }
             waitStrategy.wait(unit, waitFor, executionNumber);
 
         }
+        manageErrorToThrowRuntime(ex);
         return result;
+    }
+
+    private void manageErrorToThrowRuntime(Exception ex) {
+        if (ex != null) {
+            if (!(ex instanceof RuntimeException)) {
+                ex = new RuntimeException(ex.getMessage(), ex);
+            }
+            throw (RuntimeException) ex;
+        }
     }
 
     @FunctionalInterface
@@ -70,14 +76,10 @@ public class MethodRetryer<I, O> {
 
         public void wait(TimeUnit time, long waitFor, int executionNumber) {
             try {
-                //                time.sleep(waitFor);
-                //                Object mutex = new Object();
-                //                synchronized (mutex) {
-                //                    mutex.wait(waitFor);
-                //              }
                 Thread.sleep(time.toMillis(waitFor));
             } catch (InterruptedException ex) {
                 log.error("error wait for retryer", ex);
+                Thread.currentThread().interrupt();
             }
         }
 

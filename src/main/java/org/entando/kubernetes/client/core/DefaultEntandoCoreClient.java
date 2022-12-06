@@ -3,6 +3,7 @@ package org.entando.kubernetes.client.core;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -92,10 +93,10 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
-    private final MethodRetryer retryer;
-    private final int retryNumber = Integer.valueOf(
+    private final MethodRetryer<Runnable, Object> retryer;
+    private final int retryNumber = Integer.parseInt(
             Optional.ofNullable(System.getenv("ENTANDO_REST_RETRY_NUMBER")).orElse("3"));
-    private final long backOffPeriod = Integer.valueOf(
+    private final long backOffPeriod = Integer.parseInt(
             Optional.ofNullable(System.getenv("ENTANDO_REST_RETRY_BACKOFF")).orElse("5"));
 
 
@@ -120,25 +121,20 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
-        Runnable r = () -> {
-            restTemplate
-                    .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
-                            new EntandoCoreWidget(descriptor),
-                            Void.class);
-        };
+        Runnable r = () -> restTemplate
+                .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
+                        new EntandoCoreWidget(descriptor),
+                        Void.class);
         retryer.execute(r);
 
     }
 
     @Override
     public void updateWidget(WidgetDescriptor descriptor) {
-        Runnable r = () -> {
-
-            restTemplate
-                    .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build()
-                                    .toUri(),
-                            new EntandoCoreWidget(descriptor));
-        };
+        Runnable r = () -> restTemplate
+                .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build()
+                                .toUri(),
+                        new EntandoCoreWidget(descriptor));
         retryer.execute(r);
     }
 
@@ -649,10 +645,20 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 || s.equals(HttpStatus.FORBIDDEN));
     }
 
+    private boolean isRetryableResponseStatus(int status) {
+        List<HttpStatus> retryables = Arrays.asList(
+                HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_GATEWAY,
+                HttpStatus.SERVICE_UNAVAILABLE, HttpStatus.GATEWAY_TIMEOUT,
+                HttpStatus.INSUFFICIENT_STORAGE, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED
+        );
+        HttpStatus s = HttpStatus.resolve(status);
+        return s != null && s.is5xxServerError() && retryables.contains(s);
+    }
+
     private boolean checkerError50x(Object obj, Exception ex) {
         if (ex instanceof RestClientResponseException) {
             RestClientResponseException e = (RestClientResponseException) ex;
-            if (e.getRawStatusCode() >= 500 && e.getRawStatusCode() < 510) {
+            if (isRetryableResponseStatus(e.getRawStatusCode())) {
                 log.info("Error in a REST call to entandoDeApp code:'{}'", e.getRawStatusCode());
                 log.debug("Error: ", e);
                 return false;
@@ -662,12 +668,12 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return true;
     }
 
-    private Object genericaResExecutor(Runnable c) throws Exception {
+    private Object genericaResExecutor(Runnable c) {
         c.run();
         return null;
     }
 
-    private MethodRetryer buildRetryer() {
+    private MethodRetryer<Runnable, Object> buildRetryer() {
         return MethodRetryer.<Runnable, Object>builder()
                 .retries(retryNumber)
                 .waitFor(backOffPeriod)

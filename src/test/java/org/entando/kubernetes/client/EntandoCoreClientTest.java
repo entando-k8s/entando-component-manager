@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientResponseException;
 
 @Tag("unit")
 class EntandoCoreClientTest {
@@ -152,6 +153,44 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::post);
         this.client.createWidget(wd);
         coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
+    }
+
+    @Test
+    void updateWidgetWithNoError() {
+        final String code = "DDAABBCC";
+        WidgetDescriptor wd = new WidgetDescriptor();
+        wd.setCode(code);
+
+        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, code, WireMock::put);
+        this.client.updateWidget(wd);
+        coreMockServer.verify(1, EntandoCoreMockServer.WIDGET_ENDPOINT + "/" + code, WireMock::putRequestedFor);
+
+    }
+
+    @Test
+    void updateWidgetWithErrorWithRetry() {
+        final String code = "DDAABBCC";
+        WidgetDescriptor wd = new WidgetDescriptor();
+        wd.setCode(code);
+
+        coreMockServer = coreMockServer.withGenericSupportAndStatusCode(EntandoCoreMockServer.WIDGET_ENDPOINT, code,
+                WireMock::put, HttpStatus.BAD_GATEWAY.value());
+        assertThrows(RestClientResponseException.class, () -> this.client.updateWidget(wd));
+        coreMockServer.verify(3, EntandoCoreMockServer.WIDGET_ENDPOINT + "/" + code, WireMock::putRequestedFor);
+
+    }
+
+    @Test
+    void updateWidgetWithErrorWithoutRetry() {
+        final String code = "DDAABBCC";
+        WidgetDescriptor wd = new WidgetDescriptor();
+        wd.setCode(code);
+
+        coreMockServer = coreMockServer.withGenericSupportAndStatusCode(EntandoCoreMockServer.WIDGET_ENDPOINT, code,
+                WireMock::put, HttpStatus.BAD_REQUEST.value());
+        assertThrows(HttpClientErrorException.class, () -> this.client.updateWidget(wd));
+        coreMockServer.verify(1, EntandoCoreMockServer.WIDGET_ENDPOINT + "/" + code, WireMock::putRequestedFor);
+
     }
 
 

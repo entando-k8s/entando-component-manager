@@ -38,7 +38,7 @@ class MethodRetryerTest {
     }
 
     @Test
-    void executeShouldRetryWithException() throws Exception {
+    void executeShouldRetryWithExceptionToRetry() throws Exception {
         AtomicInteger counter = new AtomicInteger(0);
         final String EXECUTION_OK = "OK";
         var method = MethodRetryer.<String, String>builder().execMethod(d -> {
@@ -49,6 +49,20 @@ class MethodRetryerTest {
         }).retries(3).waitFor(1).build();
         Assert.assertThrows(Exception.class, () -> method.execute("test"));
         assertThat(counter.get()).isEqualTo(3);
+    }
+
+    @Test
+    void executeShouldRetryWithExceptionWithoutRetry() throws Exception {
+        AtomicInteger counter = new AtomicInteger(0);
+        final String EXECUTION_OK = "OK";
+        var method = MethodRetryer.<String, String>builder().execMethod(d -> {
+            counter.incrementAndGet();
+            throw new IllegalArgumentException();
+        }).checkerMethod((d, ex) -> {
+            return true;
+        }).retries(3).waitFor(1).build();
+        Assert.assertThrows(IllegalArgumentException.class, () -> method.execute("test"));
+        assertThat(counter.get()).isEqualTo(1);
     }
 
 }
