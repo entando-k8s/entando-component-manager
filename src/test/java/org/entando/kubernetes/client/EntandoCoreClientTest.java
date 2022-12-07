@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -153,6 +154,42 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::post);
         this.client.createWidget(wd);
         coreMockServer.verify(EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
+    }
+
+    @Test
+    void createWidgetWithError409() {
+        final String scenarioName = "create_error409";
+        final String scenarioStepError409 = "error409";
+        final String code = "DDAABBCC";
+        WidgetDescriptor wd = new WidgetDescriptor();
+        wd.setCode(code);
+
+        coreMockServer = coreMockServer.scenarioWithGenericSupportAndStatusCode(
+                scenarioName,
+                Scenario.STARTED,
+                scenarioStepError409,
+                EntandoCoreMockServer.WIDGET_ENDPOINT, null, WireMock::post, HttpStatus.BAD_GATEWAY.value());
+        coreMockServer = coreMockServer.scenarioWithGenericSupportAndStatusCode(
+                scenarioName,
+                scenarioStepError409,
+                "",
+                EntandoCoreMockServer.WIDGET_ENDPOINT, null, WireMock::post, HttpStatus.CONFLICT.value());
+        this.client.createWidget(wd);
+        coreMockServer.verify(2, EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
+
+    }
+
+    @Test
+    void createWidgetWithErrorWithRetry() {
+        final String code = "DDAABBCC";
+        WidgetDescriptor wd = new WidgetDescriptor();
+        wd.setCode(code);
+
+        coreMockServer = coreMockServer.withGenericSupportAndStatusCode(EntandoCoreMockServer.WIDGET_ENDPOINT, null,
+                WireMock::post, HttpStatus.BAD_GATEWAY.value());
+        assertThrows(RestClientResponseException.class, () -> this.client.createWidget(wd));
+        coreMockServer.verify(3, EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
+
     }
 
     @Test

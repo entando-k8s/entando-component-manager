@@ -2,9 +2,11 @@ package org.entando.kubernetes.model.bundle.downloader;
 
 import java.util.concurrent.TimeUnit;
 import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Data
 @Builder
 public class MethodRetryer<I, O> {
 
@@ -27,13 +29,13 @@ public class MethodRetryer<I, O> {
         int executionNumber = 0;
         while (!success) {
             ex = null;
+            executionNumber++;
             try {
-                result = execMethod.exec(input);
+                result = execMethod.exec(input, executionNumber);
             } catch (Exception e) {
                 ex = e;
             }
-            executionNumber++;
-            success = checkerMethod.test(result, ex);
+            success = checkerMethod.test(result, ex, executionNumber);
             if (executionNumber >= retries) {
 
                 manageErrorToThrowRuntime(ex);
@@ -58,13 +60,13 @@ public class MethodRetryer<I, O> {
     @FunctionalInterface
     public interface RetryerExecutor<I, O> {
 
-        O exec(I input) throws Exception;
+        O exec(I input, int executionNumber) throws Exception;
     }
 
     @FunctionalInterface
     public interface RetryerChecker<O> {
 
-        boolean test(O input, Exception ex);
+        boolean test(O input, Exception ex, int executionNumber);
     }
 
     public interface RetryerWaitStrategy {

@@ -60,6 +60,7 @@ import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -93,11 +94,15 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
-    private final MethodRetryer<Runnable, Object> retryer;
-    private final int retryNumber = Integer.parseInt(
-            Optional.ofNullable(System.getenv("ENTANDO_REST_RETRY_NUMBER")).orElse("3"));
-    private final long backOffPeriod = Integer.parseInt(
-            Optional.ofNullable(System.getenv("ENTANDO_REST_RETRY_BACKOFF")).orElse("5"));
+    private final int retryNumber = parseIntOrDefault("ENTANDO_REST_RETRY_NUMBER", 3);
+    private final long backOffPeriod = parseIntOrDefault("ENTANDO_REST_RETRY_BACKOFF", 5);
+
+    private final List<HttpStatus> errorsCandidatesToRetry = Arrays.asList(
+            HttpStatus.TOO_MANY_REQUESTS,
+            HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_GATEWAY,
+            HttpStatus.SERVICE_UNAVAILABLE, HttpStatus.GATEWAY_TIMEOUT,
+            HttpStatus.INSUFFICIENT_STORAGE, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED
+    );
 
 
     public DefaultEntandoCoreClient(
@@ -115,12 +120,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         this.restTemplate = new OAuth2RestTemplate(resourceDetails);
         this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
         this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
-        this.retryer = this.buildRetryer();
 
     }
 
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
+        MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
+        retryer.setExecMethod(this::restExecutorCreate);
         Runnable r = () -> restTemplate
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
                         new EntandoCoreWidget(descriptor),
@@ -131,6 +137,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateWidget(WidgetDescriptor descriptor) {
+        MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
         Runnable r = () -> restTemplate
                 .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build()
                                 .toUri(),
@@ -646,16 +653,11 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     }
 
     private boolean isRetryableResponseStatus(int status) {
-        List<HttpStatus> retryables = Arrays.asList(
-                HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_GATEWAY,
-                HttpStatus.SERVICE_UNAVAILABLE, HttpStatus.GATEWAY_TIMEOUT,
-                HttpStatus.INSUFFICIENT_STORAGE, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED
-        );
         HttpStatus s = HttpStatus.resolve(status);
-        return s != null && s.is5xxServerError() && retryables.contains(s);
+        return s != null && s.is5xxServerError() && errorsCandidatesToRetry.contains(s);
     }
 
-    private boolean checkerError50x(Object obj, Exception ex) {
+    private boolean checkerErrorDefault(Object obj, Exception ex, int executionNumber) {
         if (ex instanceof RestClientResponseException) {
             RestClientResponseException e = (RestClientResponseException) ex;
             if (isRetryableResponseStatus(e.getRawStatusCode())) {
@@ -668,17 +670,45 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return true;
     }
 
-    private Object genericaResExecutor(Runnable c) {
+    private Object genericRestExecutor(Runnable c, int executionNumber) {
         c.run();
         return null;
     }
 
-    private MethodRetryer<Runnable, Object> buildRetryer() {
+    private Object restExecutorCreate(Runnable c, int executionNumber) {
+        try {
+            c.run();
+        } catch (HttpClientErrorException ex) {
+            if (isError409PostFirstExecution(ex, executionNumber)) {
+                log.debug("Error 409 in REST create call, not executed throw operation");
+            } else {
+                throw ex;
+            }
+        }
+        return null;
+    }
+
+    private boolean isError409PostFirstExecution(HttpClientErrorException ex, int executionNumber) {
+        return ex.getRawStatusCode() == HttpStatus.CONFLICT.value() && executionNumber > 1;
+    }
+
+    private MethodRetryer<Runnable, Object> buildDefaultRetryer() {
         return MethodRetryer.<Runnable, Object>builder()
                 .retries(retryNumber)
                 .waitFor(backOffPeriod)
-                .execMethod(this::genericaResExecutor)
-                .checkerMethod(this::checkerError50x)
+                .execMethod(this::genericRestExecutor)
+                .checkerMethod(this::checkerErrorDefault)
                 .build();
     }
+
+    private static int parseIntOrDefault(String envNameToParse, int defaultValue) {
+        String envToParse = Optional.ofNullable(System.getenv(envNameToParse)).orElse("" + defaultValue);
+        try {
+            return Integer.parseInt(envToParse);
+        } catch (NumberFormatException ex) {
+            log.error("Error parsing:'{}' from env with name:'{}'", envToParse, envNameToParse, ex);
+            return defaultValue;
+        }
+    }
+
 }

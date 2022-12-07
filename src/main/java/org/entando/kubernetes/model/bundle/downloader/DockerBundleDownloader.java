@@ -276,13 +276,14 @@ public class DockerBundleDownloader extends BundleDownloader {
         }
     }
 
-    private boolean checker(ExecResult result, Exception ex) {
+    private boolean checker(ExecResult result, Exception ex, int executionNumber) {
         boolean success = result.getReturnValue() == 0;
         boolean isException = ex != null;
         return success || isException;
     }
 
-    private ExecResult genericExecuteCommand(ExecProcessInputParameters parameters) throws Exception {
+    private ExecResult genericExecuteCommand(ExecProcessInputParameters parameters, int executionNumber)
+            throws Exception {
         ExecResult result = new ExecResult();
 
         ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(parameters.getCommand(),

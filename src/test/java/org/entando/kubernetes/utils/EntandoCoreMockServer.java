@@ -157,6 +157,25 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
         return this;
     }
 
+    public EntandoCoreMockServer scenarioWithGenericSupportAndStatusCode(String scenario, String scenarioStart,
+            String scenarioNext, String urlPath, String code,
+            Function<UrlPattern, MappingBuilder> wireMockHttpMethod, int statusCode) {
+
+        String url = Optional.ofNullable(code)
+                .map(c -> UriComponentsBuilder.newInstance().path(urlPath + CODE_PATH_PARAM).buildAndExpand(code)
+                        .toUriString())
+                .orElseGet(() -> UriComponentsBuilder.newInstance().path(urlPath).buildAndExpand().toUriString());
+
+        this.wireMockServer.stubFor(wireMockHttpMethod.apply(urlEqualTo(url))
+                .inScenario(scenario)
+                .whenScenarioStateIs(scenarioStart)
+                .willReturn(aResponse().withStatus(statusCode)
+                        .withHeader("Content-Type", "application/json"))
+                .willSetStateTo(scenarioNext));
+
+        return this;
+    }
+
     /**
      * stub a successful response for the Engine AnalysisReport endpoint.
      *
