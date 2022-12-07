@@ -8,6 +8,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
@@ -25,6 +26,7 @@ import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
@@ -47,6 +49,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     private final @NonNull EntandoBundleUninstallService uninstallService;
     private final @NonNull InstallPlanValidator installPlanValidator;
     private final @NonNull AuthorizationChecker authorizationChecker;
+    private final @NonNull EntandoBundleService bundleService;
 
     @Override
     public ResponseEntity<SimpleRestResponse<InstallPlan>> installPlans(
@@ -78,16 +81,39 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         this.authorizationChecker.checkPermissions(authorizationHeader);
 
         final InstallRequest request = Optional.ofNullable(installRequest).orElse(new InstallRequest());
-        EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
-                .orElseThrow(() -> new BundleNotFoundException(componentId));
-        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
 
-        EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
-                .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy()));
+        if (checkConflictOnBundleAndRequest(componentId, request)) {
+            String errorMessage = String.format(
+                    "Error install request conflict strategy:'%s' not compatible with the status of the bundle:'%s'",
+                    request.getConflictStrategy(), componentId);
+            throw new JobConflictException(errorMessage);
+        } else {
 
-        return ResponseEntity.created(
-                getJobLocationURI(installJob))
-                .body(new SimpleRestResponse<>(installJob));
+            EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
+                    .orElseThrow(() -> new BundleNotFoundException(componentId));
+            EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+
+            EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
+                    .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy()));
+
+            return ResponseEntity.created(
+                            getJobLocationURI(installJob))
+                    .body(new SimpleRestResponse<>(installJob));
+        }
+    }
+
+    private boolean checkConflictOnBundleAndRequest(String componentId, InstallRequest installRequest) {
+        if (bundleService.getInstalledBundle(componentId).map(b -> b.isInstalled()).orElse(Boolean.FALSE)
+                && strategyCretateOrNull(installRequest)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean strategyCretateOrNull(InstallRequest installRequest) {
+        return installRequest.getConflictStrategy() == null
+                || InstallAction.CREATE.equals(installRequest.getConflictStrategy());
     }
 
     @Override
@@ -98,7 +124,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         this.authorizationChecker.checkPermissions(authorizationHeader);
 
-        final InstallWithPlansRequest request = Optional.ofNullable(installRequest).orElse(new InstallWithPlansRequest());
+        final InstallWithPlansRequest request = Optional.ofNullable(installRequest)
+                .orElse(new InstallWithPlansRequest());
 
         installPlanValidator.validateInstallPlanOrThrow(installRequest);
 
