@@ -246,11 +246,11 @@ public class TestInstallUtils {
     /**
      * perform mock operations required to simulate a successfully bundle installation.
      *
-     * @param coreClient the EntandoCoreClient
+     * @param coreClient       the EntandoCoreClient
      * @param k8sServiceClient the K8SServiceClient
-     * @param bundleName the name of the bundle
+     * @param bundleName       the name of the bundle
      */
-    private static void mockSuccessfullyCompletedInstallV5(EntandoCoreClient coreClient,
+    public static void mockSuccessfullyCompletedInstallV5(EntandoCoreClient coreClient,
             K8SServiceClient k8sServiceClient, String bundleName) {
 
         Mockito.reset(coreClient);
