@@ -60,7 +60,6 @@ import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -94,8 +93,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
-    private final int retryNumber = parseIntOrDefault("ENTANDO_REST_RETRY_NUMBER", 3);
-    private final long backOffPeriod = parseIntOrDefault("ENTANDO_REST_RETRY_BACKOFF", 5);
+    private final int retryNumber = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_RETRIES", 3);
+    private final long backOffPeriod = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_BACKOFF", 5);
 
     private final List<HttpStatus> errorsCandidatesToRetry = Arrays.asList(
             HttpStatus.TOO_MANY_REQUESTS,
@@ -126,7 +125,6 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
         MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
-        retryer.setExecMethod(this::restExecutorCreate);
         Runnable r = () -> restTemplate
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
                         new EntandoCoreWidget(descriptor),
@@ -657,7 +655,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return s != null && s.is5xxServerError() && errorsCandidatesToRetry.contains(s);
     }
 
-    private boolean checkerErrorDefault(Object obj, Exception ex, int executionNumber) {
+    private boolean shouldRetry(Object obj, Exception ex, int executionNumber) {
         if (ex instanceof RestClientResponseException) {
             RestClientResponseException e = (RestClientResponseException) ex;
             if (isRetryableResponseStatus(e.getRawStatusCode())) {
@@ -675,29 +673,12 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return null;
     }
 
-    private Object restExecutorCreate(Runnable c, int executionNumber) {
-        try {
-            c.run();
-        } catch (HttpClientErrorException ex) {
-            if (isError409PostFirstExecution(ex, executionNumber)) {
-                log.debug("Error 409 in REST create call, not executed throw operation");
-            } else {
-                throw ex;
-            }
-        }
-        return null;
-    }
-
-    private boolean isError409PostFirstExecution(HttpClientErrorException ex, int executionNumber) {
-        return ex.getRawStatusCode() == HttpStatus.CONFLICT.value() && executionNumber > 1;
-    }
-
     private MethodRetryer<Runnable, Object> buildDefaultRetryer() {
         return MethodRetryer.<Runnable, Object>builder()
                 .retries(retryNumber)
                 .waitFor(backOffPeriod)
                 .execMethod(this::genericRestExecutor)
-                .checkerMethod(this::checkerErrorDefault)
+                .checkerMethod(this::shouldRetry)
                 .build();
     }
 

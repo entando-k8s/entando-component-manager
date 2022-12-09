@@ -157,9 +157,10 @@ class EntandoCoreClientTest {
     }
 
     @Test
-    void createWidgetWithError409() {
-        final String scenarioName = "create_error409";
-        final String scenarioStepError409 = "error409";
+    void createWidgetWithErrorRecovery() {
+        final String scenarioName = "create_widget_error";
+        final String scenarioStepError500 = "error500";
+        final String scenarioStepNoError = "noerror";
         final String code = "DDAABBCC";
         WidgetDescriptor wd = new WidgetDescriptor();
         wd.setCode(code);
@@ -167,15 +168,20 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.scenarioWithGenericSupportAndStatusCode(
                 scenarioName,
                 Scenario.STARTED,
-                scenarioStepError409,
+                scenarioStepError500,
                 EntandoCoreMockServer.WIDGET_ENDPOINT, null, WireMock::post, HttpStatus.BAD_GATEWAY.value());
         coreMockServer = coreMockServer.scenarioWithGenericSupportAndStatusCode(
                 scenarioName,
-                scenarioStepError409,
+                scenarioStepError500,
+                scenarioStepNoError,
+                EntandoCoreMockServer.WIDGET_ENDPOINT, null, WireMock::post, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        coreMockServer = coreMockServer.scenarioWithGenericSupportAndStatusCode(
+                scenarioName,
+                scenarioStepNoError,
                 "",
-                EntandoCoreMockServer.WIDGET_ENDPOINT, null, WireMock::post, HttpStatus.CONFLICT.value());
+                EntandoCoreMockServer.WIDGET_ENDPOINT, null, WireMock::post, HttpStatus.CREATED.value());
         this.client.createWidget(wd);
-        coreMockServer.verify(2, EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
+        coreMockServer.verify(3, EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
 
     }
 
