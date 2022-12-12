@@ -83,10 +83,15 @@ class EntandoBundleOperationResourceControllerTest {
                 .installedJob(EntandoBundleJob.builder().status(JobStatus.INSTALL_COMPLETED).build()).code(bundleId)
                 .build();
         when(bundleService.getInstalledBundle(bundleId)).thenReturn(Optional.of(bundle));
-        InstallRequest installReq = InstallRequest.builder().conflictStrategy(InstallAction.CREATE).build();
+        final InstallRequest installReqCreate = InstallRequest.builder().conflictStrategy(InstallAction.CREATE).build();
 
         Assert.assertThrows(JobConflictException.class,
-                () -> entandoBundleOperationResourceController.install("jwt", bundleId, installReq));
+                () -> entandoBundleOperationResourceController.install("jwt", bundleId, installReqCreate));
+
+        final InstallRequest installReqNull = InstallRequest.builder().conflictStrategy(null).build();
+        Assert.assertThrows(JobConflictException.class,
+                () -> entandoBundleOperationResourceController.install("jwt", bundleId, installReqNull));
+
     }
 
 }

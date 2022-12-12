@@ -17,6 +17,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
@@ -103,15 +104,14 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     private boolean checkConflictOnBundleAndRequest(String componentId, InstallRequest installRequest) {
-        if (bundleService.getInstalledBundle(componentId).map(b -> b.isInstalled()).orElse(Boolean.FALSE)
-                && strategyCretateOrNull(installRequest)) {
-            return true;
-        } else {
-            return false;
-        }
+        return isBundleInstalled(componentId) && isStrategyCreateOrNull(installRequest);
     }
 
-    private boolean strategyCretateOrNull(InstallRequest installRequest) {
+    private boolean isBundleInstalled(String componentId) {
+        return bundleService.getInstalledBundle(componentId).map(EntandoBundle::isInstalled).orElse(Boolean.FALSE);
+    }
+
+    private boolean isStrategyCreateOrNull(InstallRequest installRequest) {
         return installRequest.getConflictStrategy() == null
                 || InstallAction.CREATE.equals(installRequest.getConflictStrategy());
     }
