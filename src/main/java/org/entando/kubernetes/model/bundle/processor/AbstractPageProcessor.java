@@ -22,16 +22,16 @@ import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 
 @Slf4j
 public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageDescriptor> {
-    
+
     private final EntandoCoreClient engineService;
-    
+
     private final PageDescriptorValidator descriptorValidator;
-    
+
     protected AbstractPageProcessor(EntandoCoreClient engineService, PageDescriptorValidator descriptorValidator) {
         this.engineService = engineService;
         this.descriptorValidator = descriptorValidator;
     }
-    
+
     @Override
     public Class<PageDescriptor> getDescriptorClass() {
         return PageDescriptor.class;
@@ -76,7 +76,7 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
                 .map(c -> this.getInstallable(this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
-    
+
     protected abstract Installable<PageDescriptor> getInstallable(PageDescriptor pageDescriptor, InstallAction action);
 
     @Override
@@ -85,8 +85,8 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
                 .code(component.getComponentId())
                 .build();
     }
-    
-    private void composeAndSetCode(PageDescriptor pageDescriptor, BundleReader bundleReader) {
+
+    protected void composeAndSetCode(PageDescriptor pageDescriptor, BundleReader bundleReader) {
         if (!pageDescriptor.isVersion1()) {
             // set the code and the parentCode
             if (StringUtils.isBlank(pageDescriptor.getCode())) {
@@ -107,7 +107,7 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
             }
         }
     }
-    
+
     private void composeAndSetWidgetCode(WidgetConfigurationDescriptor widgetDescriptor, PageDescriptor pageDescriptor, BundleReader bundleReader) {
         if (!pageDescriptor.isVersion1() && StringUtils.isBlank(widgetDescriptor.getCode())) {
             // set the code
@@ -126,5 +126,5 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
     protected EntandoCoreClient getEngineService() {
         return engineService;
     }
-    
+
 }

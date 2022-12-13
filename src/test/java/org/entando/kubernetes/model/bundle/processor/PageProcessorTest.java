@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -34,11 +35,13 @@ import org.mockito.MockitoAnnotations;
 @Tag("unit")
 class PageProcessorTest extends BaseProcessorTest {
 
+    private final String pageDescriptorFile = "/pages/my-page.yaml";
+
     @Mock
     private DefaultEntandoCoreClient entandoCoreClient;
-    
+
     private PageDescriptorValidator validator = new PageDescriptorValidator();
-    
+
     @Mock
     private BundleReader bundleReader;
 
@@ -49,7 +52,7 @@ class PageProcessorTest extends BaseProcessorTest {
         MockitoAnnotations.initMocks(this);
         validator.setupValidatorConfiguration();
         pageProcessor = new PageProcessor(entandoCoreClient, validator);
-        Mockito.lenient().when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        lenient().when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
     }
 
     @Test
@@ -61,7 +64,7 @@ class PageProcessorTest extends BaseProcessorTest {
         assertThat(installables.get(0)).isInstanceOf(PageInstallable.class);
         PageInstallable pginst = (PageInstallable) installables.get(0);
         assertThat(pginst.getName()).isEqualTo("my-page");
-        
+
         descriptor.setName("name");
         descriptor.setCode(null);
         descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
@@ -69,7 +72,7 @@ class PageProcessorTest extends BaseProcessorTest {
         installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0).getRepresentation().getCode()).startsWith("name");
-        
+
         descriptor.setCode(null);
         descriptor.setParentName("parent");
         descriptor.setParentCode(null);
@@ -78,7 +81,7 @@ class PageProcessorTest extends BaseProcessorTest {
         installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
         assertThat(installables.get(0).getRepresentation().getParentCode()).startsWith("parent");
-        
+
         descriptor.setCode(null);
         descriptor.setParentName("parent");
         descriptor.setParentCode(null);
@@ -93,7 +96,7 @@ class PageProcessorTest extends BaseProcessorTest {
         assertThat(representation.getWidgets().get(0).getCode()).isNotEqualTo("my-name");
         assertThat(representation.getWidgets().get(0).getCode()).startsWith("my-name");
     }
-    
+
     @Test
     void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
         PageDescriptor descriptor = this.createPageDescriptor();
@@ -101,30 +104,27 @@ class PageProcessorTest extends BaseProcessorTest {
         descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         initBundleReader(descriptor);
         assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
-        
+
         descriptor.setCode(null);
         descriptor.setParentCode("parent");
         initBundleReader(descriptor);
         assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
-        
+
         descriptor.setParentCode("parent-12345678");
         descriptor.setParentName("parent");
         assertThrows(InvalidBundleException.class, () -> pageProcessor.process(bundleReader));
     }
-    
-    private void initBundleReader(PageDescriptor pageDescriptor) throws IOException {
-        final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
-        job.setComponentId("my-component-id");
 
+    private void initBundleReader(PageDescriptor pageDescriptor) throws IOException {
         ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
-        spec.setPages(Collections.singletonList("/pages/my-page.yaml"));
-        when(bundleReader.readDescriptorFile("/pages/my-page.yaml", PageDescriptor.class))
+        spec.setPages(Collections.singletonList(pageDescriptorFile));
+        when(bundleReader.readDescriptorFile(pageDescriptorFile, PageDescriptor.class))
                 .thenReturn(pageDescriptor);
         BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
-        when(bundleReader.readBundleDescriptor())
+        lenient().when(bundleReader.readBundleDescriptor())
                 .thenReturn(descriptor);
     }
-    
+
     private PageDescriptor createPageDescriptor() {
         Map<String, String> pageTitles = new HashMap<>();
         pageTitles.put("it", "La mia pagina");
@@ -138,12 +138,25 @@ class PageProcessorTest extends BaseProcessorTest {
                 .build();
         return pageDescriptor;
     }
-    
+
 
     @Test
     void shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing() {
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new PageProcessor(new EntandoCoreClientTestDouble(), validator), "page");
     }
-    
+
+    @Test
+    void shouldComposeAndSetPageCodeWhileReadingDescriptorKeys() throws IOException {
+        PageDescriptor descriptor = this.createPageDescriptor();
+        descriptor.setName("name");
+        descriptor.setCode(null);
+        descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        initBundleReader(descriptor);
+        final List<String> pageCodeList = pageProcessor.readDescriptorKeys(bundleReader, pageDescriptorFile,
+                pageProcessor);
+
+        assertThat(pageCodeList).hasSize(1);
+        assertThat(pageCodeList.get(0)).isEqualTo("name_77b2b10e");
+    }
 }
