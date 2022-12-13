@@ -40,6 +40,7 @@ public class ComponentWidgetData implements Labeled {
     private String permGroup;
 
     // json fields and metadata
+    private String assetsBasePath;
     private String customElement;
     private String[] assets;
     @JsonRawValue

@@ -22,6 +22,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.entando.kubernetes.validator.descriptor.DescriptorValidatorConfigBean.DescriptorValidationFunction;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -206,7 +207,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
             String[] splitIngressPath = ingressPath.split("/");
 
             if (splitIngressPath.length >= 1
-                    && BundleUtilities.DESCRIPTOR_CODE_PATTERN.matcher(splitIngressPath[1]).matches()) {
+                    && ValidationFunctions.VALID_ENTITY_CODE_REGEX_PATTERN.matcher(splitIngressPath[1]).matches()) {
 
                 throw new InvalidBundleException(String.format(INVALID_CUSTOM_INGRESS_PATH, descriptor.getName(),
                         ingressPath));
@@ -341,7 +342,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     public static final String INVALID_CUSTOM_INGRESS_PATH =
             "The plugin \"%s\" contains an invalid custom ingress path: \"%s\". Custom ingress paths cannot mime the "
                     + "standard format in which the first subpath matches with the regex \""
-                    + BundleUtilities.DESCRIPTOR_CODE_REGEX + "\"";
+                    + ValidationFunctions.VALID_ENTITY_CODE_REGEX + "\"";
 
     public static final String INVALID_ROLES_MAX_LENGTH_EXCEEDED_ERROR =
             "The roles (joined with comma) \"%s\" exceeds the max allowed length \"%d\".";

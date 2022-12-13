@@ -23,6 +23,7 @@ import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -250,12 +251,15 @@ class FileProcessorTest extends BaseProcessorTest {
     @Test
     void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV5() throws IOException {
 
-        List<String> expectedCodeList = Arrays
-                .asList("bundles/widgets/ootb-widgets-77b2b10e/css/main.css",
-                        "bundles/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
-                        "bundles/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js");
+        List<String> expectedCodeList = Stream.of("bundles/widgets/ootb-widgets-XXXXXXXX/css/main.css",
+                        "bundles/widgets/ootb-widgets-XXXXXXXX/static/css/sitemap.css",
+                        "bundles/widgets/ootb-widgets-XXXXXXXX/static/js/2.ootb.chunk.js")
+                .map(c -> c.replace("XXXXXXXX", BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA))
+                .collect(Collectors.toList());
 
-        when(mockBundleReader.isBundleV1()).thenReturn(false);
+        final BundleDescriptor descriptor = (BundleDescriptor) BundleStubHelper.stubBundleDescriptor(null)
+                .setDescriptorVersion(DescriptorVersion.V5.getVersion());
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(descriptor);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);
@@ -274,7 +278,8 @@ class FileProcessorTest extends BaseProcessorTest {
 
         // prefix each expected file path with the bundle code
         when(mockBundleReader.isBundleV1()).thenReturn(true);
-        when(mockBundleReader.getBundleName()).thenReturn(BundleStubHelper.BUNDLE_NAME);
+        when(mockBundleReader.getCode()).thenReturn(
+                BundleStubHelper.BUNDLE_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.containsBundleResourceFolder()).thenReturn(true);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFolderV1);
@@ -299,17 +304,17 @@ class FileProcessorTest extends BaseProcessorTest {
         bundleDescriptor.setBundleType(BundleType.STANDARD_BUNDLE);
         bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
-        List<String> expectedCodeList = Arrays
-                .asList("bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/css/main.css",
-                        "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
-                        "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js",
-                        "bundles/my-component-77b2b10e/resources/txt/my-text.txt",
-                        "bundles/my-component-77b2b10e/resources/js/my-js.js",
-                        "bundles/my-component-77b2b10e/resources/my-style.css");
+        List<String> expectedCodeList = Stream.of(
+                        "bundles/my-component-XXXXXXXX/widgets/ootb-widgets-XXXXXXXX/css/main.css",
+                        "bundles/my-component-XXXXXXXX/widgets/ootb-widgets-XXXXXXXX/static/css/sitemap.css",
+                        "bundles/my-component-XXXXXXXX/widgets/ootb-widgets-XXXXXXXX/static/js/2.ootb.chunk.js")
+                .map(c -> c.replace("XXXXXXXX", BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA))
+                .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
         when(mockBundleReader.getCode()).thenReturn(
                 bundleDescriptor.getCode() + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);

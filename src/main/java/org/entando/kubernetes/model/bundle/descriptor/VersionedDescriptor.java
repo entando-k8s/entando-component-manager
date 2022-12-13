@@ -21,6 +21,10 @@ public abstract class VersionedDescriptor implements Descriptor {
     private String descriptorVersion;
 
     public boolean isVersion1() {
+        return isVersion1(this.descriptorVersion);
+    }
+
+    public static boolean isVersion1(String descriptorVersion) {
         return ObjectUtils.isEmpty(descriptorVersion)
                 || descriptorVersion.equals(DescriptorVersion.V1.getVersion());
     }
