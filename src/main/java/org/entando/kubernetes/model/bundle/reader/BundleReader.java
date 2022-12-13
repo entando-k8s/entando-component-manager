@@ -78,6 +78,7 @@ public class BundleReader {
                     DescriptorVersion.V5))
                     ? bundleDescriptor.getName()
                     : bundleDescriptor.getCode();
+            bundleDescriptor.setName(this.bundleName);
 
             // ensure the right code is used
             final String code = BundleUtilities.composeDescriptorCode(bundleDescriptor.getCode(),

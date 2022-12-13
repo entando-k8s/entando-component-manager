@@ -151,7 +151,7 @@ class EntandoDeBundleComposerTest {
 
         bundle.setSpec(new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
-                .withDescription("A bundle containing some demo components for Entano6")
+                .withDescription("A bundle containing some demo components for Entando6")
                 .withName(BundleInfoStubHelper.NAME).endDetails().build());
 
         K8SServiceClient k8SServiceClientLocal = mock(K8SServiceClient.class);
@@ -177,7 +177,7 @@ class EntandoDeBundleComposerTest {
         assertOnFullLabelsDeBundleMap(deBundle.getMetadata().getLabels());
 
         final EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-        assertThat(details.getName()).isEqualTo(BundleInfoStubHelper.NAME);
+        assertThat(details.getName()).isEqualTo("something");
         assertThat(details.getDescription()).isEqualTo("bundle description");
 
         assertThat(details.getThumbnail()).isEqualTo(BundleInfoStubHelper.DESCR_IMAGE);
@@ -246,6 +246,53 @@ class EntandoDeBundleComposerTest {
 
         final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
         assertOnVersionsAndTags(deBundle, entandoDeBundleTags);
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleWithThumbnailFromDescriptorForBundleV5() {
+        final String DESCR_IMAGE = "data:image/png;base64,dGhpcyBpcyBub3QgYW4gaW1hZ2UK";
+        List<String> tagList = new ArrayList<>();
+        tagList.addAll(BundleStubHelper.TAG_LIST);
+
+        bundleDownloaderFactory.setDefaultSupplier(() -> {
+            Path bundleFolder;
+            GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
+            try {
+                bundleFolder = new ClassPathResource("bundle-v5").getFile().toPath();
+                when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
+                when(git.fetchRemoteTags(anyString())).thenReturn(tagList);
+            } catch (IOException e) {
+                throw new RuntimeException("Impossible to read the bundle folder from test resources");
+            }
+            return git;
+        });
+
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+        assertThat(deBundle.getSpec().getDetails().getThumbnail()).isEqualTo(DESCR_IMAGE);
+
+    }
+
+    @Test
+    void shouldBeAbleToComposeEntandoDeBundleWithThumbnailFromDescriptorForBundleV1() {
+        List<String> tagList = new ArrayList<>();
+        tagList.addAll(BundleStubHelper.TAG_LIST);
+
+        bundleDownloaderFactory.setDefaultSupplier(() -> {
+            Path bundleFolder;
+            GitBundleDownloader git = Mockito.mock(GitBundleDownloader.class);
+            try {
+                bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+                when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
+                when(git.fetchRemoteTags(anyString())).thenReturn(tagList);
+            } catch (IOException e) {
+                throw new RuntimeException("Impossible to read the bundle folder from test resources");
+            }
+            return git;
+        });
+
+        final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
+        assertThat(deBundle.getSpec().getDetails().getThumbnail()).isEqualTo(bundleInfo.getDescriptionImage());
+
     }
 
 
