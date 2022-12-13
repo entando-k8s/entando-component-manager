@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ObjectUtils;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
@@ -13,10 +14,11 @@ public class ValidationFunctions {
 
     public static final String HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX = "^[a-zA-Z0-9].*[a-zA-Z0-9]$";
     public static final String VALID_CHARS_RFC_1123_REGEX = "^[a-z0-9.\\-].*$";
+    public static final String VALID_ENTITY_CODE_REGEX = "^[\\w|-]+-[0-9a-fA-F]{8}$";
     public static final Pattern HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX_PATTERN = Pattern.compile(
             HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX);
-    public static final Pattern VALID_CHARS_RFC_1123_REGEX_PATTERN = Pattern.compile(
-            VALID_CHARS_RFC_1123_REGEX);
+    public static final Pattern VALID_CHARS_RFC_1123_REGEX_PATTERN = Pattern.compile(VALID_CHARS_RFC_1123_REGEX);
+    public static final Pattern VALID_ENTITY_CODE_REGEX_PATTERN = Pattern.compile(VALID_ENTITY_CODE_REGEX);
 
     public static final String GIT_PROTOCOL = "git";
     public static final String HTTP_PROTOCOL = "http";
@@ -85,5 +87,20 @@ public class ValidationFunctions {
         }
 
         return url;
+    }
+
+    /**
+     * validate the received code against the code regex
+     * @param entityCode the code to validate
+     * @return the validated code
+     * @throws EntandoComponentManagerException if the validation fails
+     */
+    public static String validateEntityCodeOrThrow(String entityCode) throws EntandoComponentManagerException {
+        if (!VALID_ENTITY_CODE_REGEX_PATTERN.matcher(entityCode).matches()) {
+            throw new EntandoComponentManagerException(
+                    "The received code does not respect the format: " + VALID_ENTITY_CODE_REGEX);
+        }
+
+        return entityCode;
     }
 }

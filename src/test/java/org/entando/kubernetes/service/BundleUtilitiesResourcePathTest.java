@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,8 +30,8 @@ class BundleUtilitiesResourcePathTest {
         when(bundleReader.getCode()).thenReturn(BUNDLE_NAME + "-" + BUNDLE_ID);
 
         bundleDescriptor = Mockito.mock(BundleDescriptor.class);
-        when(bundleDescriptor.isVersion1()).thenReturn(false);
-        when(bundleReader.isBundleV1()).thenReturn(false);
+        when(bundleDescriptor.getCode()).thenReturn(BUNDLE_NAME + "-" + BUNDLE_ID);
+        when(bundleDescriptor.getDescriptorVersion()).thenReturn(DescriptorVersion.V5.getVersion());
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
     }
 
@@ -39,7 +40,7 @@ class BundleUtilitiesResourcePathTest {
         final String file = "widgets/app-builder-menu/app-builder-menu.umd.js";
         final String expectedResource = "bundles/entando-ab-core-navigation-b3a2d562/widgets/app-builder-menu-b3a2d562/app-builder-menu.umd.js";
 
-        String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.WIDGET_FOLDER_PATH, file, BUNDLE_ID);
+        String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.WIDGET_FOLDER_PATH, file);
         assertThat(path).isEqualTo(expectedResource);
     }
 
@@ -48,7 +49,7 @@ class BundleUtilitiesResourcePathTest {
         final String file = "resources/text.txt";
         final String expectedResource = "bundles/entando-ab-core-navigation-b3a2d562/" + file;
 
-        String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH, file, BUNDLE_ID);
+        String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH, file);
         assertThat(path).isEqualTo(expectedResource);
     }
 
@@ -57,10 +58,9 @@ class BundleUtilitiesResourcePathTest {
         final String file = "resources/text.txt";
         final String expectedResource = "bundles/entando-ab-core-navigation/" + file;
 
-        when(bundleDescriptor.isVersion1()).thenReturn(true);
-        when(bundleReader.isBundleV1()).thenReturn(true);
+        when(bundleDescriptor.getDescriptorVersion()).thenReturn(DescriptorVersion.V1.getVersion());
 
-        String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH, file, BUNDLE_ID);
+        String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, BundleProperty.RESOURCES_FOLDER_PATH, file);
         assertThat(path).isEqualTo(expectedResource);
     }
 

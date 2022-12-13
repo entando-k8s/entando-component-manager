@@ -189,7 +189,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
             final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
 
             String folder = BundleUtilities.buildFullBundleResourcePath(bundleReader, folderProp,
-                    fileDescriptor.getFolder(), bundleId);
+                    fileDescriptor.getFolder());
             fileDescriptor.setFolder(folder);
 
             String filename = Paths.get(folder, fileDescriptor.getFilename()).toString();
@@ -264,7 +264,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
         List<String> idList = bundleReader.getWidgetsFiles().stream().sorted().collect(Collectors.toList());
         for (String file : idList) {
             final String fileId = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, file, bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, file);
             reportableIdList.add(fileId);
         }
 

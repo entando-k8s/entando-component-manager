@@ -304,7 +304,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
 
         return String.join("-",
-                DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH),
+                DigestUtils.sha256Hex(inputValueForSha).substring(0, BundleUtilities.CODE_HASH_LENGTH),
                 deploymentBaseName);
     }
 

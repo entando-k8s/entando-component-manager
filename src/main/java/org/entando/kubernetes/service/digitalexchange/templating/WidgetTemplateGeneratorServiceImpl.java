@@ -128,7 +128,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         try {
             final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
             baseWidgetPath = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, widgetFolder, bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, widgetFolder);
 
         } catch (IOException e) {
             log.error("Unable to determine the widget base path", e);
@@ -229,7 +229,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     private String formatTagFilePath(BundleReader bundleReader, String tag, String file, String bundleId) {
         try {
             final String fullFile = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, file, bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, file);
             return String.format(tag, fullFile);
         } catch (Exception e) {
             throw new EntandoComponentManagerException(e);

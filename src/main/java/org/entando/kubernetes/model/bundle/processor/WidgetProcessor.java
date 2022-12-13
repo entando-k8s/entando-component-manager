@@ -296,8 +296,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 return BundleUtilities.buildFullBundleResourcePath(
                         bundleReader,
                         BundleProperty.WIDGET_FOLDER_PATH,
-                        file,
-                        bundleId);
+                        file);
             } catch (IOException e) {
                 throw new EntandoComponentManagerException(e);
             }
