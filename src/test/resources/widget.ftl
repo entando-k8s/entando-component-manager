@@ -6,7 +6,9 @@
 <@wp.info key="systemParam" paramName="applicationBaseURL" var="systemParam_applicationBaseURL" />
 
 <@wp.currentWidget param="config" configParam="paramA" var="widget_paramA" />
+<#assign widget_paramA>${(widget_paramA)!""}</#assign>
 <@wp.currentWidget param="config" configParam="paramB" var="widget_paramB" />
+<#assign widget_paramB>${(widget_paramB)!""}</#assign>
 
 <#assign PLACEHOLDER_FOR_API_URL_EXTRACTION></#assign>
 

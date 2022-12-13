@@ -6,7 +6,9 @@
 <@wp.info key="systemParam" paramName="applicationBaseURL" var="systemParam_applicationBaseURL" />
 
 <@wp.currentWidget param="config" configParam="url" var="widget_url" />
+<#assign widget_url>${(widget_url)!""}</#assign>
 <@wp.currentWidget param="config" configParam="title" var="widget_title" />
+<#assign widget_title>${(widget_title)!""}</#assign>
 
 <#assign apiClaim_ext_DASH_api>my-path</#assign>
 <#assign apiClaim_int_DASH_api>/myhostname.io/entando-plugin</#assign>
