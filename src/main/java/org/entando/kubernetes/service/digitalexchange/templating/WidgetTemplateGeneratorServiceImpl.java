@@ -149,7 +149,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         if (params != null) {
             for (var p : params) {
                 String scopedVarName = ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName());
-                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",
+
+                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",// NOSONAR
                         "config", p.getName(), scopedVarName));
                 res.append(String.format(ASSIGN_TAG_FROM_VAR_NULLSAFE + "\n", scopedVarName, scopedVarName));
             }
