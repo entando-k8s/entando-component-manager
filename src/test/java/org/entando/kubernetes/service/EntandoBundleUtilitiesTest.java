@@ -570,6 +570,26 @@ public class EntandoBundleUtilitiesTest {
         assertThat(ingressPath).isEqualTo("/entando/the-lucas");
     }
 
+    @Test
+    void shouldExtractNameFromEntityCode() {
+        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractNameFromEntityCode(null));
+        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractNameFromEntityCode(""));
+        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractNameFromEntityCode("code1234abcd"));
+
+        final String name = BundleUtilities.extractNameFromEntityCode(BundleStubHelper.BUNDLE_CODE);
+        assertThat(name).isEqualTo(BundleStubHelper.BUNDLE_NAME);
+    }
+
+    @Test
+    void shouldExtractIdFromEntityCode() {
+        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractIdFromEntityCode(null));
+        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractIdFromEntityCode(""));
+        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractIdFromEntityCode("code1234abcd"));
+
+        final String id = BundleUtilities.extractIdFromEntityCode(BundleStubHelper.BUNDLE_CODE);
+        assertThat(id).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+    }
+
     /*****************************************************************************************************
      * ROLES ASSERTIONS.
      ****************************************************************************************************/

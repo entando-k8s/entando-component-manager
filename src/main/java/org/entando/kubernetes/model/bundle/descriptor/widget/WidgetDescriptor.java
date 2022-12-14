@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.jackson.Jacksonized;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
@@ -154,5 +156,14 @@ public class WidgetDescriptor extends VersionedDescriptor {
             return false;
         }
         return type != null && type.equals(WidgetDescriptor.TYPE_WIDGET_CONFIG);
+    }
+
+    @Override
+        public String getDescriptorVersion() {
+        if (StringUtils.isBlank(super.getDescriptorVersion())) {
+            return DescriptorVersion.V1.getVersion();
+        }
+
+        return super.getDescriptorVersion();
     }
 }
