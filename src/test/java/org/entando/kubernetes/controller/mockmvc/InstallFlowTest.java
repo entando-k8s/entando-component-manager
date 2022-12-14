@@ -593,12 +593,11 @@ public class InstallFlowTest {
                 )));
     }
 
-    // FIXME not possible a bundle now have an identity so not possible install 2 times the same bundle
-    //@Test
+    @Test
     void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
         // Given I try to update a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
-        String secondSuccessfulJobId = simulateSuccessfullyCompletedInstall();
+        String secondSuccessfulJobId = simulateSuccessfullyCompletedUpdate();
 
         // two successfull jobs are created
         assertThat(firstSuccessfulJobId).isNotEqualTo(secondSuccessfulJobId);
@@ -955,9 +954,6 @@ public class InstallFlowTest {
     @Test
     void shouldReturn503OnInstallIfAnotherBundleOperationIsRunning() throws Exception {
 
-        // this operation is not useful to check a real concurrent operation
-        // simulateSuccessfullyCompletedInstall();
-
         mockServicesForaSuccessfullyInstallation();
 
         doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
@@ -1044,6 +1040,12 @@ public class InstallFlowTest {
     private String simulateSuccessfullyCompletedInstall() {
         return TestInstallUtils
                 .simulateSuccessfullyCompletedInstall(mockMvc, coreClient, k8SServiceClient,
+                        TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
+    }
+
+    private String simulateSuccessfullyCompletedUpdate() {
+        return TestInstallUtils
+                .simulateSuccessfullyCompletedUpdate(mockMvc, coreClient, k8SServiceClient,
                         TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
     }
 
