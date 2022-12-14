@@ -721,12 +721,12 @@ public class BundleUtilities {
         return Optional.ofNullable(System.getenv(ENTANDO_DOCKER_REGISTRY_OVERRIDE)).orElse("");
     }
 
-    public String extractNameFromEntityCode(String entityCode) {
+    public String extractNameFromEntityCode(String entityCode) throws EntandoComponentManagerException {
         ValidationFunctions.validateEntityCodeOrThrow(entityCode);
         return entityCode.substring(0, entityCode.length() - (CODE_HASH_LENGTH + 1));
     }
 
-    public static String extractIdFromEntityCode(String entityCode) {
+    public static String extractIdFromEntityCode(String entityCode) throws EntandoComponentManagerException {
         ValidationFunctions.validateEntityCodeOrThrow(entityCode);
         return entityCode.substring(entityCode.length() - CODE_HASH_LENGTH);
     }

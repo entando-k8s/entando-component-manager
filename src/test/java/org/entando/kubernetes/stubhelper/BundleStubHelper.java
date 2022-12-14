@@ -13,7 +13,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 public class BundleStubHelper {
 
     public static final String BUNDLE_CODE = "my-component-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA;
-    public static final String BUNDLE_NAME = "my-bundle-name";
+    public static final String BUNDLE_NAME = "my-component";
     public static final String BUNDLE_DESCRIPTION = "desc";
     public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
     public static final String V1_0_0 = "v1.0.0";

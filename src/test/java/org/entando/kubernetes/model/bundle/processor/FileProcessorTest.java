@@ -155,7 +155,6 @@ class FileProcessorTest extends BaseProcessorTest {
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/css/main.css",
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/css/sitemap.css",
                 BundleProperty.WIDGET_FOLDER_PATH.getValue() + "ootb-widgets/static/js/main.js"));
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         execShouldOmitBundleCodeRootFolderIfSystemLevelBundle(false, BundleProperty.WIDGET_FOLDER_PATH,
                 mockBundleReader::containsWidgetFolder, mockBundleReader::getWidgetsFiles);
@@ -260,6 +259,7 @@ class FileProcessorTest extends BaseProcessorTest {
         final BundleDescriptor descriptor = (BundleDescriptor) BundleStubHelper.stubBundleDescriptor(null)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
         when(mockBundleReader.readBundleDescriptor()).thenReturn(descriptor);
+        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);
@@ -312,9 +312,8 @@ class FileProcessorTest extends BaseProcessorTest {
                 .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
+        when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getCode()).thenReturn(
                 bundleDescriptor.getCode() + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);

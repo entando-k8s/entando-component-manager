@@ -183,7 +183,6 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         List<String> resourceFiles = resourceFilelist.stream().sorted().collect(Collectors.toList());
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         for (final String resourceFile : resourceFiles) {
             final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
@@ -266,7 +265,7 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
         for (final String resourceFile : resourceFiles) {
             String file = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.RESOURCES_FOLDER_PATH, resourceFile, bundleId);
+                    BundleProperty.RESOURCES_FOLDER_PATH, resourceFile);
 
             reportableIdList.add(file);
         }

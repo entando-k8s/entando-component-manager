@@ -133,11 +133,35 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     @Test
     void testCreatePluginV5() throws IOException, ExecutionException, InterruptedException {
-        final List<? extends Installable> installables = execTestCreatePlugin(
-                PluginStubHelper.stubPluginDescriptorV5(),
-                BundleInfoStubHelper.DOCKER_REPO_ADDRESS,
-                BundleInfoStubHelper.DOCKER_REPO_ADDRESS_8_CHARS_SHA
-        );
+
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.DOCKER_REPO_ADDRESS);
+
+        when(bundleReader.readDescriptorFile(eq("plugins/pluginV2.yaml"), any()))
+                .thenReturn(PluginStubHelper.stubPluginDescriptorV5());
+
+        initBundleReaderShortImagesName();
+
+        PluginDescriptor descriptorV1 = PluginStubHelper.stubPluginDescriptorV1();
+        descriptorV1.setDescriptorVersion(DescriptorVersion.V1.getVersion());
+
+        ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setPlugins(Arrays.asList("plugins/pluginV1.yaml", pluginV2Filename));
+
+        final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
+        job.setComponentId("my-component-id");
+
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec)
+                .setCode("my-component-89f28dad");
+        when(bundleReader.readBundleDescriptor())
+                .thenReturn(descriptor);
+
+        String repoSha = BundleInfoStubHelper.DOCKER_REPO_ADDRESS_8_CHARS_SHA;
+        final List<? extends Installable> installables = processor.process(bundleReader);
+        assertOnInstallables(installables, String.format("pn-%s-%s-entando-the-lucas",
+                        repoSha, "24f085aa"),
+                repoSha);
+
         assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/my-component-89f28dad/my-bundle", null);
     }
