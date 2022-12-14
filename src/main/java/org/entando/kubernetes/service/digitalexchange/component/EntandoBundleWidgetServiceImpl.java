@@ -15,6 +15,7 @@
 package org.entando.kubernetes.service.digitalexchange.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.model.bundle.BundleProperty;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.ComponentWidgetData;
@@ -33,6 +39,7 @@ import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -69,6 +76,7 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
         List<ComponentWidgetData> allWidgets = allWidgetEntities.stream()
                 .map(this::convertToComponentWidgetData)
                 .map(this::populatePbcList)
+                .map(this::composeBaseAssetsPath)
                 .map(w -> w.setBundleCode(bundleIdBundleCodeMap.getOrDefault(w.getBundleId(), null)))
                 .collect(Collectors.toList());
 
@@ -98,6 +106,7 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
         return ComponentWidgetData.builder()
                 .id(entity.getId().toString())
                 .bundleId(entity.getBundleId())
+                .bundleCode(widgetDescriptor.getDescriptorMetadata().getBundleCode())
                 .widgetCode(entity.getComponentCode())
                 .widgetName(entity.getComponentName())
                 .widgetType(entity.getComponentSubType())
@@ -106,6 +115,7 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
                 .assets(widgetDescriptor.getDescriptorMetadata().getAssets())
                 .descriptorExt(descriptorExt)
                 .systemParams(widgetDescriptor.getDescriptorMetadata().getSystemParams())
+                .desriptorVersion(widgetDescriptor.getDescriptorVersion())
                 .build();
 
     }
@@ -116,5 +126,23 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
         return (findByBundleId.isPresent())
                 ? (ComponentWidgetData) componentWidgetData.setPbcLabelsFrom(findByBundleId.get())
                 : componentWidgetData;
+    }
+
+    private ComponentWidgetData composeBaseAssetsPath(ComponentWidgetData componentWidgetData) {
+
+        // in some cases the descriptor saved in the db could be empty
+        if (StringUtils.isNotBlank(componentWidgetData.getBundleCode())) {
+
+            String path = BundleUtilities.buildFullBundleResourcePath(
+                    BundleType.STANDARD_BUNDLE,
+                    componentWidgetData.getDesriptorVersion(),
+                    BundleProperty.WIDGET_FOLDER_PATH,
+                    Paths.get(BundleProperty.WIDGET_FOLDER_PATH.getValue(), componentWidgetData.getWidgetName())
+                            .toString(),
+                    componentWidgetData.getBundleCode());
+
+            componentWidgetData.setAssetsBasePath(path);
+        }
+        return componentWidgetData;
     }
 }
