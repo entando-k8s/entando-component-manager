@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -90,15 +91,20 @@ public class ValidationFunctions {
     }
 
     /**
-     * validate the received code against the code regex
+     * validate the received code against the code regex.
      * @param entityCode the code to validate
      * @return the validated code
      * @throws EntandoComponentManagerException if the validation fails
      */
     public static String validateEntityCodeOrThrow(String entityCode) throws EntandoComponentManagerException {
+        if (StringUtils.isBlank(entityCode)) {
+            throw new EntandoComponentManagerException(
+                    "The received code is empty");
+        }
+
         if (!VALID_ENTITY_CODE_REGEX_PATTERN.matcher(entityCode).matches()) {
             throw new EntandoComponentManagerException(
-                    "The received code does not respect the format: " + VALID_ENTITY_CODE_REGEX);
+                    "The received code \"" + entityCode + "\" does not respect the format: " + VALID_ENTITY_CODE_REGEX);
         }
 
         return entityCode;

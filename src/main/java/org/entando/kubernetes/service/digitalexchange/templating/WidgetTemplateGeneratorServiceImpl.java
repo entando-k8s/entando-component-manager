@@ -121,7 +121,6 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, WidgetDescriptor descriptor,
             BundleReader bundleReader) {
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         String baseWidgetPath = "";
 

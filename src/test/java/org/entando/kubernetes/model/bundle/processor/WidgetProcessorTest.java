@@ -92,8 +92,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
     @Test
     void canProcessDescriptorV5() throws IOException {
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        String bundleCode = "bundle-v5";
-        when(bundleReader.getCode()).thenReturn(bundleCode);
+        when(bundleReader.getCode()).thenReturn(BundleStubHelper.BUNDLE_CODE);
         String widgetConfigFolder = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5";
         when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "js")).thenReturn(
                 List.of(
@@ -121,7 +120,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         WidgetDescriptor actual = installableList.get(0).getRepresentation();
         WidgetDescriptor expected = yamlMapper.readValue(new File(widgDescrFile), WidgetDescriptor.class);
         expected.setCode("todomvc_widget-77b2b10e");
-        expected.setDescriptorMetadata(DescriptorMetadata.builder().bundleCode(bundleCode).build());
+        expected.setDescriptorMetadata(DescriptorMetadata.builder().bundleCode(BundleStubHelper.BUNDLE_CODE).build());
 
         assertOnWidgetDescriptors(actual, expected);
 
@@ -134,11 +133,11 @@ class WidgetProcessorTest extends BaseProcessorTest {
         List<String> res = actual.getConfigUi().getResources();
         assertThat(res).hasSize(3)
                 .contains(
-                    "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js")
+                    "bundles/" + BundleStubHelper.BUNDLE_CODE + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js")
                 .contains(
-                    "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js")
+                    "bundles/" + BundleStubHelper.BUNDLE_CODE + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js")
                 .contains(
-                    "bundles/" + bundleCode + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
+                    "bundles/" + BundleStubHelper.BUNDLE_CODE + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
     }
 
     @Test

@@ -16,6 +16,7 @@ import org.entando.kubernetes.client.PluginDataRepositoryTestDouble;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ApiClaim;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -43,12 +44,6 @@ class WidgetTemplateGeneratorServiceImplTest {
     private WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
     private WidgetTemplateGeneratorServiceImpl service;
 
-    private PluginDataEntity extApiDataEntity1 = new PluginDataEntity()
-            .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_1_PATH);
-
-    private PluginDataEntity extApiDataEntity2 = new PluginDataEntity()
-            .setEndpoint(WidgetStubHelper.PLUGIN_INGRESS_2_PATH);
-
     @BeforeEach
     public void setup() {
         service = new WidgetTemplateGeneratorServiceImpl(repository);
@@ -63,10 +58,10 @@ class WidgetTemplateGeneratorServiceImplTest {
                 WidgetStubHelper.CSS_RESOURCES);
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         BundleDescriptor bundleDescriptor = mock(BundleDescriptor.class);
-        when(bundleReader.getCode()).thenReturn(
-                BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(bundleDescriptor.getCode()).thenReturn(BundleStubHelper.BUNDLE_CODE);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
+        when(bundleDescriptor.getDescriptorVersion()).thenReturn(DescriptorVersion.V5.getVersion());
 
         String expected = ("<script src=\"<@wp.resourceURL />bundles/my-component-[REP]/widgets/my-code-"
                 + "[REP]/static/js/main.js\"></script>\n"
@@ -159,10 +154,10 @@ class WidgetTemplateGeneratorServiceImplTest {
 
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         BundleDescriptor bundleDescriptor = mock(BundleDescriptor.class);
-        when(bundleReader.getCode()).thenReturn(
-                BundleStubHelper.BUNDLE_CODE + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(bundleDescriptor.getBundleType()).thenReturn(BundleType.STANDARD_BUNDLE);
+        when(bundleDescriptor.getCode()).thenReturn(BundleStubHelper.BUNDLE_CODE);
+        when(bundleDescriptor.getDescriptorVersion()).thenReturn(DescriptorVersion.V5.getVersion());
 
         File expectedOnFile = new File("src/test/resources/widget.ftl");
         String expected = FileUtils.readFileToString(expectedOnFile, "UTF-8").trim();

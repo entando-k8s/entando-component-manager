@@ -140,7 +140,6 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
         when(mockBundleReader.readBundleDescriptor()).thenReturn(descriptor);
 
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);
@@ -159,12 +158,11 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         List<String> expectedCodeList = Stream
                 .of("/static/css/ootb", "/static/css/ootb/page-templates", "/static/css", "/ootb-widgets",
                         "/static", "/ootb-widgets/static/js", "/ootb-widgets/static", "/ootb-widgets/static/css")
-                .map(s -> "/" + bundleDescriptor.getCode() + s)
+                .map(s -> "/" + bundleDescriptor.getName() + s)
                 .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(true);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getBundleName()).thenReturn(bundleDescriptor.getCode());
         when(mockBundleReader.getResourceFolders()).thenReturn(this.resourceFolder);
         when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode());
 
@@ -187,15 +185,11 @@ class DirectoryProcessorTest extends BaseProcessorTest {
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/css",
                         "widgets/my-widget-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/static/js")
-                .map(s -> "bundles/" + bundleDescriptor.getCode() + "-"
-                        + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA + "/" + s)
+                .map(s -> "bundles/" + bundleDescriptor.getCode() + "/" + s)
                 .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getCode()).thenReturn(bundleDescriptor.getCode() + "-"
-                + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFolders()).thenReturn(this.widgetsFolder);
 
         Reportable reportable = directoryProcessor.getReportable(mockBundleReader, directoryProcessor);

@@ -157,8 +157,6 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
             list.add(bundleRootFolder);
         }
 
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-
         for (String resDir : folderList) {
             String path = BundleUtilities.buildFullBundleResourcePath(bundleReader, bundleProperty, resDir);
             list.add(path);
