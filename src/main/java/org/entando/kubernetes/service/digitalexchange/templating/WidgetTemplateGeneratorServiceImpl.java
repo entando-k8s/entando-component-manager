@@ -40,6 +40,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String CSS_TAG = "<link href=\"<@wp.resourceURL />%s\" rel=\"stylesheet\">";
     public static final String ASSIGN_TAG_MFE_CONFIG = "<#assign mfeConfig>%s</#assign>";
     public static final String ASSIGN_TAG_GENERIC = "<#assign %s>%s</#assign>";
+
+    public static final String ASSIGN_TAG_FROM_VAR_NULLSAFE = "<#assign %s>${(%s)!\"\"}</#assign>";
     public static final String CUSTOM_ELEMENT_TAG =
             "<%s config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>";
     public static final String APPLICATION_BASEURL_PARAM = "";
@@ -146,8 +148,11 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         var params = descriptor.getParams();
         if (params != null) {
             for (var p : params) {
-                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",
-                        "config", p.getName(), ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName())));
+                String scopedVarName = ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName());
+
+                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",// NOSONAR
+                        "config", p.getName(), scopedVarName));
+                res.append(String.format(ASSIGN_TAG_FROM_VAR_NULLSAFE + "\n", scopedVarName, scopedVarName));
             }
         }
         return res.toString();
