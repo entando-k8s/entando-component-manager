@@ -261,6 +261,17 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
+        // resources files
+        List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted().collect(Collectors.toList());
+
+        for (final String resourceFile : resourceFiles) {
+            String file = BundleUtilities.buildFullBundleResourcePath(bundleReader,
+                    BundleProperty.RESOURCES_FOLDER_PATH, resourceFile, bundleId);
+
+            reportableIdList.add(file);
+        }
+
+        // widget files
         List<String> idList = bundleReader.getWidgetsFiles().stream().sorted().collect(Collectors.toList());
         for (String file : idList) {
             final String fileId = BundleUtilities.buildFullBundleResourcePath(bundleReader,
