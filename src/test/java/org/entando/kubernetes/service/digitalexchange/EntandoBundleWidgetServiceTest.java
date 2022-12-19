@@ -247,6 +247,8 @@ class EntandoBundleWidgetServiceTest {
         String bundleId = StringUtils.leftPad("2" + idx, 8, "0");
         String widgetName = PREFIX_WIDGET_NAME + idx;
         String widgetCode = widgetName + "-" + bundleId;
+        // String widgetName = idx == 1 ? "" : PREFIX_WIDGET_NAME + idx;
+        //  String widgetCode = idx == 2 ? PREFIX_WIDGET_NAME : widgetName + "-" + bundleId;
         String componentDescriptor;
 
         if (idx == 2) {

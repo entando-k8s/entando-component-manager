@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.bundle.installable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -10,8 +11,10 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
+import org.entando.kubernetes.validator.ValidationFunctions;
 
 
 @Slf4j
@@ -152,7 +155,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 .componentType(ComponentType.WIDGET)
                 .componentSubType(representation.getType())
                 .componentId(null)
-                .componentName(representation.getName())
+                .componentName(composeWidgetName())
                 .componentCode(representation.getCode())
                 .componentGroup(representation.getGroup())
                 .componentDescriptor(widgetDescriptor)
@@ -161,6 +164,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
     private String mkWidgetCleanedUpDescriptor() {
         WidgetDescriptor cleanedUp = new WidgetDescriptor(
+                representation.getDescriptorVersion(),
                 representation.getCode(),
                 representation.getTitles(),
                 representation.getGroup(),
@@ -187,4 +191,17 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
         }
         return res;
     }
+
+    private String composeWidgetName() {
+        if (StringUtils.isNotBlank(representation.getName())) {
+            return representation.getName();
+        }
+
+        if (ValidationFunctions.isEntityCodeValid(representation.getCode())) {
+            return BundleUtilities.extractNameFromEntityCode(representation.getCode());
+        }
+
+        return representation.getCode();
+    }
+
 }

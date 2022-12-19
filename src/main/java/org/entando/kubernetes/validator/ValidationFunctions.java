@@ -93,6 +93,21 @@ public class ValidationFunctions {
     /**
      * validate the received code against the code regex.
      * @param entityCode the code to validate
+     * @return true if the code is valid, false otherwise
+     */
+    public static boolean isEntityCodeValid(String entityCode) {
+        try {
+            validateEntityCodeOrThrow(entityCode);
+        } catch (EntandoComponentManagerException e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * validate the received code against the code regex.
+     * @param entityCode the code to validate
      * @return the validated code
      * @throws EntandoComponentManagerException if the validation fails
      */

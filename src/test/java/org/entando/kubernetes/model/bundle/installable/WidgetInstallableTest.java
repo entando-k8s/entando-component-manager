@@ -11,6 +11,8 @@ import org.entando.kubernetes.client.ComponentDataRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -57,11 +59,26 @@ class WidgetInstallableTest {
         widgetInstallable.install().join();
         verify(entandoCoreClientTestDouble, times(1)).createWidget(any());
         assertThat(componentDataRepository.count()).isEqualTo(1);
+        assertThat(componentDataRepository.findAll().get(0).getComponentName()).isEqualTo(widgetDescriptor.getName());
+    }
+
+    @Test
+    void shouldInstall_StrategyIsCreate_WidgetV1WithoutNameButCode() {
+
+        this.widgetDescriptor = WidgetStubHelper.stubWidgetDescriptorV1()
+                .setType(WidgetDescriptor.TYPE_WIDGET_APPBUILDER);
+        componentDataRepository = new ComponentDataRepositoryTestDouble();
+        widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
+                componentDataRepository);
+        widgetInstallable.install().join();
+        verify(entandoCoreClientTestDouble, times(1)).createWidget(any());
+        assertThat(componentDataRepository.count()).isEqualTo(1);
+        assertThat(componentDataRepository.findAll().get(0).getComponentCode()).isEqualTo(WidgetStubHelper.WIDGET_1_CODE);
+        assertThat(componentDataRepository.findAll().get(0).getComponentName()).isEqualTo(WidgetStubHelper.WIDGET_1_CODE);
     }
 
     @Test
     void shouldInstallAndUpdate_StrategyIsCreate() {
-        //componentDataRepository = new ComponentDataRepositoryTestDouble();
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
         widgetInstallable.install().join();

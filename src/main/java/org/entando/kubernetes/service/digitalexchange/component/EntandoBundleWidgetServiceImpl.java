@@ -30,7 +30,6 @@ import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
-import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.ComponentWidgetData;
@@ -40,6 +39,7 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
@@ -115,7 +115,8 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
                 .assets(widgetDescriptor.getDescriptorMetadata().getAssets())
                 .descriptorExt(descriptorExt)
                 .systemParams(widgetDescriptor.getDescriptorMetadata().getSystemParams())
-                .desriptorVersion(widgetDescriptor.getDescriptorVersion())
+                .desriptorVersion(determineWidgetDescriptorVersion(widgetDescriptor.getDescriptorVersion(),
+                        entity.getComponentSubType()))
                 .build();
 
     }
@@ -131,18 +132,45 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
     private ComponentWidgetData composeBaseAssetsPath(ComponentWidgetData componentWidgetData) {
 
         // in some cases the descriptor saved in the db could be empty
-        if (StringUtils.isNotBlank(componentWidgetData.getBundleCode())) {
-
+        if (StringUtils.isBlank(componentWidgetData.getBundleCode())) {
+            log.info("Skipping widget " + componentWidgetData.getWidgetName() + " due to empty saved descriptor");
+        } else {
+            String widgetName = determineWidgetName(componentWidgetData);
             String path = BundleUtilities.buildFullBundleResourcePath(
                     BundleType.STANDARD_BUNDLE,
                     componentWidgetData.getDesriptorVersion(),
                     BundleProperty.WIDGET_FOLDER_PATH,
-                    Paths.get(BundleProperty.WIDGET_FOLDER_PATH.getValue(), componentWidgetData.getWidgetName())
-                            .toString(),
+                    Paths.get(BundleProperty.WIDGET_FOLDER_PATH.getValue(), widgetName).toString(),
                     componentWidgetData.getBundleCode());
 
             componentWidgetData.setAssetsBasePath(path);
         }
+
         return componentWidgetData;
+    }
+
+    private String determineWidgetName(ComponentWidgetData componentWidgetData) {
+        if (StringUtils.isNotBlank(componentWidgetData.getWidgetName())) {
+            return componentWidgetData.getWidgetName();
+        }
+
+        final String widgetCode = componentWidgetData.getWidgetCode();
+        if (ValidationFunctions.isEntityCodeValid(widgetCode)) {
+            return BundleUtilities.extractNameFromEntityCode(widgetCode);
+        }
+
+        return widgetCode;
+    }
+
+    private String determineWidgetDescriptorVersion(String descriptorVersion, String widgetSubType) {
+        if (StringUtils.isNotBlank(descriptorVersion)) {
+            return descriptorVersion;
+        }
+
+        if (WidgetDescriptor.TYPE_WIDGET_STANDARD.equals(widgetSubType)) {
+            return DescriptorVersion.V1.getVersion();
+        }
+
+        return DescriptorVersion.V5.getVersion();
     }
 }

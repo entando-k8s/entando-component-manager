@@ -24,7 +24,6 @@ import org.springframework.util.ObjectUtils;
 @Setter
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 @Accessors(chain = true)
 public class WidgetDescriptor extends VersionedDescriptor {
 
@@ -61,6 +60,52 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private DescriptorMetadata descriptorMetadata = DescriptorMetadata.builder().build();
     private String parentName;
     private String parentCode;
+
+    // TODO after ENG-4004 we could revert these changes since the descriptor version will be stored into a separate
+    //  db col. look also at EntandoBundleWidgetServiceImpl.composeBaseAssetsPath()
+
+    /**
+     * deprecated constructor.
+     * @deprecated this method is no longer acceptable since it doesn't set the descriptor version
+     */
+    @Deprecated
+    public WidgetDescriptor(String code, Map<String, String> titles, String group,
+            String customUi, ConfigUi configUi, String customUiPath, String configWidget, String name, String type,
+            String configMfe, List<ApiClaim> apiClaims, List<Param> params, List<String> contextParams,
+            String customElement, WidgetExt ext, Map<String, String> paramsDefaults,
+            DescriptorMetadata descriptorMetadata, String parentName, String parentCode) {
+
+        this(null, code, titles, group, customUi, configUi, customUiPath, configWidget, name, type, configMfe,
+                apiClaims, params, contextParams, customElement, ext, paramsDefaults, descriptorMetadata, parentName,
+                parentCode);
+    }
+
+    public WidgetDescriptor(String descriptorVersion, String code, Map<String, String> titles, String group,
+            String customUi, ConfigUi configUi, String customUiPath, String configWidget, String name, String type,
+            String configMfe, List<ApiClaim> apiClaims, List<Param> params, List<String> contextParams,
+            String customElement, WidgetExt ext, Map<String, String> paramsDefaults,
+            DescriptorMetadata descriptorMetadata, String parentName, String parentCode) {
+        super.setDescriptorVersion(descriptorVersion);
+        this.code = code;
+        this.titles = titles;
+        this.group = group;
+        this.customUi = customUi;
+        this.configUi = configUi;
+        this.customUiPath = customUiPath;
+        this.configWidget = configWidget;
+        this.name = name;
+        this.type = type;
+        this.configMfe = configMfe;
+        this.apiClaims = apiClaims;
+        this.params = params;
+        this.contextParams = contextParams;
+        this.customElement = customElement;
+        this.ext = ext;
+        this.paramsDefaults = paramsDefaults;
+        this.descriptorMetadata = descriptorMetadata;
+        this.parentName = parentName;
+        this.parentCode = parentCode;
+    }
 
     // ------------------------------------------------------------
     @Override
@@ -156,14 +201,5 @@ public class WidgetDescriptor extends VersionedDescriptor {
             return false;
         }
         return type != null && type.equals(WidgetDescriptor.TYPE_WIDGET_CONFIG);
-    }
-
-    @Override
-        public String getDescriptorVersion() {
-        if (StringUtils.isBlank(super.getDescriptorVersion())) {
-            return DescriptorVersion.V1.getVersion();
-        }
-
-        return super.getDescriptorVersion();
     }
 }
