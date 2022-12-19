@@ -258,8 +258,6 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
         List<String> reportableIdList = new ArrayList<>();
 
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-
         // resources files
         List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted().collect(Collectors.toList());
 

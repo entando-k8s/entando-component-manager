@@ -248,29 +248,6 @@ class FileProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void whenCreatingReportableShouldOmitBundleCodeRootFolderIfSystemLevelBundleV5() throws IOException {
-
-        List<String> expectedCodeList = Stream.of("bundles/widgets/ootb-widgets-XXXXXXXX/css/main.css",
-                        "bundles/widgets/ootb-widgets-XXXXXXXX/static/css/sitemap.css",
-                        "bundles/widgets/ootb-widgets-XXXXXXXX/static/js/2.ootb.chunk.js")
-                .map(c -> c.replace("XXXXXXXX", BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA))
-                .collect(Collectors.toList());
-
-        final BundleDescriptor descriptor = (BundleDescriptor) BundleStubHelper.stubBundleDescriptor(null)
-                .setDescriptorVersion(DescriptorVersion.V5.getVersion());
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(descriptor);
-        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
-        when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
-        when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
-        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);
-
-        Reportable reportable = fileProcessor.getReportable(mockBundleReader, fileProcessor);
-
-        assertThat(reportable.getComponentType()).isEqualTo(ComponentType.RESOURCE);
-        assertThat(reportable.getCodes()).containsAll(expectedCodeList);
-    }
-
-    @Test
     void whenCreatingReportableShouldAddBundleCodeRootFolderIfStandardBundleV1() throws IOException {
 
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null);
@@ -312,10 +289,7 @@ class FileProcessorTest extends BaseProcessorTest {
                 .collect(Collectors.toList());
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
-        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(mockBundleReader.getCode()).thenReturn(
-                bundleDescriptor.getCode() + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
         when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);
         when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFilesV5);
 

@@ -133,7 +133,7 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
 
         // in some cases the descriptor saved in the db could be empty
         if (StringUtils.isBlank(componentWidgetData.getBundleCode())) {
-            log.info("Skipping widget " + componentWidgetData.getWidgetName() + " due to empty saved descriptor");
+            log.warn("Skipping widget " + componentWidgetData.getWidgetName() + " due to empty saved descriptor");
         } else {
             String widgetName = determineWidgetName(componentWidgetData);
             String path = BundleUtilities.buildFullBundleResourcePath(
@@ -162,6 +162,14 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
         return widgetCode;
     }
 
+    /**
+     * this method address an old bug that wasn't writing the widget descriptor version inside the db. this method
+     * provides a walkarount to determine the widget descriptor version
+     *
+     * @param descriptorVersion the descriptor version
+     * @param widgetSubType     the widget sub type
+     * @return the determined widget descriptor version
+     */
     private String determineWidgetDescriptorVersion(String descriptorVersion, String widgetSubType) {
         if (StringUtils.isNotBlank(descriptorVersion)) {
             return descriptorVersion;
