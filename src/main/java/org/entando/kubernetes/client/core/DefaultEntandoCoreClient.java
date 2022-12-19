@@ -3,6 +3,7 @@ package org.entando.kubernetes.client.core;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import org.entando.kubernetes.model.bundle.descriptor.content.ContentDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.MethodRetryer;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
@@ -91,6 +93,16 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private final OAuth2RestTemplate restTemplate;
     private final String entandoUrl;
+    private final int retryNumber = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_RETRIES", 3);
+    private final long backOffPeriod = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_BACKOFF", 5);
+
+    private final List<HttpStatus> errorsCandidatesToRetry = Arrays.asList(
+            HttpStatus.TOO_MANY_REQUESTS,
+            HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_GATEWAY,
+            HttpStatus.SERVICE_UNAVAILABLE, HttpStatus.GATEWAY_TIMEOUT,
+            HttpStatus.INSUFFICIENT_STORAGE, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED
+    );
+
 
     public DefaultEntandoCoreClient(
             @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
@@ -107,21 +119,28 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         this.restTemplate = new OAuth2RestTemplate(resourceDetails);
         this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
         this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
+
     }
 
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
-        restTemplate
+        MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
+        Runnable r = () -> restTemplate
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
-                new EntandoCoreWidget(descriptor),
+                        new EntandoCoreWidget(descriptor),
                         Void.class);
+        retryer.execute(r);
+
     }
 
     @Override
     public void updateWidget(WidgetDescriptor descriptor) {
-        restTemplate
-                .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build().toUri(),
+        MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
+        Runnable r = () -> restTemplate
+                .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build()
+                                .toUri(),
                         new EntandoCoreWidget(descriptor));
+        retryer.execute(r);
     }
 
     @Override
@@ -630,4 +649,47 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 || s.equals(HttpStatus.NOT_FOUND)
                 || s.equals(HttpStatus.FORBIDDEN));
     }
+
+    private boolean isRetryableResponseStatus(int status) {
+        HttpStatus s = HttpStatus.resolve(status);
+        return s != null && s.is5xxServerError() && errorsCandidatesToRetry.contains(s);
+    }
+
+    private boolean shouldRetry(Object obj, Exception ex, int executionNumber) {
+        if (ex instanceof RestClientResponseException) {
+            RestClientResponseException e = (RestClientResponseException) ex;
+            if (isRetryableResponseStatus(e.getRawStatusCode())) {
+                log.info("Error in a REST call to entandoDeApp code:'{}'", e.getRawStatusCode());
+                log.debug("Error: ", e);
+                return false;
+            }
+        }
+        log.debug("Error in a REST call to entandoDeApp", ex);
+        return true;
+    }
+
+    private Object genericRestExecutor(Runnable c, int executionNumber) {
+        c.run();
+        return null;
+    }
+
+    private MethodRetryer<Runnable, Object> buildDefaultRetryer() {
+        return MethodRetryer.<Runnable, Object>builder()
+                .retries(retryNumber)
+                .waitFor(backOffPeriod)
+                .execMethod(this::genericRestExecutor)
+                .checkerMethod(this::shouldRetry)
+                .build();
+    }
+
+    private static int parseIntOrDefault(String envNameToParse, int defaultValue) {
+        String envToParse = Optional.ofNullable(System.getenv(envNameToParse)).orElse("" + defaultValue);
+        try {
+            return Integer.parseInt(envToParse);
+        } catch (NumberFormatException ex) {
+            log.error("Error parsing:'{}' from env with name:'{}'", envToParse, envNameToParse, ex);
+            return defaultValue;
+        }
+    }
+
 }
