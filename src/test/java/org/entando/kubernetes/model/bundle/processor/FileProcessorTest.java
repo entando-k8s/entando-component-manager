@@ -56,10 +56,10 @@ class FileProcessorTest extends BaseProcessorTest {
             "resources/static/css/ootb/page-templates/index.css",
             "resources/ootb-widgets/static/js/runtime-main.ootb.js",
             "resources/ootb-widgets/static/js/main.ootb.chunk.js");
-    private List<String> resourceFolderV5 = Arrays.asList("widgets/ootb-widgets/css/main.css",
+    private List<String> widgetsFilesV5 = Arrays.asList("widgets/ootb-widgets/css/main.css",
             "widgets/ootb-widgets/static/css/sitemap.css",
-            "widgets/ootb-widgets/static/js/2.ootb.chunk.js",
-            "resources/txt/my-text.txt",
+            "widgets/ootb-widgets/static/js/2.ootb.chunk.js");
+    private List<String> resourceFilesV5 = Arrays.asList("resources/txt/my-text.txt",
             "resources/js/my-js.js",
             "resources/my-style.css");
 
@@ -258,7 +258,7 @@ class FileProcessorTest extends BaseProcessorTest {
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(BundleStubHelper.stubBundleDescriptor(null));
-        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
+        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);
 
         Reportable reportable = fileProcessor.getReportable(mockBundleReader, fileProcessor);
 
@@ -302,18 +302,23 @@ class FileProcessorTest extends BaseProcessorTest {
         List<String> expectedCodeList = Arrays
                 .asList("bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/css/main.css",
                         "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/css/sitemap.css",
-                        "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js");
+                        "bundles/my-component-77b2b10e/widgets/ootb-widgets-77b2b10e/static/js/2.ootb.chunk.js",
+                        "bundles/my-component-77b2b10e/resources/txt/my-text.txt",
+                        "bundles/my-component-77b2b10e/resources/js/my-js.js",
+                        "bundles/my-component-77b2b10e/resources/my-style.css");
 
         when(mockBundleReader.isBundleV1()).thenReturn(false);
         when(mockBundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(mockBundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
         when(mockBundleReader.getCode()).thenReturn(
                 bundleDescriptor.getCode() + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.resourceFolderV5);
+        when(mockBundleReader.getWidgetsFiles()).thenReturn(this.widgetsFilesV5);
+        when(mockBundleReader.getResourceFiles()).thenReturn(this.resourceFilesV5);
 
         Reportable reportable = fileProcessor.getReportable(mockBundleReader, fileProcessor);
 
         assertThat(reportable.getComponentType()).isEqualTo(ComponentType.RESOURCE);
+        assertThat(reportable.getCodes()).containsAll(expectedCodeList);
         assertThat(reportable.getCodes()).containsAll(expectedCodeList);
     }
 }
