@@ -29,6 +29,7 @@ import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
+import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DockerImage;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
@@ -64,9 +65,6 @@ public class BundleUtilities {
 
     public static final String LATEST_VERSION = "latest";
 
-    public static final String DESCRIPTOR_CODE_REGEX = "^[\\w|-]+-[0-9a-fA-F]{8}$";
-    public static final Pattern DESCRIPTOR_CODE_PATTERN = Pattern.compile(DESCRIPTOR_CODE_REGEX);
-
     public static final String BUNDLE_PROTOCOL_REGEX = "^((git@)|(git:\\/\\/)|(ssh:\\/\\/)|(http:\\/\\/)|(https:\\/\\/))";
     public static final Pattern BUNDLE_PROTOCOL_REGEX_PATTERN = Pattern.compile(BUNDLE_PROTOCOL_REGEX);
 
@@ -75,7 +73,7 @@ public class BundleUtilities {
     public static final String HTTP_OVER_GIT_REPLACER = ValidationFunctions.HTTP_PROTOCOL + "://";
     public static final String COLONS_REGEX = ":(?!\\/)";
     public static final Pattern COLONS_REGEX_PATTERN = Pattern.compile(COLONS_REGEX);
-    public static final int PLUGIN_HASH_LENGTH = 8;
+    public static final int ENTITY_CODE_HASH_LENGTH = 8;
 
     public static final String BUNDLES_FOLDER = "bundles";
 
@@ -382,23 +380,38 @@ public class BundleUtilities {
 
 
     /**
-     * determine and return the resource root folder for the current bundle. - if the current bundle is a standard
-     * bundle, root folder = current_bundle_code + '/resources' - otherwise '/resources'
-     *
+     * convenience method using only the BundleReader.
      * @param bundleReader the reader of the current bundle
      * @return the resource root folder for the current bundle
      * @throws IOException if a read error occurs during the bundle reading
      */
     public static String determineBundleResourceRootFolder(BundleReader bundleReader) throws IOException {
+        final BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptor();
+        return determineBundleResourceRootFolder(
+                bundleDescriptor.getBundleType(),
+                bundleDescriptor.getDescriptorVersion(),
+                bundleReader.getCode());
+    }
+
+    /**
+     * determine and return the resource root folder for the current bundle. - if the current bundle is a standard
+     * bundle, root folder = current_bundle_code + '/resources' - otherwise '/resources'
+     *
+     * @param bundleType the bundle type
+     * @param descriptorVersion the bundle descriptor version
+     * @param bundleCode the bundle code
+     * @return the resource root folder for the current bundle
+     */
+    public static String determineBundleResourceRootFolder(BundleType bundleType, String descriptorVersion,
+            String bundleCode) {
 
         var resourceFolder = "/";
-        var bundleType = bundleReader.readBundleDescriptor().getBundleType();
 
         if (null == bundleType || bundleType == BundleType.STANDARD_BUNDLE) {
-            if (bundleReader.readBundleDescriptor().isVersion1()) {
-                resourceFolder += bundleReader.getBundleName();
+            if (VersionedDescriptor.isVersion1(descriptorVersion)) {
+                resourceFolder += extractNameFromEntityCode(bundleCode);
             } else {
-                resourceFolder += bundleReader.getCode();
+                resourceFolder += bundleCode;
             }
         }
 
@@ -410,10 +423,24 @@ public class BundleUtilities {
      *
      * @param bundleReader the BundleReader to use to compose the signed bundle folder name
      * @return the composed signed bundle folder name
-     * @throws IOException if an error occurrs during the reading of the bundle
      */
-    public static String composeSignedBundleFolder(BundleReader bundleReader) throws IOException {
+    public static String determineSignedBundleFolder(BundleReader bundleReader) throws IOException {
         final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleReader);
+        return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
+    }
+
+    /**
+     * return the bundle folder name full of the signing hash.
+     *
+     * @param bundleType        the type of the bundle
+     * @param descriptorVersion the version of the descriptor of the bundle
+     * @param bundleCode        the code of the bundle
+     * @return the composed signed bundle folder name
+     */
+    public static String determineSignedBundleFolder(BundleType bundleType, String descriptorVersion,
+            String bundleCode) {
+        final String resourceFolder = BundleUtilities.determineBundleResourceRootFolder(bundleType, descriptorVersion,
+                bundleCode);
         return Paths.get(BUNDLES_FOLDER, resourceFolder).toString();
     }
 
@@ -519,7 +546,7 @@ public class BundleUtilities {
      * @return the signed bundle id
      */
     public static String getBundleId(String bundleUrl) {
-        return DigestUtils.sha256Hex(bundleUrl).substring(0, BundleUtilities.PLUGIN_HASH_LENGTH);
+        return DigestUtils.sha256Hex(bundleUrl).substring(0, ENTITY_CODE_HASH_LENGTH);
     }
 
     /**
@@ -555,21 +582,54 @@ public class BundleUtilities {
      * @param bundleReader         the bundle reader responsible for reading the bundle
      * @param folderProp           the BundleProperty indicating the root folder of the file
      * @param fileDescriptorFolder the folder containing the current file
-     * @param bundleId             the id of the current bundle
      * @return the built full path of a resource
      */
     public static String buildFullBundleResourcePath(BundleReader bundleReader, BundleProperty folderProp,
-            String fileDescriptorFolder, String bundleId) throws IOException {
+            String fileDescriptorFolder) throws IOException {
 
-        final String signedBundleFolder = composeSignedBundleFolder(bundleReader);
+        final BundleDescriptor bundleDescriptor = bundleReader.readBundleDescriptor();
+        return buildFullBundleResourcePath(
+                bundleDescriptor.getBundleType(),
+                bundleDescriptor.getDescriptorVersion(),
+                folderProp,
+                fileDescriptorFolder,
+                bundleDescriptor.getCode());
+    }
+
+
+    /**
+     * build the full path of a resource inside a bundle.
+     *
+     * @param bundleType           the type of the current  bundle
+     * @param folderProp           the BundleProperty indicating the root folder of the file
+     * @param fileDescriptorFolder the folder containing the current file
+     * @param bundleCode           the code of the current bundle
+     * @return the built full path of a resource
+     */
+    public static String buildFullBundleResourcePath(BundleType bundleType, String descriptorVersion,
+            BundleProperty folderProp, String fileDescriptorFolder, String bundleCode) {
+
+        final String signedBundleFolder = determineSignedBundleFolder(bundleType, descriptorVersion, bundleCode);
         Path fileFolder = Paths.get(folderProp.getValue()).relativize(Paths.get(fileDescriptorFolder));
 
-        if (!bundleReader.isBundleV1() && folderProp == BundleProperty.WIDGET_FOLDER_PATH) {
-            final String signedFolder = fileFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
-            fileFolder = Paths.get(signedFolder, fileFolder.subpath(0, 1).relativize(fileFolder).toString());
+        if (!VersionedDescriptor.isVersion1(descriptorVersion) && folderProp == BundleProperty.WIDGET_FOLDER_PATH) {
+            fileFolder = signWidgetFolder(bundleCode, fileFolder);
         }
 
         return Paths.get(signedBundleFolder, folderProp.getValue()).resolve(fileFolder).toString();
+    }
+
+    /**
+     * sign a widget folder.
+     * @param bundleCode the code of the bundle containin the id to sign the widget folder
+     * @param widgetFolder the widget folder to sign
+     * @return the signed widget folder
+     */
+    private Path signWidgetFolder(String bundleCode, Path widgetFolder) {
+        String bundleId = BundleUtilities.extractIdFromEntityCode(bundleCode);
+        final String signedWidgetName = widgetFolder.subpath(0, 1).toString().concat("-").concat(bundleId);
+        return Paths.get(signedWidgetName, widgetFolder.subpath(0, 1).relativize(widgetFolder).toString());
+
     }
 
     public static String composeDescriptorCode(String code, String name, VersionedDescriptor descriptor,
@@ -622,7 +682,7 @@ public class BundleUtilities {
         if (bundleReader.isBundleV1() && bundleReader.containsBundleResourceFolder()) {
             return determineBundleResourceRootFolder(bundleReader);
         } else {
-            return composeSignedBundleFolder(bundleReader);
+            return determineSignedBundleFolder(bundleReader);
         }
     }
 
@@ -670,5 +730,15 @@ public class BundleUtilities {
 
     public static String readDefaultImageRegistryOverride() {
         return Optional.ofNullable(System.getenv(ENTANDO_DOCKER_REGISTRY_OVERRIDE)).orElse("");
+    }
+
+    public String extractNameFromEntityCode(String entityCode) throws EntandoComponentManagerException {
+        ValidationFunctions.validateEntityCodeOrThrow(entityCode);
+        return entityCode.substring(0, entityCode.length() - (ENTITY_CODE_HASH_LENGTH + 1));
+    }
+
+    public static String extractIdFromEntityCode(String entityCode) throws EntandoComponentManagerException {
+        ValidationFunctions.validateEntityCodeOrThrow(entityCode);
+        return entityCode.substring(entityCode.length() - ENTITY_CODE_HASH_LENGTH);
     }
 }

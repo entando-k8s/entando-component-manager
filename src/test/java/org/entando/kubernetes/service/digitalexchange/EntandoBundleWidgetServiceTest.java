@@ -27,6 +27,7 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleWidgetService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleWidgetServiceImpl;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -47,11 +48,8 @@ class EntandoBundleWidgetServiceTest {
     private static final String PREFIX_WIDGET_NAME = "my-widget-name";
     private static final String PREFIX_PLUGIN_NAME = "my-plugin-name";
     private static final String PREFIX_GROUP = "group";
-    private static final String PREFIX_BUNDLE_REPO_URL = "http://test.com/gitrepo/reponame";
     private static final int INSTALLED_WIDGET_SIZE = 6;
     private static final String APP_BUILDER_OBJ = "{\"slot\":\"content\"}";
-    private static final String COMPONENT_DESCRIPTOR =
-            "{\"ext\":{\"appBuilder\":" + APP_BUILDER_OBJ + ", \"adminConsole\":{\"access\":12}}}";
     public static final String BUNDLE_ID = "bundleId";
     public static final String WIDGET_TYPE = "widgetType";
     public static final String PERM_GROUP = "permGroup";
@@ -79,6 +77,16 @@ class EntandoBundleWidgetServiceTest {
 
                     assertThat(componentWidgetData.getBundleCode()).isEqualTo(
                             BundleInfoStubHelper.NAME + "-" + componentWidgetData.getBundleId());
+
+                    if (i == 2) {
+                        assertThat(componentWidgetData.getAssetsBasePath()).isEqualTo(
+                                "bundles/my-component-77b2b10e/widgets/my-widget-name" + (i + 1) + "-77b2b10e");
+                    }
+                    if (i == 3) {
+                        // widget v1
+                        assertThat(componentWidgetData.getAssetsBasePath()).isEqualTo(
+                                "bundles/my-component/widgets/my-widget-name" + (i + 1));
+                    }
 
                     final List<String> pbcNames = componentWidgetData.getLabels().getPbcNames();
                     assertThat(pbcNames).hasSize(2);
@@ -239,15 +247,28 @@ class EntandoBundleWidgetServiceTest {
         String bundleId = StringUtils.leftPad("2" + idx, 8, "0");
         String widgetName = PREFIX_WIDGET_NAME + idx;
         String widgetCode = widgetName + "-" + bundleId;
-        String componentDescriptor =
-                idx != 2 ? "{\"ext\": {\"appBuilder\":" + APP_BUILDER_OBJ + ", \"adminConsole\": {\"access\": 12 }}}"
-                        : "{}";
+        // String widgetName = idx == 1 ? "" : PREFIX_WIDGET_NAME + idx;
+        //  String widgetCode = idx == 2 ? PREFIX_WIDGET_NAME : widgetName + "-" + bundleId;
+        String componentDescriptor;
+
+        if (idx == 2) {
+            componentDescriptor = "{}";
+        } else if (idx == 3) {
+            componentDescriptor = "{\"ext\": {\"appBuilder\":" + APP_BUILDER_OBJ + ", \"adminConsole\": {\"access\": 12 }},"
+                    + "\"descriptorMetadata\": {\"bundleCode\": \"" + BundleStubHelper.BUNDLE_CODE + "\"},"
+                    + "\"descriptorVersion\": \"v5\"}";
+        } else {
+            componentDescriptor = "{\"ext\": {\"appBuilder\":" + APP_BUILDER_OBJ + ", \"adminConsole\": {\"access\": 12 }},"
+                    + "\"descriptorMetadata\": {\"bundleCode\": \"" + BundleStubHelper.BUNDLE_CODE + "\"}}";
+        }
+
         return ComponentDataEntity.builder().id(UUID.randomUUID()).bundleId(bundleId)
                 .componentName(widgetName).componentCode(widgetCode)
                 .componentType(ComponentType.WIDGET)
                 .componentSubType(selectWidgetSubType(idx))
                 .componentGroup(PREFIX_GROUP + idx)
                 .componentDescriptor(componentDescriptor)
+                .bundleCode(BundleStubHelper.BUNDLE_CODE)
                 .build();
     }
 
