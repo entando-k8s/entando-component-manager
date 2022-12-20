@@ -5,7 +5,7 @@ LABEL name="Entando Component Manager" \
       maintainer="dev@entando.com" \
       vendor="Entando Inc." \
       version="v{VERSION}" \
-      release="6.3.0" \
+      release="7.1" \
       summary="Entando Component Manager for Entando Component Repository" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
 
