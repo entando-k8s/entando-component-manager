@@ -28,6 +28,7 @@ import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.common.DbmsVendor;
 import org.entando.kubernetes.model.common.ExpectedRole;
@@ -54,11 +55,13 @@ public class EntandoBundleUtilitiesTest {
 
     private BundleReader bundleReader;
     private Path bundleFolder;
+    private DownloadedBundle downloadedBundle;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        downloadedBundle = new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
+        bundleReader = new BundleReader(downloadedBundle, BundleStubHelper.stubEntandoDeBundle());
     }
 
     @Test

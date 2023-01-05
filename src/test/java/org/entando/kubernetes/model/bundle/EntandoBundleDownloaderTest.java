@@ -15,12 +15,14 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType;
 import org.entando.kubernetes.model.bundle.downloader.DockerBundleDownloader;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.NpmBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,7 +32,7 @@ public class EntandoBundleDownloaderTest {
 
     public static final String BUNDLE_REMOTE_REPOSITORY = "https://github.com/Kerruba/entando-sample-bundle";
     private static final int port;
-
+    private CraneCommand craneCommand = new CraneCommand();
 
     static {
         port = findFreePort().orElse(9080);
@@ -72,9 +74,10 @@ public class EntandoBundleDownloaderTest {
                 .withTarball(BUNDLE_REMOTE_REPOSITORY)
                 .build();
         downloader = new GitBundleDownloader();
-        Path target = downloader.saveBundleLocally(bundle, tag);
-        Path expectedFile = target.resolve("descriptor.yaml");
+        DownloadedBundle downloadedBundle = downloader.saveBundleLocally(bundle, tag);
+        Path expectedFile = downloadedBundle.getLocalBundlePath().resolve("descriptor.yaml");
         assertThat(expectedFile.toFile().exists()).isTrue();
+        assertThat(downloadedBundle.getBundleDigest()).isEmpty();
     }
 
     @Test
@@ -89,10 +92,11 @@ public class EntandoBundleDownloaderTest {
                 .withName("my-name")
                 .endMetadata()
                 .build();
-        downloader = BundleDownloaderFactory.getForType("git", 300, 3, 600, null);
-        Path target = downloader.saveBundleLocally(bundle, tag);
-        Path unexpectedFile = target.resolve("package.json");
+        downloader = BundleDownloaderFactory.getForType("git", 300, 3, 600, null, craneCommand);
+        DownloadedBundle downloadedBundle = downloader.saveBundleLocally(bundle, tag);
+        Path unexpectedFile = downloadedBundle.getLocalBundlePath().resolve("package.json");
         assertThat(unexpectedFile.toFile().exists()).isFalse();
+        assertThat(downloadedBundle.getBundleDigest()).isEmpty();
     }
 
     @Test
@@ -109,27 +113,28 @@ public class EntandoBundleDownloaderTest {
                 .build();
         WireMockServer npmRegistry = getMockedNpmRegistry();
         npmRegistry.start();
-        downloader = BundleDownloaderFactory.getForType("npm", 300, 3, 600, null);
-        Path target = downloader.saveBundleLocally(bundle, tag);
-        assertThat(target.toFile().exists()).isTrue();
+        downloader = BundleDownloaderFactory.getForType("npm", 300, 3, 600, null, craneCommand);
+        DownloadedBundle downloadedBundle = downloader.saveBundleLocally(bundle, tag);
+        assertThat(downloadedBundle.getLocalBundlePath().toFile()).exists();
+        assertThat(downloadedBundle.getBundleDigest()).isEmpty();
 
-        Path expectedFile = target.resolve("package.json");
+        Path expectedFile = downloadedBundle.getLocalBundlePath().resolve("package.json");
         assertThat(expectedFile.toFile().exists()).isTrue();
         npmRegistry.stop();
     }
 
     @Test
     public void shouldGetInstanceBasedOnType() {
-        downloader = BundleDownloaderFactory.getForType("NPM", 300, 3, 600, null);
+        downloader = BundleDownloaderFactory.getForType("NPM", 300, 3, 600, null, craneCommand);
         assertThat(downloader instanceof NpmBundleDownloader).isTrue();
 
-        downloader = BundleDownloaderFactory.getForType("GIT", 300, 3, 600, null);
+        downloader = BundleDownloaderFactory.getForType("GIT", 300, 3, 600, null, craneCommand);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
-        downloader = BundleDownloaderFactory.getForType("ANYTHING", 300, 3, 600, null);
+        downloader = BundleDownloaderFactory.getForType("ANYTHING", 300, 3, 600, null, craneCommand);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
 
-        downloader = BundleDownloaderFactory.getForType(null, 300, 3, 600, null);
+        downloader = BundleDownloaderFactory.getForType(null, 300, 3, 600, null, craneCommand);
         assertThat(downloader instanceof GitBundleDownloader).isTrue();
     }
 
@@ -140,7 +145,7 @@ public class EntandoBundleDownloaderTest {
 
         factory.registerSupplier(BundleDownloaderType.NPM, NpmBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null));
+        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null, craneCommand));
 
         downloader = factory.newDownloader();
         assertThat(downloader).isInstanceOf(GitBundleDownloader.class);

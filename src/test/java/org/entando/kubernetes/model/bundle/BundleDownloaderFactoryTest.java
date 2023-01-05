@@ -9,6 +9,7 @@ import org.entando.kubernetes.model.bundle.downloader.DockerBundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +21,8 @@ class BundleDownloaderFactoryTest {
     void shouldCreateBundleDownloaderFromTag() {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(GitBundleDownloader::new);
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(300, 3, 600, null, new CraneCommand()));
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
 
         EntandoDeBundleTag tagGit = new EntandoDeBundleTagBuilder()

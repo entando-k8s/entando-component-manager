@@ -33,6 +33,7 @@ import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.processor.AssetProcessor;
 import org.entando.kubernetes.model.bundle.processor.CategoryProcessor;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
@@ -123,6 +124,7 @@ public class InstallServiceTest {
     private PageDescriptorValidator pageDescriptorValidator;
     private BundleDescriptorValidator bundleDescriptorValidator;
     private CraneCommand craneCommand;
+    private DownloadedBundle downloadedBundle = new DownloadedBundle(Paths.get(bundleFolder), "");
 
     @BeforeEach
     public void init() {
@@ -202,7 +204,7 @@ public class InstallServiceTest {
 
         EntandoDeBundle bundle = getTestBundle();
 
-        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
 
         InstallPlan installPlan = installService.generateInstallPlan(bundle, bundle.getSpec().getTags().get(0),
                 true);
@@ -226,7 +228,7 @@ public class InstallServiceTest {
 
         EntandoDeBundle bundle = getTestBundle();
 
-        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
         when(coreClient.getEngineAnalysisReport(anyList())).thenThrow(ReportAnalysisException.class);
 
         EntandoDeBundleTag entandoDeBundleTag = bundle.getSpec().getTags().get(0);
@@ -247,7 +249,7 @@ public class InstallServiceTest {
                 .name(bundle.getSpec().getDetails().getName())
                 .build();
 
-        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
         when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
 
         EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0));
@@ -272,7 +274,7 @@ public class InstallServiceTest {
                 .name(bundle.getSpec().getDetails().getName())
                 .build();
 
-        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
         when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
         doThrow(RuntimeException.class).when(coreClient).createContentType(any());
 
@@ -446,7 +448,7 @@ public class InstallServiceTest {
                 .name(bundle.getSpec().getDetails().getName())
                 .build();
 
-        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(Paths.get(bundleFolder));
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
         when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
 
         EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0));

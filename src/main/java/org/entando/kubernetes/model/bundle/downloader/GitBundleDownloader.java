@@ -17,11 +17,11 @@ public class GitBundleDownloader extends BundleDownloader {
     private static final String ERROR_WHILE_FETCHING_TAGS = "An error occurred while fetching git repo tags";
 
     @Override
-    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
+    protected DownloadedBundle saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         try {
             //Ampie: removed HTTP validation because we support SSH now
             cloneUsingCliImplementation(tag, targetPath);
-            return targetPath;
+            return new DownloadedBundle(targetPath, "");
         } catch (IOException e) {
             throw new BundleDownloaderException(ERROR_WHILE_CLONING_REPO, e);
         } catch (InterruptedException e) {

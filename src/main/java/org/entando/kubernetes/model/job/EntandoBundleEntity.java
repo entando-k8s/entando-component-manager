@@ -117,6 +117,11 @@ public class EntandoBundleEntity {
     @Column(name = "ext")
     private String ext;
 
+    @Size(min = 71, max = 71)
+    @Column(name = "image_digest")
+    private String imageDigest;
+
+
     @PrePersist
     public void generateId() {
         this.id = UUID.randomUUID();

@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20230104000001
+      author: dev@entando.com
+      changes:
+        - addColumn:
+            tableName: installed_entando_bundles
+            columns:
+              - column:
+                  name: image_digest
+                  type: CHAR(72)
