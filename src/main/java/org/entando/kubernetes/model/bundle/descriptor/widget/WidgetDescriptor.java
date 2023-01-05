@@ -31,6 +31,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
     private Map<String, String> titles;
     private String group;
     private String customUi;
+    private String widgetCategory;
 
     // ------------------------------------------------------------
     // Version 1
@@ -70,18 +71,18 @@ public class WidgetDescriptor extends VersionedDescriptor {
      */
     @Deprecated
     public WidgetDescriptor(String code, Map<String, String> titles, String group,
-            String customUi, ConfigUi configUi, String customUiPath, String configWidget, String name, String type,
+            String customUi, String widgetCategory, ConfigUi configUi, String customUiPath, String configWidget, String name, String type,
             String configMfe, List<ApiClaim> apiClaims, List<Param> params, List<String> contextParams,
             String customElement, WidgetExt ext, Map<String, String> paramsDefaults,
             DescriptorMetadata descriptorMetadata, String parentName, String parentCode) {
 
-        this(null, code, titles, group, customUi, configUi, customUiPath, configWidget, name, type, configMfe,
+        this(null, code, titles, group, customUi, widgetCategory, configUi, customUiPath, configWidget, name, type, configMfe,
                 apiClaims, params, contextParams, customElement, ext, paramsDefaults, descriptorMetadata, parentName,
                 parentCode);
     }
 
     public WidgetDescriptor(String descriptorVersion, String code, Map<String, String> titles, String group,
-            String customUi, ConfigUi configUi, String customUiPath, String configWidget, String name, String type,
+            String customUi, String widgetCategory, ConfigUi configUi, String customUiPath, String configWidget, String name, String type,
             String configMfe, List<ApiClaim> apiClaims, List<Param> params, List<String> contextParams,
             String customElement, WidgetExt ext, Map<String, String> paramsDefaults,
             DescriptorMetadata descriptorMetadata, String parentName, String parentCode) {
@@ -90,6 +91,7 @@ public class WidgetDescriptor extends VersionedDescriptor {
         this.titles = titles;
         this.group = group;
         this.customUi = customUi;
+        this.widgetCategory = widgetCategory;
         this.configUi = configUi;
         this.customUiPath = customUiPath;
         this.configWidget = configWidget;
