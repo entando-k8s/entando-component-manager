@@ -102,6 +102,7 @@ public class EntandoDeBundleComposer {
                         }
                     })
                     .filter(Objects::nonNull)
+                    .filter(v -> !v.isSnapshot())
                     .min(Comparator.comparing(EntandoBundleVersion::getSemVersion))
                     .map(EntandoBundleVersion::getVersion)
                     .orElseThrow(() -> new EntandoComponentManagerException("Cannot find the first bundle version"));
@@ -201,6 +202,7 @@ public class EntandoDeBundleComposer {
 
         return deBundleTags.stream()
                 .map(EntandoBundleVersion::fromEntity)
+                .filter(Objects::nonNull)
                 .max(Comparator.comparing(EntandoBundleVersion::getSemVersion))
                 .map(EntandoBundleVersion::getVersion)
                 .orElseThrow(() -> new EntandoComponentManagerException("Cannot find the latest bundle version"));

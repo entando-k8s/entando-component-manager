@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -209,6 +210,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
         return bundles.stream()
                 .map(this::convertToBundleFromEcr)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -333,6 +335,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .lastJob(lastJob)
                 .versions(deBundle.getSpec().getTags().stream()
                         .map(EntandoBundleVersion::fromEntity) //TODO how to read timestamp from k8s custom model?
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList()))
                 .build();
 
