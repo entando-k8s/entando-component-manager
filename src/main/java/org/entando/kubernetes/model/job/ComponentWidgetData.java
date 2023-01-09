@@ -14,6 +14,7 @@
 
 package org.entando.kubernetes.model.job;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,12 +41,16 @@ public class ComponentWidgetData implements Labeled {
     private String permGroup;
 
     // json fields and metadata
+    private String assetsBasePath;
     private String customElement;
     private String[] assets;
     @JsonRawValue
     private String descriptorExt;
     private SystemParams systemParams;
     private Labels labels;
+
+    @JsonIgnore
+    private String desriptorVersion;
 
     public void setLabels(Labels labels) {
         this.labels = labels;

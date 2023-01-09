@@ -111,7 +111,7 @@ class HubFlowTest {
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().json("{\"payload\":{\"code\":\"something-77b2b10e\",\"title\":"
-                        + "\"my-bundle\",\"description\":\"bundle description\",\"repoUrl\":\"http://www.github.com/entan"
+                        + "\"something\",\"description\":\"bundle description\",\"repoUrl\":\"http://www.github.com/entan"
                         + "do/mybundle.git\",\"bundleType\":\"standard-bundle\",\"thumbnail\":\"data:image/png;base64,"
                         + "iVBORw0KGgoAAAANSUhEUgAAARkAAAEZCAYAAACjEFEXAAAPLElEQVR4nOzdD2yc5X3A8V\",\"componentTypes\""
                         + ":[\"widget\",\"contentTemplate\",\"pageTemplate\",\"language\",\"label\",\"content\",\"frag"

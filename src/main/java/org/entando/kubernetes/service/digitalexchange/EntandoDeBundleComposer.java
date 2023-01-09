@@ -159,7 +159,7 @@ public class EntandoDeBundleComposer {
                 .endMetadata()
                 .withNewSpec()
                 .withNewDetails()
-                .withName(retrieveSpecName(bundleInfo, oldBundle))
+                .withName(retrieveSpecName(bundleDescriptor, oldBundle))
                 .withDescription(bundleDescriptor.getDescription())
                 .addNewDistTag(BundleUtilities.LATEST_VERSION, getLatestSemverVersion(deBundleTags))
                 .withVersions(versionList)
@@ -180,16 +180,16 @@ public class EntandoDeBundleComposer {
         return oldBundle.map(b -> b.getMetadata().getName()).orElse(bundleCode);
     }
 
-    private String retrieveSpecName(BundleInfo bundleInfo, Optional<EntandoDeBundle> oldBundle) {
-        return Optional.ofNullable(bundleInfo.getName())
+    private String retrieveSpecName(BundleDescriptor bundleDescriptor, Optional<EntandoDeBundle> oldBundle) {
+        return Optional.ofNullable(bundleDescriptor.getName())
                 .orElse(oldBundle.map(b -> b.getSpec().getDetails().getName()).orElse(null));
     }
 
     private String retrieveThumbnail(BundleDescriptor bundleDescriptor, BundleInfo bundleInfo) {
-        if (StringUtils.isNotBlank(bundleInfo.getDescriptionImage())) {
-            return bundleInfo.getDescriptionImage();
-        } else {
+        if (StringUtils.isNotBlank(bundleDescriptor.getThumbnail())) {
             return bundleDescriptor.getThumbnail();
+        } else {
+            return bundleInfo.getDescriptionImage();
         }
     }
 

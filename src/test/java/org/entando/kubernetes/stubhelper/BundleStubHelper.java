@@ -12,8 +12,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 public class BundleStubHelper {
 
-    public static final String BUNDLE_CODE = "my-component";
-    public static final String BUNDLE_NAME = "my-bundle-name";
+    public static final String BUNDLE_NAME = "my-component";
+    public static final String BUNDLE_CODE = BUNDLE_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA;
     public static final String BUNDLE_DESCRIPTION = "desc";
     public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
     public static final String V1_0_0 = "v1.0.0";
@@ -63,42 +63,5 @@ public class BundleStubHelper {
     public static BundleDescriptor stubBundleDescriptor(ComponentSpecDescriptor spec, BundleType type) {
         return new BundleDescriptor(BUNDLE_CODE, BUNDLE_NAME, BUNDLE_DESCRIPTION, type, spec, "{ \"test_ext\": true }",
                 THUMBNAIL);
-    }
-
-    /**
-     * receives a List of ContentAttribute representing the content of the file bundle/contents/cng102-descriptor.yaml.
-     * @return
-     */
-    public static List<ContentAttribute> stubContentAttributeList() {
-
-        ContentAttribute contentAttribute1 = new ContentAttribute()
-                .setCode("title")
-                .setValues(Map.of("en", "Learn about checking and savings accounts"))
-                .setElements(Arrays.asList(
-                        new ContentAttribute()
-                                .setCode("title elements")
-                                .setValue("test value")
-                                .setValues(Map.of("it", "Learn about checking and savings accounts in ita"))))
-                .setCompositeelements(Arrays.asList(
-                        new ContentAttribute()
-                                .setCode("title composite elements")
-                                .setValue("test composite")
-                                .setValues(Map.of("gb", "Learn about checking and savings accounts in gb"))))
-                .setListelements(Map.of(
-                        "myel",
-                        Arrays.asList(
-                                new ContentAttribute()
-                                        .setCode("title list elements")
-                                        .setValue("test value list elements")
-                                        .setValues(Map.of("fr", "Learn about checking and savings accounts in fr")))));
-
-        ContentAttribute contentAttribute2 = new ContentAttribute()
-                .setCode("subtitle")
-                .setValues(Map.of("en", "Learn about checking and savings accounts sub"));
-
-        ContentAttribute contentAttribute3 = new ContentAttribute()
-                .setCode("descr");
-
-        return Arrays.asList(contentAttribute1, contentAttribute2, contentAttribute3);
     }
 }

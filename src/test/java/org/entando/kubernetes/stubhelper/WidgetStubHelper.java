@@ -65,6 +65,7 @@ public class WidgetStubHelper {
         return stubWidgetDescriptor()
                 .customUiPath(CUSTOM_UI_PATH)
                 .configUi(stubConfigUiDescriptor())
+                .descriptorMetadata(stubDescriptorMetadata())
                 .build();
     }
 

@@ -362,7 +362,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity job,
-            Function<Installable, JobResult> action) {
+            Function<Installable<?>, JobResult> action) {
         JobTracker<EntandoBundleComponentJobEntity> componentJobTracker = new JobTracker<>(job, compJobRepo);
         componentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
         JobResult result = action.apply(job.getInstallable());

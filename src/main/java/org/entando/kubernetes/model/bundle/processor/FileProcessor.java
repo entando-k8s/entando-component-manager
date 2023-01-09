@@ -183,13 +183,12 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
         final List<Installable<FileDescriptor>> installables = new LinkedList<>();
 
         List<String> resourceFiles = resourceFilelist.stream().sorted().collect(Collectors.toList());
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         for (final String resourceFile : resourceFiles) {
             final FileDescriptor fileDescriptor = bundleReader.getResourceFileAsDescriptor(resourceFile);
 
             String folder = BundleUtilities.buildFullBundleResourcePath(bundleReader, folderProp,
-                    fileDescriptor.getFolder(), bundleId);
+                    fileDescriptor.getFolder());
             fileDescriptor.setFolder(folder);
 
             String filename = Paths.get(folder, fileDescriptor.getFilename()).toString();
@@ -259,12 +258,21 @@ public class FileProcessor extends BaseComponentProcessor<FileDescriptor> implem
 
         List<String> reportableIdList = new ArrayList<>();
 
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+        // resources files
+        List<String> resourceFiles = bundleReader.getResourceFiles().stream().sorted().collect(Collectors.toList());
 
+        for (final String resourceFile : resourceFiles) {
+            String file = BundleUtilities.buildFullBundleResourcePath(bundleReader,
+                    BundleProperty.RESOURCES_FOLDER_PATH, resourceFile);
+
+            reportableIdList.add(file);
+        }
+
+        // widget files
         List<String> idList = bundleReader.getWidgetsFiles().stream().sorted().collect(Collectors.toList());
         for (String file : idList) {
             final String fileId = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, file, bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, file);
             reportableIdList.add(fileId);
         }
 

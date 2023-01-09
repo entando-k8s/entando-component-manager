@@ -40,6 +40,8 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     public static final String CSS_TAG = "<link href=\"<@wp.resourceURL />%s\" rel=\"stylesheet\">";
     public static final String ASSIGN_TAG_MFE_CONFIG = "<#assign mfeConfig>%s</#assign>";
     public static final String ASSIGN_TAG_GENERIC = "<#assign %s>%s</#assign>";
+
+    public static final String ASSIGN_TAG_FROM_VAR_NULLSAFE = "<#assign %s>${(%s)!\"\"}</#assign>";
     public static final String CUSTOM_ELEMENT_TAG =
             "<%s config=\"<#outputformat 'HTML'>${mfeConfig}</#outputformat>\"/>";
     public static final String APPLICATION_BASEURL_PARAM = "";
@@ -121,14 +123,13 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     private String generateCodeForPageGlobalObjectUpdate(String descriptorFileName, WidgetDescriptor descriptor,
             BundleReader bundleReader) {
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         String baseWidgetPath = "";
 
         try {
             final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
             baseWidgetPath = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, widgetFolder, bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, widgetFolder);
 
         } catch (IOException e) {
             log.error("Unable to determine the widget base path", e);
@@ -146,8 +147,11 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         var params = descriptor.getParams();
         if (params != null) {
             for (var p : params) {
-                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",
-                        "config", p.getName(), ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName())));
+                String scopedVarName = ftlScopedVar(FTL_WIDGETS_PARAM_PREFIX, p.getName());
+
+                res.append(String.format("<@wp.currentWidget param=\"%s\" configParam=\"%s\" var=\"%s\" />\n",// NOSONAR
+                        "config", p.getName(), scopedVarName));
+                res.append(String.format(ASSIGN_TAG_FROM_VAR_NULLSAFE + "\n", scopedVarName, scopedVarName));
             }
         }
         return res.toString();
@@ -229,7 +233,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
     private String formatTagFilePath(BundleReader bundleReader, String tag, String file, String bundleId) {
         try {
             final String fullFile = BundleUtilities.buildFullBundleResourcePath(bundleReader,
-                    BundleProperty.WIDGET_FOLDER_PATH, file, bundleId);
+                    BundleProperty.WIDGET_FOLDER_PATH, file);
             return String.format(tag, fullFile);
         } catch (Exception e) {
             throw new EntandoComponentManagerException(e);

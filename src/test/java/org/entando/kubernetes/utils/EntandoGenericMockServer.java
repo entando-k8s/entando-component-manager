@@ -107,4 +107,9 @@ public abstract class EntandoGenericMockServer {
     public void verify(String url, Function<UrlPattern, RequestPatternBuilder> httpMethodVerifier) {
         wireMockServer.verify(httpMethodVerifier.apply(urlEqualTo(url)));
     }
+
+    public void verify(int count, String url, Function<UrlPattern, RequestPatternBuilder> httpMethodVerifier) {
+        wireMockServer.verify(count, httpMethodVerifier.apply(urlEqualTo(url)));
+    }
+
 }

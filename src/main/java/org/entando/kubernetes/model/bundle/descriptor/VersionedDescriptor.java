@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
@@ -21,6 +21,10 @@ public abstract class VersionedDescriptor implements Descriptor {
     private String descriptorVersion;
 
     public boolean isVersion1() {
+        return isVersion1(this.descriptorVersion);
+    }
+
+    public static boolean isVersion1(String descriptorVersion) {
         return ObjectUtils.isEmpty(descriptorVersion)
                 || descriptorVersion.equals(DescriptorVersion.V1.getVersion());
     }
