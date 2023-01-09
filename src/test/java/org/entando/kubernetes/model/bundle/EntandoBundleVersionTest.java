@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-public class EntandoBundleVersionTest {
+class EntandoBundleVersionTest {
 
     @Test
     void shouldCreateTheExpectedValue() {
@@ -19,7 +19,7 @@ public class EntandoBundleVersionTest {
         final String keyExpected = "expected";
         List.of(Map.of(keyInput, "v1.0.0", keyExpected, "v1.0.0"), Map.of("input", "1.0.0", "expected", "1.0.0"))
                 .forEach(m -> {
-                            EntandoDeBundleTag tagDockerV = new EntandoDeBundleTag(m.get(keyInput), dockerImageDigest,
+                    EntandoDeBundleTag tagDockerV = new EntandoDeBundleTag(m.get(keyInput), dockerImageDigest,
                                     dockerImageDigest, dockerImage);
 
                             EntandoBundleVersion ver1 = EntandoBundleVersion.fromEntity(tagDockerV);
