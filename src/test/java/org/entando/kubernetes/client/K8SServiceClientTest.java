@@ -40,6 +40,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
+import org.entando.kubernetes.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +63,10 @@ public class K8SServiceClientTest {
     private DefaultK8SServiceClient client;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
+        //needed by DefaultK8SServiceClient constructor
+        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+
         mockServer = new EntandoK8SServiceMockServer();
         client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, true);
         client.setRestTemplate(noOAuthRestTemplate());
@@ -367,6 +371,30 @@ public class K8SServiceClientTest {
         AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
 
         List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithSha();
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
+
+        AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
+    }
+
+    @Test
+    void shouldGetAnalysisReportWithPluginsExistingOnK8SButNotLinked() {
+
+        String singlePluginResponse = mockServer.readResourceAsString(
+                "/payloads/k8s-svc/plugins/plugin_with_no_link.json");
+
+        mockServer.getInnerServer().stubFor(get(urlMatching("/plugins/" + ReportableStubHelper.PLUGIN_CODE_3))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singlePluginResponse)));
+
+        Map<String, Status> pluginMap = Map.of(
+                ReportableStubHelper.PLUGIN_CODE_3, Status.DIFF,
+                ReportableStubHelper.PLUGIN_CODE_2, Status.NEW);
+
+        AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
+
+        List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithNoLink();
         AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
 
         AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);

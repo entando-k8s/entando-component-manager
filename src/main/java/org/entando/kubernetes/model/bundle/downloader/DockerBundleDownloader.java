@@ -170,10 +170,6 @@ public class DockerBundleDownloader extends BundleDownloader {
                     .inheritIO(false)
                     .build());
 
-            if (result.getEx() != null) {
-                throw result.getEx();
-            }
-
             ProcessHandler process = result.getProcess();
             if (result.getProcess().exitValue() == 0) {
                 List<String> tagList = process.getOutputLines().stream().collect(Collectors.toList());
@@ -184,10 +180,6 @@ public class DockerBundleDownloader extends BundleDownloader {
                 log.warn("Error fetching image tags, status:'{}'", process.exitValue());
                 throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE);
             }
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            log.warn("Error retrieve tags", ex);
-            throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE, ex);
         } catch (Exception ex) {
             log.warn("Error retrieve tags", ex);
             throw new BundleDownloaderException(ERROR_WHILE_FETCHING_TAGS_IMAGE, ex);
@@ -230,9 +222,6 @@ public class DockerBundleDownloader extends BundleDownloader {
                 .inheritIO(true)
                 .build());
 
-        if (result.getEx() != null) {
-            throw result.getEx();
-        }
         int exitStatus = result.getReturnValue();
         if (exitStatus != 0 || !tarImage.toFile().exists()) {
             log.warn("Error downloading image status:'{}' tarImage exists:'{}'", exitStatus,
@@ -269,9 +258,6 @@ public class DockerBundleDownloader extends BundleDownloader {
                             .inheritIO(true)
                             .build());
 
-            if (result.getEx() != null) {
-                throw result.getEx();
-            }
             int exitStatus = result.getReturnValue();
 
             if (exitStatus != 0) {
@@ -290,31 +276,24 @@ public class DockerBundleDownloader extends BundleDownloader {
         }
     }
 
-    private boolean checker(ExecResult result) {
+    private boolean checker(ExecResult result, Exception ex, int executionNumber) {
         boolean success = result.getReturnValue() == 0;
-        boolean isException = result.getEx() != null;
+        boolean isException = ex != null;
         return success || isException;
     }
 
-    private ExecResult genericExecuteCommand(ExecProcessInputParameters parameters) {
+    private ExecResult genericExecuteCommand(ExecProcessInputParameters parameters, int executionNumber)
+            throws Exception {
         ExecResult result = new ExecResult();
-        try {
 
-            ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(parameters.getCommand(),
-                            parameters.getParams(), parameters.isInheritIO()).start()
-                    .waitFor(parameters.getTimeout());
-            int exitStatus = processHandler.exitValue();
+        ProcessHandler processHandler = ProcessHandlerBuilder.buildCommand(parameters.getCommand(),
+                        parameters.getParams(), parameters.isInheritIO()).start()
+                .waitFor(parameters.getTimeout());
+        int exitStatus = processHandler.exitValue();
 
-            result.setReturnValue(exitStatus);
-            result.setProcess(processHandler);
+        result.setReturnValue(exitStatus);
+        result.setProcess(processHandler);
 
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            result.setEx(ex);
-
-        } catch (IOException ex) {
-            result.setEx(ex);
-        }
         return result;
     }
 
@@ -431,7 +410,6 @@ public class DockerBundleDownloader extends BundleDownloader {
     public static class ExecResult {
 
         private int returnValue;
-        private Exception ex;
         private ProcessHandler process;
 
     }

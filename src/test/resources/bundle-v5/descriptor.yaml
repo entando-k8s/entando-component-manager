@@ -19,3 +19,5 @@ ext:
         it: Dashboard
       target: platform
       url: /dashboard
+
+thumbnail: data:image/png;base64,dGhpcyBpcyBub3QgYW4gaW1hZ2UK

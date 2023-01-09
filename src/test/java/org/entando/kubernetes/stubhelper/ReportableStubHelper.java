@@ -29,6 +29,7 @@ public class ReportableStubHelper {
     public static final String RESOURCE_CODE_2 = "ResouTWO";
     public static final String PLUGIN_CODE_1 = "PlugONE";
     public static final String PLUGIN_CODE_2 = "PlugTWO";
+    public static final String PLUGIN_CODE_3 = "Plug3";
     public static final String CATEGORY_CODE_1 = "CatONE";
     public static final String CATEGORY_CODE_2 = "CatTWO";
     public static final String GROUP_CODE_1 = "GroupNE";
@@ -46,6 +47,16 @@ public class ReportableStubHelper {
         var reportableList = stubAllReportableList();
         reportableList.add(new Reportable(ComponentType.PLUGIN, ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
                 Arrays.asList(new Reportable.Component(PLUGIN_CODE_1, PluginStubHelper.PLUGIN_IMAGE_SHA),
+                        new Reportable.Component(PLUGIN_CODE_2,
+                                "sha256:AAAAf3443c577db1b1df3b47593b07895acab5ef582e5a661c2c1ade6f19ZZZZ"))));
+        return reportableList;
+    }
+
+    public static List<Reportable> stubAllReportableListWithNoLink() {
+
+        var reportableList = stubAllReportableList();
+        reportableList.add(new Reportable(ComponentType.PLUGIN, ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                Arrays.asList(new Reportable.Component(PLUGIN_CODE_3, PluginStubHelper.PLUGIN_IMAGE_SHA),
                         new Reportable.Component(PLUGIN_CODE_2,
                                 "sha256:AAAAf3443c577db1b1df3b47593b07895acab5ef582e5a661c2c1ade6f19ZZZZ"))));
         return reportableList;

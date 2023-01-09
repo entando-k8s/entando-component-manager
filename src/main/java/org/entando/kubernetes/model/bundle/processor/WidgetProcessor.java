@@ -66,7 +66,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     private final WidgetDescriptorValidator descriptorValidator;
     @Setter
     private Map<String, String> pluginIngressPathMap;
-    private static final ObjectMapper jsonMapper = new ObjectMapper();
 
 
     /**
@@ -285,7 +284,6 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             BundleReader bundleReader) {
         //~
         final String widgetFolder = FilenameUtils.removeExtension(descriptorFileName);
-        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         var resources = new ArrayList<String>();
         resources.addAll(bundleReader.getWidgetResourcesOfType(widgetFolder, JS_TYPE));
@@ -296,8 +294,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 return BundleUtilities.buildFullBundleResourcePath(
                         bundleReader,
                         BundleProperty.WIDGET_FOLDER_PATH,
-                        file,
-                        bundleId);
+                        file);
             } catch (IOException e) {
                 throw new EntandoComponentManagerException(e);
             }

@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -34,7 +35,7 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
                 engineService.updateContent(representation);
             }
 
-            if (representation.getStatus().equals(ContentStatus.PUBLIC.toString())) {
+            if (ContentStatus.PUBLIC.toString().equals(representation.getStatus())) {
                 engineService.publishContent(representation);
             }
         });

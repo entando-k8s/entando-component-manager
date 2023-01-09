@@ -8,7 +8,10 @@ import java.net.URL;
 import java.util.List;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -84,5 +87,18 @@ class ValidationFunctionsTest {
         testCasesList.forEach(url ->
                 assertThrows(EntandoValidationException.class,
                         () -> ValidationFunctions.composeUrlForcingHttpProtocolOrThrow(url, "null", "not valid")));
+    }
+
+    @Test
+    void shouldCorrectlyValidateAnEntityCode() {
+        assertThrows(EntandoComponentManagerException.class, () -> ValidationFunctions.validateEntityCodeOrThrow(null));
+        assertThrows(EntandoComponentManagerException.class, () -> ValidationFunctions.validateEntityCodeOrThrow(""));
+        assertThrows(EntandoComponentManagerException.class, () -> ValidationFunctions.validateEntityCodeOrThrow("code1234abcd"));
+        assertThrows(EntandoComponentManagerException.class, () -> ValidationFunctions.validateEntityCodeOrThrow("-code1234abcd"));
+        assertThrows(EntandoComponentManagerException.class, () -> ValidationFunctions.validateEntityCodeOrThrow("code1234abcd-"));
+        assertThrows(EntandoComponentManagerException.class, () -> ValidationFunctions.validateEntityCodeOrThrow("code-1234abcm"));
+
+        final String code = ValidationFunctions.validateEntityCodeOrThrow(BundleStubHelper.BUNDLE_CODE);
+        assertThat(code).isEqualTo(BundleStubHelper.BUNDLE_CODE);
     }
 }

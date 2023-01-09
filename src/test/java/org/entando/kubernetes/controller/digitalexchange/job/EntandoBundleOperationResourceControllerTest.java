@@ -7,15 +7,23 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import lombok.NonNull;
+import java.util.Optional;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.job.EntandoBundleJob;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleInstallService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobService;
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.validator.InstallPlanValidator;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,6 +42,8 @@ class EntandoBundleOperationResourceControllerTest {
     @Mock
     private EntandoBundleInstallService installService;
     @Mock
+    private EntandoBundleService bundleService;
+    @Mock
     private EntandoBundleUninstallService uninstallService;
     @Mock
     private InstallPlanValidator installPlanValidator;
@@ -46,7 +56,7 @@ class EntandoBundleOperationResourceControllerTest {
     public void setup() {
         entandoBundleOperationResourceController = new EntandoBundleOperationResourceController(
                 kubernetesService, jobService, installService, uninstallService, installPlanValidator,
-                authorizationChecker);
+                authorizationChecker, bundleService);
     }
 
     @Test
@@ -65,4 +75,23 @@ class EntandoBundleOperationResourceControllerTest {
         verify(kubernetesService, times(0)).fetchBundleByName(anyString());
         verify(jobService, times(0)).findCompletedOrConflictingInstallJob(any());
     }
+
+    @Test
+    void shouldReturnErrorDuringTheInstallWithInstallReqCreateOnInstalledBundle() {
+        final String bundleId = "bundleId";
+        EntandoBundle bundle = EntandoBundle.builder()
+                .installedJob(EntandoBundleJob.builder().status(JobStatus.INSTALL_COMPLETED).build()).code(bundleId)
+                .build();
+        when(bundleService.getInstalledBundle(bundleId)).thenReturn(Optional.of(bundle));
+        final InstallRequest installReqCreate = InstallRequest.builder().conflictStrategy(InstallAction.CREATE).build();
+
+        Assert.assertThrows(JobConflictException.class,
+                () -> entandoBundleOperationResourceController.install("jwt", bundleId, installReqCreate));
+
+        final InstallRequest installReqNull = InstallRequest.builder().conflictStrategy(null).build();
+        Assert.assertThrows(JobConflictException.class,
+                () -> entandoBundleOperationResourceController.install("jwt", bundleId, installReqNull));
+
+    }
+
 }
