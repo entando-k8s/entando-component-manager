@@ -27,6 +27,7 @@ public class EntandoCoreWidget {
     private String configUiName;
     private String parentCode;
     private Map<String, String> paramsDefaults;
+    private String widgetCategory;
 
     public EntandoCoreWidget(final WidgetDescriptor descriptor) {
         this.code = descriptor.getCode();
@@ -42,6 +43,7 @@ public class EntandoCoreWidget {
         }
         this.parentCode = descriptor.getParentCode();
         this.paramsDefaults = descriptor.getParamsDefaults();
+        this.widgetCategory = descriptor.getWidgetCategory();
     }
 
     private void buildAndSetConfigUiData(WidgetDescriptor descriptor) {

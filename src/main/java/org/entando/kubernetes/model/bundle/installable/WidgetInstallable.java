@@ -16,7 +16,6 @@ import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
 import org.entando.kubernetes.validator.ValidationFunctions;
 
-
 @Slf4j
 public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
@@ -37,7 +36,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
             logConflictStrategyAction();
 
             if (shouldSkip()) {
-                return; //Do nothing
+                return; // Do nothing
             }
 
             if (representation.getType().equals(WidgetDescriptor.TYPE_WIDGET_STANDARD)) {
@@ -72,8 +71,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 representation.getDescriptorMetadata().getTemplateGeneratorService().updateWidgetTemplate(
                         customUi,
                         representation.getApiClaims(),
-                        representation.getDescriptorMetadata().getBundleId())
-        );
+                        representation.getDescriptorMetadata().getBundleId()));
     }
 
     private boolean shouldApplyToAppEngine(WidgetDescriptor descriptor) {
@@ -168,9 +166,10 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 representation.getCode(),
                 representation.getTitles(),
                 representation.getGroup(),
-                null,
-                null,
                 representation.getCustomUiPath(),
+                representation.getWidgetCategory(),
+                null,
+                null,
                 representation.getConfigWidget(),
                 representation.getName(),
                 representation.getType(),
@@ -185,6 +184,8 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
                 representation.getParentName(),
                 representation.getParentCode()
         );
+
+        
         String res = JSONUtilities.serializeDescriptor(cleanedUp);
         if (res.length() >= MAX_COMMON_SIZE_OF_STRINGS) {
             log.warn("Detected possible overflow ({}) in deserialization of widgetDescriptor blob", res.length());
