@@ -38,8 +38,7 @@ public class PageConfigurationInstallable extends Installable<PageDescriptor> {
                     .parallelStream()
                     .forEach(w -> engineService.configurePageWidget(representation, w));
 
-            //Publish Page
-            engineService.setPageStatus(representation.getCode(), EntandoCoreClient.PUBLISHED);
+            engineService.setPageStatus(representation.getCode(), representation.getStatus());
         });
     }
 
