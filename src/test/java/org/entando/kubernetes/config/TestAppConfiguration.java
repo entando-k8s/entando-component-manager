@@ -9,9 +9,11 @@ import java.nio.file.Path;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.mockito.Mockito;
@@ -31,7 +33,7 @@ public class TestAppConfiguration extends AppConfiguration {
 
     @Bean
     @Override
-    public BundleDownloaderFactory bundleDownloaderFactory() {
+    public BundleDownloaderFactory bundleDownloaderFactory(CraneCommand craneCommand) {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(() -> {
             Path bundleFolder;
@@ -42,18 +44,20 @@ public class TestAppConfiguration extends AppConfiguration {
                 bundleFolder = new ClassPathResource("bundle").getFile().toPath();
                 bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
                 bundleFolderInvalidSecret = new ClassPathResource("bundle-invalid-secret").getFile().toPath();
+
                 lenient().when(git.saveBundleLocally(any(EntandoDeBundle.class), any(EntandoDeBundleTag.class)))
                                 .thenAnswer(invocation -> {
                                     final String bundleName = invocation.getArgument(0, EntandoDeBundle.class).getMetadata()
                                             .getName();
                                     if (bundleName.equals(TestInstallUtils.MOCK_BUNDLE_NAME)) {
-                                        return bundleFolder;
+                                        return new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
                                     } else if (bundleName.equals(TestInstallUtils.MOCK_BUNDLE_NAME_V5)) {
-                                        return bundleFolderV5;
+                                        return new DownloadedBundle(bundleFolderV5, BundleStubHelper.BUNDLE_DIGEST);
                                     } else {
-                                        return bundleFolderInvalidSecret;
+                                        return new DownloadedBundle(bundleFolderInvalidSecret, BundleStubHelper.BUNDLE_DIGEST);
                                     }
                                 });
+
                 lenient().when(git.saveBundleLocally(anyString())).thenReturn(bundleFolder);
                 lenient().when(git.createTargetDirectory()).thenReturn(bundleFolder);
                 lenient().when(git.fetchRemoteTags(anyString())).thenReturn(BundleStubHelper.TAG_LIST);

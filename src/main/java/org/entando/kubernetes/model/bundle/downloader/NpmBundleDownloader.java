@@ -31,12 +31,12 @@ import org.springframework.web.client.RestTemplate;
 public class NpmBundleDownloader extends BundleDownloader {
 
     @Override
-    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
+    protected DownloadedBundle saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         try {
             InputStream is = downloadComponentPackage(tag);
             Path tarPath = savePackageStreamLocally(is);
             unpackTar(tarPath, targetPath);
-            return targetPath;
+            return new DownloadedBundle(targetPath, "");
         } catch (IOException e) {
             throw new BundleDownloaderException(e);
         }

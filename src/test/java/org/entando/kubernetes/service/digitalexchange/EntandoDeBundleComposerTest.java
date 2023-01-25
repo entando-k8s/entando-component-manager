@@ -35,6 +35,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,7 @@ class EntandoDeBundleComposerTest {
             .collect(Collectors.toList());
     private final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
     private final BundleDownloaderFactory bundleDownloaderFactory = new TestAppConfiguration(null,
-            null).bundleDownloaderFactory();
+            null).bundleDownloaderFactory(new CraneCommand());
     private EntandoDeBundleComposer deBundleComposer;
     private ObjectMapper objectMapper = new ObjectMapper();
     private K8SServiceClientTestDouble k8SServiceClient;

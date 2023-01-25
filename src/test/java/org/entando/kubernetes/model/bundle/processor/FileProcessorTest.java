@@ -24,6 +24,7 @@ import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.installable.FileInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -50,6 +51,7 @@ class FileProcessorTest extends BaseProcessorTest {
     private BundleReader bundleReader;
     private FileProcessor fileProcessor;
     private final EntandoDeBundle entandoDeBundle = TestEntitiesGenerator.getTestBundle();
+    private DownloadedBundle downloadedBundle;
 
     private List<String> resourceFolderV1 = Arrays.asList("resources/ootb-widgets/static/css/main.ootb.chunk.css",
             "resources/ootb-widgets/static/css/sitemap.css",
@@ -68,7 +70,8 @@ class FileProcessorTest extends BaseProcessorTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder, entandoDeBundle);
+        downloadedBundle = new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
+        bundleReader = new BundleReader(downloadedBundle, entandoDeBundle);
         fileProcessor = new FileProcessor(engineService);
     }
 
@@ -106,7 +109,8 @@ class FileProcessorTest extends BaseProcessorTest {
     @Test
     void testCreateFilesBundleV5() throws IOException {
         Path bundleFolder = new ClassPathResource("bundle-v5").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder, entandoDeBundle);
+        downloadedBundle = new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
+        bundleReader = new BundleReader(downloadedBundle, entandoDeBundle);
 
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
