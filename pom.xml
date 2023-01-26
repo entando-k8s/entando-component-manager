@@ -11,7 +11,7 @@
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>7.1.3</version>
+    <version>7.1.4</version>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Entando Component Manager</name>
