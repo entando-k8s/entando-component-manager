@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
 import io.micrometer.core.instrument.util.StringUtils;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,31 +24,49 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 @Accessors(chain = true)
 public class EntandoBundleVersion {
 
+    public static final String INVALID_VERSION_ERROR = "Tag:'{}' skipped, value not compatible with semantic versioning or admitted values (e.g. v1.0.0)";
+
     private String version;
     @JsonIgnore
     @Setter(AccessLevel.NONE)
     private Version semVersion;
-    //private ZonedDateTime timestamp;
 
     public static EntandoBundleVersion fromEntity(EntandoDeBundleTag tag) {
-        //.timestamp() TODO how to read from k8s custom model?
-        try {
-            return new EntandoBundleVersion().setVersion(tag.getVersion());
-        } catch (IllegalArgumentException | ParseException ex) {
-            log.info("Tag:'{}' skipped, value not compatible with semantic versioning or admitted values (e.g. v1.0.0)",
-                    tag.getVersion());
-            log.debug("error: ", ex);
-            return null;
-        }
+        return fromString(tag.getVersion())
+                .map(v -> new EntandoBundleVersion(tag.getVersion(), v))
+                .orElse(null);
     }
 
     public EntandoBundleVersion setVersion(String version) {
-        this.version = version;
-        this.semVersion = Version.valueOf(version.replaceAll("^v", ""));
-        return this;
+        return fromString(version)
+                .map(v -> {
+                    this.semVersion = v;
+                    this.version = version;
+                    return this;
+                })
+                .orElse(null);
+    }
+
+    public static Optional<Version> fromString(String version) {
+        try {
+            return Optional.of(Version.valueOf(version.replaceAll("^v", "")));
+        } catch (IllegalArgumentException | ParseException ex) {
+            log.info(INVALID_VERSION_ERROR, version);
+            log.debug("error: ", ex);
+            return Optional.empty();
+        }
     }
 
     public boolean isSnapshot() {
         return StringUtils.isNotBlank(this.getSemVersion().getPreReleaseVersion());
+    }
+
+    public static boolean isSemanticVersion(String version) {
+        try {
+            Version.valueOf(version);
+            return true;
+        } catch (IllegalArgumentException | ParseException ex) {
+            return false;
+        }
     }
 }

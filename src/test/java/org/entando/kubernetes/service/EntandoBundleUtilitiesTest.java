@@ -359,6 +359,25 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
+    void shouldReturnAnEmptyOptionalIfLatestIsNotValid() {
+
+        Map<String, Object> failingDistTag = Map.of(
+                "version", "main",
+                "tarball", "docker://registry.hub.docker.com/my-org/my-bundle");
+        EntandoDeBundleDetails deBundleDetails = new EntandoDeBundleDetails("my-bundle", "", failingDistTag,
+                Collections.emptyList(), Collections.emptyList(), "");
+
+        List<EntandoDeBundle> notValidBundles = List.of(
+                new EntandoDeBundle(),
+                new EntandoDeBundleBuilder().withSpec(new EntandoDeBundleSpec(deBundleDetails, null)).build()
+        );
+
+        notValidBundles.forEach(entandoDeBundle -> {
+            assertThat(BundleUtilities.composeLatestVersionFromDistTags(entandoDeBundle).isEmpty());
+        });
+    }
+
+    @Test
     void shouldComposeTheExpectedBundleIdentifier() {
 
         Map<String, String> testCasesMap = Map.of(
@@ -574,7 +593,8 @@ public class EntandoBundleUtilitiesTest {
     void shouldExtractNameFromEntityCode() {
         assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractNameFromEntityCode(null));
         assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractNameFromEntityCode(""));
-        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractNameFromEntityCode("code1234abcd"));
+        assertThrows(EntandoComponentManagerException.class,
+                () -> BundleUtilities.extractNameFromEntityCode("code1234abcd"));
 
         final String name = BundleUtilities.extractNameFromEntityCode(BundleStubHelper.BUNDLE_CODE);
         assertThat(name).isEqualTo(BundleStubHelper.BUNDLE_NAME);
@@ -584,7 +604,8 @@ public class EntandoBundleUtilitiesTest {
     void shouldExtractIdFromEntityCode() {
         assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractIdFromEntityCode(null));
         assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractIdFromEntityCode(""));
-        assertThrows(EntandoComponentManagerException.class, () -> BundleUtilities.extractIdFromEntityCode("code1234abcd"));
+        assertThrows(EntandoComponentManagerException.class,
+                () -> BundleUtilities.extractIdFromEntityCode("code1234abcd"));
 
         final String id = BundleUtilities.extractIdFromEntityCode(BundleStubHelper.BUNDLE_CODE);
         assertThat(id).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
