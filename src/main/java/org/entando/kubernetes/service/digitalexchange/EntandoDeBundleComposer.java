@@ -93,15 +93,9 @@ public class EntandoDeBundleComposer {
             return MAIN_VERSION;
         } else {
             return tagList.stream()
-                    .map(tag -> {
-                        try {
-                            return new EntandoBundleVersion().setVersion(tag);
-                        } catch (Exception e) {
-                            log.error("Tag {} is not semver compliant. Ignoring it.", tag);
-                            return null;
-                        }
-                    })
+                    .map(tag -> new EntandoBundleVersion().setVersion(tag))
                     .filter(Objects::nonNull)
+                    .filter(v -> !v.isSnapshot())
                     .min(Comparator.comparing(EntandoBundleVersion::getSemVersion))
                     .map(EntandoBundleVersion::getVersion)
                     .orElseThrow(() -> new EntandoComponentManagerException("Cannot find the first bundle version"));
@@ -201,6 +195,7 @@ public class EntandoDeBundleComposer {
 
         return deBundleTags.stream()
                 .map(EntandoBundleVersion::fromEntity)
+                .filter(Objects::nonNull)
                 .max(Comparator.comparing(EntandoBundleVersion::getSemVersion))
                 .map(EntandoBundleVersion::getVersion)
                 .orElseThrow(() -> new EntandoComponentManagerException("Cannot find the latest bundle version"));
@@ -285,14 +280,7 @@ public class EntandoDeBundleComposer {
     private List<EntandoDeBundleTag> createTagsFrom(List<String> tagList, String bundleUrl) {
 
         return tagList.stream()
-                .map(tag -> {
-                    try {
-                        return new EntandoBundleVersion().setVersion(tag);
-                    } catch (Exception e) {
-                        log.error("Tag {} is not semver compliant. Ignoring it.", tag);
-                        return null;
-                    }
-                })
+                .map(tag -> new EntandoBundleVersion().setVersion(tag))
                 .filter(Objects::nonNull)
                 .map(semver -> new EntandoDeBundleTagBuilder()
                         .withVersion(semver.getVersion())
