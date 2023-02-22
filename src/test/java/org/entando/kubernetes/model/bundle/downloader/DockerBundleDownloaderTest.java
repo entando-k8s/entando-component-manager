@@ -10,6 +10,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,11 +30,13 @@ class DockerBundleDownloaderTest {
             "{\"auths\": {\"myrepo\": {\"username\": \"unuseduser\",\"password\": \"unusedpassword\"}}}";
     private static final BundleDownloaderFactory factory = new BundleDownloaderFactory();
 
+    private static CraneCommand craneCommand;
+
     @BeforeAll
     static void setup() {
         factory.setDefaultSupplier(GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
-
+        craneCommand = new CraneCommand();
     }
 
 
@@ -44,7 +47,7 @@ class DockerBundleDownloaderTest {
         }
 
         factory.registerSupplier(BundleDownloaderType.DOCKER,
-                () -> new DockerBundleDownloader(300, 3, 600, UNUSED_CREDENTIALS));
+                () -> new DockerBundleDownloader(300, 3, 600, UNUSED_CREDENTIALS, craneCommand));
         EntandoDeBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
@@ -59,8 +62,8 @@ class DockerBundleDownloaderTest {
         BundleDownloader dockerDownloader = factory.newDownloader(tag);
         assertThat(dockerDownloader).isInstanceOf(DockerBundleDownloader.class);
 
-        Path target1 = dockerDownloader.saveBundleLocally(bundle, tag);
-        Path expectedFile1 = target1.resolve("descriptor.yaml");
+        DownloadedBundle downloadedBundle = dockerDownloader.saveBundleLocally(bundle, tag);
+        Path expectedFile1 = downloadedBundle.getLocalBundlePath().resolve("descriptor.yaml");
         assertThat(expectedFile1.toFile()).exists();
 
         Path target2 = dockerDownloader.saveBundleLocally(
@@ -77,7 +80,7 @@ class DockerBundleDownloaderTest {
         }
 
         factory.registerSupplier(BundleDownloaderType.DOCKER,
-                () -> new DockerBundleDownloader(300, 3, 600, UNUSED_CREDENTIALS));
+                () -> new DockerBundleDownloader(300, 3, 600, UNUSED_CREDENTIALS, craneCommand));
         String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + ":" + ENTANDO_TEST_DOCKER_BUNDLE_TAG;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_TAG)
@@ -99,7 +102,8 @@ class DockerBundleDownloaderTest {
             return;
         }
 
-        factory.registerSupplier(BundleDownloaderType.DOCKER, () -> new DockerBundleDownloader(300, 3, 600, null));
+        factory.registerSupplier(BundleDownloaderType.DOCKER,
+                () -> new DockerBundleDownloader(300, 3, 600, null, craneCommand));
         String url = ENTANDO_TEST_DOCKER_BUNDLE_ADDRESS + "WRONG_TAG" + ":" + ENTANDO_TEST_DOCKER_BUNDLE_TAG;
         EntandoDeBundleTag tag = new EntandoDeBundleTagBuilder()
                 .withVersion(ENTANDO_TEST_DOCKER_BUNDLE_TAG)
@@ -120,7 +124,7 @@ class DockerBundleDownloaderTest {
         }
 
         factory.registerSupplier(BundleDownloaderType.DOCKER,
-                () -> new DockerBundleDownloader(300, 3, 600, WRONG_CREDENTIALS));
+                () -> new DockerBundleDownloader(300, 3, 600, WRONG_CREDENTIALS, craneCommand));
         EntandoDeBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")
@@ -146,7 +150,7 @@ class DockerBundleDownloaderTest {
         }
 
         factory.registerSupplier(BundleDownloaderType.DOCKER,
-                () -> new DockerBundleDownloader(300, 3, 600, "{as , ]}"));
+                () -> new DockerBundleDownloader(300, 3, 600, "{as , ]}", craneCommand));
         EntandoDeBundle bundle = new EntandoDeBundleBuilder()
                 .withNewMetadata()
                 .withName("my-name")

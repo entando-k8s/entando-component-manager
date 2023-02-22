@@ -18,6 +18,7 @@ import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.installable.DirectoryInstallable;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -44,7 +45,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     private BundleReader bundleReader;
     private DirectoryProcessor directoryProcessor;
     private final EntandoDeBundle entandoDeBundle = TestEntitiesGenerator.getTestBundle();
-    private Path bundleFolderV5;
+    private DownloadedBundle downloadedBundle;
 
     private List<String> resourceFolder = Arrays
             .asList("resources/ootb-widgets", "resources/ootb-widgets/static", "resources/ootb-widgets/static/css",
@@ -56,14 +57,19 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     @BeforeEach
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
-        Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
-        bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
-        bundleReader = new BundleReader(bundleFolder, entandoDeBundle);
+        Path bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
+        downloadedBundle = new DownloadedBundle(bundleFolderV5, BundleStubHelper.BUNDLE_DIGEST);
+        bundleReader = new BundleReader(downloadedBundle, entandoDeBundle);
         directoryProcessor = new DirectoryProcessor(engineService);
     }
 
     @Test
-    void testCreateFoldersV1() {
+    void testCreateFoldersV1() throws IOException {
+
+        Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+        DownloadedBundle downloadedBundle = new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
+        BundleReader bundleReader = new BundleReader(downloadedBundle, entandoDeBundle);
+
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
@@ -81,7 +87,7 @@ class DirectoryProcessorTest extends BaseProcessorTest {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
 
-        bundleReader = new BundleReader(bundleFolderV5, entandoDeBundle);
+        bundleReader = new BundleReader(downloadedBundle, entandoDeBundle);
         final List<? extends Installable> installables = directoryProcessor.process(bundleReader);
 
         assertThat(installables).hasSize(1);
@@ -92,9 +98,13 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void shouldExtractRootFolderV1() {
+    void shouldExtractRootFolderV1() throws IOException {
         final EntandoBundleJobEntity job = new EntandoBundleJobEntity();
         job.setComponentId("my-component-id");
+
+        Path bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+        DownloadedBundle downloadedBundle = new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
+        BundleReader bundleReader = new BundleReader(downloadedBundle, entandoDeBundle);
 
         List<DirectoryDescriptor> rootFolders = directoryProcessor
                 .process(bundleReader).stream()

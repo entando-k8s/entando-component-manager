@@ -7,9 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.bundle.downloader.ProcessHandler;
 import org.entando.kubernetes.model.bundle.downloader.ProcessHandlerBuilder;
 import org.entando.kubernetes.model.bundle.downloader.ProcessHandlerUtils;
+import org.entando.kubernetes.service.digitalexchange.DockerUtilities;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -26,7 +28,7 @@ public class CraneCommand {
 
         ProcessHandlerUtils.killProcessContainsName(CRANE_CMD);
 
-        List<String> params = Arrays.asList("digest", image);
+        List<String> params = Arrays.asList("digest", DockerUtilities.removeDockerProtocol(image));
 
         ProcessHandler processHandler;
         try {
