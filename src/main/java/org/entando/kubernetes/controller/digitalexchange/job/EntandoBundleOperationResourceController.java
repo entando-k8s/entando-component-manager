@@ -137,7 +137,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .orElseGet(() -> installService.installWithInstallPlan(bundle, tag, request));
 
         return ResponseEntity.created(
-                getJobLocationURI(installJob))
+                        getJobLocationURI(installJob))
                 .body(new SimpleRestResponse<>(installJob));
     }
 
@@ -168,7 +168,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         try {
             EntandoBundleJobEntity uninstallJob = uninstallService.uninstall(componentId);
             return ResponseEntity.created(
-                    getJobLocationURI(uninstallJob))
+                            getJobLocationURI(uninstallJob))
                     .body(new SimpleRestResponse<>(uninstallJob));
         } catch (JobConflictException e) {
             SimpleRestResponse<EntandoBundleJobEntity> restResponse = new SimpleRestResponse<>();
