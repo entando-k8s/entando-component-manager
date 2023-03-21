@@ -34,6 +34,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
@@ -285,7 +286,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     parentJobResult = rollback(scheduler, parentJobResult);
                 } else {
 
-                    saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor());
+                    saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor(),
+                            bundleReader.getBundleDigest());
                     parentJobResult.clearException();
                     parentJobResult.setStatus(JobStatus.INSTALL_COMPLETED);
                     parentJobResult.setProgress(1.0);
@@ -345,8 +347,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private BundleReader downloadBundleAndGetBundleReader(BundleDownloader bundleDownloader, EntandoDeBundle bundle,
             EntandoDeBundleTag tag) {
 
-        Path pathToDownloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
-        return new BundleReader(pathToDownloadedBundle, bundle);
+        final DownloadedBundle downloadedBundle = bundleDownloader.saveBundleLocally(bundle, tag);
+        return new BundleReader(downloadedBundle, bundle);
     }
 
     private Queue<Installable> getBundleInstallableComponents(BundleReader bundleReader, InstallAction conflictStrategy,
@@ -449,7 +451,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
 
     private void saveAsInstalledBundle(EntandoDeBundle bundle, EntandoBundleJobEntity job,
-            BundleDescriptor bundleDescriptor) {
+            BundleDescriptor bundleDescriptor, String bundleDigest) {
 
         EntandoBundleEntity installedComponent = bundleRepository
                 .findByBundleCode(bundle.getMetadata().getName())
@@ -461,6 +463,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         installedComponent.setBundleType(BundleUtilities.extractBundleTypeFromBundle(bundle).toString());
         installedComponent.setExt(bundleDescriptor.getExt());
         installedComponent.setInstalled(true);
+        installedComponent.setImageDigest(bundleDigest);
         bundleRepository.save(installedComponent);
         log.info("Component " + job.getComponentId() + " registered as installed in the system");
     }

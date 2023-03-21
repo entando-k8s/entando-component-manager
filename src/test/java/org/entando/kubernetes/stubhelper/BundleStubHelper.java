@@ -20,6 +20,7 @@ public class BundleStubHelper {
     public static final String V1_1_0 = "v1.1.0";
     public static final String V1_2_0 = "v1.2.0";
     public static final List<String> TAG_LIST = List.of(V1_0_0, V1_1_0, V1_2_0);
+    public static final String BUNDLE_DIGEST = "sha256:0642ce789fb639c5dda6b039c224f2245afecf5923db9dc165f81c138bd1609b";
     private static final String THUMBNAIL =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAsVBMV"
                     + "EUGL4f///8AoOAGLYYAKIQGKYMApOMAmNoDabMFPpL5+/0AmttWaqUFQZMDcroBlNYGN40EXqsEVaM/XKAAJIMnSZYAIIIAJYN3h7UADH"

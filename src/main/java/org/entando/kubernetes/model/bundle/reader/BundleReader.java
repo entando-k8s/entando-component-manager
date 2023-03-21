@@ -30,6 +30,7 @@ import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.FileDescriptor;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -39,6 +40,7 @@ public class BundleReader {
 
     private final YAMLMapper mapper = new YAMLMapper();
     private final Path bundleBasePath;
+    private final String bundleDigest;
     private EntandoDeBundle entandoDeBundle;
     private BundleDescriptor bundleDescriptor;
     private String bundleUrl;
@@ -47,15 +49,18 @@ public class BundleReader {
     public BundleReader(Path filePath) {
         this.bundleBasePath = filePath;
         this.entandoDeBundle = null;
+        this.bundleDigest = "";
     }
 
     public BundleReader(Path filePath, String bundleUrl) {
         this.bundleBasePath = filePath;
         this.bundleUrl = bundleUrl;
+        this.bundleDigest = "";
     }
 
-    public BundleReader(Path filePath, EntandoDeBundle entandoDeBundle) {
-        this.bundleBasePath = filePath;
+    public BundleReader(DownloadedBundle downloadedBundle, EntandoDeBundle entandoDeBundle) {
+        this.bundleBasePath = downloadedBundle.getLocalBundlePath();
+        this.bundleDigest = downloadedBundle.getBundleDigest();
         this.entandoDeBundle = entandoDeBundle;
     }
 
@@ -276,5 +281,9 @@ public class BundleReader {
 
     public String getBundleName() {
         return bundleName;
+    }
+
+    public String getBundleDigest() {
+        return bundleDigest;
     }
 }

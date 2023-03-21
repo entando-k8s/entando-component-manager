@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
@@ -21,17 +22,20 @@ public abstract class BundleDownloader {
 
     }
 
-    public Path saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
+    public DownloadedBundle saveBundleLocally(EntandoDeBundle bundle, EntandoDeBundleTag tag) {
         log.info("Downloading bundle " + bundle.getMetadata().getName() + "@" + tag.getVersion() + " locally");
         try {
             createTargetDirectory();
-            saveBundleStrategy(tag, targetPath);
+            DownloadedBundle downloadedBundle = saveBundleStrategy(tag, targetPath);
+            if (ObjectUtils.isNotEmpty(downloadedBundle.getBundleDigest())) {
+                log.info("Bundle digest: " + downloadedBundle.getBundleDigest());
+            }
             log.info("Bundle downloaded locally at path " + targetPath.toAbsolutePath());
+            return downloadedBundle;
         } catch (BundleDownloaderException | IOException e) {
             log.error("An error occurred during download operation", e);
             throw new BundleDownloaderException(e);
         }
-        return this.targetPath;
     }
 
     public Path saveBundleLocally(String url) {
@@ -47,7 +51,7 @@ public abstract class BundleDownloader {
         return this.targetPath;
     }
 
-    protected abstract Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
+    protected abstract DownloadedBundle saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath);
 
     protected abstract Path saveBundleStrategy(String url, Path targetPath);
 

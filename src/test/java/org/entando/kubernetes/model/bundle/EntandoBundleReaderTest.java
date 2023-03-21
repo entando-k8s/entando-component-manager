@@ -40,6 +40,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.ConfigUi;
+import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
@@ -63,10 +64,12 @@ public class EntandoBundleReaderTest {
     Path bundleFolderV5;
     BundleReader bundleReaderNoWidgetsV5;
     Path bundleFolderNoWidgetsV5;
+    DownloadedBundle downloadedBundle;
 
     @BeforeEach
     public void readNpmPackage() throws IOException {
         bundleFolder = new ClassPathResource("bundle").getFile().toPath();
+        downloadedBundle = new DownloadedBundle(bundleFolder, BundleStubHelper.BUNDLE_DIGEST);
         bundleReader = new BundleReader(bundleFolder, BundleInfoStubHelper.GIT_REPO_ADDRESS);
         bundleFolderV5 = new ClassPathResource("bundle-v5").getFile().toPath();
         bundleReaderV5 = new BundleReader(bundleFolder, BundleInfoStubHelper.GIT_REPO_ADDRESS);
@@ -82,7 +85,7 @@ public class EntandoBundleReaderTest {
 
     @Test
     void shouldReturnAValidBundleIdWhenEntandoBundleIsPassedToTheConstructor() {
-        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        bundleReader = new BundleReader(downloadedBundle, BundleStubHelper.stubEntandoDeBundle());
         assertThat(bundleReader.getDeBundleMetadataName()).isEqualTo(BundleStubHelper.BUNDLE_NAME);
     }
 
@@ -90,19 +93,19 @@ public class EntandoBundleReaderTest {
     void shouldReturnAValidBundleUrlWhenEntandoBundleIsPassedToTheConstructor() {
         final EntandoDeBundle deBundle = new EntandoDeBundleBuilder().withNewSpec().addNewTag()
                 .withTarball(BundleInfoStubHelper.GIT_REPO_ADDRESS).endTag().endSpec().build();
-        bundleReader = new BundleReader(bundleFolder, deBundle);
+        bundleReader = new BundleReader(downloadedBundle, deBundle);
         assertThat(bundleReader.getBundleUrl()).isEqualTo(BundleInfoStubHelper.GIT_REPO_ADDRESS);
     }
 
     @Test
     void shouldThrowExceptionWhileReadingABundleUrlIfTheBunbleUrlIsNotSet() {
-        bundleReader = new BundleReader(bundleFolder, BundleStubHelper.stubEntandoDeBundle());
+        bundleReader = new BundleReader(downloadedBundle, BundleStubHelper.stubEntandoDeBundle());
         assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
 
-        bundleReader = new BundleReader(bundleFolder, new EntandoDeBundleBuilder().withNewSpec().endSpec().build());
+        bundleReader = new BundleReader(downloadedBundle, new EntandoDeBundleBuilder().withNewSpec().endSpec().build());
         assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
 
-        bundleReader = new BundleReader(bundleFolder, new EntandoDeBundleBuilder().withNewSpec()
+        bundleReader = new BundleReader(downloadedBundle, new EntandoDeBundleBuilder().withNewSpec()
                 .addNewTag().endTag().endSpec().build());
         assertThrows(EntandoComponentManagerException.class, () -> bundleReader.getBundleUrl());
     }
@@ -427,26 +430,8 @@ public class EntandoBundleReaderTest {
         assertThat(files).isEmpty();
     }
 
-    private Path getTestDefaultBundlePath() throws IOException {
-        return getBundlePath(TestInstallUtils.MOCK_BUNDLE_NAME_TGZ);
-    }
-
     private Path getBundlePath(String bundleName) throws IOException {
         return new ClassPathResource(bundleName).getFile().toPath();
-    }
-
-    private TarArchiveInputStream getGzipTarInputStream() throws IOException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("inail_bundle-0.0.1.tgz");
-        InputStream gzis = new GzipCompressorInputStream(is);
-        return new TarArchiveInputStream(gzis);
-    }
-
-    private TarArchiveEntry nextTarArchiveEntry(TarArchiveInputStream is) throws UncheckedIOException {
-        try {
-            return is.getNextTarEntry();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static class DumbComponentProcessor implements ComponentProcessor<DumbDescriptor> {

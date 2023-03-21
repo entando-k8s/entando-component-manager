@@ -19,6 +19,7 @@ import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitProcessListener;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,14 +65,14 @@ public class AppConfiguration {
     }
 
     @Bean
-    public BundleDownloaderFactory bundleDownloaderFactory() {
+    public BundleDownloaderFactory bundleDownloaderFactory(CraneCommand craneCommand) {
         BundleDownloaderFactory factory = new BundleDownloaderFactory();
         factory.setDefaultSupplier(
                 () -> BundleDownloaderFactory.getForType(type, bundleDownloadTimeoutSeconds, bundleDownloadRetries,
-                        bundleDecompressTimeoutSeconds, containerRegistryCredentials));
+                        bundleDecompressTimeoutSeconds, containerRegistryCredentials, craneCommand));
         factory.registerSupplier(BundleDownloaderType.DOCKER,
                 () -> new DockerBundleDownloader(bundleDownloadTimeoutSeconds, bundleDownloadRetries,
-                        bundleDecompressTimeoutSeconds, containerRegistryCredentials));
+                        bundleDecompressTimeoutSeconds, containerRegistryCredentials, craneCommand));
         factory.registerSupplier(BundleDownloaderType.GIT, GitBundleDownloader::new);
         factory.registerSupplier(BundleDownloaderType.NPM, NpmBundleDownloader::new);
         return factory;

@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -209,6 +210,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
         return bundles.stream()
                 .map(this::convertToBundleFromEcr)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -333,35 +335,17 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .lastJob(lastJob)
                 .versions(deBundle.getSpec().getTags().stream()
                         .map(EntandoBundleVersion::fromEntity) //TODO how to read timestamp from k8s custom model?
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList()))
                 .build();
 
-        final EntandoBundleVersion latestVersionFromDistTag = findLatestVersionFromDistTag(deBundle);
+        final EntandoBundleVersion latestVersionFromDistTag = BundleUtilities.composeLatestVersionFromDistTags(deBundle)
+                .orElse(null);
         bundle.setLatestVersion(latestVersionFromDistTag);
 
         bundle.setRepoUrl(getLatestTagRepoUrl(deBundle, latestVersionFromDistTag));
 
         return bundle;
-    }
-
-    /**
-     * identify and return the latest version from distTag property of the received EntandoDeBundle.
-     *
-     * @param deBundle the EntandoDeBundle of which identify and return the latest version
-     * @return the latest version shaped as EntandoBundleVersion
-     */
-    private EntandoBundleVersion findLatestVersionFromDistTag(EntandoDeBundle deBundle) {
-
-        EntandoDeBundleDetails details = deBundle.getSpec().getDetails();
-
-        if (details != null && details.getDistTags() != null && details.getDistTags()
-                .containsKey(BundleUtilities.LATEST_VERSION)) {
-
-            return new EntandoBundleVersion()
-                    .setVersion(details.getDistTags().get(BundleUtilities.LATEST_VERSION).toString());
-        } else {
-            return BundleUtilities.composeLatestVersionFromDistTags(deBundle).orElse(null);
-        }
     }
 
     /**
@@ -392,6 +376,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         // otherwise let's calculate the latest from the tags list
         Optional<EntandoBundleVersion> latestVersionOpt = tags.stream()
                 .map(tag -> new EntandoBundleVersion().setVersion(tag.getVersion()))
+                .filter(Objects::nonNull)
                 .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
 
         if (latestVersionOpt.isEmpty()) {

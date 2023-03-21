@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -140,9 +141,10 @@ public class BundleUtilities {
 
         // get the latest from the spec.details.dist-tags.latest property if available
         if (details.getDistTags() != null
-                && details.getDistTags().containsKey(LATEST_VERSION)) {
+                && details.getDistTags().containsKey(LATEST_VERSION)
+                && EntandoBundleVersion.isSemanticVersion(details.getDistTags().get(LATEST_VERSION).toString())) {
 
-            latestVersionOpt = Optional.of(new EntandoBundleVersion()
+            latestVersionOpt = Optional.ofNullable(new EntandoBundleVersion()
                     .setVersion(details.getDistTags().get(LATEST_VERSION).toString()));
 
         } else if (!CollectionUtils.isEmpty(details.getVersions())) {
@@ -150,6 +152,7 @@ public class BundleUtilities {
             // calculate the latest from the versions list
             latestVersionOpt = details.getVersions().stream()
                     .map(version -> new EntandoBundleVersion().setVersion(version))
+                    .filter(Objects::nonNull)
                     .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
         } else {
             latestVersionOpt = Optional.empty();
