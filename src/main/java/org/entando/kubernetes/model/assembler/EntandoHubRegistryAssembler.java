@@ -48,6 +48,10 @@ public class EntandoHubRegistryAssembler {
             entandoHubRegistryEntity.setId(UUID.fromString(dto.getId()));
         }
 
+        if (!ObjectUtils.isEmpty(dto.getApiKey())) {
+            entandoHubRegistryEntity.setApiKey(dto.getApiKeyAsSha(dto.getApiKey()));
+        }
+
         return entandoHubRegistryEntity;
     }
 }

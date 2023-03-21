@@ -15,6 +15,7 @@
 package org.entando.kubernetes.model.entandohub;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 
 @Data
@@ -34,6 +36,8 @@ public class EntandoHubRegistry {
     private String id;
     private String name;
     private String url;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String apiKey;
 
     @JsonIgnore
     public URL getUrlAsURL() {
@@ -42,5 +46,10 @@ public class EntandoHubRegistry {
         } catch (MalformedURLException e) {
             throw new EntandoComponentManagerException("Error during URL parsing " + url);
         }
+    }
+
+    @JsonIgnore
+    public String getApiKeyAsSha(String apiKey) {
+        return DigestUtils.sha3_512Hex(apiKey);
     }
 }
