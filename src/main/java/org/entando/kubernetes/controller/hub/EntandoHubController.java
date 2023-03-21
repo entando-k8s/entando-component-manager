@@ -46,6 +46,7 @@ public class EntandoHubController implements EntandhoHubResource {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());
             }
+            // FIXME controllare che il risultato sia 200
             return (PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>) clientResponse.getPayload();
         } catch (Throwable t) {
             log.error("error getting bundle groups!", t);
@@ -57,16 +58,24 @@ public class EntandoHubController implements EntandhoHubResource {
     @Override
     public PagedContent<BundleDto, BundleEntityDto> getBundles(@RequestParam String host, @RequestParam Integer page, @RequestParam Integer pageSize, @RequestParam(required = false) String bundleGroupId, @RequestParam(required=false) String[] descriptorVersions) {
         try {
-        ProxiedPayload clientResponse = hubClientService.getBundles(host, Map.of(
-                "page", page,
-                "pageSize", pageSize,
-                "descriptorVersions", descriptorVersions
-        ));
-        if (clientResponse.hasError()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());
-        }
-        return (PagedContent<BundleDto, BundleEntityDto>) clientResponse.getPayload();
+            Map<String, Object> params = new HashMap<>();
+
+            if (page != null) {
+                params.put("page", page);
+            }
+            if (pageSize != null) {
+                params.put("pageSize", pageSize);
+            }
+            if (descriptorVersions != null) {
+                params.put("descriptorVersions", descriptorVersions);
+            }
+            ProxiedPayload clientResponse = hubClientService.getBundles(host, params);
+            // FIXME controllare che il risultato sia 200
+            if (clientResponse.hasError()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());
+            }
+            return (PagedContent<BundleDto, BundleEntityDto>) clientResponse.getPayload();
         } catch (Throwable t) {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "error in getaBundles ", t);
