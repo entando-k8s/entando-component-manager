@@ -37,7 +37,6 @@ public class EntandoHubRegistry {
     private String id;
     private String name;
     private String url;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Schema(accessMode = Schema.AccessMode.WRITE_ONLY)
     private String apiKey;
 
