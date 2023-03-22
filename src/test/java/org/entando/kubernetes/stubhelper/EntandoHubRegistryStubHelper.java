@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 
@@ -19,6 +20,8 @@ public class EntandoHubRegistryStubHelper {
     public static final String REGISTRY_ID_3 = "69e4a917-ad6a-4965-9aa5-c7e5a5914d0c";
     public static final String REGISTRY_NAME_3 = "name_3";
     public static final String REGISTRY_URL_STRING_3 = "http://www.entando.com/registry_3";
+    public static final String REGISTRY_API_KEY_1 = "gKOTQ9w5lSdKA3cg1aSpF2VY2vVHyk0sOVPMl4FjXKfXwri20hV";
+
 
     @SneakyThrows
     public static EntandoHubRegistry stubEntandoHubRegistry1() {
@@ -44,6 +47,15 @@ public class EntandoHubRegistryStubHelper {
                 .setUrl(REGISTRY_URL_STRING_3);
     }
 
+    @SneakyThrows
+    public static EntandoHubRegistry stubEntandoHubRegistry4() {
+        return new EntandoHubRegistry()
+                .setId(REGISTRY_ID_1)
+                .setName(REGISTRY_NAME_1)
+                .setUrl(REGISTRY_URL_STRING_1)
+                .setApiKey(REGISTRY_API_KEY_1);
+    }
+
     public static List<EntandoHubRegistry> stubListOfEntandoHubRegistry() {
         return Arrays.asList(stubEntandoHubRegistry1(), stubEntandoHubRegistry2());
     }
@@ -62,6 +74,15 @@ public class EntandoHubRegistryStubHelper {
                 .setId(UUID.fromString(REGISTRY_ID_2))
                 .setName(REGISTRY_NAME_2)
                 .setUrl(new URL(REGISTRY_URL_STRING_2));
+    }
+
+    @SneakyThrows
+    public static EntandoHubRegistryEntity stubEntandoHubRegistryEntity4() {
+        return new EntandoHubRegistryEntity()
+                .setId(UUID.fromString(REGISTRY_ID_1))
+                .setName(REGISTRY_NAME_1)
+                .setUrl(new URL(REGISTRY_URL_STRING_1))
+                .setApiKey(DigestUtils.sha3_512Hex(REGISTRY_API_KEY_1));
     }
 
     public static List<EntandoHubRegistryEntity> stubListOfEntandoHubRegistryEntity() {

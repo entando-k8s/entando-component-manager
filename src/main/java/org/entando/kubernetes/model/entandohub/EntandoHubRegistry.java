@@ -16,6 +16,7 @@ package org.entando.kubernetes.model.entandohub;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.AllArgsConstructor;
@@ -37,6 +38,7 @@ public class EntandoHubRegistry {
     private String name;
     private String url;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Schema(accessMode = Schema.AccessMode.WRITE_ONLY)
     private String apiKey;
 
     @JsonIgnore
