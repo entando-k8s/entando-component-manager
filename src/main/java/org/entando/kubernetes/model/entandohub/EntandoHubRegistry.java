@@ -15,7 +15,6 @@
 package org.entando.kubernetes.model.entandohub;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.MalformedURLException;
 import java.net.URL;
