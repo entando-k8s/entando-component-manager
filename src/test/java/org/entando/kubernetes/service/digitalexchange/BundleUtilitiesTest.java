@@ -5,8 +5,10 @@ import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.ext
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("unit")
 class BundleUtilitiesTest {
 
     @Test

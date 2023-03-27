@@ -15,6 +15,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +62,7 @@ class EntandoDeBundleComposerTest {
     private EntandoDeBundleComposer deBundleComposer;
     private ObjectMapper objectMapper = new ObjectMapper();
     private K8SServiceClientTestDouble k8SServiceClient;
+    private BundleTagFilterManager bundleTagFilterManager;
 
     EntandoDeBundleComposerTest() throws MalformedURLException {
     }
@@ -68,11 +70,14 @@ class EntandoDeBundleComposerTest {
     @BeforeEach
     public void setup() {
         k8SServiceClient = new K8SServiceClientTestDouble();
-        deBundleComposer = new EntandoDeBundleComposer(bundleDownloaderFactory, k8SServiceClient);
+        bundleTagFilterManager = mock(BundleTagFilterManager.class);
+        deBundleComposer = new EntandoDeBundleComposer(bundleDownloaderFactory, k8SServiceClient, bundleTagFilterManager);
     }
 
     @Test
     void shouldReturnTheExpectedBundleDescriptorWhileComposingIt() {
+
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
 
         Stream.of(
                         BundleInfoStubHelper.GIT_REPO_ADDRESS,
@@ -93,6 +98,7 @@ class EntandoDeBundleComposerTest {
     @Test
     void shouldBeAbleToComposeEntandoDeBundleEvenWithoutBundleGroups() {
         BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setBundleGroups(null);
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
 
         final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
 
@@ -104,6 +110,8 @@ class EntandoDeBundleComposerTest {
 
     @Test
     void shouldBeAbleToComposeEntandoDeBundleEvenHavingOnlyBundleGroupsName() {
+
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
 
         // given a bundle info with null bundle groups id
         final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
@@ -121,6 +129,8 @@ class EntandoDeBundleComposerTest {
 
     @Test
     void shouldBeAbleToComposeEntandoDeBundleEvenHavingOnlyBundleGroupsId() {
+
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
 
         // given a bundle info with null bundle groups name
         final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
@@ -140,9 +150,10 @@ class EntandoDeBundleComposerTest {
     @Test
     void shouldBeAbleToComposeEntandoDeBundleWithBundleGroupsFromKubeCr() throws JsonProcessingException {
 
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
+
         // given a bundle info with null bundle groups name
         final BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setBundleGroups(null);
-
 
         final EntandoDeBundle bundle = BundleStubHelper.stubEntandoDeBundle();
         Map<String, String> annotations = new HashMap<>();
@@ -158,7 +169,7 @@ class EntandoDeBundleComposerTest {
         K8SServiceClient k8SServiceClientLocal = mock(K8SServiceClient.class);
         when(k8SServiceClientLocal.getBundlesInObservedNamespaces(any())).thenReturn(Collections.singletonList(bundle));
         EntandoDeBundleComposer deBundleComposerLocal = new EntandoDeBundleComposer(bundleDownloaderFactory,
-                k8SServiceClientLocal);
+                k8SServiceClientLocal, bundleTagFilterManager);
 
         // when the debundle gets composed
         final EntandoDeBundle deBundle = deBundleComposerLocal.composeEntandoDeBundle(bundleInfo);
@@ -211,6 +222,8 @@ class EntandoDeBundleComposerTest {
     @Test
     void shouldThrowExceptionWhenComposingABundleAndReceivingANullOrInvalidUrl() {
 
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
+
         bundleInfo.setGitRepoAddress(null);
         assertThrows(EntandoValidationException.class, () -> deBundleComposer.composeEntandoDeBundle(bundleInfo));
 
@@ -226,6 +239,8 @@ class EntandoDeBundleComposerTest {
 
     @Test
     void shouldIgnoreBundleTagsNotCompliantWithSemver() {
+
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
 
         List<String> tagList = new ArrayList<>();
         tagList.add("not_working_version");
@@ -251,6 +266,8 @@ class EntandoDeBundleComposerTest {
 
     @Test
     void shouldBeAbleToComposeEntandoDeBundleWithThumbnailFromDescriptorForBundleV5() {
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
+
         final String DESCR_IMAGE = "data:image/png;base64,dGhpcyBpcyBub3QgYW4gaW1hZ2UK";
         List<String> tagList = new ArrayList<>();
         tagList.addAll(BundleStubHelper.TAG_LIST);
@@ -275,6 +292,8 @@ class EntandoDeBundleComposerTest {
 
     @Test
     void shouldBeAbleToComposeEntandoDeBundleWithThumbnailFromDescriptorForBundleV1() {
+        when(bundleTagFilterManager.filterTagsByEnvironment(any())).thenAnswer(i -> ((Collection<?>)i.getArguments()[0]).stream());
+
         List<String> tagList = new ArrayList<>();
         tagList.addAll(BundleStubHelper.TAG_LIST);
 
