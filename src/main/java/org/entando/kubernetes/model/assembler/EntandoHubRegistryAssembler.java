@@ -49,7 +49,7 @@ public class EntandoHubRegistryAssembler {
         }
 
         if (!ObjectUtils.isEmpty(dto.getApiKey())) {
-            entandoHubRegistryEntity.setApiKey(dto.getApiKeyAsSha(dto.getApiKey()));
+            entandoHubRegistryEntity.setApiKey(dto.getApiKey());
         }
 
         return entandoHubRegistryEntity;

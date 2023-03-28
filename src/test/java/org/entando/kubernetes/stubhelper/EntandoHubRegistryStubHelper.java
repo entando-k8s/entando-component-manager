@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.SneakyThrows;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 
@@ -20,7 +19,7 @@ public class EntandoHubRegistryStubHelper {
     public static final String REGISTRY_ID_3 = "69e4a917-ad6a-4965-9aa5-c7e5a5914d0c";
     public static final String REGISTRY_NAME_3 = "name_3";
     public static final String REGISTRY_URL_STRING_3 = "http://www.entando.com/registry_3";
-    public static final String REGISTRY_API_KEY_1 = "gKOTQ9w5lSdKA3cg1aSpF2VY2vVHyk0sOVPMl4FjXKfXwri20hV";
+    public static final String REGISTRY_API_KEY_1 = "a34fd4e4-ad09-4e15-ae33-55222d337337";
 
 
     @SneakyThrows
@@ -82,7 +81,7 @@ public class EntandoHubRegistryStubHelper {
                 .setId(UUID.fromString(REGISTRY_ID_1))
                 .setName(REGISTRY_NAME_1)
                 .setUrl(new URL(REGISTRY_URL_STRING_1))
-                .setApiKey(DigestUtils.sha3_512Hex(REGISTRY_API_KEY_1));
+                .setApiKey(REGISTRY_API_KEY_1);
     }
 
     public static List<EntandoHubRegistryEntity> stubListOfEntandoHubRegistryEntity() {
