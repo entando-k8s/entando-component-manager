@@ -49,11 +49,14 @@ public class EntandoDeBundleComposer {
     private final K8SServiceClient k8SServiceClient;
     private static final String MAIN_VERSION = "main";
     private ObjectMapper objectMapper = new ObjectMapper();
+    private BundleTagFilterManager bundleTagFilterManager;
 
     @Autowired
-    public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory, K8SServiceClient k8SServiceClient) {
+    public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory, K8SServiceClient k8SServiceClient,
+            BundleTagFilterManager bundleTagFilterManager) {
         this.downloaderFactory = downloaderFactory;
         this.k8SServiceClient = k8SServiceClient;
+        this.bundleTagFilterManager = bundleTagFilterManager;
     }
 
     /**
@@ -79,26 +82,30 @@ public class EntandoDeBundleComposer {
             throw new EntandoComponentManagerException("No versions available for the received bundle");
         }
 
+        List<String> filteredTagList = bundleTagFilterManager.filterTagsByEnvironment(tagList)
+                .collect(Collectors.toList());
+
         final BundleDescriptor bundleDescriptor = this.fetchBundleDescriptor(bundleDownloader,
-                bundleInfo.getGitRepoAddress(), selectVersionToFetch(tagList));
+                bundleInfo.getGitRepoAddress(), selectVersionToFetch(filteredTagList));
         if (bundleDescriptor == null) {
             throw new EntandoComponentManagerException("Null bundle descriptor");
         }
 
-        return createEntandoDeBundle(bundleDescriptor, tagList, bundleInfo);
+        return createEntandoDeBundle(bundleDescriptor, filteredTagList, bundleInfo);
     }
 
-    private String selectVersionToFetch(List<String> tagList) {
+    public String selectVersionToFetch(List<String> tagList) {
         if (tagList.contains(MAIN_VERSION)) {
             return MAIN_VERSION;
         } else {
-            return tagList.stream()
+            return bundleTagFilterManager.filterTagsByEnvironment(tagList)
                     .map(tag -> new EntandoBundleVersion().setVersion(tag))
                     .filter(Objects::nonNull)
-                    .filter(v -> !v.isSnapshot())
                     .min(Comparator.comparing(EntandoBundleVersion::getSemVersion))
                     .map(EntandoBundleVersion::getVersion)
-                    .orElseThrow(() -> new EntandoComponentManagerException("Cannot find the first bundle version"));
+                    .orElseThrow(() -> new EntandoComponentManagerException(
+                            "Cannot find the first bundle version because no tag is compliant with the semantic "
+                                    + "versioning and with the selected tag environment profile"));
         }
     }
 
