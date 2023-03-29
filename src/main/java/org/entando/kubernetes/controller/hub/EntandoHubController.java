@@ -7,7 +7,6 @@ import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
-import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,27 +35,17 @@ public class EntandoHubController implements EntandhoHubResource {
 
 
     @Override
-    public PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> getaBundleGroupVersionsAndFilterThem(
+    public PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> getBundleGroupVersionsAndFilterThem(
 //            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @PathVariable(value = "id") String id,
+            @PathVariable String id,
             @RequestParam Integer page,
             @RequestParam Integer pageSize,
             @RequestParam(required = false) String[] descriptorVersions) {
         try {
-            Map<String, Object> params = new HashMap<>();
-
-            if (page != null) {
-                params.put("page", page);
-            }
-            if (pageSize != null) {
-                params.put("pageSize", pageSize);
-            }
-            if (descriptorVersions != null) {
-                params.put("descriptorVersions", descriptorVersions);
-            }
+            Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
 
             String host = registryService.getRegistry(id).getUrl();
-            ProxiedPayload clientResponse = hubClientService.searchBundleGroupVersions(host, params);
+            ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> clientResponse = hubClientService.searchBundleGroupVersions(host, params);
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());
@@ -72,35 +61,42 @@ public class EntandoHubController implements EntandhoHubResource {
     }
 
     @Override
-    public PagedContent<BundleDto, BundleEntityDto> getBundles(@PathVariable(value = "id") String id,
+    public PagedContent<BundleDto, BundleEntityDto> getBundles(@PathVariable String id,
                                                                @RequestParam Integer page,
                                                                @RequestParam Integer pageSize,
                                                                @RequestParam(required = false) String bundleGroupId,
-                                                               @RequestParam(required=false) String[] descriptorVersions) {
+                                                               @RequestParam(required = false) String[] descriptorVersions) {
         try {
-            Map<String, Object> params = new HashMap<>();
+            Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
+            params.put("bundleGroupId", bundleGroupId);
 
-            if (page != null) {
-                params.put("page", page);
-            }
-            if (pageSize != null) {
-                params.put("pageSize", pageSize);
-            }
-            if (descriptorVersions != null) {
-                params.put("descriptorVersions", descriptorVersions);
-            }
             String host = registryService.getRegistry(id).getUrl();
-            ProxiedPayload clientResponse = hubClientService.getBundles(host, params);
-            // FIXME controllare che il risultato sia 200
+            ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> clientResponse = hubClientService.getBundles(host, params);
+
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());
             }
-            return (PagedContent<BundleDto, BundleEntityDto>) clientResponse.getPayload();
+            return clientResponse.getPayload();
         } catch (Throwable t) {
             throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "error in getaBundles ", t);
+                    HttpStatus.INTERNAL_SERVER_ERROR, "error in getBundles ", t);
         }
+    }
+
+    private static Map<String, Object> getParamsToMap(Integer page, Integer pageSize, String[] descriptorVersions) {
+        Map<String, Object> params = new HashMap<>();
+
+        if (page != null) {
+            params.put("page", page);
+        }
+        if (pageSize != null) {
+            params.put("pageSize", pageSize);
+        }
+        if (descriptorVersions != null) {
+            params.put("descriptorVersions", descriptorVersions);
+        }
+        return params;
     }
 
 }

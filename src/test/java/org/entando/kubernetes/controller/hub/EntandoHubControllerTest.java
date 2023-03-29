@@ -74,7 +74,7 @@ public class EntandoHubControllerTest {
     @Test
     public void testBundleGroupControllerService() {
         PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> result =
-                controller.getaBundleGroupVersionsAndFilterThem("http://localhost:7762", 1, 1, new String[] {"v1", "v5"});
+                controller.getBundleGroupVersionsAndFilterThem("http://localhost:7762", 1, 1, new String[] {"v1", "v5"});
         assertNotNull(result);
         assertThat(result, instanceOf(PagedContent.class));
 

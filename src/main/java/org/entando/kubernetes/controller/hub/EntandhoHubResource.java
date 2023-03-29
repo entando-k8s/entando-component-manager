@@ -15,8 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface EntandhoHubResource {
 
     @GetMapping(value = "/bundlegroups/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> getaBundleGroupVersionsAndFilterThem(@PathVariable(value = "id") String id, @RequestParam Integer page, @RequestParam Integer pageSize, @RequestParam(required = false) String[] descriptorVersions);
+    PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> getBundleGroupVersionsAndFilterThem(
+            @PathVariable String id, @RequestParam Integer page, @RequestParam Integer pageSize,
+            @RequestParam(required = false) String[] descriptorVersions);
 
     @GetMapping(value = "/bundles/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    PagedContent<BundleDto, BundleEntityDto> getBundles(@PathVariable(value = "id") String id, @RequestParam Integer page, @RequestParam Integer pageSize, @RequestParam(required = false) String bundleGroupId, @RequestParam(required = false) String[] descriptorVersions);
+    PagedContent<BundleDto, BundleEntityDto> getBundles(@PathVariable String id, @RequestParam Integer page,
+            @RequestParam Integer pageSize, @RequestParam(required = false) String bundleGroupId,
+            @RequestParam(required = false) String[] descriptorVersions);
 }

@@ -7,15 +7,16 @@ import org.springframework.http.HttpStatus;
 
 @Data
 @Builder
-public class ProxiedPayload {
+public class ProxiedPayload<T> {
 
     private HttpStatus status;
-    private Object payload;
+    private T payload;
     private String exceptionMessage;
     private String exceptionClass;
 
     public boolean hasError() {
-        return (StringUtils.isNotBlank(exceptionMessage)
+        return ! status.is2xxSuccessful() ||
+                (StringUtils.isNotBlank(exceptionMessage)
                 && StringUtils.isNotBlank(exceptionMessage));
     }
 }

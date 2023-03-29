@@ -18,19 +18,22 @@ public class HubClientService {
 
     private Logger log = LoggerFactory.getLogger(HubClientService.class);
 
-    public ProxiedPayload searchBundleGroupVersions(String host, Map<String, Object> params) {
+    public ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> searchBundleGroupVersions(
+            String host, Map<String, Object> params) {
         return doPagedGet(host, BUNDLEGROUPS_API_PATH,
                 new ParameterizedTypeReference<PagedContent<BundleGroupVersionFilteredResponseView,
-                        BundleGroupVersionEntityDto>>() {}, params);
+                        BundleGroupVersionEntityDto>>() {
+                }, params);
     }
 
-    public ProxiedPayload getBundles(String host, Map<String, Object> params) {
+    public ProxiedPayload<PagedContent<BundleDto,BundleEntityDto>> getBundles(String host, Map<String, Object> params) {
         return doPagedGet(host, BUNDLE_API_PATH,
-                new ParameterizedTypeReference<PagedContent<BundleDto,
-                        BundleEntityDto>>() {}, params);
+                new ParameterizedTypeReference<PagedContent<BundleDto, BundleEntityDto>>() {
+                }, params);
     }
 
-    private ProxiedPayload doPagedGet(String host, String apiPath, ParameterizedTypeReference typedContent, Map<String, Object> params) {
+    private <T> ProxiedPayload<T> doPagedGet(String host, String apiPath, ParameterizedTypeReference typedContent,
+            Map<String, Object> params) {
         RestTemplate restTemplate = new RestTemplate();
         ProxiedPayload payload;
 
@@ -82,20 +85,21 @@ public class HubClientService {
 
     /**
      * Creates endpoint URL
-     * @param params map query parameters (value can be a String[])
+     *
+     * @param params  map query parameters (value can be a String[])
      * @param builder the generated builder
      */
     private static void generateUriBuilder(Map<String, Object> params, UriComponentsBuilder builder) {
-        if (params != null)
-            params.entrySet().stream()
-                    .forEach(e -> {
-                        if (e.getValue() instanceof String[]) {
-                            Arrays.stream((String [])e.getValue())
-                                    .forEach(l -> builder.queryParam(e.getKey(), l));
-                        } else {
-                            builder.queryParam(e.getKey(), e.getValue());
-                        }
-                    });
+        if (params != null) {
+            params.forEach((key, value) -> {
+                if (value instanceof String[]) {
+                    Arrays.stream((String[]) value)
+                            .forEach(l -> builder.queryParam(key, l));
+                } else {
+                    builder.queryParam(key, value);
+                }
+            });
+        }
     }
 
     public static final String BUNDLEGROUPS_API_PATH = "appbuilder/api/bundlegroups/";
