@@ -1,6 +1,8 @@
 package org.entando.kubernetes.client.hub;
 
 import org.entando.kubernetes.client.hub.domain.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import java.util.Map;
 @Service
 public class HubClientService {
 
+    private Logger log = LoggerFactory.getLogger(HubClientService.class);
 
     public ProxiedPayload searchBundleGroupVersions(String host, Map<String, Object> params) {
         return doPagedGet(host, BUNDLEGROUPS_API_PATH,
@@ -27,11 +30,12 @@ public class HubClientService {
                         BundleEntityDto>>() {}, params);
     }
 
-    private static ProxiedPayload doPagedGet(String host, String apiPath, ParameterizedTypeReference typedContent, Map<String, Object> params) {
+    private ProxiedPayload doPagedGet(String host, String apiPath, ParameterizedTypeReference typedContent, Map<String, Object> params) {
         RestTemplate restTemplate = new RestTemplate();
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(host);
         ProxiedPayload payload;
+
         try {
+            UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(host);
             generateUriBuilder(params, builder);
             builder.path(apiPath);
             final String endpointUrl = builder.build().toString();
@@ -41,7 +45,7 @@ public class HubClientService {
                     .status(response.getStatusCode())
                     .build();
         } catch (Throwable t) {
-            t.printStackTrace(); // FIXME usare log
+            log.error("error performing paged GET", t);
             payload = ProxiedPayload.builder()
                     .exceptionMessage(t.getMessage())
                     .exceptionClass(t.getClass().getCanonicalName())
@@ -67,6 +71,7 @@ public class HubClientService {
                     .status(response.getStatusCode())
                     .build();
         } catch (Throwable t) {
+            log.error("error performing paged GET", t);
             payload = ProxiedPayload.builder()
                     .exceptionMessage(t.getMessage())
                     .exceptionClass(t.getClass().getCanonicalName())

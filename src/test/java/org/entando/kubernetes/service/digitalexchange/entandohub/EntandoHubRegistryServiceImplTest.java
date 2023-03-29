@@ -1,17 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange.entandohub;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.entando.kubernetes.assertionhelper.EntandoHubRegistryAssertionHelper;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.web.NotFoundException;
@@ -26,6 +14,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -144,4 +144,23 @@ class EntandoHubRegistryServiceImplTest {
         verify(repository, times(0)).delete(any());
         assertThat(name).isEmpty();
     }
+
+    @Test
+    void shouldThrowExceptionOnGetNotFoundRegistry() {
+        EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
+        when(repository.findById(registryToSave.getId())).thenReturn(Optional.empty());
+
+        final EntandoHubRegistry entandoHubRegistry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
+        Assertions.assertThrows(NotFoundException.class, () -> this.service.getRegistry(entandoHubRegistry.getId()));
+    }
+
+    @Test
+    void shouldGetWantedRegistry() {
+        EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
+        when(repository.findById(registryToSave.getId())).thenReturn(Optional.of(registryToSave));
+
+        final EntandoHubRegistry current = this.service.getRegistry(EntandoHubRegistryStubHelper.stubEntandoHubRegistry1().getId());
+        EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistries(current, registryToSave);
+    }
+
 }

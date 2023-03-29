@@ -29,8 +29,7 @@ import java.util.Scanner;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -81,6 +80,27 @@ public class HubClientServiceTest {
         }
     }
 
+    @Test
+    public void testBundleServiceNoParams() {
+        ProxiedPayload proxiedPayload =
+                hubClientService.getBundles(mockServer.getApiRoot(), null);
+        assertNotNull(proxiedPayload);
+        assertThat(proxiedPayload.getPayload(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
+        assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
+    }
+
+    @Test
+    public void testBundleServiceNoData() {
+        ProxiedPayload proxiedPayload =
+                hubClientService.getBundles(null, null);
+        assertNotNull(proxiedPayload);
+        assertThat(proxiedPayload.getPayload(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
+        assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
+    }
 
     @Test
     public void testBundleService() throws JSONException {
@@ -96,6 +116,8 @@ public class HubClientServiceTest {
             assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.OK));
             assertNotNull(proxiedPayload);
             assertNotNull(proxiedPayload.getPayload());
+            assertNotNull(proxiedPayload.getStatus());
+            assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.OK));
             assertThat(proxiedPayload.getPayload(), instanceOf(PagedContent.class));
             PagedContent pc = (PagedContent) proxiedPayload.getPayload();
             assertNotNull(pc.getMetadata());
@@ -116,6 +138,28 @@ public class HubClientServiceTest {
             t.printStackTrace();
             throw t;
         }
+    }
+
+    @Test
+    public void testBundleGroupServiceNoParams() {
+        ProxiedPayload proxiedPayload =
+                hubClientService.searchBundleGroupVersions(mockServer.getApiRoot(), null);
+        assertNotNull(proxiedPayload);
+        assertThat(proxiedPayload.getPayload(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
+        assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
+    }
+
+    @Test
+    public void testBundleGroupServiceNoData() {
+        ProxiedPayload proxiedPayload =
+                hubClientService.searchBundleGroupVersions(null, null);
+        assertNotNull(proxiedPayload);
+        assertThat(proxiedPayload.getPayload(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
+        assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
     }
 
     @Test

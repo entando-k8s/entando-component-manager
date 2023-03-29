@@ -39,6 +39,13 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
         this.repository = repository;
     }
 
+//    @Override
+    public EntandoHubRegistry getRegistry(String id) {
+        return repository.findById(UUID.fromString(id))
+                .map(EntandoHubRegistryAssembler::toEntandoHubRegistry)
+                .orElseThrow(() -> new NotFoundException("No registry found with the given ID"));
+    }
+
     @Override
     public List<EntandoHubRegistry> listRegistries() {
         return EntandoHubRegistryAssembler.toListOfEntandoHubRegistry(

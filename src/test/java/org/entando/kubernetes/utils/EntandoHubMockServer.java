@@ -20,7 +20,7 @@ public class EntandoHubMockServer extends EntandoGenericMockServer {
     }
 
     private void addBundleGroup(WireMockServer wireMockServer) {
-        wireMockServer.stubFor(get(urlMatching("/appbuilder/api/bundlegroups/.*"))
+        wireMockServer.stubFor(get(urlEqualTo("/appbuilder/api/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1"))
                 // not correctly handled so far https://github.com/wiremock/wiremock/issues/398
 //                .withQueryParam("page", WireMock.equalTo("1"))
 //                .withQueryParam("descriptorVersions", WireMock.equalTo("v5"))
