@@ -3,8 +3,11 @@ package org.entando.kubernetes.config;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,8 +41,16 @@ public class OpenApiConfig {
                                                 .scheme("bearer")
                                                 .bearerFormat("JWT")
                                 )
+                                .addSchemas("HubRegistryResponseSchema", getHubRegistryResponseSchema())
                 )
                 .info(new Info().title(apiTitle).version(apiVersion));
+    }
+
+    private Schema getHubRegistryResponseSchema() {
+        return new Schema<Map<String, String>>()
+                .addProperties("id",new StringSchema().example("string"))
+                .addProperties("name",new StringSchema().example("string"))
+                .addProperties("url",new StringSchema().example("string"));
     }
 }
 

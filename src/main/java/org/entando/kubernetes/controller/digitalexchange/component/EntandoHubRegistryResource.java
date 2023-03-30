@@ -15,6 +15,8 @@
 package org.entando.kubernetes.controller.digitalexchange.component;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
@@ -36,19 +38,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface EntandoHubRegistryResource {
 
     @Operation(description = "Returns available Entando Hub registries")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = {
+            @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(ref = "#/components/schemas/HubRegistryResponseSchema"))})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<List<EntandoHubRegistry>>> getRegistries();
 
     @Operation(description = "Add new Entando Hub registry")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = {
+            @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(ref = "#/components/schemas/HubRegistryResponseSchema"))})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> addRegistry(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
             @RequestBody EntandoHubRegistry entandoHubRegistry);
 
     @Operation(description = "Update an Entando Hub registry")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = {
+            @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(ref = "#/components/schemas/HubRegistryResponseSchema"))})
     @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<EntandoHubRegistry>> updateRegistry(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,

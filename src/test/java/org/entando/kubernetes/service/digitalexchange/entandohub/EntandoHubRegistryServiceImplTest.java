@@ -144,4 +144,40 @@ class EntandoHubRegistryServiceImplTest {
         verify(repository, times(0)).delete(any());
         assertThat(name).isEmpty();
     }
+
+    @Test
+    void shouldReturnTheExpectedEntandoHubRegistryOnCreateRegistryWithApiKey() {
+
+        EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity4();
+
+        when(repository.findByName(registryToSave.getName())).thenReturn(
+                Optional.empty());
+        when(repository.findByUrl(registryToSave.getUrl())).thenReturn(
+                Optional.empty());
+        when(repository.save(registryToSave)).thenReturn(registryToSave);
+
+        final EntandoHubRegistry current = this.service.createRegistry(
+                EntandoHubRegistryStubHelper.stubEntandoHubRegistry4());
+
+        EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistries(current, registryToSave);
+    }
+
+    @Test
+    void shouldReturnTheExpectedEntandoHubRegistryOnUpdateExistingRegistryWithApiKey() {
+
+        EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity4();
+
+        when(repository.findByNameAndIdNot(registryToSave.getName(), registryToSave.getId())).thenReturn(
+                Optional.empty());
+        when(repository.findByUrlAndIdNot(registryToSave.getUrl(), registryToSave.getId())).thenReturn(
+                Optional.empty());
+        when(repository.findById(registryToSave.getId())).thenReturn(Optional.of(registryToSave));
+        when(repository.save(registryToSave)).thenReturn(registryToSave);
+
+        final EntandoHubRegistry current = this.service.updateRegistry(
+                EntandoHubRegistryStubHelper.stubEntandoHubRegistry4());
+
+        EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistries(current, registryToSave);
+    }
+
 }

@@ -45,6 +45,8 @@ public class EntandoHubRegistryEntity {
     private String name;
     @Column
     private URL url;
+    @Column
+    private String apiKey;
 
     @PrePersist
     public void generateId() {
