@@ -14,16 +14,16 @@ import java.util.Set;
 @ToString
 @Jacksonized
 public class BundleEntityDto {
-    
+
     private Long id;
     private String name;
     private String description;
     private String gitRepoAddress;
     private String gitSrcRepoAddress;
     private String dependencies;
-    
-    private DescriptorVersion descriptorVersion = DescriptorVersion.V1;
-    
+
+    private HubDescriptorVersion descriptorVersion = HubDescriptorVersion.V1;
+
 	private Set<BundleGroupVersionEntityDto> bundleGroupVersions;
 
 }

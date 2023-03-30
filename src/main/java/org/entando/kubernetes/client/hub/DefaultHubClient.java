@@ -14,10 +14,11 @@ import java.util.Arrays;
 import java.util.Map;
 
 @Service
-public class HubClientService {
+public class DefaultHubClient implements HubClient {
 
-    private Logger log = LoggerFactory.getLogger(HubClientService.class);
+    private Logger log = LoggerFactory.getLogger(DefaultHubClient.class);
 
+    @Override
     public ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> searchBundleGroupVersions(
             String host, Map<String, Object> params) {
         return doPagedGet(host, BUNDLEGROUPS_API_PATH,
@@ -26,6 +27,7 @@ public class HubClientService {
                 }, params);
     }
 
+    @Override
     public ProxiedPayload<PagedContent<BundleDto,BundleEntityDto>> getBundles(String host, Map<String, Object> params) {
         return doPagedGet(host, BUNDLE_API_PATH,
                 new ParameterizedTypeReference<PagedContent<BundleDto, BundleEntityDto>>() {

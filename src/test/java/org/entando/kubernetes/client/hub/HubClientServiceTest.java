@@ -2,7 +2,7 @@ package org.entando.kubernetes.client.hub;
 
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
-import org.entando.kubernetes.client.hub.domain.DescriptorVersion;
+import org.entando.kubernetes.client.hub.domain.HubDescriptorVersion;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
 import org.entando.kubernetes.utils.EntandoHubMockServer;
 import org.json.JSONArray;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class HubClientServiceTest {
 
     @Spy
-    private HubClientService hubClientService = new HubClientService();
+    private DefaultHubClient hubClientService = new DefaultHubClient();
 
     private static EntandoHubMockServer mockServer;
 
@@ -133,7 +133,7 @@ public class HubClientServiceTest {
             assertThat(bundle.getDescription(), equalTo("Description default"));
             assertThat(bundle.getGitRepoAddress(), equalTo("https://github.com/account/bundle-uri-1.git"));
             assertThat(bundle.getGitSrcRepoAddress(), equalTo("https://github.com/account/source-url-1.git"));
-            assertThat(bundle.getDescriptorVersion(), equalTo(DescriptorVersion.V1.toString()));
+            assertThat(bundle.getDescriptorVersion(), equalTo(HubDescriptorVersion.V1.toString()));
         } catch (Throwable t) {
             t.printStackTrace();
             throw t;

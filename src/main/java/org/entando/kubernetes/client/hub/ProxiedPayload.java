@@ -19,4 +19,9 @@ public class ProxiedPayload<T> {
                 (StringUtils.isNotBlank(exceptionMessage)
                 && StringUtils.isNotBlank(exceptionMessage));
     }
+
+    public ProxiedPayload<T> payload(T payload) {
+        this.payload = payload;
+        return this;
+    }
 }

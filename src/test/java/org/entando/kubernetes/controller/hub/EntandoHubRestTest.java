@@ -1,7 +1,7 @@
 package org.entando.kubernetes.controller.hub;
 
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
-import org.entando.kubernetes.client.hub.HubClientService;
+import org.entando.kubernetes.client.hub.DefaultHubClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.junit.Assert;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
@@ -39,7 +38,7 @@ public class EntandoHubRestTest {
     private MockMvc mockMvc;
 
     @SpyBean
-    private HubClientService clientService;
+    private DefaultHubClient clientService;
     @BeforeEach
     public void setup() {
         Assert.assertNotNull(context);

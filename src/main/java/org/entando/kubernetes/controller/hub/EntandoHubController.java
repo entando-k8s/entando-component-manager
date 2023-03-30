@@ -1,13 +1,12 @@
 package org.entando.kubernetes.controller.hub;
 
-import org.entando.kubernetes.client.hub.HubClientService;
 import org.entando.kubernetes.client.hub.ProxiedPayload;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
-import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
+import org.entando.kubernetes.service.HubService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,12 +24,10 @@ public class EntandoHubController implements EntandhoHubResource {
 
     Logger log = LoggerFactory.getLogger(EntandoHubController.class);
 
-    private final HubClientService hubClientService;
-    private final EntandoHubRegistryService registryService;
+    private final HubService hubService;
 
-    public EntandoHubController(HubClientService hubClientService, EntandoHubRegistryService registryService) {
-        this.hubClientService = hubClientService;
-        this.registryService = registryService;
+    public EntandoHubController(HubService hubService) {
+        this.hubService = hubService;
     }
 
 
@@ -44,19 +41,20 @@ public class EntandoHubController implements EntandhoHubResource {
         try {
             Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
 
-            String host = registryService.getRegistry(id).getUrl();
-            ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> clientResponse = hubClientService.searchBundleGroupVersions(host, params);
+            ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> clientResponse = hubService.searchBundleGroupVersions(id, params);
+
+            // TODO should this return the status code gotten by the hub client?
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());
             }
-            // FIXME controllare che il risultato sia 200
-            return (PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>) clientResponse.getPayload();
+
+            return clientResponse.getPayload();
         } catch (Throwable t) {
             t.printStackTrace();
             log.error("error getting bundle groups!", t);
             throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "error in getaBundleGroupVersionsAndFilterThem ", t);
+                    HttpStatus.INTERNAL_SERVER_ERROR, "error in getBundleGroupVersionsAndFilterThem ", t);
         }
     }
 
@@ -70,9 +68,9 @@ public class EntandoHubController implements EntandhoHubResource {
             Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
             params.put("bundleGroupId", bundleGroupId);
 
-            String host = registryService.getRegistry(id).getUrl();
-            ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> clientResponse = hubClientService.getBundles(host, params);
+            ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> clientResponse = hubService.getBundles(id, params);
 
+            // TODO should this return the status code gotten by the hub client?
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: " + clientResponse.getExceptionMessage());

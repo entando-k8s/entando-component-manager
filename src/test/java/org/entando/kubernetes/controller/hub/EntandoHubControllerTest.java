@@ -1,69 +1,75 @@
 package org.entando.kubernetes.controller.hub;
 
-import org.entando.kubernetes.client.hub.HubClientService;
+import java.util.Map;
+import org.entando.kubernetes.assertionhelper.HubAssertionHelper;
+import org.entando.kubernetes.client.hub.DefaultHubClient;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
-import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
+import org.entando.kubernetes.service.HubService;
+import org.entando.kubernetes.stubhelper.HubStubHelper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 
-@AutoConfigureWireMock(port = 7762)
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@ActiveProfiles({"test"})
+//@AutoConfigureWireMock(port = 7762)
+//@SpringBootTest(
+//        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+//@AutoConfigureMockMvc
+//@ActiveProfiles({"test"})
+@Tag("unit")
+@ExtendWith(MockitoExtension.class)
 public class EntandoHubControllerTest {
 
-    @LocalServerPort
-    private int localServerPort;
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
+//    @LocalServerPort
+//    private int localServerPort;
+//    @Autowired
+//    private MockMvc mockMvc;
+//    @Autowired
     private EntandoHubController controller;
-    private HubClientService clientService;
-    private HubClientService hubClientService;
-    private EntandoHubRegistryService registryService;
+    @Mock
+    private HubService hubService;
+//    private HubClientService hubClientService;
+//    private EntandoHubRegistryService registryService;
 
 
     @BeforeEach
     public void setup() throws Exception {
         try {
-            clientService = new HubClientService();
-            controller = new EntandoHubController(clientService, registryService);
+//            clientService = new DefaultHubClient();
+            controller = new EntandoHubController(hubService);
             // wiremock stuff
-            stubFor(get(urlMatching("/appbuilder/api/bundlegroups/.*"))
-                    .willReturn(aResponse()
-                            .withStatus(200)
-                            .withHeader("Content-Type", HAL_JSON_VALUE)
-                            .withBody(BUNDLEGROUP_RESPONSE_JSON)));
-            stubFor(get(urlMatching("/appbuilder/api/bundles/.*"))
-                    .willReturn(aResponse()
-                            .withStatus(200)
-                            .withHeader("Content-Type", HAL_JSON_VALUE)
-                            .withBody(BUNDLE_RESPONSE_JSON)));
+//            stubFor(get(urlMatching("/appbuilder/api/bundlegroups/.*"))
+//                    .willReturn(aResponse()
+//                            .withStatus(200)
+//                            .withHeader("Content-Type", HAL_JSON_VALUE)
+//                            .withBody(BUNDLEGROUP_RESPONSE_JSON)));
+//            stubFor(get(urlMatching("/appbuilder/api/bundles/.*"))
+//                    .willReturn(aResponse()
+//                            .withStatus(200)
+//                            .withHeader("Content-Type", HAL_JSON_VALUE)
+//                            .withBody(BUNDLE_RESPONSE_JSON)));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,23 +79,32 @@ public class EntandoHubControllerTest {
 
     @Test
     public void testBundleGroupControllerService() {
-        PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> result =
-                controller.getBundleGroupVersionsAndFilterThem("http://localhost:7762", 1, 1, new String[] {"v1", "v5"});
-        assertNotNull(result);
-        assertThat(result, instanceOf(PagedContent.class));
 
-        PagedContent pc = (PagedContent) result;
-        assertNotNull(pc.getMetadata());
-        assertNotNull(pc.getPayload());
-        assertThat(pc.getPayload(), instanceOf(List.class));
+        when(hubService.searchBundleGroupVersions(anyString(), any()))
+                .thenReturn(HubStubHelper.stubBundleGroupVersionsProxiedPayload());
 
-        Object elem = pc.getPayload().get(0);
-        assertThat(elem, instanceOf(BundleGroupVersionFilteredResponseView.class));
-        BundleGroupVersionFilteredResponseView bgv = (BundleGroupVersionFilteredResponseView) elem;
-        assertThat(bgv.getBundleGroupId(), equalTo((long)1));
-        assertThat(bgv.getBundleGroupVersionId(), equalTo((long)4));
-        assertThat(bgv.getDocumentationUrl(), equalTo("http://docm.me"));
-        assertThat(bgv.isPublicCatalog(), equalTo(true));
+        final PagedContent pagedContent = controller.getBundleGroupVersionsAndFilterThem(
+                "hostId", 1, 1, new String[]{"v1", "v5"});
+
+        HubAssertionHelper.assertOnBundleGroupVersionsPagedContent(pagedContent);
+
+//        PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> result =
+//                controller.getBundleGroupVersionsAndFilterThem("hostId", 1, 1, new String[] {"v1", "v5"});
+//        assertNotNull(result);
+//        assertThat(result, instanceOf(PagedContent.class));
+//
+//        PagedContent pc = (PagedContent) result;
+//        assertNotNull(pc.getMetadata());
+//        assertNotNull(pc.getPayload());
+//        assertThat(pc.getPayload(), instanceOf(List.class));
+//
+//        Object elem = pc.getPayload().get(0);
+//        assertThat(elem, instanceOf(BundleGroupVersionFilteredResponseView.class));
+//        BundleGroupVersionFilteredResponseView bgv = (BundleGroupVersionFilteredResponseView) elem;
+//        assertThat(bgv.getBundleGroupId(), equalTo((long)1));
+//        assertThat(bgv.getBundleGroupVersionId(), equalTo((long)4));
+//        assertThat(bgv.getDocumentationUrl(), equalTo("http://docm.me"));
+//        assertThat(bgv.isPublicCatalog(), equalTo(true));
     }
 
     @Test
