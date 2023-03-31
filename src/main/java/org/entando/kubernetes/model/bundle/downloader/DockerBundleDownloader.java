@@ -36,13 +36,15 @@ public class DockerBundleDownloader extends BundleDownloader {
     private final int downloadRetries;
     private final int decompressTimeoutSeconds;
     private final String jsonContainerRegistryCredentials;
+    private final CraneCommand craneCommand;
 
     public DockerBundleDownloader(int downloadTimeoutSeconds, int downloadRetries, int decompressTimeoutSeconds,
-            String jsonContainerRegistryCredentials) {
+            String jsonContainerRegistryCredentials, CraneCommand craneCommand) {
         this.downloadTimeoutSeconds = downloadTimeoutSeconds;
         this.downloadRetries = downloadRetries;
         this.decompressTimeoutSeconds = decompressTimeoutSeconds;
         this.jsonContainerRegistryCredentials = jsonContainerRegistryCredentials;
+        this.craneCommand = craneCommand;
     }
 
     /**
@@ -80,19 +82,20 @@ public class DockerBundleDownloader extends BundleDownloader {
      * @param tag        the tag with the tarball field that contains the fully qualified image url, i.e.:
      *                   docker://docker.io/nginx:8.0.1
      * @param targetPath the Path of the temporary directory to use to save the bundle files
-     * @return the Path of the temporary directory used to save the bundle files
+     * @return the DownloadedBundle containing the temporary directory used to save the bundle files and the image digest
      */
     @Override
-    protected Path saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
+    protected DownloadedBundle saveBundleStrategy(EntandoDeBundleTag tag, Path targetPath) {
         log.info("Docker saveBundleStrategy");
         try {
             String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(tag);
             ImageValidator.parse(fullyQualifiedImageUrl).isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
 
+            final String imageDigest = craneCommand.getImageDigest(fullyQualifiedImageUrl);
             saveContainerImage(fullyQualifiedImageUrl, targetPath);
             log.info("Docker image saved");
             untarContainerImage(targetPath);
-            return targetPath;
+            return new DownloadedBundle(targetPath, imageDigest);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BundleDownloaderException(ERROR_WHILE_DOWNLOADING_IMAGE, e);

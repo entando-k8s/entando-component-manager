@@ -15,6 +15,7 @@
 package org.entando.kubernetes.model.entandohub;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.AllArgsConstructor;
@@ -34,6 +35,19 @@ public class EntandoHubRegistry {
     private String id;
     private String name;
     private String url;
+    private String apiKey;
+
+    @JsonIgnore
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    @JsonProperty
+    public EntandoHubRegistry setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+        return this;
+    }
+
 
     @JsonIgnore
     public URL getUrlAsURL() {

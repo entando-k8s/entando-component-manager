@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20230321000001_entando_hub_registry_api_key
+      author: a.romeo@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: entando_hub_registry
+      changes:
+        - addColumn:
+            tableName: entando_hub_registry
+            columns:
+              - column:
+                  name: api_key
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: true

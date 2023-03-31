@@ -82,7 +82,8 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
         return repository.findById(UUID.fromString(entandoHubRegistry.getId()))
                 .map(entity -> {
                     entity.setName(entandoHubRegistry.getName())
-                            .setUrl(entandoHubRegistry.getUrlAsURL());
+                            .setUrl(entandoHubRegistry.getUrlAsURL())
+                            .setApiKey(entandoHubRegistry.getApiKey());
                     return EntandoHubRegistryAssembler.toEntandoHubRegistry(repository.save(entity));
                 })
                 .orElseThrow(() -> new NotFoundException("No registry found for the received ID"));

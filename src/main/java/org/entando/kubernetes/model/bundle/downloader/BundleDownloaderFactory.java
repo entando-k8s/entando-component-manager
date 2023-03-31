@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderType.BundleDownloaderConstants;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 
 public class BundleDownloaderFactory {
 
@@ -23,7 +24,7 @@ public class BundleDownloaderFactory {
      * @return the correct BundleDownloader implementation
      */
     public static BundleDownloader getForType(String type, int downloadTimeoutSeconds, int downloadRetries,
-            int decompressTimeoutSeconds, String jsonContainerRegistryCredentials) {
+            int decompressTimeoutSeconds, String jsonContainerRegistryCredentials, CraneCommand craneCommand) {
         if (type == null) {
             return new GitBundleDownloader();
         }
@@ -33,7 +34,7 @@ public class BundleDownloaderFactory {
                 return new NpmBundleDownloader();
             case BundleDownloaderConstants.CODE_TYPE_DOCKER:
                 return new DockerBundleDownloader(downloadTimeoutSeconds, downloadRetries, decompressTimeoutSeconds,
-                        jsonContainerRegistryCredentials);
+                        jsonContainerRegistryCredentials, craneCommand);
             case BundleDownloaderConstants.CODE_TYPE_GIT:
             default:
                 return new GitBundleDownloader();
