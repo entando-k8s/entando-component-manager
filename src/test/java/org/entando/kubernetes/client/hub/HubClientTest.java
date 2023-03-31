@@ -29,13 +29,16 @@ import java.util.Scanner;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @Tag("unit")
 @AutoConfigureMockMvc
-public class HubClientServiceTest {
+public class HubClientTest {
 
     @Spy
     private DefaultHubClient hubClientService = new DefaultHubClient();
@@ -210,7 +213,7 @@ public class HubClientServiceTest {
         assertTrue(json.has("payload"));
         JSONArray array = json.getJSONArray("payload");
         assertThat(array.length(), equalTo(1));
-        // identify boundle group payload
+        // identify bundle group payload
         JSONObject group = array.getJSONObject(0);
         assertTrue(group.has("bundleGroupId"));
         assertTrue(group.has("bundleGroupVersionId"));
