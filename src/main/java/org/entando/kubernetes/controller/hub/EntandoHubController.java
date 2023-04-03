@@ -64,7 +64,6 @@ public class EntandoHubController implements EntandhoHubResource {
 
             return clientResponse.getPayload();
         } catch (RuntimeException t) {
-            log.error("error getting bundle groups!", t);
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "error in getBundleGroupVersionsAndFilterThem ", t);
         }

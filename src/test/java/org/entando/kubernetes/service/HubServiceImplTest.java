@@ -87,7 +87,8 @@ class HubServiceImplTest {
     @Test
     void shouldThrowExceptionWhileAskingForBundlesButTheRegistryServiceFails() {
         when(registryService.getRegistry(anyString())).thenThrow(new NotFoundException("not found"));
-        assertThrows(NotFoundException.class, () -> hubService.getBundles("hostId", Collections.emptyMap()));
+        final Map<String, Object> params = Collections.emptyMap();
+        assertThrows(NotFoundException.class, () -> hubService.getBundles("hostId", params));
     }
 
 }

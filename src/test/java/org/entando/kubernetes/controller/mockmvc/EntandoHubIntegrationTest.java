@@ -47,7 +47,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-public class EntandoHubIntegrationTest {
+class EntandoHubIntegrationTest {
 
     @Autowired
     private WebApplicationContext context;

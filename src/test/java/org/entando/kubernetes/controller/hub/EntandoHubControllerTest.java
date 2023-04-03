@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-public class EntandoHubControllerTest {
+class EntandoHubControllerTest {
 
     private EntandoHubController controller;
     @Mock

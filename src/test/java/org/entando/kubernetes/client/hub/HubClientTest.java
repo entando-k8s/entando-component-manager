@@ -39,7 +39,7 @@ import wiremock.org.apache.http.impl.client.HttpClients;
 
 @Tag("unit")
 @AutoConfigureMockMvc
-public class HubClientTest {
+class HubClientTest {
 
     private static EntandoHubMockServer mockServer;
     @Spy
