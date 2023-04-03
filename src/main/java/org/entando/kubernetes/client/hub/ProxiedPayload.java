@@ -17,7 +17,7 @@ public class ProxiedPayload<T> {
     public boolean hasError() {
         return !status.is2xxSuccessful()
                 || (StringUtils.isNotBlank(exceptionMessage)
-                        && StringUtils.isNotBlank(exceptionMessage));
+                        && StringUtils.isNotBlank(exceptionClass));
     }
 
     public ProxiedPayload<T> payload(T payload) {
