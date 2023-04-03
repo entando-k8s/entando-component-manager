@@ -39,7 +39,7 @@ public class EntandoHubRegistryServiceImpl implements EntandoHubRegistryService 
         this.repository = repository;
     }
 
-    //    @Override
+    @Override
     public EntandoHubRegistry getRegistry(String id) {
         return repository.findById(UUID.fromString(id))
                 .map(EntandoHubRegistryAssembler::toEntandoHubRegistry)

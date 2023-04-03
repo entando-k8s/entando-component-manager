@@ -55,7 +55,6 @@ public class EntandoHubController implements EntandhoHubResource {
             ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> clientResponse
                     = hubService.searchBundleGroupVersions(id, params);
 
-            // TODO should this return the status code gotten by the hub client?
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: "
@@ -81,7 +80,6 @@ public class EntandoHubController implements EntandhoHubResource {
 
             ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> clientResponse = hubService.getBundles(id, params);
 
-            // TODO should this return the status code got by the hub client?
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_GATEWAY, "STATUS: " + clientResponse.getStatus() + "\nEXCEPTION MESSAGE: "

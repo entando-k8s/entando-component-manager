@@ -86,29 +86,4 @@ public class DefaultHubClient implements HubClient {
         return payload;
     }
 
-    protected <T> ProxiedPayload<T> doGet(String host, String apiPath, Map<String, Object> params) {
-        ProxiedPayload<T> payload;
-        RestTemplate restTemplate = new RestTemplate();
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(host);
-
-        try {
-            generateUriBuilder(params, builder);
-            builder.path(apiPath);
-            final String endpointUrl = builder.build().toString();
-            ResponseEntity<String> response
-                    = restTemplate.getForEntity(endpointUrl, String.class);
-            payload = ProxiedPayload.<T>builder()
-                    .payload((T) response.getBody())
-                    .status(response.getStatusCode())
-                    .build();
-        } catch (RuntimeException t) {
-            log.error("error performing paged GET", t);
-            payload = (ProxiedPayload<T>) ProxiedPayload.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .exceptionMessage(t.getMessage())
-                    .exceptionClass(t.getClass().getCanonicalName())
-                    .build();
-        }
-        return payload;
-    }
 }
