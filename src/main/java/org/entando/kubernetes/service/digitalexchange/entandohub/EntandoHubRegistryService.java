@@ -15,7 +15,6 @@
 package org.entando.kubernetes.service.digitalexchange.entandohub;
 
 import java.util.List;
-
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 
 public interface EntandoHubRegistryService {

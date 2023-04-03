@@ -1,5 +1,22 @@
 package org.entando.kubernetes.client.hub;
 
+import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
+import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Scanner;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.HubDescriptorVersion;
@@ -20,30 +37,13 @@ import wiremock.org.apache.http.client.methods.HttpGet;
 import wiremock.org.apache.http.impl.client.CloseableHttpClient;
 import wiremock.org.apache.http.impl.client.HttpClients;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Scanner;
-
-import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
-import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 @Tag("unit")
 @AutoConfigureMockMvc
 public class HubClientTest {
 
+    private static EntandoHubMockServer mockServer;
     @Spy
     private DefaultHubClient hubClientService = new DefaultHubClient();
-
-    private static EntandoHubMockServer mockServer;
 
     @BeforeEach
     public void setup() throws Exception {
@@ -58,7 +58,8 @@ public class HubClientTest {
     @Test
     public void testBundleGroupServerClient() throws Throwable {
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet request = new HttpGet(mockServer.getApiRoot() + "/appbuilder/api/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
+        HttpGet request = new HttpGet(mockServer.getApiRoot()
+                + "/appbuilder/api/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
         try {
             HttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
@@ -72,7 +73,8 @@ public class HubClientTest {
     @Test
     public void testBundleServerClient() throws Throwable {
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet request = new HttpGet(mockServer.getApiRoot() + "/appbuilder/api/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
+        HttpGet request = new HttpGet(mockServer.getApiRoot()
+                + "/appbuilder/api/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
         try {
             HttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
@@ -110,7 +112,7 @@ public class HubClientTest {
         try {
             assertNotNull(hubClientService);
             LinkedHashMap<String, Object> params = new LinkedHashMap<>();
-            params.put("descriptorVersions", new String[] {"v1", "v5"});
+            params.put("descriptorVersions", new String[]{"v1", "v5"});
             params.put("pageSize", "1");
             params.put("page", "1");
 
@@ -170,15 +172,9 @@ public class HubClientTest {
         try {
             assertNotNull(hubClientService);
 
-//        ProxiedPayload proxiedPayload =
-//                hubClientService.getHubBundleGroups(mockServer.getApiRoot(), Map.of(
-//                        "page", "1",
-//                        "descriptorVersions", new String[] {"v5","v1"},
-//                        "pageSize", "1"));
-
             LinkedHashMap<String, Object> params = new LinkedHashMap<>();
             params.put("page", "1");
-            params.put("descriptorVersions", new String[] {"v5","v1"});
+            params.put("descriptorVersions", new String[]{"v5", "v1"});
             params.put("pageSize", "1");
 
             ProxiedPayload proxiedPayload =
@@ -196,8 +192,8 @@ public class HubClientTest {
             Object elem = pc.getPayload().get(0);
             assertThat(elem, instanceOf(BundleGroupVersionFilteredResponseView.class));
             BundleGroupVersionFilteredResponseView bgv = (BundleGroupVersionFilteredResponseView) elem;
-            assertThat(bgv.getBundleGroupId(), equalTo((long)1));
-            assertThat(bgv.getBundleGroupVersionId(), equalTo((long)4));
+            assertThat(bgv.getBundleGroupId(), equalTo((long) 1));
+            assertThat(bgv.getBundleGroupVersionId(), equalTo((long) 4));
             assertThat(bgv.getDocumentationUrl(), equalTo("http://docm.me"));
             assertThat(bgv.isPublicCatalog(), equalTo(true));
         } catch (Throwable t) {
@@ -217,7 +213,7 @@ public class HubClientTest {
         JSONObject group = array.getJSONObject(0);
         assertTrue(group.has("bundleGroupId"));
         assertTrue(group.has("bundleGroupVersionId"));
-        assertTrue(!group.has("bundleId"));
+        assertFalse(group.has("bundleId"));
     }
 
     private void testBundlePayload(String payload) throws JSONException {
@@ -230,13 +226,13 @@ public class HubClientTest {
         // identify boundle group payload
         JSONObject group = array.getJSONObject(0);
         assertTrue(group.has("bundleId"));
-        assertTrue(!group.has("bundleGroupId"));
-        assertTrue(!group.has("bundleGroupVersionId"));
+        assertFalse(group.has("bundleGroupId"));
+        assertFalse(group.has("bundleGroupVersionId"));
     }
 
     private String convertResponseToString(HttpResponse response) throws IOException {
         InputStream responseStream = response.getEntity().getContent();
-        Scanner scanner = new Scanner(responseStream, "UTF-8");
+        Scanner scanner = new Scanner(responseStream, StandardCharsets.UTF_8);
         String responseString = scanner.useDelimiter("\\Z").next();
         scanner.close();
         return responseString;

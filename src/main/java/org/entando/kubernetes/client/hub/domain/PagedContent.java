@@ -1,21 +1,20 @@
 package org.entando.kubernetes.client.hub.domain;
 
-import lombok.Builder;
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
-public class PagedContent<T,P> {
+public class PagedContent<T, P> {
+
     private List<T> payload;
     private Metadata<P> metadata;
 
-    public PagedContent(List<T> payload, Page<P> pageObj ){
-        this.payload=payload;
+    public PagedContent(List<T> payload, Page<P> pageObj) {
+        this.payload = payload;
         this.metadata = new Metadata<>(pageObj);
     }
 
@@ -31,7 +30,8 @@ public class PagedContent<T,P> {
     @Data
     @NoArgsConstructor
     @Jacksonized
-    public static class Metadata<P>{
+    public static class Metadata<P> {
+
         private int page;
         private int pageSize;
         private int lastPage;
@@ -41,7 +41,7 @@ public class PagedContent<T,P> {
             this.lastPage = pageObj.getTotalPages();
             this.totalItems = pageObj.getTotalElements();
             this.pageSize = pageObj.getSize();
-            this.page = pageObj.getNumber()+1;
+            this.page = pageObj.getNumber() + 1;
         }
 
         public int getPage() {

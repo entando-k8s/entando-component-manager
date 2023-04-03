@@ -2,7 +2,6 @@ package org.entando.kubernetes.service.digitalexchange.entandohub;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -145,7 +144,7 @@ class EntandoHubRegistryServiceImplTest {
         assertThat(name).isEmpty();
     }
 
- @Test
+    @Test
     void shouldThrowExceptionOnGetNotFoundRegistry() {
         EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
         when(repository.findById(registryToSave.getId())).thenReturn(Optional.empty());
@@ -159,7 +158,8 @@ class EntandoHubRegistryServiceImplTest {
         EntandoHubRegistryEntity registryToSave = EntandoHubRegistryStubHelper.stubEntandoHubRegistryEntity1();
         when(repository.findById(registryToSave.getId())).thenReturn(Optional.of(registryToSave));
 
-        final EntandoHubRegistry current = this.service.getRegistry(EntandoHubRegistryStubHelper.stubEntandoHubRegistry1().getId());
+        final EntandoHubRegistry current = this.service.getRegistry(
+                EntandoHubRegistryStubHelper.stubEntandoHubRegistry1().getId());
         EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistries(current, registryToSave);
     }
 

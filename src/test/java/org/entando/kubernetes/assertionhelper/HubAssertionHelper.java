@@ -1,5 +1,11 @@
 package org.entando.kubernetes.assertionhelper;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 import org.assertj.core.api.Java6Assertions;
 import org.entando.kubernetes.client.hub.ProxiedPayload;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
@@ -8,13 +14,6 @@ import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
 import org.springframework.http.HttpStatus;
-
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertNotNull;
 
 public class HubAssertionHelper {
 
@@ -34,10 +33,11 @@ public class HubAssertionHelper {
         Java6Assertions.assertThat(proxiedPayload.getPayload()).isNull();
     }
 
-    public static void assertOnBundleGroupVersionsPagedContent(PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> result) {
+    public static void assertOnBundleGroupVersionsPagedContent(
+            PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> result) {
         assertNotNull(result);
         assertThat(result, instanceOf(PagedContent.class));
-        PagedContent pc = (PagedContent) result;
+        PagedContent pc = result;
         assertNotNull(pc.getMetadata());
         assertNotNull(pc.getPayload());
         assertThat(pc.getPayload(), instanceOf(List.class));
@@ -45,8 +45,8 @@ public class HubAssertionHelper {
         Object elem = pc.getPayload().get(0);
         assertThat(elem, instanceOf(BundleGroupVersionFilteredResponseView.class));
         BundleGroupVersionFilteredResponseView bgv = (BundleGroupVersionFilteredResponseView) elem;
-        assertThat(bgv.getBundleGroupId(), equalTo((long)10));
-        assertThat(bgv.getBundleGroupVersionId(), equalTo((long)100));
+        assertThat(bgv.getBundleGroupId(), equalTo((long) 10));
+        assertThat(bgv.getBundleGroupVersionId(), equalTo((long) 100));
         assertThat(bgv.getDocumentationUrl(), equalTo("http://www.entando.com"));
         assertThat(bgv.isPublicCatalog(), equalTo(true));
     }
@@ -56,7 +56,7 @@ public class HubAssertionHelper {
         assertNotNull(result);
         assertThat(result, instanceOf(PagedContent.class));
 
-        PagedContent pc = (PagedContent) result;
+        PagedContent pc = result;
         assertNotNull(pc.getMetadata());
         assertNotNull(pc.getPayload());
         assertThat(pc.getPayload(), instanceOf(List.class));

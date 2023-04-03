@@ -1,5 +1,9 @@
 package org.entando.kubernetes.controller.hub;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 import org.entando.kubernetes.assertionhelper.HubAssertionHelper;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
@@ -12,10 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -63,10 +63,10 @@ public class EntandoHubControllerTest {
         when(hubService.getBundles(anyString(), any()))
                 .thenReturn(HubStubHelper.stubBundleDtosProxiedPayload());
 
-        PagedContent<BundleDto, BundleEntityDto> result = controller.getBundles("registry-123", 1, 1, null, new String[]{"v1", "v5"});
+        PagedContent<BundleDto, BundleEntityDto> result = controller.getBundles("registry-123", 1, 1, null,
+                new String[]{"v1", "v5"});
         HubAssertionHelper.assertOnBundlePagedContent(result);
     }
-
 
 
 }

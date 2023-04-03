@@ -1,13 +1,13 @@
 package org.entando.kubernetes.client.hub.domain;
 
-import lombok.*;
+import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
 import lombok.extern.jackson.Jacksonized;
 
-import java.util.Set;
-
 /**
- * This entity class is for BUNDLE table
- *
+ * This entity class is for BUNDLE table.
  */
 @Data
 @Builder
@@ -24,6 +24,6 @@ public class BundleEntityDto {
 
     private HubDescriptorVersion descriptorVersion = HubDescriptorVersion.V1;
 
-	private Set<BundleGroupVersionEntityDto> bundleGroupVersions;
+    private Set<BundleGroupVersionEntityDto> bundleGroupVersions;
 
 }

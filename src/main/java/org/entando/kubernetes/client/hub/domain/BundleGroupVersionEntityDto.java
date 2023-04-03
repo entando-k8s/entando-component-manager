@@ -1,15 +1,12 @@
 package org.entando.kubernetes.client.hub.domain;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.jackson.Jacksonized;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- *
  * This is the exact match of com.entando.hub.catalog.persistence.entity.BundleGroupVersion.
  * TODO find usage in the FE and and possibly use the proper dto
  */

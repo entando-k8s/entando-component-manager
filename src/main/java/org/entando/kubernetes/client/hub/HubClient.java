@@ -12,5 +12,5 @@ public interface HubClient {
     ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> searchBundleGroupVersions(
             String host, Map<String, Object> params);
 
-    ProxiedPayload<PagedContent<BundleDto,BundleEntityDto>> getBundles(String host, Map<String, Object> params);
+    ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> getBundles(String host, Map<String, Object> params);
 }

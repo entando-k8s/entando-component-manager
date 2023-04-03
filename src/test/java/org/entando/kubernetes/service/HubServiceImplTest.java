@@ -1,5 +1,10 @@
 package org.entando.kubernetes.service;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
 import org.entando.kubernetes.assertionhelper.HubAssertionHelper;
 import org.entando.kubernetes.client.HubClientTestDouble;
 import org.entando.kubernetes.client.hub.HubClient;
@@ -14,18 +19,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class HubServiceImplTest {
 
-    private HubServiceImpl hubService;
     private final HubClient hubClient = new HubClientTestDouble();
+    private HubServiceImpl hubService;
     @Mock
     private EntandoHubRegistryService registryService;
 
@@ -47,7 +46,7 @@ class HubServiceImplTest {
     void shouldReturnErrorWhileAskingForBundleGroupVersionsButTheClientFails() {
         when(registryService.getRegistry(anyString())).thenReturn(
                 EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
-        ((HubClientTestDouble)hubClient).setMustFail(true);
+        ((HubClientTestDouble) hubClient).setMustFail(true);
 
         final ProxiedPayload proxiedPayload = hubService.searchBundleGroupVersions(
                 "hostId", Collections.emptyMap());
@@ -76,7 +75,7 @@ class HubServiceImplTest {
 
         when(registryService.getRegistry(anyString())).thenReturn(
                 EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
-        ((HubClientTestDouble)hubClient).setMustFail(true);
+        ((HubClientTestDouble) hubClient).setMustFail(true);
         final ProxiedPayload proxiedPayload = hubService.getBundles("hostId", Collections.emptyMap());
 
         HubAssertionHelper.assertOnFailingProxiedPayload(proxiedPayload);

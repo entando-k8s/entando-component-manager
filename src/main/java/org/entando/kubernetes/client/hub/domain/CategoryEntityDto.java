@@ -1,11 +1,9 @@
 package org.entando.kubernetes.client.hub.domain;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.jackson.Jacksonized;
-
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

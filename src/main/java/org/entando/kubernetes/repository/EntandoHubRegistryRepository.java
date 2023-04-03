@@ -12,8 +12,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EntandoHubRegistryRepository extends JpaRepository<EntandoHubRegistryEntity, UUID> {
 
-//    Optional<EntandoHubRegistryEntity> findById(@Param("id") String id);
-
     List<EntandoHubRegistryEntity> findAllByOrderByNameAsc();
 
     Optional<EntandoHubRegistryEntity> findByName(@Param("name") String name);

@@ -1,6 +1,24 @@
 package org.entando.kubernetes.controller.mockmvc;
 
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
+import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
@@ -22,24 +40,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
-import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @AutoConfigureWireMock(port = 7762)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -58,7 +58,8 @@ public class EntandoHubIntegrationTest {
     @Autowired
     private EntandoHubRegistryService registryService;
 
-    private List<EntandoHubRegistryEntity> entityToSaveList = Arrays.asList(getRegistryEntityForTesting());
+    private final List<EntandoHubRegistryEntity> entityToSaveList = Collections.singletonList(getRegistryEntityForTesting());
+
     @BeforeEach
     public void setup() throws Exception {
         try {
@@ -87,16 +88,17 @@ public class EntandoHubIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown () {
+    public void tearDown() {
         registryRepository.deleteAll();
     }
 
     @Test
     public void testBundleGroupController() {
-        String DEFAULT_REGISTRY_ID = getDefaultRegistryId();
+        final String DEFAULT_REGISTRY_ID = getDefaultRegistryId();
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .get("/hub/bundlegroups/"+ DEFAULT_REGISTRY_ID+ "/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
+                            .get("/hub/bundlegroups/" + DEFAULT_REGISTRY_ID
+                                    + "/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
                             .accept(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -109,7 +111,8 @@ public class EntandoHubIntegrationTest {
                     .andExpect(jsonPath("$.payload[0].version", is("v0.0.2")))
                     .andExpect(jsonPath("$.payload[0].organisationId", is(1)))
                     .andExpect(jsonPath("$.payload[0].publicCatalog", is(Boolean.TRUE)))
-                    .andExpect(jsonPath("$.payload[0].bundleGroupUrl", is("http://localhost:3000/#/bundlegroup/versions/4")))
+                    .andExpect(jsonPath("$.payload[0].bundleGroupUrl",
+                            is("http://localhost:3000/#/bundlegroup/versions/4")))
                     .andExpect(jsonPath("$.payload[0].status", is("PUBLISHED")));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -118,10 +121,11 @@ public class EntandoHubIntegrationTest {
 
     @Test
     public void testBundleController() {
-        String DEFAULT_REGISTRY_ID = getDefaultRegistryId();
+        final String DEFAULT_REGISTRY_ID = getDefaultRegistryId();
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .get("/hub/bundles/"+ DEFAULT_REGISTRY_ID+ "/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
+                            .get("/hub/bundles/" + DEFAULT_REGISTRY_ID
+                                    + "/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
                             .accept(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -130,20 +134,21 @@ public class EntandoHubIntegrationTest {
                     .andExpect(jsonPath("$.payload[0].name", is("bundle-uri-1")))
                     .andExpect(jsonPath("$.payload[0].description", is("Description default")))
                     .andExpect(jsonPath("$.payload[0].descriptorVersion", is("V1")))
-                    .andExpect(jsonPath("$.payload[0].gitRepoAddress", is("https://github.com/account/bundle-uri-1.git")))
-                    .andExpect(jsonPath("$.payload[0].gitSrcRepoAddress", is("https://github.com/account/source-url-1.git")))
-                    .andExpect(jsonPath("$.payload[0].bundleGroups[0]", is("15")));;
+                    .andExpect(
+                            jsonPath("$.payload[0].gitRepoAddress", is("https://github.com/account/bundle-uri-1.git")))
+                    .andExpect(jsonPath("$.payload[0].gitSrcRepoAddress",
+                            is("https://github.com/account/source-url-1.git")))
+                    .andExpect(jsonPath("$.payload[0].bundleGroups[0]", is("15")));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     protected String getDefaultRegistryId() {
-        String DEFAULT_REGISTRY_ID = registryService
+        return registryService
                 .listRegistries()
                 .get(0)
                 .getId();
-        return DEFAULT_REGISTRY_ID;
     }
 
     @SneakyThrows
