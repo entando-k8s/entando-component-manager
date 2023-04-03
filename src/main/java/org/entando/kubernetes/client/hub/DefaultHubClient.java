@@ -59,24 +59,24 @@ public class DefaultHubClient implements HubClient {
                 }, params);
     }
 
-    private <T> ProxiedPayload<T> doPagedGet(String host, String apiPath, ParameterizedTypeReference typedContent,
+    protected <T> ProxiedPayload<T> doPagedGet(String host, String apiPath, ParameterizedTypeReference<? extends PagedContent> typedContent,
             Map<String, Object> params) {
         RestTemplate restTemplate = new RestTemplate();
-        ProxiedPayload payload;
+        ProxiedPayload<T> payload;
 
         try {
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(host);
             generateUriBuilder(params, builder);
             builder.path(apiPath);
             final String endpointUrl = builder.build().toString();
-            ResponseEntity response = restTemplate.exchange(endpointUrl, HttpMethod.GET, null, typedContent);
-            payload = ProxiedPayload.builder()
-                    .payload(response.getBody())
+            ResponseEntity<? extends PagedContent> response = restTemplate.exchange(endpointUrl, HttpMethod.GET, null, typedContent);
+            payload = ProxiedPayload.<T>builder()
+                    .payload((T) response.getBody())
                     .status(response.getStatusCode())
                     .build();
-        } catch (Throwable t) {
+        } catch (RuntimeException t) {
             log.error("error performing paged GET", t);
-            payload = ProxiedPayload.builder()
+            payload = ProxiedPayload.<T>builder()
                     .exceptionMessage(t.getMessage())
                     .exceptionClass(t.getClass().getCanonicalName())
                     .build();
@@ -84,9 +84,8 @@ public class DefaultHubClient implements HubClient {
         return payload;
     }
 
-    @Deprecated
-    protected ProxiedPayload doGet(String host, String apiPath, Map<String, Object> params) {
-        ProxiedPayload payload;
+    protected <T> ProxiedPayload<T> doGet(String host, String apiPath, Map<String, Object> params) {
+        ProxiedPayload<T> payload;
         RestTemplate restTemplate = new RestTemplate();
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(host);
 
@@ -96,13 +95,13 @@ public class DefaultHubClient implements HubClient {
             final String endpointUrl = builder.build().toString();
             ResponseEntity<String> response
                     = restTemplate.getForEntity(endpointUrl, String.class);
-            payload = ProxiedPayload.builder()
-                    .payload(response.getBody())
+            payload = ProxiedPayload.<T>builder()
+                    .payload((T) response.getBody())
                     .status(response.getStatusCode())
                     .build();
-        } catch (Throwable t) {
+        } catch (RuntimeException t) {
             log.error("error performing paged GET", t);
-            payload = ProxiedPayload.builder()
+            payload = (ProxiedPayload<T>) ProxiedPayload.builder()
                     .exceptionMessage(t.getMessage())
                     .exceptionClass(t.getClass().getCanonicalName())
                     .build();

@@ -150,7 +150,8 @@ class EntandoHubRegistryServiceImplTest {
         when(repository.findById(registryToSave.getId())).thenReturn(Optional.empty());
 
         final EntandoHubRegistry entandoHubRegistry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
-        Assertions.assertThrows(NotFoundException.class, () -> this.service.getRegistry(entandoHubRegistry.getId()));
+        final String id = entandoHubRegistry.getId();
+        Assertions.assertThrows(NotFoundException.class, () -> this.service.getRegistry(id));
     }
 
     @Test

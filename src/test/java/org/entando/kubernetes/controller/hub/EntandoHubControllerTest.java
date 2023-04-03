@@ -36,7 +36,7 @@ public class EntandoHubControllerTest {
     }
 
     @Test
-    public void testBundleGroupControllerService() {
+    void testBundleGroupControllerService() {
 
         when(hubService.searchBundleGroupVersions(anyString(), any()))
                 .thenReturn(HubStubHelper.stubBundleGroupVersionsProxiedPayload());
@@ -47,7 +47,7 @@ public class EntandoHubControllerTest {
     }
 
     @Test
-    public void testBundleGroupControllerServiceInvlalidData() {
+    void testBundleGroupControllerServiceInvlalidData() {
 
         when(hubService.searchBundleGroupVersions(anyString(), any()))
                 .thenReturn(HubStubHelper.stubBundleGroupVersionsProxiedPayload());
@@ -58,7 +58,7 @@ public class EntandoHubControllerTest {
     }
 
     @Test
-    public void testBundleControllerService() {
+    void testBundleControllerService() {
 
         when(hubService.getBundles(anyString(), any()))
                 .thenReturn(HubStubHelper.stubBundleDtosProxiedPayload());

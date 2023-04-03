@@ -36,18 +36,4 @@ public class BundleDto {
     private List<String> dependencies;
     private List<String> bundleGroups; //Used for bundle group versions, need to make it bundleGroupVersions
 
-
-    @Deprecated
-    public BundleDto(String id, String name, String description, String gitRepoAddress, String gitSrcRepoAddress,
-            List<String> dependencies, List<String> bundleGroupVersions, String descriptorVersion) {
-        this.bundleId = id;
-        this.name = name;
-        this.description = description;
-        this.gitRepoAddress = gitRepoAddress;
-        this.gitSrcRepoAddress = gitSrcRepoAddress;
-        this.dependencies = dependencies;
-        this.bundleGroups = bundleGroupVersions;
-        this.descriptorVersion = descriptorVersion;
-    }
-
 }

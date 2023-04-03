@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.Map;
 import org.entando.kubernetes.assertionhelper.HubAssertionHelper;
 import org.entando.kubernetes.client.HubClientTestDouble;
 import org.entando.kubernetes.client.hub.HubClient;
@@ -57,15 +58,17 @@ class HubServiceImplTest {
     void shouldThrowExceptionWhileAskingForBundleGroupVersionsButTheRegistryServiceFails() {
         when(registryService.getRegistry(anyString())).thenThrow(new NotFoundException("not found"));
 
+        final Map<String, Object> emptyMap = Collections.emptyMap();
         assertThrows(NotFoundException.class, () -> hubService.searchBundleGroupVersions(
-                "hostId", Collections.emptyMap()));
+                "hostId", emptyMap));
     }
 
     @Test
     void shouldReturnSomeBundleDtoWhenTheClientSucceeds() {
         when(registryService.getRegistry(anyString())).thenReturn(
                 EntandoHubRegistryStubHelper.stubEntandoHubRegistry1());
-        final ProxiedPayload proxiedPayload = hubService.getBundles("hostId", Collections.emptyMap());
+        final Map<String, Object> emptyMap = Collections.emptyMap();
+        final ProxiedPayload proxiedPayload = hubService.getBundles("hostId", emptyMap);
 
         HubAssertionHelper.assertOnSuccessfulProxiedPayload(proxiedPayload);
     }

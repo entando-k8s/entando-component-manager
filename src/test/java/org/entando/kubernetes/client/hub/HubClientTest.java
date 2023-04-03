@@ -56,7 +56,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleGroupServerClient() throws Throwable {
+    void testBundleGroupServerClient() throws Throwable {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet request = new HttpGet(mockServer.getApiRoot()
                 + "/appbuilder/api/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
@@ -71,7 +71,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleServerClient() throws Throwable {
+    void testBundleServerClient() throws Throwable {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet request = new HttpGet(mockServer.getApiRoot()
                 + "/appbuilder/api/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
@@ -86,7 +86,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleServiceNoParams() {
+    void testBundleServiceNoParams() {
         ProxiedPayload proxiedPayload =
                 hubClientService.getBundles(mockServer.getApiRoot(), null);
         assertNotNull(proxiedPayload);
@@ -97,7 +97,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleServiceNoData() {
+    void testBundleServiceNoData() {
         ProxiedPayload proxiedPayload =
                 hubClientService.getBundles(null, null);
         assertNotNull(proxiedPayload);
@@ -108,7 +108,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleService() throws JSONException {
+    void testBundleService() throws JSONException {
         try {
             assertNotNull(hubClientService);
             LinkedHashMap<String, Object> params = new LinkedHashMap<>();
@@ -146,7 +146,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleGroupServiceNoParams() {
+    void testBundleGroupServiceNoParams() {
         ProxiedPayload proxiedPayload =
                 hubClientService.searchBundleGroupVersions(mockServer.getApiRoot(), null);
         assertNotNull(proxiedPayload);
@@ -157,7 +157,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleGroupServiceNoData() {
+    void testBundleGroupServiceNoData() {
         ProxiedPayload proxiedPayload =
                 hubClientService.searchBundleGroupVersions(null, null);
         assertNotNull(proxiedPayload);
@@ -168,7 +168,7 @@ public class HubClientTest {
     }
 
     @Test
-    public void testBundleGroupService() throws JSONException {
+    void testBundleGroupService() throws JSONException {
         try {
             assertNotNull(hubClientService);
 

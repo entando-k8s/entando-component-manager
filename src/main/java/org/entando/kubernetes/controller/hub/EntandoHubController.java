@@ -63,8 +63,7 @@ public class EntandoHubController implements EntandhoHubResource {
             }
 
             return clientResponse.getPayload();
-        } catch (Throwable t) {
-            t.printStackTrace();
+        } catch (RuntimeException t) {
             log.error("error getting bundle groups!", t);
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "error in getBundleGroupVersionsAndFilterThem ", t);
@@ -90,7 +89,7 @@ public class EntandoHubController implements EntandhoHubResource {
                         + clientResponse.getExceptionMessage());
             }
             return clientResponse.getPayload();
-        } catch (Throwable t) {
+        } catch (RuntimeException t) {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "error in getBundles ", t);
         }

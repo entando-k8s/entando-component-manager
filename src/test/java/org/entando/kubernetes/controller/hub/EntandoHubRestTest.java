@@ -63,12 +63,12 @@ public class EntandoHubRestTest {
     }
 
     @Test
-    public void shouldStart() {
+    void shouldStart() {
         assertThat(mockMvc).isNotNull();
     }
 
     @Test
-    public void testBundleGroupController() {
+    void testBundleGroupController() {
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .get("/hub/bundlegroups/123-abop-4560/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
@@ -92,7 +92,7 @@ public class EntandoHubRestTest {
     }
 
     @Test
-    public void testBundleController() {
+    void testBundleController() {
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .get("/hub/bundles/123-abop-4560/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")

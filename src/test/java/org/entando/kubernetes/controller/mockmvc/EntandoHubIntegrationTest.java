@@ -93,7 +93,7 @@ public class EntandoHubIntegrationTest {
     }
 
     @Test
-    public void testBundleGroupController() {
+    void testBundleGroupController() {
         final String DEFAULT_REGISTRY_ID = getDefaultRegistryId();
         try {
             mockMvc.perform(MockMvcRequestBuilders
@@ -120,7 +120,7 @@ public class EntandoHubIntegrationTest {
     }
 
     @Test
-    public void testBundleController() {
+    void testBundleController() {
         final String DEFAULT_REGISTRY_ID = getDefaultRegistryId();
         try {
             mockMvc.perform(MockMvcRequestBuilders

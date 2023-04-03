@@ -22,7 +22,7 @@ public class PagedContent<T, P> {
         return payload;
     }
 
-    public Metadata getMetadata() {
+    public Metadata<P> getMetadata() {
         return metadata;
     }
 
