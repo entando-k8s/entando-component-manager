@@ -91,7 +91,7 @@ class HubClientTest {
                 hubClientService.getBundles(mockServer.getApiRoot(), null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
-        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
         assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
         assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
     }
@@ -102,7 +102,7 @@ class HubClientTest {
                 hubClientService.getBundles(null, null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
-        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
         assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
         assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
     }
@@ -151,7 +151,7 @@ class HubClientTest {
                 hubClientService.searchBundleGroupVersions(mockServer.getApiRoot(), null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
-        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
         assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
         assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
     }
@@ -162,7 +162,7 @@ class HubClientTest {
                 hubClientService.searchBundleGroupVersions(null, null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
-        assertThat(proxiedPayload.getStatus(), equalTo(null));
+        assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
         assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
         assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
     }
