@@ -15,10 +15,8 @@ import lombok.Setter;
 public class BundleDto {
 
     @Schema(example = "This is a example bundle")
-    @Setter
     protected String description;
     @Schema(example = "data:image/png;base64,base64code")
-    @Setter
     protected String descriptionImage;
     @Schema(example = "bundle identifier")
     private String bundleId;

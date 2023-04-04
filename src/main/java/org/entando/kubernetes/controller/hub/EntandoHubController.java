@@ -9,8 +9,6 @@ import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
 import org.entando.kubernetes.service.HubService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,7 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class EntandoHubController implements EntandhoHubResource {
 
     private final HubService hubService;
-    Logger log = LoggerFactory.getLogger(EntandoHubController.class);
 
     public EntandoHubController(HubService hubService) {
         this.hubService = hubService;

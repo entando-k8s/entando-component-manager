@@ -1,0 +1,22 @@
+server.port=9999
+# Database
+spring.datasource.url=jdbc:h2:file:./databases/de/h2.db;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=admin
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+# Keycloak
+spring.security.oauth2.client.provider.oidc.issuer-uri=http://entando-kc-entando.172.16.120.3.nip.io/auth/realms/entando
+spring.security.oauth2.client.registration.oidc.client-id=entando-de
+spring.security.oauth2.client.registration.oidc.client-secret=a41fc959-1e17-48d1-a493-1a022c57d0fb
+# Entando-k8s-service
+entando.k8s.service.url=http://entando-eci-entando.172.16.120.3.nip.io/k8s
+entando.app.namespace=entando
+entando.app.name=entando
+entando.url=http://entando-entando.172.16.120.3.nip.io/entando-de-app
+entando.auth-url=${spring.security.oauth2.client.provider.oidc.issuer-uri}/protocol/openid-connect/token
+springdoc.swagger-ui.oauth.client-id=${spring.security.oauth2.client.registration.oidc.client-id}
+springdoc.swagger-ui.oauth.client-secret=${spring.security.oauth2.client.registration.oidc.client-secret}
+springdoc.swagger-ui.oauth2-redirect-url=${spring.security.oauth2.client.provider.oidc.issuer-uri}/protocol/openid-connect/auth
+
+cors.enabled = true
