@@ -9,27 +9,16 @@ import javax.persistence.OneToMany;
 import lombok.Data;
 import lombok.ToString;
 
-/**
- * This entity class is for BUNDLE_GROUP table.
- */
 @Data
 @ToString
 public class BundleGroupEntityDto {
 
     private Long id;
     private String name;
-
     private Long catalogId;
-
     private Boolean publicCatalog;
-
-
     private OrganisationEntityDto organisation;
-
-
     private Set<CategoryEntityDto> categories = new HashSet<>();
-
-    @OneToMany(mappedBy = "bundleGroup", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE})
     private Set<BundleGroupVersionEntityDto> version = new HashSet<>();
 
     @Override
