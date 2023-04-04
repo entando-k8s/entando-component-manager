@@ -42,7 +42,7 @@ public class EntandoHubController implements EntandhoHubResource {
 
     @Override
     public PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> getBundleGroupVersionsAndFilterThem(
-            @PathVariable String id,
+            @PathVariable(name = "id") String hubRegistryId,
             @RequestParam Integer page,
             @RequestParam Integer pageSize,
             @RequestParam(required = false) String[] descriptorVersions) {
@@ -50,7 +50,7 @@ public class EntandoHubController implements EntandhoHubResource {
             Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
 
             ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> clientResponse
-                    = hubService.searchBundleGroupVersions(id, params);
+                    = hubService.searchBundleGroupVersions(hubRegistryId, params);
 
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
@@ -66,7 +66,8 @@ public class EntandoHubController implements EntandhoHubResource {
     }
 
     @Override
-    public PagedContent<BundleDto, BundleEntityDto> getBundles(@PathVariable String id,
+    public PagedContent<BundleDto, BundleEntityDto> getBundles(
+            @PathVariable(name = "id") String hubRegistryId,
             @RequestParam Integer page,
             @RequestParam Integer pageSize,
             @RequestParam(required = false) String bundleGroupId,
@@ -75,7 +76,7 @@ public class EntandoHubController implements EntandhoHubResource {
             Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
             params.put("bundleGroupId", bundleGroupId);
 
-            ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> clientResponse = hubService.getBundles(id, params);
+            ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> clientResponse = hubService.getBundles(hubRegistryId, params);
 
             if (clientResponse.hasError()) {
                 throw new ResponseStatusException(
