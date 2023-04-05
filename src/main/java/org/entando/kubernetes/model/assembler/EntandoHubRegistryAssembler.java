@@ -20,10 +20,12 @@ public class EntandoHubRegistryAssembler {
             throw new EntandoComponentManagerException("The received EntandoHubRegistryEntity to convert is null");
         }
 
-        return new EntandoHubRegistry()
+        EntandoHubRegistry entandoHubRegistry = new EntandoHubRegistry()
                 .setId(entity.getId().toString())
                 .setName(entity.getName())
                 .setUrl(entity.getUrl().toString());
+        entandoHubRegistry.setApiKeyPresent(entity.getApiKey() != null);
+        return entandoHubRegistry;
     }
 
     public static List<EntandoHubRegistry> toListOfEntandoHubRegistry(List<EntandoHubRegistryEntity> entityList) {

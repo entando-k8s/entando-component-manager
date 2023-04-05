@@ -36,6 +36,7 @@ public class EntandoHubRegistry {
     private String name;
     private String url;
     private String apiKey;
+    private boolean apiKeyPresent;
 
     @JsonIgnore
     public String getApiKey() {
@@ -46,6 +47,16 @@ public class EntandoHubRegistry {
     public EntandoHubRegistry setApiKey(String apiKey) {
         this.apiKey = apiKey;
         return this;
+    }
+
+    @JsonProperty
+    public boolean getApiKeyPresent() {
+        return apiKeyPresent;
+    }
+
+    @JsonIgnore
+    public void setApiKeyPresent(boolean apiKeyPresent) {
+        this.apiKeyPresent = apiKeyPresent;
     }
 
 

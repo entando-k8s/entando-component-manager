@@ -3,6 +3,7 @@ package org.entando.kubernetes.config;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -50,7 +51,8 @@ public class OpenApiConfig {
         return new Schema<Map<String, String>>()
                 .addProperties("id",new StringSchema().example("string"))
                 .addProperties("name",new StringSchema().example("string"))
-                .addProperties("url",new StringSchema().example("string"));
+                .addProperties("url",new StringSchema().example("string"))
+                .addProperties("apiKeyPresent", new BooleanSchema().example(false));
     }
 }
 
