@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
@@ -24,7 +25,7 @@ public class EntandoHubRegistryAssembler {
                 .setId(entity.getId().toString())
                 .setName(entity.getName())
                 .setUrl(entity.getUrl().toString());
-        entandoHubRegistry.setApiKeyPresent(entity.getApiKey() != null);
+        entandoHubRegistry.setApiKeyPresent(StringUtils.isNotEmpty(entity.getApiKey()));
         return entandoHubRegistry;
     }
 
