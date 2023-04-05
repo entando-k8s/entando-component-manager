@@ -18,11 +18,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.net.MalformedURLException;
 import java.net.URL;
+import liquibase.util.StringUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 
 @Data
@@ -67,5 +69,10 @@ public class EntandoHubRegistry {
         } catch (MalformedURLException e) {
             throw new EntandoComponentManagerException("Error during URL parsing " + url);
         }
+    }
+
+    @JsonIgnore
+    public boolean hasApiKey() {
+        return StringUtils.isNotEmpty(apiKey);
     }
 }

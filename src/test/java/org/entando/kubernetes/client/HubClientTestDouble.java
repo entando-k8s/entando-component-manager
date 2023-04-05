@@ -10,6 +10,7 @@ import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
 import org.entando.kubernetes.exception.web.InternalServerException;
+import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.stubhelper.HubStubHelper;
 import org.springframework.http.HttpStatus;
 
@@ -20,7 +21,7 @@ public class HubClientTestDouble implements HubClient {
 
     @Override
     public ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> searchBundleGroupVersions(
-            String host, Map<String, Object> params) {
+            EntandoHubRegistry registry, Map<String, Object> params) {
 
         if (mustFail) {
             return asBundleGroupVersionsDto(createWithError());
@@ -30,7 +31,7 @@ public class HubClientTestDouble implements HubClient {
     }
 
     @Override
-    public ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> getBundles(String host,
+    public ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> getBundles(EntandoHubRegistry registry,
             Map<String, Object> params) {
 
         if (mustFail) {
