@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -27,7 +26,7 @@ public class EntandoHubMockServer extends EntandoGenericMockServer {
 
     private void addBundleGroup(WireMockServer wireMockServer) {
         wireMockServer.stubFor(get(urlEqualTo(
-                "/appbuilder/api/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1"))
+                "/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1"))
                 /*
                 Not correctly handled so far https://github.com/wiremock/wiremock/issues/398
                 .withQueryParam("page", WireMock.equalTo("1"))
@@ -43,7 +42,7 @@ public class EntandoHubMockServer extends EntandoGenericMockServer {
 
     private void addBundle(WireMockServer wireMockServer) {
         wireMockServer.stubFor(get(urlEqualTo(
-                "/appbuilder/api/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1"))
+                "/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)

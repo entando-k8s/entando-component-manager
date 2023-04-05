@@ -20,8 +20,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class DefaultHubClient implements HubClient {
 
-    public static final String BUNDLEGROUPS_API_PATH = "appbuilder/api/bundlegroups/";
-    public static final String BUNDLE_API_PATH = "appbuilder/api/bundles/";
+    public static final String BUNDLEGROUPS_API_PATH = "/bundlegroups/";
+    public static final String BUNDLE_API_PATH = "/bundles/";
     private final Logger log = LoggerFactory.getLogger(DefaultHubClient.class);
 
     /**

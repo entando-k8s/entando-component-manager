@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -66,12 +65,12 @@ class EntandoHubIntegrationTest {
             // db stuff
             registryRepository.saveAll(entityToSaveList);
             // wiremock stuff
-            stubFor(get(urlMatching("/appbuilder/api/bundlegroups/.*"))
+            stubFor(get(urlMatching("/bundlegroups/.*"))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", HAL_JSON_VALUE)
                             .withBody(BUNDLEGROUP_RESPONSE_JSON)));
-            stubFor(get(urlMatching("/appbuilder/api/bundles/.*"))
+            stubFor(get(urlMatching("/bundles/.*"))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", HAL_JSON_VALUE)

@@ -59,7 +59,7 @@ class HubClientTest {
     void testBundleGroupServerClient() throws Throwable {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet request = new HttpGet(mockServer.getApiRoot()
-                + "/appbuilder/api/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
+                + "/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
         try {
             HttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
@@ -74,7 +74,7 @@ class HubClientTest {
     void testBundleServerClient() throws Throwable {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet request = new HttpGet(mockServer.getApiRoot()
-                + "/appbuilder/api/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
+                + "/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
         try {
             HttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
