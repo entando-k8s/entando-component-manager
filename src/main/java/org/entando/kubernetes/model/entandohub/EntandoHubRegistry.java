@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.net.MalformedURLException;
 import java.net.URL;
-import liquibase.util.StringUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +39,7 @@ public class EntandoHubRegistry {
     private String apiKey;
     private boolean apiKeyPresent;
 
-    @JsonIgnore
+    @JsonIgnore // security reason: this ensure that the api key is never returned
     public String getApiKey() {
         return apiKey;
     }

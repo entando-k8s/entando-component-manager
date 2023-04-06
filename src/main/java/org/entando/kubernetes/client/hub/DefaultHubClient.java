@@ -3,7 +3,6 @@ package org.entando.kubernetes.client.hub;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import liquibase.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
@@ -111,4 +110,6 @@ public class DefaultHubClient implements HubClient {
         }
         return entity;
     }
+
+
 }

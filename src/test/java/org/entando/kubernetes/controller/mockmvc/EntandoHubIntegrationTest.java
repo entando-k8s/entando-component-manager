@@ -154,6 +154,7 @@ class EntandoHubIntegrationTest {
     protected EntandoHubRegistryEntity getRegistryEntityForTesting() {
         return EntandoHubRegistryStubHelper
                 .stubEntandoHubRegistryEntity2()
-                .setUrl(new URL("http://localhost:7762"));
+                .setUrl(new URL("http://localhost:7762"))
+                .setApiKey("myapikey");
     }
 }

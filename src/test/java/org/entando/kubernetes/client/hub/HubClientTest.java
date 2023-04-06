@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
@@ -207,6 +208,16 @@ class HubClientTest {
         }
     }
 
+    @Test
+    void shouldThrowExceptionWhileReceivingANullRegistryOrEmptyUrl() {
+        final Map<String, Object> emptyParams = new LinkedHashMap<>();
+        final EntandoHubRegistry emptyRegistry = new EntandoHubRegistry();
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.getBundles(null, emptyParams));
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.getBundles(emptyRegistry, emptyParams));
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.searchBundleGroupVersions(null, emptyParams));
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.searchBundleGroupVersions(emptyRegistry, emptyParams));
+    }
+
     private void testBundleGroupPayload(String payload) throws JSONException {
         assertThat(payload, equalTo(BUNDLEGROUP_RESPONSE_JSON));
         assertNotNull(payload);
@@ -290,5 +301,4 @@ class HubClientTest {
             throw e;
         }
     }
-
 }
