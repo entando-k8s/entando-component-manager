@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
@@ -20,10 +21,12 @@ public class EntandoHubRegistryAssembler {
             throw new EntandoComponentManagerException("The received EntandoHubRegistryEntity to convert is null");
         }
 
-        return new EntandoHubRegistry()
+        EntandoHubRegistry entandoHubRegistry = new EntandoHubRegistry()
                 .setId(entity.getId().toString())
                 .setName(entity.getName())
                 .setUrl(entity.getUrl().toString());
+        entandoHubRegistry.setApiKeyPresent(StringUtils.isNotEmpty(entity.getApiKey()));
+        return entandoHubRegistry;
     }
 
     public static List<EntandoHubRegistry> toListOfEntandoHubRegistry(List<EntandoHubRegistryEntity> entityList) {
