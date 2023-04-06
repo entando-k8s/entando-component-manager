@@ -19,6 +19,8 @@ import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 
 public interface EntandoHubRegistryService {
 
+    EntandoHubRegistry getRegistry(String id);
+
     List<EntandoHubRegistry> listRegistries();
 
     EntandoHubRegistry createRegistry(EntandoHubRegistry entandoHubRegistry);

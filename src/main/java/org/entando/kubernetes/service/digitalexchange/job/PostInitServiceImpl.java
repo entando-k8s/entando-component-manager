@@ -381,11 +381,14 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
         @Getter
         @Setter
+        @Builder.Default
         private int frequency = DEFAULT_CONFIGURATION_FREQUENCY;
         @Getter
         @Setter
+        @Builder.Default
         private int maxAppWait = DEFAULT_CONFIGURATION_TIMEOUT;
         @Getter
+        @Builder.Default
         private List<PostInitItem> items = new ArrayList<>();
     }
 

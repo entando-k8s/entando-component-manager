@@ -13,12 +13,13 @@ EntandoDeBundles served in the cluster can be installed in an EntandoApp using t
 ## How to run locally
 
 ### Prerequisites
-You'll need an Entando cluster already running
+ - An Entando cluster already running or the required components reachable
+ - `crane` installed locally and in the system path; crane can be installed from the [following URL](https://github.com/google/go-containerregistry/tree/main/cmd/crane).
 
 ### Steps
 
 - Rename `application-dev.properties.template` to `application-dev.properties` and change relevant properties
-- Fetch k8s JWT token from the cluster running instance inside `/var/run/secrets/kubernetes.io/serviceaccount/token` and place it locally in the same path or eventually set the environment variable SERVICE_ACCOUNT_TOKEN_PATH
+- Fetch k8s JWT token from the pod of the component manager running in your cluster instance inside `/var/run/secrets/kubernetes.io/serviceaccount/token` and place it locally in the same path or eventually set the environment variable SERVICE_ACCOUNT_TOKEN_PATH
 - Start Spring application with `dev` profile
 
 ## Environment Variables
@@ -38,4 +39,3 @@ You'll need an Entando cluster already running
 | ENTANDO_APP_NAMESPACE                                         | The kubernetes namespace where the entando app is running. Default to `test-namespace`;                       |
 | ENTANDO_APP_NAME                                              | The entando app name that this service is in. Defaults to `test-entando`.                                     |
 | ENTANDO_BUNDLE_TYPE                                           | The bundle type that should be handled by this service. It can be `git` or `npm`. The default value is `git`. |
-

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,10 +36,12 @@ public class BundleTagFilterManager {
 
         this.bundleTagTypes.forEach(tagType -> {
             if (! allowedBundleTagTypes.containsKey(tagType)) {
-                log.info("Unsupported tag type \"{}\" found in configuration. Supported tag types are {}",
+                log.info("Unsupported bundle tag type \"{}\" found in configuration. Supported tag types are {}",
                         tagType, String.join(", ", allowedBundleTagTypes.keySet()));
             }
         });
+
+        log.info("Bundle tag types loaded: \"{}\"", String.join(",", this.bundleTagTypes));
     }
 
 
