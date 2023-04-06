@@ -39,3 +39,4 @@ EntandoDeBundles served in the cluster can be installed in an EntandoApp using t
 | ENTANDO_APP_NAMESPACE                                         | The kubernetes namespace where the entando app is running. Default to `test-namespace`;                       |
 | ENTANDO_APP_NAME                                              | The entando app name that this service is in. Defaults to `test-entando`.                                     |
 | ENTANDO_BUNDLE_TYPE                                           | The bundle type that should be handled by this service. It can be `git` or `npm`. The default value is `git`. |
+
