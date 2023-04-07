@@ -67,4 +67,5 @@ COPY pom.xml target/lib* /opt/lib/
 # we could do with a better way to know the name - or to always create an app.jar or something
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
-ENTRYPOINT ["/wrapper.sh"]
+RUN /entrypoint.sh
+ENTRYPOINT [ "java", "-XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-20}", "-XshowSettings:vm", "-jar", "app.jar" ]
