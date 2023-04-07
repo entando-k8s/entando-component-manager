@@ -23,6 +23,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 
 @Data
@@ -38,7 +39,7 @@ public class EntandoHubRegistry {
     private String apiKey;
     private boolean apiKeyPresent;
 
-    @JsonIgnore
+    @JsonIgnore // security reason: this ensure that the api key is never returned
     public String getApiKey() {
         return apiKey;
     }
@@ -67,5 +68,10 @@ public class EntandoHubRegistry {
         } catch (MalformedURLException e) {
             throw new EntandoComponentManagerException("Error during URL parsing " + url);
         }
+    }
+
+    @JsonIgnore
+    public boolean hasApiKey() {
+        return StringUtils.isNotEmpty(apiKey);
     }
 }

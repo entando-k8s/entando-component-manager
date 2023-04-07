@@ -1,12 +1,14 @@
 package org.entando.kubernetes.utils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.stubhelper.HubStubHelper;
 
 @Slf4j
 public class EntandoHubMockServer extends EntandoGenericMockServer {
@@ -22,6 +24,8 @@ public class EntandoHubMockServer extends EntandoGenericMockServer {
     protected void init(WireMockServer wireMockServer) {
         addBundle(wireMockServer);
         addBundleGroup(wireMockServer);
+        addBundlePrivateCatalog(wireMockServer);
+        addBundleGroupPrivateCatalog(wireMockServer);
     }
 
     private void addBundleGroup(WireMockServer wireMockServer) {
@@ -43,6 +47,37 @@ public class EntandoHubMockServer extends EntandoGenericMockServer {
     private void addBundle(WireMockServer wireMockServer) {
         wireMockServer.stubFor(get(urlEqualTo(
                 "/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(BUNDLE_RESPONSE_JSON)));
+    }
+
+
+    /**
+     * private catalog 1 request.
+     * it needs the "Entando-hub-api-key" header to pass
+     * @param wireMockServer the wiremockserver to use
+     */
+    private void addBundleGroupPrivateCatalog(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(get(urlEqualTo(
+                "/appbuilder/api/bundlegroups/?catalogId=1&page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1"))
+                .withHeader(HubStubHelper.API_KEY_HEADER_NAME, containing(HubStubHelper.API_KEY_HEADER_VALUE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(BUNDLEGROUP_RESPONSE_JSON)));
+    }
+
+    /**
+     * private catalog 1 request.
+     * it needs the "Entando-hub-api-key" header to pass
+     * @param wireMockServer the wiremockserver to use
+     */
+    private void addBundlePrivateCatalog(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(get(urlEqualTo(
+                "/appbuilder/api/bundles/?catalogId=1&descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1"))
+                .withHeader(HubStubHelper.API_KEY_HEADER_NAME, containing(HubStubHelper.API_KEY_HEADER_VALUE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)

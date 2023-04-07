@@ -6,11 +6,12 @@ import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
+import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 
 public interface HubClient {
 
     ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> searchBundleGroupVersions(
-            String host, Map<String, Object> params);
+            EntandoHubRegistry registry, Map<String, Object> params);
 
-    ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> getBundles(String host, Map<String, Object> params);
+    ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> getBundles(EntandoHubRegistry registry, Map<String, Object> params);
 }

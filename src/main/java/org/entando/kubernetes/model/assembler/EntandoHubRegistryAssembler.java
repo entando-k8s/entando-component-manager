@@ -24,7 +24,8 @@ public class EntandoHubRegistryAssembler {
         EntandoHubRegistry entandoHubRegistry = new EntandoHubRegistry()
                 .setId(entity.getId().toString())
                 .setName(entity.getName())
-                .setUrl(entity.getUrl().toString());
+                .setUrl(entity.getUrl().toString())
+                .setApiKey(entity.getApiKey());
         entandoHubRegistry.setApiKeyPresent(StringUtils.isNotEmpty(entity.getApiKey()));
         return entandoHubRegistry;
     }

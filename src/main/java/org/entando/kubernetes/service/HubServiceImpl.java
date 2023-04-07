@@ -9,6 +9,7 @@ import org.entando.kubernetes.client.hub.domain.BundleEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionEntityDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
+import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,15 +31,15 @@ public class HubServiceImpl implements HubService {
     public ProxiedPayload<PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto>> searchBundleGroupVersions(
             String hostId, Map<String, Object> params) {
 
-        String host = registryService.getRegistry(hostId).getUrl();
-        return hubClientService.searchBundleGroupVersions(host, params);
+        final EntandoHubRegistry registry = registryService.getRegistry(hostId);
+        return hubClientService.searchBundleGroupVersions(registry, params);
     }
 
     @Override
     public ProxiedPayload<PagedContent<BundleDto, BundleEntityDto>> getBundles(String hostId,
             Map<String, Object> params) {
 
-        String host = registryService.getRegistry(hostId).getUrl();
-        return hubClientService.getBundles(host, params);
+        final EntandoHubRegistry registry = registryService.getRegistry(hostId);
+        return hubClientService.getBundles(registry, params);
     }
 }

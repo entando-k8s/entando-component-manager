@@ -3,12 +3,15 @@ package org.entando.kubernetes.client.hub;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLEGROUP_RESPONSE_JSON;
 import static org.entando.kubernetes.utils.EntandoHubMockServer.BUNDLE_RESPONSE_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -16,11 +19,16 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.HubDescriptorVersion;
 import org.entando.kubernetes.client.hub.domain.PagedContent;
+import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
+import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
+import org.entando.kubernetes.stubhelper.HubStubHelper;
 import org.entando.kubernetes.utils.EntandoHubMockServer;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +39,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import wiremock.org.apache.http.HttpResponse;
 import wiremock.org.apache.http.client.methods.HttpGet;
@@ -43,11 +53,14 @@ class HubClientTest {
 
     private static EntandoHubMockServer mockServer;
     @Spy
-    private DefaultHubClient hubClientService = new DefaultHubClient();
+    private DefaultHubClient hubClient = new DefaultHubClient();
+
+    private EntandoHubRegistry registry;
 
     @BeforeEach
     public void setup() throws Exception {
         mockServer = new EntandoHubMockServer();
+        registry = EntandoHubRegistry.builder().url(mockServer.getApiRoot()).build();
     }
 
     @AfterEach
@@ -88,7 +101,7 @@ class HubClientTest {
     @Test
     void testBundleServiceNoParams() {
         ProxiedPayload proxiedPayload =
-                hubClientService.getBundles(mockServer.getApiRoot(), null);
+                hubClient.getBundles(registry, null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
         assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
@@ -99,7 +112,7 @@ class HubClientTest {
     @Test
     void testBundleServiceNoData() {
         ProxiedPayload proxiedPayload =
-                hubClientService.getBundles(null, null);
+                hubClient.getBundles(registry, null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
         assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
@@ -110,14 +123,14 @@ class HubClientTest {
     @Test
     void testBundleService() throws JSONException {
         try {
-            assertNotNull(hubClientService);
+            assertNotNull(hubClient);
             LinkedHashMap<String, Object> params = new LinkedHashMap<>();
             params.put("descriptorVersions", new String[]{"v1", "v5"});
             params.put("pageSize", "1");
             params.put("page", "1");
 
             ProxiedPayload proxiedPayload =
-                    hubClientService.getBundles(mockServer.getApiRoot(), params);
+                    hubClient.getBundles(registry, params);
             assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.OK));
             assertNotNull(proxiedPayload);
             assertNotNull(proxiedPayload.getPayload());
@@ -148,7 +161,7 @@ class HubClientTest {
     @Test
     void testBundleGroupServiceNoParams() {
         ProxiedPayload proxiedPayload =
-                hubClientService.searchBundleGroupVersions(mockServer.getApiRoot(), null);
+                hubClient.searchBundleGroupVersions(registry, null);
         assertNotNull(proxiedPayload);
         assertThat(proxiedPayload.getPayload(), equalTo(null));
         assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
@@ -158,27 +171,20 @@ class HubClientTest {
 
     @Test
     void testBundleGroupServiceNoData() {
-        ProxiedPayload proxiedPayload =
-                hubClientService.searchBundleGroupVersions(null, null);
-        assertNotNull(proxiedPayload);
-        assertThat(proxiedPayload.getPayload(), equalTo(null));
-        assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
-        assertThat(proxiedPayload.getExceptionMessage(), is(notNullValue()));
-        assertThat(proxiedPayload.getExceptionClass(), is(notNullValue()));
+        assertThrows(EntandoComponentManagerException.class,
+                () -> hubClient.searchBundleGroupVersions(null, null));
     }
 
     @Test
     void testBundleGroupService() throws JSONException {
         try {
-            assertNotNull(hubClientService);
-
             LinkedHashMap<String, Object> params = new LinkedHashMap<>();
             params.put("page", "1");
             params.put("descriptorVersions", new String[]{"v5", "v1"});
             params.put("pageSize", "1");
 
             ProxiedPayload proxiedPayload =
-                    hubClientService.searchBundleGroupVersions(mockServer.getApiRoot(), params);
+                    hubClient.searchBundleGroupVersions(registry, params);
             assertThat(proxiedPayload.getStatus(), equalTo(HttpStatus.OK));
             assertNotNull(proxiedPayload);
             assertNotNull(proxiedPayload.getPayload());
@@ -200,6 +206,16 @@ class HubClientTest {
             t.printStackTrace();
             throw t;
         }
+    }
+
+    @Test
+    void shouldThrowExceptionWhileReceivingANullRegistryOrEmptyUrl() {
+        final Map<String, Object> emptyParams = new LinkedHashMap<>();
+        final EntandoHubRegistry emptyRegistry = new EntandoHubRegistry();
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.getBundles(null, emptyParams));
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.getBundles(emptyRegistry, emptyParams));
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.searchBundleGroupVersions(null, emptyParams));
+        assertThrows(EntandoComponentManagerException.class, () -> hubClient.searchBundleGroupVersions(emptyRegistry, emptyParams));
     }
 
     private void testBundleGroupPayload(String payload) throws JSONException {
@@ -238,4 +254,51 @@ class HubClientTest {
         return responseString;
     }
 
+    @Test
+    void shouldAddTheHeaderWhenAnApiKeyIsPresent() {
+        EntandoHubRegistry registry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry4();
+        final HttpEntity<Void> httpEntity = hubClient.composeWithApiKeyHeader(registry);
+        final HttpHeaders headers = httpEntity.getHeaders();
+        assertThat(headers.size(), equalTo(1));
+        assertThat(headers.get(HubStubHelper.API_KEY_HEADER_NAME), contains(registry.getApiKey()));
+    }
+
+    @Test
+    void shouldNOTAddTheHeaderWhenAnApiKeyIsNOTPresent() {
+        EntandoHubRegistry registry = EntandoHubRegistryStubHelper.stubEntandoHubRegistry1();
+        final HttpEntity<Void> httpEntity = hubClient.composeWithApiKeyHeader(registry);
+        assertNull(httpEntity);
+    }
+
+    @Test
+    void testBundleGroupServerClientWithApiKey() throws Throwable {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet request = new HttpGet(mockServer.getApiRoot()
+                + "/appbuilder/api/bundlegroups/?catalogId=1&page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
+        request.addHeader(HubStubHelper.API_KEY_HEADER_NAME, HubStubHelper.API_KEY_HEADER_VALUE);
+        try {
+            HttpResponse httpResponse = httpClient.execute(request);
+            String responseString = convertResponseToString(httpResponse);
+            testBundleGroupPayload(responseString);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    @Test
+    void testBundleServerClientWithApiKey() throws Throwable {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet request = new HttpGet(mockServer.getApiRoot()
+                + "/appbuilder/api/bundles/?catalogId=1&descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
+        request.addHeader(HubStubHelper.API_KEY_HEADER_NAME, HubStubHelper.API_KEY_HEADER_VALUE);
+        try {
+            HttpResponse httpResponse = httpClient.execute(request);
+            String responseString = convertResponseToString(httpResponse);
+            testBundlePayload(responseString);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 }

@@ -19,6 +19,9 @@ import org.springframework.http.HttpStatus;
 
 public class HubStubHelper {
 
+    public static final String API_KEY_HEADER_NAME = "Entando-hub-api-key";
+    public static final String API_KEY_HEADER_VALUE = "apikey";
+
     public static final Long ID = 30L;
     public static final Long BUNDLE_GROUP_ID = 10L;
     public static final Long BUNDLE_GROUP_VERSION_ID = 100L;
