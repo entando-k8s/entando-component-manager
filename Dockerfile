@@ -51,9 +51,10 @@ ENV PORT=8080 \
     CLASSPATH=/opt/lib \
     USER_NAME=root \
     NSS_WRAPPER_PASSWD=/tmp/passwd \
-    NSS_WRAPPER_GROUP=/tmp/group
+    NSS_WRAPPER_GROUP=/tmp/group \
+    MAX_RAM_PERCENTAGE=20
 
-COPY passwd.template entrypoint.sh /
+COPY passwd.template entrypoint.sh child.sh wrapper.sh /
 
 EXPOSE 8080
 
@@ -66,5 +67,4 @@ COPY pom.xml target/lib* /opt/lib/
 # we could do with a better way to know the name - or to always create an app.jar or something
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["java", "-XX:MaxRAMPercentage=80.0", "-XshowSettings:vm", "-jar", "app.jar"]
+ENTRYPOINT ["/wrapper.sh"]
