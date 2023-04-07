@@ -1,4 +1,4 @@
-FROM entando/entando-java-base:11.0.2
+FROM gigiozzz/entando-java-base:17.0.6
 ARG VERSION
 ### Required OpenShift Labels
 LABEL name="Entando Component Manager" \
@@ -9,7 +9,7 @@ LABEL name="Entando Component Manager" \
       summary="Entando Component Manager for Entando Component Repository" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
 
-COPY target/generated-resources/licenses /licenses
+#COPY target/generated-resources/licenses /licenses
 
 ### start git section -- copy and install
 USER 0
