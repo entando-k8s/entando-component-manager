@@ -68,4 +68,4 @@ COPY pom.xml target/lib* /opt/lib/
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
 RUN /entrypoint.sh
-ENTRYPOINT [ "java", "-XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-20}", "-XshowSettings:vm", "-jar", "app.jar" ]
+ENTRYPOINT java -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-20} -XshowSettings:vm -jar app.jar
