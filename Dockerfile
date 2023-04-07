@@ -54,7 +54,7 @@ ENV PORT=8080 \
     NSS_WRAPPER_GROUP=/tmp/group \
     MAX_RAM_PERCENTAGE=20
 
-COPY passwd.template entrypoint.sh child.sh wrapper.sh /
+COPY passwd.template entrypoint.sh /
 
 EXPOSE 8080
 
