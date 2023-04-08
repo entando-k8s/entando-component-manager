@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import org.apache.commons.lang.NotImplementedException;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
 
 @Profile("mockjpa")
 public class PluginDataRepositoryTestDouble implements PluginDataRepository {
@@ -77,6 +79,12 @@ public class PluginDataRepositoryTestDouble implements PluginDataRepository {
     @Override
     public <S extends PluginDataEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public <S extends PluginDataEntity, R> R findBy(Example<S> example,
+            Function<FetchableFluentQuery<S>, R> queryFunction) {
+        return null;
     }
 
     @Override
@@ -181,6 +189,11 @@ public class PluginDataRepositoryTestDouble implements PluginDataRepository {
     @Override
     public PluginDataEntity getById(UUID uuid) {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public PluginDataEntity getReferenceById(UUID uuid) {
+        return null;
     }
 
     @Override

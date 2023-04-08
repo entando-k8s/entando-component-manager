@@ -53,8 +53,7 @@ class EntandoBundleResourceNgControllerTest {
     @Test
     void getBundleInstalledComponents_withValidBundleId_shouldBeOk() {
         final PagedListRequest req = new PagedListRequest();
-        when(
-                bundleComponentService.getInstalledPluginsByBundleId(eq(req), any())).thenReturn(
+        when(bundleComponentService.getInstalledPluginsByBundleId(eq(req), any())).thenReturn(
                 new PagedMetadata(req, new ArrayList<>()));
         final String bundleId = "45355572";
         assertThat(controller.getBundleInstalledComponents(RestNamedId.from(bundleId), req).getBody().getPayload()
@@ -72,8 +71,7 @@ class EntandoBundleResourceNgControllerTest {
         assertThrows(DefaultProblem.class, () -> controller.getBundleInstalledComponents(idWrongEncode, request));
 
         String urlEncode = Base64.getEncoder().encodeToString("mccp://-test".getBytes(StandardCharsets.UTF_8));
-        when(
-                bundleComponentService.getInstalledPluginsByEncodedUrl(request, urlEncode)).thenThrow(
+        when(bundleComponentService.getInstalledPluginsByEncodedUrl(request, urlEncode)).thenThrow(
                 new EntandoValidationException());
         final RestNamedId idWrongValue = RestNamedId.from(
                 EntandoBundleResourceNgController.REPO_URL_PATH_PARAM + RestNamedId.SEPARATOR + urlEncode);

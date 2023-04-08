@@ -27,7 +27,6 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
-import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleServiceImpl;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.PostInitData;
 import org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.PostInitItem;
 import org.junit.jupiter.api.AfterEach;
@@ -36,19 +35,31 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 @Tag("unit")
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class PostInitServiceTest {
 
+    @MockBean
     private EntandoBundleService bundleService;
+    @MockBean
     private EntandoBundleInstallService installService;
+    @MockBean
     private KubernetesService kubernetesService;
+    @MockBean
     private EntandoBundleJobService entandoBundleJobService;
+    @SpyBean
+    private EntandoBundleInstallService installServiceSpy;
+    @SpyBean
+    private EntandoBundleService bundleServiceSpy;
+
     private PostInitServiceImpl serviceToTest;
+
 
     private static final String POST_INIT_BUNDLE_VERSION = "0.0.2";
     private static final String POST_INIT_BUNDLE_NAME = "test-bundle-entando-post-init-01";
@@ -57,11 +68,6 @@ class PostInitServiceTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        bundleService = Mockito.mock(EntandoBundleServiceImpl.class);
-        installService = Mockito.mock(EntandoBundleInstallService.class);
-        kubernetesService = Mockito.mock(KubernetesService.class);
-        entandoBundleJobService = Mockito.mock(EntandoBundleJobService.class);
-
     }
 
     @AfterEach
@@ -114,8 +120,6 @@ class PostInitServiceTest {
 
     @Test
     void postInitDefault_ShouldInstall() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
-        EntandoBundleService bundleServiceSpy = Mockito.spy(bundleService);
 
         initServiceToTest(null, bundleServiceSpy, installServiceSpy, kubernetesService,
                 entandoBundleJobService);
@@ -147,8 +151,6 @@ class PostInitServiceTest {
 
     @Test
     void postInit_WithoutActionShouldNotInstall() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
-        EntandoBundleService bundleServiceSpy = Mockito.spy(bundleService);
 
         PostInitData data = convertConfigDataToString();
         data.getItems().get(0).setAction(null);
@@ -280,8 +282,7 @@ class PostInitServiceTest {
 
     @Test
     void postInit_ShouldUpdate() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
-
+        
         initServiceToTest(convertConfigDataToString(convertConfigDataToString()), bundleService, installServiceSpy,
                 kubernetesService,
                 entandoBundleJobService);

@@ -41,6 +41,8 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -81,6 +83,11 @@ class HubFlowTest {
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
+    @DynamicPropertySource
+    static void registerNewEntandoUrl(DynamicPropertyRegistry registry) {
+        registry.add("entando.url", () -> "http://localhost:8092/entando-app");
+    }
+
     @BeforeEach
     public void setup() {
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
@@ -90,7 +97,7 @@ class HubFlowTest {
                 .apply(springSecurity())
                 .build();
 
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8092);
+        //TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8092);
     }
 
     @AfterEach

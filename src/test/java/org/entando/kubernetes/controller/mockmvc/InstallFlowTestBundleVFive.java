@@ -65,6 +65,8 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -126,6 +128,11 @@ class InstallFlowTestBundleVFive {
 
     private Supplier<BundleDownloader> defaultBundleDownloaderSupplier;
 
+    @DynamicPropertySource
+    static void registerNewEntandoUrl(DynamicPropertyRegistry registry) {
+        registry.add("entando.url", () -> "http://localhost:8091/entando-app");
+    }
+
     @BeforeEach
     public void setup() {
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
@@ -160,7 +167,7 @@ class InstallFlowTestBundleVFive {
         pluginDataRepository.save(pluginData2);
         pluginDataRepository.save(pluginData3);
 
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8091);
+        //TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8091);
 
         when(craneCommand.getImageDigest(anyString())).thenReturn(PluginStubHelper.PLUGIN_IMAGE_SHA);
     }

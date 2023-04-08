@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.persistence.EntityNotFoundException;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
 
 @Profile("mockjpa")
 public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRepository {
@@ -125,6 +127,12 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
 
     @Override
     public <S extends EntandoBundleJobEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
+        return null;
+    }
+
+    @Override
+    public <S extends EntandoBundleJobEntity, R> R findBy(Example<S> example,
+            Function<FetchableFluentQuery<S>, R> queryFunction) {
         return null;
     }
 
@@ -251,6 +259,11 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
 
     @Override
     public EntandoBundleJobEntity getById(UUID uuid) {
+        return null;
+    }
+
+    @Override
+    public EntandoBundleJobEntity getReferenceById(UUID uuid) {
         return null;
     }
 

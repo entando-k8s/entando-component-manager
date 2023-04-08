@@ -413,7 +413,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
      * </p>
      *
      * @param encodedRepoUrl BASE64 encoded repo URL
-     * @return
+     * @return an {@link Optional} of {@link EntandoBundle}
      */
     @Override
     public Optional<EntandoBundle> getBundleByRepoUrl(String encodedRepoUrl) {
@@ -435,7 +435,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
      * </p>
      *
      * @param encodedUrl BASE64 encoded URL
-     * @return
+     * @return an {@link Optional} of {@link EntandoBundle}
      */
     @Override
     public Optional<EntandoBundle> getInstalledBundleByEncodedUrl(String encodedUrl) {

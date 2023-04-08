@@ -41,6 +41,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -79,6 +81,11 @@ class EntandoHubRegistryIntegrationTest {
     @Autowired
     private AuthorizationChecker authorizationChecker;
 
+    @DynamicPropertySource
+    static void registerNewEntandoUrl(DynamicPropertyRegistry registry) {
+        registry.add("entando.url", () -> "http://localhost:8103/entando-app");
+    }
+
     @BeforeEach
     public void setup() {
         mockMvc = MockMvcBuilders
@@ -87,7 +94,7 @@ class EntandoHubRegistryIntegrationTest {
                 .build();
         entandoHubRegistryRepository.saveAll(entityToSaveList);
 
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8103);
+        //TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8103);
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
     }
 

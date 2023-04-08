@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,7 +41,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
-import org.entando.kubernetes.utils.TestUtils;
+import org.entando.kubernetes.utils.EnvironmentVariableMocker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +66,9 @@ public class K8SServiceClientTest {
     @BeforeEach
     public void setup() throws Exception {
         //needed by DefaultK8SServiceClient constructor
-        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+        Map<String, String> newEnvs = new HashMap<>();
+        newEnvs.put(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app");
+        EnvironmentVariableMocker.connect(newEnvs);
 
         mockServer = new EntandoK8SServiceMockServer();
         client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, true);
@@ -75,6 +78,7 @@ public class K8SServiceClientTest {
 
     @AfterEach
     public void reset() {
+        EnvironmentVariableMocker.pop();
         mockServer.tearDown();
     }
 

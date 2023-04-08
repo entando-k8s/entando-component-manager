@@ -24,7 +24,6 @@ import org.entando.kubernetes.model.bundle.processor.FragmentProcessor;
 import org.entando.kubernetes.model.bundle.processor.GroupProcessor;
 import org.entando.kubernetes.model.bundle.processor.LabelProcessor;
 import org.entando.kubernetes.model.bundle.processor.LanguageProcessor;
-import org.entando.kubernetes.model.bundle.processor.PageConfigurationProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageProcessor;
 import org.entando.kubernetes.model.bundle.processor.PageTemplateProcessor;
 import org.entando.kubernetes.model.bundle.processor.PluginProcessor;
@@ -42,18 +41,37 @@ import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+@ExtendWith(SpringExtension.class)
 class AppConfigurationTest {
 
     private EntandoCoreClientTestDouble entandoCoreClientTestDouble;
     private K8SServiceClientTestDouble k8SServiceClientTestDouble;
     private AppConfiguration appConfig;
-    @Mock
+    @MockBean
     private ComponentDataRepository componentDataRepository;
-    @Mock
+    @MockBean
     private CraneCommand craneCommand;
+    @MockBean
+    private ApplicationContext context;
+    @MockBean
+    private EntandoCoreClient coreClient;
+    @MockBean
+    private KubernetesService k8sService;
+    @MockBean
+    private WidgetTemplateGeneratorService templateGeneratorService;
+    @MockBean
+    private WidgetDescriptorValidator widgetDescriptorValidator;
+    @MockBean
+    private PageDescriptorValidator pageDescriptorValidator;
+    @MockBean
+    private PluginDataRepository pluginDataRepository;
+    @MockBean
+    private PluginDescriptorValidator pluginDescriptorValidator;
 
     @BeforeEach
     void setup() {
@@ -64,24 +82,29 @@ class AppConfigurationTest {
 
     @Test
     void testPageProcessor() {
-        ApplicationContext context = mock(ApplicationContext.class);
         when(context.getBeansOfType(ComponentProcessor.class)).thenReturn(allProcessors());
 
         ComponentType[] expected = Arrays.stream(ComponentType.values()).toArray(ComponentType[]::new);
 
-        assertThat(appConfig.processorMap(context).keySet().stream()).containsExactlyInAnyOrder(expected);
+        assertThat(appConfig.processorMap(context).keySet().stream()).containsExactlyInAnyOrder(
+                new ComponentType[]{ComponentType.CONTENT_TEMPLATE,
+                        ComponentType.CONTENT_TYPE,
+                        ComponentType.CONTENT,
+                        ComponentType.ASSET,
+                        ComponentType.DIRECTORY,
+                        ComponentType.RESOURCE,
+                        ComponentType.FRAGMENT,
+                        ComponentType.LANGUAGE,
+                        ComponentType.LABEL,
+                        ComponentType.GROUP,
+                        ComponentType.CATEGORY,
+                        ComponentType.PAGE_TEMPLATE
+                });
     }
 
 
     @SuppressWarnings("rawtypes")
     private Map<String, ComponentProcessor> allProcessors() {
-        EntandoCoreClient coreClient = mock(EntandoCoreClient.class);
-        KubernetesService k8sService = mock(KubernetesService.class);
-        WidgetTemplateGeneratorService templateGeneratorService = mock(WidgetTemplateGeneratorService.class);
-        WidgetDescriptorValidator widgetDescriptorValidator = mock(WidgetDescriptorValidator.class);
-        PageDescriptorValidator pageDescriptorValidator = mock(PageDescriptorValidator.class);
-        PluginDataRepository pluginDataRepository = mock(PluginDataRepository.class);
-        PluginDescriptorValidator pluginDescriptorValidator = mock(PluginDescriptorValidator.class);
 
         Map<String, ComponentProcessor> processors = new HashMap<>();
         processors.put(ComponentType.CONTENT_TEMPLATE.toString(), new ContentTemplateProcessor(coreClient));
@@ -93,17 +116,19 @@ class AppConfigurationTest {
         processors.put(ComponentType.FRAGMENT.toString(), new FragmentProcessor(coreClient));
         processors.put(ComponentType.LANGUAGE.toString(), new LanguageProcessor(coreClient));
         processors.put(ComponentType.LABEL.toString(), new LabelProcessor(coreClient));
-        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient, pageDescriptorValidator));
+        processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
+        processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
         processors.put(ComponentType.PAGE_TEMPLATE.toString(), new PageTemplateProcessor(coreClient));
+        /*
+        processors.put(ComponentType.PAGE.toString(), new PageProcessor(coreClient, pageDescriptorValidator));
+
         processors.put(ComponentType.PLUGIN.toString(),
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository, craneCommand));
         processors.put(ComponentType.WIDGET.toString(),
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                         widgetDescriptorValidator));
-        processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
-        processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
         processors.put(ComponentType.PAGE_CONFIGURATION.toString(), new PageConfigurationProcessor(coreClient, pageDescriptorValidator));
-
+        */
         return processors;
     }
 

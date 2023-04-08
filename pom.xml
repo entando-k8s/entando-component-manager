@@ -4,14 +4,15 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <groupId>org.entando</groupId>
-        <artifactId>entando-spring-boot-parent</artifactId>
-        <version>7.1.1</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.10</version>
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>7.1.5</version>
+    <version>7.1.6-SNAPSHOT</version>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Entando Component Manager</name>
@@ -49,12 +50,26 @@
         <github.organization>entando-k8s</github.organization>
         <entando-k8s-custom-model.version>7.1.0</entando-k8s-custom-model.version>
         <liquibase.version>4.3.1</liquibase.version>
+        <!--
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        -->
+        <java.version>17</java.version>
+        <spring-cloud.version>2021.0.3</spring-cloud.version>
         <fabric8.version>5.3.2</fabric8.version>
         <!-- not working -->
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <testcontainers.version>1.17.2</testcontainers.version>
+        <testcontainers.version>1.17.6</testcontainers.version>
+
+        <skipLicenseDownload>true</skipLicenseDownload>
+        <checkstyleConfigLocation>
+            https://raw.githubusercontent.com/entando-k8s/entando-spring-boot-parent/ACTIVE-CHECKSTYLE/checkstyle.xml
+        </checkstyleConfigLocation>
+        <verifyAllFailures>true</verifyAllFailures>
+
+        <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
+        <maven-checkstyle-plugin.version>3.2.1</maven-checkstyle-plugin.version>
+        <mysql-driver.version>8.0.32</mysql-driver.version>
     </properties>
 
     <dependencies>
@@ -77,10 +92,13 @@
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-websocket</artifactId>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.springframework.security.oauth</groupId>
             <artifactId>spring-security-oauth2</artifactId>
+            <version>2.5.2.RELEASE</version>
         </dependency>
+        -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -93,14 +111,19 @@
         <dependency>
             <groupId>org.entando</groupId>
             <artifactId>entando-k8s-custom-model</artifactId>
+            <version>${entando-k8s-custom-model.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>quarkus-kubernetes-client</artifactId>
+                    <groupId>io.quarkus</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -110,11 +133,13 @@
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>problem-spring-web</artifactId>
+            <version>0.26.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.6.15</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -124,8 +149,10 @@
         <dependency>
             <groupId>org.springframework.security.oauth.boot</groupId>
             <artifactId>spring-security-oauth2-autoconfigure</artifactId>
+            <version>2.6.8</version>
         </dependency>
-
+        <!--
+-->
         <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-client -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -149,8 +176,9 @@
         </dependency>
 
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql-driver.version}</version>
         </dependency>
 
         <dependency>
@@ -173,26 +201,24 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <version>2.8.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
+            <version>1.21</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.ojdbc</groupId>
             <artifactId>ojdbc8</artifactId>
             <scope>compile</scope>
+            <version>19.3.0.0</version>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>org.eclipse.jgit</groupId>-->
-        <!--            <artifactId>org.eclipse.jgit</artifactId>-->
-        <!--            <version>5.7.0.202003110725-r</version>-->
-        <!--        </dependency>-->
-
 
         <!-- Testing -->
         <dependency>
@@ -208,8 +234,13 @@
             <artifactId>mockito-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
+            <version>3.23.1-GA</version>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
@@ -218,6 +249,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+            <version>2.2.1.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>javax.xml.bind</groupId>
@@ -238,14 +270,17 @@
         <dependency>
             <groupId>com.github.zafarkhaja</groupId>
             <artifactId>java-semver</artifactId>
+            <version>0.9.0</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
+            <version>${fabric8.version}</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-server-mock</artifactId>
+            <version>${fabric8.version}</version>
         </dependency>
 
         <dependency>
@@ -296,7 +331,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <source>11</source>
+                    <source>17</source>
                 </configuration>
             </plugin>
             <!-- added for problems with java output redirect, property doesn't work
@@ -305,7 +340,51 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <!--
                 <version>3.0.0-M5</version>
+                -->
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${license-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>download-licenses</id>
+                        <goals>
+                            <goal>aggregate-download-licenses</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skipAggregateDownloadLicenses>${skipLicenseDownload}</skipAggregateDownloadLicenses>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven-checkstyle-plugin.version}</version>
+                <configuration>
+                    <configLocation>${checkstyleConfigLocation}</configLocation>
+                    <!--<encoding>UTF-8</encoding>-->
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <violationSeverity>warning</violationSeverity>
+                    <failOnViolation>${verifyAllFailures}</failOnViolation>
+                    <linkXRef>false</linkXRef>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <outputDirectory>target/site</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>checkstyle</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -330,8 +409,6 @@
                     </reportSet>
                 </reportSets>
             </plugin>
-
-
         </plugins>
     </reporting>
     <profiles>

@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.persistence.EntityNotFoundException;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
 
 @Profile("mockjpa")
 public class ComponentDataRepositoryTestDouble implements ComponentDataRepository {
@@ -76,6 +78,11 @@ public class ComponentDataRepositoryTestDouble implements ComponentDataRepositor
         return Optional.empty();
     }
 
+    @Override
+    public <S extends ComponentDataEntity, R> R findBy(Example<S> example,
+            Function<FetchableFluentQuery<S>, R> queryFunction) {
+        return null;
+    }
 
     @Override
     public List<ComponentDataEntity> findAllById(Iterable<UUID> uuids) {
@@ -204,4 +211,10 @@ public class ComponentDataRepositoryTestDouble implements ComponentDataRepositor
     public ComponentDataEntity getById(UUID uuid) {
         return null;
     }
+
+    @Override
+    public ComponentDataEntity getReferenceById(UUID uuid) {
+        return null;
+    }
+
 }
