@@ -27,7 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class
         })
-@ActiveProfiles("testdb")
+@ActiveProfiles("test-db")
 @Slf4j
 @Tag("component")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)

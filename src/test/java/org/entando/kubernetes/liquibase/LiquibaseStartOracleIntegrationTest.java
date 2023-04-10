@@ -29,7 +29,7 @@ import org.testcontainers.utility.DockerImageName;
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class
         })
-@ActiveProfiles("testdb")
+@ActiveProfiles("test-db")
 @Testcontainers
 @Slf4j
 @Tag("component")
