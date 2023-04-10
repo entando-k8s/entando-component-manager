@@ -22,14 +22,11 @@ public class AppEngineRestTemplateInterceptor implements ClientHttpRequestInterc
     private static final String BEARER_PREFIX = "Bearer ";
     private final OAuth2AuthorizedClientManager manager;
     private final ClientRegistration clientRegistration;
-    // private final OAuth2AuthorizeRequest oauth2AuthorizeRequest;
 
     public AppEngineRestTemplateInterceptor(OAuth2AuthorizedClientManager manager,
-            ClientRegistration clientRegistration/*,
-            OAuth2AuthorizeRequest oauth2AuthorizeRequest*/) {
+            ClientRegistration clientRegistration) {
         this.manager = manager;
         this.clientRegistration = clientRegistration;
-        // this.oauth2AuthorizeRequest = oauth2AuthorizeRequest;
     }
 
     @Override
