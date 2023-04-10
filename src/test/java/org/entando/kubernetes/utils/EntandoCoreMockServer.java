@@ -53,7 +53,7 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     private void addKeycloakEndpoints() {
         this.wireMockServer.stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\":\"bearer\" }")));
     }
 
     public EntandoCoreMockServer withGenericComponentsUsageSupport() {

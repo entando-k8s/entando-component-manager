@@ -1,13 +1,9 @@
 package org.entando.kubernetes.client.k8ssvc;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,17 +34,10 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.Hop;
 import org.springframework.hateoas.client.Traverson;
-import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -67,44 +56,31 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
-    private Path tokenFilePath;
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
     private final String entandoAppName;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, boolean normalizeK8sServiceUrl) {
-        this.tokenFilePath = Paths.get(tokenFilePath);
-        this.restTemplate = newRestTemplate();
+    public DefaultK8SServiceClient(
+            RestTemplate oauth2RestTemplate,
+            RestTemplate noAuthRestTemplate,
+            String k8sServiceUrl, boolean normalizeK8sServiceUrl) {
 
         if (normalizeK8sServiceUrl && !k8sServiceUrl.endsWith("/")) {
             k8sServiceUrl += "/";
         }
         this.k8sServiceUrl = k8sServiceUrl;
-
-        this.traverson = newTraverson();
-        this.noAuthRestTemplate = newNoAuthRestTemplate();
-
         this.entandoAppName = System.getenv(ENTANDO_APP_NAME);
 
+        this.restTemplate = oauth2RestTemplate;
+        this.noAuthRestTemplate = noAuthRestTemplate;
+        this.traverson = newTraverson();
+        
     }
 
     public Traverson newTraverson() {
         return new Traverson(URI.create(k8sServiceUrl), MediaTypes.HAL_JSON, MediaType.APPLICATION_JSON)
-                .setRestOperations(getRestTemplate());
-    }
-
-    public RestTemplate getRestTemplate() {
-        return restTemplate;
-    }
-
-    public void setRestTemplate(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-        this.traverson = newTraverson();
-    }
-
-    public void setNoAuthRestTemplate(RestTemplate restTemplate) {
-        this.noAuthRestTemplate = restTemplate;
+                .setRestOperations(restTemplate);
     }
 
     @Override
@@ -514,59 +490,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {
                 })
                 .getContent());
-    }
-
-
-    private RestTemplate newRestTemplate() {
-        final OAuth2RestTemplate template = new OAuth2RestTemplate(new ClientCredentialsResourceDetails());
-        template.setRequestFactory(getRequestFactory());
-        template.setAccessTokenProvider(new FromFileTokenProvider(this.tokenFilePath));
-        return setMessageConverters(template);
-    }
-
-    private RestTemplate newNoAuthRestTemplate() {
-
-        final RestTemplate template = new RestTemplate();
-        template.setRequestFactory(getRequestFactory());
-
-        return setMessageConverters(template);
-    }
-
-    private RestTemplate setMessageConverters(RestTemplate restTemplate) {
-        List<HttpMessageConverter<?>> messageConverters = Traverson
-                .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
-        if (messageConverters.stream()
-                .noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
-            messageConverters.add(0, getJsonConverter());
-        }
-        restTemplate.setMessageConverters(messageConverters);
-
-        return restTemplate;
-    }
-
-    private HttpMessageConverter<?> getJsonConverter() {
-        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new Jackson2HalModule());
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-
-        converter.setObjectMapper(mapper);
-        converter.setSupportedMediaTypes(supportedMediatypes);
-
-        return converter;
-    }
-
-
-    private ClientHttpRequestFactory getRequestFactory() {
-        final HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-        final int timeout = 10000;
-
-        requestFactory.setConnectionRequestTimeout(timeout);
-        requestFactory.setConnectTimeout(timeout);
-        requestFactory.setReadTimeout(timeout);
-        return requestFactory;
     }
 
     public void tryOrThrow(Runnable runnable, String actionDescription) {

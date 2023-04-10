@@ -51,6 +51,28 @@ public class TestSecurityConfiguration {
                 .clientSecret("client-secret");
     }
 
+    /*
+    private ClientRegistration.Builder clientRegistrationK8s() {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("end_session_endpoint", "https://jhipster.org/logout");
+
+        return ClientRegistration.withRegistrationId("k8s")
+                .redirectUriTemplate("{baseUrl}/{action}/oauth2/code/{registrationId}")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("read:user")
+                .authorizationUri("https://jhipster.org/login/oauth/authorize")
+                .tokenUri("https://jhipster.org/login/oauth/access_token")
+                .jwkSetUri("https://jhipster.org/oauth/jwk")
+                .userInfoUri("https://api.jhipster.org/user")
+                .providerConfigurationMetadata(metadata)
+                .userNameAttributeName("id")
+                .clientName("Client Name")
+                .clientId("client-id")
+                .clientSecret("client-secret");
+    }
+    */
+
     @Bean
     JwtDecoder jwtDecoder() {
         return mock(JwtDecoder.class);

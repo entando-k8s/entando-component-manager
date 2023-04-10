@@ -18,6 +18,7 @@ import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.config.AppEngineRestTemplateInterceptor;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -40,9 +41,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 
 @Tag("unit")
 class EntandoCoreClientTest {
@@ -58,8 +69,27 @@ class EntandoCoreClientTest {
         String keycloakClientSecret = "clientSecret";
         String keycloakAuthEndpoint = coreMockServer.getApiRoot() + "/auth/protocol/openid-connect/auth";
         String entandoCoreUrl = coreMockServer.getApiRoot() + "/";
-        this.client = new DefaultEntandoCoreClient(keycloakClientId, keycloakClientSecret, keycloakAuthEndpoint,
-                entandoCoreUrl);
+        this.client = new DefaultEntandoCoreClient(fakeOAuth2RestTemplate(), entandoCoreUrl);
+    }
+
+    private RestTemplate fakeOAuth2RestTemplate() {
+        ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("oidc")
+                .tokenUri(coreMockServer.getApiRoot() + "/auth/protocol/openid-connect/auth")
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .clientId("clientId")
+                .clientSecret("clientSecret").build();
+        ClientRegistrationRepository clientRegistrationRepository = new InMemoryClientRegistrationRepository(
+                clientRegistration);
+        OAuth2AuthorizedClientService authorizedClientService = new InMemoryOAuth2AuthorizedClientService(
+                clientRegistrationRepository);
+        OAuth2AuthorizedClientManager manager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                clientRegistrationRepository,
+                authorizedClientService);
+
+        return (new RestTemplateBuilder())
+                .additionalInterceptors(new AppEngineRestTemplateInterceptor(manager, clientRegistration))
+
+                .build();
     }
 
     @AfterEach

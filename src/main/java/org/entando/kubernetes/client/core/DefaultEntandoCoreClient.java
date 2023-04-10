@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
+import org.entando.kubernetes.config.AppEngineRestTemplateConfiguration;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -43,7 +44,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCorePageWidgetConfigurati
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.entando.kubernetes.model.web.response.RestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
@@ -53,14 +54,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
-import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
@@ -91,7 +89,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String DIRECTORY_PATH_SEGMENT = "directory";
     private static final String FILE_PATH_SEGMENT = "file";
 
-    private final OAuth2RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
     private final String entandoUrl;
     private final int retryNumber = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_RETRIES", 3);
     private final long backOffPeriod = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_BACKOFF", 5);
@@ -105,21 +103,10 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
 
     public DefaultEntandoCoreClient(
-            @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
-            @Value("${spring.security.oauth2.client.registration.oidc.client-secret}") final String clientSecret,
-            @Value("${entando.auth-url}") final String tokenUri,
+            @Qualifier(AppEngineRestTemplateConfiguration.APP_ENGINE_OAUTH2_CLIENT) RestTemplate oauth2RestClient,
             @Value("${entando.url}") final String entandoUrl) {
-        final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
-        resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(clientId);
-        resourceDetails.setClientSecret(clientSecret);
-        resourceDetails.setAccessTokenUri(tokenUri);
-
         this.entandoUrl = entandoUrl;
-        this.restTemplate = new OAuth2RestTemplate(resourceDetails);
-        this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
-        this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
-
+        this.restTemplate = oauth2RestClient;
     }
 
     @Override

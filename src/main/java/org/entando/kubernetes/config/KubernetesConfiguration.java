@@ -10,10 +10,12 @@ import java.time.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @Profile("!test")
@@ -31,8 +33,8 @@ public class KubernetesConfiguration {
     private String tokenUri;
     @Value("${entando.k8s.plugin-readiness-timeout-in-minutes:5}")
     private long pluginReadinessTimeoutInMinutes;
-    @Value("${entando.k8s.service-account.token-filepath}")
-    private String serviceAccountTokenPath;
+    //    @Value("${entando.k8s.service-account.token-filepath}")
+    //    private String serviceAccountTokenPath;
 
     @Bean
     public KubernetesClient client() {
@@ -41,8 +43,13 @@ public class KubernetesConfiguration {
     }
 
     @Bean
-    public K8SServiceClient k8SServiceClient() {
-        return new DefaultK8SServiceClient(k8sServiceUrl, serviceAccountTokenPath, normalizeK8sServiceUrl);
+    public K8SServiceClient k8SServiceClient(
+            @Qualifier(K8sServiceRestTemplateConfiguration.K8s_SERVICE_AUTH_CLIENT) RestTemplate oauth2RestTemplate,
+            @Qualifier(K8sServiceRestTemplateConfiguration.NO_AUTH_REST_CLIENT) RestTemplate noAuthRestTemplate) {
+        return new DefaultK8SServiceClient(oauth2RestTemplate,
+                noAuthRestTemplate,
+                k8sServiceUrl,
+                normalizeK8sServiceUrl);
     }
 
     @Bean

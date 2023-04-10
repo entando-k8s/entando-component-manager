@@ -1,68 +1,79 @@
 package org.entando.kubernetes.client.k8ssvc;
 
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import lombok.Getter;
+import java.text.ParseException;
+import java.time.Instant;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
-import org.springframework.security.oauth2.client.resource.UserApprovalRequiredException;
-import org.springframework.security.oauth2.client.resource.UserRedirectRequiredException;
-import org.springframework.security.oauth2.client.token.AccessTokenProvider;
-import org.springframework.security.oauth2.client.token.AccessTokenRequest;
-import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 
-public class FromFileTokenProvider implements AccessTokenProvider {
+public final class FromFileTokenProvider {
 
-    @Getter
-    private final Path tokenFileUri;
-    private OAuth2AccessToken oauth2AccessToken;
+    private String value;
 
-    public FromFileTokenProvider(Path tokenFileUri) {
-        this.tokenFileUri = tokenFileUri;
-        this.oauth2AccessToken = this.readOAuth2AccessToken();
+    private FromFileTokenProvider(String v) {
+        value = v;
     }
 
-    @Override
-    public OAuth2AccessToken obtainAccessToken(OAuth2ProtectedResourceDetails oauth2ProtectedResourceDetails,
-            AccessTokenRequest accessTokenRequest)
-            throws UserRedirectRequiredException, UserApprovalRequiredException, AccessDeniedException {
-
-        return this.oauth2AccessToken;
+    public static FromFileTokenProvider getInstance(Path tokenFileUri) {
+        return new FromFileTokenProvider(readValue(tokenFileUri));
     }
 
-    @Override
-    public boolean supportsResource(OAuth2ProtectedResourceDetails oauth2ProtectedResourceDetails) {
-        return true;
+
+    public OAuth2AccessToken getAccessToken() {
+        JWT jwt = readToken();
+        return new OAuth2AccessToken(TokenType.BEARER, value, getIat(jwt), getExp(jwt));
     }
 
-    @Override
-    public OAuth2AccessToken refreshAccessToken(OAuth2ProtectedResourceDetails oauth2ProtectedResourceDetails,
-            OAuth2RefreshToken oauth2RefreshToken, AccessTokenRequest accessTokenRequest)
-            throws UserRedirectRequiredException {
-
-        this.oauth2AccessToken = this.readOAuth2AccessToken();
-        return this.oauth2AccessToken;
-    }
-
-    @Override
-    public boolean supportsRefresh(OAuth2ProtectedResourceDetails oauth2ProtectedResourceDetails) {
-        return true;
+    public OAuth2RefreshToken getRefreshAccessToken() {
+        JWT jwt = readToken();
+        return new OAuth2RefreshToken(value, getIat(jwt), getExp(jwt));
     }
 
     /**
      * read the token from the set file.
+     *
      * @return the OAuth2AccessToken built using the token read from the set file
      */
-    private OAuth2AccessToken readOAuth2AccessToken() {
+    private static String readValue(Path tokenFileUri) {
         try {
-            return new DefaultOAuth2AccessToken(Files.readString(this.getTokenFileUri()).trim());
+            return Files.readString(tokenFileUri).trim();
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String
-                    .format("Issues retrieving service account token from %s", this.tokenFileUri), e);
+                    .format("Issues retrieving service account token from %s", tokenFileUri), e);
         }
     }
+
+    private JWT readToken() {
+        try {
+            return JWTParser.parse(value);
+        } catch (ParseException e) {
+            throw new EntandoComponentManagerException(String
+                    .format("Issues retrieving jwt token from %s", value), e);
+        }
+    }
+
+    private Instant getIat(JWT jwt) {
+        try {
+            return jwt.getJWTClaimsSet().getIssueTime().toInstant();
+        } catch (ParseException e) {
+            throw new EntandoComponentManagerException(String
+                    .format("Issues retrieving iat from jwt token"), e);
+        }
+    }
+
+    private Instant getExp(JWT jwt) {
+        try {
+            return jwt.getJWTClaimsSet().getExpirationTime().toInstant();
+        } catch (ParseException e) {
+            throw new EntandoComponentManagerException(String
+                    .format("Issues retrieving iat from jwt token"), e);
+        }
+    }
+
 }
