@@ -242,7 +242,7 @@ public class EntandoDeBundleComposer {
 
     private List<BundleGroup> createBundleGroupFrom(Map<String, String> annotations) {
 
-        return Optional.ofNullable(annotations.get(PBC_ANNOTATIONS_KEY)).map(s -> {
+        return Optional.ofNullable(annotations).map(m -> m.get(PBC_ANNOTATIONS_KEY)).map(s -> {
             try {
                 List<String> pbcList = objectMapper.readValue(s, new TypeReference<List<String>>() {
                 });
