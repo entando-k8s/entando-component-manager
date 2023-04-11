@@ -43,7 +43,7 @@ USER 0
 RUN mkdir /opt/certs; \
     touch /opt/certs/ca-certs-custom.pem; \
     chown -R root:root /opt/certs; \
-    chmod -R ug+rwx /opt/certs; 
+    chmod -R ug+rwx /opt/certs;
 USER 1001
 ### end certs section --
 
@@ -67,5 +67,5 @@ COPY pom.xml target/lib* /opt/lib/
 # we could do with a better way to know the name - or to always create an app.jar or something
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
-RUN /entrypoint.sh
-ENTRYPOINT java -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-20} -XshowSettings:vm -jar app.jar
+ENTRYPOINT ["/entrypoint.sh"]
+CMD java -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-20} -XshowSettings:vm -jar app.jar
