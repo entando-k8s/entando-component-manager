@@ -43,7 +43,7 @@ USER 0
 RUN mkdir /opt/certs; \
     touch /opt/certs/ca-certs-custom.pem; \
     chown -R root:root /opt/certs; \
-    chmod -R ug+rwx /opt/certs; 
+    chmod -R ug+rwx /opt/certs;
 USER 1001
 ### end certs section --
 
@@ -51,7 +51,8 @@ ENV PORT=8080 \
     CLASSPATH=/opt/lib \
     USER_NAME=root \
     NSS_WRAPPER_PASSWD=/tmp/passwd \
-    NSS_WRAPPER_GROUP=/tmp/group
+    NSS_WRAPPER_GROUP=/tmp/group \
+    MAX_RAM_PERCENTAGE=20
 
 COPY passwd.template entrypoint.sh /
 
@@ -67,4 +68,4 @@ COPY pom.xml target/lib* /opt/lib/
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["java", "-XX:MaxRAMPercentage=80.0", "-XshowSettings:vm", "-jar", "app.jar"]
+CMD java -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-20} -XshowSettings:vm -jar app.jar
