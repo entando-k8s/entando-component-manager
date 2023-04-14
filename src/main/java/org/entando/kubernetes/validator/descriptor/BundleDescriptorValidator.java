@@ -1,10 +1,10 @@
 package org.entando.kubernetes.validator.descriptor;
 
+import jakarta.annotation.PostConstruct;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;

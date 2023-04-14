@@ -17,20 +17,21 @@ package org.entando.kubernetes.model.job;
 import static org.entando.kubernetes.model.bundle.installable.Installable.MAX_COMMON_SIZE_OF_STRINGS;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.sql.Types;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +39,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
 import org.entando.kubernetes.model.web.SystemConstants;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -52,7 +53,8 @@ import org.springframework.validation.annotation.Validated;
 public class EntandoBundleEntity {
 
     @Id
-    @Type(type = "uuid-char")
+    //@Type(type = "uuid-char")
+    @JdbcTypeCode(Types.VARCHAR)
     private UUID id;
 
     @NotNull

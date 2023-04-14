@@ -79,7 +79,7 @@ public class K8sServiceRestTemplateConfiguration {
 
         requestFactory.setConnectionRequestTimeout(timeout);
         requestFactory.setConnectTimeout(timeout);
-        requestFactory.setReadTimeout(timeout);
+        //requestFactory.setReadTimeout(timeout);
         return requestFactory;
     }
 

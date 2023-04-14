@@ -14,23 +14,24 @@
 
 package org.entando.kubernetes.model.job;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotNull;
+import java.sql.Types;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.ComponentType;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -45,7 +46,8 @@ public class ComponentDataEntity {
 
     @Id
     @Column
-    @Type(type = "uuid-char")
+    // @Type(type = "uuid-char")
+    @JdbcTypeCode(Types.VARCHAR)
     private UUID id;
 
     @NotNull

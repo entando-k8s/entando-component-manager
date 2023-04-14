@@ -614,7 +614,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                             String.format("Empty response received for usage of component type %s with code %s",
                                     componentType, code)));
         } else {
-            throw new WebHttpException(usage.getStatusCode(),
+            throw new WebHttpException(HttpStatus.valueOf(usage.getStatusCode().value()),
                     String.format("Some error occurred while retrieving %s %s usage", componentType, code));
         }
     }

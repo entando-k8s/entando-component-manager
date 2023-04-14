@@ -14,20 +14,21 @@
 
 package org.entando.kubernetes.model.job;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Data
 @Entity
@@ -39,7 +40,8 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
 
     @Id
     @Column
-    @Type(type = "uuid-char")
+    //@Type(type = "uuid-char")
+    @JdbcTypeCode(Types.VARCHAR)
     private UUID id;
     @Column
     private String componentId;

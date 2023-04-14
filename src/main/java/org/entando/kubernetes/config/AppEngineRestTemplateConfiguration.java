@@ -60,7 +60,8 @@ public class AppEngineRestTemplateConfiguration {
 
         requestFactory.setConnectionRequestTimeout(timeout);
         requestFactory.setConnectTimeout(timeout);
-        requestFactory.setReadTimeout(timeout);
+        // FIXME
+        //requestFactory.setReadTimeout(timeout);
         return requestFactory;
     }
 

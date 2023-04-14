@@ -1,8 +1,8 @@
 package org.entando.kubernetes.config;
 
 import java.io.IOException;
-import org.apache.http.HttpHeaders;
 import org.entando.kubernetes.client.k8ssvc.FromFileTokenProvider;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;

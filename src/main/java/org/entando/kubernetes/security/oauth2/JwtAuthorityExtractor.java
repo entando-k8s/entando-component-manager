@@ -19,7 +19,6 @@ public class JwtAuthorityExtractor extends JwtAuthenticationConverter {
     @Value("${spring.security.oauth2.client.registration.oidc.client-id}")
     public String clientId;
 
-    @Override
     protected Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         return this.extractAuthorityFromClaims(jwt.getClaims());
     }

@@ -1,8 +1,8 @@
 package org.entando.kubernetes.model.common;
 
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.Transient;
 import org.springframework.lang.Nullable;
 

@@ -1,9 +1,9 @@
 package org.entando.kubernetes.model.bundle;
 
+import jakarta.persistence.AttributeConverter;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.AttributeConverter;
 
 public class BundleComponentTypesConverter implements AttributeConverter<Set<String>, String> {
 

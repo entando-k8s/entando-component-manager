@@ -152,7 +152,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 return response.getBody().getContent();
             } else {
                 throw new RestClientResponseException("Update process failed",
-                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                        response.getStatusCodeValue(),
+                        HttpStatus.valueOf(response.getStatusCode().value()).getReasonPhrase(),
                         null, null, null);
             }
         }, String.format("while updating plugin %s", pluginName));
@@ -213,7 +214,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                         return resp.getBody().getContent();
                     }
                     throw new RestClientResponseException("Linking process failed",
-                            resp.getStatusCodeValue(), resp.getStatusCode().getReasonPhrase(),
+                            resp.getStatusCodeValue(),
+                            HttpStatus.valueOf(resp.getStatusCode().value()).getReasonPhrase(),
                             null, null, null);
                 },
                 String.format("linking app %s to plugin %s", name, plugin.getMetadata().getName())
@@ -448,7 +450,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 return entandoDeBundle;
             }
             throw new RestClientResponseException("Deploy EntandoDeBundle process failed",
-                    response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                    response.getStatusCodeValue(),
+                    HttpStatus.valueOf(response.getStatusCode().value()).getReasonPhrase(),
                     null, null, null);
         }, logMessage);
     }

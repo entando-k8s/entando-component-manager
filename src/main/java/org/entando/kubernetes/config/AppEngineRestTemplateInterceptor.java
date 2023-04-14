@@ -5,7 +5,7 @@ import static java.util.Objects.isNull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import org.apache.http.HttpHeaders;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
