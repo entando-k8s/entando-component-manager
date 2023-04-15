@@ -125,6 +125,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!--
+        setUseTrailingSlashMatch
+        -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
@@ -356,7 +364,7 @@
         </dependency>
         <!--
         to fix https://stackoverflow.com/questions/68761409/jcapemkeyconverter-is-provided-by-bouncycastle-an-optional-dependency-to-use-s
-        
+
         -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
