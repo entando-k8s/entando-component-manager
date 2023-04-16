@@ -49,6 +49,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
         <entando-k8s-custom-model.version>7.1.0</entando-k8s-custom-model.version>
+        <spring-boot.build-image.imageName>registry.hub.docker.com/entando/${project.artifactId}:${project.version}
+        </spring-boot.build-image.imageName>
+        <native.maven.plugin.version>0.9.20</native.maven.plugin.version>
         <!-- springboot 3 liquibase 4.17!!!
         <liquibase.version>4.3.1</liquibase.version>
         -->
@@ -88,6 +91,19 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>graalvm-native-build-tools-snapshots</id>
+            <name>GraalVM native-build-tools Snapshots</name>
+            <url>https://raw.githubusercontent.com/graalvm/native-build-tools/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencies>
         <!-- OWASP Fixes -->
@@ -386,6 +402,7 @@
         </dependency>
     </dependencies>
 
+
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
@@ -490,6 +507,33 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native.maven.plugin.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>add-reachability-metadata</id>
+                                <goals>
+                                    <goal>add-reachability-metadata</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <metadataRepository>
+                                <enabled>true</enabled>
+                                <version>0.2.7</version>
+                            </metadataRepository>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
