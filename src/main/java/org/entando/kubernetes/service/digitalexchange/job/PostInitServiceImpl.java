@@ -274,6 +274,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
             return Optional.ofNullable(kubeStatus);
         } catch (Exception ex) {
             log.warn("Error post init retrieve app status or bundle install:'{}'", ex.getMessage());
+            log.debug("error stack: ", ex);
             return Optional.empty();
         }
 
