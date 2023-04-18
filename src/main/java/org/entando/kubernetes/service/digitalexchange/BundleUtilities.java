@@ -129,9 +129,10 @@ public class BundleUtilities {
      * @return the latest version respect to the sem version rules
      */
     public static Optional<EntandoBundleVersion> composeLatestVersionFromDistTags(EntandoDeBundle entandoDeBundle) {
-
+        log.debug("compose latest version from dist tags for entandoDeBundle:'{}'", entandoDeBundle);
         if (entandoDeBundle == null || entandoDeBundle.getSpec() == null
                 || entandoDeBundle.getSpec().getDetails() == null) {
+            log.debug("composed empty latest version");
             return Optional.empty();
         }
 
@@ -157,7 +158,9 @@ public class BundleUtilities {
         } else {
             latestVersionOpt = Optional.empty();
         }
-
+        log.debug("composed latest version:'{}' from dist tags for entandoDeBundle:'{}'",
+                latestVersionOpt,
+                entandoDeBundle);
         return latestVersionOpt;
     }
 

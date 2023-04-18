@@ -96,13 +96,16 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public PagedMetadata<EntandoBundle> listBundles(PagedListRequest request) {
+        log.info("search bundles list for request:'{}'", request);
         //TODO may generate performance issues if list of bundles is too big
         List<EntandoBundle> allBundles = listAllBundles();
         List<EntandoBundle> localFilteredList = new EntandoBundleListProcessor(request, allBundles)
                 .filterAndSort().toList();
         List<EntandoBundle> sublist = request.getSublist(localFilteredList);
 
-        return new PagedMetadata<>(request, sublist, localFilteredList.size());
+        PagedMetadata<EntandoBundle> response = new PagedMetadata<>(request, sublist, localFilteredList.size());
+        log.debug("return bundles list:'{}'", response);
+        return response;
     }
 
     private List<EntandoBundle> listAllBundles() {
@@ -116,7 +119,9 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         allComponents.addAll(availableBundles);
         allComponents.addAll(installedButNotAvailableOnEcr);
 
-        return updateCustomInstallationFlag(allComponents, installedBundles);
+        List<EntandoBundle> allComponentsUpdated = updateCustomInstallationFlag(allComponents, installedBundles);
+        log.debug("listAllBundles :'{}'", allComponentsUpdated);
+        return allComponentsUpdated;
     }
 
     /**
@@ -201,17 +206,20 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     }
 
     public List<EntandoBundle> listBundlesFromEcr(Optional<String> repoUrlFilter) {
+        log.debug("search bundles list from k8s services with repoUrlFilter:'{}'", repoUrlFilter);
         List<EntandoDeBundle> bundles;
         if (accessibleDigitalExchanges.isEmpty()) {
             bundles = k8SServiceClient.getBundlesInObservedNamespaces(repoUrlFilter);
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges, repoUrlFilter);
         }
-
-        return bundles.stream()
+        List<EntandoBundle> listBundlesFromEcr = bundles.stream()
                 .map(this::convertToBundleFromEcr)
+                .peek(b -> log.debug("b before filter:'{}'", b))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        log.debug("bundles list from k8s services:'{}'", listBundlesFromEcr);
+        return listBundlesFromEcr;
     }
 
     @Override
@@ -297,6 +305,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
     @Override
     public EntandoBundle convertToBundleFromEcr(EntandoDeBundle deBundle) {
+        log.debug("Convert EntandoDeBundle:'{}' to EntandoBundle", deBundle);
         Set<String> bundleComponentTypes = Sets.newHashSet("bundle");
         BundleType bundleType = BundleType.STANDARD_BUNDLE;
         if (deBundle.getMetadata().getLabels() != null) {
@@ -345,6 +354,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
         bundle.setRepoUrl(getLatestTagRepoUrl(deBundle, latestVersionFromDistTag));
 
+        log.debug("Converted EntandoDeBundle to EntandoBundle:'{}'", bundle);
         return bundle;
     }
 
@@ -356,6 +366,9 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
      * @return the latest repo url of latest tag
      */
     private String getLatestTagRepoUrl(EntandoDeBundle deBundle, EntandoBundleVersion latestVersionFromDistTag) {
+        log.debug("Get latest tag repo url for deBundle:'{}' with latestVersionFromDistTag:'{}'",
+                deBundle,
+                latestVersionFromDistTag);
 
         final List<EntandoDeBundleTag> tags = deBundle.getSpec().getTags();
 
@@ -370,7 +383,9 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
 
         // if the latestVersionFromDistTag is availabe, let's use that one
         if (latestVersionFromDistTag != null && tagsMap.containsKey(latestVersionFromDistTag.getVersion())) {
-            return tagsMap.get(latestVersionFromDistTag.getVersion()).getTarball();
+            String latestVersion = tagsMap.get(latestVersionFromDistTag.getVersion()).getTarball();
+            log.debug("Found latestVersion:'{}'", latestVersion);
+            return latestVersion;
         }
 
         // otherwise let's calculate the latest from the tags list
@@ -380,10 +395,13 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                 .max(Comparator.comparing(EntandoBundleVersion::getSemVersion));
 
         if (latestVersionOpt.isEmpty()) {
+            log.debug("Found null latestVersion");
             return null;
         }
 
-        return tagsMap.get(latestVersionOpt.get().getVersion()).getTarball();
+        String latestVersion = tagsMap.get(latestVersionOpt.get().getVersion()).getTarball();
+        log.debug("Found latestVersion:'{}'", latestVersion);
+        return latestVersion;
     }
 
     @Override
