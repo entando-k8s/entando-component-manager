@@ -111,6 +111,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
     private List<EntandoBundle> listAllBundles() {
         List<EntandoBundle> allComponents = new ArrayList<>();
         List<EntandoBundleEntity> installedBundles = installedComponentRepo.findAll();
+        log.debug("installedBundles :'{}'", installedBundles);
 
         List<EntandoBundle> availableBundles = listBundlesFromEcr();
         List<EntandoBundle> installedButNotAvailableOnEcr = filterInstalledButNotAvailableOnEcrToEntandoBundle(

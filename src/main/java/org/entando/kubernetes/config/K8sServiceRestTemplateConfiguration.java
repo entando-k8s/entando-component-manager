@@ -1,23 +1,13 @@
 package org.entando.kubernetes.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import org.entando.kubernetes.client.k8ssvc.FromFileTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.client.Traverson;
-import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
-import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -36,7 +26,6 @@ public class K8sServiceRestTemplateConfiguration {
         return restTemplateBuilder
                 .additionalInterceptors(new K8sRestTemplateInterceptor(provider))
                 .requestFactory(() -> getRequestFactory())
-                .messageConverters(getMessageConverters())
                 .build();
     }
 
@@ -44,10 +33,10 @@ public class K8sServiceRestTemplateConfiguration {
     RestTemplate noauthRestTemplate(RestTemplateBuilder restTemplateBuilder) {
         return restTemplateBuilder
                 .requestFactory(() -> getRequestFactory())
-                .messageConverters(getMessageConverters())
                 .build();
     }
 
+    /*
     private List<HttpMessageConverter<?>> getMessageConverters() {
         List<HttpMessageConverter<?>> messageConverters = Traverson
                 .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
@@ -72,7 +61,7 @@ public class K8sServiceRestTemplateConfiguration {
 
         return converter;
     }
-
+    */
     private ClientHttpRequestFactory getRequestFactory() {
         final HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
         final int timeout = 10000;

@@ -1,91 +1,11 @@
-{
-  "_embedded": {
-    "observedNamespaces": [
-      {
-        "name": "my-namespace",
-        "_links": {
-          "self": {
-            "href": "http://localhost:9080/namespaces/my-namespace"
-          },
-          "plugins-in-namespace": {
-            "href": "http://localhost:9080/plugins?namespace=my-namespace"
-          },
-          "apps-in-namespace": {
-            "href": "http://localhost:9080/apps?namespace=my-namespace"
-          },
-          "bundles-in-namespace": {
-            "href": "http://localhost:9080/bundles?namespace=my-namespace"
-          },
-          "app-plugin-links-in-namespace": {
-            "href": "http://localhost:9080/app-plugin-links?namespace=my-namespace",
-            "templated": true
-          }
-        }
-      },
-      {
-        "name": "entando-de-bundles",
-        "_links": {
-          "self": {
-            "href": "http://localhost:9080/namespaces/entando-de-bundles"
-          },
-          "plugins-in-namespace": {
-            "href": "http://localhost:9080/plugins?namespace=entando-de-bundles"
-          },
-          "apps-in-namespace": {
-            "href": "http://localhost:9080/apps?namespace=entando-de-bundles"
-          },
-          "bundles-in-namespace": {
-            "href": "http://localhost:9080/bundles?namespace=entando-de-bundles"
-          },
-          "app-plugin-links-in-namespace": {
-            "href": "http://localhost:9080/app-plugin-links?namespace=entando-de-bundles",
-            "templated": true
-          }
-        }
-      },
-      {
-        "name": "plugin-namespace",
-        "_links": {
-          "self": {
-            "href": "http://localhost:9080/namespaces/plugin-namespace"
-          },
-          "plugins-in-namespace": {
-            "href": "http://localhost:9080/plugins?namespace=plugin-namespace"
-          },
-          "apps-in-namespace": {
-            "href": "http://localhost:9080/apps?namespace=plugin-namespace"
-          },
-          "bundles-in-namespace": {
-            "href": "http://localhost:9080/bundles?namespace=plugin-namespace"
-          },
-          "app-plugin-links-in-namespace": {
-            "href": "http://localhost:9080/app-plugin-links?namespace=plugin-namespace",
-            "templated": true
-          }
-        }
-      }
-    ]
+[
+  {
+    "name": "my-namespace"
   },
-  "_links": {
-    "namespace": {
-      "href": "http://localhost:9080/namespaces/{name}",
-      "templated": true
-    },
-    "apps-in-namespace": {
-      "href": "http://localhost:9080/apps?namespace={namespace}",
-      "templated": true
-    },
-    "plugins-in-namespace": {
-      "href": "http://localhost:9080/plugins?namespace={namespace}",
-      "templated": true
-    },
-    "bundles-in-namespace": {
-      "href": "http://localhost:9080/bundles?namespace={namespace}",
-      "templated": true
-    },
-    "app-plugin-links-in-namespace": {
-      "href": "http://localhost:9080/app-plugin-links?namespace={namespace}",
-      "templated": true
-    }
+  {
+    "name": "entando-de-bundles"
+  },
+  {
+    "name": "plugin-namespace"
   }
-}
+]

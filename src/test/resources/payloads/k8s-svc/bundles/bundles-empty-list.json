@@ -1,15 +1,1 @@
-{
-  "_embedded": {
-    "entandoDeBundles": []
-  },
-  "_links": {
-    "bundle": {
-      "href": "http://localhost:9080/bundles/{name}",
-      "templated": true
-    },
-    "bundles-list": {
-      "href": "http://localhost:9080/bundles{?namespace}",
-      "templated": true
-    }
-  }
-}
+[]

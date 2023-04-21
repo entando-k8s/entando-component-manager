@@ -15,8 +15,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoAppPluginLinkJavaNative;
+import org.entando.kubernetes.client.model.EntandoDeBundleJavaNative;
+import org.entando.kubernetes.client.model.EntandoPluginJavaNative;
+import org.entando.kubernetes.client.model.IngressJavaNative;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -28,12 +33,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.client.Hop;
-import org.springframework.hateoas.client.Traverson;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -58,7 +58,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private final String k8sServiceUrl;
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
-    private Traverson traverson;
     private final String entandoAppName;
 
     public DefaultK8SServiceClient(
@@ -74,55 +73,60 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         this.restTemplate = oauth2RestTemplate;
         this.noAuthRestTemplate = noAuthRestTemplate;
-        this.traverson = newTraverson();
-        
-    }
 
-    public Traverson newTraverson() {
-        return new Traverson(URI.create(k8sServiceUrl), MediaTypes.HAL_JSON, MediaType.APPLICATION_JSON)
-                .setRestOperations(restTemplate);
     }
 
     @Override
     public List<EntandoAppPluginLink> getAppLinks(String entandoAppName) {
+
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(APP_PLUGIN_LINKS_ENDPOINT)
+                .queryParam("app", entandoAppName).build().toUri();
+        LOGGER.info("### fetching EntandoAppPluginLink list from entandoAppName:'{}' with url:'{}'", entandoAppName,
+                url);
+
         return tryOrThrow(() -> {
-            CollectionModel<EntityModel<EntandoAppPluginLink>> links = traverson
-                    .follow(APP_PLUGIN_LINKS_ENDPOINT)
-                    .follow(Hop.rel("app-links").withParameter("app", entandoAppName))
-                    .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoAppPluginLink>>>() {
-                    });
-            assert links != null;
-            return links.getContent().stream()
-                    .map(EntityModel::getContent)
+            return Stream.of(restTemplate.getForObject(url, EntandoAppPluginLinkJavaNative[].class))
+                    .map(e -> new EntandoAppPluginLink(e.getMetadata(), e.getSpec(), e.getStatus()))
                     .collect(Collectors.toList());
         });
     }
 
     @Override
     public EntandoPlugin getPluginForLink(EntandoAppPluginLink el) {
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(APP_PLUGIN_LINKS_ENDPOINT)
+                .queryParam("name", entandoAppName).build().toUri();
+        LOGGER.info("### fetching EntandoAppPlugin from EntandoAppPluginLink:'{}' with url:'{}'", el, url);
+
+        return getLinkByName(el.getMetadata().getName())
+                .flatMap(link -> getPluginByName(link.getSpec().getEntandoPluginName()))
+                .orElse(null);
+        /*
         return tryOrThrow(() -> traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", el.getMetadata().getName()))
                 .follow("plugin")
                 .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
                 })
                 .getContent(), "get plugin associated with link " + el.getMetadata().getName());
+         */
     }
 
     @Override
     public Optional<EntandoPlugin> getPluginByName(String name) {
-        EntandoPlugin plugin = null;
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(PLUGINS_ENDPOINT)
+                .path("/" + name)
+                .build().toUri();
+        LOGGER.info("### fetching EntandoPlugin from name:'{}' with url:'{}'", name, url);
+
         try {
-            plugin = traverson.follow(PLUGINS_ENDPOINT)
-                    .follow(Hop.rel("plugin").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
-                    })
-                    .getContent();
+            return Optional.ofNullable(restTemplate.getForObject(url, EntandoPluginJavaNative.class))
+                    .map(p -> new EntandoPlugin(p.getMetadata(), p.getSpec(), p.getStatus()));
+
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException("An error occurred while retrieving plugin with name " + name, ex);
             }
+            return Optional.empty();
         }
-        return Optional.ofNullable(plugin);
     }
 
     /**
@@ -134,22 +138,28 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public EntandoPlugin updatePlugin(EntandoPlugin plugin) {
         String pluginName = plugin.getMetadata().getName();
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(PLUGINS_ENDPOINT)
+                .build().toUri();
+        LOGGER.info("### update  EntandoPlugin with pluginName:'{}' with url:'{}'", pluginName, url);
+
+        /*
         URI updateURI = traverson.follow(PLUGINS_ENDPOINT)
                 .follow(Hop.rel("create-or-replace-plugin").withParameter("name", pluginName))
                 .asLink().toUri();
+         */
 
         return tryOrThrow(() -> {
             RequestEntity<EntandoPlugin> request = RequestEntity
-                    .put(updateURI)
+                    .put(url)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(plugin);
 
-            ResponseEntity<EntityModel<EntandoPlugin>> response = restTemplate
-                    .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
+            ResponseEntity<EntandoPlugin> response = restTemplate
+                    .exchange(request, new ParameterizedTypeReference<EntandoPlugin>() {
                     });
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return response.getBody().getContent();
+                return response.getBody();
             } else {
                 throw new RestClientResponseException("Update process failed",
                         response.getStatusCodeValue(),
@@ -165,10 +175,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String linkName = el.getMetadata().getName();
         String appName = el.getSpec().getEntandoAppName();
         String pluginName = el.getSpec().getEntandoAppNamespace().orElse(el.getMetadata().getNamespace());
-        Link unlinkHref = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
-                .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
-                .asLink();
-        tryOrThrow(() -> restTemplate.delete(unlinkHref.toUri()),
+
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .path(APP_PLUGIN_LINKS_ENDPOINT)
+                .path("/" + linkName)
+                .build().toUri();
+        LOGGER.info("### delete EntandoAppPluginLink from linkName:'{}' with url:'{}'", linkName, url);
+
+        tryOrThrow(() -> restTemplate.delete(url),
                 String.format("unlink app %s and plugin %s", appName, pluginName));
     }
 
@@ -177,41 +191,56 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         String linkName = el.getMetadata().getName();
         String appName = el.getSpec().getEntandoAppName();
         String pluginName = el.getSpec().getEntandoAppNamespace().orElse(el.getMetadata().getNamespace());
-        Link unlinkHref = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
-                .follow(Hop.rel("delete-and-scale-down").withParameter("name", linkName))
-                .asLink();
-        tryOrThrow(() -> restTemplate.delete(unlinkHref.toUri()),
+
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .path(APP_PLUGIN_LINKS_ENDPOINT)
+                .path("/delete-and-scale-down/" + linkName)
+                .build().toUri();
+        LOGGER.info("### delete and scale down EntandoAppPluginLink from linkName:'{}' with url:'{}'", linkName, url);
+
+        tryOrThrow(() -> restTemplate.delete(url),
                 String.format("unlink app %s and plugin %s and scale down plugin", appName, pluginName));
     }
 
     @Override
     public void removeIngressPathForPlugin(String pluginCode) {
-        Link deleteIngressPathsHref = traverson.follow(PLUGINS_ENDPOINT)
-                .follow(Hop.rel("delete-plugin-ingress-path").withParameter("name", pluginCode))
-                .asLink();
-        tryOrThrow(() -> restTemplate.delete(deleteIngressPathsHref.toUri()),
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .path(PLUGINS_ENDPOINT)
+                .path("/ingress/" + pluginCode)
+                .build().toUri();
+        LOGGER.info("### delete ingress path for pluginCode:'{}' with url:'{}'", pluginCode, url);
+
+        tryOrThrow(() -> restTemplate.delete(url),
                 String.format("remove ingress path from plugin %s", pluginCode));
     }
 
     @Override
     public EntandoAppPluginLink linkAppWithPlugin(String name, String namespace, EntandoPlugin plugin) {
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(APPS_ENDPOINT)
+                .path("/" + name)
+                .path("/links")
+                .build().toUri();
+        LOGGER.info("### link app name:'{}' with plugin:'{}' with url:'{}'", name, plugin, url);
+
+        /*
         URI linkToCall = tryOrThrow(() -> {
             Link linkToApp = traverson.follow("apps")
                     .follow(Hop.rel("app").withParameter("name", name))
                     .asLink();
             return UriComponentsBuilder.fromUri(linkToApp.toUri()).pathSegment("links").build(Collections.emptyMap());
         });
+         */
 
         return tryOrThrow(() -> {
                     RequestEntity<EntandoPlugin> request = RequestEntity
-                            .post(linkToCall)
+                            .post(url)
                             .contentType(MediaType.APPLICATION_JSON)
                             .body(plugin);
-                    ResponseEntity<EntityModel<EntandoAppPluginLink>> resp = restTemplate
-                            .exchange(request, new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {
+                    ResponseEntity<EntandoAppPluginLink> resp = restTemplate
+                            .exchange(request, new ParameterizedTypeReference<EntandoAppPluginLink>() {
                             });
                     if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
-                        return resp.getBody().getContent();
+                        return resp.getBody();
                     }
                     throw new RestClientResponseException("Linking process failed",
                             resp.getStatusCodeValue(),
@@ -224,40 +253,60 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public Optional<EntandoAppPluginLink> getLinkByName(String linkName) {
-        EntandoAppPluginLink link = null;
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl)
+                .path(APP_PLUGIN_LINKS_ENDPOINT)
+                .path("/" + linkName)
+                .build().toUri();
+        LOGGER.info("### fetching EntandoAppPluginLink from linkName:'{}' with url:'{}'", linkName, url);
+
         try {
-            link = traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
-                    .follow(Hop.rel("app-plugin-link").withParameter("name", linkName))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoAppPluginLink>>() {
-                    })
-                    .getContent();
+            return Optional.ofNullable(restTemplate.getForObject(url, EntandoAppPluginLinkJavaNative.class))
+                    .map(l -> new EntandoAppPluginLink(l.getMetadata(), l.getSpec(), l.getStatus()));
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException(
                         "An error occurred while retrieving entando-app-plugin-link with name " + linkName, ex);
             }
+            return Optional.empty();
         }
-        return Optional.ofNullable(link);
     }
 
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> repoUrlFilter) {
 
-        LOGGER.info("### fetching bundles from all namespaces");
-        return tryOrThrow(() -> repoUrlFilter
-                .map(filter -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("repoUrl", filter)))
-                .orElse(traverson.follow(BUNDLES_ENDPOINT))
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
-                })
-                .getContent()
-                .stream().map(EntityModel::getContent)
-                .collect(Collectors.toList()));
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(BUNDLES_ENDPOINT)
+                .queryParamIfPresent("repoUrl", repoUrlFilter).build().toUri();
+        LOGGER.info("### fetching bundles from all namespaces with url:'{}'", url);
+        RequestEntity<Void> req = RequestEntity
+                .get(url).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.ACCEPT_ENCODING, "none").build();
+        List<EntandoDeBundle> bundles = tryOrThrow(
+                () -> Stream.of(restTemplate.exchange(req, EntandoDeBundleJavaNative[].class).getBody())
+                        .map(b -> new EntandoDeBundle(b.getMetadata(), b.getSpec(), b.getStatus()))
+                        .collect(Collectors.toList())
+        );
+
+        LOGGER.debug("### from all namespaces fetched bundles:'{}'", bundles);
+        return bundles;
     }
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter) {
 
-        LOGGER.info("### fetching bundles from " + namespace + " namespace");
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(BUNDLES_ENDPOINT)
+                .queryParam("namespace", namespace)
+                .queryParamIfPresent("repoUrl", repoUrlFilter).build().toUri();
+
+        LOGGER.info("### fetching bundles from namespace:'{}' with url:'{}'", namespace, url);
+        RequestEntity<Void> req = RequestEntity
+                .get(url).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.ACCEPT_ENCODING, "none").build();
+        List<EntandoDeBundle> bundles = tryOrThrow(
+                () -> Stream.of(restTemplate.exchange(req, EntandoDeBundleJavaNative[].class).getBody())
+                        .map(b -> new EntandoDeBundle(b.getMetadata(), b.getSpec(), b.getStatus()))
+                        .collect(Collectors.toList())
+        );
+        LOGGER.debug("### from namespace:'{}' fetched bundles:'{}'", namespace, bundles);
+        return bundles;
+        /*
         Hop baseHop = Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace);
         return tryOrThrow(() -> traverson.follow(
                         repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop))
@@ -266,10 +315,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
+                 */
     }
 
     @Override
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter) {
+        LOGGER.debug("search bundles in namespaces:'{}' with repoUrlFilter:'{}'", namespaces, repoUrlFilter);
         @SuppressWarnings("unchecked")
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
                 .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, repoUrlFilter))
@@ -279,58 +330,50 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                         }))
                 .toArray(CompletableFuture[]::new);
 
-        return CompletableFuture.allOf(futures).thenApply(v -> Arrays.stream(futures)
-                .map(CompletableFuture::join)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList())
-        ).join();
+        List<EntandoDeBundle> bundlesInNamespaces = CompletableFuture.allOf(futures)
+                .thenApply(v -> Arrays.stream(futures)
+                        .map(CompletableFuture::join)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList())
+                ).join();
+        LOGGER.trace("bundles found in namespaces:'{}'", bundlesInNamespaces);
+        return bundlesInNamespaces;
     }
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithName(String name) {
-        EntandoDeBundle bundle = null;
-        try {
-            bundle = traverson.follow(BUNDLES_ENDPOINT)
-                    .follow(Hop.rel("bundle").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
-                    })
-                    .getContent();
-
-        } catch (RestClientResponseException ex) {
-            if (ex.getRawStatusCode() != 404) {
-                throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
-            }
-        } catch (Exception ex) {
-            throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
-        }
-
-        return Optional.ofNullable(bundle);
+        return getBundleWithNameAndNamespace(name, Optional.empty());
     }
 
     @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
-        EntandoDeBundle bundle = null;
-        try {
-            final EntityModel<EntandoDeBundle> entityModel = traverson.follow(BUNDLES_ENDPOINT)
-                    .follow(Hop.rel("bundle")
-                            .withParameter("name", name)
-                            .withParameter("namespace", namespace))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
-                    });
-            if (entityModel != null) {
-                bundle = entityModel.getContent();
-            }
+        return getBundleWithNameAndNamespace(name, Optional.ofNullable(namespace));
+    }
 
+    private Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, Optional<String> namespace) {
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(BUNDLES_ENDPOINT)
+                .path("/" + name)
+                .queryParamIfPresent("namespace", namespace)
+                .build().toUri();
+
+        LOGGER.info("### fetching bundle with name:'{}' with url:'{}'", name, url);
+        RequestEntity<Void> req = RequestEntity
+                .get(url).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.ACCEPT_ENCODING, "none").build();
+
+        try {
+            return Optional.ofNullable(restTemplate.exchange(req, EntandoDeBundleJavaNative.class).getBody())
+                    .map(b -> new EntandoDeBundle(b.getMetadata(), b.getSpec(), b.getStatus()));
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
                 throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
             }
+            return Optional.empty();
+
         } catch (Exception ex) {
             throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
         }
-
-        return Optional.ofNullable(bundle);
     }
+
 
     @Override
     public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
@@ -434,10 +477,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                         ? entandoDeBundle.getSpec().getDetails().getName()
                         : entandoDeBundle.getMetadata().getName());
 
-        Link deployBundleHref = traverson.follow(BUNDLES_ENDPOINT).asLink();
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(BUNDLES_ENDPOINT)
+                .build().toUri();
+        LOGGER.debug("### deployDeBundle:'{}' with url:'{}'", entandoDeBundle, url);
 
         RequestEntity<EntandoDeBundle> request = RequestEntity
-                .post(deployBundleHref.toUri())
+                .post(url)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(entandoDeBundle);
 
@@ -463,14 +508,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             throw new KubernetesClientException("Trying to delete an EntandoDeBundle using an empty name");
         }
 
-        Link bundlesEndpoint = traverson.follow(BUNDLES_ENDPOINT).asLink();
-
-        UriComponents uriComponents = UriComponentsBuilder.fromUri(bundlesEndpoint.toUri())
-                .pathSegment(bundleName)
-                .build();
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(BUNDLES_ENDPOINT)
+                .path("/" + bundleName)
+                .build().toUri();
+        LOGGER.info("### undeploy EntandoDeBundle from bundleName:'{}' with url:'{}'", bundleName, url);
 
         try {
-            restTemplate.delete(uriComponents.toUri());
+            restTemplate.delete(url);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
                 throw e;
@@ -480,19 +524,47 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public ApplicationStatus getAppStatusPhase(String appName) {
-        return tryOrThrow(() ->
-                traverson.follow(APPS_ENDPOINT).follow(Hop.rel("app").withParameter("name", appName))
-                        .follow(Hop.rel("app-status"))
-                        .toObject(ApplicationStatus.class));
+
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(APPS_ENDPOINT).path("/" + appName)
+                .path("/status")
+                .build().toUri();
+        LOGGER.info("### fetching app status for appName:'{}' with url:'{}'", appName, url);
+
+        ApplicationStatus status = tryOrThrow(
+                () -> restTemplate.getForObject(url, ApplicationStatus.class)
+        );
+
+        LOGGER.info("### fetched app status:'{}' for appName:'{}'", status, appName);
+        return status;
     }
 
     private Ingress getAppIngress(String appName) {
-        return tryOrThrow(() -> traverson.follow(APPS_ENDPOINT)
-                .follow(Hop.rel("app").withParameter("name", appName))
-                .follow("app-ingress")
-                .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {
-                })
-                .getContent());
+
+        URI url = UriComponentsBuilder.fromUriString(k8sServiceUrl).path(APPS_ENDPOINT).path("/" + appName)
+                .path("/ingress")
+                .build().toUri();
+        LOGGER.info("### fetching app ingress for appName:'{}' with url:'{}'", appName, url);
+
+        return tryOrThrow(
+                () -> Optional.ofNullable(restTemplate.getForObject(url, IngressJavaNative.class))
+                        .map(i -> {
+                            Ingress ing = new Ingress();
+                            ing.setMetadata(i.getMetadata());
+                            ing.setSpec(i.getSpec());
+                            ing.setStatus(i.getStatus());
+                            return ing;
+                        }).orElse(null)
+        );
+
+
+        /*
+        () -> traverson.follow(APPS_ENDPOINT)
+        .follow(Hop.rel("app").withParameter("name", appName))
+        .follow("app-ingress")
+        .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {
+        })
+        .getContent());
+         */
     }
 
     public void tryOrThrow(Runnable runnable, String actionDescription) {

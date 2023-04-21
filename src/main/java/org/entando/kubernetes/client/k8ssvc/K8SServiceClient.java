@@ -1,5 +1,6 @@
 package org.entando.kubernetes.client.k8ssvc;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -53,7 +54,7 @@ public interface K8SServiceClient extends ECMClient {
 
     @Data
     @NoArgsConstructor
-    class ApplicationStatus {
+    class ApplicationStatus implements Serializable {
 
         private String status;
     }
