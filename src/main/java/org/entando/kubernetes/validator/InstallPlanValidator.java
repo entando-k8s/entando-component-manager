@@ -7,6 +7,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.web.UnprocessableEntityException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.springframework.stereotype.Component;
 
@@ -82,7 +83,7 @@ public class InstallPlanValidator {
      */
     private void validateStatusNEW(String key, Status status, InstallAction action, ComponentType componentType) {
         if (status == Status.NEW && action != InstallAction.CREATE) {
-            throw new EntandoComponentManagerException(
+            throw new UnprocessableEntityException(
                     String.format(
                             "The InstallAction %s supplied for the %s %s is not valid. A component with Status.NEW "
                                     + "can receives only an InstallAction.CREATE",
@@ -98,7 +99,7 @@ public class InstallPlanValidator {
      */
     private void validateStatusNotNEW(String key, Status status, InstallAction action, ComponentType componentType) {
         if (status != Status.NEW && action == InstallAction.CREATE) {
-            throw new EntandoComponentManagerException(
+            throw new UnprocessableEntityException(
                     String.format(
                             "The InstallAction %s supplied for the %s %s is not valid. A component with Status.DIFF "
                                     + "or Status.EQUAL can receives only InstallAction.SKIP or InstallAction.OVERRIDE",
