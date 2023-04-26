@@ -1,3 +1,13 @@
+FROM gigiozzz/entando-java-base:17.0.6 as builder
+
+USER 0
+COPY target/entando-component-manager.jar /opt/app.jar
+# unpack layered jar
+RUN cd /opt \
+    && java -Djarmode=layertools -jar app.jar extract
+
+USER 1001
+
 FROM gigiozzz/entando-java-base:17.0.6
 ARG VERSION
 ### Required OpenShift Labels
@@ -57,14 +67,14 @@ COPY passwd.template entrypoint.sh /
 
 EXPOSE 8080
 
+RUN cd /opt
+#copy layered jar from builder stage
+COPY --from=builder /opt/dependencies ./
+COPY --from=builder /opt/snapshot-dependencies ./
+COPY --from=builder /opt/spring-boot-loader ./
+COPY --from=builder /opt/application ./
 
-# copy pom.xml and wildcards to avoid this command failing if there's no target/lib directory
-COPY pom.xml target/lib* /opt/lib/
-
-# NOTE we assume there's only 1 jar in the target dir
-# but at least this means we don't have to guess the name
-# we could do with a better way to know the name - or to always create an app.jar or something
-COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["java", "-XX:MaxRAMPercentage=80.0", "-XshowSettings:vm", "-jar", "app.jar"]
+#CMD ["java", "-XX:MaxRAMPercentage=80.0", "-XshowSettings:vm", "-jar", "app.jar"]
+CMD ["java", "-XX:MaxRAMPercentage=80.0", "-XshowSettings:vm","-cp",".", "org.springframework.boot.loader.JarLauncher"]
