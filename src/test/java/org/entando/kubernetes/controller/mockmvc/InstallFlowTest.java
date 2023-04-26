@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -952,32 +953,32 @@ public class InstallFlowTest {
     }
 
     @Test
-    void shouldReturn503OnInstallIfAnotherBundleOperationIsRunning() throws Exception {
+    void shouldReturn409OnInstallIfAnotherBundleOperationIsRunning() throws Exception {
 
         mockServicesForaSuccessfullyInstallation();
 
-        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
-                .throwIfAnotherOperationIsRunningOrStartOperation();
+        doCallRealMethod().when(bundleOperationsConcurrencyManager).throwIfAnotherOperationIsRunningOrStartOperation();
+        when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(false);
 
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
-                .andExpect(status().isServiceUnavailable());
+                .andExpect(status().isConflict());
     }
 
     @Test
-    void shouldReturn503OnInstallPlanIfAnotherBundleOperationIsRunning() throws Exception {
+    void shouldReturn409OnInstallPlanIfAnotherBundleOperationIsRunning() throws Exception {
 
         mockAnalysisReportV1(coreClient, k8SServiceClient);
         mockBundle(k8SServiceClient);
 
-        doThrow(BundleOperationConcurrencyException.class).when(bundleOperationsConcurrencyManager)
-                .throwIfAnotherOperationIsRunningOrStartOperation();
+        doCallRealMethod().when(bundleOperationsConcurrencyManager).throwIfAnotherOperationIsRunningOrStartOperation();
+        when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(false);
 
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
-                .andExpect(status().isServiceUnavailable());
+                .andExpect(status().isConflict());
     }
 
 
