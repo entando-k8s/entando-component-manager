@@ -9,6 +9,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.exception.web.UnprocessableEntityException;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.Assertions;
@@ -52,13 +53,13 @@ class InstallPlanValidatorTest {
 
         // Status = NEW and InstallAction = OVERRIDE
         widgets.put("wid", ComponentInstallPlan.builder().status(Status.NEW).action(InstallAction.OVERRIDE).build());
-        Assertions.assertThrows(EntandoComponentManagerException.class,
+        Assertions.assertThrows(UnprocessableEntityException.class,
                 () -> installPlanValidator.validateInstallPlanOrThrow(installPlan));
         widgets.remove("wid");
 
         // Status = NEW and InstallAction = SKIP
         widgets.put("wid", ComponentInstallPlan.builder().status(Status.NEW).action(InstallAction.SKIP).build());
-        Assertions.assertThrows(EntandoComponentManagerException.class,
+        Assertions.assertThrows(UnprocessableEntityException.class,
                 () -> installPlanValidator.validateInstallPlanOrThrow(installPlan));
     }
 
@@ -70,13 +71,13 @@ class InstallPlanValidatorTest {
 
         // Status = DIFF and InstallAction = CREATE
         widgets.put("wid", ComponentInstallPlan.builder().status(Status.DIFF).action(InstallAction.CREATE).build());
-        Assertions.assertThrows(EntandoComponentManagerException.class,
+        Assertions.assertThrows(UnprocessableEntityException.class,
                 () -> installPlanValidator.validateInstallPlanOrThrow(installPlan));
         widgets.remove("wid");
 
         // Status = NEW and InstallAction = SKIP
         widgets.put("wid", ComponentInstallPlan.builder().status(Status.EQUAL).action(InstallAction.CREATE).build());
-        Assertions.assertThrows(EntandoComponentManagerException.class,
+        Assertions.assertThrows(UnprocessableEntityException.class,
                 () -> installPlanValidator.validateInstallPlanOrThrow(installPlan));
     }
 }
