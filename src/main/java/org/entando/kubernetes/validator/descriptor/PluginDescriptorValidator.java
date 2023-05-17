@@ -19,6 +19,7 @@ import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginResources;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -34,7 +35,14 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
     public static final String DNS_LABEL_HOST_REGEX = "^([a-z0-9][a-z0-9\\\\-]*[a-z0-9])$";
     public static final Pattern DNS_LABEL_HOST_REGEX_PATTERN = Pattern.compile(DNS_LABEL_HOST_REGEX);
+
+    public static final String MEM_AND_STORAGE_REGEX = "^(\\d+)(G|M|K|Gi|Mi|Ki)$";
+    public static final Pattern MEM_AND_STORAGE_PATTERN = Pattern.compile(MEM_AND_STORAGE_REGEX);
+
+    public static final String CPU_REGEX = "^(\\d+)(m)$";
+    public static final Pattern CPU_PATTERN = Pattern.compile(CPU_REGEX);
     public static final String DESC_PROP_ENV_VARS = "environmentVariables";
+    public static final String DESC_PROP_RESOURCES = "resources";
     public static final int MIN_FULL_DEPLOYMENT_NAME_LENGTH = 50;
     public static final int MAX_FULL_DEPLOYMENT_NAME_LENGTH = 200;
     public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = MAX_FULL_DEPLOYMENT_NAME_LENGTH;
@@ -71,6 +79,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         setupValidatorConfigurationDescriptorV3();
         setupValidatorConfigurationDescriptorV4();
         setupValidatorConfigurationDescriptorV5();
+        setupValidatorConfigurationDescriptorV6();
     }
 
     private void setupValidatorConfigurationDescriptorV1() {
@@ -91,6 +100,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         objectsThatMustBeNull.put("permissions", PluginDescriptor::getPermissions);
         objectsThatMustBeNull.put("securityLevel", PluginDescriptor::getSecurityLevel);
         objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
+        objectsThatMustBeNull.put(DESC_PROP_RESOURCES, PluginDescriptor::getResources);
 
         addValidationConfigMap(DescriptorVersion.V1,
                 Arrays.asList(
@@ -125,6 +135,17 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         configBeanV5.getValidationFunctions().add(this::validateEnvVarsOrThrow);
     }
 
+    private void setupValidatorConfigurationDescriptorV6() {
+        setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion.V6);
+        DescriptorValidatorConfigBean<PluginDescriptor> configBeanV6 = validationConfigMap.get(
+                DescriptorVersion.V6);
+        configBeanV6.getObjectsThatMustNOTBeNull().put("name", PluginDescriptor::getName);
+        configBeanV6.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
+        configBeanV6.getObjectsThatMustBeNull().remove(DESC_PROP_RESOURCES);
+        configBeanV6.getValidationFunctions().add(this::validateEnvVarsOrThrow);
+        configBeanV6.getValidationFunctions().add(this::validatePluginResources);
+    }
+
     private void setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion descriptorVersion) {
         Map<String, Function<PluginDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
         objectsThatMustNOTBeNull.put("image", PluginDescriptor::getImage);
@@ -134,6 +155,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         Map<String, Function<PluginDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
         objectsThatMustBeNull.put("spec", PluginDescriptor::getSpec);
         objectsThatMustBeNull.put(DESC_PROP_ENV_VARS, PluginDescriptor::getEnvironmentVariables);
+        objectsThatMustBeNull.put(DESC_PROP_RESOURCES, PluginDescriptor::getResources);
 
         List<DescriptorValidationFunction<PluginDescriptor>> validationFunctionList = new ArrayList<>();
         validationFunctionList.add(this::validateDescriptorFormatOrThrow);
@@ -327,6 +349,42 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     }
 
 
+    /**
+     * validate the PluginResources property. if the validation fails an EntandoComponentManagerException is thrown.
+     *
+     * @param pluginDescriptor the descriptor of which validate the fullDeploymentName length
+     * @return the validated PluginDescriptor
+     */
+    private PluginDescriptor validatePluginResources(PluginDescriptor pluginDescriptor) {
+        if (pluginDescriptor.getResources() == null) {
+            return pluginDescriptor;
+        }
+
+        final PluginResources pluginResources = pluginDescriptor.getResources();
+
+        // check storage measure unit
+        validatePluginResourcePropOrThrow(MEM_AND_STORAGE_PATTERN, pluginDescriptor.getName(), "storage",
+                pluginResources.getStorage());
+
+        // check memory measure unit
+        validatePluginResourcePropOrThrow(MEM_AND_STORAGE_PATTERN, pluginDescriptor.getName(), "memory",
+                pluginResources.getMemory());
+
+        // check cpu measure unit
+        validatePluginResourcePropOrThrow(CPU_PATTERN, pluginDescriptor.getName(), "cpu",
+                pluginResources.getCpu());
+
+        return pluginDescriptor;
+    }
+
+    private static void validatePluginResourcePropOrThrow(Pattern regexPattern, String pluginName, String propName, String propValue) {
+        if (! regexPattern.matcher(propValue).matches()) {
+            throw new EntandoComponentManagerException(String.format(
+                    PLUGIN_RESOURCES_NOT_VALID_ERROR,
+                    propName, pluginName, propValue));
+        }
+    }
+
     public static final String SECURITY_LEVEL_NOT_RECOGNIZED =
             "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
                     + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
@@ -346,5 +404,10 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
     public static final String INVALID_ROLES_MAX_LENGTH_EXCEEDED_ERROR =
             "The roles (joined with comma) \"%s\" exceeds the max allowed length \"%d\".";
+
+    public static final String PLUGIN_RESOURCES_NOT_VALID_ERROR =
+            "The plugin resources \"%s\" of the plugin \"%s\""
+                    + "contains an invalid value: %s. Accepted values for memory and storage must match the regex "
+                    + MEM_AND_STORAGE_REGEX + " . Accepted values for CPU must match the regex " + CPU_REGEX;
 
 }

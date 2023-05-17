@@ -10,6 +10,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Spec;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginResources;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.SecretKeyRef;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.ValueFrom;
 
@@ -38,6 +39,9 @@ public class PluginStubHelper {
     public static final String TEST_ENV_VAR_2_SECRET_KEY = "env2SecretKey";
     public static final String PLUGIN_IMAGE_SHA = "sha256:f1acf3443c577db1b1df3b47593b07895acab5ef582e5a661c2c1ade6f19e431";
     public static final String TEST_DESCRIPTOR_IMAGE_WITH_SHA = "entando/the-lucas@" + PLUGIN_IMAGE_SHA;
+    public static final String TEST_RES_STORAGE = "7G";
+    public static final String TEST_RES_MEMORY = "8G";
+    public static final String TEST_RES_CPU = "6m";
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {
@@ -75,6 +79,13 @@ public class PluginStubHelper {
         pluginDescriptorV5.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         pluginDescriptorV5.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
         return pluginDescriptorV5;
+    }
+
+    public static PluginDescriptor stubPluginDescriptorV6() {
+        PluginDescriptor pluginDescriptor = stubPluginDescriptorV5()
+                .setResources(stubPluginResources());
+        pluginDescriptor.setDescriptorVersion(DescriptorVersion.V6.getVersion());
+        return pluginDescriptor;
     }
 
     public static List<EnvironmentVariable> stubEnvironmentVariables() {
@@ -115,5 +126,12 @@ public class PluginStubHelper {
                 TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+    }
+
+    public static PluginResources stubPluginResources() {
+        return new PluginResources()
+                .setStorage(TEST_RES_STORAGE)
+                .setMemory(TEST_RES_MEMORY)
+                .setCpu(TEST_RES_CPU);
     }
 }

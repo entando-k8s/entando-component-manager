@@ -89,6 +89,11 @@ public class PluginDescriptor extends VersionedDescriptor {
      */
     private List<EnvironmentVariable> environmentVariables;
 
+    // ------------------------------------------------------------
+    // Version 6
+    private PluginResources resources;
+
+
     /******************************************************************
      * private variables that can't be set from the yaml descriptor.
      *****************************************************************/
