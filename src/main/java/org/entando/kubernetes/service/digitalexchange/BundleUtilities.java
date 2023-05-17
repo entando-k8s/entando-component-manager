@@ -37,8 +37,11 @@ import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1Role;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginResources;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.common.DbmsVendor;
+import org.entando.kubernetes.model.common.EntandoResourceRequirements;
+import org.entando.kubernetes.model.common.EntandoResourceRequirementsBuilder;
 import org.entando.kubernetes.model.common.ExpectedRole;
 import org.entando.kubernetes.model.common.Permission;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -315,8 +318,24 @@ public class BundleUtilities {
                 .withPermissions(extractPermissionsFromDescriptor(descriptor))
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
                 .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables()))
+                .withResourceRequirements(generateResourceRequirementsFromDescriptor(descriptor))
                 .endSpec()
                 .build();
+    }
+
+    public static EntandoResourceRequirements generateResourceRequirementsFromDescriptor(PluginDescriptor descriptor) {
+
+        final PluginResources pluginResources = descriptor.getResources();
+
+        final EntandoResourceRequirementsBuilder builder = new EntandoResourceRequirementsBuilder();
+        if (pluginResources != null) {
+            builder
+                    .withStorageRequest(pluginResources.getStorage())
+                    .withMemoryRequest(pluginResources.getMemory())
+                    .withCpuRequest(pluginResources.getCpu());
+        }
+
+        return builder.build();
     }
 
     /**
@@ -361,7 +380,7 @@ public class BundleUtilities {
      *
      * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
      * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
-     *     no type is found
+     *          no type is found
      */
     public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
 
@@ -384,6 +403,7 @@ public class BundleUtilities {
 
     /**
      * convenience method using only the BundleReader.
+     *
      * @param bundleReader the reader of the current bundle
      * @return the resource root folder for the current bundle
      * @throws IOException if a read error occurs during the bundle reading
@@ -400,9 +420,9 @@ public class BundleUtilities {
      * determine and return the resource root folder for the current bundle. - if the current bundle is a standard
      * bundle, root folder = current_bundle_code + '/resources' - otherwise '/resources'
      *
-     * @param bundleType the bundle type
+     * @param bundleType        the bundle type
      * @param descriptorVersion the bundle descriptor version
-     * @param bundleCode the bundle code
+     * @param bundleCode        the bundle code
      * @return the resource root folder for the current bundle
      */
     public static String determineBundleResourceRootFolder(BundleType bundleType, String descriptorVersion,
@@ -624,7 +644,8 @@ public class BundleUtilities {
 
     /**
      * sign a widget folder.
-     * @param bundleCode the code of the bundle containin the id to sign the widget folder
+     *
+     * @param bundleCode   the code of the bundle containin the id to sign the widget folder
      * @param widgetFolder the widget folder to sign
      * @return the signed widget folder
      */
@@ -698,7 +719,8 @@ public class BundleUtilities {
         }
         try {
             if (imageAddress.startsWith(DOCKER_IMAGE_TRANSPORT_PREFIX)) {
-                return DockerImage.fromString(imageAddress.substring(DOCKER_IMAGE_TRANSPORT_PREFIX.length())).getRegistry();
+                return DockerImage.fromString(imageAddress.substring(DOCKER_IMAGE_TRANSPORT_PREFIX.length()))
+                        .getRegistry();
             } else {
                 return DockerImage.fromString(imageAddress).getRegistry();
             }

@@ -90,6 +90,20 @@ class PluginDescriptorValidatorTest {
     }
 
     @Test
+    void startingFromPluginDescriptorV6WeShouldAllowResourcesTag() {
+
+        Stream.of(DescriptorVersion.V1, DescriptorVersion.V2, DescriptorVersion.V3, DescriptorVersion.V4, DescriptorVersion.V5)
+                        .forEach(v -> {
+                            PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV6();
+                            descriptor.setDescriptorVersion(v.getVersion());
+                            assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
+                        });
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV6();
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+    }
+
+    @Test
     void shouldThrowExceptionWhenDescriptorVersionNotRecognized() throws Exception {
 
         PluginDescriptor descriptor = yamlMapper
@@ -371,5 +385,36 @@ class PluginDescriptorValidatorTest {
         assertDoesNotThrow(() -> new PluginDescriptorValidator(100));
         assertDoesNotThrow(() -> new PluginDescriptorValidator(199));
         assertDoesNotThrow(() -> new PluginDescriptorValidator(200));
+    }
+
+    @Test
+    void shouldNotThrowExceptionWithBundleV6AndPluginResources() {
+
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV6();
+        Stream.of("Gi", "Mi", "Ki", "G", "M", "K")
+                        .forEach(m -> {
+                            descriptor.getResources().setMemory("5" + m).setStorage("4" + m);
+                            assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+                        });
+    }
+
+    @Test
+    void shouldThrowExceptionWithBundleV6AndWrongUnitMeasuresOfPluginResources() {
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV6();
+
+        Stream.of("Gm", // unrecognized
+                        "")     // empty
+                .forEach(m -> {
+                    descriptor.getResources().setMemory("5" + m).setStorage("4" + m);
+                    assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor));
+                });
+
+        final PluginDescriptor descriptor2 = PluginStubHelper.stubPluginDescriptorV6();
+        Stream.of("mm", // unrecognized
+                        "")     // empty
+                .forEach(m -> {
+                    descriptor2.getResources().setCpu("5" + m);
+                    assertThrows(EntandoComponentManagerException.class, () -> validator.validateOrThrow(descriptor2));
+                });
     }
 }
