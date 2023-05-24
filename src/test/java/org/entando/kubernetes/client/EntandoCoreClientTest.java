@@ -2,6 +2,7 @@ package org.entando.kubernetes.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,6 +12,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -32,6 +34,7 @@ import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDes
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
 import org.junit.jupiter.api.AfterEach;
@@ -145,6 +148,56 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer
                 .withFailingComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", HttpStatus.NOT_FOUND);
         assertThrows(HttpClientErrorException.NotFound.class, () -> this.client.getContentModelUsage("12345"));
+    }
+
+    @Test
+    void shouldComponentsUsageDetailsReturnCorrectData() {
+        this.stubForPostComponentsUsageDetailsWithoutErrors();
+        List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
+                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
+        assertThat(usageList).hasSize(1);
+    }
+
+    @Test
+    void shouldComponentsUsageDetailsReturnException() {
+        this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_REQUEST.value());
+        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
+                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
+    }
+
+    @Test
+    void shouldComponentsUsageDetailsWithErrorExecuteRetry() {
+        this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_GATEWAY.value());
+
+        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
+                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
+        coreMockServer.verify(3, "/api/components/usage-details", WireMock::postRequestedFor);
+    }
+
+    @Test
+    void shouldComponentsUsageDetailsWithErrorExecuteRetryOnlyIfNeeded() {
+        final String scenarioName = "errorToStart";
+        final String scenarioStepError500 = "error500";
+        final String scenarioStepNoError = "noError";
+
+        stubForPostComponentsUsageDetailsWithScenarioAndStatusCode(
+                scenarioName,
+                Scenario.STARTED,
+                scenarioStepError500,
+                HttpStatus.BAD_GATEWAY.value());
+        stubForPostComponentsUsageDetailsWithScenarioAndStatusCode(
+                scenarioName,
+                scenarioStepError500,
+                scenarioStepNoError,
+                HttpStatus.INTERNAL_SERVER_ERROR.value());
+        stubForPostComponentsUsageDetailsWithScenarioAndStatusCode(
+                scenarioName,
+                scenarioStepNoError,
+                "",
+                HttpStatus.OK.value());
+        List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
+                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
+        coreMockServer.verify(3, "/api/components/usage-details", WireMock::postRequestedFor);
     }
 
 
@@ -471,5 +524,58 @@ class EntandoCoreClientTest {
                                         .withStatus(statusCode)
                                         .withHeader("Content-Type", "application/json")
                         ));
+    }
+
+    private void stubForPostComponentsUsageDetailsWithoutErrors() {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.post(urlPathMatching("/api/components/usage-details"))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("{ \"payload\" : [{\n "
+                                        + "\"type\": \"widget\",\n"
+                                        + "\"code\": \"W23D\",\n"
+                                        + "\"usage\": 1,\n"
+                                        + "\"references\": [\n"
+                                        + "{\n"
+                                        + "\"componentType\": \"page\",\n"
+                                        + "\"code\": \"P23D\"\n"
+                                        + "}\n"
+                                        + "]\n"
+                                        + "}],\n"
+                                        + "\"metadata\": {},\n"
+                                        + "\"errors\": []\n "
+                                        + "}")
+                                .withTransformers("response-template")
+                        ));
+    }
+
+    private void stubForPostComponentsUsageDetailsWithError(int error) {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.post(urlPathMatching("/api/components/usage-details"))
+                        .willReturn(aResponse()
+                                .withStatus(error)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("{ \"payload\" : [],\n"
+                                        + "\"metadata\": {},\n"
+                                        + "\"errors\": []\n "
+                                        + "}")
+                                .withTransformers("response-template")
+                        ));
+    }
+
+    public void stubForPostComponentsUsageDetailsWithScenarioAndStatusCode(String scenario, String scenarioStart,
+            String scenarioNext, int statusCode) {
+
+        coreMockServer.getInnerServer().stubFor(WireMock.post(urlEqualTo("/api/components/usage-details"))
+                .inScenario(scenario)
+                .whenScenarioStateIs(scenarioStart)
+                .willReturn(aResponse().withStatus(statusCode)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"payload\" : [],\n"
+                                + "\"metadata\": {},\n"
+                                + "\"errors\": []\n "
+                                + "}"))
+                .willSetStateTo(scenarioNext));
     }
 }

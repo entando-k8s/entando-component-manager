@@ -20,6 +20,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfiguration
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.junit.jupiter.api.Tag;
 
 @Tag("unit")
@@ -273,6 +274,12 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
 
     @Override
     public EntandoCoreComponentUsage getCategoryUsage(String code) {
+        return null;
+    }
+
+    @Override
+    public List<EntandoCoreComponentUsage> getComponentsUsageDetails(
+            List<EntandoCoreComponentUsageRequest> request) {
         return null;
     }
 

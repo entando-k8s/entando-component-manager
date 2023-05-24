@@ -5,7 +5,6 @@ import static org.entando.kubernetes.TestEntitiesGenerator.getTestEntandoBundle;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +20,7 @@ import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledExcept
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -126,10 +126,19 @@ public class EntandoBundleControllerTest {
 
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(component));
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
-        when(coreClient.getWidgetUsage(eq("my-magic-widget"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget", 11));
-        when(coreClient.getPageUsage(eq("my-magic-page"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page", 5));
+
+        when(coreClient.getComponentsUsageDetails(Arrays.asList(
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-magic-widget"),
+                new EntandoCoreComponentUsageRequest(ComponentType.PAGE.getTypeName(), "my-magic-page")
+        )))
+                .thenReturn(Arrays.asList(
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget",
+                                true, 11,
+                                Collections.emptyList()),
+                        new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page",
+                                true, 5,
+                                Collections.emptyList())
+                ));
 
         ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
@@ -178,10 +187,19 @@ public class EntandoBundleControllerTest {
 
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(component));
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
-        when(coreClient.getWidgetUsage(eq("my-magic-widget"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget", 11));
-        when(coreClient.getWidgetUsage(eq("my-other-widget"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget", 5));
+
+        when(coreClient.getComponentsUsageDetails(Arrays.asList(
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-magic-widget"),
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-other-widget")
+        )))
+                .thenReturn(Arrays.asList(
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget",
+                                true, 11,
+                                Collections.emptyList()),
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget",
+                                true, 5,
+                                Collections.emptyList())
+                ));
 
         ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");

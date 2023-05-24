@@ -13,6 +13,7 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -81,7 +82,7 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
         ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
         SimpleRestResponse<EntandoCoreComponentUsage> usageResponse = new SimpleRestResponse<>(
-                new EntandoCoreComponentUsage(ep.getTypeValue(), code, usageCount));
+                new EntandoCoreComponentUsage(ep.getTypeValue(), code, true, usageCount, Collections.emptyList()));
         String response = null;
         try {
             response = new ObjectMapper().writeValueAsString(usageResponse);

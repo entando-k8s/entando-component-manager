@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
@@ -32,6 +33,7 @@ import org.entando.kubernetes.model.bundle.downloader.MethodRetryer;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.model.entandocore.EntandoCoreContentModel;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFile;
 import org.entando.kubernetes.model.entandocore.EntandoCoreFolder;
@@ -85,6 +87,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String CATEGORIES_PATH_SEGMENT = "categories";
     private static final String COMPONENTS_PATH_SEGMENT = "components";
     private static final String USAGE_PATH_SEGMENT = "usage";
+    private static final String USAGE_DETAILS_PATH_SEGMENT = "usage-details";
     private static final String DIFF_PATH_SEGMENT = "diff";
     private static final String STATUS_PATH_SEGMENT = "status";
     private static final String ASSETS_PATH_SEGMENT = "assets";
@@ -629,6 +632,45 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         } else {
             throw new WebHttpException(usage.getStatusCode(),
                     String.format("Some error occurred while retrieving %s %s usage", componentType, code));
+        }
+    }
+
+    public List<EntandoCoreComponentUsage> getComponentsUsageDetails(
+            List<EntandoCoreComponentUsageRequest> request) {
+
+        try {
+
+            var retryer = MethodRetryer
+                    .<Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>>, Object>builder()
+                    .retries(retryNumber)
+                    .waitFor(backOffPeriod)
+                    .execMethod(
+                            (Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> s,
+                                    int executionNumber) -> s.get()
+                    )
+                    .checkerMethod(this::shouldRetry)
+                    .build();
+
+            Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> r = () ->
+                    restTemplate
+                            .exchange(
+                                    resolvePathSegments(API_PATH_SEGMENT, COMPONENTS_PATH_SEGMENT,
+                                            USAGE_DETAILS_PATH_SEGMENT).build().toUri(),
+                                    HttpMethod.POST, new HttpEntity<>(request),
+                                    new ParameterizedTypeReference<SimpleRestResponse<List<EntandoCoreComponentUsage>>>() {
+                                    });
+
+            var usage = (ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>) retryer.execute(r);
+
+            return Optional.ofNullable(usage.getBody())
+                    .map(RestResponse::getPayload)
+                    .orElseThrow(() ->
+                            new WebHttpException(usage.getStatusCode(),
+                                    "Some error occurred while retrieving components usage details"));
+        } catch (Exception ex) {
+            log.debug("Some error occurred while retrieving components usage details", ex);
+            throw new WebHttpException(HttpStatus.INTERNAL_SERVER_ERROR, String.format(
+                    "Some error occurred while retrieving components usage details:'%s'", ex.getMessage()));
         }
     }
 
