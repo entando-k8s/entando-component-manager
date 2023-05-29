@@ -317,8 +317,6 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
     @Test
     void canProcessDescriptorV5WithFTL() throws IOException {
-
-        String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5_with_custom_ui_path.yaml";
         when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
         when(bundleReader.readFileAsString(any())).thenReturn("content");
 
@@ -326,6 +324,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         spec.setWidgets(singletonList("widgets/my_widget_descriptor_v5_with_custom_ui_path.yaml"));
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
 
+        String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5_with_custom_ui_path.yaml";
         var installableList = execWidgetProcessor(widgDescrFile, null, bundleDescriptor);
 
         assertThat(installableList).hasSize(1);
