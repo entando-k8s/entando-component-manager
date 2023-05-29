@@ -1,0 +1,6 @@
+name: todomvc_widget
+type: widget
+group: free
+descriptorVersion: v5
+customUiPath: widget.ftl
+params: []

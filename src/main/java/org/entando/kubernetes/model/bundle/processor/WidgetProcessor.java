@@ -237,6 +237,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         if (!StringUtils.isBlank(widgetDescriptor.getCustomUiPath())) {
             String widgetUiPath = getRelativePath(fileName, widgetDescriptor.getCustomUiPath());
             widgetDescriptor.setCustomUi(bundleReader.readFileAsString(widgetUiPath));
+            return;
         }
         if (!widgetDescriptor.isVersion1()) {
             String ftl = templateGeneratorService.generateWidgetTemplate(fileName, widgetDescriptor, bundleReader);
