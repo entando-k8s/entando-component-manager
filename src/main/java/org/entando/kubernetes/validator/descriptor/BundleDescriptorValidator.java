@@ -2,7 +2,6 @@ package org.entando.kubernetes.validator.descriptor;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +21,15 @@ public class BundleDescriptorValidator extends BaseDescriptorValidator<BundleDes
     public void setupValidatorConfiguration() {
         setupValidatorConfigurationDescriptorV1();
         setupValidatorConfigurationDescriptorV5();
+        setupValidatorConfigurationDescriptorV6();
     }
 
     private void setupValidatorConfigurationDescriptorV1() {
-        Map<String, Function<BundleDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
+        var objectsThatMustNOTBeNull = new LinkedHashMap<String, Function<BundleDescriptor, Object>>();
         objectsThatMustNOTBeNull.put("components", BundleDescriptor::getComponents);
         objectsThatMustNOTBeNull.put("code", BundleDescriptor::getCode);
 
-        Map<String, Function<BundleDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
+        var objectsThatMustBeNull = new LinkedHashMap<String, Function<BundleDescriptor, Object>>();
         objectsThatMustBeNull.put("name", BundleDescriptor::getName);
 
         addValidationConfigMap(DescriptorVersion.V1,
@@ -39,11 +39,11 @@ public class BundleDescriptorValidator extends BaseDescriptorValidator<BundleDes
     }
 
     private void setupValidatorConfigurationDescriptorV5() {
-        Map<String, Function<BundleDescriptor, Object>> objectsThatMustNOTBeNull = new LinkedHashMap<>();
+        var objectsThatMustNOTBeNull = new LinkedHashMap<String, Function<BundleDescriptor, Object>>();
         objectsThatMustNOTBeNull.put("components", BundleDescriptor::getComponents);
         objectsThatMustNOTBeNull.put("name", BundleDescriptor::getName);
 
-        Map<String, Function<BundleDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
+        var objectsThatMustBeNull = new LinkedHashMap<String, Function<BundleDescriptor, Object>>();
         objectsThatMustBeNull.put("code", BundleDescriptor::getCode);
 
         addValidationConfigMap(DescriptorVersion.V5,
@@ -51,4 +51,19 @@ public class BundleDescriptorValidator extends BaseDescriptorValidator<BundleDes
                 objectsThatMustNOTBeNull,
                 objectsThatMustBeNull);
     }
+
+    private void setupValidatorConfigurationDescriptorV6() {
+        var fieldsThatMustNOTBeNull = new LinkedHashMap<String, Function<BundleDescriptor, Object>>();
+        fieldsThatMustNOTBeNull.put("components", BundleDescriptor::getComponents);
+        fieldsThatMustNOTBeNull.put("name", BundleDescriptor::getName);
+
+        var fieldsThatMustBeNull = new LinkedHashMap<String, Function<BundleDescriptor, Object>>();
+        fieldsThatMustBeNull.put("code", BundleDescriptor::getCode);
+
+        addValidationConfigMap(DescriptorVersion.V6,
+                List.of(super::validateDescriptorFormatOrThrow),
+                fieldsThatMustNOTBeNull,
+                fieldsThatMustBeNull);
+    }
+
 }

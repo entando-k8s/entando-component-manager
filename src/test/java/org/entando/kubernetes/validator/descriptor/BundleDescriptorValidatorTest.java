@@ -58,4 +58,37 @@ class BundleDescriptorValidatorTest {
         bundleDescriptor.setCode(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
     }
+
+
+    @Test
+    void shouldCorrectlyValidateABundleDescriptorV6WithValidFields() {
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null)
+                .setComponents(new ComponentSpecDescriptor());
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V6.getVersion());
+
+        bundleDescriptor.setCode(null);
+        assertDoesNotThrow(() -> validator.validateOrThrow(bundleDescriptor));
+    }
+
+    @Test
+    void shouldThrowExceptionWhileValidatingABundleDescriptorV6WithInvalidFields() {
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(null)
+                .setComponents(new ComponentSpecDescriptor());
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V6.getVersion());
+
+        // without name
+        var name = bundleDescriptor.getName();
+        bundleDescriptor.setName(null);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
+        bundleDescriptor.setName(name);
+
+        // with code
+        bundleDescriptor.setCode("awesome-code");
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
+        bundleDescriptor.setCode(null);
+
+        // without components
+        bundleDescriptor.setComponents(null);
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
+    }
 }
