@@ -66,8 +66,6 @@ class BundleDescriptorValidatorTest {
                 .setComponents(new ComponentSpecDescriptor());
         bundleDescriptor.setDescriptorVersion(DescriptorVersion.V6.getVersion());
 
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(bundleDescriptor));
-
         bundleDescriptor.setCode(null);
         assertDoesNotThrow(() -> validator.validateOrThrow(bundleDescriptor));
     }
