@@ -55,6 +55,7 @@
         <!-- not working -->
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <testcontainers.version>1.17.2</testcontainers.version>
+        <test.mirko>123</test.mirko>
     </properties>
 
     <dependencies>
