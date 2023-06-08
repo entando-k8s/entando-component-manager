@@ -91,6 +91,9 @@ public class DockerBundleDownloader extends BundleDownloader {
             String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(tag);
             ImageValidator.parse(fullyQualifiedImageUrl).isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
 
+            if (useCredentials()) {
+                getCredentials(fullyQualifiedImageUrl).ifPresent(this::doCraneAuthLogin);
+            }
             final String imageDigest = craneCommand.getImageDigest(fullyQualifiedImageUrl);
             saveContainerImage(fullyQualifiedImageUrl, targetPath);
             log.info("Docker image saved");
