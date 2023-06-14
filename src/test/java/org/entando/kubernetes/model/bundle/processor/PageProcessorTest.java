@@ -6,6 +6,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +22,6 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfiguration
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
-import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
@@ -29,7 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
@@ -57,7 +56,7 @@ class PageProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldReturnAListOfInstallablePagesFromTheBundle() throws IOException {
-        PageDescriptor descriptor = this.createPageDescriptor();
+        PageDescriptor descriptor = this.createPageDescriptor("my-page", "homepage-12345678");
         initBundleReader(descriptor);
         List<Installable<PageDescriptor>> installables = pageProcessor.process(bundleReader);
         assertThat(installables).hasSize(1);
@@ -98,8 +97,53 @@ class PageProcessorTest extends BaseProcessorTest {
     }
 
     @Test
+    void shouldReturnAListOfInstallablePagesPartiallySortedFromTheBundle() throws IOException {
+        ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setPages(Arrays.asList(
+                "/pages/child.yaml",
+                "/pages/child2.yaml",
+                "/pages/parent.yaml",
+                "/pages/parentnotinlistandwithoutchild.yaml",
+                "/pages/globalparent.yaml"
+        ));
+
+        PageDescriptor pageDescriptor1 = this.createPageDescriptor("child", "parent");
+        when(bundleReader.readDescriptorFile("/pages/child.yaml", PageDescriptor.class))
+                .thenReturn(pageDescriptor1);
+
+        PageDescriptor pageDescriptor2 = this.createPageDescriptor("child2", "parent");
+        when(bundleReader.readDescriptorFile("/pages/child2.yaml", PageDescriptor.class))
+                .thenReturn(pageDescriptor2);
+
+        PageDescriptor pageDescriptor3 = this.createPageDescriptor("parent", "homepage");
+        when(bundleReader.readDescriptorFile("/pages/parent.yaml", PageDescriptor.class))
+                .thenReturn(pageDescriptor3);
+
+        PageDescriptor pageDescriptor4 = this.createPageDescriptor("parentnotinlistandwithoutchild", "example");
+        when(bundleReader.readDescriptorFile("/pages/parentnotinlistandwithoutchild.yaml", PageDescriptor.class))
+                .thenReturn(pageDescriptor4);
+
+        PageDescriptor pageDescriptor5 = this.createPageDescriptor("globalparent", "global:sample-page");
+        when(bundleReader.readDescriptorFile("/pages/globalparent.yaml", PageDescriptor.class))
+                .thenReturn(pageDescriptor5);
+
+        BundleDescriptor descriptor = BundleStubHelper.stubBundleDescriptor(spec);
+        lenient().when(bundleReader.readBundleDescriptor())
+                .thenReturn(descriptor);
+
+        List<Installable<PageDescriptor>> installables = pageProcessor.process(bundleReader);
+        assertThat(installables).hasSize(5);
+
+        assertThat(installables.get(0).getName()).isEqualTo("globalparent");
+        assertThat(installables.get(1).getName()).isEqualTo("parent");
+        assertThat(installables.get(2).getName()).isEqualTo("parentnotinlistandwithoutchild");
+        assertThat(installables.get(3).getName()).isEqualTo("child");
+        assertThat(installables.get(4).getName()).isEqualTo("child2");
+    }
+
+    @Test
     void shouldThrowExceptionWhileProcessingPageAndValidationFails() throws IOException {
-        PageDescriptor descriptor = this.createPageDescriptor();
+        PageDescriptor descriptor = this.createPageDescriptor("my-page", "homepage-12345678");
         descriptor.setName("name");
         descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         initBundleReader(descriptor);
@@ -125,13 +169,13 @@ class PageProcessorTest extends BaseProcessorTest {
                 .thenReturn(descriptor);
     }
 
-    private PageDescriptor createPageDescriptor() {
+    private PageDescriptor createPageDescriptor(String code, String parentCode) {
         Map<String, String> pageTitles = new HashMap<>();
         pageTitles.put("it", "La mia pagina");
         pageTitles.put("en", "My page");
         PageDescriptor pageDescriptor = PageDescriptor.builder()
-                .code("my-page")
-                .parentCode("homepage-12345678")
+                .code(code)
+                .parentCode(parentCode)
                 .pageModel("service")
                 .ownerGroup("administrators")
                 .titles(pageTitles)
@@ -148,9 +192,8 @@ class PageProcessorTest extends BaseProcessorTest {
 
     @Test
     void shouldComposeAndSetPageCodeWhileReadingDescriptorKeys() throws IOException {
-        PageDescriptor descriptor = this.createPageDescriptor();
+        PageDescriptor descriptor = this.createPageDescriptor(null, "homepage-12345678");
         descriptor.setName("name");
-        descriptor.setCode(null);
         descriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
         initBundleReader(descriptor);
         final List<String> pageCodeList = pageProcessor.readDescriptorKeys(bundleReader, pageDescriptorFile,
