@@ -17,9 +17,10 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage.ComponentReference;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage.ComponentReferenceType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.ComponentReference;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.ComponentReferenceType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -61,7 +62,7 @@ public class EntandoBundleComponentUsageService {
         }
     }
 
-    public List<EntandoCoreComponentUsage> getComponentsUsageDetails(
+    public List<ComponentUsage> getComponentsUsageDetails(
             List<EntandoBundleComponentJobEntity> bundleInstalledComponents) {
 
         List<EntandoCoreComponentUsageRequest> usageListRequest = bundleInstalledComponents.stream()
@@ -74,19 +75,28 @@ public class EntandoBundleComponentUsageService {
 
         Map<String, EntandoBundleComponentJobEntity> bundleComponents = bundleInstalledComponents.stream()
                 .collect(Collectors.toMap(this::composeKey, c -> c));
-        usageListResponse.stream()
-                .map(EntandoCoreComponentUsage::getReferences)
-                .flatMap(List::stream)
+
+        List<ComponentUsage> outputList = usageListResponse.stream()
+                .map(ComponentUsage::fromEntandoCore)
+                .collect(Collectors.toList());
+
+        outputList.forEach(componentUsage -> computeReferenceTypes(bundleComponents, componentUsage));
+        return outputList;
+
+    }
+
+    private void computeReferenceTypes(Map<String, EntandoBundleComponentJobEntity> bundleComponents,
+            ComponentUsage componentUsage) {
+        componentUsage.getReferences().stream()
                 .filter(Objects::nonNull)
                 .forEach(ref -> {
                     if (bundleContainsRef(bundleComponents, ref)) {
                         ref.setReferenceType(ComponentReferenceType.INTERNAL);
                     } else {
                         ref.setReferenceType(ComponentReferenceType.EXTERNAL);
+                        componentUsage.setHasExternal(true);
                     }
                 });
-
-        return usageListResponse;
     }
 
     private boolean bundleContainsRef(Map<String, EntandoBundleComponentJobEntity> bundleComponents,

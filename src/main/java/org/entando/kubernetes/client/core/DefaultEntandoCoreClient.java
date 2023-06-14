@@ -87,7 +87,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String CATEGORIES_PATH_SEGMENT = "categories";
     private static final String COMPONENTS_PATH_SEGMENT = "components";
     private static final String USAGE_PATH_SEGMENT = "usage";
-    private static final String USAGE_DETAILS_PATH_SEGMENT = "usage-details";
+    private static final String USAGE_DETAILS_PATH_SEGMENT = "usageDetails";
     private static final String DIFF_PATH_SEGMENT = "diff";
     private static final String STATUS_PATH_SEGMENT = "status";
     private static final String ASSETS_PATH_SEGMENT = "assets";

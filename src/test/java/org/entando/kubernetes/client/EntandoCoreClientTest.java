@@ -171,7 +171,7 @@ class EntandoCoreClientTest {
 
         assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
                 Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
-        coreMockServer.verify(3, "/api/components/usage-details", WireMock::postRequestedFor);
+        coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
     @Test
@@ -197,7 +197,7 @@ class EntandoCoreClientTest {
                 HttpStatus.OK.value());
         List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
                 Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
-        coreMockServer.verify(3, "/api/components/usage-details", WireMock::postRequestedFor);
+        coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
 
@@ -528,7 +528,7 @@ class EntandoCoreClientTest {
 
     private void stubForPostComponentsUsageDetailsWithoutErrors() {
         coreMockServer.getInnerServer()
-                .stubFor(WireMock.post(urlPathMatching("/api/components/usage-details"))
+                .stubFor(WireMock.post(urlPathMatching("/api/components/usageDetails"))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", "application/json")
@@ -552,7 +552,7 @@ class EntandoCoreClientTest {
 
     private void stubForPostComponentsUsageDetailsWithError(int error) {
         coreMockServer.getInnerServer()
-                .stubFor(WireMock.post(urlPathMatching("/api/components/usage-details"))
+                .stubFor(WireMock.post(urlPathMatching("/api/components/usageDetails"))
                         .willReturn(aResponse()
                                 .withStatus(error)
                                 .withHeader("Content-Type", "application/json")
@@ -567,7 +567,7 @@ class EntandoCoreClientTest {
     public void stubForPostComponentsUsageDetailsWithScenarioAndStatusCode(String scenario, String scenarioStart,
             String scenarioNext, int statusCode) {
 
-        coreMockServer.getInnerServer().stubFor(WireMock.post(urlEqualTo("/api/components/usage-details"))
+        coreMockServer.getInnerServer().stubFor(WireMock.post(urlEqualTo("/api/components/usageDetails"))
                 .inScenario(scenario)
                 .whenScenarioStateIs(scenarioStart)
                 .willReturn(aResponse().withStatus(statusCode)

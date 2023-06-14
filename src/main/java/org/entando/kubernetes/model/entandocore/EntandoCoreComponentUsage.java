@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.entandocore;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -16,7 +18,7 @@ public class EntandoCoreComponentUsage {
     private String code;
     private boolean exist;
     private int usage;
-    private List<ComponentReference> references;
+    private List<EntandoCoreComponentReference> references;
 
     public static class NoUsageComponent extends EntandoCoreComponentUsage {
 
@@ -29,7 +31,7 @@ public class EntandoCoreComponentUsage {
         }
 
         public NoUsageComponent(String type, String code) {
-            super(type, code, true, 0, Collections.emptyList());
+            super(type, code, true, 0,  Collections.emptyList());
         }
     }
 
@@ -43,16 +45,11 @@ public class EntandoCoreComponentUsage {
     @NoArgsConstructor
     @AllArgsConstructor
     @Data
-    public static class ComponentReference {
+    public static class EntandoCoreComponentReference {
 
-        private String componentType;
-        private ComponentReferenceType referenceType;
+        private String type;
         private String code;
+        private Boolean online;
 
     }
-
-    public enum ComponentReferenceType {
-        EXTERNAL, INTERNAL;
-    }
-
 }
