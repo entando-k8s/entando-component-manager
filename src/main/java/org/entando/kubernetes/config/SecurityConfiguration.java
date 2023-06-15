@@ -1,7 +1,6 @@
 package org.entando.kubernetes.config;
 
 import org.entando.kubernetes.security.oauth2.JwtAuthorityExtractor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
@@ -22,12 +21,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private static final String ADMIN = "ROLE_ADMIN";//From JHipster generated code.
     private final JwtAuthorityExtractor jwtAuthorityExtractor;
     private final SecurityProblemSupport problemSupport;
-    @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}")
-    private String issuerUri;
+    private final JwtAuthenticationManagerIssuerResolver resolver;
 
-    public SecurityConfiguration(JwtAuthorityExtractor jwtAuthorityExtractor, SecurityProblemSupport problemSupport) {
+    public SecurityConfiguration(JwtAuthorityExtractor jwtAuthorityExtractor, 
+            SecurityProblemSupport problemSupport, JwtAuthenticationManagerIssuerResolver resolver) {
         this.problemSupport = problemSupport;
         this.jwtAuthorityExtractor = jwtAuthorityExtractor;
+        this.resolver = resolver;
     }
 
     @Override
@@ -65,12 +65,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/actuator/**").hasAuthority(ADMIN)
                 .antMatchers("/**").authenticated()
                 .and()
-                .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(jwtAuthorityExtractor)
-                .and()
-                .and()
-                .oauth2Client();
+                .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(resolver)); // ADDED
+                //.oauth2ResourceServer()
+                //.jwt()
+                //.jwtAuthenticationConverter(jwtAuthorityExtractor)
+                //.and()
+                //.and()
+                //.oauth2Client();
         // @formatter:on
     }
 
