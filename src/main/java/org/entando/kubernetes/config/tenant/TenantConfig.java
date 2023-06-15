@@ -51,8 +51,18 @@ public class TenantConfig {
     private static final int DEFAULT_DB_MAX_IDLE = 2;
     private static final int DEFAULT_DB_MAX_WAIT_MS = 20000;
     private static final int DEFAULT_DB_INITIAL_SIZE = 2;
-
-
+    
+    // ***************************************************
+    
+    private static final String DE_DB_DRIVER_CLASS_NAME_PROPERTY = "deDbDriverClassName";
+    private static final String DE_DB_URL_PROPERTY = "deDbUrl";
+    private static final String DE_DB_USERNAME_PROPERTY = "deDbUsername";
+    private static final String DE_DB_PASSWORD_PROPERTY = "deDbPassword";
+    private static final String DE_DB_MAX_TOTAL_PROPERTY = "deDbMaxTotal";
+    private static final String DE_DB_MAX_IDLE_PROPERTY = "deDbMaxIdle";
+    private static final String DE_DB_MAX_WAIT_MS_PROPERTY = "deDbMaxWaitMillis";
+    private static final String DE_DB_INITIAL_SIZE_PROPERTY = "deDbInitialSize";
+    
     private Map<String, String> configs;
 
     public TenantConfig(Map<String,String> c) {
@@ -166,5 +176,39 @@ public class TenantConfig {
                 .map(i -> NumberUtils.toInt(i, defaultValue))
                 .orElse(defaultValue);
     }
+    
+   
+    // *******************************************************************
+    
+    public String getDeDbDriverClassName() {
+        return configs.get(DE_DB_DRIVER_CLASS_NAME_PROPERTY);
+    }
 
+    public String getDeDbUrl() {
+        return configs.get(DE_DB_URL_PROPERTY);
+    }
+
+    public String getDeDbUsername() {
+        return configs.get(DE_DB_USERNAME_PROPERTY);
+    }
+
+    public String getDeDbPassword() {
+        return configs.get(DE_DB_PASSWORD_PROPERTY);
+    }
+    
+    public int getDeMaxTotal() {
+        return getIntegerValueOrDefault(TenantConfig.DE_DB_MAX_TOTAL_PROPERTY, DEFAULT_DB_MAX_TOTAL);
+    }
+
+    public int getDeMaxIdle() {
+        return getIntegerValueOrDefault(TenantConfig.DE_DB_MAX_IDLE_PROPERTY, DEFAULT_DB_MAX_IDLE);
+    }
+
+    public int getDeMaxWaitMillis() {
+        return getIntegerValueOrDefault(TenantConfig.DE_DB_MAX_WAIT_MS_PROPERTY, DEFAULT_DB_MAX_WAIT_MS);
+    }
+
+    public int getDeInitialSize() {
+        return getIntegerValueOrDefault(TenantConfig.DE_DB_INITIAL_SIZE_PROPERTY, DEFAULT_DB_INITIAL_SIZE);
+    }
 }
