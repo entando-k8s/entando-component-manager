@@ -66,12 +66,16 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/**").authenticated()
                 .and()
                 .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(resolver)); // ADDED
-                //.oauth2ResourceServer()
-                //.jwt()
-                //.jwtAuthenticationConverter(jwtAuthorityExtractor)
-                //.and()
-                //.and()
-                //.oauth2Client();
+                /*
+                .oauth2ResourceServer()
+                .jwt()
+                .jwtAuthenticationConverter(jwtAuthorityExtractor)
+                .and()
+                .and()
+                .oauth2Client();
+                */
+        // Set of jwtAuthorityExtractor generate the error in startup:
+        // If an authenticationManagerResolver() is configured, then it takes precedence over any jwt() or opaqueToken() configuration.
         // @formatter:on
     }
 

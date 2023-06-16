@@ -63,6 +63,9 @@ public class TenantConfig {
     private static final String DE_DB_MAX_WAIT_MS_PROPERTY = "deDbMaxWaitMillis";
     private static final String DE_DB_INITIAL_SIZE_PROPERTY = "deDbInitialSize";
     
+    private static final String DE_KC_CLIENT_ID_PROPERTY = "deKcClientId";
+    private static final String DE_KC_CLIENT_SECRET_PROPERTY = "deKcClientSecret";
+    
     private Map<String, String> configs;
 
     public TenantConfig(Map<String,String> c) {
@@ -177,7 +180,6 @@ public class TenantConfig {
                 .orElse(defaultValue);
     }
     
-   
     // *******************************************************************
     
     public String getDeDbDriverClassName() {
@@ -196,6 +198,14 @@ public class TenantConfig {
         return configs.get(DE_DB_PASSWORD_PROPERTY);
     }
     
+    public String getDeKcClientId() {
+        return configs.get(DE_KC_CLIENT_ID_PROPERTY);
+    }
+
+    public String getDeKcClientSecret() {
+        return configs.get(DE_KC_CLIENT_SECRET_PROPERTY);
+    }
+    
     public int getDeMaxTotal() {
         return getIntegerValueOrDefault(TenantConfig.DE_DB_MAX_TOTAL_PROPERTY, DEFAULT_DB_MAX_TOTAL);
     }
@@ -211,4 +221,5 @@ public class TenantConfig {
     public int getDeInitialSize() {
         return getIntegerValueOrDefault(TenantConfig.DE_DB_INITIAL_SIZE_PROPERTY, DEFAULT_DB_INITIAL_SIZE);
     }
+    
 }

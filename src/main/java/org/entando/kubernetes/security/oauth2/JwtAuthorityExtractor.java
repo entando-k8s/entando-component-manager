@@ -5,7 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.tenant.TenantConfig;
+import org.entando.kubernetes.config.tenant.TenantContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,6 +23,9 @@ public class JwtAuthorityExtractor extends JwtAuthenticationConverter {
 
     @Value("${spring.security.oauth2.client.registration.oidc.client-id}")
     public String clientId;
+    
+    @Autowired(required = false)
+    private Map<String, TenantConfig> tenantConfigs;
 
     @Override
     protected Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
@@ -33,8 +41,11 @@ public class JwtAuthorityExtractor extends JwtAuthenticationConverter {
     private Collection<String> getRolesFromClaims(Map<String, Object> claims) {
         Map<String, Object> resourceAccessClaim = (Map<String, Object>) claims
                 .getOrDefault("resource_access", new HashMap<>());
-        if (resourceAccessClaim.containsKey(clientId)) {
-            return (Collection<String>) ((Map) resourceAccessClaim.get(clientId))
+        String currentTenant = TenantContext.getCurrentTenant();
+        String currentClientId = (null == this.tenantConfigs || StringUtils.isBlank(currentTenant)) ? this.clientId : 
+                Optional.ofNullable(this.tenantConfigs.get(currentTenant)).map(c -> c.getDeKcClientId()).orElse(clientId); 
+        if (resourceAccessClaim.containsKey(currentClientId)) {
+            return (Collection<String>) ((Map) resourceAccessClaim.get(currentClientId))
                     .getOrDefault("roles", new ArrayList<>());
         } else {
             return new ArrayList<>();
@@ -44,4 +55,5 @@ public class JwtAuthorityExtractor extends JwtAuthenticationConverter {
     private List<GrantedAuthority> mapRolesToGrantedAuthorities(Collection<String> roles) {
         return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
+    
 }
