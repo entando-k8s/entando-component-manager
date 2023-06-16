@@ -9,10 +9,11 @@ import static org.entando.kubernetes.model.bundle.ComponentType.PAGE;
 import static org.entando.kubernetes.model.bundle.ComponentType.PAGE_TEMPLATE;
 import static org.entando.kubernetes.model.bundle.ComponentType.WIDGET;
 
-import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
@@ -31,7 +32,7 @@ import org.springframework.stereotype.Service;
 public class EntandoBundleComponentUsageService {
 
     private final EntandoCoreClient client;
-    private static final List<ComponentType> RELEVANT_USAGE_COMPONENT_TYPES = Arrays.asList(WIDGET, GROUP, FRAGMENT,
+    private static final EnumSet<ComponentType> RELEVANT_USAGE_COMPONENT_TYPES = EnumSet.of(WIDGET, GROUP, FRAGMENT,
             CATEGORY, PAGE, PAGE_TEMPLATE, CONTENT_TYPE, CONTENT_TEMPLATE);
     private static final String KEY_SEP = "_";
 
@@ -67,7 +68,7 @@ public class EntandoBundleComponentUsageService {
 
         List<EntandoCoreComponentUsageRequest> usageListRequest = bundleInstalledComponents.stream()
                 .filter(u -> RELEVANT_USAGE_COMPONENT_TYPES.contains(u.getComponentType()))
-                .map(cj -> new EntandoCoreComponentUsageRequest(cj.getComponentType().getTypeName(),
+                .map(cj -> new EntandoCoreComponentUsageRequest(cj.getComponentType().getAppEngineTypeName(),
                         cj.getComponentId()))
                 .collect(Collectors.toList());
 
@@ -78,6 +79,7 @@ public class EntandoBundleComponentUsageService {
 
         List<ComponentUsage> outputList = usageListResponse.stream()
                 .map(ComponentUsage::fromEntandoCore)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toList());
 
         outputList.forEach(componentUsage -> computeReferenceTypes(bundleComponents, componentUsage));
