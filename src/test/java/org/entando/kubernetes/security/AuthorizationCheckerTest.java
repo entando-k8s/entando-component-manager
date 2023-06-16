@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.entando.kubernetes.config.tenant.TenantRestTemplateAccessor;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.security.AuthorizationChecker.MyGroupPermission;
@@ -27,6 +28,8 @@ import org.springframework.web.client.RestTemplate;
 class AuthorizationCheckerTest {
 
     @Mock
+    private TenantRestTemplateAccessor accessor;
+    @Mock
     private RestTemplate restTemplate;
     @Mock
     private ResponseEntity<SimpleRestResponse<List<MyGroupPermission>>> response;
@@ -37,7 +40,8 @@ class AuthorizationCheckerTest {
 
     @BeforeEach
     public void setup() {
-        this.target = new AuthorizationChecker("url", restTemplate);
+        this.target = new AuthorizationChecker("url", accessor);
+        when(accessor.getRestTemplate()).thenReturn(this.restTemplate);
     }
 
     @Test

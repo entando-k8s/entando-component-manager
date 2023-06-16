@@ -18,6 +18,7 @@ import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.config.tenant.TenantRestTemplateAccessor;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -57,9 +58,9 @@ class EntandoCoreClientTest {
         String keycloakClientId = "clientId";
         String keycloakClientSecret = "clientSecret";
         String keycloakAuthEndpoint = coreMockServer.getApiRoot() + "/auth/protocol/openid-connect/auth";
+        TenantRestTemplateAccessor accessor = new TenantRestTemplateAccessor(keycloakClientId, keycloakClientSecret, keycloakAuthEndpoint);
         String entandoCoreUrl = coreMockServer.getApiRoot() + "/";
-        this.client = new DefaultEntandoCoreClient(keycloakClientId, keycloakClientSecret, keycloakAuthEndpoint,
-                entandoCoreUrl);
+        this.client = new DefaultEntandoCoreClient(entandoCoreUrl, accessor);
     }
 
     @AfterEach

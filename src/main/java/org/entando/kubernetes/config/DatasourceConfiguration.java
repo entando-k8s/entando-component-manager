@@ -69,7 +69,6 @@ public class DatasourceConfiguration {
         dataSource.setDefaultTargetDataSource(defaultDatasource);
         dataSource.setTargetDataSources(resolvedDataSources);
         dataSource.afterPropertiesSet();
-        logger.debug("Created MultitenantDatasource");
         return dataSource;
     }
     

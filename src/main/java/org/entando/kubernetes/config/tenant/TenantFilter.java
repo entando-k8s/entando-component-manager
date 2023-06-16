@@ -44,8 +44,8 @@ class TenantFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         String domain = UrlUtils.fetchServer(req);
         String tenantCode = this.getTenantCodeByDomain(domain);
-        logger.error("Tenant Code " + tenantCode);
         if (null != tenantCode) {
+            logger.debug("Tenant code {}", tenantCode);
             TenantContext.setCurrentTenant(tenantCode);
         }
         try {

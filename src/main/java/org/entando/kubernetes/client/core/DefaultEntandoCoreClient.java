@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
+import org.entando.kubernetes.config.tenant.TenantRestTemplateAccessor;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -43,7 +44,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCorePageWidgetConfigurati
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.entando.kubernetes.model.web.response.RestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
@@ -53,14 +54,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
-import org.springframework.security.oauth2.common.AuthenticationScheme;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
@@ -90,53 +88,44 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String ASSETS_PATH_SEGMENT = "assets";
     private static final String DIRECTORY_PATH_SEGMENT = "directory";
     private static final String FILE_PATH_SEGMENT = "file";
-
-    private final OAuth2RestTemplate restTemplate;
+    
     private final String entandoUrl;
+    
+    private final TenantRestTemplateAccessor accessor;
+    
     private final int retryNumber = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_RETRIES", 3);
     private final long backOffPeriod = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_BACKOFF", 5);
-
+    
     private final List<HttpStatus> errorsCandidatesToRetry = Arrays.asList(
             HttpStatus.TOO_MANY_REQUESTS,
             HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_GATEWAY,
             HttpStatus.SERVICE_UNAVAILABLE, HttpStatus.GATEWAY_TIMEOUT,
             HttpStatus.INSUFFICIENT_STORAGE, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED
     );
-
-
-    public DefaultEntandoCoreClient(
-            @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
-            @Value("${spring.security.oauth2.client.registration.oidc.client-secret}") final String clientSecret,
-            @Value("${entando.auth-url}") final String tokenUri,
-            @Value("${entando.url}") final String entandoUrl) {
-        final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
-        resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(clientId);
-        resourceDetails.setClientSecret(clientSecret);
-        resourceDetails.setAccessTokenUri(tokenUri);
-
+    
+    public DefaultEntandoCoreClient(@Value("${entando.url}") String entandoUrl, @Autowired TenantRestTemplateAccessor accessor) {
         this.entandoUrl = entandoUrl;
-        this.restTemplate = new OAuth2RestTemplate(resourceDetails);
-        this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
-        this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
-
+        this.accessor = accessor;
     }
-
+    
+    private RestTemplate getRestTemplate() {
+        return this.accessor.getRestTemplate();
+    }
+    
     @Override
     public void createWidget(final WidgetDescriptor descriptor) {
         MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
-        Runnable r = () -> restTemplate
+        Runnable r = () -> this.getRestTemplate()
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT).build().toUri(),
                         new EntandoCoreWidget(descriptor),
                         Void.class);
         retryer.execute(r);
-
     }
 
     @Override
     public void updateWidget(WidgetDescriptor descriptor) {
         MethodRetryer<Runnable, Object> retryer = this.buildDefaultRetryer();
-        Runnable r = () -> restTemplate
+        Runnable r = () -> this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, WIDGETS_PATH_SEGMENT, descriptor.getCode()).build()
                                 .toUri(),
                         new EntandoCoreWidget(descriptor));
@@ -158,13 +147,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createFragment(FragmentDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT).build().toUri(),
+        this.getRestTemplate().postForEntity(resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT).build().toUri(),
                 new EntandoCoreFragment(descriptor), Void.class);
     }
 
     @Override
     public void updateFragment(FragmentDescriptor descriptor) {
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT, descriptor.getCode()).build()
+        this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT, descriptor.getCode()).build()
                         .toUri(),
                 new EntandoCoreFragment(descriptor));
     }
@@ -184,14 +173,14 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createLabel(final LabelDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, LABELS_PATH_SEGMENT).build().toUri(), descriptor,
                         Void.class);
     }
 
     @Override
     public void updateLabel(LabelDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, LABELS_PATH_SEGMENT, descriptor.getKey()).build().toUri(),
                         descriptor);
     }
@@ -205,7 +194,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void enableLanguage(final LanguageDescriptor descriptor) {
         descriptor.setActive(true);
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, descriptor.getCode()).build()
+        this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, descriptor.getCode()).build()
                         .toUri(),
                 new EntandoCoreLanguage(descriptor));
     }
@@ -217,7 +206,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .setActive(false);
 
         try {
-            restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, code).build().toUri(),
+            this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, code).build().toUri(),
                     entandoCoreLanguage);
         } catch (RestClientResponseException e) {
             HttpStatus s = HttpStatus.resolve(e.getRawStatusCode());
@@ -230,14 +219,14 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createGroup(GroupDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, GROUPS_PATH_SEGMENT).build().toUri(), descriptor,
                         Void.class);
     }
 
     @Override
     public void updateGroup(GroupDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, GROUPS_PATH_SEGMENT, descriptor.getCode()).build().toUri(),
                         descriptor);
     }
@@ -257,7 +246,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createPage(PageDescriptor pageDescriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT).build().toUri(),
                         new EntandoCorePage(pageDescriptor),
                         Void.class);
@@ -265,14 +254,14 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updatePageConfiguration(PageDescriptor pageDescriptor) {
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode()).build()
+        this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode()).build()
                         .toUri(),
                 new EntandoCorePage(pageDescriptor));
     }
 
     @Override
     public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode(),
+        this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode(),
                 WIDGETS_PATH_SEGMENT,
                 widgetDescriptor.getPos().toString()).build().toUri(),
                 new EntandoCorePageWidgetConfiguration(widgetDescriptor));
@@ -280,7 +269,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void setPageStatus(String code, String status) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, code,
                         STATUS_PATH_SEGMENT).build().toUri(),
                         Collections.singletonMap("status", status));   // NOSONAR
@@ -301,13 +290,13 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createPageTemplate(final PageTemplateDescriptor descriptor) {
-        restTemplate.postForEntity(resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT).build().toUri(),
+        this.getRestTemplate().postForEntity(resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT).build().toUri(),
                 new EntandoCorePageTemplate(descriptor), Void.class);
     }
 
     @Override
     public void updatePageTemplate(PageTemplateDescriptor descriptor) {
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT, descriptor.getCode()).build()
+        this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT, descriptor.getCode()).build()
                         .toUri(),
                 new EntandoCorePageTemplate(descriptor));
     }
@@ -336,7 +325,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createContentTemplate(final ContentTemplateDescriptor descriptor) {
-        restTemplate.postForEntity(
+        this.getRestTemplate().postForEntity(
                 resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENT_MODELS_PATH_SEGMENT).build().toUri(),
                 new EntandoCoreContentModel(descriptor), Void.class);
@@ -344,7 +333,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateContentTemplate(ContentTemplateDescriptor descriptor) {
-        restTemplate.put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
+        this.getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                 CONTENT_MODELS_PATH_SEGMENT,
                 descriptor.getId()).build().toUri(), new EntandoCoreContentModel(descriptor));
     }
@@ -359,7 +348,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createContentType(final ContentTypeDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(
                         resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                                 CONTENT_TYPES_PATH_SEGMENT).build()
@@ -369,7 +358,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateContentType(ContentTypeDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENT_TYPES_PATH_SEGMENT).build().toUri(),
                         descriptor);
@@ -395,7 +384,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createContent(ContentDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(
                         resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                                 CONTENTS_PATH_SEGMENT).build().toUri(),
@@ -405,7 +394,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateContent(ContentDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENTS_PATH_SEGMENT, descriptor.getId())
                                 .build().toUri(),
@@ -414,7 +403,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void publishContent(ContentDescriptor descriptor) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         CONTENTS_PATH_SEGMENT, descriptor.getId(),
                         "status")
@@ -439,7 +428,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        restTemplate
+        this.getRestTemplate()
                 .exchange(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         ASSETS_PATH_SEGMENT)
                                 .build().toUri(),
@@ -457,7 +446,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        restTemplate.exchange(
+        this.getRestTemplate().exchange(
                 resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
                         ASSETS_PATH_SEGMENT,
                         "cc=" + descriptor.getCorrelationCode())
@@ -473,7 +462,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void createFolder(final String folder) {
-        restTemplate.postForEntity(
+        this.getRestTemplate().postForEntity(
                 resolvePathSegments(API_PATH_SEGMENT, FILE_BROWSER_PATH_SEGMENT, DIRECTORY_PATH_SEGMENT).build()
                         .toUri(),
                 new EntandoCoreFolder(folder), Void.class);
@@ -492,7 +481,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void createFile(final FileDescriptor descriptor) {
         final String path = Paths.get(descriptor.getFolder(), descriptor.getFilename()).toString();
         final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(
                         resolvePathSegments(API_PATH_SEGMENT, FILE_BROWSER_PATH_SEGMENT, FILE_PATH_SEGMENT).build()
                                 .toUri(),
@@ -504,14 +493,14 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void updateFile(FileDescriptor descriptor) {
         final String path = Paths.get(descriptor.getFolder(), descriptor.getFilename()).toString();
         final EntandoCoreFile file = new EntandoCoreFile(false, path, descriptor.getFilename(), descriptor.getBase64());
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, FILE_BROWSER_PATH_SEGMENT, FILE_PATH_SEGMENT).build()
                         .toUri(), file);
     }
 
     @Override
     public void createCategory(CategoryDescriptor representation) {
-        restTemplate
+        this.getRestTemplate()
                 .postForEntity(resolvePathSegments(API_PATH_SEGMENT, CATEGORIES_PATH_SEGMENT).build().toUri(),
                         representation,
                         Void.class);
@@ -519,7 +508,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateCategory(CategoryDescriptor representation) {
-        restTemplate
+        this.getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, CATEGORIES_PATH_SEGMENT, representation.getCode()).build()
                                 .toUri(),
                         representation);
@@ -577,7 +566,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         AnalysisReportClientRequest analysisReportClientRequest = factoryRequestCreationFn.apply(requestFactory);
 
         try {
-            ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = restTemplate
+            ResponseEntity<SimpleRestResponse<AnalysisReport>> reportResponseEntity = this.getRestTemplate()
                     .exchange(resolvePathSegments(pathSegments).build().toUri(),
                             HttpMethod.POST, new HttpEntity<>(analysisReportClientRequest),
                             new ParameterizedTypeReference<>() {
@@ -615,7 +604,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
      */
     public EntandoCoreComponentUsage getComponentUsage(String code, String[] endpointUrlParts, String componentType) {
 
-        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = restTemplate
+        ResponseEntity<SimpleRestResponse<EntandoCoreComponentUsage>> usage = this.getRestTemplate()
                 .exchange(resolvePathSegments(endpointUrlParts).build().toUri(), HttpMethod.GET, null,
                         new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentUsage>>() {
                         });
@@ -634,7 +623,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     private void notFoundOrUnauthorizedProtectedDelete(URI url) {
         try {
-            restTemplate.delete(url);
+            this.getRestTemplate().delete(url);
         } catch (RestClientResponseException e) {
             if (isSafeDeleteResponseStatus(e.getRawStatusCode())) {
                 return;

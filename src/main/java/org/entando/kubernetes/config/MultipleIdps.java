@@ -20,12 +20,16 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.config.tenant.TenantConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
+@Slf4j
 @Configuration
+@DependsOn("tenantConfiguration")
 class MultipleIdps {
     
     public final Map<String, OAuth2IdpConfig> trustedIssuers;
@@ -49,6 +53,7 @@ class MultipleIdps {
             return new OAuth2IdpConfig(issuer, jwkCacheTtl, jwkCacheRefresh, jwkSetUri);
         }));
         trustedIssuers.putAll(tenantTustedIssuers);
+        log.debug("Extracted issuers {}", trustedIssuers.keySet());
         this.trustedIssuers = trustedIssuers;
     }
 

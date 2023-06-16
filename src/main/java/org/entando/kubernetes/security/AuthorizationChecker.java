@@ -6,6 +6,8 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.config.tenant.TenantRestTemplateAccessor;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,30 +18,27 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Component
 public class AuthorizationChecker {
 
     protected static final String ACCESS_DENIED_ERROR = "The user does not have the required permission to execute this operation";
     protected static final List<String> ECR_PERMISSION_LIST = Arrays.asList("superuser", "enterECR");
-
-    private final RestTemplate restTemplate;
+    
+    private final TenantRestTemplateAccessor restTemplateAccessor;
     private final String entandoUrl;
 
-    public AuthorizationChecker(@Value("${entando.url}") final String entandoUrl, RestTemplate simpleRestTemplate) {
+    public AuthorizationChecker(@Value("${entando.url}") final String entandoUrl, TenantRestTemplateAccessor restTemplateAccessor) {
         this.entandoUrl = entandoUrl;
-        this.restTemplate = simpleRestTemplate;
+        this.restTemplateAccessor = restTemplateAccessor;
     }
 
     public void checkPermissions(String authorizationHeader) {
-
         if (ObjectUtils.isEmpty(authorizationHeader)) {
             throw new AuthorizationDeniedException(ACCESS_DENIED_ERROR);
         }
-
         final String perm = fetchAndExtractRequiredPermission(authorizationHeader);
-
         if (perm == null) {
             throw new AuthorizationDeniedException(ACCESS_DENIED_ERROR);
         }
@@ -68,11 +67,9 @@ public class AuthorizationChecker {
      */
     private ResponseEntity<SimpleRestResponse<List<MyGroupPermission>>> fetchMyGroupPermissions(
             String authorizationHeader) {
-
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", authorizationHeader);
-
-        return restTemplate.exchange(
+        return this.restTemplateAccessor.getRestTemplate().exchange(
                 entandoUrl + "/api/users/myGroupPermissions", HttpMethod.GET,
                 new HttpEntity<>(null, headers),
                 new ParameterizedTypeReference<SimpleRestResponse<List<MyGroupPermission>>>() {

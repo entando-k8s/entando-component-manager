@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 public class TenantConfiguration {
 
@@ -40,11 +42,13 @@ public class TenantConfiguration {
     public Map<String, TenantConfig> tenantConfigs() {
         try {
             if (StringUtils.isNotBlank(this.tenantsConfigAsString)) {
-                return this.objectMapper.readValue(tenantsConfigAsString, new TypeReference<List<Map<String, String>>>() {
+                Map<String, TenantConfig> map = this.objectMapper.readValue(tenantsConfigAsString, new TypeReference<List<Map<String, String>>>() {
                 })
                         .stream()
                         .map(TenantConfig::new)
                         .collect(Collectors.toMap(TenantConfig::getTenantCode, tc -> tc));
+                log.debug("Readed tenant configuration - tenants {}", map.keySet());
+                return map;
             } else {
                 return new HashMap<>();
             }
