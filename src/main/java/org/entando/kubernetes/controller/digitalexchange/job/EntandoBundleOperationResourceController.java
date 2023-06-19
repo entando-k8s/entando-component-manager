@@ -143,17 +143,18 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJob(@PathVariable("component") String componentId) {
-        return new SimpleRestResponse<>(executeGetLastInstallJow(componentId));
+        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL));
     }
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJobWithInstallPlan(String componentId) {
-        return new SimpleRestResponse<>(executeGetLastInstallJow(componentId));
+        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL));
     }
 
-    private EntandoBundleJobEntity executeGetLastInstallJow(String componentId) {
+    private EntandoBundleJobEntity executeGetLastJob(String componentId, JobType jobType) {
         return jobService.getJobs(componentId)
-                .stream().filter(j -> j.getStatus().isOfType(JobType.INSTALL))
+                .stream()
+                .filter(j -> j.getStatus().isOfType(jobType))
                 .findFirst()
                 .orElseThrow(JobNotFoundException::new);
     }
@@ -182,12 +183,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastUninstallJob(
             @PathVariable("component") String componentId) {
-        EntandoBundleJobEntity lastUninstallJob = jobService.getJobs(componentId)
-                .stream()
-                .filter(j -> j.getStatus().isOfType(JobType.UNINSTALL))
-                .findFirst()
-                .orElseThrow(JobNotFoundException::new);
-        return new SimpleRestResponse<>(lastUninstallJob);
+            return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.UNINSTALL));
     }
 
     private URI getJobLocationURI(EntandoBundleJobEntity job) {

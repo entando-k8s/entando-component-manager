@@ -7,12 +7,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.job.JobConflictException;
+import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -24,12 +26,14 @@ import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleJobServic
 import org.entando.kubernetes.service.digitalexchange.job.EntandoBundleUninstallService;
 import org.entando.kubernetes.validator.InstallPlanValidator;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -94,4 +98,14 @@ class EntandoBundleOperationResourceControllerTest {
 
     }
 
+    @Test
+    void shouldThrowJobNotFoundExceptionWith404StatusIfUninstallationIdDoesNotExistsOnGet() {
+        // Given
+        final String bundleId = "bundleId";
+        when(jobService.getJobs(bundleId)).thenReturn(List.of());
+        // Then
+        JobNotFoundException jobNotFoundException = Assertions.assertThrows(JobNotFoundException.class,
+                () -> entandoBundleOperationResourceController.getLastUninstallJob(bundleId));
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, jobNotFoundException.getStatus());
+    }
 }
