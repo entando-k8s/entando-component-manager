@@ -14,6 +14,8 @@
 
 package org.entando.kubernetes.model.job;
 
+import static org.entando.kubernetes.model.bundle.installable.Installable.MAX_COMMON_SIZE_OF_STRINGS;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.persistence.Column;
@@ -23,6 +25,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -68,6 +71,13 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     private String rollbackErrorMessage;
     @Column
     private String installPlan;
+    @Column
+    private Integer uninstallErrorCode;
+    @Column
+    private String uninstallErrorMessage;
+    @Column
+    @Size(max = MAX_COMMON_SIZE_OF_STRINGS)
+    private String uninstallErrors;
     /**
      * this field denotes if a bundle installation has been customized by the user.
      * a bundle installation becomes custom when the bundle is not installed entirely (one or more components are

@@ -3,11 +3,13 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
@@ -16,12 +18,14 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPl
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
+import org.entando.kubernetes.exception.job.UninstallJobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobType;
+import org.entando.kubernetes.model.job.UninstallJobResult;
 import org.entando.kubernetes.model.web.response.RestError;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.security.AuthorizationChecker;
@@ -39,7 +43,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class EntandoBundleOperationResourceController implements EntandoBundleOperationResource {
@@ -143,20 +149,33 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJob(@PathVariable("component") String componentId) {
-        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL));
+        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL).orElseThrow(JobNotFoundException::new));
     }
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJobWithInstallPlan(String componentId) {
-        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL));
+        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL).orElseThrow(JobNotFoundException::new));
     }
 
-    private EntandoBundleJobEntity executeGetLastJob(String componentId, JobType jobType) {
-        return jobService.getJobs(componentId)
+    private Optional<EntandoBundleJobEntity> executeGetLastJob(String componentId, JobType jobType) {
+        log.debug("Getting jobs from DB with componentId: '{}'. Returned jobs will be filtered by job type: '{}'",
+                componentId, jobType);
+        // try to find the first job related to the given componentId and jobType
+        Optional<EntandoBundleJobEntity> result = jobService.getJobs(componentId)
                 .stream()
                 .filter(j -> j.getStatus().isOfType(jobType))
-                .findFirst()
-                .orElseThrow(JobNotFoundException::new);
+                .findFirst();
+        // some log to show the query and filter result
+        if (log.isDebugEnabled()) {
+            result.ifPresentOrElse(
+                    entity -> log.debug("Found job relative to componentId: '{}' and jobType: '{}'", componentId,
+                            jobType),
+                    () -> log.debug("No job found relative to componentId: '{}' and jobType: '{}'", componentId,
+                            jobType));
+
+        }
+
+        return result;
     }
 
     @Override
@@ -181,9 +200,33 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     @Override
-    public SimpleRestResponse<EntandoBundleJobEntity> getLastUninstallJob(
+    public SimpleRestResponse<UninstallJobResult> getLastUninstallJob(
             @PathVariable("component") String componentId) {
-            return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.UNINSTALL));
+        log.debug("Entered '{}' to get uninstallation info about component {}",
+                getCurrentURLPath(), componentId);
+        // FIXME a new exception of type UninstallJobNotFoundException was used instead of JobNotFoundException
+        //  because the latter lacks the related message used by MessageSource. As a result, the handling of the
+        //  JobNotFoundException currently causes an error in the GlobalControllerExceptionHandler which must be resolved.
+        UninstallJobResult uninstallJobResult = executeGetLastJob(componentId, JobType.UNINSTALL)
+                .flatMap(UninstallJobResult::fromEntity)
+                .orElseThrow(() -> new UninstallJobNotFoundException(
+                        String.format("Job '%s' not found", componentId)));
+        return new SimpleRestResponse<>(uninstallJobResult);
+    }
+
+    /*
+        Utility method to return the current path for debug purpose
+     */
+    private static String getCurrentURLPath() {
+        try {
+            return new URL(ServletUriComponentsBuilder.fromCurrentRequest().toUriString()).getPath();
+        } catch (Exception e) {
+            // a catch-all strategy to prevent any blocking situation.
+            // if an exception in raised should not block the whole execution because this value is used only for debug
+            // purpose.
+            return "";
+        }
+
     }
 
     private URI getJobLocationURI(EntandoBundleJobEntity job) {
