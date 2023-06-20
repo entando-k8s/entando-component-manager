@@ -39,7 +39,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
@@ -377,21 +376,19 @@ class WidgetProcessorTest extends BaseProcessorTest {
                 new WidgetTemplateGeneratorServiceDouble(), validator);
         widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
 
-        if (widg1ConfigDescrFile != null) {
-            WidgetDescriptor wcdesc = yamlMapper.readValue(new File(widg1ConfigDescrFile), WidgetDescriptor.class);
-            final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
-            wcdesc.setDescriptorMetadata(new DescriptorMetadata(
-                    Map.of("", ""),
-                    widg1ConfigDescrFile,
-                    bundleDescriptor.getCode(),
-                    null, null,
-                    bundleId,
-                    widgetProcessor.getTemplateGeneratorService()
-            ));
-            var wcdm = new HashMap<String, WidgetDescriptor>();
-            wcdm.put(wcdesc.getName(), wcdesc);
-            widgetProcessor.setWidgetConfigDescriptorsMap(wcdm);
-        }
+        WidgetDescriptor wcdesc = yamlMapper.readValue(new File(widg1ConfigDescrFile), WidgetDescriptor.class);
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+        wcdesc.setDescriptorMetadata(new DescriptorMetadata(
+                Map.of("", ""),
+                widg1ConfigDescrFile,
+                bundleDescriptor.getCode(),
+                null, null,
+                bundleId,
+                widgetProcessor.getTemplateGeneratorService()
+        ));
+        var wcdm = new HashMap<String, WidgetDescriptor>();
+        wcdm.put(wcdesc.getName(), wcdesc);
+        widgetProcessor.setWidgetConfigDescriptorsMap(wcdm);
 
         var installableList = widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
         assertThat(installableList).hasSize(2);
