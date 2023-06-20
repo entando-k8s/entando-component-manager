@@ -46,6 +46,8 @@ import org.apache.commons.io.IOUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteResponseStatus;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
@@ -860,6 +862,11 @@ public class TestInstallUtils {
 
         stubPermissionRequestReturningSuperuser();
 
+        doSleep(Duration.ofSeconds(1L),
+                EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.SUCCESS).build())
+                .when(coreClient).deleteComponents(any());
+
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
@@ -952,6 +959,10 @@ public class TestInstallUtils {
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
                 .when(coreClient).createPage(any(PageDescriptor.class));
+
+        when(coreClient.deleteComponents(any())).thenReturn(EntandoCoreComponentDeleteResponse.builder()
+                .status(EntandoCoreComponentDeleteResponseStatus.SUCCESS)
+                .build());
 
         stubPermissionRequestReturningSuperuser();
     }
@@ -1132,21 +1143,17 @@ public class TestInstallUtils {
         UniformDistribution delayDistribution = new UniformDistribution(200, 500);
         Mockito.reset(coreClient);
         WireMock.reset();
-        WireMock.setGlobalRandomDelay(delayDistribution);
+        //WireMock.setGlobalRandomDelay(delayDistribution);
 
         setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
 
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePage(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deletePageModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteWidget(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFragment(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentType(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteContentModel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteLabel(any());
-        doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).deleteFolder(any());
+        doSleep(Duration.ofSeconds(2L),
+                EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.SUCCESS).build())
+                .when(coreClient).deleteComponents(any());
 
         stubPermissionRequestReturningSuperuser();
 

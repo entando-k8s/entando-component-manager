@@ -44,13 +44,8 @@ public class AssetInstallable extends Installable<AssetDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing Asset {}", getName());
-            if (shouldCreate()) {
-                engineService.deleteAsset("cc=" + getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing Asset {}", getName()));
     }
 
     @Override

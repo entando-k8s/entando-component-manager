@@ -14,6 +14,8 @@
 
 package org.entando.kubernetes.model.job;
 
+import static org.entando.kubernetes.model.bundle.installable.Installable.MAX_COMMON_SIZE_OF_STRINGS;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.persistence.Column;
@@ -23,6 +25,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -69,12 +72,18 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     @Column
     private String installPlan;
     /**
-     * this field denotes if a bundle installation has been customized by the user.
-     * a bundle installation becomes custom when the bundle is not installed entirely (one or more components are
-     * skipped or overridden)
+     * this field denotes if a bundle installation has been customized by the user. a bundle installation becomes custom
+     * when the bundle is not installed entirely (one or more components are skipped or overridden)
      */
     @Column
     private Boolean customInstallation;
+    @Column
+    private Integer uninstallErrorCode;
+    @Column
+    private String uninstallErrorMessage;
+    @Column
+    @Size(max = MAX_COMMON_SIZE_OF_STRINGS)
+    private String uninstallErrors;
 
     @PrePersist
     public void generateId() {
@@ -98,6 +107,9 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
         newEntity.setUserId(this.userId);
         newEntity.setInstallPlan(this.installPlan);
         newEntity.setCustomInstallation(this.customInstallation);
+        newEntity.setUninstallErrorCode(this.uninstallErrorCode);
+        newEntity.setUninstallErrorMessage(this.uninstallErrorMessage);
+        newEntity.setUninstallErrors(this.uninstallErrors);
         return newEntity;
     }
 }

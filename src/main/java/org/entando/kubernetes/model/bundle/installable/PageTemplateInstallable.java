@@ -37,13 +37,8 @@ public class PageTemplateInstallable extends Installable<PageTemplateDescriptor>
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing PageTemplate {}", getName());
-            if (shouldCreate()) {
-                engineService.deletePageModel(getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing PageTemplate {}", getName()));
     }
 
     @Override

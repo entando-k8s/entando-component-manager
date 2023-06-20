@@ -43,10 +43,16 @@ public class PageConfigurationInstallable extends Installable<PageDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
+    public CompletableFuture<Void> uninstallFromEcr() {
         return CompletableFuture.runAsync(() -> {
             // UNINSTALL IN THE PageInstallable
         });
+    }
+
+    @Override
+    public boolean shouldUninstallFromAppEngine() {
+        log.debug("should delete:'false' element type:'PAGE_CONFIGURATION' name:'{}'", getName());
+        return false;
     }
 
     @Override

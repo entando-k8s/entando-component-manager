@@ -37,13 +37,8 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing Content Template {}", getName());
-            if (shouldCreate()) {
-                engineService.deleteContentModel(getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing Content Template {}", getName()));
     }
 
     @Override

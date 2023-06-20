@@ -3,7 +3,6 @@ package org.entando.kubernetes.service.digitalexchange.job;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,7 +20,11 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteStatus;
 import org.entando.kubernetes.client.model.assembler.InstallPlanAssembler;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -82,6 +85,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull Map<ReportableRemoteHandler, AnalysisReportFunction> analysisReportStrategies;
     private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
     private final @NonNull BundleDescriptorValidator bundleDescriptorValidator;
+    private final @NonNull EntandoCoreClient entandoCoreClient;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -283,7 +287,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             parentJobResult.getInstallError());
                     log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
                             .getComponentVersion());
-                    parentJobResult = rollback(scheduler, parentJobResult);
+                    parentJobResult = rollback(scheduler, parentJobResult, parentJob);
                 } else {
 
                     saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor(),
@@ -306,9 +310,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         });
     }
 
-    private JobResult rollback(JobScheduler scheduler, JobResult result) {
+    private JobResult rollback(JobScheduler scheduler, JobResult result, EntandoBundleJobEntity parentJob) {
         JobScheduler rollbackScheduler = scheduler.createRollbackScheduler();
         try {
+            List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
             Optional<EntandoBundleComponentJobEntity> optCompJob = rollbackScheduler.extractFromQueue();
             while (optCompJob.isPresent()) {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
@@ -321,12 +326,19 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                                         + " rollback can't proceed due to an error with one of the components");
                     }
                     rollbackScheduler.recordProcessedComponentJob(tracker.getJob());
+
+                    if (tracker.getJob().getInstallable().shouldUninstallFromAppEngine()) {
+                        componentToUninstallFromAppEngine.add(tracker.getJob());
+                    }
+
                 }
                 optCompJob = rollbackScheduler.extractFromQueue();
             }
 
-            log.info("Rollback operation completed successfully");
-            result.setStatus(JobStatus.INSTALL_ROLLBACK);
+            // remove from appEngine
+            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, parentJob);
+            result.setStatus(finalStatus);
+            log.info("Rollback operation completed");
 
         } catch (Exception rollbackException) {
             log.error("An error occurred during component rollback", rollbackException);
@@ -335,6 +347,37 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         }
         return result;
     }
+
+    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
+            EntandoBundleJobEntity parentJob) {
+        EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
+                .map(EntandoCoreComponentDeleteRequest::fromEntity)
+                .flatMap(Optional::stream)
+                .collect(Collectors.toList()));
+
+        switch (response.getStatus()) {
+            case FAILURE:
+                log.debug("In rollback All deletes are in error with response:'{}'", response);
+                return JobStatus.INSTALL_ERROR;
+            case PARTIAL_SUCCESS:
+                log.debug("In rollback Partial deletes are in error with response:'{}'", response);
+                try {
+                    String uninstallErrors = objectMapper.writeValueAsString(response.getComponents().stream()
+                            .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())).collect(
+                                    Collectors.toList()));
+                    parentJob.setUninstallErrors(uninstallErrors);
+
+                } catch (JsonProcessingException ex) {
+                    log.error("In rollback with response:'{}' we had a json error", response, ex);
+                }
+                return JobStatus.INSTALL_ROLLBACK_PARTIAL;
+            case SUCCESS:
+            default:
+                log.debug("In rollback all deletes ok with response:'{}'", response);
+                return JobStatus.INSTALL_ROLLBACK;
+        }
+    }
+
 
     /**
      * download the bundle, create a BundleReader to read it and return it.
@@ -507,7 +550,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobResult executeRollback(Installable<?> installable) {
-        return installable.uninstall()
+        return installable.uninstallFromEcr()
                 .thenApply(vd -> JobResult.builder().status(JobStatus.INSTALL_ROLLBACK).build())
                 .exceptionally(th -> {
                     log.error(String.format("Error rolling back %s %s",

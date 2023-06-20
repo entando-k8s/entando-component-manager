@@ -2,7 +2,10 @@ package org.entando.kubernetes.service.digitalexchange.job;
 
 import static org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.ECR_ACTION_UNINSTALL;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -15,6 +18,10 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteStatus;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -47,6 +54,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull EntandoBundleComponentUsageService usageService;
     private final @NonNull PostInitService postInitService;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
+    private final @NonNull EntandoCoreClient entandoCoreClient;
+    private final @NonNull ObjectMapper objectMapper;
 
     public EntandoBundleJobEntity uninstall(String componentId) {
         EntandoBundleEntity installedBundle = installedComponentRepository.findByBundleCode(componentId)
@@ -127,9 +136,10 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
                 scheduler.queuePrimaryComponents(uninstallJobs);
 
-                JobProgress uninstallProgress = new JobProgress(1.0 / uninstallJobs.size());
+                JobProgress uninstallProgress = new JobProgress(1.0 / (uninstallJobs.size() + 1));
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();
+                List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
                 while (optCompJob.isPresent()) {
                     EntandoBundleComponentJobEntity uninstallJob = optCompJob.get();
                     JobTracker<EntandoBundleComponentJobEntity> cjt = trackExecution(uninstallJob,
@@ -138,18 +148,27 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                         throw new EntandoComponentManagerException(parentJob.getComponentId()
                                 + " uninstall can't proceed due to an error with one of the components");
                     }
+
+                    if (cjt.getJob().getInstallable().shouldUninstallFromAppEngine()) {
+                        componentToUninstallFromAppEngine.add(cjt.getJob());
+                    }
+
                     uninstallProgress.increment();
                     parentJobTracker.setProgress(uninstallProgress.getValue());
                     scheduler.recordProcessedComponentJob(cjt.getJob());
                     optCompJob = scheduler.extractFromQueue();
                 }
 
+                JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, parentJob);
+                parentJobResult.setStatus(finalStatus);
+
                 installedComponentRepository.deleteByBundleCode(parentJob.getComponentId());
 
+                uninstallProgress.increment();
                 parentJobResult.clearException();
                 parentJobResult.setProgress(1.0);
-                parentJobResult.setStatus(JobStatus.UNINSTALL_COMPLETED);
-                log.info("Component " + parentJob.getComponentId() + " uninstalled successfully");
+
+                log.info("Component '{}' uninstalled successfully", parentJob.getComponentId());
 
             } catch (Exception ex) {
                 log.error("An error occurred while uninstalling component " + parentJob.getComponentId(), ex);
@@ -191,7 +210,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
     private JobResult executeUninstall(Installable<?> installable) {
 
-        CompletableFuture<?> future = installable.uninstall();
+        CompletableFuture<?> future = installable.uninstallFromEcr();
         CompletableFuture<JobResult> uninstallResult = future
                 .thenApply(vd -> {
                     log.debug("Installable '{}' uninstalled successfully", installable.getName());
@@ -206,6 +225,36 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 });
 
         return uninstallResult.join();
+    }
+
+    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
+            EntandoBundleJobEntity parentJob) {
+        EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
+                .map(EntandoCoreComponentDeleteRequest::fromEntity)
+                .flatMap(Optional::stream)
+                .collect(Collectors.toList()));
+
+        switch (response.getStatus()) {
+            case FAILURE:
+                log.debug("All deletes are in error with response:'{}'", response);
+                return JobStatus.UNINSTALL_ERROR;
+            case PARTIAL_SUCCESS:
+                log.debug("Partial deletes are in error with response:'{}'", response);
+                try {
+                    String uninstallErrors = objectMapper.writeValueAsString(response.getComponents().stream()
+                            .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())).collect(
+                                    Collectors.toList()));
+                    parentJob.setUninstallErrors(uninstallErrors);
+
+                } catch (JsonProcessingException ex) {
+                    log.error("with response:'{}' we had a json error", response, ex);
+                }
+                return JobStatus.UNINSTALL_PARTIAL_COMPLETED;
+            case SUCCESS:
+            default:
+                log.debug("All deletes ok with response:'{}'", response);
+                return JobStatus.UNINSTALL_COMPLETED;
+        }
     }
 
 }

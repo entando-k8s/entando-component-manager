@@ -130,7 +130,7 @@ class PluginInstallableTest {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
         pluginInstallable = new PluginInstallable(kubernetesService, descriptor, InstallAction.CREATE,
                 pluginDataRepository);
-        pluginInstallable.uninstall().get();
+        pluginInstallable.uninstallFromEcr().get();
 
         // then the unlink and linkPluginAndWaitForSuccess have been called as expected
         verify(kubernetesService, times(1)).unlinkAndScaleDownPlugin(pluginCodeCaptor.capture());

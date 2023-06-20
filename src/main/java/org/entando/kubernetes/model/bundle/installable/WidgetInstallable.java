@@ -100,15 +100,20 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
+    public CompletableFuture<Void> uninstallFromEcr() {
         return CompletableFuture.runAsync(() -> {
             log.info("Removing Widget {}", getName());
-            if (shouldCreate() && shouldApplyToAppEngine(representation)) {
-                engineService.deleteWidget(getName());
-            }
             deleteWidgetDefinitionFromEcr();
         });
     }
+
+    @Override
+    public boolean shouldUninstallFromAppEngine() {
+        boolean shouldCallDelete = shouldCreate() && shouldApplyToAppEngine(representation);
+        log.debug("should delete:'{}' element type:'WIDGET' name:'{}'", shouldCallDelete, getName());
+        return shouldCallDelete;
+    }
+
 
     private void deleteWidgetDefinitionFromEcr() {
         retrieveWidgetFromDb().ifPresent(componentDataRepository::delete);

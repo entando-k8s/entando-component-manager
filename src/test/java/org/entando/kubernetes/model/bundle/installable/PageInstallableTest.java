@@ -31,7 +31,7 @@ class PageInstallableTest {
     void shouldUnpublishAndDeletePageOnUninstallIfConflictStrategyIsCreate() {
 
         pageInstallable = new PageInstallable(entandoCoreClientTestDouble, pageDescriptor, InstallAction.CREATE);
-        pageInstallable.uninstall().join();
+        pageInstallable.uninstallFromEcr().join();
         verify(entandoCoreClientTestDouble, times(1)).setPageStatus(PageStubHelper.PAGE_CODE, "draft");
     }
 
@@ -39,7 +39,7 @@ class PageInstallableTest {
     void shouldNOTUnpublishAndNOTDeletePageOnUninstallIfConflictStrategyIsNOTCreate() {
 
         pageInstallable = new PageInstallable(entandoCoreClientTestDouble, pageDescriptor, InstallAction.OVERRIDE);
-        pageInstallable.uninstall().join();
+        pageInstallable.uninstallFromEcr().join();
         verify(entandoCoreClientTestDouble, times(0)).setPageStatus(anyString(), anyString());
     }
 }

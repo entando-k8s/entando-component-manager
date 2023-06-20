@@ -2,7 +2,6 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -42,13 +41,8 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing Content {}", getName());
-            if (shouldCreate()) {
-                engineService.deleteContent(getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing Content {}", getName()));
     }
 
     @Override

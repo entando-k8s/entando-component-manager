@@ -4,7 +4,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.model.common.EntandoDeploymentPhase.FAILED;
 import static org.entando.kubernetes.utils.TestInstallUtils.ALL_COMPONENTS_ENDPOINT;
@@ -28,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +50,7 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -65,12 +64,12 @@ import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.assertionhelper.InstallFlowAssertionHelper;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
-import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
@@ -325,56 +324,42 @@ public class InstallFlowTest {
 
         final String uninstallJobId = simulateSuccessfullyCompletedUninstall();
 
-        ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteWidget(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(
-                Arrays.asList("todomvc_widget", "another_todomvc_widget"));
+        Class<ArrayList<EntandoCoreComponentDeleteRequest>> listClass =
+                (Class<ArrayList<EntandoCoreComponentDeleteRequest>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
+        verify(coreClient, times(1)).deleteComponents(ac.capture());
+        List<EntandoCoreComponentDeleteRequest> expectedInput = Arrays.asList(
+                new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET.getTypeName(), "todomvc_widget"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET.getTypeName(), "another_todomvc_widget"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getTypeName(),
+                        "todomvc_page_model"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getTypeName(),
+                        "todomvc_another_page_model"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.LANGUAGE.getTypeName(), "it"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.LANGUAGE.getTypeName(), "en"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.LABEL.getTypeName(), "HELLO"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.LABEL.getTypeName(), "WORLD"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.DIRECTORY.getTypeName(), "/something"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.FRAGMENT.getTypeName(), "title_fragment"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.FRAGMENT.getTypeName(), "another_fragment"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "CNG"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "CNT"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT.getTypeName(), "CNG102"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT.getTypeName(), "CNT103"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.ASSET.getTypeName(), "cc=my_asset"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.ASSET.getTypeName(), "cc=anotherAsset"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "my-page"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "another-page")
+        );
+
+        assertThat(ac.getValue()).containsAll(expectedInput);
+
+        /*
 
         ac = ArgumentCaptor.forClass(String.class);
         verify(coreClient, times(2)).deletePageModel(ac.capture());
         assertThat(ac.getAllValues()).containsAll(Arrays.asList("todomvc_page_model", "todomvc_another_page_model"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).disableLanguage(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("it", "en"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteLabel(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("HELLO", "WORLD"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertEquals("/something", ac.getValue());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteFragment(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("title_fragment", "another_fragment"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteContentType(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG", "CNT"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteContent(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG102", "CNT103"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteAsset(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("cc=my_asset", "cc=anotherAsset"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deleteContentType(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("CNG", "CNT"));
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).setPageStatus(ac.capture(), ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
-        assertThat(ac.getAllValues()).contains("draft");
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deletePage(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("my-page", "another-page"));
-
+        */
         verify(k8SServiceClient, times(6)).unlinkAndScaleDown(any());
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);

@@ -36,13 +36,8 @@ public class CategoryInstallable extends Installable<CategoryDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing Category {}", getName());
-            if (shouldCreate()) {
-                engineService.deleteCategory(getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing Category {}", getName()));
     }
 
     @Override

@@ -36,13 +36,8 @@ public class GroupInstallable extends Installable<GroupDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing Group {}", getName());
-            if (shouldCreate()) {
-                engineService.deleteGroup(getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing Group {}", getName()));
     }
 
     @Override

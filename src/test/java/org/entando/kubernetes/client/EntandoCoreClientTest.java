@@ -20,6 +20,9 @@ import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteResponseStatus;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -200,6 +203,55 @@ class EntandoCoreClientTest {
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
+    @Test
+    void shouldComponentsDeleteReturnCorrectData() {
+        this.stubForDeleteAllComponentsWithoutError();
+        EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D")));
+        assertThat(deleteComponentsResp.getStatus()).isEqualTo(EntandoCoreComponentDeleteResponseStatus.SUCCESS);
+        assertThat(deleteComponentsResp.getComponents()).isEmpty();
+    }
+
+    @Test
+    void shouldComponentsDeleteReturnException() {
+        this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_REQUEST.value());
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D"))));
+    }
+
+    @Test
+    void shouldComponentsDeleteWithErrorExecuteRetry() {
+        this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_GATEWAY.value());
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D"))));
+        coreMockServer.verify(3, "/api/components/all-internals/delete", WireMock::deleteRequestedFor);
+    }
+
+    @Test
+    void shouldComponentsDeleteWithErrorExecuteRetryOnlyIfNeeded() {
+        final String scenarioName = "errorToStart";
+        final String scenarioStepError500 = "error500";
+        final String scenarioStepNoError = "noError";
+
+        stubForDeleteAllComponentsWWithScenarioAndStatusCode(
+                scenarioName,
+                Scenario.STARTED,
+                scenarioStepError500,
+                HttpStatus.BAD_GATEWAY.value());
+        stubForDeleteAllComponentsWWithScenarioAndStatusCode(
+                scenarioName,
+                scenarioStepError500,
+                scenarioStepNoError,
+                HttpStatus.INTERNAL_SERVER_ERROR.value());
+        stubForDeleteAllComponentsWWithScenarioAndStatusCode(
+                scenarioName,
+                scenarioStepNoError,
+                "",
+                HttpStatus.OK.value());
+        EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D")));
+        coreMockServer.verify(3, "/api/components/all-internals/delete", WireMock::deleteRequestedFor);
+    }
 
     @Test
     void registerWidget() {
@@ -573,6 +625,55 @@ class EntandoCoreClientTest {
                 .willReturn(aResponse().withStatus(statusCode)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{ \"payload\" : [],\n"
+                                + "\"metadata\": {},\n"
+                                + "\"errors\": []\n "
+                                + "}"))
+                .willSetStateTo(scenarioNext));
+    }
+
+    private void stubForDeleteAllComponentsWithoutError() {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlPathMatching("/api/components/all-internals/delete"))
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(200)
+                                        .withHeader("Content-Type", "application/json")
+                                        .withBody("{ \"payload\" : {\n "
+                                                + "\"status\": \"SUCCESS\",\n"
+                                                + "\"code\": \"W23D\",\n"
+                                                + "\"usage\": 1,\n"
+                                                + "\"components\": []\n"
+                                                + "},\n"
+                                                + "\"metadata\": {},\n"
+                                                + "\"errors\": []\n "
+                                                + "}")
+                                        .withTransformers("response-template")
+                        ));
+    }
+
+    private void stubForDeleteAllComponentsWithError(int error) {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlPathMatching("/api/components/all-internals/delete"))
+                        .willReturn(aResponse()
+                                .withStatus(error)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("{ \"payload\" : {},\n"
+                                        + "\"metadata\": {},\n"
+                                        + "\"errors\": []\n "
+                                        + "}")
+                                .withTransformers("response-template")
+                        ));
+    }
+
+    public void stubForDeleteAllComponentsWWithScenarioAndStatusCode(String scenario, String scenarioStart,
+            String scenarioNext, int statusCode) {
+
+        coreMockServer.getInnerServer().stubFor(WireMock.delete(urlEqualTo("/api/components/all-internals/delete"))
+                .inScenario(scenario)
+                .whenScenarioStateIs(scenarioStart)
+                .willReturn(aResponse().withStatus(statusCode)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"payload\" : {},\n"
                                 + "\"metadata\": {},\n"
                                 + "\"errors\": []\n "
                                 + "}"))

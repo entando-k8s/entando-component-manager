@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,10 @@ import org.entando.kubernetes.assertionhelper.InstallPlanAssertionHelper;
 import org.entando.kubernetes.client.EntandoBundleComponentJobRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoBundleJobRepositoryTestDouble;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteResponseStatus;
+import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleOperationConcurrencyException;
@@ -158,10 +163,11 @@ public class InstallServiceTest {
         installService = new EntandoBundleInstallService(
                 bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap,
                 reportableComponentProcessorList, analysisReportStrategies, bundleOperationsConcurrencyManager,
-                bundleDescriptorValidator);
+                bundleDescriptorValidator, coreClient);
 
         uninstallService = new EntandoBundleUninstallService(
-                jobRepository, compJobRepo, installRepo, usageService, postInitService, processorMap);
+                jobRepository, compJobRepo, installRepo, usageService, postInitService, processorMap, coreClient,
+                new ObjectMapper());
 
         when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(true);
     }
@@ -326,9 +332,11 @@ public class InstallServiceTest {
 
         EntandoBundleComponentJobEntity cjeA = new EntandoBundleComponentJobEntity();
         cjeA.setComponentId("A");
+        cjeA.setAction(InstallAction.CREATE);
         cjeA.setComponentType(ComponentType.CONTENT_TYPE);
         EntandoBundleComponentJobEntity cjeB = new EntandoBundleComponentJobEntity();
         cjeB.setComponentId("B");
+        cjeB.setAction(InstallAction.CREATE);
         cjeB.setComponentType(ComponentType.CONTENT_TYPE);
 
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
@@ -340,6 +348,11 @@ public class InstallServiceTest {
                 .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));
         when(usageService.getUsage(ComponentType.CONTENT_TYPE, "B"))
                 .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "B"));
+        when(coreClient.deleteComponents(Arrays.asList(
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.SUCCESS).build());
 
         EntandoBundleJobEntity job = uninstallService.uninstall(BUNDLE_ID);
 
@@ -348,7 +361,7 @@ public class InstallServiceTest {
                 .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
 
         List<Double> progress = getJobProgress();
-        assertThat(progress).containsExactly(0.0, 0.5, 1.0);
+        assertThat(progress).containsExactly(0.0, 0.33, 0.66, 1.0);
 
     }
 
@@ -368,9 +381,11 @@ public class InstallServiceTest {
 
         EntandoBundleComponentJobEntity cjeA = new EntandoBundleComponentJobEntity();
         cjeA.setComponentId("A");
+        cjeA.setAction(InstallAction.CREATE);
         cjeA.setComponentType(ComponentType.CONTENT_TYPE);
         EntandoBundleComponentJobEntity cjeB = new EntandoBundleComponentJobEntity();
         cjeB.setComponentId("B");
+        cjeB.setAction(InstallAction.CREATE);
         cjeB.setComponentType(ComponentType.CONTENT_TYPE);
 
         processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
@@ -381,6 +396,11 @@ public class InstallServiceTest {
                 .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));
         when(usageService.getUsage(ComponentType.CONTENT_TYPE, "B"))
                 .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "B"));
+        when(coreClient.deleteComponents(Arrays.asList(
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.SUCCESS).build());
 
         EntandoBundleJobEntity job = uninstallService.uninstall(BUNDLE_ID);
 
@@ -389,7 +409,7 @@ public class InstallServiceTest {
                 .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
 
         List<Double> progress = getJobProgress();
-        assertThat(progress).containsExactly(0.0, 0.5, 1.0);
+        assertThat(progress).containsExactly(0.0, 0.33, 0.66, 1.0);
     }
 
     @Test

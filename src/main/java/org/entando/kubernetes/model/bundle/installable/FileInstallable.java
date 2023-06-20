@@ -38,10 +38,16 @@ public class FileInstallable extends Installable<FileDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
+    public CompletableFuture<Void> uninstallFromEcr() {
         return CompletableFuture.runAsync(() -> {
             //Do nothing since Directories and Assets are uninstalled in a different way
         });
+    }
+
+    @Override
+    public boolean shouldUninstallFromAppEngine() {
+        log.debug("should delete:'false' element type:'RESOURCE' name:'{}'", getName());
+        return false;
     }
 
     @Override
