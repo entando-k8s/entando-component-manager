@@ -71,6 +71,13 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     private String rollbackErrorMessage;
     @Column
     private String installPlan;
+    @Column
+    private Integer uninstallErrorCode;
+    @Column
+    private String uninstallErrorMessage;
+    @Column
+    @Size(max = MAX_COMMON_SIZE_OF_STRINGS)
+    private String uninstallErrors;
     /**
      * this field denotes if a bundle installation has been customized by the user. a bundle installation becomes custom
      * when the bundle is not installed entirely (one or more components are skipped or overridden)
