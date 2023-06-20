@@ -360,9 +360,9 @@ class WidgetProcessorTest extends BaseProcessorTest {
         BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
         bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
-        String widg1ConfigDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5.yaml";
-        String widg1DescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
-        String widg2DescrFile = "src/test/resources/bundle-v5/widgets/my_logical_widget_descriptor_v5.yaml";
+        final String widg1ConfigDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5.yaml";
+        final String widg1DescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
+        final String widg2DescrFile = "src/test/resources/bundle-v5/widgets/my_logical_widget_descriptor_v5.yaml";
 
         WidgetDescriptor descriptor1 = yamlMapper.readValue(new File(widg1DescrFile), WidgetDescriptor.class);
         WidgetDescriptor descriptor2 = yamlMapper.readValue(new File(widg2DescrFile), WidgetDescriptor.class);
@@ -397,14 +397,14 @@ class WidgetProcessorTest extends BaseProcessorTest {
         assertThat(installableList).hasSize(2);
 
         // the head should be the non-logical widget
-        WidgetDescriptor widget = installableList.get(0).getRepresentation();
+        final WidgetDescriptor widget = installableList.get(0).getRepresentation();
         WidgetDescriptor expected = yamlMapper.readValue(new File(widg1DescrFile), WidgetDescriptor.class);
         expected.setCode("todomvc_widget-77b2b10e");
         expected.setDescriptorMetadata(DescriptorMetadata.builder().bundleCode(BundleStubHelper.BUNDLE_CODE).build());
 
         assertOnWidgetDescriptors(widget, expected);
 
-        WidgetDescriptor logicWidget = installableList.get(1).getRepresentation();
+        final WidgetDescriptor logicWidget = installableList.get(1).getRepresentation();
         expected = yamlMapper.readValue(new File(widg2DescrFile), WidgetDescriptor.class);
         expected.setCode("todomvc_logic_widget-77b2b10e");
         expected.setDescriptorMetadata(DescriptorMetadata.builder().bundleCode(BundleStubHelper.BUNDLE_CODE).build());
