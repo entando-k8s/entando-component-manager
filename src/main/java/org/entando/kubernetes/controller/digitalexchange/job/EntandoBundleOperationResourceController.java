@@ -3,7 +3,6 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +42,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Slf4j
 @RestController
@@ -168,9 +166,9 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         // some log to show the query and filter result
         if (log.isDebugEnabled()) {
             result.ifPresentOrElse(
-                    entity -> log.debug("Found job relative to componentId: '{}' and jobType: '{}'", componentId,
+                    entity -> log.debug("Found job related to componentId: '{}' and jobType: '{}'", componentId,
                             jobType),
-                    () -> log.debug("No job found relative to componentId: '{}' and jobType: '{}'", componentId,
+                    () -> log.debug("No job found related to componentId: '{}' and jobType: '{}'", componentId,
                             jobType));
 
         }
@@ -202,8 +200,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     @Override
     public SimpleRestResponse<UninstallJobResult> getLastUninstallJob(
             @PathVariable("component") String componentId) {
-        log.debug("Entered '{}' to get uninstallation info about component {}",
-                getCurrentURLPath(), componentId);
+        log.debug("Get uninstallation info about component {}", componentId);
         // FIXME a new exception of type UninstallJobNotFoundException was used instead of JobNotFoundException
         //  because the latter lacks the related message used by MessageSource. As a result, the handling of the
         //  JobNotFoundException currently causes an error in the GlobalControllerExceptionHandler which must be resolved.
@@ -212,21 +209,6 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .orElseThrow(() -> new UninstallJobNotFoundException(
                         String.format("Job '%s' not found", componentId)));
         return new SimpleRestResponse<>(uninstallJobResult);
-    }
-
-    /*
-        Utility method to return the current path for debug purpose
-     */
-    private static String getCurrentURLPath() {
-        try {
-            return new URL(ServletUriComponentsBuilder.fromCurrentRequest().toUriString()).getPath();
-        } catch (Exception e) {
-            // a catch-all strategy to prevent any blocking situation.
-            // if an exception in raised should not block the whole execution because this value is used only for debug
-            // purpose.
-            return "";
-        }
-
     }
 
     private URI getJobLocationURI(EntandoBundleJobEntity job) {
