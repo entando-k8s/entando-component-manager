@@ -17,7 +17,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPl
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
-import org.entando.kubernetes.exception.job.UninstallJobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -147,12 +146,14 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJob(@PathVariable("component") String componentId) {
-        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL).orElseThrow(JobNotFoundException::new));
+        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL).orElseThrow(
+                () -> new JobNotFoundException(componentId)));
     }
 
     @Override
     public SimpleRestResponse<EntandoBundleJobEntity> getLastInstallJobWithInstallPlan(String componentId) {
-        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL).orElseThrow(JobNotFoundException::new));
+        return new SimpleRestResponse<>(executeGetLastJob(componentId, JobType.INSTALL).orElseThrow(
+                () -> new JobNotFoundException(componentId)));
     }
 
     private Optional<EntandoBundleJobEntity> executeGetLastJob(String componentId, JobType jobType) {
@@ -201,13 +202,9 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     public SimpleRestResponse<UninstallJobResult> getLastUninstallJob(
             @PathVariable("component") String componentId) {
         log.debug("Get uninstallation info about component {}", componentId);
-        // FIXME a new exception of type UninstallJobNotFoundException was used instead of JobNotFoundException
-        //  because the latter lacks the related message used by MessageSource. As a result, the handling of the
-        //  JobNotFoundException currently causes an error in the GlobalControllerExceptionHandler which must be resolved.
         UninstallJobResult uninstallJobResult = executeGetLastJob(componentId, JobType.UNINSTALL)
                 .flatMap(UninstallJobResult::fromEntity)
-                .orElseThrow(() -> new UninstallJobNotFoundException(
-                        String.format("Job '%s' not found", componentId)));
+                .orElseThrow(() -> new JobNotFoundException(componentId));
         return new SimpleRestResponse<>(uninstallJobResult);
     }
 
