@@ -26,6 +26,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -100,6 +102,19 @@ class EntandoBundleOperationResourceControllerIT {
 
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"install", "installplans"})
+    void shouldReturn404StatusIfInstallationIdDoesNotExists(String urlPath) throws Exception {
+        // Given
+        String componentId = "comp-id";
+        // When the user sends the request
+        // Then he gets the 400 http status and a proper message
+        mockMvc.perform(get(componentsUrl + String.format("/%s/%s", componentId, urlPath))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
+                .andExpect(content().json(String.format("{\"message\":\"Job '%s' has not been found\"}", componentId)));
+    }
+
     @Test
     void shouldReturn404StatusIfUninstallationIdDoesNotExists() throws Exception {
         // Given
@@ -108,10 +123,11 @@ class EntandoBundleOperationResourceControllerIT {
                 JobStatus.INSTALL_COMPLETED, componentId);
         jobRepository.save(entandoBundleJobEntity);
         // When the user sends the request
-        // Then he gets the 200 http status and the uninstall job result
+        // Then he gets the 400 http status and a proper message
         mockMvc.perform(get(componentsUrl + String.format("/%s/uninstall", componentId))
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is(HttpStatus.NOT_FOUND.value()));
+                .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
+                .andExpect(content().json(String.format("{\"message\":\"Job '%s' has not been found\"}", componentId)));
     }
 
     @Test

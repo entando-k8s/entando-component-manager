@@ -14,7 +14,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallReques
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.job.JobConflictException;
-import org.entando.kubernetes.exception.job.UninstallJobNotFoundException;
+import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
@@ -105,11 +105,11 @@ class EntandoBundleOperationResourceControllerTest {
     @Test
     void shouldThrowJobNotFoundExceptionWith404StatusIfUninstallationIdDoesNotExistsOnGet() {
         // Given
-        final String bundleId = "bundleId";
-        when(jobService.getJobs(bundleId)).thenReturn(List.of());
+        final String componentId = "componentId";
+        when(jobService.getJobs(componentId)).thenReturn(List.of());
         // Then
-        UninstallJobNotFoundException jobNotFoundException = Assertions.assertThrows(UninstallJobNotFoundException.class,
-                () -> entandoBundleOperationResourceController.getLastUninstallJob(bundleId));
+        JobNotFoundException jobNotFoundException = Assertions.assertThrows(JobNotFoundException.class,
+                () -> entandoBundleOperationResourceController.getLastUninstallJob(componentId));
         Assertions.assertEquals(HttpStatus.NOT_FOUND, jobNotFoundException.getStatus());
     }
 
