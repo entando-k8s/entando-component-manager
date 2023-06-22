@@ -1,0 +1,11 @@
+descriptorVersion: v5
+name: todomvc_logic_widget
+type: widget
+titles:
+  en: main menu
+  it: menu primario
+group: free
+parentName: todomvc_widget
+paramsDefaults:
+  title: any_string_will_suffice
+  url: any_url

@@ -99,7 +99,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     public List<Installable<WidgetDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallPlan installPlan) {
 
-        final List<Installable<WidgetDescriptor>> installables = new LinkedList<>();
+        final List<Installable<WidgetDescriptor>> installableList = new LinkedList<>();
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
@@ -120,7 +120,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 }
 
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
-                installables.add(
+                installableList.add(
                         new WidgetInstallable(engineService, widgetDescriptor, action, componentDataRepository));
             }
 
@@ -128,17 +128,31 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             throw makeMeaningfulException(e);
         }
 
-        return installables;
+        return pushLogicWidgetsDownTheList(installableList);
     }
 
 
     @Override
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
-        return components.stream()
+        return pushLogicWidgetsDownTheList(components.stream()
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
                 .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction(),
                         componentDataRepository))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+    }
+
+    private List<Installable<WidgetDescriptor>> pushLogicWidgetsDownTheList(List<Installable<WidgetDescriptor>> installables) {
+        if (installables == null || installables.isEmpty()) {
+            return installables;
+        }
+        installables.sort((Installable<WidgetDescriptor> i1, Installable<WidgetDescriptor> i2) -> {
+            if (StringUtils.isBlank(i1.getRepresentation().getParentName())
+                    && StringUtils.isNotBlank(i2.getRepresentation().getParentName())) {
+                return -1;
+            }
+            return 0;
+        });
+        return installables;
     }
 
     private void validateApiClaims(List<ApiClaim> apiClaims) {
@@ -197,8 +211,11 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
         widgetDescriptor.applyFallbacks();
         widgetDescriptor.setDescriptorMetadata(
-                DescriptorMetadata.builder().pluginIngressPathMap(pluginIngressPathMap).filename(fileName).bundleCode(
-                                bundleReader.getCode()).bundleId(bundleId).templateGeneratorService(templateGeneratorService)
+                DescriptorMetadata.builder()
+                        .pluginIngressPathMap(pluginIngressPathMap)
+                        .filename(fileName)
+                        .bundleCode(bundleReader.getCode())
+                        .bundleId(bundleId).templateGeneratorService(templateGeneratorService)
                         .build());
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
