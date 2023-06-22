@@ -6,12 +6,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-spring-boot-parent</artifactId>
-        <version>7.2.0</version>
+        <version>7.2.1</version>
     </parent>
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>7.2.1-SNAPSHOT</version>
+    <version>7.2.2</version>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Entando Component Manager</name>
