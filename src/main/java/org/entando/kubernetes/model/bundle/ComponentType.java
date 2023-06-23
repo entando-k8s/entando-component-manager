@@ -19,7 +19,7 @@ public enum ComponentType {
     WIDGET("widget", "widget", 7),
     FRAGMENT("fragment", "fragment", 8),
     CONTENT_TYPE("contentType", "contentType", 9),
-    CONTENT_TEMPLATE("contentTemplate", "contentTemplate", 10),
+    CONTENT_TEMPLATE("contentTemplate", "contentModel", 10),
     ASSET("asset", "asset", 11),
     PAGE_TEMPLATE("pageTemplate", "pageModel", 12),
     PAGE("page", "page", 13),
