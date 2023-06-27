@@ -225,7 +225,7 @@ class PluginProcessorTest extends BaseProcessorTest {
         final ArgumentCaptor<EntandoPlugin> captor = ArgumentCaptor.forClass(EntandoPlugin.class);
         installables.get(0).install().get();
         installables.get(1).install().get();
-        verify(kubernetesService, times(2)).linkPluginAndWaitForSuccess(captor.capture());
+        verify(kubernetesService, times(2)).linkPluginAndWaitForSuccess(captor.capture(), any());
     }
 
     private void initBundleReaderShortImagesName() throws IOException {
