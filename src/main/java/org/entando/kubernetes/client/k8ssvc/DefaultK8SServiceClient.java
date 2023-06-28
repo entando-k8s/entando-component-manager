@@ -370,7 +370,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         UriComponents pluginHealthCheck = UriComponentsBuilder.newInstance()
                 .scheme(appIngress.getSpec().getTls().isEmpty() ? "http" : "https")
                 .host(appHost)
-                .path(plugin.getSpec().getIngressPath())
+                .path(useCanonicalIngressPath ? plugin.getSpec().getIngressPath() : plugin.getSpec().getCustomIngressPath())
                 .path(plugin.getSpec().getHealthCheckPath())
                 .build();
 

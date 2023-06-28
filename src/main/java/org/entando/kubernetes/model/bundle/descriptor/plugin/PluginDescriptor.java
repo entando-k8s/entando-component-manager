@@ -65,6 +65,10 @@ public class PluginDescriptor extends VersionedDescriptor {
      */
     private String healthCheckPath;
     /**
+     * Generate the ingress path for the helathcheck endpoint using either the canonical ingress or the custom one.
+     */
+    private String healthCheckIngress;
+    /**
      * Type of dbms to be supported on the plugin.
      */
     private String dbms;
@@ -101,7 +105,7 @@ public class PluginDescriptor extends VersionedDescriptor {
     @Builder
     public PluginDescriptor(String descriptorVersion,
             DockerImage dockerImage, PluginDescriptorV1Spec spec, String name, String deploymentBaseName,
-            String image, String healthCheckPath, String dbms, List<String> roles,
+            String image, String healthCheckPath, String healthCheckIngress, String dbms, List<String> roles,
             List<PluginPermission> permissions, String ingressPath, String securityLevel,
             List<EnvironmentVariable> environmentVariables) {
         super.setDescriptorVersion(descriptorVersion);
@@ -111,6 +115,7 @@ public class PluginDescriptor extends VersionedDescriptor {
         this.deploymentBaseName = deploymentBaseName;
         this.image = image;
         this.healthCheckPath = healthCheckPath;
+        this.healthCheckIngress = healthCheckIngress;
         this.dbms = dbms;
         this.roles = roles;
         this.permissions = permissions;
@@ -171,4 +176,10 @@ public class PluginDescriptor extends VersionedDescriptor {
                 endpoint, customEndpoint);
         return this;
     }
+
+    public void setHealthCheckIngress(String healthCheckIngress) {
+        this.healthCheckIngress = healthCheckIngress != null ?
+                healthCheckIngress.toLowerCase() : null;
+    }
+
 }
