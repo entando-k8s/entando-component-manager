@@ -151,7 +151,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldReturnCustomIngressPathAndBeReady() {
+    void shouldReturnCustomIngressPathAndBeReady() {
         EntandoPlugin testPlugin = getTestEntandoPluginWithIngressPathCustom();
         mockServer.addStub(get(urlMatching("/my-custom-path-plugin/management/health"))
                 .willReturn(aResponse()
