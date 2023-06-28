@@ -2,6 +2,7 @@ package org.entando.kubernetes.model.bundle.installable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -46,7 +47,7 @@ class PluginInstallableTest {
         assertThat(pluginDataRepository.count()).isZero();
 
         ArgumentCaptor<EntandoPlugin> pluginCaptor = ArgumentCaptor.forClass(EntandoPlugin.class);
-        doNothing().when(kubernetesService).linkPluginAndWaitForSuccess(pluginCaptor.capture(), any());
+        doNothing().when(kubernetesService).linkPluginAndWaitForSuccess(pluginCaptor.capture(), anyBoolean());
 
         // when the plugin is installed in CREATE mode
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
@@ -55,7 +56,7 @@ class PluginInstallableTest {
         pluginInstallable.install().get();
 
         // then the linkPluginAndWaitForSuccess has been called as expected
-        verify(kubernetesService, times(1)).linkPluginAndWaitForSuccess(pluginCaptor.capture(), any());
+        verify(kubernetesService, times(1)).linkPluginAndWaitForSuccess(pluginCaptor.capture(), anyBoolean());
 
         // and the db contains only 1 record
         assertThat(pluginDataRepository.count()).isEqualTo(1);
@@ -84,7 +85,7 @@ class PluginInstallableTest {
         assertThat(pluginDataRepository.count()).isEqualTo(1);
 
         ArgumentCaptor<EntandoPlugin> pluginCaptor = ArgumentCaptor.forClass(EntandoPlugin.class);
-        doNothing().when(kubernetesService).linkPluginAndWaitForSuccess(pluginCaptor.capture(), any());
+        doNothing().when(kubernetesService).linkPluginAndWaitForSuccess(pluginCaptor.capture(), anyBoolean());
         ArgumentCaptor<String> pluginNameCaptor = ArgumentCaptor.forClass(String.class);
         doNothing().when(kubernetesService).unlink(pluginNameCaptor.capture());
 
@@ -96,7 +97,7 @@ class PluginInstallableTest {
 
         // then the unlink and linkPluginAndWaitForSuccess have been called as expected
         verify(kubernetesService, times(1)).unlink(pluginNameCaptor.capture());
-        verify(kubernetesService, times(1)).linkPluginAndWaitForSuccess(pluginCaptor.capture(), any());
+        verify(kubernetesService, times(1)).linkPluginAndWaitForSuccess(pluginCaptor.capture(), anyBoolean());
 
         // and the db contains only 1 record
         assertThat(pluginDataRepository.count()).isEqualTo(1);
