@@ -316,8 +316,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     }
 
     /**
-     * generate the full deployment name (deployment-name + bundleId) the deployment name is generated starting by the.
-     * deployment base name or by the docker image apply a truncation if required
+     * generate the full deployment name (deployment-name + bundleId) the deployment name is generated starting by the
+     * deployment base name or by the docker image apply a truncation if required.
      *
      * @param bundleId         the bundle identifier to concatenate to the deployment name
      * @param signedPluginName the plugin identifier (hash-name) to concatenate to the deployment name

@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.installable;
 
 import static org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator.HEALTHCHECK_INGRESS_TYPE_CANONICAL;
+import static org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator.HEALTHCHECK_INGRESS_TYPE_CUSTOM;
 
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +39,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             logConflictStrategyAction();
 
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
-            boolean useCanonicalIngressPath = isCanonicalIngressPath();
+            boolean useCanonicalIngressPath = useCanonicalIngressPath(plugin);
 
             if (shouldSkip()) {
                 fixPluginRegistrationIfNecessary();
@@ -55,9 +56,13 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
         });
     }
 
+    private boolean useCanonicalIngressPath(EntandoPlugin plugin) {
+        return StringUtils.isNotBlank(plugin.getSpec().getCustomIngressPath()) && isCanonicalIngressPath();
+    }
+
     private boolean isCanonicalIngressPath() {
-        return StringUtils.isNotBlank(representation.getHealthCheckIngress())
-                && representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL);
+        return (StringUtils.isNotBlank(representation.getHealthCheckIngress())
+                && representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL));
     }
 
     private void installPlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {

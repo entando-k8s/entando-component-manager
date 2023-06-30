@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -365,6 +366,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     throw new K8SServiceClientException(
                             "EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
                 });
+
+        useCanonicalIngressPath |= StringUtils.isBlank(plugin.getSpec().getCustomIngressPath());
 
         String appHost = ingressRule.getHost();
         UriComponents pluginHealthCheck = UriComponentsBuilder.newInstance()

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
@@ -178,7 +179,7 @@ public class PluginDescriptor extends VersionedDescriptor {
     }
 
     public void setHealthCheckIngress(String healthCheckIngress) {
-        this.healthCheckIngress = healthCheckIngress != null
+        this.healthCheckIngress = StringUtils.isNotBlank(healthCheckIngress)
                 ? healthCheckIngress.toLowerCase() : null;
     }
 

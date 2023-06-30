@@ -395,6 +395,14 @@ class PluginDescriptorValidatorTest {
     }
 
     @Test
+    void shouldIgnoreCustomHealthCheckWhenCustomIngressPathMissing() {
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+
+        validator.validateOrThrow(descriptor);
+        assertThat(descriptor.getHealthCheckIngress()).isEqualTo(HEALTHCHECK_INGRESS_TYPE_DEFAULT);
+    }
+
+    @Test
     void shouldIngressHealthCheckPathSettingIgnoreCase() {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
 
