@@ -23,19 +23,30 @@ EntandoDeBundles served in the cluster can be installed in an EntandoApp using t
 - Start Spring application with `dev` profile
 
 ## Environment Variables
-| Env variable                                                  | Description                                                                                                   |
-| :---                                                          | :---                                                                                                          |
-| SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER-URI        | The issuer of the token, e.g http://insecure-keycloak-cacms.apps.serv.run/auth/realms/entando                 |
-| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-ID     | The client id for the service                                                                                 |
-| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-SECRET | The client secret                                                                                             |
-| DB_VENDOR                                                     | Which database will be used. Default `postgres`                                                               |
-| DB_HOST                                                       | Database host. Default `localhost`                                                                            |
-| DB_PORT                                                       | Database port. Default `5432`                                                                                 |
-| DB_NAME                                                       | Database name. Default `digital_exchange`                                                                     |
-| DB_OPTIONS                                                    | Database options. Default `useSSL=false`                                                                      |
-| DB_USER                                                       | Database user. Default `admin`                                                                                |
-| DB_PASS                                                       | Database password. Default `admin`                                                                            |
-| ENTANDO_URL                                                   | The URL to access the Entando App instance.                                                                   |
-| ENTANDO_APP_NAMESPACE                                         | The kubernetes namespace where the entando app is running. Default to `test-namespace`;                       |
-| ENTANDO_APP_NAME                                              | The entando app name that this service is in. Defaults to `test-entando`.                                     |
-| ENTANDO_BUNDLE_TYPE                                           | The bundle type that should be handled by this service. It can be `git` or `npm`. The default value is `git`. |
+| Group | Name | Value [default] | Description |
+| :---   | :--- | :--- |:--- |
+| General | ENTANDO_URL                 |  | The URL to access the Entando App instance                            |
+|     | ENTANDO_APP_NAMESPACE                                        | [test-namespace] | The kubernetes namespace where the entando app is running |
+|     | ENTANDO_APP_NAME                                             | [test-entando] | The entando app name that this service is in |
+|    | ENTANDO_ECR_DEAPP_REQUEST_RETRIES    | [3] |  Number of times the CM retries the component create/update before giving up     |
+|    | ENTANDO_ECR_DEAPP_REQUEST_BACKOFF       | [5] |  Seconds to wait before the next attempt is executed     |
+|    | ENTANDO_ECR_POSTINIT        |  |  Configuration of the postinit process      |
+|    | ENTANDO_CONTAINER_REGISTRY_CREDENTIALS   | [null] | Credentials for each container registry    |
+|    | MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE     | [not enabled] |  To enable component-manager /actuator/info     |
+|Spring Security| SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER-URI  | |  The issuer of the token, e.g., http://insecure-keycloak-cacms.apps.serv.run/auth/realms/entando                 |
+|     |SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-ID   |  | The client id for the service                                                                                 |
+|     |SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-SECRET| | The client secret         |
+| Database | DB_VENDOR             | [postgres] | Which database will be used     |
+|    | DB_HOST      | [localhost] | Database host |
+|    | DB_PORT  | [5432] | Database port |
+|    | DB_NAME    | [digital_exchange] | Database name |
+|    | DB_OPTIONS           | [useSSL=false] | Database options |
+|    | DB_USER       | [admin] | Database user |
+|    | DB_PASS        | [admin] | Database password |
+| Bundle Related | ENTANDO_BUNDLE_TAGS_TYPES       | dev, [prod] | To generate EntandoDeBundle CRs using tags to select for dev, prod, or both |
+|     | ENTANDO_BUNDLE_TYPE           | npm, [git] | The bundle type that should be handled by this service |
+|    | ENTANDO_BUNDLE_DOWNLOAD_TIMEOUT    | [300] | Download timeout in seconds   |
+|    | ENTANDO_BUNDLE_DOWNLOAD_RETRIES   | [3] |  Max download attempts         |
+|    | ENTANDO_BUNDLE_DECOMPRESS_TIMEOUT | [600] |  Decompress timeout in seconds     |
+|    |          | [] |       |
+
