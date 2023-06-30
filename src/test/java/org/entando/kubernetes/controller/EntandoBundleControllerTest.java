@@ -5,7 +5,6 @@ import static org.entando.kubernetes.TestEntitiesGenerator.getTestEntandoBundle;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestJobEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -20,7 +19,9 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -73,7 +74,7 @@ public class EntandoBundleControllerTest {
         EntandoBundle bundle = getTestEntandoBundle();
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(bundle));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+        ResponseEntity<SimpleRestResponse<List<ComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(Objects.requireNonNull(resp.getBody()).getPayload()).isEmpty();
@@ -94,7 +95,7 @@ public class EntandoBundleControllerTest {
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(component));
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Collections.singletonList(componentJob));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+        ResponseEntity<SimpleRestResponse<List<ComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(Objects.requireNonNull(resp.getBody()).getPayload()).isEmpty();
@@ -126,16 +127,24 @@ public class EntandoBundleControllerTest {
 
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(component));
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
-        when(coreClient.getWidgetUsage(eq("my-magic-widget"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget", 11));
-        when(coreClient.getPageUsage(eq("my-magic-page"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page", 5));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+        when(coreClient.getComponentsUsageDetails(Arrays.asList(
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-magic-widget"),
+                new EntandoCoreComponentUsageRequest(ComponentType.PAGE.getTypeName(), "my-magic-page")
+        )))
+                .thenReturn(Arrays.asList(
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget",
+                                true, 11, Collections.emptyList()),
+                        new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page",
+                                true, 5,
+                                Collections.emptyList())
+                ));
+
+        ResponseEntity<SimpleRestResponse<List<ComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
-        List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
+        List<ComponentUsage> usageList = resp.getBody().getPayload();
 
         assertThat(usageList).hasSize(2);
         assertThat(usageList.stream()
@@ -146,9 +155,9 @@ public class EntandoBundleControllerTest {
                 .filter(usc -> usc.getType().equals(ComponentType.PAGE.getTypeName()) && usc.getCode()
                         .equals("my-magic-page"))
                 .findFirst().get().getUsage()).isEqualTo(5);
-        assertThat(usageList.stream().map(EntandoCoreComponentUsage::getType).distinct().count())
+        assertThat(usageList.stream().map(ComponentUsage::getType).distinct().count())
                 .isEqualTo(2);
-        assertThat(usageList.stream().map(EntandoCoreComponentUsage::getUsage).reduce(0, Integer::sum))
+        assertThat(usageList.stream().map(ComponentUsage::getUsage).reduce(0, Integer::sum))
                 .isEqualTo(16);
     }
 
@@ -178,18 +187,25 @@ public class EntandoBundleControllerTest {
 
         when(bundleService.getInstalledBundle(any())).thenReturn(Optional.of(component));
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
-        when(coreClient.getWidgetUsage(eq("my-magic-widget"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget", 11));
-        when(coreClient.getWidgetUsage(eq("my-other-widget"))).thenReturn(
-                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget", 5));
 
-        ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> resp = controller
+        when(coreClient.getComponentsUsageDetails(Arrays.asList(
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-magic-widget"),
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-other-widget")
+        )))
+                .thenReturn(Arrays.asList(
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget",
+                                true, 11, Collections.emptyList()),
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget",
+                                true, 5, Collections.emptyList())
+                ));
+
+        ResponseEntity<SimpleRestResponse<List<ComponentUsage>>> resp = controller
                 .getBundleUsageSummary("my-component");
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
         assertThat(resp.getStatusCodeValue()).isEqualTo(200);
         assertThat(resp.getBody()).isNotNull();
-        List<EntandoCoreComponentUsage> usageList = resp.getBody().getPayload();
+        List<ComponentUsage> usageList = resp.getBody().getPayload();
 
         assertThat(usageList).hasSize(2);
         assertThat(usageList.stream()

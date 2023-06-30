@@ -17,7 +17,6 @@ package org.entando.kubernetes.controller.digitalexchange.component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.bundle.BundleInfo;
@@ -26,9 +25,8 @@ import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusQuery;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusResult;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
 import org.entando.kubernetes.model.common.RestNamedId;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.web.request.PagedListRequest;
 import org.entando.kubernetes.model.web.response.DeletedObjectResponse;
@@ -89,15 +87,12 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     }
 
     @Override
-    public ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>> getBundleUsageSummary(String component) {
+    public ResponseEntity<SimpleRestResponse<List<ComponentUsage>>> getBundleUsageSummary(String component) {
         //I should be able to retrieve the related installed components given component id
         List<EntandoBundleComponentJobEntity> bundleInstalledComponents = bundleService
                 .getBundleInstalledComponents(component);
-        //For each installed components, I should check the summary
-        List<EntandoCoreComponentUsage> usageList = bundleInstalledComponents.stream()
-                .map(cj -> usageService.getUsage(cj.getComponentType(), cj.getComponentId()))
-                .filter(u -> !(u instanceof IrrelevantComponentUsage))
-                .collect(Collectors.toList());
+        //For each installed components, I should check the usage from Entando core
+        List<ComponentUsage> usageList = usageService.getComponentsUsageDetails(bundleInstalledComponents);
 
         return ResponseEntity.ok(new SimpleRestResponse<>(usageList));
     }

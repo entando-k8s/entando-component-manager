@@ -9,28 +9,30 @@ import java.util.Arrays;
  */
 public enum ComponentType {
 
-    PLUGIN("plugin", 0),
-    DIRECTORY("directory", 1),
-    CATEGORY("category",2),
-    GROUP("group", 3),
-    LANGUAGE("language", 4),
-    LABEL("label", 5),
-    RESOURCE("asset", 6),
-    WIDGET("widget", 7),
-    FRAGMENT("fragment", 8),
-    CONTENT_TYPE("contentType", 9),
-    CONTENT_TEMPLATE("contentTemplate", 10),
-    ASSET("asset", 11),
-    PAGE_TEMPLATE("pageTemplate", 12),
-    PAGE("page", 13),
-    CONTENT("content", 14),
-    PAGE_CONFIGURATION("pageConfiguration", 15);
+    PLUGIN("plugin", "plugin", 0),
+    DIRECTORY("directory", "directory", 1),
+    CATEGORY("category", "category", 2),
+    GROUP("group", "group", 3),
+    LANGUAGE("language", "language", 4),
+    LABEL("label", "label", 5),
+    RESOURCE("asset", "asset", 6),
+    WIDGET("widget", "widget", 7),
+    FRAGMENT("fragment", "fragment", 8),
+    CONTENT_TYPE("contentType", "contentType", 9),
+    CONTENT_TEMPLATE("contentTemplate", "contentTemplate", 10),
+    ASSET("asset", "asset", 11),
+    PAGE_TEMPLATE("pageTemplate", "pageModel", 12),
+    PAGE("page", "page", 13),
+    CONTENT("content", "content", 14),
+    PAGE_CONFIGURATION("pageConfiguration", "pageConfiguration", 15);
 
     private final String typeName;
+    private final String appEngineTypeName;
     private final int installPriority;
 
-    ComponentType(String typeName, int installPriority) {
+    ComponentType(String typeName, String appEngineTypeName, int installPriority) {
         this.typeName = typeName;
+        this.appEngineTypeName = appEngineTypeName;
         this.installPriority = installPriority;
     }
 
@@ -44,5 +46,9 @@ public enum ComponentType {
 
     public int getInstallPriority() {
         return installPriority;
+    }
+
+    public String getAppEngineTypeName() {
+        return appEngineTypeName;
     }
 }

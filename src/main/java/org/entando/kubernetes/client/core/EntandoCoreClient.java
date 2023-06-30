@@ -20,6 +20,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetConfiguration
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
+import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 
 public interface EntandoCoreClient extends ECMClient {
 
@@ -125,6 +126,9 @@ public interface EntandoCoreClient extends ECMClient {
     void deleteCategory(String code);
 
     EntandoCoreComponentUsage getCategoryUsage(String code);
+
+    List<EntandoCoreComponentUsage> getComponentsUsageDetails(
+            List<EntandoCoreComponentUsageRequest> request);
 
     AnalysisReport getEngineAnalysisReport(List<Reportable> reportableList);
 
