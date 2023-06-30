@@ -395,7 +395,7 @@ class PluginDescriptorValidatorTest {
     }
 
     @Test
-    void shouldIgnoreCustomHealthCheckWhenCustomIngressPathMissing() {
+    void shouldIgnoreCustomHealtchCheckWhenCustomIngressPathMissing() {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
 
         validator.validateOrThrow(descriptor);
