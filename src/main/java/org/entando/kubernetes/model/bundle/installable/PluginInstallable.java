@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -37,9 +38,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             logConflictStrategyAction();
 
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
-            // ENG-4990
-            boolean useCanonicalIngressPath = representation.getHealthCheckIngress() != null
-                    && representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL);
+            boolean useCanonicalIngressPath = isCanonicalIngressPath();
 
             if (shouldSkip()) {
                 fixPluginRegistrationIfNecessary();
@@ -54,6 +53,11 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
         });
+    }
+
+    private boolean isCanonicalIngressPath() {
+        return StringUtils.isNotBlank(representation.getHealthCheckIngress())
+                && representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL);
     }
 
     private void installPlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
