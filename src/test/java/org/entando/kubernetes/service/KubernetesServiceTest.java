@@ -5,12 +5,10 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -65,7 +63,7 @@ public class KubernetesServiceTest {
         EntandoPlugin plugin = getTestEntandoPlugin();
         EntandoAppPluginLink link = getTestEntandoAppPluginLink();
 
-        boolean val = kubernetesService.hasLinkingProcessCompletedSuccessfully(link, plugin);
+        boolean val = kubernetesService.hasLinkingProcessCompletedSuccessfully(link, plugin, true);
         assertFalse(val);
     }
 
@@ -81,7 +79,7 @@ public class KubernetesServiceTest {
         getClientDouble().addInMemoryLink(link);
         getClientDouble().addInMemoryLinkedPlugins(plugin);
 
-        assertTrue(kubernetesService.hasLinkingProcessCompletedSuccessfully(link, plugin));
+        assertTrue(kubernetesService.hasLinkingProcessCompletedSuccessfully(link, plugin, true));
     }
 
     @Test
@@ -96,7 +94,7 @@ public class KubernetesServiceTest {
             getClientDouble().addInMemoryLink(link);
             getClientDouble().addInMemoryLinkedPlugins(plugin);
 
-            kubernetesService.hasLinkingProcessCompletedSuccessfully(link, plugin);
+            kubernetesService.hasLinkingProcessCompletedSuccessfully(link, plugin, true);
         });
     }
 

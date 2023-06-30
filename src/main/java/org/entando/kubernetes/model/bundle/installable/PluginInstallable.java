@@ -1,9 +1,12 @@
 package org.entando.kubernetes.model.bundle.installable;
 
+import static org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator.HEALTHCHECK_INGRESS_TYPE_CANONICAL;
+
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -35,6 +38,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             logConflictStrategyAction();
 
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+            boolean useCanonicalIngressPath = isCanonicalIngressPath();
 
             if (shouldSkip()) {
                 fixPluginRegistrationIfNecessary();
@@ -42,25 +46,30 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             }
 
             if (shouldCreate()) {
-                installPlugin(plugin);
+                installPlugin(plugin, useCanonicalIngressPath);
             } else if (shouldOverride()) {
-                overridePlugin(plugin);
+                overridePlugin(plugin, useCanonicalIngressPath);
             } else {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
         });
     }
 
-    private void installPlugin(EntandoPlugin plugin) {
-        kubernetesService.linkPluginAndWaitForSuccess(plugin);
+    private boolean isCanonicalIngressPath() {
+        return StringUtils.isNotBlank(representation.getHealthCheckIngress())
+                && representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL);
+    }
+
+    private void installPlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
+        kubernetesService.linkPluginAndWaitForSuccess(plugin, useCanonicalIngressPath);
 
         PluginDataEntity pluginDataEntity = composePluginDataEntity(new PluginDataEntity());
         pluginDataRepository.save(pluginDataEntity);
     }
 
-    private void overridePlugin(EntandoPlugin plugin) {
+    private void overridePlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
         kubernetesService.unlink(plugin.getMetadata().getName());
-        kubernetesService.linkPluginAndWaitForSuccess(plugin);
+        kubernetesService.linkPluginAndWaitForSuccess(plugin, useCanonicalIngressPath);
 
         PluginDataEntity pluginDataEntity = pluginDataRepository.findByBundleIdAndPluginName(
                         representation.getDescriptorMetadata().getBundleId(),
