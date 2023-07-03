@@ -61,8 +61,8 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     }
 
     private boolean isCanonicalIngressPath() {
-        return (StringUtils.isNotBlank(representation.getHealthCheckIngress())
-                && representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL));
+        return (StringUtils.isBlank(representation.getHealthCheckIngress())
+                || representation.getHealthCheckIngress().equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL));
     }
 
     private void installPlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {

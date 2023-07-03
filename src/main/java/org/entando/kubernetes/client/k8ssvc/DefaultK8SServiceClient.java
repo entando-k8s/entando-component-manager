@@ -367,6 +367,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                             "EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
                 });
 
+        /*
+            The line below needed in order to cover the case where the system is asked to generate a custom ingress for
+            the healthcheck endpoint, but no custom ingress path is present.
+            This should have been already taken care of when validating the descriptor, but a unit test exists to check
+            for this exact case at the client level (thus bypassing validation process).
+         */
         useCanonicalIngressPath |= StringUtils.isBlank(plugin.getSpec().getCustomIngressPath());
 
         String appHost = ingressRule.getHost();
