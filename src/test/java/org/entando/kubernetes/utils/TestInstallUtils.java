@@ -1143,7 +1143,6 @@ public class TestInstallUtils {
         UniformDistribution delayDistribution = new UniformDistribution(200, 500);
         Mockito.reset(coreClient);
         WireMock.reset();
-        //WireMock.setGlobalRandomDelay(delayDistribution);
 
         setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))

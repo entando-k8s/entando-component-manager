@@ -135,7 +135,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                         createUninstallComponentJobs(parentJob, referenceJob);
 
                 scheduler.queuePrimaryComponents(uninstallJobs);
-
+                // added +1 because we have a step for each components
+                // and finally we added a global step to do a single call to appEngine (this new call is the +1)
                 JobProgress uninstallProgress = new JobProgress(1.0 / (uninstallJobs.size() + 1));
 
                 Optional<EntandoBundleComponentJobEntity> optCompJob = scheduler.extractFromQueue();

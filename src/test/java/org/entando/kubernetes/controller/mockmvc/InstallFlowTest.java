@@ -354,12 +354,6 @@ public class InstallFlowTest {
 
         assertThat(ac.getValue()).containsAll(expectedInput);
 
-        /*
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(2)).deletePageModel(ac.capture());
-        assertThat(ac.getAllValues()).containsAll(Arrays.asList("todomvc_page_model", "todomvc_another_page_model"));
-        */
         verify(k8SServiceClient, times(6)).unlinkAndScaleDown(any());
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
