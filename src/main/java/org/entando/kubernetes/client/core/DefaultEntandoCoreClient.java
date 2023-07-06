@@ -707,7 +707,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     .map(RestResponse::getPayload)
                     .orElseThrow(() ->
                             new WebHttpException(deleteResponse.getStatusCode(),
-                                    "Some error occurred while retrieving components usage details"));
+                                    "Some error occurred while deleting components"));
             log.debug("Executed delete for all components from appEngin with response:'{}'", response);
             return response;
 
