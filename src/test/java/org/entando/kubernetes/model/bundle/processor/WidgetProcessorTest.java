@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_APPBUILDER;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -356,5 +357,79 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         return widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
     }
-}
 
+
+    @Test
+    void canProcessCorrectInstallationOrderV5() throws IOException {
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        when(bundleReader.getCode()).thenReturn(BundleStubHelper.BUNDLE_CODE);
+        String widgetConfigFolder = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5";
+        when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "js")).thenReturn(
+                List.of(
+                        "widgets/my_widget_config_descriptor_v5/static/js/js-res-2.js",
+                        "widgets/my_widget_config_descriptor_v5/static/js-res-1.js"
+                )
+        );
+        when(bundleReader.getWidgetResourcesOfType(widgetConfigFolder, "css")).thenReturn(
+                List.of("widgets/my_widget_config_descriptor_v5/assets/css-res.css")
+        );
+
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+
+        // note this: first the logical widget, then the parent
+        spec.setWidgets(List.of("widgets/my_logical_widget_descriptor_v5.yaml",
+                "widgets/my_widget_descriptor_v5.yaml"));
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
+        bundleDescriptor.setDescriptorVersion(DescriptorVersion.V5.getVersion());
+
+        final String widg1ConfigDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_config_descriptor_v5.yaml";
+        final String widg1DescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml";
+        final String widg2DescrFile = "src/test/resources/bundle-v5/widgets/my_logical_widget_descriptor_v5.yaml";
+
+        WidgetDescriptor descriptor1 = yamlMapper.readValue(new File(widg1DescrFile), WidgetDescriptor.class);
+        WidgetDescriptor descriptor2 = yamlMapper.readValue(new File(widg2DescrFile), WidgetDescriptor.class);
+
+        when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
+        when(bundleReader.readDescriptorFile(eq("widgets/my_widget_descriptor_v5.yaml"), any())).thenReturn(descriptor1);
+        when(bundleReader.readDescriptorFile(eq("widgets/my_logical_widget_descriptor_v5.yaml"), any())).thenReturn(descriptor2);
+        when(validator.validateOrThrow(any())).thenReturn(true);
+
+        final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
+                new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), validator);
+        widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
+
+        WidgetDescriptor wcdesc = yamlMapper.readValue(new File(widg1ConfigDescrFile), WidgetDescriptor.class);
+        final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+        wcdesc.setDescriptorMetadata(new DescriptorMetadata(
+                Map.of("", ""),
+                widg1ConfigDescrFile,
+                bundleDescriptor.getCode(),
+                null, null,
+                bundleId,
+                widgetProcessor.getTemplateGeneratorService()
+        ));
+        var wcdm = new HashMap<String, WidgetDescriptor>();
+        wcdm.put(wcdesc.getName(), wcdesc);
+        widgetProcessor.setWidgetConfigDescriptorsMap(wcdm);
+
+        var installableList = widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
+        assertThat(installableList).hasSize(2);
+
+        // the head should be the non-logical widget
+        final WidgetDescriptor widget = installableList.get(0).getRepresentation();
+        WidgetDescriptor expected = yamlMapper.readValue(new File(widg1DescrFile), WidgetDescriptor.class);
+        expected.setCode("todomvc_widget-77b2b10e");
+        expected.setDescriptorMetadata(DescriptorMetadata.builder().bundleCode(BundleStubHelper.BUNDLE_CODE).build());
+
+        assertOnWidgetDescriptors(widget, expected);
+
+        final WidgetDescriptor logicWidget = installableList.get(1).getRepresentation();
+        expected = yamlMapper.readValue(new File(widg2DescrFile), WidgetDescriptor.class);
+        expected.setCode("todomvc_logic_widget-77b2b10e");
+        expected.setDescriptorMetadata(DescriptorMetadata.builder().bundleCode(BundleStubHelper.BUNDLE_CODE).build());
+
+        assertOnWidgetDescriptors(logicWidget, expected);
+
+    }
+}
