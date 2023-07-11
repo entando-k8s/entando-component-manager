@@ -31,8 +31,8 @@ EntandoDeBundles served in the cluster can be installed in an EntandoApp using t
 |    | ENTANDO_ECR_DEAPP_REQUEST_RETRIES    | [3] |  Number of times the CM retries the component create/update before giving up     |
 |    | ENTANDO_ECR_DEAPP_REQUEST_BACKOFF       | [5] |  Seconds to wait before the next attempt is executed     |
 |    | ENTANDO_ECR_POSTINIT        |  |  Configuration of the postinit process      |
-|    | ENTANDO_CONTAINER_REGISTRY_CREDENTIALS   | [null] | Credentials for each container registry    |
-|    | MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE     | [not enabled] |  To enable component-manager /actuator/info     |
+|    | ENTANDO_CONTAINER_REGISTRY_CREDENTIALS   | [blank] | Credentials for each container registry    |
+|    | MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE     |  |  To enable component-manager /actuator/info  ([More Info](https://docs.spring.io/spring-boot/docs/2.5.x/reference/html/actuator.html))   |
 |Spring Security| SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER-URI  | |  The issuer of the token, e.g., http://insecure-keycloak-cacms.apps.serv.run/auth/realms/entando                 |
 |     |SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-ID   |  | The client id for the service                                                                                 |
 |     |SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-SECRET| | The client secret         |
@@ -43,10 +43,9 @@ EntandoDeBundles served in the cluster can be installed in an EntandoApp using t
 |    | DB_OPTIONS           | [useSSL=false] | Database options |
 |    | DB_USER       | [admin] | Database user |
 |    | DB_PASS        | [admin] | Database password |
-| Bundle Related | ENTANDO_BUNDLE_TAGS_TYPES       | dev, [prod] | To generate EntandoDeBundle CRs using tags to select for dev, prod, or both |
-|     | ENTANDO_BUNDLE_TYPE           | npm, [git] | The bundle type that should be handled by this service |
+| Bundle Related | ENTANDO_BUNDLE_TAGS_TYPES       | dev, [prod] | To generate EntandoDeBundle CRs using tags to select for dev, prod, or both as a comma delimited list|
 |    | ENTANDO_BUNDLE_DOWNLOAD_TIMEOUT    | [300] | Download timeout in seconds   |
 |    | ENTANDO_BUNDLE_DOWNLOAD_RETRIES   | [3] |  Max download attempts         |
 |    | ENTANDO_BUNDLE_DECOMPRESS_TIMEOUT | [600] |  Decompress timeout in seconds     |
-|    |          | [] |       |
+
 
