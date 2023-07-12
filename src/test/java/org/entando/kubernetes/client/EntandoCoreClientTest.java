@@ -224,7 +224,7 @@ class EntandoCoreClientTest {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_GATEWAY.value());
         assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
                 Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D"))));
-        coreMockServer.verify(3, "/api/components/all-internals/delete", WireMock::deleteRequestedFor);
+        coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
     }
 
     @Test
@@ -250,7 +250,7 @@ class EntandoCoreClientTest {
                 HttpStatus.OK.value());
         EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
                 Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D")));
-        coreMockServer.verify(3, "/api/components/all-internals/delete", WireMock::deleteRequestedFor);
+        coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
     }
 
     @Test
@@ -633,7 +633,7 @@ class EntandoCoreClientTest {
 
     private void stubForDeleteAllComponentsWithoutError() {
         coreMockServer.getInnerServer()
-                .stubFor(WireMock.delete(urlPathMatching("/api/components/all-internals/delete"))
+                .stubFor(WireMock.delete(urlPathMatching("/api/components/allInternals"))
                         .willReturn(
                                 aResponse()
                                         .withStatus(200)
@@ -653,7 +653,7 @@ class EntandoCoreClientTest {
 
     private void stubForDeleteAllComponentsWithError(int error) {
         coreMockServer.getInnerServer()
-                .stubFor(WireMock.delete(urlPathMatching("/api/components/all-internals/delete"))
+                .stubFor(WireMock.delete(urlPathMatching("/api/components/allInternals"))
                         .willReturn(aResponse()
                                 .withStatus(error)
                                 .withHeader("Content-Type", "application/json")
@@ -668,7 +668,7 @@ class EntandoCoreClientTest {
     public void stubForDeleteAllComponentsWWithScenarioAndStatusCode(String scenario, String scenarioStart,
             String scenarioNext, int statusCode) {
 
-        coreMockServer.getInnerServer().stubFor(WireMock.delete(urlEqualTo("/api/components/all-internals/delete"))
+        coreMockServer.getInnerServer().stubFor(WireMock.delete(urlEqualTo("/api/components/allInternals"))
                 .inScenario(scenario)
                 .whenScenarioStateIs(scenarioStart)
                 .willReturn(aResponse().withStatus(statusCode)

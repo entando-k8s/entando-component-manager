@@ -88,7 +88,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String FILE_BROWSER_PATH_SEGMENT = "fileBrowser";
     private static final String CATEGORIES_PATH_SEGMENT = "categories";
     private static final String COMPONENTS_PATH_SEGMENT = "components";
-    private static final String DELETE_ALL_INTERNALS_PATH_SEGMENT = "all-internals/delete";
+    private static final String DELETE_ALL_INTERNALS_PATH_SEGMENT = "allInternals";
     private static final String USAGE_PATH_SEGMENT = "usage";
     private static final String USAGE_DETAILS_PATH_SEGMENT = "usageDetails";
     private static final String DIFF_PATH_SEGMENT = "diff";
