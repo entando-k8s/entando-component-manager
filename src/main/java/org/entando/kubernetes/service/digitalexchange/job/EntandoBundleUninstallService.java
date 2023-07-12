@@ -79,7 +79,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
     private void verifyBundleUninstallIsPossibleOrThrow(EntandoBundleEntity bundle) {
         if (bundle.getJob() != null && bundle.getJob().getStatus().equals(JobStatus.INSTALL_COMPLETED)) {
-            verifyNoComponentInUseOrThrow(bundle);
+            // verifyNoComponentInUseOrThrow(bundle);
             verifyNoConcurrentUninstallOrThrow(bundle);
         } else {
             throw new EntandoComponentManagerException(
