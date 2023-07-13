@@ -165,13 +165,16 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, parentJob);
                 parentJobResult.setStatus(finalStatus);
 
-                installedComponentRepository.deleteByBundleCode(parentJob.getComponentId());
-
+                if (JobStatus.UNINSTALL_COMPLETED.equals(finalStatus)) {
+                    installedComponentRepository.deleteByBundleCode(parentJob.getComponentId());
+                }
                 uninstallProgress.increment();
                 parentJobResult.clearException();
                 parentJobResult.setProgress(1.0);
 
-                log.info("Component '{}' uninstalled successfully", parentJob.getComponentId());
+                log.info("Uninstall operation completed with status '{}' for component:'{}'",
+                        finalStatus,
+                        parentJob.getComponentId());
 
             } catch (Exception ex) {
                 log.error("An error occurred while uninstalling component " + parentJob.getComponentId(), ex);
