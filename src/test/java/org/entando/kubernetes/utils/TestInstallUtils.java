@@ -10,7 +10,6 @@ import static org.entando.kubernetes.model.common.EntandoDeploymentPhase.SUCCESS
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -1197,15 +1196,32 @@ public class TestInstallUtils {
     }
 
     private static void setupComponentUsageToAllowUninstall(EntandoCoreClient coreClient) {
-        when(coreClient.getGroupUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.GROUP));
-        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-        when(coreClient.getContentModelUsage(anyString()))
-                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-        when(coreClient.getCategoryUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CATEGORY));
+        when(coreClient.getComponentsUsageDetails(any())).thenReturn(List.of(
+                new NoUsageComponent(ComponentType.WIDGET.getTypeName(), "todomvc_widget"),
+                new NoUsageComponent(ComponentType.WIDGET.getTypeName(), "another_todomvc_widget"),
+                new NoUsageComponent(ComponentType.PAGE_TEMPLATE.getTypeName(), "todomvc_page_model"),
+                new NoUsageComponent(ComponentType.PAGE_TEMPLATE.getTypeName(), "todomvc_another_page_model"),
+                new NoUsageComponent(ComponentType.CATEGORY.getTypeName(), "my-category"),
+                new NoUsageComponent(ComponentType.CATEGORY.getTypeName(), "another_category"),
+                new NoUsageComponent(ComponentType.GROUP.getTypeName(), "ecr"),
+                new NoUsageComponent(ComponentType.GROUP.getTypeName(), "ps"),
+                new NoUsageComponent(ComponentType.LANGUAGE.getTypeName(), "it"),
+                new NoUsageComponent(ComponentType.LANGUAGE.getTypeName(), "en"),
+                new NoUsageComponent(ComponentType.LABEL.getTypeName(), "HELLO"),
+                new NoUsageComponent(ComponentType.LABEL.getTypeName(), "WORLD"),
+                new NoUsageComponent(ComponentType.DIRECTORY.getTypeName(), "/something"),
+                new NoUsageComponent(ComponentType.FRAGMENT.getTypeName(), "title_fragment"),
+                new NoUsageComponent(ComponentType.FRAGMENT.getTypeName(), "another_fragment"),
+                new NoUsageComponent(ComponentType.CONTENT_TYPE.getTypeName(), "CNG"),
+                new NoUsageComponent(ComponentType.CONTENT_TYPE.getTypeName(), "CNT"),
+                new NoUsageComponent(ComponentType.CONTENT.getTypeName(), "CNG102"),
+                new NoUsageComponent(ComponentType.CONTENT.getTypeName(), "CNT103"),
+                new NoUsageComponent(ComponentType.PAGE.getTypeName(), "my-page"),
+                new NoUsageComponent(ComponentType.PAGE.getTypeName(), "another-page"),
+                new NoUsageComponent(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880002"),
+                new NoUsageComponent(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880003")
+
+        ));
     }
 
     public static PagedMetadata<EntandoBundleJobEntity> getInstallJob(MockMvc mockMvc) throws Exception {

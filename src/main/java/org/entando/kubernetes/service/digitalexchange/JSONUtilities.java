@@ -28,4 +28,28 @@ public class JSONUtilities {
             throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR, err);
         }
     }
+
+    public static <T extends Descriptor> Descriptor deserializeDescriptor(String value, Class<T> clazz) {
+
+        try {
+            return deserializeDescriptorOrThrow(value, clazz);
+        } catch (JsonProcessingException ex) {
+            String err = String.format(
+                    "error deserializeDescriptor with Class %s from value:'%s' error:'%s'",
+                    clazz,
+                    value, ex.getMessage());
+
+            log.error(err);
+            throw Problem.valueOf(Status.INTERNAL_SERVER_ERROR, err);
+        }
+    }
+
+    public static <T extends Descriptor> Descriptor deserializeDescriptorOrThrow(String value, Class<T> clazz)
+            throws JsonProcessingException {
+
+        ObjectMapper jsonMapper = new ObjectMapper();
+
+        return jsonMapper.readValue(value, clazz);
+    }
+
 }

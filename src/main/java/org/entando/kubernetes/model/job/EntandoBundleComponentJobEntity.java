@@ -47,6 +47,10 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
     @Column
     private String installErrorMessage;
     @Column
+    private Integer uninstallErrorCode;
+    @Column
+    private String uninstallErrorMessage;
+    @Column
     private Integer rollbackErrorCode;
     @Column
     private String rollbackErrorMessage;
@@ -77,6 +81,8 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
         newComponent.setInstallable(o.getInstallable());
         newComponent.setInstallErrorMessage(o.getInstallErrorMessage());
         newComponent.setInstallErrorCode(o.getInstallErrorCode());
+        newComponent.setUninstallErrorMessage(o.getUninstallErrorMessage());
+        newComponent.setUninstallErrorCode(o.getUninstallErrorCode());
         newComponent.setRollbackErrorMessage(o.getRollbackErrorMessage());
         newComponent.setRollbackErrorCode(o.getRollbackErrorCode());
         return newComponent;

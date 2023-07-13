@@ -75,6 +75,8 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
     }
 
     private boolean shouldApplyToAppEngine(WidgetDescriptor descriptor) {
+        log.debug("shouldApplyToAppEngine ? isVersion1:'{}' widgetType:'{}'",
+                descriptor.isVersion1(), descriptor.getType());
         if (descriptor.isVersion1()) {
             return true;
         } else {
@@ -109,8 +111,11 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
     @Override
     public boolean shouldUninstallFromAppEngine() {
-        boolean shouldCallDelete = shouldCreate() && shouldApplyToAppEngine(representation);
-        log.debug("should delete:'{}' element type:'WIDGET' name:'{}'", shouldCallDelete, getName());
+        boolean shouldCreate = shouldCreate();
+        boolean shouldApply = shouldApplyToAppEngine(representation);
+        boolean shouldCallDelete = shouldCreate && shouldApply;
+        log.debug("should delete:'{}' element type:'WIDGET' name:'{}' - shouldCreate:'{}' shouldApply:'{}'",
+                shouldCallDelete, getName(), shouldCreate, shouldApply);
         return shouldCallDelete;
     }
 
