@@ -21,7 +21,7 @@ public class EntandoCoreComponentDeleteRequest {
 
     public static Optional<EntandoCoreComponentDeleteRequest> fromEntity(EntandoBundleComponentJobEntity entity) {
         return Optional.ofNullable(entity).map(e -> EntandoCoreComponentDeleteRequest.builder()
-                .type(e.getComponentType().getTypeName())
+                .type(e.getComponentType().getAppEngineTypeName())
                 .code(mapCodeByType(e.getComponentType(), e.getComponentId()))
                 .build());
     }

@@ -1,5 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import static org.entando.kubernetes.model.bundle.installable.Installable.MAX_COMMON_SIZE_OF_STRINGS;
 import static org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.ECR_ACTION_UNINSTALL;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
@@ -238,18 +240,11 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         switch (response.getStatus()) {
             case FAILURE:
                 log.debug("All deletes are in error with response:'{}'", response);
+                markError(parentJob, response);
                 return JobStatus.UNINSTALL_ERROR;
             case PARTIAL_SUCCESS:
                 log.debug("Partial deletes are in error with response:'{}'", response);
-                try {
-                    String uninstallErrors = objectMapper.writeValueAsString(response.getComponents().stream()
-                            .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())).collect(
-                                    Collectors.toList()));
-                    parentJob.setUninstallErrors(uninstallErrors);
-
-                } catch (JsonProcessingException ex) {
-                    log.error("with response:'{}' we had a json error", response, ex);
-                }
+                markError(parentJob, response);
                 return JobStatus.UNINSTALL_PARTIAL_COMPLETED;
             case SUCCESS:
             default:
@@ -258,4 +253,17 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         }
     }
 
+    private void markError(EntandoBundleJobEntity parentJob, EntandoCoreComponentDeleteResponse response) {
+        try {
+            String uninstallErrors = objectMapper.writeValueAsString(response.getComponents().stream()
+                    .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())).collect(
+                            Collectors.toList()));
+            String valueToSave = StringUtils.truncate(uninstallErrors, MAX_COMMON_SIZE_OF_STRINGS);
+            log.debug("save error inside parentJob:'{}'", valueToSave);
+            parentJob.setUninstallErrors(valueToSave);
+
+        } catch (JsonProcessingException ex) {
+            log.error("with response:'{}' we had a json error", response, ex);
+        }
+    }
 }

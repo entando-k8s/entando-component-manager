@@ -639,7 +639,7 @@ class EntandoCoreClientTest {
                                         .withStatus(200)
                                         .withHeader("Content-Type", "application/json")
                                         .withBody("{ \"payload\" : {\n "
-                                                + "\"status\": \"SUCCESS\",\n"
+                                                + "\"status\": \"success\",\n"
                                                 + "\"code\": \"W23D\",\n"
                                                 + "\"usage\": 1,\n"
                                                 + "\"components\": []\n"

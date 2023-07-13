@@ -196,9 +196,6 @@ public class UpdateFlowTest {
         verifyAssetsUninstallRequests();
         verifyContentTypesUninstallRequests();
         verifyPagesUninstallRequests();
-        /*
-        verifyPageSetDraftStatus();
-        */
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
     }
 
@@ -571,7 +568,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getTypeName(), "todomvc_page_model"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getAppEngineTypeName(), "todomvc_page_model"));
     }
 
     private void verifyWidgetsUninstallRequests() {

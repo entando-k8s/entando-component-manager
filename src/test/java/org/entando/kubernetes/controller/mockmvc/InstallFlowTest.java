@@ -331,9 +331,9 @@ public class InstallFlowTest {
         List<EntandoCoreComponentDeleteRequest> expectedInput = Arrays.asList(
                 new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET.getTypeName(), "todomvc_widget"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET.getTypeName(), "another_todomvc_widget"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getTypeName(),
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getAppEngineTypeName(),
                         "todomvc_page_model"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getTypeName(),
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getAppEngineTypeName(),
                         "todomvc_another_page_model"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.LANGUAGE.getTypeName(), "it"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.LANGUAGE.getTypeName(), "en"),
