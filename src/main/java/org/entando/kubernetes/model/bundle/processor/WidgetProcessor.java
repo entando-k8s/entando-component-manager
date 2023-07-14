@@ -34,7 +34,6 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
-import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -143,11 +142,11 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     }
 
     private WidgetDescriptor retrieveWidgetDescriptor(EntandoBundleComponentJobEntity c) {
-        ComponentDataEntity entity = componentDataRepository
-                .findByComponentTypeAndComponentCode(c.getComponentType(), c.getComponentId()).orElseThrow();
-        return (WidgetDescriptor) JSONUtilities
-                .deserializeDescriptor(entity.getComponentDescriptor(), WidgetDescriptor.class);
-
+        return componentDataRepository
+                .findByComponentTypeAndComponentCode(c.getComponentType(), c.getComponentId())
+                .map(e -> (WidgetDescriptor) JSONUtilities
+                        .deserializeDescriptor(e.getComponentDescriptor(), WidgetDescriptor.class))
+                .orElseGet(() -> this.buildDescriptorFromComponentJob(c));
     }
 
     private void validateApiClaims(List<ApiClaim> apiClaims) {
