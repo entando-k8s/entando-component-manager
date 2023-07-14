@@ -4,7 +4,6 @@ import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescri
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -35,9 +34,11 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
+import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
@@ -136,9 +137,17 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
-                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction(),
+                .map(c -> new WidgetInstallable(engineService, retrieveWidgetDescriptor(c), c.getAction(),
                         componentDataRepository))
                 .collect(Collectors.toList());
+    }
+
+    private WidgetDescriptor retrieveWidgetDescriptor(EntandoBundleComponentJobEntity c) {
+        ComponentDataEntity entity = componentDataRepository
+                .findByComponentTypeAndComponentCode(c.getComponentType(), c.getComponentId()).orElseThrow();
+        return (WidgetDescriptor) JSONUtilities
+                .deserializeDescriptor(entity.getComponentDescriptor(), WidgetDescriptor.class);
+
     }
 
     private void validateApiClaims(List<ApiClaim> apiClaims) {
