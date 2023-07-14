@@ -315,6 +315,29 @@ class WidgetProcessorTest extends BaseProcessorTest {
                 installPlan));
     }
 
+    @Test
+    void canProcessDescriptorV5WithFTL() throws IOException {
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
+        when(bundleReader.readFileAsString(any())).thenReturn("content");
+
+        final ComponentSpecDescriptor spec = new ComponentSpecDescriptor();
+        spec.setWidgets(singletonList("widgets/my_widget_descriptor_v5_with_custom_ui_path.yaml"));
+        BundleDescriptor bundleDescriptor = BundleStubHelper.stubBundleDescriptor(spec, BundleType.STANDARD_BUNDLE);
+
+        String widgDescrFile = "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5_with_custom_ui_path.yaml";
+        var installableList = execWidgetProcessor(widgDescrFile, null, bundleDescriptor);
+
+        assertThat(installableList).hasSize(1);
+
+        WidgetDescriptor actual = installableList.get(0).getRepresentation();
+        WidgetDescriptor expected = yamlMapper.readValue(new File(widgDescrFile), WidgetDescriptor.class);
+        expected.setCode("todomvc_widget-77b2b10e");
+
+        assertThat(actual.getCustomUiPath()).isEqualTo("widget.ftl");
+        assertThat(actual.getConfigUi()).isNull();
+        assertThat(actual.getCustomUi()).isEqualTo("content");
+    }
+
     private List<Installable<WidgetDescriptor>> execWidgetProcessorParentNameParentCode(
             WidgetDescriptor widgetDescriptor) throws IOException {
 
