@@ -20,7 +20,7 @@ public class JobResult {
     Double progress;
 
     public boolean hasException() {
-        return this.installException != null || this.rollbackException != null;
+        return this.installException != null || this.rollbackException != null || this.uninstallException != null;
     }
 
     public Integer getInstallErrorCode() {
