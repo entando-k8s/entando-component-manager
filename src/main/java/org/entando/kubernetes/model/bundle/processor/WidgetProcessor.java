@@ -142,11 +142,19 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     }
 
     private WidgetDescriptor retrieveWidgetDescriptor(EntandoBundleComponentJobEntity c) {
+        log.debug("retrieveWidgetDescriptor by id:'{}' by type:'{}'", c.getComponentType(), c.getComponentId());
         return componentDataRepository
                 .findByComponentTypeAndComponentCode(c.getComponentType(), c.getComponentId())
+                .map(e -> {
+                    log.debug("found element:'{}'", e);
+                    return e;
+                })
                 .map(e -> (WidgetDescriptor) JSONUtilities
                         .deserializeDescriptor(e.getComponentDescriptor(), WidgetDescriptor.class))
-                .orElseGet(() -> this.buildDescriptorFromComponentJob(c));
+                .orElseGet(() -> {
+                    log.debug("not found element by id:'{}' by type:'{}'", c.getComponentType(), c.getComponentId());
+                    return this.buildDescriptorFromComponentJob(c);
+                });
     }
 
     private void validateApiClaims(List<ApiClaim> apiClaims) {

@@ -649,9 +649,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     .waitFor(backOffPeriod)
                     .execMethod(
                             (Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> s,
-                                    int executionNumber) -> s.get()
+                             int executionNumber) -> s.get()
                     )
-                    .checkerMethod(this::shouldRetry)
+                    .checkerMethod(this::isSuccessCall)
                     .build();
 
             Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> r = () ->
@@ -687,9 +687,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     .waitFor(backOffPeriod)
                     .execMethod(
                             (Supplier<ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>> s,
-                                    int executionNumber) -> s.get()
+                             int executionNumber) -> s.get()
                     )
-                    .checkerMethod(this::shouldRetry)
+                    .checkerMethod(this::isSuccessCall)
                     .build();
 
             Supplier<ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>> r = () ->
@@ -741,7 +741,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return s != null && s.is5xxServerError() && errorsCandidatesToRetry.contains(s);
     }
 
-    private boolean shouldRetry(Object obj, Exception ex, int executionNumber) {
+    private boolean isSuccessCall(Object obj, Exception ex, int executionNumber) {
+        log.debug("Evaluate if I should retry REST call to entandoDeApp", ex);
         if (ex instanceof RestClientResponseException) {
             RestClientResponseException e = (RestClientResponseException) ex;
             if (isRetryableResponseStatus(e.getRawStatusCode())) {
@@ -750,7 +751,6 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 return false;
             }
         }
-        log.debug("Error in a REST call to entandoDeApp", ex);
         return true;
     }
 
@@ -764,7 +764,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .retries(retryNumber)
                 .waitFor(backOffPeriod)
                 .execMethod(this::genericRestExecutor)
-                .checkerMethod(this::shouldRetry)
+                .checkerMethod(this::isSuccessCall)
                 .build();
     }
 
