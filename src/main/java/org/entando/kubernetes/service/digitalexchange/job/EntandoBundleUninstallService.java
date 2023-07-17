@@ -67,7 +67,9 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
         verifyBundleUninstallIsPossibleOrThrow(installedBundle);
 
-        return createAndSubmitUninstallJob(installedBundle.getJob());
+        Map<String, Boolean> componentUsages = getComponentsUsage(installedBundle);
+
+        return createAndSubmitUninstallJob(installedBundle.getJob(), componentUsages);
     }
 
     private void verifyBundleUninstallIsAllowedOrThrow(String bundleCode) {
@@ -108,8 +110,17 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     "Some of bundle " + bundle.getId() + " components are in use and bundle can't be uninstalled");
         }
     }
+    //verifyAndGetUsageOrThrow
+    private Map<String, Boolean> getComponentsUsage(EntandoBundleEntity bundle) {
+        List<EntandoBundleComponentJobEntity> bundleComponentJobs = compJobRepo.findAllByParentJob(bundle.getJob());
+//        return bundleComponentJobs.stream()
+//                .map(e -> usageService.getComponentsUsageDetails(e.getComponentType(), e.getComponentId()))
+//                .collect(Collectors.toMap(EntandoCoreComponentUsage::getCode, EntandoCoreComponentUsage::isExist ));
+        return null;
+    }
 
-    private EntandoBundleJobEntity createAndSubmitUninstallJob(EntandoBundleJobEntity lastAvailableJob) {
+    private EntandoBundleJobEntity createAndSubmitUninstallJob(EntandoBundleJobEntity lastAvailableJob,
+            Map<String, Boolean> componentUsages) {
 
         EntandoBundleJobEntity uninstallJob = new EntandoBundleJobEntity();
         uninstallJob.setComponentId(lastAvailableJob.getComponentId());
@@ -119,12 +130,13 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         uninstallJob.setProgress(0.0);
         EntandoBundleJobEntity savedJob = jobRepo.save(uninstallJob);
 
-        submitUninstallAsync(uninstallJob, lastAvailableJob);
+        submitUninstallAsync(uninstallJob, lastAvailableJob, componentUsages);
 
         return savedJob;
     }
 
-    private void submitUninstallAsync(EntandoBundleJobEntity parentJob, EntandoBundleJobEntity referenceJob) {
+    private void submitUninstallAsync(EntandoBundleJobEntity parentJob, EntandoBundleJobEntity referenceJob,
+            Map<String, Boolean> componentUsages) {
         CompletableFuture.runAsync(() -> {
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
             JobScheduler scheduler = new JobScheduler();
@@ -134,7 +146,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
             parentJobTracker.startTracking(JobStatus.UNINSTALL_IN_PROGRESS);
             try {
                 Queue<EntandoBundleComponentJobEntity> uninstallJobs =
-                        createUninstallComponentJobs(parentJob, referenceJob);
+                        createUninstallComponentJobs(parentJob, referenceJob, componentUsages);
 
                 scheduler.queuePrimaryComponents(uninstallJobs);
                 // added +1 because we have a step for each components
@@ -196,8 +208,12 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     }
 
     private Queue<EntandoBundleComponentJobEntity> createUninstallComponentJobs(EntandoBundleJobEntity parentJob,
-            EntandoBundleJobEntity referenceJob) {
-        List<EntandoBundleComponentJobEntity> installJobs = compJobRepo.findAllByParentJob(referenceJob);
+            EntandoBundleJobEntity referenceJob, Map<String, Boolean> componentUsages) {
+
+        List<EntandoBundleComponentJobEntity> installJobs = compJobRepo.findAllByParentJob(referenceJob)
+                .stream()
+                .filter(cje -> Optional.ofNullable(componentUsages.get(cje.getComponentId())).orElseThrow(/* IllegalArgument*/))
+                .collect(Collectors.toList());
         return installJobs.stream()
                 .map(cj -> {
                     Installable<?> i = processorMap.get(cj.getComponentType()).process(cj);
