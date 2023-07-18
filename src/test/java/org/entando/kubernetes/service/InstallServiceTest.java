@@ -59,12 +59,12 @@ import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
-import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
@@ -344,10 +344,9 @@ public class InstallServiceTest {
         when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
         when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
-        when(usageService.getUsage(ComponentType.CONTENT_TYPE, "A"))
-                .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));
-        when(usageService.getUsage(ComponentType.CONTENT_TYPE, "B"))
-                .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "B"));
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
         when(coreClient.deleteComponents(Arrays.asList(
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
@@ -392,10 +391,9 @@ public class InstallServiceTest {
 
         when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
-        when(usageService.getUsage(ComponentType.CONTENT_TYPE, "A"))
-                .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "A"));
-        when(usageService.getUsage(ComponentType.CONTENT_TYPE, "B"))
-                .thenReturn(new EntandoCoreComponentUsage.NoUsageComponent(ComponentType.CONTENT_TYPE, "B"));
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
         when(coreClient.deleteComponents(Arrays.asList(
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))

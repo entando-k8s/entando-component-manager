@@ -283,13 +283,13 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private void markSingleErrors(List<EntandoBundleComponentJobEntity> toDelete,
             EntandoCoreComponentDeleteResponse response,
             HashSet<String> existingComponentCodes) {
-        Set<String> markableErrorComponents = response.getComponents()
+        Set<String> toMarkErrorComponents = response.getComponents()
                 .stream()
                 .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())
                         && existingComponentCodes.contains(composeComponentDeleteUniqueKey(c)))
                 .map(this::composeComponentDeleteUniqueKey).collect(Collectors.toSet());
         toDelete.stream()
-                .filter(cje -> markableErrorComponents.contains(composeComponentJobEntityUniqueKey(cje)))
+                .filter(cje -> toMarkErrorComponents.contains(composeComponentJobEntityUniqueKey(cje)))
                 .map(cje -> {
                     cje.setUninstallErrorMessage("Error in deleting component from app-engine");
                     cje.setUninstallErrorCode(100);
