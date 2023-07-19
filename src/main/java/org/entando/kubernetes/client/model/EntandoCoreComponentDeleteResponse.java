@@ -44,7 +44,7 @@ public class EntandoCoreComponentDeleteResponse {
     @AllArgsConstructor
     public enum EntandoCoreComponentDeleteStatus {
 
-        SUCCESS("success"), PARTIAL_SUCCESS("partialSuccess"), FAILURE("failure");
+        SUCCESS("success"), FAILURE("failure");
         private String code;
 
         @JsonValue

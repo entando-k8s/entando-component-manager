@@ -23,6 +23,7 @@ import static org.entando.kubernetes.utils.TestInstallUtils.waitForUninstallStat
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -351,11 +352,13 @@ public class InstallFlowTest {
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT.getTypeName(), "CNG102"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT.getTypeName(), "CNT103"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "my-page"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "another-page")
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "another-page"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880002"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880003")
         );
 
         assertThat(ac.getValue()).containsAll(expectedInput);
-
+        assertEquals(ac.getValue().size(), expectedInput.size());
         verify(k8SServiceClient, times(6)).unlinkAndScaleDown(any());
 
         verifyJobHasComponentAndStatus(mockMvc, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);

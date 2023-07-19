@@ -113,7 +113,7 @@ public class TestInstallUtils {
             .pathSegment("components", MOCK_BUNDLE_NAME_V5, "uninstall");
     public static final UriBuilder DEPLOY_COMPONENT_ENDPOINT = ALL_COMPONENTS_ENDPOINT;
     public static final String JOBS_ENDPOINT = "/jobs";
-    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(60);
+    private static final Duration MAX_WAITING_TIME_FOR_JOB_STATUS = Duration.ofSeconds(30);
     private static final Duration AWAITILY_DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
 
     @SneakyThrows
@@ -1196,15 +1196,6 @@ public class TestInstallUtils {
     }
 
     private static void setupComponentUsageToAllowUninstall(EntandoCoreClient coreClient) {
-//        when(coreClient.getGroupUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.GROUP));
-//        when(coreClient.getWidgetUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.WIDGET));
-//        when(coreClient.getPageUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE));
-//        when(coreClient.getContentModelUsage(anyString()))
-//                .thenReturn(new NoUsageComponent(ComponentType.CONTENT_TEMPLATE));
-//        when(coreClient.getPageModelUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.PAGE_TEMPLATE));
-//        when(coreClient.getFragmentUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.FRAGMENT));
-//        when(coreClient.getContentTypeUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CONTENT_TYPE));
-//        when(coreClient.getCategoryUsage(anyString())).thenReturn(new NoUsageComponent(ComponentType.CATEGORY));
         when(coreClient.getComponentsUsageDetails(any())).thenReturn(List.of(
                 new NoUsageComponent(ComponentType.WIDGET.getTypeName(), "todomvc_widget"),
                 new NoUsageComponent(ComponentType.WIDGET.getTypeName(), "another_todomvc_widget"),
@@ -1226,7 +1217,9 @@ public class TestInstallUtils {
                 new NoUsageComponent(ComponentType.CONTENT.getTypeName(), "CNG102"),
                 new NoUsageComponent(ComponentType.CONTENT.getTypeName(), "CNT103"),
                 new NoUsageComponent(ComponentType.PAGE.getTypeName(), "my-page"),
-                new NoUsageComponent(ComponentType.PAGE.getTypeName(), "another-page")
+                new NoUsageComponent(ComponentType.PAGE.getTypeName(), "another-page"),
+                new NoUsageComponent(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880002"),
+                new NoUsageComponent(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880003")
 
         ));
     }

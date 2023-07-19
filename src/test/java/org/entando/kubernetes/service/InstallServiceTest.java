@@ -543,6 +543,7 @@ public class InstallServiceTest {
         assertFalse(componentB.getUninstallErrorMessage().isEmpty());
         assertEquals(100, componentB.getUninstallErrorCode());
     }
+
     @Test
     void shouldThrowBundleOperationConcurrencyExceptionWhenAnalysisOrInstallRequestedWhileAnotherOperationIsRunning() {
 
