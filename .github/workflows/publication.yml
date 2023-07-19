@@ -53,8 +53,16 @@ jobs:
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build with Maven
-        run: ${{ env.BUILD_COMMANDS }}
+      - name: "FULL BUILD"
+        env:
+          ENTANDO_OPT_SONAR_PROJECT_KEY: "${{ secrets.ENTANDO_OPT_SONAR_PROJECT_KEY }}"
+          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          ~/ppl-run generic FULL-BUILD --lcd "$LOCAL_CLONE_DIR"
+
+#      - name: Build with Maven
+#        run: ${{ env.BUILD_COMMANDS }}
 
       - name: Docker meta
         id: meta
