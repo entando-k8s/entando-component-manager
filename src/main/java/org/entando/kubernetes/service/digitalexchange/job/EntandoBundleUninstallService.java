@@ -177,7 +177,9 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 }
 
                 parentJobResult.clearException();
-                JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, parentJobResult,
+                JobStatus finalStatus = executeDeleteFromAppEngine(
+                        keepExistingComponentsOnly(existingComponentCodes, componentToUninstallFromAppEngine),
+                        parentJobResult,
                         existingComponentCodes);
                 parentJobResult.setStatus(finalStatus);
 
@@ -204,6 +206,14 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         });
     }
 
+    private List<EntandoBundleComponentJobEntity> keepExistingComponentsOnly(HashSet<String> existingComponentCodes,
+            List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine) {
+        return componentToUninstallFromAppEngine
+                .stream()
+                .filter(cje -> filterComponentToDelete(cje, existingComponentCodes))
+                .collect(Collectors.toList());
+    }
+
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity cj,
             Function<Installable, JobResult> action) {
         JobTracker<EntandoBundleComponentJobEntity> cjt = new JobTracker<>(cj, compJobRepo);
@@ -216,10 +226,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private Queue<EntandoBundleComponentJobEntity> createUninstallComponentJobs(EntandoBundleJobEntity parentJob,
             EntandoBundleJobEntity referenceJob, HashSet<String> existingComponentCodes) {
 
-        List<EntandoBundleComponentJobEntity> installJobs = compJobRepo.findAllByParentJob(referenceJob)
-                .stream()
-                .filter(cje -> existingComponentCodes.contains(composeComponentJobEntityUniqueKey(cje)))
-                .collect(Collectors.toList());
+        List<EntandoBundleComponentJobEntity> installJobs = compJobRepo.findAllByParentJob(referenceJob);
         return installJobs.stream()
                 .map(cj -> {
                     Installable<?> i = processorMap.get(cj.getComponentType()).process(cj);
@@ -234,6 +241,11 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                         .comparingInt(cj -> ((EntandoBundleComponentJobEntity) cj).getInstallable().getPriority())
                         .reversed())
                 .collect(Collectors.toCollection(ArrayDeque::new));
+    }
+
+    private boolean filterComponentToDelete(EntandoBundleComponentJobEntity cje,
+            HashSet<String> existingComponentCodes) {
+        return existingComponentCodes.contains(composeComponentJobEntityUniqueKey(cje));
     }
 
     private JobResult executeUninstall(Installable<?> installable) {
