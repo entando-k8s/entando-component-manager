@@ -18,6 +18,8 @@ env:
   DOCKER_IMAGE_FILE: Dockerfile
   DOCKER_IMAGE_PUSH: true
 
+  LOCAL_CLONE_DIR: "local-checkout"
+
 jobs:
 
   check-pr:
