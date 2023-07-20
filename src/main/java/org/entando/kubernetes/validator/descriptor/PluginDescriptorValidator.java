@@ -221,7 +221,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     }
 
     /**
-     * Validate the choice and assign a default, if needed.
+     * Validate the choice and assign a default, if needed
      *
      * @param descriptor the plugin descriptor to validate
      * @return InvalidBundleException if the value is not "canonical" or "custom" (case-insensitive)
@@ -375,6 +375,6 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
     public static final String INVALID_HEALTH_TYPE_INGRESS_DEFINITION =
             "The plugin \"%s\" contains an invalid definition of the ingress healthcheck path: \"%s\". Admitted values are "
-                    + HEALTHCHECK_INGRESS_TYPE_CUSTOM + " (default) or " + HEALTHCHECK_INGRESS_TYPE_CANONICAL + ".";
+                    + HEALTHCHECK_INGRESS_TYPE_CUSTOM + " (default) or "+ HEALTHCHECK_INGRESS_TYPE_CANONICAL + ".";
 
 }

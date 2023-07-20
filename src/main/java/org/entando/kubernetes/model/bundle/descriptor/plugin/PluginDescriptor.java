@@ -178,8 +178,8 @@ public class PluginDescriptor extends VersionedDescriptor {
     }
 
     public void setHealthCheckIngress(String healthCheckIngress) {
-        this.healthCheckIngress = healthCheckIngress != null
-                ? healthCheckIngress.toLowerCase() : null;
+        this.healthCheckIngress = healthCheckIngress != null ?
+                healthCheckIngress.toLowerCase() : null;
     }
 
 }
