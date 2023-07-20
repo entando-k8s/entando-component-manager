@@ -2,6 +2,8 @@ package org.entando.kubernetes.client.model;
 
 import static org.entando.kubernetes.model.bundle.ComponentType.ASSET;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,12 +18,14 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 @AllArgsConstructor
 public class EntandoCoreComponentDeleteRequest {
 
-    private String type;
+    @JsonSerialize(using = EntandoCoreComponentTypeSerializer.class)
+    @JsonDeserialize(using = EntandoCoreComponentTypeDeserializer.class)
+    private ComponentType type;
     private String code;
 
     public static Optional<EntandoCoreComponentDeleteRequest> fromEntity(EntandoBundleComponentJobEntity entity) {
         return Optional.ofNullable(entity).map(e -> EntandoCoreComponentDeleteRequest.builder()
-                .type(e.getComponentType().getAppEngineTypeName())
+                .type(e.getComponentType())
                 .code(mapCodeByType(e.getComponentType(), e.getComponentId()))
                 .build());
     }

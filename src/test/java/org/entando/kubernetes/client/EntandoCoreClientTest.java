@@ -157,7 +157,7 @@ class EntandoCoreClientTest {
     void shouldComponentsUsageDetailsReturnCorrectData() {
         this.stubForPostComponentsUsageDetailsWithoutErrors();
         List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D")));
         assertThat(usageList).hasSize(1);
     }
 
@@ -165,7 +165,7 @@ class EntandoCoreClientTest {
     void shouldComponentsUsageDetailsReturnException() {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_REQUEST.value());
         assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
     }
 
     @Test
@@ -173,7 +173,7 @@ class EntandoCoreClientTest {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_GATEWAY.value());
 
         assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
@@ -199,7 +199,7 @@ class EntandoCoreClientTest {
                 "",
                 HttpStatus.OK.value());
         List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D")));
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
@@ -207,7 +207,7 @@ class EntandoCoreClientTest {
     void shouldComponentsDeleteReturnCorrectData() {
         this.stubForDeleteAllComponentsWithoutError();
         EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D")));
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D")));
         assertThat(deleteComponentsResp.getStatus()).isEqualTo(EntandoCoreComponentDeleteResponseStatus.SUCCESS);
         assertThat(deleteComponentsResp.getComponents()).isEmpty();
     }
@@ -216,14 +216,14 @@ class EntandoCoreClientTest {
     void shouldComponentsDeleteReturnException() {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_REQUEST.value());
         assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D"))));
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
     }
 
     @Test
     void shouldComponentsDeleteWithErrorExecuteRetry() {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_GATEWAY.value());
         assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D"))));
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
         coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
     }
 
@@ -249,7 +249,7 @@ class EntandoCoreClientTest {
                 "",
                 HttpStatus.OK.value());
         EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest("widget", "W23D")));
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D")));
         coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
     }
 

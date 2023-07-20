@@ -350,11 +350,11 @@ public class InstallServiceTest {
         when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
-                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
-                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build()));
         when(coreClient.deleteComponents(Arrays.asList(
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "B"))))
                 .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
                         EntandoCoreComponentDeleteResponseStatus.SUCCESS).build());
 
@@ -397,11 +397,11 @@ public class InstallServiceTest {
         when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
-                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
-                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build()));
         when(coreClient.deleteComponents(Arrays.asList(
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "B"))))
                 .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
                         EntandoCoreComponentDeleteResponseStatus.SUCCESS).build());
 
@@ -450,15 +450,15 @@ public class InstallServiceTest {
         when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
-                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
-                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build()));
         when(coreClient.deleteComponents(Arrays.asList(
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "B"))))
                 .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
                         EntandoCoreComponentDeleteResponseStatus.FAILURE).components(Arrays.asList(
-                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE.getTypeName(), "A", EntandoCoreComponentDeleteStatus.FAILURE),
-                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE.getTypeName(), "B", EntandoCoreComponentDeleteStatus.FAILURE))).build());
+                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE, "A", EntandoCoreComponentDeleteStatus.FAILURE),
+                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE, "B", EntandoCoreComponentDeleteStatus.FAILURE))).build());
 
         ArgumentCaptor<EntandoBundleComponentJobEntity> ac = ArgumentCaptor.forClass(EntandoBundleComponentJobEntity.class);
 
@@ -508,15 +508,15 @@ public class InstallServiceTest {
         when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
         when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
         when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
-                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
-                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE).exist(true).references(List.of()).usage(0).build()));
         when(coreClient.deleteComponents(Arrays.asList(
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "B"))))
                 .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
                         EntandoCoreComponentDeleteResponseStatus.PARTIAL_SUCCESS).components(Arrays.asList(
-                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE.getTypeName(), "A", EntandoCoreComponentDeleteStatus.SUCCESS),
-                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE.getTypeName(), "B", EntandoCoreComponentDeleteStatus.FAILURE))).build());
+                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE, "A", EntandoCoreComponentDeleteStatus.SUCCESS),
+                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE, "B", EntandoCoreComponentDeleteStatus.FAILURE))).build());
 
         ArgumentCaptor<EntandoBundleComponentJobEntity> ac = ArgumentCaptor.forClass(EntandoBundleComponentJobEntity.class);
 

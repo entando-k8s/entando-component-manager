@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.EntandoCoreComponentReference;
 
@@ -19,7 +20,7 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.Entand
 @Builder
 public class ComponentUsage {
 
-    private String type;
+    private ComponentType type;
     private String code;
     private boolean exist;
     private int usage;
@@ -37,7 +38,7 @@ public class ComponentUsage {
     @Builder
     public static class ComponentReference {
 
-        private String componentType;
+        private ComponentType componentType;
         private ComponentReferenceType referenceType;
         private String code;
         @JsonInclude(Include.NON_NULL)
