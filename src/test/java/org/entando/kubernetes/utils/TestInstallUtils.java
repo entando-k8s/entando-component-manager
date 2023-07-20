@@ -10,7 +10,6 @@ import static org.entando.kubernetes.model.common.EntandoDeploymentPhase.SUCCESS
 import static org.entando.kubernetes.utils.SleepStubber.doSleep;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -682,7 +681,7 @@ public class TestInstallUtils {
                 new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
                 deploymentStatus);
 
-        when(k8sServiceClient.isPluginReadyToServeApp(any(), any(), anyBoolean())).thenReturn(true);
+        when(k8sServiceClient.isPluginReadyToServeApp(any(), any(), any())).thenReturn(true);
         when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
         when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
         when(k8sServiceClient.updatePlugin(any())).thenReturn(null);
@@ -701,7 +700,7 @@ public class TestInstallUtils {
                 new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
                 deploymentStatus);
 
-        when(k8sServiceClient.isPluginReadyToServeApp(any(), any(), anyBoolean())).thenReturn(true);
+        when(k8sServiceClient.isPluginReadyToServeApp(any(), any(), any())).thenReturn(true);
         when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
         when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
         when(k8sServiceClient.updatePlugin(any())).thenReturn(null);

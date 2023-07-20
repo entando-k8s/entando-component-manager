@@ -105,7 +105,7 @@ public class KubernetesService {
         return k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
     }
 
-    public void linkPluginAndWaitForSuccess(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
+    public void linkPluginAndWaitForSuccess(EntandoPlugin plugin, Boolean useCanonicalIngressPath) {
         EntandoAppPluginLink createdLink = this.linkPlugin(plugin);
         try {
             this.waitingConditionFactory.until(() -> this.hasLinkingProcessCompletedSuccessfully(createdLink, plugin,
