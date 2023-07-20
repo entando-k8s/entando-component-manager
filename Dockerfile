@@ -1,4 +1,4 @@
-FROM entando/entando-java-base:11.0.2
+FROM entando/entando-java-base:11.1.0-IT-411-PR-10
 ARG VERSION
 ### Required OpenShift Labels
 LABEL name="Entando Component Manager" \
