@@ -354,7 +354,10 @@ public class InstallFlowTest {
                 new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "my-page"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "another-page"),
                 new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880002"),
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880003")
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TEMPLATE.getTypeName(), "8880003"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.ASSET.getTypeName(), "cc=my_asset"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.ASSET.getTypeName(), "cc=anotherAsset")
+
         );
 
         assertThat(ac.getValue()).containsAll(expectedInput);
