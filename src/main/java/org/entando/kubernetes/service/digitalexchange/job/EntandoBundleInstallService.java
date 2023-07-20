@@ -287,7 +287,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             parentJobResult.getInstallError());
                     log.warn("Rolling installation of bundle " + parentJob.getComponentId() + "@" + parentJob
                             .getComponentVersion());
-                    parentJobResult = rollback(scheduler, parentJobResult, parentJob);
+                    parentJobResult = rollback(scheduler, parentJobResult);
                 } else {
 
                     saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor(),
@@ -310,7 +310,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         });
     }
 
-    private JobResult rollback(JobScheduler scheduler, JobResult result, EntandoBundleJobEntity parentJob) {
+    private JobResult rollback(JobScheduler scheduler, JobResult result) {
         JobScheduler rollbackScheduler = scheduler.createRollbackScheduler();
         try {
             List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();

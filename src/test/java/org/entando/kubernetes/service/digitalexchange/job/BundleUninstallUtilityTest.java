@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 @Tag("unit")
-public class BundleUninstallUtilityTest {
+class BundleUninstallUtilityTest {
 
     private EntandoBundleComponentJobRepository compJobRepo;
     private BundleUninstallUtility bundleUninstallUtility;
