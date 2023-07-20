@@ -395,7 +395,7 @@ class PluginDescriptorValidatorTest {
     }
 
     @Test
-    void shouldIngressHealthCheckPathSettingIgnoreCase() {
+    void IngressHealthCheckPathSettingIgnoreCase() {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
 
         descriptor.setHealthCheckIngress("CUSTOM");
