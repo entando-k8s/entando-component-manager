@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -324,7 +325,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private String composeComponentDeleteUniqueKey(EntandoCoreComponentDelete entandoCoreComponentDelete) {
         if (entandoCoreComponentDelete == null
                 || StringUtils.isEmpty(entandoCoreComponentDelete.getCode())
-                || StringUtils.isEmpty(entandoCoreComponentDelete.getType())) {
+                || Objects.isNull(entandoCoreComponentDelete.getType())) {
             throw new IllegalArgumentException("Error in composing key from Entando Core Component Delete: "
                     + "element, code or type fields have null or empty values");
         }
@@ -334,7 +335,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private String composeComponentJobEntityUniqueKey(EntandoBundleComponentJobEntity componentJobEntity) {
         if (componentJobEntity == null
                 || StringUtils.isEmpty(componentJobEntity.getComponentId())
-                || StringUtils.isEmpty(componentJobEntity.getComponentType().getTypeName())) {
+                || Objects.isNull(componentJobEntity.getComponentType())) {
             throw new IllegalArgumentException("Error in composing key from Entando Bundle Component Job Entity: "
                     + "element, code or type fields have null or empty values");
         }

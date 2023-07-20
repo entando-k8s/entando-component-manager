@@ -44,7 +44,7 @@ class EntandoBundleComponentUsageServiceTest {
     void shouldReturnComponentUsageForValidComponent() {
         when(client.getWidgetUsage("my-widget"))
                 .thenReturn(
-                        new EntandoCoreComponentUsage("widgets", "my-widget", true, 1, Collections.emptyList()));
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 1, Collections.emptyList()));
         EntandoCoreComponentUsage cu = this.usageService.getUsage(ComponentType.WIDGET, "my-widget");
         assertThat(cu.getCode()).isEqualTo("my-widget");
         assertThat(cu.getUsage()).isEqualTo(1);
@@ -54,7 +54,7 @@ class EntandoBundleComponentUsageServiceTest {
     void shouldReturnIrrelevantUsageInformation() {
         EntandoCoreComponentUsage cu = this.usageService.getUsage(ComponentType.LABEL, "my-great-label");
         assertThat(cu).isInstanceOf(IrrelevantComponentUsage.class);
-        assertThat(cu.getType()).isEqualTo("irrelevant");
+        assertThat(cu.getType()).isEqualTo(ComponentType.LABEL);
         assertThat(cu.getCode()).isEqualTo("my-great-label");
         assertThat(cu.getUsage()).isZero();
     }
@@ -107,9 +107,9 @@ class EntandoBundleComponentUsageServiceTest {
                 Arguments.of(
                         // test inputs
                         Collections.singletonList(
-                                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-widget", true, 1,
+                                new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 1,
                                         List.of(
-                                                new EntandoCoreComponentReference(ComponentType.WIDGET.getTypeName(),
+                                                new EntandoCoreComponentReference(ComponentType.WIDGET,
                                                         "my-widget",
                                                         null)))),
                         // provides an entity with the component id that matches the component reference code returned
@@ -130,9 +130,9 @@ class EntandoBundleComponentUsageServiceTest {
                 Arguments.of(
                         // test inputs
                         Collections.singletonList(
-                                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-widget", true, 1,
+                                new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 1,
                                         List.of(
-                                                new EntandoCoreComponentReference(ComponentType.WIDGET.getTypeName(),
+                                                new EntandoCoreComponentReference(ComponentType.WIDGET,
                                                         "my-widget",
                                                         null)))),
                         // no component job entity found, so we expect the provided reference to be external
@@ -147,12 +147,12 @@ class EntandoBundleComponentUsageServiceTest {
                 Arguments.of(
                         // test inputs
                         Collections.singletonList(
-                                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-widget", true, 2,
+                                new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 2,
                                         Arrays.asList(
-                                                new EntandoCoreComponentReference(ComponentType.WIDGET.getTypeName(),
+                                                new EntandoCoreComponentReference(ComponentType.WIDGET,
                                                         "my-widget",
                                                         null),
-                                                new EntandoCoreComponentReference(ComponentType.PAGE.getTypeName(),
+                                                new EntandoCoreComponentReference(ComponentType.PAGE,
                                                         "page123",
                                                         true)))),
                         // provides only one entity out of 2 with a component id that matches the reference code. So we
@@ -174,12 +174,12 @@ class EntandoBundleComponentUsageServiceTest {
                 Arguments.of(
                         // test inputs
                         Collections.singletonList(
-                                new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-widget", true, 2,
+                                new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 2,
                                         Arrays.asList(
-                                                new EntandoCoreComponentReference(ComponentType.WIDGET.getTypeName(),
+                                                new EntandoCoreComponentReference(ComponentType.WIDGET,
                                                         "my-widget",
                                                         null),
-                                                new EntandoCoreComponentReference(ComponentType.PAGE.getTypeName(),
+                                                new EntandoCoreComponentReference(ComponentType.PAGE,
                                                         "page123",
                                                         true)))),
                         // provides both entities with a component id that matches the returned reference codes.
@@ -203,7 +203,7 @@ class EntandoBundleComponentUsageServiceTest {
                         Collections.singletonList(
                                 // given that a bundle exist and the component inside it has no references
                                 // then we expect a usage value equals to 0 and an empty references list
-                                new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "page-1", true, 0,
+                                new EntandoCoreComponentUsage(ComponentType.PAGE, "page-1", true, 0,
                                         List.of())),
                         (Supplier<List<EntandoBundleComponentJobEntity>>) () -> {
                             EntandoBundleComponentJobEntity pageComponentJob = new EntandoBundleComponentJobEntity();

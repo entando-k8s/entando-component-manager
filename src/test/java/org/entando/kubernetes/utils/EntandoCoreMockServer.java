@@ -82,7 +82,7 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
 
         ComponentUsageApiEndpoint ep = ComponentUsageApiEndpoint.getForComponentType(type);
         SimpleRestResponse<EntandoCoreComponentUsage> usageResponse = new SimpleRestResponse<>(
-                new EntandoCoreComponentUsage(ep.getTypeValue(), code, true, usageCount, Collections.emptyList()));
+                new EntandoCoreComponentUsage(ep.getComponentType(), code, true, usageCount, Collections.emptyList()));
         String response = null;
         try {
             response = new ObjectMapper().writeValueAsString(usageResponse);

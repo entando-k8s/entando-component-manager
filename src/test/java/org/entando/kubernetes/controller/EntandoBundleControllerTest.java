@@ -129,13 +129,13 @@ public class EntandoBundleControllerTest {
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
 
         when(coreClient.getComponentsUsageDetails(Arrays.asList(
-                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-magic-widget"),
-                new EntandoCoreComponentUsageRequest(ComponentType.PAGE.getTypeName(), "my-magic-page")
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "my-magic-widget"),
+                new EntandoCoreComponentUsageRequest(ComponentType.PAGE, "my-magic-page")
         )))
                 .thenReturn(Arrays.asList(
-                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget",
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-magic-widget",
                                 true, 11, Collections.emptyList()),
-                        new EntandoCoreComponentUsage(ComponentType.PAGE.getTypeName(), "my-magic-page",
+                        new EntandoCoreComponentUsage(ComponentType.PAGE, "my-magic-page",
                                 true, 5,
                                 Collections.emptyList())
                 ));
@@ -148,11 +148,11 @@ public class EntandoBundleControllerTest {
 
         assertThat(usageList).hasSize(2);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET) && usc.getCode()
                         .equals("my-magic-widget"))
                 .findFirst().get().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.PAGE.getTypeName()) && usc.getCode()
+                .filter(usc -> usc.getType().equals(ComponentType.PAGE) && usc.getCode()
                         .equals("my-magic-page"))
                 .findFirst().get().getUsage()).isEqualTo(5);
         assertThat(usageList.stream().map(ComponentUsage::getType).distinct().count())
@@ -189,13 +189,13 @@ public class EntandoBundleControllerTest {
         when(bundleService.getBundleInstalledComponents(any())).thenReturn(Arrays.asList(cjA, cjB, cjC));
 
         when(coreClient.getComponentsUsageDetails(Arrays.asList(
-                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-magic-widget"),
-                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET.getTypeName(), "my-other-widget")
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "my-magic-widget"),
+                new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "my-other-widget")
         )))
                 .thenReturn(Arrays.asList(
-                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-magic-widget",
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-magic-widget",
                                 true, 11, Collections.emptyList()),
-                        new EntandoCoreComponentUsage(ComponentType.WIDGET.getTypeName(), "my-other-widget",
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-other-widget",
                                 true, 5, Collections.emptyList())
                 ));
 
@@ -209,12 +209,12 @@ public class EntandoBundleControllerTest {
 
         assertThat(usageList).hasSize(2);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET) && usc.getCode()
                         .equals("my-magic-widget"))
                 .findFirst()
                 .get().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
-                .filter(usc -> usc.getType().equals(ComponentType.WIDGET.getTypeName()) && usc.getCode()
+                .filter(usc -> usc.getType().equals(ComponentType.WIDGET) && usc.getCode()
                         .equals("my-other-widget"))
                 .findFirst()
                 .get()

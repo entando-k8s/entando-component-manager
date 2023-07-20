@@ -495,7 +495,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE.getTypeName(), "my-page"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE, "my-page"));
     }
 
     private void verifyContentTypesUninstallRequests() {
@@ -504,7 +504,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "CNT"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE, "CNT"));
     }
 
     private void verifyAssetsUninstallRequests() {
@@ -513,7 +513,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.ASSET.getTypeName(), "cc=my_asset"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.ASSET, "cc=my_asset"));
 
     }
 
@@ -523,7 +523,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT.getTypeName(), "CNT103"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT, "CNT103"));
     }
 
     private void verifyFragmentsUninstallRequests() {
@@ -532,7 +532,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.FRAGMENT.getTypeName(), "title_fragment"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.FRAGMENT, "title_fragment"));
     }
 
     private void verifyDirectoriesUninstallRequests() {
@@ -541,7 +541,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.DIRECTORY.getTypeName(), "/something"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.DIRECTORY, "/something"));
     }
 
     private void verifyLabelsUninstallRequests() {
@@ -550,7 +550,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.LABEL.getTypeName(), "WORLD"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.LABEL, "WORLD"));
     }
 
     private void verifyLanguagesUninstallRequests() {
@@ -559,7 +559,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.LANGUAGE.getTypeName(), "en"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.LANGUAGE, "en"));
     }
 
     private void verifyPageTemplatesUninstallRequests() {
@@ -568,7 +568,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE.getAppEngineTypeName(), "todomvc_page_model"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.PAGE_TEMPLATE, "todomvc_page_model"));
     }
 
     private void verifyWidgetsUninstallRequests() {
@@ -577,7 +577,7 @@ public class UpdateFlowTest {
         ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass(listClass);
         verify(coreClient, times(1)).deleteComponents(ac.capture());
         assertThat(ac.getValue()).contains(
-                new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET.getTypeName(), "todomvc_widget"));
+                new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "todomvc_widget"));
     }
 
     private String simulateSuccessfullyCompletedUpdate() {
