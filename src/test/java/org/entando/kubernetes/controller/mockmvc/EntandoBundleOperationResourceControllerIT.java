@@ -166,7 +166,7 @@ class EntandoBundleOperationResourceControllerIT {
                 .userId(userId)
                 .progress(progress)
                 .status(JobStatus.UNINSTALL_ERROR)
-                .uninstallErrors(uninstallErrors)
+                .errorComponents(UninstallJobResult.deserialize(uninstallErrors))
                 .uninstallErrorMessage(uninstallErrorMessage)
                 .uninstallErrorCode(uninstallErrorCode)
                 .build();

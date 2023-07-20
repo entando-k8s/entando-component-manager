@@ -1,13 +1,20 @@
 package org.entando.kubernetes.model.job;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDelete;
 
+@Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -27,7 +34,7 @@ public class UninstallJobResult {
     private String rollbackErrorMessage;
     private Integer uninstallErrorCode;
     private String uninstallErrorMessage;
-    private String uninstallErrors;
+    private List<EntandoCoreComponentDelete> errorComponents;
 
 
     public static Optional<UninstallJobResult> fromEntity(EntandoBundleJobEntity entity) {
@@ -46,8 +53,19 @@ public class UninstallJobResult {
                         .rollbackErrorMessage(entity.getRollbackErrorMessage())
                         .uninstallErrorCode(entity.getUninstallErrorCode())
                         .uninstallErrorMessage(entity.getUninstallErrorMessage())
-                        .uninstallErrors(entity.getUninstallErrors())
+                        .errorComponents(deserialize(entity.getUninstallErrors()))
                         .build());
+    }
+
+    public static List<EntandoCoreComponentDelete> deserialize(String value) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(value, new TypeReference<List<EntandoCoreComponentDelete>>() {
+            });
+        } catch (JsonProcessingException ex) {
+            log.error("Error deserialize:'{}'", value, ex);
+            return null;
+        }
     }
 
 }
