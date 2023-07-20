@@ -65,7 +65,7 @@ public class PluginDescriptor extends VersionedDescriptor {
      */
     private String healthCheckPath;
     /**
-     * Generate the ingress path for the healthcheck endpoint using either the canonical ingress or the custom one.
+     * Generate the ingress path for the helathcheck endpoint using either the canonical ingress or the custom one.
      */
     private String healthCheckIngress;
     /**
