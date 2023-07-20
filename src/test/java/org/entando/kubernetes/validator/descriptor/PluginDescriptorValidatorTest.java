@@ -1,9 +1,6 @@
 package org.entando.kubernetes.validator.descriptor;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator.HEALTHCHECK_INGRESS_TYPE_CANONICAL;
-import static org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator.HEALTHCHECK_INGRESS_TYPE_CUSTOM;
-import static org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator.HEALTHCHECK_INGRESS_TYPE_DEFAULT;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -375,36 +372,4 @@ class PluginDescriptorValidatorTest {
         assertDoesNotThrow(() -> new PluginDescriptorValidator(199));
         assertDoesNotThrow(() -> new PluginDescriptorValidator(200));
     }
-
-    @Test
-    void shouldThrowOnIncorrectIngressHealthCheckPathSetting() {
-        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
-
-        descriptor.setHealthCheckIngress("incorrectValue");
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-    }
-
-    @Test
-    void shouldAssignDefaultIngressHealthCheckPathSetting() {
-        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
-
-        // force null value, just in case
-        descriptor.setHealthCheckIngress(null);
-        validator.validateOrThrow(descriptor);
-        assertThat(descriptor.getHealthCheckIngress()).isEqualTo(HEALTHCHECK_INGRESS_TYPE_DEFAULT);
-    }
-
-    @Test
-    void IngressHealthCheckPathSettingIgnoreCase() {
-        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
-
-        descriptor.setHealthCheckIngress("CUSTOM");
-        validator.validateOrThrow(descriptor);
-        assertThat(descriptor.getHealthCheckIngress()).isEqualTo(HEALTHCHECK_INGRESS_TYPE_CUSTOM);
-
-        descriptor.setHealthCheckIngress("caNonIcal");
-        validator.validateOrThrow(descriptor);
-        assertThat(descriptor.getHealthCheckIngress()).isEqualTo(HEALTHCHECK_INGRESS_TYPE_CANONICAL);
-    }
-
 }

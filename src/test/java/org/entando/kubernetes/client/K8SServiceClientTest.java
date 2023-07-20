@@ -151,19 +151,6 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldReturnCustomIngressPathAndBeReady() {
-        EntandoPlugin testPlugin = getTestEntandoPluginWithIngressPathCustom();
-        mockServer.addStub(get(urlMatching("/my-custom-path-plugin/management/health"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", HAL_JSON_VALUE)));
-        boolean pluginReady = client.isPluginReadyToServeApp(testPlugin, "my-app", false);
-        assertThat(pluginReady).isTrue();
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/apps/my-app/ingress")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/my-custom-path-plugin/management/health")));
-    }
-
-    @Test
     public void shouldUnlinkThePlugin() {
         EntandoAppPluginLink testLink = getTestEntandoAppPluginLink();
         client.unlinkAndScaleDown(getTestEntandoAppPluginLink());
@@ -510,19 +497,5 @@ public class K8SServiceClientTest {
                 .endSpec()
                 .build();
 
-    }
-
-    private EntandoPlugin getTestEntandoPluginWithIngressPathCustom() {
-        return new EntandoPluginBuilder()
-                .withNewMetadata()
-                .withName("plugin")
-                .withNamespace("plugin-namespace")
-                .endMetadata()
-                .withNewSpec()
-                .withIngressPath("/my-plugin")
-                .withCustomIngressPath("/my-custom-path-plugin")
-                .withHealthCheckPath("/management/health")
-                .endSpec()
-                .build();
     }
 }
