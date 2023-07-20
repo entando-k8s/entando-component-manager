@@ -80,7 +80,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withGenericComponentsUsageSupport();
         EntandoCoreComponentUsage widgetUsage = this.client.getWidgetUsage("my-new-widget");
         assertThat(widgetUsage.getCode()).isEqualTo("my-new-widget");
-        assertThat(widgetUsage.getType()).isEqualTo("widgets");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.WIDGET);
         assertThat(widgetUsage.getUsage()).isEqualTo(1);
 
     }
@@ -90,7 +90,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.WIDGET, "my-widget", 11);
         EntandoCoreComponentUsage widgetUsage = this.client.getWidgetUsage("my-widget");
         assertThat(widgetUsage.getCode()).isEqualTo("my-widget");
-        assertThat(widgetUsage.getType()).isEqualTo("widgets");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.WIDGET);
         assertThat(widgetUsage.getUsage()).isEqualTo(11);
     }
 
@@ -99,7 +99,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE, "my-page", 3);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageUsage("my-page");
         assertThat(widgetUsage.getCode()).isEqualTo("my-page");
-        assertThat(widgetUsage.getType()).isEqualTo("pages");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.PAGE);
         assertThat(widgetUsage.getUsage()).isEqualTo(3);
     }
 
@@ -108,7 +108,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE_TEMPLATE, "my-pagemodel", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageModelUsage("my-pagemodel");
         assertThat(widgetUsage.getCode()).isEqualTo("my-pagemodel");
-        assertThat(widgetUsage.getType()).isEqualTo("pageModels");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.PAGE_TEMPLATE);
         assertThat(widgetUsage.getUsage()).isEqualTo(1);
     }
 
@@ -117,7 +117,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.FRAGMENT, "fragment-101", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getFragmentUsage("fragment-101");
         assertThat(widgetUsage.getCode()).isEqualTo("fragment-101");
-        assertThat(widgetUsage.getType()).isEqualTo("fragments");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.FRAGMENT);
         assertThat(widgetUsage.getUsage()).isEqualTo(1);
     }
 
@@ -126,7 +126,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TYPE, "CT092", 2);
         EntandoCoreComponentUsage widgetUsage = this.client.getContentTypeUsage("CT092");
         assertThat(widgetUsage.getCode()).isEqualTo("CT092");
-        assertThat(widgetUsage.getType()).isEqualTo("contentTypes");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.CONTENT_TYPE);
         assertThat(widgetUsage.getUsage()).isEqualTo(2);
     }
 
@@ -135,7 +135,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", 8);
         EntandoCoreComponentUsage contentModelUsage = this.client.getContentModelUsage("12345");
         assertThat(contentModelUsage.getCode()).isEqualTo("12345");
-        assertThat(contentModelUsage.getType()).isEqualTo("contentTemplates");
+        assertThat(contentModelUsage.getType()).isEqualTo(ComponentType.CONTENT_TEMPLATE);
         assertThat(contentModelUsage.getUsage()).isEqualTo(8);
     }
 

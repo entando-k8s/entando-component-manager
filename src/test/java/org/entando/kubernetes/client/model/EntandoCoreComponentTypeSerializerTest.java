@@ -32,8 +32,7 @@ class EntandoCoreComponentTypeSerializerTest {
         );
         String deleteComponentJson = objectMapper.writeValueAsString(componentToDelete);
         System.out.println(deleteComponentJson);
-        assertThat(deleteComponentJson).contains("pageModel");
-        assertThat(deleteComponentJson).contains("success");
+        assertThat(deleteComponentJson).contains("pageModel").contains("success");
 
         EntandoCoreComponentUsageRequest usageRequest = new EntandoCoreComponentUsageRequest(
                 ComponentType.PAGE_TEMPLATE,

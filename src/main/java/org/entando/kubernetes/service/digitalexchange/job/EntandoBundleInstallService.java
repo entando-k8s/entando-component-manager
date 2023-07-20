@@ -24,7 +24,6 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
-import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteStatus;
 import org.entando.kubernetes.client.model.assembler.InstallPlanAssembler;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -86,6 +85,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
     private final @NonNull BundleDescriptorValidator bundleDescriptorValidator;
     private final @NonNull EntandoCoreClient entandoCoreClient;
+    private final @NonNull BundleUninstallUtility bundleUninstallUtility;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -336,7 +336,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             // remove from appEngine
-            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, parentJob);
+            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result);
             result.setStatus(finalStatus);
             log.info("Rollback operation completed");
 
@@ -349,7 +349,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
-            EntandoBundleJobEntity parentJob) {
+            JobResult parentJobResult) {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
@@ -358,18 +358,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         switch (response.getStatus()) {
             case FAILURE:
                 log.debug("In rollback All deletes are in error with response:'{}'", response);
+                bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                bundleUninstallUtility.markSingleErrors(toDelete,response);
                 return JobStatus.INSTALL_ERROR;
             case PARTIAL_SUCCESS:
                 log.debug("In rollback Partial deletes are in error with response:'{}'", response);
-                try {
-                    String uninstallErrors = objectMapper.writeValueAsString(response.getComponents().stream()
-                            .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())).collect(
-                                    Collectors.toList()));
-                    parentJob.setUninstallErrors(uninstallErrors);
-
-                } catch (JsonProcessingException ex) {
-                    log.error("In rollback with response:'{}' we had a json error", response, ex);
-                }
+                bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                bundleUninstallUtility.markSingleErrors(toDelete,response);
                 return JobStatus.INSTALL_ROLLBACK_PARTIAL;
             case SUCCESS:
             default:

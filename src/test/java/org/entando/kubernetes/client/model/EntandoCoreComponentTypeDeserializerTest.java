@@ -17,7 +17,7 @@ class EntandoCoreComponentTypeDeserializerTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void shouldDeserialize() throws Exception{
+    void shouldDeserialize() throws Exception {
 
         String deleteRequestJson = "{\"type\":\"pageModel\",\"code\":\"123\"}";
         EntandoCoreComponentDeleteRequest deleteRequest = objectMapper.readValue(deleteRequestJson,

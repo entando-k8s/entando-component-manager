@@ -1,10 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import static org.entando.kubernetes.model.bundle.installable.Installable.MAX_COMMON_SIZE_OF_STRINGS;
 import static org.entando.kubernetes.service.digitalexchange.job.PostInitServiceImpl.ECR_ACTION_UNINSTALL;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -20,12 +17,9 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
-import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDelete;
-import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteStatus;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -60,9 +54,8 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private final @NonNull PostInitService postInitService;
     private final @NonNull Map<ComponentType, ComponentProcessor<?>> processorMap;
     private final @NonNull EntandoCoreClient entandoCoreClient;
-    private final @NonNull ObjectMapper objectMapper;
+    private final @NonNull BundleUninstallUtility bundleUninstallUtility;
 
-    private static final String KEY_SEP = "_";
 
     public EntandoBundleJobEntity uninstall(String componentId) {
         EntandoBundleEntity installedBundle = installedComponentRepository.findByBundleCode(componentId)
@@ -190,8 +183,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 uninstallProgress.increment();
                 parentJobResult.setProgress(1.0);
 
-                log.info("Uninstall operation completed with status '{}' for component:'{}'",
-                        finalStatus,
+                log.info("Uninstall operation completed with status '{}' for component:'{}'", finalStatus,
                         parentJob.getComponentId());
 
             } catch (Exception ex) {
@@ -244,7 +236,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     private boolean filterComponentToDelete(EntandoBundleComponentJobEntity cje,
             List<ComponentUsage> componentUsages) {
         return componentUsages.stream()
-                .filter(componentUsage -> componentUsage.getType().equals(cje.getComponentType().getTypeName())
+                .filter(componentUsage -> componentUsage.getType().equals(cje.getComponentType())
                         && componentUsage.getCode().equals(cje.getComponentId()))
                 .findFirst()
                 .map(ComponentUsage::isExist)
@@ -266,12 +258,10 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                             .installException(new EntandoComponentManagerException(message))
                             .build();
                 });
-
         return uninstallResult.join();
     }
 
-    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
-            JobResult parentJobResult) {
+    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete, JobResult parentJobResult) {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
@@ -280,13 +270,13 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         switch (response.getStatus()) {
             case FAILURE:
                 log.debug("All deletes are in error with response:'{}'", response);
-                markGlobalError(parentJobResult, response);
-                markSingleErrors(toDelete,response);
+                bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                bundleUninstallUtility.markSingleErrors(toDelete,response);
                 return JobStatus.UNINSTALL_ERROR;
             case PARTIAL_SUCCESS:
                 log.debug("Partial deletes are in error with response:'{}'", response);
-                markGlobalError(parentJobResult, response);
-                markSingleErrors(toDelete,response);
+                bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                bundleUninstallUtility.markSingleErrors(toDelete,response);
                 return JobStatus.UNINSTALL_PARTIAL_COMPLETED;
             case SUCCESS:
             default:
@@ -295,64 +285,5 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         }
     }
 
-    private void markSingleErrors(List<EntandoBundleComponentJobEntity> toDelete,
-            EntandoCoreComponentDeleteResponse response) {
-        // convenience map to speed up the search of an EntandoBundleComponentJobEntity related to a specific component
-        // included in the app-engine response
-        Map<String, EntandoBundleComponentJobEntity> toDeleteMap = toDelete.stream()
-                .collect(Collectors.toMap(this::composeComponentJobEntityUniqueKey,Function.identity()));
 
-        response.getComponents()
-                .stream()
-                .filter(c -> EntandoCoreComponentDeleteStatus.FAILURE.equals(c.getStatus()))
-                .map(entandoCoreComponentDelete ->
-                        // find the EntandoBundleComponentJobEntity, related to the ith component of the response,
-                        // to set on it the appropriate error message
-                        Optional.ofNullable(
-                                        toDeleteMap.get(composeComponentDeleteUniqueKey(entandoCoreComponentDelete)))
-                                .orElseThrow(() -> new IllegalStateException(
-                                        String.format("Missing job for component '%s' of type '%s'",
-                                                entandoCoreComponentDelete.getCode(),
-                                                entandoCoreComponentDelete.getType())))
-                ).forEach(cje -> {
-                    // set the error message and code and save to DB
-                    cje.setUninstallErrorMessage("Error in deleting component from app-engine");
-                    cje.setUninstallErrorCode(100);
-                    compJobRepo.save(cje);
-                });
-    }
-
-    private String composeComponentDeleteUniqueKey(EntandoCoreComponentDelete entandoCoreComponentDelete) {
-        if (entandoCoreComponentDelete == null
-                || StringUtils.isEmpty(entandoCoreComponentDelete.getCode())
-                || Objects.isNull(entandoCoreComponentDelete.getType())) {
-            throw new IllegalArgumentException("Error in composing key from Entando Core Component Delete: "
-                    + "element, code or type fields have null or empty values");
-        }
-        return entandoCoreComponentDelete.getCode() + KEY_SEP + entandoCoreComponentDelete.getType();
-    }
-
-    private String composeComponentJobEntityUniqueKey(EntandoBundleComponentJobEntity componentJobEntity) {
-        if (componentJobEntity == null
-                || StringUtils.isEmpty(componentJobEntity.getComponentId())
-                || Objects.isNull(componentJobEntity.getComponentType())) {
-            throw new IllegalArgumentException("Error in composing key from Entando Bundle Component Job Entity: "
-                    + "element, code or type fields have null or empty values");
-        }
-        return componentJobEntity.getComponentId() + KEY_SEP + componentJobEntity.getComponentType().getTypeName();
-    }
-
-    private void markGlobalError(JobResult parentJobResult, EntandoCoreComponentDeleteResponse response) {
-        try {
-            String uninstallErrors = objectMapper.writeValueAsString(response.getComponents().stream()
-                    .filter(c -> !EntandoCoreComponentDeleteStatus.SUCCESS.equals(c.getStatus())).collect(
-                            Collectors.toList()));
-            String valueToSave = StringUtils.truncate(uninstallErrors, MAX_COMMON_SIZE_OF_STRINGS);
-            log.debug("save error inside parentJob:'{}'", valueToSave);
-            parentJobResult.setUninstallException(new EntandoComponentManagerException(valueToSave));
-
-        } catch (JsonProcessingException ex) {
-            log.error("with response:'{}' we had a json error", response, ex);
-        }
-    }
 }

@@ -1,7 +1,6 @@
 package org.entando.kubernetes.client.model;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
@@ -22,7 +21,7 @@ public class EntandoCoreComponentTypeDeserializer extends StdDeserializer<Compon
 
     @Override
     public ComponentType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-            throws IOException, JsonProcessingException {
+            throws IOException {
 
         String appEngineValue = jsonParser.getText();
         return getComponentTypeFromAppEngineValue(appEngineValue);
