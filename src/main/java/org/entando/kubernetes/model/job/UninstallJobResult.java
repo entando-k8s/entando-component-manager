@@ -1,6 +1,5 @@
 package org.entando.kubernetes.model.job;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
@@ -12,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDelete;
 
 @Slf4j
@@ -60,9 +60,12 @@ public class UninstallJobResult {
     public static List<EntandoCoreComponentDelete> deserialize(String value) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
+            if (StringUtils.isBlank(value)) {
+                return null;
+            }
             return objectMapper.readValue(value, new TypeReference<List<EntandoCoreComponentDelete>>() {
             });
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             log.error("Error deserialize:'{}'", value, ex);
             return null;
         }
