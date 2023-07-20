@@ -35,7 +35,6 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             logConflictStrategyAction();
 
             EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
-            // ENG-4990-let-the-user-choose-if-the-canonical-or-custom
 
             if (shouldSkip()) {
                 fixPluginRegistrationIfNecessary();
@@ -43,25 +42,25 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
             }
 
             if (shouldCreate()) {
-                installPlugin(plugin, true);
+                installPlugin(plugin);
             } else if (shouldOverride()) {
-                overridePlugin(plugin, true);
+                overridePlugin(plugin);
             } else {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
         });
     }
 
-    private void installPlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
-        kubernetesService.linkPluginAndWaitForSuccess(plugin, useCanonicalIngressPath);
+    private void installPlugin(EntandoPlugin plugin) {
+        kubernetesService.linkPluginAndWaitForSuccess(plugin);
 
         PluginDataEntity pluginDataEntity = composePluginDataEntity(new PluginDataEntity());
         pluginDataRepository.save(pluginDataEntity);
     }
 
-    private void overridePlugin(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
+    private void overridePlugin(EntandoPlugin plugin) {
         kubernetesService.unlink(plugin.getMetadata().getName());
-        kubernetesService.linkPluginAndWaitForSuccess(plugin, useCanonicalIngressPath);
+        kubernetesService.linkPluginAndWaitForSuccess(plugin);
 
         PluginDataEntity pluginDataEntity = pluginDataRepository.findByBundleIdAndPluginName(
                         representation.getDescriptorMetadata().getBundleId(),

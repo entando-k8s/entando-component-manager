@@ -41,7 +41,7 @@ public interface K8SServiceClient extends ECMClient {
 
     Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace);
 
-    boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName, Boolean useCanonicalIngressPath);
+    boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName);
 
     AnalysisReport getAnalysisReport(List<Reportable> reportableList);
 

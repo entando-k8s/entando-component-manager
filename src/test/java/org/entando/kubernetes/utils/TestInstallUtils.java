@@ -681,7 +681,7 @@ public class TestInstallUtils {
                 new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
                 deploymentStatus);
 
-        when(k8sServiceClient.isPluginReadyToServeApp(any(), any(), any())).thenReturn(true);
+        when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
         when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
         when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
         when(k8sServiceClient.updatePlugin(any())).thenReturn(null);
@@ -700,7 +700,7 @@ public class TestInstallUtils {
                 new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
                 deploymentStatus);
 
-        when(k8sServiceClient.isPluginReadyToServeApp(any(), any(), any())).thenReturn(true);
+        when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
         when(k8sServiceClient.linkAppWithPlugin(any(), any(), any())).thenReturn(plugin1);
         when(k8sServiceClient.getLinkByName(any())).thenReturn(Optional.of(plugin1));
         when(k8sServiceClient.updatePlugin(any())).thenReturn(null);

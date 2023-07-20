@@ -69,8 +69,8 @@ public class KubernetesService {
         return getCurrentAppLinkToPlugin(pluginId).isPresent();
     }
 
-    public boolean isPluginReady(EntandoPlugin plugin, boolean useCanonicalIngressPath) {
-        return k8sServiceClient.isPluginReadyToServeApp(plugin, entandoAppName, useCanonicalIngressPath);
+    public boolean isPluginReady(EntandoPlugin plugin) {
+        return k8sServiceClient.isPluginReadyToServeApp(plugin, entandoAppName);
     }
 
     private List<EntandoAppPluginLink> getCurrentAppLinks() {
@@ -105,11 +105,10 @@ public class KubernetesService {
         return k8sServiceClient.linkAppWithPlugin(entandoAppName, entandoAppNamespace, newPlugin);
     }
 
-    public void linkPluginAndWaitForSuccess(EntandoPlugin plugin, Boolean useCanonicalIngressPath) {
+    public void linkPluginAndWaitForSuccess(EntandoPlugin plugin) {
         EntandoAppPluginLink createdLink = this.linkPlugin(plugin);
         try {
-            this.waitingConditionFactory.until(() -> this.hasLinkingProcessCompletedSuccessfully(createdLink, plugin,
-                    useCanonicalIngressPath));
+            this.waitingConditionFactory.until(() -> this.hasLinkingProcessCompletedSuccessfully(createdLink, plugin));
         } catch (ConditionTimeoutException e) {
             throw new PluginNotReadyException(plugin.getMetadata().getName());
         }
@@ -132,8 +131,7 @@ public class KubernetesService {
         return newPlugin;
     }
 
-    public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin,
-            boolean useCanonicalIngressPath) {
+    public boolean hasLinkingProcessCompletedSuccessfully(EntandoAppPluginLink link, EntandoPlugin plugin) {
         boolean result = false;
         Optional<EntandoAppPluginLink> linkByName = k8sServiceClient.getLinkByName(link.getMetadata().getName());
         if (linkByName.isPresent() && linkByName.get().getStatus() != null
@@ -145,7 +143,7 @@ public class KubernetesService {
                 throw new EntandoAppPluginLinkingProcessException(msg);
             }
             result = linkByName.get().getStatus().getPhase().equals(SUCCESSFUL)
-                    && isPluginReady(plugin, useCanonicalIngressPath);
+                    && isPluginReady(plugin);
         }
         return result;
     }

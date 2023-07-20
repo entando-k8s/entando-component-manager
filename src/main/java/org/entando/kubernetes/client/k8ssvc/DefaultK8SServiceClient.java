@@ -355,7 +355,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName, Boolean useCanonicalIngressPath) {
+    public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
         if (plugin.getSpec().getIngressPath() == null) {
             return false;
         }
