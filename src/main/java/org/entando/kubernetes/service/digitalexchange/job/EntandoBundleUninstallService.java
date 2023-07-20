@@ -177,8 +177,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                 parentJobResult.clearException();
                 JobStatus finalStatus = executeDeleteFromAppEngine(
                         keepNeededComponentsOnly(componentUsages, componentToUninstallFromAppEngine),
-                        parentJobResult,
-                        componentUsages);
+                        parentJobResult);
                 parentJobResult.setStatus(finalStatus);
 
                 if (JobStatus.UNINSTALL_COMPLETED.equals(finalStatus)) {
@@ -271,7 +270,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
     }
 
     private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
-            JobResult parentJobResult, List<ComponentUsage> existingComponentCodes) {
+            JobResult parentJobResult) {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
@@ -297,21 +296,29 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
 
     private void markSingleErrors(List<EntandoBundleComponentJobEntity> toDelete,
             EntandoCoreComponentDeleteResponse response) {
+        // convenience map to speed up the search of an EntandoBundleComponentJobEntity related to a specific component
+        // included in the app-engine response
+        Map<String, EntandoBundleComponentJobEntity> toDeleteMap = toDelete.stream()
+                .collect(Collectors.toMap(this::composeComponentJobEntityUniqueKey,Function.identity()));
 
         response.getComponents()
                 .stream()
                 .filter(c -> EntandoCoreComponentDeleteStatus.FAILURE.equals(c.getStatus()))
-                .map(entandoCoreComponentDelete -> toDelete.stream().filter(componentJobEntity ->
-                                entandoCoreComponentDelete.getCode().equals(componentJobEntity.getComponentId())
-                                        && entandoCoreComponentDelete.getType()
-                                        .equals(componentJobEntity.getComponentType().getTypeName()))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("Missing job for component")))
-                .map(cje -> {
+                .map(entandoCoreComponentDelete ->
+                        // find the EntandoBundleComponentJobEntity, related to the ith component of the response,
+                        // to set on it the appropriate error message
+                        Optional.ofNullable(
+                                        toDeleteMap.get(composeComponentDeleteUniqueKey(entandoCoreComponentDelete)))
+                                .orElseThrow(() -> new IllegalStateException(
+                                        String.format("Missing job for component '%s' of type '%s'",
+                                                entandoCoreComponentDelete.getCode(),
+                                                entandoCoreComponentDelete.getType())))
+                ).forEach(cje -> {
+                    // set the error message and code and save to DB
                     cje.setUninstallErrorMessage("Error in deleting component from app-engine");
                     cje.setUninstallErrorCode(100);
-                    return cje;
-                }).forEach(compJobRepo::save);
+                    compJobRepo.save(cje);
+                });
     }
 
     private String composeComponentDeleteUniqueKey(EntandoCoreComponentDelete entandoCoreComponentDelete) {
@@ -322,16 +329,6 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
                     + "element, code or type fields have null or empty values");
         }
         return entandoCoreComponentDelete.getCode() + KEY_SEP + entandoCoreComponentDelete.getType();
-    }
-
-    private String composeComponentUniqueKey(ComponentUsage componentUsage) {
-        if (componentUsage == null
-                || StringUtils.isEmpty(componentUsage.getCode())
-                || StringUtils.isEmpty(componentUsage.getType())) {
-            throw new IllegalArgumentException("Error in composing key from component usage: element, code or type "
-                    + "fields have null or empty values");
-        }
-        return componentUsage.getCode() + KEY_SEP + componentUsage.getType();
     }
 
     private String composeComponentJobEntityUniqueKey(EntandoBundleComponentJobEntity componentJobEntity) {

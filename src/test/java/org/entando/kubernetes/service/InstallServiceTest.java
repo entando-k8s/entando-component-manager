@@ -544,6 +544,60 @@ public class InstallServiceTest {
         assertEquals(100, componentB.getUninstallErrorCode());
     }
 
+
+
+    @Test
+    void shouldSetUnistallErrorIfUninstallResponseContainsFailuresNotIncludedInTheRequest() {
+        EntandoBundleEntity bundleEntity = EntandoBundleEntity.builder()
+                .bundleCode(BUNDLE_ID)
+                .name(BUNDLE_TITLE)
+                .build();
+        EntandoBundleJobEntity jobEntity = EntandoBundleJobEntity.builder()
+                .componentId(BUNDLE_ID)
+                .componentName(BUNDLE_TITLE)
+                .componentVersion(BUNDLE_VERSION)
+                .status(JobStatus.INSTALL_COMPLETED)
+                .build();
+        bundleEntity.setJob(jobEntity);
+
+        EntandoBundleComponentJobEntity cjeA = new EntandoBundleComponentJobEntity();
+        cjeA.setComponentId("A");
+        cjeA.setAction(InstallAction.CREATE);
+        cjeA.setComponentType(ComponentType.CONTENT_TYPE);
+        EntandoBundleComponentJobEntity cjeB = new EntandoBundleComponentJobEntity();
+        cjeB.setComponentId("B");
+        cjeB.setAction(InstallAction.CREATE);
+        cjeB.setComponentType(ComponentType.CONTENT_TYPE);
+
+        processorMap.put(ComponentType.CONTENT_TYPE, new ContentTypeProcessor(coreClient));
+
+        when(installRepo.findByBundleCode(any())).thenReturn(Optional.of(bundleEntity));
+        when(postInitService.isEcrActionAllowed(any(), any())).thenReturn(Optional.of(Boolean.TRUE));
+        when(compJobRepo.findAllByParentJob(any())).thenReturn(Arrays.asList(cjeA, cjeB));
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(Arrays.asList(
+                ComponentUsage.builder().code("A").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build(),
+                ComponentUsage.builder().code("B").type(ComponentType.CONTENT_TYPE.getTypeName()).exist(true).references(List.of()).usage(0).build()));
+        when(coreClient.deleteComponents(Arrays.asList(
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "A"),
+                new EntandoCoreComponentDeleteRequest(ComponentType.CONTENT_TYPE.getTypeName(), "B"))))
+                .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.PARTIAL_SUCCESS).components(Arrays.asList(
+                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE.getTypeName(), "A", EntandoCoreComponentDeleteStatus.SUCCESS),
+                        new EntandoCoreComponentDelete(ComponentType.CONTENT_TYPE.getTypeName(), "C", EntandoCoreComponentDeleteStatus.FAILURE))).build());
+
+        EntandoBundleJobEntity job = uninstallService.uninstall(BUNDLE_ID);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        List<Double> progress = getJobProgress();
+        assertThat(progress).containsExactly(0.0, 0.33, 0.66);
+        EntandoBundleJobEntity bundleJobEntity = jobRepository.getOne(job.getId());
+        assertEquals("UNINSTALL_ERROR", bundleJobEntity.getStatus().name());
+
+    }
+
     @Test
     void shouldThrowBundleOperationConcurrencyExceptionWhenAnalysisOrInstallRequestedWhileAnotherOperationIsRunning() {
 
