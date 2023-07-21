@@ -42,7 +42,8 @@ public class BundleUninstallUtility {
                             Collectors.toList()));
             String valueToSave = StringUtils.truncate(uninstallErrors, MAX_COMMON_SIZE_OF_STRINGS);
             log.debug("save error inside parentJob:'{}'", valueToSave);
-            parentJobResult.setUninstallException(new EntandoComponentManagerException(valueToSave));
+            parentJobResult.setUninstallErrors(valueToSave);
+            parentJobResult.setUninstallException(new EntandoComponentManagerException("error inside delete from appEngine"));
 
         } catch (JsonProcessingException ex) {
             log.error("with response:'{}' we had a json error", response, ex);

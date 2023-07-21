@@ -16,6 +16,7 @@ public class JobResult {
     JobStatus status;
     EntandoComponentManagerException installException;
     EntandoComponentManagerException uninstallException;
+    String uninstallErrors;
     EntandoComponentManagerException rollbackException;
     Double progress;
 
@@ -41,6 +42,10 @@ public class JobResult {
 
     public String getUninstallErrorMessage() {
         return null != uninstallException ? uninstallException.getMessage() : null;
+    }
+
+    public String getUninstallErrors() {
+        return uninstallErrors;
     }
 
     public String getUninstallError() {
@@ -70,6 +75,11 @@ public class JobResult {
         this.uninstallException = ex instanceof EntandoComponentManagerException
                 ? (EntandoComponentManagerException) ex
                 : new EntandoComponentManagerException(ex);
+        return this;
+    }
+
+    public JobResult setUninstallErrors(String errors) {
+        this.uninstallErrors = errors;
         return this;
     }
 
