@@ -3,6 +3,7 @@ package org.entando.kubernetes.model.job;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,13 +62,13 @@ public class UninstallJobResult {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             if (StringUtils.isBlank(value)) {
-                return null;
+                return Collections.emptyList();
             }
             return objectMapper.readValue(value, new TypeReference<List<EntandoCoreComponentDelete>>() {
             });
         } catch (Exception ex) {
             log.error("Error deserialize:'{}'", value, ex);
-            return null;
+            return Collections.emptyList();
         }
     }
 
