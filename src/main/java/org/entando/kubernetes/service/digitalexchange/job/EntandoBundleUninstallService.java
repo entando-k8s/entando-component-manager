@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -265,6 +264,7 @@ public class EntandoBundleUninstallService implements EntandoBundleJobExecutor {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
+                .sorted(Comparator.comparingInt(e -> ((EntandoCoreComponentDeleteRequest) e).getType().getInstallPriority()).reversed())
                 .collect(Collectors.toList()));
 
         switch (response.getStatus()) {
