@@ -355,7 +355,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     @Override
-    public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName, boolean useCanonicalIngressPath) {
+    public boolean isPluginReadyToServeApp(EntandoPlugin plugin, String appName) {
         if (plugin.getSpec().getIngressPath() == null) {
             return false;
         }
@@ -370,7 +370,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         UriComponents pluginHealthCheck = UriComponentsBuilder.newInstance()
                 .scheme(appIngress.getSpec().getTls().isEmpty() ? "http" : "https")
                 .host(appHost)
-                .path(useCanonicalIngressPath ? plugin.getSpec().getIngressPath() : plugin.getSpec().getCustomIngressPath())
+                .path(plugin.getSpec().getIngressPath())
                 .path(plugin.getSpec().getHealthCheckPath())
                 .build();
 

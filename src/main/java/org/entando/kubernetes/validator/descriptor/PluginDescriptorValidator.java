@@ -39,9 +39,6 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     public static final int MAX_FULL_DEPLOYMENT_NAME_LENGTH = 200;
     public static final int STANDARD_FULL_DEPLOYMENT_NAME_LENGTH = MAX_FULL_DEPLOYMENT_NAME_LENGTH;
     public static final int ROLES_MAX_LENGTH = 4000;
-    public static final String HEALTHCHECK_INGRESS_TYPE_CANONICAL = "canonical";
-    public static final String HEALTHCHECK_INGRESS_TYPE_CUSTOM = "custom";
-    public static final String HEALTHCHECK_INGRESS_TYPE_DEFAULT = HEALTHCHECK_INGRESS_TYPE_CANONICAL;
 
     private final int fullDeploymentNameMaxlength;
 
@@ -126,7 +123,6 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         configBeanV5.getObjectsThatMustNOTBeNull().put("name", PluginDescriptor::getName);
         configBeanV5.getObjectsThatMustBeNull().remove(DESC_PROP_ENV_VARS);
         configBeanV5.getValidationFunctions().add(this::validateEnvVarsOrThrow);
-        configBeanV5.getValidationFunctions().add(this::validateIngressHealthChoiceOrThrow);
     }
 
     private void setupValidatorConfigurationDescriptorV2Onwards(DescriptorVersion descriptorVersion) {
@@ -220,28 +216,6 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
         return descriptor;
     }
 
-    /**
-     * Validate the choice and assign a default, if needed.
-     *
-     * @param descriptor the plugin descriptor to validate
-     * @return InvalidBundleException if the value is not "canonical" or "custom" (case-insensitive)
-     */
-    private PluginDescriptor validateIngressHealthChoiceOrThrow(PluginDescriptor descriptor) {
-        if (StringUtils.isEmpty(descriptor.getHealthCheckIngress())) {
-            descriptor.setHealthCheckIngress(HEALTHCHECK_INGRESS_TYPE_DEFAULT);
-        } else {
-            final var healthIngressType = descriptor.getHealthCheckIngress();
-
-            if (!healthIngressType.equals(HEALTHCHECK_INGRESS_TYPE_CANONICAL)
-                    && !healthIngressType.equals(HEALTHCHECK_INGRESS_TYPE_CUSTOM)) {
-                throw new InvalidBundleException(String.format(INVALID_HEALTH_TYPE_INGRESS_DEFINITION,
-                        descriptor.getName(),
-                        healthIngressType));
-            }
-        }
-        return descriptor;
-    }
-
     private PluginDescriptor validateRolesLengthOrThrow(PluginDescriptor descriptor) {
         List<String> rolesList = descriptor.getRoles();
         if (rolesList != null && !rolesList.isEmpty()) {
@@ -315,8 +289,8 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
     private boolean doesSecretBelongToTheBundle(String bundleId, SecretKeyRef secretKeyRef) {
         return secretKeyRef != null
                 && (secretKeyRef.getName() == null
-                || secretKeyRef.getName().isEmpty()
-                || secretKeyRef.getName().startsWith(BundleUtilities.makeKubernetesCompatible(bundleId)));
+                        || secretKeyRef.getName().isEmpty()
+                        || secretKeyRef.getName().startsWith(BundleUtilities.makeKubernetesCompatible(bundleId)));
     }
 
     /**
@@ -357,10 +331,10 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
             "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
                     + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
                     .collect(Collectors.joining(", "));
-    public static final String NON_OWNED_SECRET =
-            "The descriptor of the plugin \"%s\" of the bundle \"%s\" contains an invalid environment variable \"%s\""
-                    + " that points to a secret that doesn't belong to the plugin. Check documentation for details about "
-                    + "bundles secrets.";
+    public static final String NON_OWNED_SECRET = ""
+            + "The descriptor of the plugin \"%s\" of the bundle \"%s\" contains an invalid environment variable \"%s\""
+            + " that points to a secret that doesn't belong to the plugin. Check documentation for details about "
+            + "bundles secrets.";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR =
             "The plugin full deployment name \"%s\" "
                     + "exceeds the max allowed length %d. You can configure the max length by setting the desired value of the "
@@ -372,9 +346,5 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
 
     public static final String INVALID_ROLES_MAX_LENGTH_EXCEEDED_ERROR =
             "The roles (joined with comma) \"%s\" exceeds the max allowed length \"%d\".";
-
-    public static final String INVALID_HEALTH_TYPE_INGRESS_DEFINITION =
-            "The plugin \"%s\" contains an invalid definition of the ingress healthcheck path: \"%s\". Admitted values are "
-                    + HEALTHCHECK_INGRESS_TYPE_CUSTOM + " (default) or " + HEALTHCHECK_INGRESS_TYPE_CANONICAL + ".";
 
 }
