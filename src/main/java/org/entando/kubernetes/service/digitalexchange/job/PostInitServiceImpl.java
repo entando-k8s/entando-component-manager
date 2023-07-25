@@ -75,8 +75,8 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         List<PostInitItem> items = new ArrayList<>();
         items.add(PostInitItem.builder()
                 .name("entando-epc-bootstrap")
-                .url("docker://registry.hub.docker.com/entando/entando-bootstrap-bundle")
-                .version("1.0.1")
+                .url("docker://registry.hub.docker.com/riccardofadda/entando-bootstrap-bundle")
+                .version("1.1.0-IT-422-PR-11")
                 .action(ACTION_INSTALL_OR_UPDATE)
                 .priority(1)
                 .build());
