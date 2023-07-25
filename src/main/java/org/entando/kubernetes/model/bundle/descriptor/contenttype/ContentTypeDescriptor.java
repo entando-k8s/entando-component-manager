@@ -23,6 +23,7 @@ public class ContentTypeDescriptor implements Descriptor {
     private String status;
     private String defaultContentModel;
     private String defaultContentModelList;
+    private String viewPage;
 
     private List<ContentTypeAttribute> attributes;
 
