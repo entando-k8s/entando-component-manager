@@ -26,7 +26,7 @@ public class TenantConfig {
 
     @Autowired
     public TenantConfig(
-            @Value("${tenant-config}")
+            @Value("${tenant-config:#{null}}")
             String tenantConfigs,
             ObjectMapper objectMapper) {
         this.tenantConfigs = tenantConfigs;
