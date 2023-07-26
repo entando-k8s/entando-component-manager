@@ -51,6 +51,9 @@ import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -259,13 +262,44 @@ public class BundleUtilities {
      * @return the composed ingress path
      */
     public static String composeIngressPathForV5(PluginDescriptor descriptor, String bundleCode) {
+        String tenantCode = getTenantCodeInSecurityContext();
+        String bundleCodeWithTenantCode = bundleCode;
+
+        if (tenantCode != null) {
+            String tenantId = getTenantId(tenantCode);
+            bundleCodeWithTenantCode = bundleCode + "-" + tenantId;
+        }
 
         return "/"
-                + Stream.of(bundleCode,
+                + Stream.of(bundleCodeWithTenantCode,
                         makeKubernetesCompatible(descriptor.getName()))
                 .map(BundleUtilities::makeKubernetesCompatible)
                 .collect(Collectors.joining("/"));
     }
+
+    // TODO: move in the right domain class
+    public String getTenantCodeInSecurityContext() {
+        try {
+            // TODO: remove -----------------
+            String tenantConf = System.getenv("TENANT-CONFIG");
+            if (tenantConf != null) {
+                log.info(String.valueOf("branch taken"));
+                return "999999";
+            }
+            // remove -----------------
+            SecurityContext context = SecurityContextHolder.getContext();
+            Authentication authentication = context.getAuthentication();
+            Object principal = authentication.getPrincipal();
+            log.info(String.valueOf(principal));
+            // TODO: use the right cast and the right property
+            //return principal.getTenantCode();
+            return "999999";
+        } catch (Exception e) {
+            log.error(String.valueOf(e));
+            return null;
+        }
+    }
+
 
 
     public static Map<String, String> getLabelsFromImage(DockerImage dockerImage) {
@@ -570,6 +604,16 @@ public class BundleUtilities {
      */
     public static String getBundleId(String bundleUrl) {
         return DigestUtils.sha256Hex(bundleUrl).substring(0, ENTITY_CODE_HASH_LENGTH);
+    }
+
+    /**
+     * get the tenant id returning the first 8 chars of the tenant code digest.
+     *
+     * @param tenantCode the code of the tenant
+     * @return the signed tenant id
+     */
+    public static String getTenantId(String tenantCode) {
+        return DigestUtils.sha256Hex(tenantCode).substring(0, ENTITY_CODE_HASH_LENGTH);
     }
 
     /**
