@@ -42,6 +42,7 @@ public class EntandoBundleJob implements TrackableJob {
     private String installErrorMessage;
     private Integer uninstallErrorCode;
     private String uninstallErrorMessage;
+    private String uninstallErrors;
     private Integer rollbackErrorCode;
     private String rollbackErrorMessage;
 
@@ -66,6 +67,7 @@ public class EntandoBundleJob implements TrackableJob {
                 .installErrorMessage(entity.getInstallErrorMessage())
                 .uninstallErrorCode(entity.getUninstallErrorCode())
                 .uninstallErrorMessage(entity.getUninstallErrorMessage())
+                .uninstallErrors(entity.getUninstallErrors())
                 .rollbackErrorCode(entity.getRollbackErrorCode())
                 .rollbackErrorMessage(entity.getRollbackErrorMessage())
                 .componentJobs(componentJobs.stream()

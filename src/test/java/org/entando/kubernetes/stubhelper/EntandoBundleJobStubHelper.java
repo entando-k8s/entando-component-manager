@@ -17,4 +17,13 @@ public class EntandoBundleJobStubHelper {
         entity.setStatus(jobStatus);
         return entity;
     }
+
+    public static EntandoBundleJobEntity stubEntandoBundleJobEntity(JobStatus jobStatus, String componentId) {
+        EntandoBundleJobEntity entity = new EntandoBundleJobEntity();
+        entity.setComponentId(componentId);
+        entity.setComponentName(COMPONENT_NAME);
+        entity.setComponentVersion(COMPONENT_VERSION);
+        entity.setStatus(jobStatus);
+        return entity;
+    }
 }
