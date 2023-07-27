@@ -75,8 +75,8 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
             if (!ObjectUtils.isEmpty(bundleRootFolder)) {
                 InstallAction rootDirectoryAction = extractInstallAction(bundleRootFolder, conflictStrategy,
                         installPlan);
-                installables.add(new DirectoryInstallable(engineService,
-                        new DirectoryDescriptor(bundleRootFolder, true), rootDirectoryAction));
+                installables.add(new DirectoryInstallable(new DirectoryDescriptor(bundleRootFolder,
+                        true), rootDirectoryAction));
             }
         } catch (IOException e) {
             throw makeMeaningfulException(e);
@@ -89,8 +89,7 @@ public class DirectoryProcessor extends BaseComponentProcessor<DirectoryDescript
     public List<Installable<DirectoryDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return components.stream()
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
-                .map(c -> new DirectoryInstallable(engineService, this.buildDescriptorFromComponentJob(c),
-                        c.getAction()))
+                .map(c -> new DirectoryInstallable(this.buildDescriptorFromComponentJob(c), c.getAction()))
                 .collect(Collectors.toList());
     }
 

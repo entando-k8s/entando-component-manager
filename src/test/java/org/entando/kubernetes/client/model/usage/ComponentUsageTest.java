@@ -32,30 +32,30 @@ class ComponentUsageTest {
             throws JsonProcessingException {
         // Given
         ComponentUsage componentUsage =
-                new ComponentUsage(ComponentType.WIDGET.getTypeName(), "my-widget", true, 1,
+                new ComponentUsage(ComponentType.WIDGET, "my-widget", true, 1,
                         false,
                         Arrays.asList(
-                                new ComponentReference(ComponentType.WIDGET.getTypeName(),
+                                new ComponentReference(ComponentType.WIDGET,
                                         ComponentReferenceType.INTERNAL,
                                         "my-widget",
                                         null),
-                                new ComponentReference(ComponentType.PAGE.getTypeName(),
+                                new ComponentReference(ComponentType.PAGE,
                                         ComponentReferenceType.EXTERNAL,
                                         "page123",
                                         true)));
         String expectedJson = "{"
-                + "\"type\":\"widget\","
+                + "\"type\":\"WIDGET\","
                 + "\"code\":\"my-widget\","
                 + "\"exist\":true,"
                 + "\"usage\":1,"
                 + "\"hasExternal\":false,"
                 + "\"references\":[{"
-                + "\"componentType\":\"widget\","
+                + "\"componentType\":\"WIDGET\","
                 + "\"referenceType\":\"INTERNAL\","
                 + "\"code\":\"my-widget\""
                 + "},"
                 + "{"
-                + "\"componentType\":\"page\","
+                + "\"componentType\":\"PAGE\","
                 + "\"referenceType\":\"EXTERNAL\","
                 + "\"code\":\"page123\","
                 + "\"online\":true"

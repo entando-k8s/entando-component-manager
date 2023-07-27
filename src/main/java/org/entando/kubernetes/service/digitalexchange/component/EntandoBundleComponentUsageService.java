@@ -59,7 +59,7 @@ public class EntandoBundleComponentUsageService {
             case CONTENT_TEMPLATE:
                 return this.client.getContentModelUsage(componentCode);
             default:
-                return new IrrelevantComponentUsage(componentCode);
+                return new IrrelevantComponentUsage(componentType, componentCode);
         }
     }
 
@@ -68,7 +68,7 @@ public class EntandoBundleComponentUsageService {
 
         List<EntandoCoreComponentUsageRequest> usageListRequest = bundleInstalledComponents.stream()
                 .filter(u -> RELEVANT_USAGE_COMPONENT_TYPES.contains(u.getComponentType()))
-                .map(cj -> new EntandoCoreComponentUsageRequest(cj.getComponentType().getAppEngineTypeName(),
+                .map(cj -> new EntandoCoreComponentUsageRequest(cj.getComponentType(),
                         cj.getComponentId()))
                 .collect(Collectors.toList());
 
@@ -119,7 +119,7 @@ public class EntandoBundleComponentUsageService {
             log.warn("Error compose key element or type null comp:'{}'", comp);
             return "null-key";
         }
-        return comp.getComponentId() + KEY_SEP + comp.getComponentType().getTypeName();
+        return comp.getComponentId() + KEY_SEP + comp.getComponentType();
     }
 
 }

@@ -11,8 +11,6 @@ import org.entando.kubernetes.client.ComponentDataRepositoryTestDouble;
 import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
-import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
-import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -102,8 +100,8 @@ class WidgetInstallableTest {
 
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.CREATE,
                 componentDataRepository);
-        widgetInstallable.uninstall().join();
-        verify(entandoCoreClientTestDouble, times(1)).deleteWidget(any());
+        widgetInstallable.uninstallFromEcr().join();
+        //verify(entandoCoreClientTestDouble, times(1)).deleteWidget(any());
         assertThat(componentDataRepository.count()).isEqualTo(0);
     }
 
@@ -118,7 +116,7 @@ class WidgetInstallableTest {
         // try to delete just one
         widgetInstallable = new WidgetInstallable(entandoCoreClientTestDouble, widgetDescriptor, InstallAction.OVERRIDE,
                 componentDataRepository);
-        widgetInstallable.uninstall().join();
+        widgetInstallable.uninstallFromEcr().join();
         verify(entandoCoreClientTestDouble, times(0)).deleteWidget(anyString());
         assertThat(componentDataRepository.count()).isEqualTo(0);
 

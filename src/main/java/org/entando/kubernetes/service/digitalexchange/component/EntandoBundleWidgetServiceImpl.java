@@ -39,6 +39,7 @@ import org.entando.kubernetes.model.web.response.PagedMetadata;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
@@ -91,7 +92,8 @@ public class EntandoBundleWidgetServiceImpl implements EntandoBundleWidgetServic
     private ComponentWidgetData convertToComponentWidgetData(ComponentDataEntity entity) {
         WidgetDescriptor widgetDescriptor = null;
         try {
-            widgetDescriptor = jsonMapper.readValue(entity.getComponentDescriptor(), WidgetDescriptor.class);
+            widgetDescriptor = (WidgetDescriptor) JSONUtilities
+                    .deserializeDescriptorOrThrow(entity.getComponentDescriptor(), WidgetDescriptor.class);
         } catch (Exception ex) {
             log.error("error marshalling widgetDescriptor from db for ComponentDataEntity with id:'{}'",
                     entity.getId().toString(), ex);

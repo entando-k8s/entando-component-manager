@@ -11,6 +11,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
@@ -86,6 +88,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String FILE_BROWSER_PATH_SEGMENT = "fileBrowser";
     private static final String CATEGORIES_PATH_SEGMENT = "categories";
     private static final String COMPONENTS_PATH_SEGMENT = "components";
+    private static final String DELETE_ALL_INTERNALS_PATH_SEGMENT = "allInternals";
     private static final String USAGE_PATH_SEGMENT = "usage";
     private static final String USAGE_DETAILS_PATH_SEGMENT = "usageDetails";
     private static final String DIFF_PATH_SEGMENT = "diff";
@@ -646,9 +649,9 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     .waitFor(backOffPeriod)
                     .execMethod(
                             (Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> s,
-                                    int executionNumber) -> s.get()
+                             int executionNumber) -> s.get()
                     )
-                    .checkerMethod(this::shouldRetry)
+                    .checkerMethod(this::isSuccessCall)
                     .build();
 
             Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> r = () ->
@@ -674,6 +677,47 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         }
     }
 
+    public EntandoCoreComponentDeleteResponse deleteComponents(List<EntandoCoreComponentDeleteRequest> request) {
+        log.debug("Try to delete all components from appEngin with request:'{}'", request);
+        try {
+
+            var retryer = MethodRetryer
+                    .<Supplier<ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>>, Object>builder()
+                    .retries(retryNumber)
+                    .waitFor(backOffPeriod)
+                    .execMethod(
+                            (Supplier<ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>> s,
+                             int executionNumber) -> s.get()
+                    )
+                    .checkerMethod(this::isSuccessCall)
+                    .build();
+
+            Supplier<ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>> r = () ->
+                    restTemplate
+                            .exchange(
+                                    resolvePathSegments(API_PATH_SEGMENT, COMPONENTS_PATH_SEGMENT,
+                                            DELETE_ALL_INTERNALS_PATH_SEGMENT).build().toUri(),
+                                    HttpMethod.DELETE, new HttpEntity<>(request),
+                                    new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>() {
+                                    });
+
+            var deleteResponse = (ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>) retryer.execute(r);
+
+            EntandoCoreComponentDeleteResponse response = Optional.ofNullable(deleteResponse.getBody())
+                    .map(RestResponse::getPayload)
+                    .orElseThrow(() ->
+                            new WebHttpException(deleteResponse.getStatusCode(),
+                                    "Some error occurred while deleting components"));
+            log.debug("Executed delete for all components from appEngin with response:'{}'", response);
+            return response;
+
+        } catch (Exception ex) {
+            log.debug("Some error occurred while deleting components", ex);
+            throw new WebHttpException(HttpStatus.INTERNAL_SERVER_ERROR, String.format(
+                    "Some error occurred while deleting components:'%s'", ex.getMessage()));
+        }
+    }
+    
     private void notFoundOrUnauthorizedProtectedDelete(URI url) {
         try {
             restTemplate.delete(url);
@@ -697,7 +741,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         return s != null && s.is5xxServerError() && errorsCandidatesToRetry.contains(s);
     }
 
-    private boolean shouldRetry(Object obj, Exception ex, int executionNumber) {
+    private boolean isSuccessCall(Object obj, Exception ex, int executionNumber) {
+        log.debug("Evaluate if I should retry REST call to entandoDeApp", ex);
         if (ex instanceof RestClientResponseException) {
             RestClientResponseException e = (RestClientResponseException) ex;
             if (isRetryableResponseStatus(e.getRawStatusCode())) {
@@ -706,7 +751,6 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 return false;
             }
         }
-        log.debug("Error in a REST call to entandoDeApp", ex);
         return true;
     }
 
@@ -720,7 +764,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .retries(retryNumber)
                 .waitFor(backOffPeriod)
                 .execMethod(this::genericRestExecutor)
-                .checkerMethod(this::shouldRetry)
+                .checkerMethod(this::isSuccessCall)
                 .build();
     }
 

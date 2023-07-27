@@ -20,6 +20,9 @@ import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteResponseStatus;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -77,7 +80,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withGenericComponentsUsageSupport();
         EntandoCoreComponentUsage widgetUsage = this.client.getWidgetUsage("my-new-widget");
         assertThat(widgetUsage.getCode()).isEqualTo("my-new-widget");
-        assertThat(widgetUsage.getType()).isEqualTo("widgets");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.WIDGET);
         assertThat(widgetUsage.getUsage()).isEqualTo(1);
 
     }
@@ -87,7 +90,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.WIDGET, "my-widget", 11);
         EntandoCoreComponentUsage widgetUsage = this.client.getWidgetUsage("my-widget");
         assertThat(widgetUsage.getCode()).isEqualTo("my-widget");
-        assertThat(widgetUsage.getType()).isEqualTo("widgets");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.WIDGET);
         assertThat(widgetUsage.getUsage()).isEqualTo(11);
     }
 
@@ -96,7 +99,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE, "my-page", 3);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageUsage("my-page");
         assertThat(widgetUsage.getCode()).isEqualTo("my-page");
-        assertThat(widgetUsage.getType()).isEqualTo("pages");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.PAGE);
         assertThat(widgetUsage.getUsage()).isEqualTo(3);
     }
 
@@ -105,7 +108,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.PAGE_TEMPLATE, "my-pagemodel", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getPageModelUsage("my-pagemodel");
         assertThat(widgetUsage.getCode()).isEqualTo("my-pagemodel");
-        assertThat(widgetUsage.getType()).isEqualTo("pageModels");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.PAGE_TEMPLATE);
         assertThat(widgetUsage.getUsage()).isEqualTo(1);
     }
 
@@ -114,7 +117,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.FRAGMENT, "fragment-101", 1);
         EntandoCoreComponentUsage widgetUsage = this.client.getFragmentUsage("fragment-101");
         assertThat(widgetUsage.getCode()).isEqualTo("fragment-101");
-        assertThat(widgetUsage.getType()).isEqualTo("fragments");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.FRAGMENT);
         assertThat(widgetUsage.getUsage()).isEqualTo(1);
     }
 
@@ -123,7 +126,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TYPE, "CT092", 2);
         EntandoCoreComponentUsage widgetUsage = this.client.getContentTypeUsage("CT092");
         assertThat(widgetUsage.getCode()).isEqualTo("CT092");
-        assertThat(widgetUsage.getType()).isEqualTo("contentTypes");
+        assertThat(widgetUsage.getType()).isEqualTo(ComponentType.CONTENT_TYPE);
         assertThat(widgetUsage.getUsage()).isEqualTo(2);
     }
 
@@ -132,7 +135,7 @@ class EntandoCoreClientTest {
         coreMockServer = coreMockServer.withComponentUsageSupport(ComponentType.CONTENT_TEMPLATE, "12345", 8);
         EntandoCoreComponentUsage contentModelUsage = this.client.getContentModelUsage("12345");
         assertThat(contentModelUsage.getCode()).isEqualTo("12345");
-        assertThat(contentModelUsage.getType()).isEqualTo("contentTemplates");
+        assertThat(contentModelUsage.getType()).isEqualTo(ComponentType.CONTENT_TEMPLATE);
         assertThat(contentModelUsage.getUsage()).isEqualTo(8);
     }
 
@@ -154,7 +157,7 @@ class EntandoCoreClientTest {
     void shouldComponentsUsageDetailsReturnCorrectData() {
         this.stubForPostComponentsUsageDetailsWithoutErrors();
         List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D")));
         assertThat(usageList).hasSize(1);
     }
 
@@ -162,7 +165,7 @@ class EntandoCoreClientTest {
     void shouldComponentsUsageDetailsReturnException() {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_REQUEST.value());
         assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
     }
 
     @Test
@@ -170,7 +173,7 @@ class EntandoCoreClientTest {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_GATEWAY.value());
 
         assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D"))));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
@@ -196,10 +199,59 @@ class EntandoCoreClientTest {
                 "",
                 HttpStatus.OK.value());
         List<EntandoCoreComponentUsage> usageList = this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest("widget", "W23D")));
+                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D")));
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
+    @Test
+    void shouldComponentsDeleteReturnCorrectData() {
+        this.stubForDeleteAllComponentsWithoutError();
+        EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D")));
+        assertThat(deleteComponentsResp.getStatus()).isEqualTo(EntandoCoreComponentDeleteResponseStatus.SUCCESS);
+        assertThat(deleteComponentsResp.getComponents()).isEmpty();
+    }
+
+    @Test
+    void shouldComponentsDeleteReturnException() {
+        this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_REQUEST.value());
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
+    }
+
+    @Test
+    void shouldComponentsDeleteWithErrorExecuteRetry() {
+        this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_GATEWAY.value());
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
+        coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
+    }
+
+    @Test
+    void shouldComponentsDeleteWithErrorExecuteRetryOnlyIfNeeded() {
+        final String scenarioName = "errorToStart";
+        final String scenarioStepError500 = "error500";
+        final String scenarioStepNoError = "noError";
+
+        stubForDeleteAllComponentsWWithScenarioAndStatusCode(
+                scenarioName,
+                Scenario.STARTED,
+                scenarioStepError500,
+                HttpStatus.BAD_GATEWAY.value());
+        stubForDeleteAllComponentsWWithScenarioAndStatusCode(
+                scenarioName,
+                scenarioStepError500,
+                scenarioStepNoError,
+                HttpStatus.INTERNAL_SERVER_ERROR.value());
+        stubForDeleteAllComponentsWWithScenarioAndStatusCode(
+                scenarioName,
+                scenarioStepNoError,
+                "",
+                HttpStatus.OK.value());
+        EntandoCoreComponentDeleteResponse deleteComponentsResp = this.client.deleteComponents(
+                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D")));
+        coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
+    }
 
     @Test
     void registerWidget() {
@@ -573,6 +625,55 @@ class EntandoCoreClientTest {
                 .willReturn(aResponse().withStatus(statusCode)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{ \"payload\" : [],\n"
+                                + "\"metadata\": {},\n"
+                                + "\"errors\": []\n "
+                                + "}"))
+                .willSetStateTo(scenarioNext));
+    }
+
+    private void stubForDeleteAllComponentsWithoutError() {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlPathMatching("/api/components/allInternals"))
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(200)
+                                        .withHeader("Content-Type", "application/json")
+                                        .withBody("{ \"payload\" : {\n "
+                                                + "\"status\": \"success\",\n"
+                                                + "\"code\": \"W23D\",\n"
+                                                + "\"usage\": 1,\n"
+                                                + "\"components\": []\n"
+                                                + "},\n"
+                                                + "\"metadata\": {},\n"
+                                                + "\"errors\": []\n "
+                                                + "}")
+                                        .withTransformers("response-template")
+                        ));
+    }
+
+    private void stubForDeleteAllComponentsWithError(int error) {
+        coreMockServer.getInnerServer()
+                .stubFor(WireMock.delete(urlPathMatching("/api/components/allInternals"))
+                        .willReturn(aResponse()
+                                .withStatus(error)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("{ \"payload\" : {},\n"
+                                        + "\"metadata\": {},\n"
+                                        + "\"errors\": []\n "
+                                        + "}")
+                                .withTransformers("response-template")
+                        ));
+    }
+
+    public void stubForDeleteAllComponentsWWithScenarioAndStatusCode(String scenario, String scenarioStart,
+            String scenarioNext, int statusCode) {
+
+        coreMockServer.getInnerServer().stubFor(WireMock.delete(urlEqualTo("/api/components/allInternals"))
+                .inScenario(scenario)
+                .whenScenarioStateIs(scenarioStart)
+                .willReturn(aResponse().withStatus(statusCode)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"payload\" : {},\n"
                                 + "\"metadata\": {},\n"
                                 + "\"errors\": []\n "
                                 + "}"))

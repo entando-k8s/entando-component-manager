@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20230620000001
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: entando_bundle_jobs
+      changes:
+        - addColumn:
+            tableName: entando_bundle_jobs
+            columns:
+              - column:
+                  name: uninstall_error_code
+                  type: INT
+                  defaultValue: null
+              - column:
+                  name: uninstall_error_message
+                  type: TEXT
+                  defaultValue: null
+              - column:
+                  name: uninstall_errors
+                  # mysql limit for varchar utf8 use 21845 BUT CHARSET=utf8mb4 use VARCHAR(16383) - 1200 other columns
+                  # oracle limit for varchar 4000
+                  type: VARCHAR(4000)
+                  defaultValue: null

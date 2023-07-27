@@ -46,7 +46,19 @@ public abstract class Installable<T extends Descriptor> {
      *
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
-    public abstract CompletableFuture<Void> uninstall();
+    public abstract CompletableFuture<Void> uninstallFromEcr();
+
+    /**
+     * This method will be return true if the component must be deleted from AppEngine.
+     *
+     * @return a boolean value representing whether or not to delete the component from AppEngine.
+     */
+    public boolean shouldUninstallFromAppEngine() {
+        boolean shouldCallDelete = shouldCreate();
+        log.debug("should delete:'{}' element type:'{}' name:'{}'", shouldCallDelete, getComponentType(), getName());
+        return shouldCallDelete;
+    }
+
 
     /**
      * Should return the component type to understand what to do in case of a rollback.

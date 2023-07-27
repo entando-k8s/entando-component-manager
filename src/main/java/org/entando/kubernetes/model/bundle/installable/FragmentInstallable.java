@@ -37,13 +37,8 @@ public class FragmentInstallable extends Installable<FragmentDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Removing Fragment {}", getName());
-            if (shouldCreate()) {
-                engineService.deleteFragment(getName());
-            }
-        });
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return CompletableFuture.runAsync(() -> log.info("Removing Fragment {}", getName()));
     }
 
     @Override

@@ -4,7 +4,6 @@ import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescri
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -38,6 +37,7 @@ import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportablePro
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
+import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
@@ -136,7 +136,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     public List<Installable<WidgetDescriptor>> process(List<EntandoBundleComponentJobEntity> components) {
         return pushLogicWidgetsDownTheList(components.stream()
                 .filter(c -> c.getComponentType() == getSupportedComponentType())
-                .map(c -> new WidgetInstallable(engineService, this.buildDescriptorFromComponentJob(c), c.getAction(),
+                .map(c -> new WidgetInstallable(engineService, retrieveWidgetDescriptor(c), c.getAction(),
                         componentDataRepository))
                 .collect(Collectors.toList()));
     }
@@ -153,6 +153,22 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             return 0;
         });
         return installables;
+    }
+
+    private WidgetDescriptor retrieveWidgetDescriptor(EntandoBundleComponentJobEntity c) {
+        log.debug("retrieveWidgetDescriptor by id:'{}' by type:'{}'", c.getComponentType(), c.getComponentId());
+        return componentDataRepository
+                .findByComponentTypeAndComponentCode(c.getComponentType(), c.getComponentId())
+                .map(e -> {
+                    log.debug("found element:'{}'", e);
+                    return e;
+                })
+                .map(e -> (WidgetDescriptor) JSONUtilities
+                        .deserializeDescriptor(e.getComponentDescriptor(), WidgetDescriptor.class))
+                .orElseGet(() -> {
+                    log.debug("not found element by id:'{}' by type:'{}'", c.getComponentType(), c.getComponentId());
+                    return this.buildDescriptorFromComponentJob(c);
+                });
     }
 
     private void validateApiClaims(List<ApiClaim> apiClaims) {

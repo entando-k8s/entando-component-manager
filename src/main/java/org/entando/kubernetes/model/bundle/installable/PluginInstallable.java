@@ -108,7 +108,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     }
 
     @Override
-    public CompletableFuture<Void> uninstall() {
+    public CompletableFuture<Void> uninstallFromEcr() {
         return CompletableFuture.runAsync(() -> {
 
             String pluginCode = representation.getComponentKey().getKey();
@@ -127,6 +127,12 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 log.warn("Plugin uninstalled but no data has been deleted from plugin_api_data db table");
             }
         });
+    }
+
+    @Override
+    public boolean shouldUninstallFromAppEngine() {
+        log.debug("should delete:'false' element type:'PLUGIN' name:'{}'", getName());
+        return false;
     }
 
     @Override

@@ -15,11 +15,12 @@ public class JobResult {
 
     JobStatus status;
     EntandoComponentManagerException installException;
+    EntandoComponentManagerException uninstallException;
     EntandoComponentManagerException rollbackException;
     Double progress;
 
     public boolean hasException() {
-        return this.installException != null || this.rollbackException != null;
+        return this.installException != null || this.rollbackException != null || this.uninstallException != null;
     }
 
     public Integer getInstallErrorCode() {
@@ -32,6 +33,18 @@ public class JobResult {
 
     public String getInstallError() {
         return this.formatError(installException);
+    }
+
+    public Integer getUninstallErrorCode() {
+        return null != uninstallException ? uninstallException.getErrorCode() : null;
+    }
+
+    public String getUninstallErrorMessage() {
+        return null != uninstallException ? uninstallException.getMessage() : null;
+    }
+
+    public String getUninstallError() {
+        return this.formatError(uninstallException);
     }
 
     public Integer getRollbackErrorCode() {
@@ -53,6 +66,13 @@ public class JobResult {
         return this;
     }
 
+    public JobResult setUninstallException(Exception ex) {
+        this.uninstallException = ex instanceof EntandoComponentManagerException
+                ? (EntandoComponentManagerException) ex
+                : new EntandoComponentManagerException(ex);
+        return this;
+    }
+
     public JobResult setRollbackException(Exception ex) {
         this.rollbackException = ex instanceof EntandoComponentManagerException
                 ? (EntandoComponentManagerException) ex
@@ -62,6 +82,7 @@ public class JobResult {
 
     public void clearException() {
         this.installException = null;
+        this.uninstallException = null;
         this.rollbackException = null;
     }
 

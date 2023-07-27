@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ContentTemplateDescriptor;
@@ -291,5 +293,10 @@ public class EntandoCoreClientTestDouble implements EntandoCoreClient {
     @Override
     public AnalysisReport getCMSAnalysisReport(List<Reportable> reportableList) {
         return null;
+    }
+
+    @Override
+    public EntandoCoreComponentDeleteResponse deleteComponents(List<EntandoCoreComponentDeleteRequest> request) {
+        return EntandoCoreComponentDeleteResponse.builder().build();
     }
 }

@@ -1,12 +1,15 @@
 package org.entando.kubernetes.model.bundle;
 
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type of the component to be (or already) registered.
  *
  * @author Sergio Marcelino
  */
+
+@Slf4j
 public enum ComponentType {
 
     PLUGIN("plugin", "plugin", 0),
@@ -51,4 +54,16 @@ public enum ComponentType {
     public String getAppEngineTypeName() {
         return appEngineTypeName;
     }
+
+    public static ComponentType getComponentTypeFromTypeName(String typeName) {
+        return Arrays.stream(ComponentType.values())
+                .filter(c -> c.getTypeName().equals(typeName))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.warn("error retrieving a valid ComponentType for:'{}'", typeName);
+                    throw new IllegalArgumentException(
+                            String.format("error retrieving a valid ComponentType for:'%s'", typeName));
+                });
+    }
+
 }
