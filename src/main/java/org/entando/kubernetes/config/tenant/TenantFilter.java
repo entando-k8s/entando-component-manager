@@ -24,16 +24,16 @@ public class TenantFilter {
         if (tenantConfiguration == null) {
             tenantCode = PRIMARY_TENANT_CODE;
         } else {
-            Optional<String> xForwarderHostTenantCode;
-            Optional<String> xHostTenantCode;
+            Optional<String> headerXForwarderHostTenantCode;
+            Optional<String> headerXHostTenantCode;
             if (headerXForwardedHost != null && !headerXForwardedHost.isBlank()) {
-                xForwarderHostTenantCode = getTenantCodeFromConfig(headerXForwardedHost);
+                headerXForwarderHostTenantCode = getTenantCodeFromConfig(headerXForwardedHost);
 
-                tenantCode = xForwarderHostTenantCode.orElse(PRIMARY_TENANT_CODE);
+                tenantCode = headerXForwarderHostTenantCode.orElse(PRIMARY_TENANT_CODE);
             } else if (headerHost != null && !headerHost.isBlank()) {
-                xHostTenantCode = getTenantCodeFromConfig(headerHost);
+                headerXHostTenantCode = getTenantCodeFromConfig(headerHost);
 
-                tenantCode = xHostTenantCode.orElse(PRIMARY_TENANT_CODE);
+                tenantCode = headerXHostTenantCode.orElse(PRIMARY_TENANT_CODE);
 
             } else if (servletRequestServerName != null && !servletRequestServerName.isBlank()) {
                 Optional<String> servletNameTenantCode = getTenantCodeFromConfig(servletRequestServerName);
@@ -42,7 +42,7 @@ public class TenantFilter {
                 tenantCode = PRIMARY_TENANT_CODE;
             }
         }
-        logger.info("TenantCode: "+ tenantCode);
+        logger.info("TenantCode: " + tenantCode);
         return tenantCode;
     }
 
