@@ -1,6 +1,7 @@
 package org.entando.kubernetes.config.tenant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -30,48 +31,50 @@ class TenantFilterTest {
     @Test
     void getByExistingXForwardedHostHeaderShouldReturnTheTenantCode() {
         String tenantCode = filter.getTenantCode("tenant2.entando.com", "", "");
-        assertEquals("tenant2", tenantCode );
+        assertEquals("tenant2", tenantCode);
     }
+
     @Test
     void getByNotExistingXForwardedHostHeaderShouldReturnPrimary() {
         String tenantCode = filter.getTenantCode("tenant256.entando.com", "", "");
-        assertEquals("primary", tenantCode );
+        assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByExistingHostHeaderShouldReturnTheTenantCode() {
         String tenantCode = filter.getTenantCode("", "tenant2.entando.com", "");
-        assertEquals("tenant2", tenantCode );
+        assertEquals("tenant2", tenantCode);
     }
+
     @Test
     void getByNotExistingHostHeaderShouldReturnPrimary() {
         String tenantCode = filter.getTenantCode("", "tenant256.entando.com", "");
-        assertEquals("primary", tenantCode );
+        assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByNotExistingXForwardedHostHeaderAndExistingHostShouldReturnPrimary() {
         String tenantCode = filter.getTenantCode("tenant256.entando.com", "tenant2.entando.com", "");
-        assertEquals("primary", tenantCode );
+        assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByExistingServletNameShouldReturnTheTenantCode() {
         String tenantCode = filter.getTenantCode("", "", "tenant1.entando.com");
-        assertEquals("tenant1", tenantCode );
+        assertEquals("tenant1", tenantCode);
     }
 
     @Test
     void getByNotExistingServletNameShouldReturnPrimary() {
         String tenantCode = filter.getTenantCode("", "", "tenant256.entando.com");
-        assertEquals("primary", tenantCode );
+        assertEquals("primary", tenantCode);
     }
 
     @Test
     void getPrimaryIfConfigNull() {
         TenantFilter filter2 = new TenantFilter(null);
         String tenantCode = filter2.getTenantCode("tenant2.entando.com", "", "");
-        assertEquals("primary", tenantCode );
+        assertEquals("primary", tenantCode);
     }
 
     private String getTenantConfigMock(String tenantName, String fqdns) {
@@ -79,7 +82,7 @@ class TenantFilterTest {
                 + "\"dbMaxTotal\":\"1\","
                 + "\"tenantCode\":\"" + tenantName + "\","
                 + "\"initializationAtStartRequired\":\"false\","
-                + "\"fqdns\":\" "+fqdns+ "\" ,"
+                + "\"fqdns\":\" " + fqdns + "\" ,"
                 + "\"kcEnabled\":true,"
                 + "\"kcAuthUrl\":\"mock-auth-url\","
                 + "\"kcRealm\":\"tenant1\","
