@@ -38,7 +38,7 @@ class TenantConfigTest {
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
         TenantConfig tenantConfiguration = new TenantConfig(invalidInput, objectMapper);
 
-        assertThrows(EntandoComponentManagerException.class, () -> tenantConfiguration.tenantConfigs());
+        assertThrows(EntandoComponentManagerException.class, tenantConfiguration::tenantConfigs);
     }
 
 
