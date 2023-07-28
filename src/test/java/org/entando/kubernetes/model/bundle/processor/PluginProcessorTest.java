@@ -31,6 +31,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
@@ -44,6 +45,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.testcontainers.shaded.org.apache.commons.lang3.ObjectUtils;
 
 @Tag("unit")
@@ -323,6 +328,27 @@ class PluginProcessorTest extends BaseProcessorTest {
                 "24f085aa-entando-the-lucas");
         assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
                 BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+    }
+
+    @Test
+    void shouldComposeTheExpectedFullDeploymentNameWithTenantCode() {
+        // set mock tenant
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        Authentication authentication = new TestingAuthenticationToken("tenantCode", "", "ROLE_USER");
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+
+        final String fullDepName = processor.generateFullDeploymentName(
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                "24f085aa-entando-the-lucas");
+
+        String tenantId = BundleUtilities.getTenantId("tenantCode");
+        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                tenantId,
+                "24f085aa"));
     }
 
     @Test

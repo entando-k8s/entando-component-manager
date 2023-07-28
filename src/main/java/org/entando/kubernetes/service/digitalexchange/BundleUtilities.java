@@ -51,6 +51,10 @@ import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
 import org.entando.kubernetes.validator.ImageValidator;
 import org.entando.kubernetes.validator.ValidationFunctions;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -265,6 +269,29 @@ public class BundleUtilities {
                         makeKubernetesCompatible(descriptor.getName()))
                 .map(BundleUtilities::makeKubernetesCompatible)
                 .collect(Collectors.joining("/"));
+    }
+
+    // TODO: move in the right domain class
+    public static String getTenantCodeInSecurityContext() {
+        try {
+            // TODO: remove -----------------
+            String tenantConf = System.getenv("TENANT-CONFIG");
+            if (tenantConf != null) {
+                // set mock tenant - waiting for ENG-5057
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                Authentication authentication = new TestingAuthenticationToken("999999", "", "ROLE_USER");
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
+            }
+            // remove -----------------
+            SecurityContext context = SecurityContextHolder.getContext();
+            Authentication authentication = context.getAuthentication();
+            Object principal = authentication.getPrincipal();
+            return String.valueOf(principal);
+        } catch (Exception e) {
+            log.error(String.valueOf(e));
+            return null;
+        }
     }
 
 
@@ -570,6 +597,16 @@ public class BundleUtilities {
      */
     public static String getBundleId(String bundleUrl) {
         return DigestUtils.sha256Hex(bundleUrl).substring(0, ENTITY_CODE_HASH_LENGTH);
+    }
+
+    /**
+     * get the tenant id returning the first 8 chars of the tenant code digest.
+     *
+     * @param tenantCode the code of the tenant
+     * @return the signed tenant id
+     */
+    public static String getTenantId(String tenantCode) {
+        return DigestUtils.sha256Hex(tenantCode).substring(0, ENTITY_CODE_HASH_LENGTH);
     }
 
     /**

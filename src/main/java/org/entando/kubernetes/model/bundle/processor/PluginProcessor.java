@@ -52,7 +52,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
 
-    public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn-";
+    public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn";
     public static final String SERVER_SERVLET_CONTEXT_PATH = "SERVER_SERVLET_CONTEXT_PATH";
     public static final String ENTANDO_ECR_INGRESS_URL = "ENTANDO_ECR_INGRESS_URL";
     public static final String ENTANDO_APP_HOST_NAME = "ENTANDO_APP_HOST_NAME";
@@ -324,10 +324,20 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * @return the generated full deployment name
      */
     public String generateFullDeploymentName(String bundleId, String signedPluginName) {
+        String tenantCode = BundleUtilities.getTenantCodeInSecurityContext();
+        List<String> deploymentParts = new ArrayList<>();
 
-        String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
-                BundleUtilities.makeKubernetesCompatible(bundleId),
-                signedPluginName);
+        deploymentParts.add(PLUGIN_DEPLOYMENT_PREFIX);
+        deploymentParts.add(BundleUtilities.makeKubernetesCompatible(bundleId));
+
+        if (tenantCode != null) {
+            String tenantId = BundleUtilities.getTenantId(tenantCode);
+            deploymentParts.add(tenantId);
+        }
+
+        deploymentParts.add(signedPluginName);
+
+        String fullDeploymentName = String.join("-", deploymentParts);
 
         if (fullDeploymentName.length() > descriptorValidator.getFullDeploymentNameMaxlength()) {
             throw new EntandoComponentManagerException("The resulting plugin full deployment name \""
@@ -337,6 +347,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
 
         return fullDeploymentName;
+
     }
 
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "
