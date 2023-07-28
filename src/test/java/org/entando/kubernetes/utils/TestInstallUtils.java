@@ -664,22 +664,22 @@ public class TestInstallUtils {
         deploymentStatus.updateDeploymentPhase(status, 1L);
 
         EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_TODOMVC_1),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_TODOMVC_1, null),
                 deploymentStatus);
         EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_TODOMVC_2),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_TODOMVC_2, null),
                 deploymentStatus);
         EntandoAppPluginLink plugin3 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE, null),
                 deploymentStatus);
         EntandoAppPluginLink plugin4 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3, null),
                 deploymentStatus);
         EntandoAppPluginLink plugin5 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3C),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3C, null),
                 deploymentStatus);
         EntandoAppPluginLink plugin6 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4, null),
                 deploymentStatus);
 
         when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
@@ -695,10 +695,10 @@ public class TestInstallUtils {
         deploymentStatus.updateDeploymentPhase(status, 1L);
 
         EntandoAppPluginLink plugin1 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3C),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V3C, null),
                 deploymentStatus);
         EntandoAppPluginLink plugin2 = new EntandoAppPluginLink(new ObjectMeta(),
-                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4),
+                new EntandoAppPluginLinkSpec("", "", "", PLUGIN_TODOMVC_CUSTOMBASE_V4, null),
                 deploymentStatus);
 
         when(k8sServiceClient.isPluginReadyToServeApp(any(), any())).thenReturn(true);
