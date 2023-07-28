@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TenantConfigDTO {
+
     @JsonProperty("tenantCode")
     private String tenantCode;
 
@@ -69,4 +70,22 @@ public class TenantConfigDTO {
 
     @JsonProperty("solrCore")
     private String solrCore;
+
+    @JsonProperty("deDbDriverClassName")
+    private String deDbDriverClassName;
+
+    @JsonProperty("deDbUrl")
+    private String deDbUrl;
+
+    @JsonProperty("deDbUsername")
+    private String deDbUsername;
+
+    @JsonProperty("deDbPassword")
+    private String deDbPassword;
+
+    @JsonProperty("deKcClientId")
+    private String deKcClientId;
+
+    @JsonProperty("deKcClientSecret")
+    private String deKcClientSecret;
 }

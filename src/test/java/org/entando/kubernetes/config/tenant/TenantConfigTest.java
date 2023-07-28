@@ -46,10 +46,19 @@ class TenantConfigTest {
         return "{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-fqdns\""
                 + ",\"kcEnabled\":true,\"kcAuthUrl\":\"mock-auth-url\",\"kcRealm\":\"tenant1\","
                 +  "\"kcClientId\":\"mock-client-id\",\"kcClientSecret\":\"mock-client-secret\","
-                +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"\",\"kcDefaultAuthorizations\":\"\",\"dbDriverClassName\":\"org.postgresql.Driver\","
+                +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\",\"dbDriverClassName\":\"org.postgresql.Driver\","
                 +  "\"dbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
-                +  "\"dbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"mock\",\"cdsPrivateUrl\":\"mock\","
-                +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"mock\",\"solrCore\":\"tenant1\"}";
+                +  "\"dbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
+                +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"solraddress\",\"solrCore\":\"tenant1\","
+
+                +  "\"deDbDriverClassName\": \"org.postgresql.Driver\","
+                +  "\"deDbPassword\": \"pwd\","
+                +  "\"deDbUrl\": \"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\","
+                +  "\"deDbUsername\": \"postgres\","
+                +  "\"deKcClientId\": \"dekcclientid\","
+                +  "\"deKcClientSecret\": \"dekcsecret\""
+
+                + "}";
     }
 
     private void assertTenantConfig(TenantConfigDTO tenant, String tenantName) {
@@ -61,17 +70,24 @@ class TenantConfigTest {
         assertThat(tenant.getKcAuthUrl()).isEqualTo("mock-auth-url");
         assertThat(tenant.getKcRealm()).isEqualTo("tenant1");
         assertThat(tenant.getKcClientId()).isEqualTo("mock-client-id");
-        assertThat(tenant.getKcSecureUris()).isEmpty();
+        assertThat(tenant.getKcSecureUris()).isEqualTo("kcsecureuris");
         assertThat(tenant.getKcDefaultAuthorizations()).isEmpty();
         assertThat(tenant.getDbDriverClassName()).isEqualTo("org.postgresql.Driver");
         assertThat(tenant.getDbUrl()).isEqualTo("jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1");
         assertThat(tenant.getDbUsername()).isEqualTo("username");
         assertThat(tenant.getDbPassword()).isEqualTo("password");
-        assertThat(tenant.getCdsPublicUrl()).isEqualTo("mock");
-        assertThat(tenant.getCdsPrivateUrl()).isEqualTo("mock");
+        assertThat(tenant.getCdsPublicUrl()).isEqualTo("cdspublicurl");
+        assertThat(tenant.getCdsPrivateUrl()).isEqualTo("cdsprivateurl");
         assertThat(tenant.getCdsPath()).isEqualTo("api/v1");
-        assertThat(tenant.getSolrAddress()).isEqualTo("mock");
+        assertThat(tenant.getSolrAddress()).isEqualTo("solraddress");
         assertThat(tenant.getSolrCore()).isEqualTo("tenant1");
+
+        assertThat(tenant.getDeDbDriverClassName()).isEqualTo("org.postgresql.Driver");
+        assertThat(tenant.getDeDbPassword()).isEqualTo("pwd");
+        assertThat(tenant.getDeDbUrl()).isEqualTo("jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345");
+        assertThat(tenant.getDeDbUsername()).isEqualTo("postgres");
+        assertThat(tenant.getDeKcClientId()).isEqualTo("dekcclientid");
+        assertThat(tenant.getDeKcClientSecret()).isEqualTo("dekcsecret");
     }
 
 }
