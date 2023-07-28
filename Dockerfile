@@ -36,7 +36,7 @@ RUN case ${TARGETPLATFORM} in \
     esac && \
     mkdir /tmp/crane; \
     cd /tmp/crane; \
-    curl -OL https://github.com/google/go-containerregistry/releases/download/${ENTANDO_CRANE_VERSION}/go-containerregistry_Linux_${ARCH}.tar.gz > go-containerregistry.tar.gz; \
+    curl -sL https://github.com/google/go-containerregistry/releases/download/${ENTANDO_CRANE_VERSION}/go-containerregistry_Linux_${ARCH}.tar.gz > go-containerregistry.tar.gz; \
     tar -zxvf go-containerregistry.tar.gz; \
     install -m 755 /tmp/crane/crane /usr/local/bin/crane; \
     rm -R /tmp/crane;
