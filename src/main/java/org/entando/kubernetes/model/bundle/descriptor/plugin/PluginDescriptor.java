@@ -93,6 +93,8 @@ public class PluginDescriptor extends VersionedDescriptor {
     // Version 6
     private PluginResources resources;
 
+    private String tenantCode;
+
 
     /******************************************************************
      * private variables that can't be set from the yaml descriptor.
@@ -108,7 +110,7 @@ public class PluginDescriptor extends VersionedDescriptor {
             DockerImage dockerImage, PluginDescriptorV1Spec spec, String name, String deploymentBaseName,
             String image, String healthCheckPath, String dbms, List<String> roles,
             List<PluginPermission> permissions, String ingressPath, String securityLevel,
-            List<EnvironmentVariable> environmentVariables) {
+            List<EnvironmentVariable> environmentVariables, String tenantCode) {
         super.setDescriptorVersion(descriptorVersion);
         this.dockerImage = dockerImage;
         this.spec = spec;
@@ -122,6 +124,7 @@ public class PluginDescriptor extends VersionedDescriptor {
         this.ingressPath = ingressPath;
         this.securityLevel = securityLevel;
         this.environmentVariables = environmentVariables;
+        this.tenantCode = tenantCode;
     }
 
     public DockerImage getDockerImage() {

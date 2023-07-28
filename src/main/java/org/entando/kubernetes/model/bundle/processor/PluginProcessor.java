@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -52,7 +53,9 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
 
-    public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn-";
+    private static final String PRIMARY_TENANT_CODE = "primary";
+
+    public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn";
     public static final String SERVER_SERVLET_CONTEXT_PATH = "SERVER_SERVLET_CONTEXT_PATH";
     public static final String ENTANDO_ECR_INGRESS_URL = "ENTANDO_ECR_INGRESS_URL";
     public static final String ENTANDO_APP_HOST_NAME = "ENTANDO_APP_HOST_NAME";
@@ -152,6 +155,11 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
                 descriptorValidator.validateOrThrow(pluginDescriptor);
+                // set tenant
+                String tenantCode = TenantContextHolder.getCurrentTenantCode();
+                if (StringUtils.isNotEmpty(tenantCode)) {
+                    pluginDescriptor.setTenantCode(tenantCode);
+                }
                 // add CM endpoint env var
                 final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
                         pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
@@ -324,10 +332,23 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * @return the generated full deployment name
      */
     public String generateFullDeploymentName(String bundleId, String signedPluginName) {
+        log.info("plugin name to process: {}", signedPluginName);
+        String tenantCode = TenantContextHolder.getCurrentTenantCode();
+        log.info("tenant code: {}", tenantCode);
 
-        String fullDeploymentName = PLUGIN_DEPLOYMENT_PREFIX + String.join("-",
-                BundleUtilities.makeKubernetesCompatible(bundleId),
-                signedPluginName);
+        List<String> deploymentParts = new ArrayList<>();
+
+        deploymentParts.add(PLUGIN_DEPLOYMENT_PREFIX);
+        deploymentParts.add(BundleUtilities.makeKubernetesCompatible(bundleId));
+
+        if (StringUtils.isNotEmpty(tenantCode) && !tenantCode.equals(PRIMARY_TENANT_CODE)) {
+            String tenantId = BundleUtilities.getTenantId(tenantCode);
+            deploymentParts.add(tenantId);
+        }
+
+        deploymentParts.add(signedPluginName);
+
+        String fullDeploymentName = String.join("-", deploymentParts);
 
         if (fullDeploymentName.length() > descriptorValidator.getFullDeploymentNameMaxlength()) {
             throw new EntandoComponentManagerException("The resulting plugin full deployment name \""
@@ -337,6 +358,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         }
 
         return fullDeploymentName;
+
     }
 
     public static final String DEPRECATED_DESCRIPTOR = "The descriptor for plugin with docker image "

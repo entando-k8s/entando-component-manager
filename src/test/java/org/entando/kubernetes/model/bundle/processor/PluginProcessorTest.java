@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.entando.kubernetes.config.AppConfiguration;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -31,6 +32,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
@@ -70,6 +72,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
+        TenantContextHolder.setCurrentTenantCode(null);
     }
 
     @Test
@@ -323,6 +326,40 @@ class PluginProcessorTest extends BaseProcessorTest {
                 "24f085aa-entando-the-lucas");
         assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
                 BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA, "24f085aa"));
+    }
+
+    @Test
+    void shouldComposeTheExpectedFullDeploymentNameWithTenantCode() {
+        // set mock tenant
+        TenantContextHolder.setCurrentTenantCode("tenantCode");
+
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+
+        final String fullDepName = processor.generateFullDeploymentName(
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                "24f085aa-entando-the-lucas");
+
+        String tenantId = BundleUtilities.getTenantId("tenantCode");
+        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                tenantId,
+                "24f085aa"));
+    }
+
+    @Test
+    void shouldComposeTheExpectedFullDeploymentNameWhenTenantCodeIsPrimary() {
+        // set mock tenant to principal
+        TenantContextHolder.setCurrentTenantCode("primary");
+
+        when(pluginDescriptorValidator.getFullDeploymentNameMaxlength()).thenReturn(200);
+
+        final String fullDepName = processor.generateFullDeploymentName(
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                "24f085aa-entando-the-lucas");
+
+        assertThat(fullDepName).isEqualTo(String.format("pn-%s-%s-entando-the-lucas",
+                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA,
+                "24f085aa"));
     }
 
     @Test

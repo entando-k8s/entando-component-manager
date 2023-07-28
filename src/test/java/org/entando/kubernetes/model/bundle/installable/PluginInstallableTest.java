@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.ExecutionException;
 import org.entando.kubernetes.client.PluginDataRepositoryTestDouble;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
