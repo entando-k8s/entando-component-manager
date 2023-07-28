@@ -31,8 +31,10 @@ USER 1001
 ENV ENTANDO_CRANE_VERSION=v0.10.0
 USER 0
 RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") ARCH="x86_64" ;; \
-        "linux/arm64") ARCH="arm64" ;; \
+        "linux/amd64") \
+          ARCH="x86_64" ;; \
+        "linux/arm64") \
+          ARCH="arm64" ;; \
     esac && \
     mkdir /tmp/crane; \
     cd /tmp/crane; \
