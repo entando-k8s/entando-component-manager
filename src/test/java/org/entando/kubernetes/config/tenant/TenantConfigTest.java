@@ -46,18 +46,17 @@ class TenantConfigTest {
         return "{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-fqdns\""
                 + ",\"kcEnabled\":true,\"kcAuthUrl\":\"mock-auth-url\",\"kcRealm\":\"tenant1\","
                 +  "\"kcClientId\":\"mock-client-id\",\"kcClientSecret\":\"mock-client-secret\","
-                +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\",\"dbDriverClassName\":\"org.postgresql.Driver\","
+                +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\","
+                + "\"dbDriverClassName\":\"org.postgresql.Driver\","
                 +  "\"dbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
                 +  "\"dbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
                 +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"solraddress\",\"solrCore\":\"tenant1\","
-
                 +  "\"deDbDriverClassName\": \"org.postgresql.Driver\","
                 +  "\"deDbPassword\": \"pwd\","
                 +  "\"deDbUrl\": \"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\","
                 +  "\"deDbUsername\": \"postgres\","
                 +  "\"deKcClientId\": \"dekcclientid\","
                 +  "\"deKcClientSecret\": \"dekcsecret\""
-
                 + "}";
     }
 
@@ -81,7 +80,6 @@ class TenantConfigTest {
         assertThat(tenant.getCdsPath()).isEqualTo("api/v1");
         assertThat(tenant.getSolrAddress()).isEqualTo("solraddress");
         assertThat(tenant.getSolrCore()).isEqualTo("tenant1");
-
         assertThat(tenant.getDeDbDriverClassName()).isEqualTo("org.postgresql.Driver");
         assertThat(tenant.getDeDbPassword()).isEqualTo("pwd");
         assertThat(tenant.getDeDbUrl()).isEqualTo("jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345");
