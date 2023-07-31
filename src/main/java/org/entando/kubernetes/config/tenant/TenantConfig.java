@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +35,7 @@ public class TenantConfig {
     @Bean
     public List<TenantConfigDTO> tenantConfigs() {
         List<TenantConfigDTO> tenantConfigList = null;
-        if (tenantConfigs != null) {
+        if (StringUtils.isNotBlank(tenantConfigs)) {
             try {
                 tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigDTO>>() {});
                 log.info("Tenant configurations have been parsed successfully");
