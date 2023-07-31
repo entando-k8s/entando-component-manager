@@ -2,10 +2,14 @@ package org.entando.kubernetes.config.tenant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 @Tag("unit")
 class TenantFilterTest {
@@ -14,7 +18,7 @@ class TenantFilterTest {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void init() {
+    void init() throws JsonProcessingException {
         StringBuilder config = new StringBuilder();
         config.append("[");
         config.append(getTenantConfigMock("tenant1", "test.entando.com, test2.entando.com, tenant1.entando.com"));
@@ -24,8 +28,8 @@ class TenantFilterTest {
         config.append(getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com"));
         config.append("]");
         String tenantsConfig = config.toString();
-        TenantConfig tenantConfiguration = new TenantConfig(tenantsConfig, objectMapper);
-        filter = new TenantFilter(tenantConfiguration);
+        List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig, new TypeReference<List<TenantConfigDTO>>() {});
+        filter = new TenantFilter(configDTOList);
     }
 
     @Test
