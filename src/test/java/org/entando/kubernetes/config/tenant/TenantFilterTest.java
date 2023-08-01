@@ -27,7 +27,9 @@ class TenantFilterTest {
         config.append(getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com"));
         config.append("]");
         String tenantsConfig = config.toString();
-        List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig, new TypeReference<List<TenantConfigDTO>>() {});
+        List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig,
+                new TypeReference<List<TenantConfigDTO>>() {
+                });
         filter = new TenantFilter(configDTOList);
     }
 

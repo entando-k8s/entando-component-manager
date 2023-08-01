@@ -1,18 +1,18 @@
 package org.entando.kubernetes.config.tenant;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
@@ -31,11 +31,11 @@ public class TenantFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String xForwardedHost = request.getHeader(X_FORWARDED_HOST);
-        String host = request.getHeader(HOST);
-        String serverName = request.getServerName();
+        String headerXForwardedHost = request.getHeader(X_FORWARDED_HOST);
+        String headerXHost = request.getHeader(HOST);
+        String headerServerName = request.getServerName();
 
-        String tenantCode = this.getTenantCode(xForwardedHost, host, serverName);
+        String tenantCode = this.getTenantCode(headerXForwardedHost, headerXHost, headerServerName);
         TenantContextManager.setTenantCode(tenantCode);
 
         logger.debug("Tenant code {}", tenantCode);
@@ -43,8 +43,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
     }
 
-    public String getTenantCode(final String headerXForwardedHost,
-            final String headerHost,
+    public String getTenantCode(final String headerXForwardedHost, final String headerHost,
             final String servletRequestServerName) {
 
         String tenantCode = PRIMARY_TENANT_CODE;
@@ -73,8 +72,8 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     private Optional<String> getTenantCodeFromConfig(String search) {
-        Optional<TenantConfigDTO> tenant = tenantConfigs.stream().filter(
-                t -> getFqdnTenantNames(t).contains(search)).findFirst();
+        Optional<TenantConfigDTO> tenant = tenantConfigs.stream().filter(t -> getFqdnTenantNames(t).contains(search))
+                .findFirst();
         return tenant.map(TenantConfigDTO::getTenantCode);
     }
 
