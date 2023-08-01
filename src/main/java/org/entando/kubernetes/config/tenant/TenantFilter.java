@@ -1,14 +1,10 @@
 package org.entando.kubernetes.config.tenant;
 
-import liquibase.util.StringUtil;
-import org.apache.commons.lang3.StringUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -17,11 +13,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @Component
-@Order(1)
-@DependsOn("tenantConfig")
-public class TenantFilter implements Filter {
+@RequiredArgsConstructor
+public class TenantFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantFilter.class);
     private static final String PRIMARY_TENANT_CODE = "primary";
@@ -30,34 +27,20 @@ public class TenantFilter implements Filter {
 
     private final List<TenantConfigDTO> tenantConfigs;
 
-    @Autowired
-    public TenantFilter(List<TenantConfigDTO> tenantConfigs) {
-        this.tenantConfigs = tenantConfigs;
-    }
-
     @Override
-    public void doFilter(ServletRequest request,
-                         ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        HttpServletRequest req = (HttpServletRequest) request;
-
-        String domain = UrlUtils.fetchServer(req);
-
-        String xForwardedHost = req.getHeader(X_FORWARDED_HOST);
-        String host = req.getHeader(HOST);
-        String serverName = req.getServerName();
+        String xForwardedHost = request.getHeader(X_FORWARDED_HOST);
+        String host = request.getHeader(HOST);
+        String serverName = request.getServerName();
 
         String tenantCode = this.getTenantCode(xForwardedHost, host, serverName);
-        if (StringUtils.isNotEmpty(tenantCode) && ! tenantCode.equals(PRIMARY_TENANT_CODE)) {
-            logger.debug("Tenant code {}", tenantCode);
-            TenantContextManager.setTenantCode(tenantCode);
-        }
+        TenantContextManager.setTenantCode(tenantCode);
 
-//        try {
-            chain.doFilter(request, response);
-//        } finally {
-//            TenantContext.clear();
-//        }
+        logger.debug("Tenant code {}", tenantCode);
+        filterChain.doFilter(request, response);
+
     }
 
     public String getTenantCode(final String headerXForwardedHost,
