@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.config.tenant.TenantContextManager;
 import org.entando.kubernetes.controller.digitalexchange.component.EntandoBundleResourceController;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.digitalexchange.BundleNotInstalledException;
@@ -44,13 +45,14 @@ public class EntandoBundleControllerTest {
     private EntandoBundleService bundleService;
     private AuthorizationChecker authorizationChecker;
 
+    private TenantContextManager tenantContextManager;
     @BeforeEach
     public void setup() {
         bundleService = mock(EntandoBundleServiceImpl.class);
         coreClient = mock(EntandoCoreClient.class);
         authorizationChecker = mock(AuthorizationChecker.class);
         usageService = new EntandoBundleComponentUsageService(coreClient);
-        controller = new EntandoBundleResourceController(bundleService, usageService, authorizationChecker);
+        controller = new EntandoBundleResourceController(bundleService, usageService, authorizationChecker, tenantContextManager);
     }
 
     @Test

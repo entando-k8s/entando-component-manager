@@ -1,22 +1,17 @@
 package org.entando.kubernetes.config.tenant;
 
-import java.util.Objects;
-import lombok.experimental.UtilityClass;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-@UtilityClass
+@Slf4j
+@Service
+@RequiredArgsConstructor
 public class TenantContextManager {
-    public static final String KEY_TENANT_CODE = "TENANT_CODE";
-
-    public static void setTenantCode(String tenantCode) {
-        Objects.requireNonNull(RequestContextHolder.currentRequestAttributes())
-                .setAttribute(KEY_TENANT_CODE, tenantCode, RequestAttributes.SCOPE_REQUEST);
-    }
-
-    public static String getTenantCode() {
-        return String.valueOf(
-                RequestContextHolder.currentRequestAttributes()
-                        .getAttribute(KEY_TENANT_CODE, RequestAttributes.SCOPE_REQUEST));
+    private final TenantContextHolder holder;
+    public String getTenantCode() {
+        String tenantCode = holder.get().getTenantCode();
+        log.info("Get tenantCode from TenantContextHolder: {}", tenantCode);
+        return tenantCode;
     }
 }

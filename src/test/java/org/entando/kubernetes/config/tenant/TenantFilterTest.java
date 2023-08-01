@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 class TenantFilterTest {
 
     private TenantFilter filter;
+    private TenantContextHolder tenantContextHolder;
     ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -30,7 +31,7 @@ class TenantFilterTest {
         List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig,
                 new TypeReference<List<TenantConfigDTO>>() {
                 });
-        filter = new TenantFilter(configDTOList);
+        filter = new TenantFilter(configDTOList, tenantContextHolder);
     }
 
     @Test
@@ -77,7 +78,7 @@ class TenantFilterTest {
 
     @Test
     void getPrimaryIfConfigNull() {
-        TenantFilter filter2 = new TenantFilter(null);
+        TenantFilter filter2 = new TenantFilter(null, tenantContextHolder);
         String tenantCode = filter2.getTenantCode("tenant2.entando.com", "", "");
         assertEquals("primary", tenantCode);
     }
