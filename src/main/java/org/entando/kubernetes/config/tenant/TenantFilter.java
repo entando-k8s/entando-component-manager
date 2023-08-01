@@ -10,8 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,7 +18,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantFilter.class);
     private static final String PRIMARY_TENANT_CODE = "primary";
     private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
     private static final String HOST = "Host";
@@ -38,7 +35,7 @@ public class TenantFilter extends OncePerRequestFilter {
         String tenantCode = this.getTenantCode(headerXForwardedHost, headerXHost, headerServerName);
         TenantContextManager.setTenantCode(tenantCode);
 
-        logger.debug("Tenant code {}", tenantCode);
+        log.debug("Tenant code {}", tenantCode);
         filterChain.doFilter(request, response);
 
     }
@@ -67,7 +64,7 @@ public class TenantFilter extends OncePerRequestFilter {
                 tenantCode = servletNameTenantCode.orElse(PRIMARY_TENANT_CODE);
             }
         }
-        logger.info("TenantCode: " + tenantCode);
+        log.info("TenantCode: " + tenantCode);
         return tenantCode;
     }
 

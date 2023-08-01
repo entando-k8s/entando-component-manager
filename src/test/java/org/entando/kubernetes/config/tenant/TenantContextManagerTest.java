@@ -9,7 +9,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Tag("unit")
-public class TenantContextManagerTest {
+class TenantContextManagerTest {
 
     @Test
     void getTenantCodeShouldReturnTheCorrectValue() {
