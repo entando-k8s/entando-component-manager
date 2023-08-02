@@ -17,14 +17,14 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @Profile("!test")
 @Slf4j
-public class TenantConfig {
+public class TenantConfiguration {
 
     private String tenantConfigs;
 
     private ObjectMapper objectMapper;
 
     @Autowired
-    public TenantConfig(
+    public TenantConfiguration(
             @Value("${tenant-config:#{null}}")
             String tenantConfigs,
             ObjectMapper objectMapper) {
@@ -33,11 +33,12 @@ public class TenantConfig {
     }
 
     @Bean
-    public List<TenantConfigDTO> tenantConfigs() {
-        List<TenantConfigDTO> tenantConfigList = null;
+    public List<TenantConfigurationDTO> tenantConfigs() {
+        List<TenantConfigurationDTO> tenantConfigList = null;
+
         if (StringUtils.isNotBlank(tenantConfigs)) {
             try {
-                tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigDTO>>() {});
+                tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigurationDTO>>() {});
                 log.info("Tenant configurations have been parsed successfully");
             } catch (final IOException e) {
                 throw new EntandoComponentManagerException(e);

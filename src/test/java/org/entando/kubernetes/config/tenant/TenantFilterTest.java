@@ -24,7 +24,7 @@ class TenantFilterTest {
         config.append(getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com"));
         config.append("]");
         String tenantsConfig = config.toString();
-        TenantConfig tenantConfiguration = new TenantConfig(tenantsConfig, objectMapper);
+        TenantConfiguration tenantConfiguration = new TenantConfiguration(tenantsConfig, objectMapper);
         filter = new TenantFilter(tenantConfiguration);
     }
 

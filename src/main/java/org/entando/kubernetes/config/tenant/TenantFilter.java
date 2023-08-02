@@ -11,9 +11,9 @@ public class TenantFilter {
     private static final Logger logger = LoggerFactory.getLogger(TenantFilter.class);
     private static final String PRIMARY_TENANT_CODE = "primary";
 
-    private final TenantConfig tenantConfiguration;
+    private final TenantConfiguration tenantConfiguration;
 
-    public TenantFilter(TenantConfig tenantConfiguration) {
+    public TenantFilter(TenantConfiguration tenantConfiguration) {
         this.tenantConfiguration = tenantConfiguration;
     }
 
@@ -47,12 +47,12 @@ public class TenantFilter {
     }
 
     private Optional<String> getTenantCodeFromConfig(String search) {
-        Optional<TenantConfigDTO> tenant = tenantConfiguration.tenantConfigs().stream().filter(
+        Optional<TenantConfigurationDTO> tenant = tenantConfiguration.tenantConfigs().stream().filter(
                 t -> getFqdnTenantNames(t).contains(search)).findFirst();
-        return tenant.map(TenantConfigDTO::getTenantCode);
+        return tenant.map(TenantConfigurationDTO::getTenantCode);
     }
 
-    private List<String> getFqdnTenantNames(TenantConfigDTO tenant) {
+    private List<String> getFqdnTenantNames(TenantConfigurationDTO tenant) {
         String[] fqdns = tenant.getFqdns().replaceAll("\\s", "").split(",");
         return Arrays.asList(fqdns);
     }

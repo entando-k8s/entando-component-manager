@@ -18,15 +18,15 @@ class TenantConfigTest {
 
         String input = "[" + getTenantConfigMock("tenant1") + "," + getTenantConfigMock("tenant2") + "]";
 
-        TenantConfig tenantConfiguration = new TenantConfig(input, objectMapper);
-        List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs();
+        TenantConfiguration tenantConfiguration = new TenantConfiguration(input, objectMapper);
+        List<TenantConfigurationDTO> tenantConfigs = tenantConfiguration.tenantConfigs();
 
         assertThat(tenantConfigs).hasSize(2);
 
-        TenantConfigDTO tenant1 = tenantConfigs.get(0);
+        TenantConfigurationDTO tenant1 = tenantConfigs.get(0);
         assertTenantConfig(tenant1, "tenant1");
 
-        TenantConfigDTO tenant2 = tenantConfigs.get(1);
+        TenantConfigurationDTO tenant2 = tenantConfigs.get(1);
         assertTenantConfig(tenant2, "tenant2");
 
     }
@@ -36,7 +36,7 @@ class TenantConfigTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // Invalid JSON data (missing closing bracket)
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
-        TenantConfig tenantConfiguration = new TenantConfig(invalidInput, objectMapper);
+        TenantConfiguration tenantConfiguration = new TenantConfiguration(invalidInput, objectMapper);
 
         assertThrows(EntandoComponentManagerException.class, tenantConfiguration::tenantConfigs);
     }
@@ -60,7 +60,7 @@ class TenantConfigTest {
                 + "}";
     }
 
-    private void assertTenantConfig(TenantConfigDTO tenant, String tenantName) {
+    private void assertTenantConfig(TenantConfigurationDTO tenant, String tenantName) {
         assertThat(tenant.getTenantCode()).isEqualTo(tenantName);
         assertThat(tenant.getDbMaxTotal()).isEqualTo(5);
         assertThat(tenant.isInitializationAtStartRequired()).isFalse();
