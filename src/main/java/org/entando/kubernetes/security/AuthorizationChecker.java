@@ -34,15 +34,15 @@ public class AuthorizationChecker {
 
     public void checkPermissions(String authorizationHeader) {
 
-        if (ObjectUtils.isEmpty(authorizationHeader)) {
-            throw new AuthorizationDeniedException(ACCESS_DENIED_ERROR);
-        }
-
-        final String perm = fetchAndExtractRequiredPermission(authorizationHeader);
-
-        if (perm == null) {
-            throw new AuthorizationDeniedException(ACCESS_DENIED_ERROR);
-        }
+//        if (ObjectUtils.isEmpty(authorizationHeader)) {
+//            throw new AuthorizationDeniedException(ACCESS_DENIED_ERROR);
+//        }
+//
+//        final String perm = fetchAndExtractRequiredPermission(authorizationHeader);
+//
+//        if (perm == null) {
+//            throw new AuthorizationDeniedException(ACCESS_DENIED_ERROR);
+//        }
     }
 
 

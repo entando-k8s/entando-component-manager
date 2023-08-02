@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.kubernetes.config.tenant.TenantContextManager;
+import org.entando.kubernetes.config.tenant.TenantContextHolder;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
@@ -59,12 +59,11 @@ public class EntandoBundleResourceController implements EntandoBundleResource {
     private final EntandoBundleService bundleService;
     private final EntandoBundleComponentUsageService usageService;
     private final AuthorizationChecker authorizationChecker;
-    private final TenantContextManager tenantContextManager;
     @Override
     public ResponseEntity<PagedRestResponse<EntandoBundle>> getBundles(PagedListRequest requestList) {
         PagedMetadata<EntandoBundle> pagedBundles = bundleService.listBundles(requestList);
         PagedRestResponse<EntandoBundle> response = new PagedRestResponse<>(pagedBundles);
-        log.info("*************** "+tenantContextManager.getTenantCode());
+        log.info("*************** "+ TenantContextHolder.getCurrentTenantCode());
         return ResponseEntity.ok(response);
     }
 

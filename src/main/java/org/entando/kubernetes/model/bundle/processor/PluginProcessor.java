@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.tenant.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -66,9 +68,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     private final CraneCommand craneCommand;
 
     public PluginProcessor(KubernetesService kubernetesService,
-            PluginDescriptorValidator descriptorValidator,
-            PluginDataRepository pluginPathRepository,
-            CraneCommand craneCommand) {
+                           PluginDescriptorValidator descriptorValidator,
+                           PluginDataRepository pluginPathRepository,
+                           CraneCommand craneCommand) {
 
         this.kubernetesService = kubernetesService;
         this.descriptorValidator = descriptorValidator;
@@ -130,9 +132,12 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     @Override
     public List<Installable<PluginDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallPlan installPlan) {
+                                                       InstallPlan installPlan) {
 
         List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
+
+        System.out.println("################## ");
+        log.error("aoooooooo PLUGINPROC {}", TenantContextHolder.getCurrentTenantCode());
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
@@ -188,7 +193,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * Reads the plugin descriptor and in case adjust its registry address if not present in the plugin image url.
      */
     private static PluginDescriptor parseAndNormalizePluginDescriptor(BundleReader bundleReader, String filename,
-            CraneCommand craneCommand) throws IOException {
+                                                                      CraneCommand craneCommand) throws IOException {
         var pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
 
         log.debug("Actual docker image on descriptor: {}", pluginDescriptor.getDockerImage());

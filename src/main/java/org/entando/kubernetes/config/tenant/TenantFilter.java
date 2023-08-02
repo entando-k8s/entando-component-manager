@@ -1,18 +1,19 @@
 package org.entando.kubernetes.config.tenant;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @Component
@@ -24,13 +25,9 @@ public class TenantFilter extends OncePerRequestFilter {
 
     private final List<TenantConfigDTO> tenantConfigs;
 
-    private final TenantContextHolder holder;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
-        TenantContext threadLocalContext = new TenantContext();
 
         String headerXForwardedHost = request.getHeader(X_FORWARDED_HOST);
         String headerHost = request.getHeader(HOST);
@@ -38,13 +35,12 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String tenantCode = this.getTenantCode(headerXForwardedHost, headerHost, headerServerName);
 
-        threadLocalContext.setTenantCode(tenantCode);
-        holder.set(threadLocalContext);
+        TenantContextHolder.setCurrentTenantCode(tenantCode);
 
         try {
             filterChain.doFilter(request, response);
         } finally {
-            holder.remove();
+            TenantContextHolder.destroy();
             log.info("Remove custom context from thread local.");
         }
     }
@@ -55,9 +51,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String tenantCode = PRIMARY_TENANT_CODE;
 
-        if (tenantConfigs == null || tenantConfigs.isEmpty()) {
-            tenantCode = PRIMARY_TENANT_CODE;
-        } else {
+        if (! CollectionUtils.isEmpty(tenantConfigs)) {
             Optional<String> headerXForwarderHostTenantCode;
             Optional<String> headerXHostTenantCode;
             if (headerXForwardedHost != null && !headerXForwardedHost.isBlank()) {

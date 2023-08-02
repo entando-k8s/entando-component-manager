@@ -1,13 +1,14 @@
 package org.entando.kubernetes.config.tenant;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-@Data
-@Component
-@RequestScope
+@Getter
+@AllArgsConstructor
 public class TenantContext {
     private String tenantCode;
 }

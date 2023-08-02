@@ -1,20 +1,42 @@
 package org.entando.kubernetes.config.tenant;
 
-import org.springframework.stereotype.Component;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
-@Component
+@Slf4j
+@UtilityClass
 public class TenantContextHolder {
-    private static final InheritableThreadLocal<TenantContext> holder = new InheritableThreadLocal<>();
 
-    public void set(TenantContext context) {
-        holder.set(context);
+    public static String getCurrentTenantCode() {
+        System.out.println("################## ");
+        log.error("GETTING TENANT {}", threadLocal.get().getTenantCode());
+        return threadLocal.get().getTenantCode();
+    }
+    public static void setCurrentTenantCode(String tenant) {
+        System.out.println("################## ");
+        log.error("SETTING TENANT {}", tenant);
+        threadLocal.set(new TenantContext(tenant));
     }
 
-    public TenantContext get() {
-        return holder.get();
-    }
+    private static final ThreadLocal<TenantContext> threadLocal = new InheritableThreadLocal<>() {
 
-    public void remove() {
-        holder.remove();
+        @Override
+        protected TenantContext childValue(TenantContext parentValue) {
+
+            final String tenantCode = parentValue.getTenantCode();
+            System.out.println("################## ");
+            log.error("SETTING CHILD VALUE {}", tenantCode);
+
+            if (parentValue == null) {
+                return null;
+            }
+
+            return new TenantContext(tenantCode);
+        }
+    };
+
+    public static void destroy() {
+        log.debug("destroy tenant context");
+        threadLocal.remove();
     }
 }
