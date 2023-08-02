@@ -3,44 +3,27 @@ package org.entando.kubernetes.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigurationDTO;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
 @TestConfiguration
 @Profile({"test", "testdb"})
-public class TenantConfiguration extends org.entando.kubernetes.config.tenant.TenantConfiguration {
-
+public class TestTenantConfiguration {
 
     private ObjectMapper objectMapper = new ObjectMapper();
-
-    @Autowired
-    public TenantConfiguration(
-            @Value("${tenant-config:#{null}}")
-            String tenantConfigs,
-            ObjectMapper objectMapper) {
-        super(jsonConfig, objectMapper);
-    }
 
     @Bean
     public List<TenantConfigurationDTO> tenantConfigs() {
         List<TenantConfigurationDTO> tenantConfigList = null;
 
-        if (StringUtils.isNotBlank(jsonConfig)) {
-            try {
-                tenantConfigList = objectMapper.readValue(jsonConfig, new TypeReference<List<TenantConfigurationDTO>>() {});
-            } catch (final IOException e) {
-                throw new EntandoComponentManagerException(e);
-            }
-        } else {
-            return new ArrayList<>();
+        try {
+            tenantConfigList = objectMapper.readValue(jsonConfig, new TypeReference<List<TenantConfigurationDTO>>() {});
+        } catch (final IOException e) {
+            throw new EntandoComponentManagerException(e);
         }
         return tenantConfigList;
     }

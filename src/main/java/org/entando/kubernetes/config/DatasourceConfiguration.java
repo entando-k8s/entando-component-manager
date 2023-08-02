@@ -16,10 +16,11 @@ package org.entando.kubernetes.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.entando.kubernetes.config.tenant.MultitenantDataSource;
-import org.entando.kubernetes.config.tenant.TenantConfiguration;
+import org.entando.kubernetes.config.tenant.TenantConfigurationDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,21 +37,21 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 @Configuration
 @Profile({"!test", "!testdb"})
-@DependsOn("tenantConfiguration")
+@DependsOn("tenantConfigs")
 public class DatasourceConfiguration {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(DatasourceConfiguration.class);
-    
+
     @Autowired(required = false)
-    private TenantConfiguration tenantConfiguration;
-    
+    private List<TenantConfigurationDTO> tenantConfigs;
+
     @Primary
     @Bean
     @ConfigurationProperties("spring.datasource")
     public DataSourceProperties dataSourceProperties() {
         return new DataSourceProperties();
     }
-    
+
     @Bean
     public DataSource dataSource(@Qualifier("dataSourceProperties") DataSourceProperties properties) {
         Map<Object, Object> resolvedDataSources = new HashMap<>();
@@ -58,8 +59,9 @@ public class DatasourceConfiguration {
                 .initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
                 .build();
-        if (this.tenantConfiguration != null) {
-            this.tenantConfiguration.tenantConfigs().stream()
+        if (this.tenantConfigs != null
+                && !tenantConfigs.isEmpty()) {
+            this.tenantConfigs.stream()
                     .forEach(configuration -> {
                         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
 
@@ -80,5 +82,5 @@ public class DatasourceConfiguration {
         dataSource.afterPropertiesSet();
         return dataSource;
     }
-    
+
 }

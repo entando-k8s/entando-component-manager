@@ -19,7 +19,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import lombok.SneakyThrows;
-import org.entando.kubernetes.config.TenantConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
@@ -44,7 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = {
-                TenantConfiguration.class
+                TestTenantConfiguration.class
         }
 )
 @AutoConfigureMockMvc

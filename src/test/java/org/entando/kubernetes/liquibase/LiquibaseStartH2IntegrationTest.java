@@ -6,10 +6,10 @@ import java.util.Properties;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
-import org.entando.kubernetes.config.TenantConfiguration;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class,
-                TenantConfiguration.class
+                TestTenantConfiguration.class
         })
 @ActiveProfiles("testdb")
 @Slf4j
