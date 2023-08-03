@@ -1,4 +1,4 @@
-package org.entando.kubernetes.config.tenant;
+package org.entando.kubernetes.config.tenant.thread;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -8,13 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 public class TenantContextHolder {
 
     public static String getCurrentTenantCode() {
-        System.out.println("################## ");
-        log.error("GETTING TENANT {}", threadLocal.get().getTenantCode());
+        log.debug("Getting tenant {}", threadLocal.get().getTenantCode());
         return threadLocal.get().getTenantCode();
     }
+
     public static void setCurrentTenantCode(String tenant) {
-        System.out.println("################## ");
-        log.error("SETTING TENANT {}", tenant);
+        log.debug("Setting tenant {}", tenant);
         threadLocal.set(new TenantContext(tenant));
     }
 
@@ -24,8 +23,6 @@ public class TenantContextHolder {
         protected TenantContext childValue(TenantContext parentValue) {
 
             final String tenantCode = parentValue.getTenantCode();
-            System.out.println("################## ");
-            log.error("SETTING CHILD VALUE {}", tenantCode);
 
             if (parentValue == null) {
                 return null;

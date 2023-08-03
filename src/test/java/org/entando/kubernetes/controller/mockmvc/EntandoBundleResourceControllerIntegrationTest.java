@@ -31,6 +31,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.tenant.TestTenantConfiguration;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
@@ -66,6 +67,7 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -80,11 +82,13 @@ import org.springframework.web.context.WebApplicationContext;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class
+                TestAppConfiguration.class,
+                TestTenantConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
+@DirtiesContext
 class EntandoBundleResourceControllerIntegrationTest {
 
     private final String componentsUrl = "/components";

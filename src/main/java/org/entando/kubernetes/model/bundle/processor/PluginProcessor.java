@@ -9,12 +9,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.kubernetes.config.tenant.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -135,9 +133,6 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                                                        InstallPlan installPlan) {
 
         List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
-
-        System.out.println("################## ");
-        log.error("aoooooooo PLUGINPROC {}", TenantContextHolder.getCurrentTenantCode());
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);

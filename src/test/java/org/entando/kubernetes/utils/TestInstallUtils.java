@@ -894,6 +894,10 @@ public class TestInstallUtils {
 
         stubPermissionRequestReturningSuperuser();
 
+        when(coreClient.deleteComponents(any())).thenReturn(EntandoCoreComponentDeleteResponse.builder()
+                .status(EntandoCoreComponentDeleteResponseStatus.SUCCESS)
+                .build());
+
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT_V5.build())
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())

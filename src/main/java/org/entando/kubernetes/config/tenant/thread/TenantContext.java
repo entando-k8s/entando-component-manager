@@ -1,11 +1,8 @@
-package org.entando.kubernetes.config.tenant;
+package org.entando.kubernetes.config.tenant.thread;
 
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
 @Getter
 @AllArgsConstructor

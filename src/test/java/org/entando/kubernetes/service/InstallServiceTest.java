@@ -91,6 +91,7 @@ import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
@@ -98,10 +99,12 @@ import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 public class InstallServiceTest {
 
     public static final String bundleFolder = InstallServiceTest.class.getResource("/bundle").getFile();
@@ -252,6 +255,7 @@ public class InstallServiceTest {
 
     @Test
     public void shouldIncrementProgressDuringInstallation() {
+
         processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
         EntandoDeBundle bundle = getTestBundle();
 

@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import org.entando.kubernetes.TestEntitiesGenerator;
 import org.entando.kubernetes.assertionhelper.SimpleRestResponseAssertionHelper;
-import org.entando.kubernetes.config.tenant.TenantContextManager;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.bundle.status.BundlesStatusItem;
@@ -48,13 +47,10 @@ class EntandoBundleResourceControllerTest {
     @Mock
     private AuthorizationChecker authorizationChecker;
 
-    @Mock
-    private TenantContextManager tenantContextManager;
-
     @BeforeEach
     public void setup() {
         controller = new EntandoBundleResourceController(bundleService, null,
-                authorizationChecker, tenantContextManager);
+                authorizationChecker);
     }
 
 

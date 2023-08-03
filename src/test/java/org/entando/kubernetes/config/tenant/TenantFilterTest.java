@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class TenantFilterTest {
         List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig,
                 new TypeReference<List<TenantConfigDTO>>() {
                 });
-        filter = new TenantFilter(configDTOList, tenantContextHolder);
+        filter = new TenantFilter(configDTOList);
     }
 
     @Test
@@ -78,7 +79,7 @@ class TenantFilterTest {
 
     @Test
     void getPrimaryIfConfigNull() {
-        TenantFilter filter2 = new TenantFilter(null, tenantContextHolder);
+        TenantFilter filter2 = new TenantFilter(null);
         String tenantCode = filter2.getTenantCode("tenant2.entando.com", "", "");
         assertEquals("primary", tenantCode);
     }

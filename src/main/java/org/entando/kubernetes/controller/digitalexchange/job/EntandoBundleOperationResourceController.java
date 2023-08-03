@@ -75,7 +75,6 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         return ResponseEntity.ok(new SimpleRestResponse<>(installPlan));
     }
 
-
     @Override
     public ResponseEntity<SimpleRestResponse<EntandoBundleJobEntity>> install(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,

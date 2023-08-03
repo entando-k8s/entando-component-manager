@@ -25,6 +25,7 @@ import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.client.model.assembler.InstallPlanAssembler;
+import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -227,7 +228,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private CompletableFuture<Void> submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
             EntandoDeBundleTag tag, InstallAction conflictStrategy, InstallPlan installPlan) {
 
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsync(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);

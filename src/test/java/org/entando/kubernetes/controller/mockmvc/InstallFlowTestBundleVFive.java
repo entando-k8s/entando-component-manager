@@ -26,12 +26,14 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.assertionhelper.InstallFlowAssertionHelper;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
@@ -49,11 +51,13 @@ import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +68,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -83,8 +88,10 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
+@ExtendWith(TenantContextJunitExt.class)
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
+@DirtiesContext
 class InstallFlowTestBundleVFive {
 
     private MockMvc mockMvc;
@@ -216,47 +223,24 @@ class InstallFlowTestBundleVFive {
 
         final String uninstallJobId = simulateSuccessfullyCompletedUninstall();
 
-        ArgumentCaptor<String> ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteWidget(ac.capture());
-        assertThat(ac.getValue()).isEqualTo("todomvc_widget-ece8f6f0");
+        final ArgumentCaptor<List<EntandoCoreComponentDeleteRequest>> ac = ArgumentCaptor.forClass((Class) List.class);
+        verify(coreClient, times(1)).deleteComponents(ac.capture());
 
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deletePageModel(ac.capture());
+        final List<EntandoCoreComponentDeleteRequest> delReqList = ac.getValue();
+        assertThat(delReqList).hasSize(2);
 
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).disableLanguage(ac.capture());
+        final Optional<EntandoCoreComponentDeleteRequest> widgetDelReq = delReqList.stream()
+                .filter(d -> d.getCode().equals("todomvc_widget-ece8f6f0")).findFirst();
+        assertThat(widgetDelReq).isPresent();
 
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deleteLabel(ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(1)).deleteFolder(ac.capture());
-        assertThat(ac.getValue()).isEqualTo("bundles/something-ece8f6f0");
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deleteFragment(ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deleteContentType(ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deleteContent(ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deleteAsset(ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deleteContentType(ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).setPageStatus(ac.capture(), ac.capture());
-
-        ac = ArgumentCaptor.forClass(String.class);
-        verify(coreClient, times(0)).deletePage(ac.capture());
+        final Optional<EntandoCoreComponentDeleteRequest> dirDelReq = delReqList.stream()
+                .filter(d -> d.getCode().equals("bundles/something-ece8f6f0")).findFirst();
+        assertThat(dirDelReq).isPresent();
 
         verify(k8SServiceClient, times(2)).unlinkAndScaleDown(any());
 
-        verifyJobHasComponentAndStatus(mockMvc, TestInstallUtils.MOCK_BUNDLE_NAME_V5, uninstallJobId, JobStatus.UNINSTALL_COMPLETED);
+        verifyJobHasComponentAndStatus(mockMvc, TestInstallUtils.MOCK_BUNDLE_NAME_V5, uninstallJobId,
+                JobStatus.UNINSTALL_COMPLETED);
     }
 
 
