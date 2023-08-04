@@ -159,6 +159,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 String tenantCode = TenantContextHolder.getCurrentTenantCode();
                 if (StringUtils.isNotEmpty(tenantCode)) {
                     pluginDescriptor.setTenantCode(tenantCode);
+                } else {
+                    pluginDescriptor.setTenantCode(PRIMARY_TENANT_CODE);
                 }
                 // add CM endpoint env var
                 final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
