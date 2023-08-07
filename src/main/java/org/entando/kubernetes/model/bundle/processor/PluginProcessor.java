@@ -334,9 +334,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * @return the generated full deployment name
      */
     public String generateFullDeploymentName(String bundleId, String signedPluginName) {
-        log.info("plugin name to process: {}", signedPluginName);
         String tenantCode = TenantContextHolder.getCurrentTenantCode();
-        log.info("tenant code: {}", tenantCode);
 
         List<String> deploymentParts = new ArrayList<>();
 
