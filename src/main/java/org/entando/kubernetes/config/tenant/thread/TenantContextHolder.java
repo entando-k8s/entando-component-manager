@@ -21,14 +21,7 @@ public class TenantContextHolder {
 
         @Override
         protected TenantContext childValue(TenantContext parentValue) {
-
-            final String tenantCode = parentValue.getTenantCode();
-
-            if (parentValue == null) {
-                return null;
-            }
-
-            return new TenantContext(tenantCode);
+            return new TenantContext(parentValue.getTenantCode());
         }
     };
 

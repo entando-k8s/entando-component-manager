@@ -1,8 +1,11 @@
 package org.entando.kubernetes.config.tenant.thread;
 
 import java.util.concurrent.Callable;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 class RequestContextUtility {
+    
     public static <T> Callable<T> wrapWithRequestContext(Callable<T> task) {
         CurrentRequestThreadState requestCurrentThreadState = CurrentRequestThreadState.currentRequestThreadState();
         return () -> {

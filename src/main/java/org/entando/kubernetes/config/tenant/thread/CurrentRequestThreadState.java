@@ -8,7 +8,6 @@ public class CurrentRequestThreadState {
     private String tenantCode = null;
 
     private CurrentRequestThreadState() {
-
     }
 
     private CurrentRequestThreadState(String tenantCode) {
