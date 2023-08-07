@@ -10,18 +10,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
-    private static final String PRIMARY_TENANT_CODE = "primary";
+
     private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
     private static final String HOST = "Host";
+    private static final String PRIMARY_TENANT_CODE = "primary"; // FIXME use the custom model constant
 
     private final List<TenantConfigDTO> tenantConfigs;
 
@@ -49,33 +50,26 @@ public class TenantFilter extends OncePerRequestFilter {
             final String headerHost,
             final String servletRequestServerName) {
 
-        String tenantCode = PRIMARY_TENANT_CODE;
+        String tenantCode = Optional.ofNullable(tenantConfigs)
+                .flatMap(tcs ->
+                        getTenantCodeFromConfig(headerXForwardedHost)
+                                .or(() -> getTenantCodeFromConfig(headerHost))
+                                .or(() -> getTenantCodeFromConfig(servletRequestServerName)))
+                .orElse(PRIMARY_TENANT_CODE);
 
-        if (! CollectionUtils.isEmpty(tenantConfigs)) {
-            Optional<String> headerXForwarderHostTenantCode;
-            Optional<String> headerXHostTenantCode;
-            if (headerXForwardedHost != null && !headerXForwardedHost.isBlank()) {
-                headerXForwarderHostTenantCode = getTenantCodeFromConfig(headerXForwardedHost);
-
-                tenantCode = headerXForwarderHostTenantCode.orElse(PRIMARY_TENANT_CODE);
-            } else if (headerHost != null && !headerHost.isBlank()) {
-                headerXHostTenantCode = getTenantCodeFromConfig(headerHost);
-
-                tenantCode = headerXHostTenantCode.orElse(PRIMARY_TENANT_CODE);
-
-            } else if (servletRequestServerName != null && !servletRequestServerName.isBlank()) {
-                Optional<String> servletNameTenantCode = getTenantCodeFromConfig(servletRequestServerName);
-                tenantCode = servletNameTenantCode.orElse(PRIMARY_TENANT_CODE);
-            }
-        }
         log.info("TenantCode: " + tenantCode);
         return tenantCode;
     }
 
     private Optional<String> getTenantCodeFromConfig(String search) {
-        Optional<TenantConfigDTO> tenant = tenantConfigs.stream().filter(
-                t -> getFqdnTenantNames(t).contains(search)).findFirst();
-        return tenant.map(TenantConfigDTO::getTenantCode);
+
+        if (StringUtils.isBlank(search)) {
+            return Optional.empty();
+        }
+
+        return tenantConfigs.stream().filter(t -> getFqdnTenantNames(t).contains(search)).findFirst()
+                .map(TenantConfigDTO::getTenantCode)
+                .or(() -> Optional.of(PRIMARY_TENANT_CODE));
     }
 
     private List<String> getFqdnTenantNames(TenantConfigDTO tenant) {

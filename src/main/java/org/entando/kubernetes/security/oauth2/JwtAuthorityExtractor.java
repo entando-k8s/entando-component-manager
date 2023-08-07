@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.stereotype.Component;
+// FIXME DELETE IF UNNECESSARY
 
 @Component
 public class JwtAuthorityExtractor extends JwtAuthenticationConverter {

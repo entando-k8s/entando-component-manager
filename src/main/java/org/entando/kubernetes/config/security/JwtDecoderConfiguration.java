@@ -1,4 +1,4 @@
-package org.entando.kubernetes.config;
+package org.entando.kubernetes.config.security;
 
 import org.entando.kubernetes.security.oauth2.AudienceValidator;
 import org.springframework.beans.factory.annotation.Value;
