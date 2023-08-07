@@ -66,9 +66,9 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     private final CraneCommand craneCommand;
 
     public PluginProcessor(KubernetesService kubernetesService,
-            PluginDescriptorValidator descriptorValidator,
-            PluginDataRepository pluginPathRepository,
-            CraneCommand craneCommand) {
+                           PluginDescriptorValidator descriptorValidator,
+                           PluginDataRepository pluginPathRepository,
+                           CraneCommand craneCommand) {
 
         this.kubernetesService = kubernetesService;
         this.descriptorValidator = descriptorValidator;
@@ -130,7 +130,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
     @Override
     public List<Installable<PluginDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
-            InstallPlan installPlan) {
+                                                       InstallPlan installPlan) {
 
         List<Installable<PluginDescriptor>> installableList = new ArrayList<>();
 
@@ -188,7 +188,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * Reads the plugin descriptor and in case adjust its registry address if not present in the plugin image url.
      */
     private static PluginDescriptor parseAndNormalizePluginDescriptor(BundleReader bundleReader, String filename,
-            CraneCommand craneCommand) throws IOException {
+                                                                      CraneCommand craneCommand) throws IOException {
         var pluginDescriptor = bundleReader.readDescriptorFile(filename, PluginDescriptor.class);
 
         log.debug("Actual docker image on descriptor: {}", pluginDescriptor.getDockerImage());

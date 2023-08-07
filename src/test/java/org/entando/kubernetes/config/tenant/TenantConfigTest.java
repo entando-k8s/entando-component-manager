@@ -9,7 +9,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-
 @Tag("unit")
 class TenantConfigTest {
     @Test

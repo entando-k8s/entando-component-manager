@@ -40,6 +40,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -60,6 +61,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WithMockUser
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
+@DirtiesContext
 class HubFlowTest {
 
     private MockMvc mockMvc;
