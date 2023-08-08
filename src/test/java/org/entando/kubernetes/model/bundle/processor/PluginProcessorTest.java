@@ -72,7 +72,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
-        TenantContextHolder.setCurrentTenantCode(null);
+        TenantContextHolder.setCurrentTenantCode("primary");
     }
 
     @Test

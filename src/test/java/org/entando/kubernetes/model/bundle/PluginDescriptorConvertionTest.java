@@ -72,7 +72,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                        PluginStubHelper.PRIMARY_TENANT_CODE)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
 
         // with tag
@@ -97,7 +98,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                        PluginStubHelper.PRIMARY_TENANT_CODE)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
         EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
 
@@ -113,7 +115,8 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4)
+                        PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                        PluginStubHelper.PRIMARY_TENANT_CODE)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
         // with sha

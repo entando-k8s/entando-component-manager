@@ -155,13 +155,6 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 setPluginMetadata(pluginDescriptor, bundleReader);
                 // validate
                 descriptorValidator.validateOrThrow(pluginDescriptor);
-                // set tenant
-                String tenantCode = TenantContextHolder.getCurrentTenantCode();
-                if (StringUtils.isNotEmpty(tenantCode)) {
-                    pluginDescriptor.setTenantCode(tenantCode);
-                } else {
-                    pluginDescriptor.setTenantCode(PRIMARY_TENANT_CODE);
-                }
                 // add CM endpoint env var
                 final List<EnvironmentVariable> environmentVariables = Optional.ofNullable(
                         pluginDescriptor.getEnvironmentVariables()).orElseGet(ArrayList::new);
@@ -271,6 +264,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         final String customEndpoint = pluginDescriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)
                 ? BundleUtilities.composeIngressPathFromIngressPathProperty(pluginDescriptor)
                 : null;
+        final String tenantCode = TenantContextHolder.getCurrentTenantCode();
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
@@ -281,7 +275,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                         : pluginDescriptor.getName(),
                 generateFullDeploymentName(bundleId, signedPluginDeplName),
                 endpoint,
-                customEndpoint);
+                customEndpoint,
+                tenantCode);
     }
 
 
@@ -322,7 +317,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new PluginDescriptor()
                 .setDescriptorMetadata(
-                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null));
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null, null));
     }
 
     /**

@@ -42,6 +42,7 @@ public class PluginStubHelper {
     public static final String TEST_RES_STORAGE = "7G";
     public static final String TEST_RES_MEMORY = "8G";
     public static final String TEST_RES_CPU = "6m";
+    public static final String PRIMARY_TENANT_CODE = "primary";
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {
@@ -125,7 +126,8 @@ public class PluginStubHelper {
                 EXPECTED_PLUGIN_NAME,
                 TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
     }
 
     public static PluginResources stubPluginResources() {
