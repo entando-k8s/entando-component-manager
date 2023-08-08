@@ -94,8 +94,6 @@ public class PluginDescriptor extends VersionedDescriptor {
     // Version 6
     private PluginResources resources;
 
-    private String tenantCode;
-
 
     /******************************************************************
      * private variables that can't be set from the yaml descriptor.
@@ -125,7 +123,6 @@ public class PluginDescriptor extends VersionedDescriptor {
         this.ingressPath = ingressPath;
         this.securityLevel = securityLevel;
         this.environmentVariables = environmentVariables;
-        this.tenantCode = tenantCode;
     }
 
     public DockerImage getDockerImage() {
