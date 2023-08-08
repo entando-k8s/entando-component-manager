@@ -30,6 +30,7 @@ import org.entando.kubernetes.model.bundle.installable.PluginInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoK8SServiceReportableProcessor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
@@ -52,8 +53,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @Service
 public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> implements
         EntandoK8SServiceReportableProcessor {
-
-    private static final String PRIMARY_TENANT_CODE = "primary";
 
     public static final String PLUGIN_DEPLOYMENT_PREFIX = "pn";
     public static final String SERVER_SERVLET_CONTEXT_PATH = "SERVER_SERVLET_CONTEXT_PATH";
@@ -336,7 +335,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         deploymentParts.add(PLUGIN_DEPLOYMENT_PREFIX);
         deploymentParts.add(BundleUtilities.makeKubernetesCompatible(bundleId));
 
-        if (StringUtils.isNotEmpty(tenantCode) && !tenantCode.equals(PRIMARY_TENANT_CODE)) {
+        if (StringUtils.isNotEmpty(tenantCode) && !tenantCode.equals(EntandoMultiTenancy.PRIMARY_TENANT)) {
             String tenantId = BundleUtilities.getTenantId(tenantCode);
             deploymentParts.add(tenantId);
         }

@@ -109,7 +109,7 @@ public class PluginDescriptor extends VersionedDescriptor {
             DockerImage dockerImage, PluginDescriptorV1Spec spec, String name, String deploymentBaseName,
             String image, String healthCheckPath, String dbms, List<String> roles,
             List<PluginPermission> permissions, String ingressPath, String securityLevel,
-            List<EnvironmentVariable> environmentVariables, String tenantCode) {
+            List<EnvironmentVariable> environmentVariables) {
         super.setDescriptorVersion(descriptorVersion);
         this.dockerImage = dockerImage;
         this.spec = spec;
