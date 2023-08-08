@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TenantConfigDTO {
+public class TenantConfigurationDTO {
 
     @JsonProperty("tenantCode")
     private String tenantCode;

@@ -8,6 +8,7 @@ import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,8 @@ import org.testcontainers.utility.DockerImageName;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class
+                TestAppConfiguration.class,
+                TestTenantConfiguration.class
         })
 @ActiveProfiles("testdb")
 @Testcontainers

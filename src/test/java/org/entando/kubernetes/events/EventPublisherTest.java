@@ -7,6 +7,7 @@ import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
@@ -24,7 +25,8 @@ import org.springframework.test.context.ActiveProfiles;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class
+                TestAppConfiguration.class,
+                TestTenantConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("in-process")

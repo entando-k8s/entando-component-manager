@@ -29,8 +29,8 @@ class TenantFilterTest {
         config.append(getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com"));
         config.append("]");
         String tenantsConfig = config.toString();
-        List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig,
-                new TypeReference<List<TenantConfigDTO>>() {
+        List<TenantConfigurationDTO> configDTOList = objectMapper.readValue(tenantsConfig,
+                new TypeReference<List<TenantConfigurationDTO>>() {
                 });
         filter = new TenantFilter(configDTOList);
     }
@@ -105,6 +105,11 @@ class TenantFilterTest {
                 + "\"cdsPublicUrl\":\"mock\","
                 + "\"cdsPrivateUrl\":\"mock\","
                 + "\"cdsPath\":\"api/v1\","
+                + "\"deDbDriverClassName\": \"org.postgresql.Driver\",\n"
+                + "\"deDbUrl\": \"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.cluster.local:5432/"
+                + "tenant2_cm?currentSchema=quickstart_dedb_65643\",\n"
+                + "\"deDbUsername\": \"postgres\",\n"
+                + "\"deDbPassword\": \"93b10c9a326445da\",\n"
                 + "\"solrAddress\":\"mock\","
                 + "\"solrCore\":\"mock\"}";
     }

@@ -1,9 +1,10 @@
-package org.entando.kubernetes.config.tenant;
+package org.entando.kubernetes.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
+import org.entando.kubernetes.config.tenant.TenantConfigurationDTO;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -13,12 +14,11 @@ import org.springframework.context.annotation.Profile;
 @Profile({"test", "testdb"})
 public class TestTenantConfiguration {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Bean
     public List<TenantConfigurationDTO> tenantConfigs() {
         List<TenantConfigurationDTO> tenantConfigList = null;
-
         try {
             tenantConfigList = objectMapper.readValue(jsonConfig, new TypeReference<List<TenantConfigurationDTO>>() {});
         } catch (final IOException e) {
@@ -27,7 +27,6 @@ public class TestTenantConfiguration {
         return tenantConfigList;
     }
 
-    // TODO make this parametric
     public static final String jsonConfig = "[    {\n"
             + "        \"tenantCode\": \"tenant1\",\n"
             + "        \"fqdns\": \"tenant1.10-219-168-202.nip.io\",\n"

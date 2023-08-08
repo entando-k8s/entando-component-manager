@@ -23,7 +23,7 @@ public class TenantFilter extends OncePerRequestFilter {
     private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
     private static final String HOST = "Host";
 
-    private final List<TenantConfigDTO> tenantConfigs;
+    private final List<TenantConfigurationDTO> tenantConfigs;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -73,12 +73,12 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     private Optional<String> getTenantCodeFromConfig(String search) {
-        Optional<TenantConfigDTO> tenant = tenantConfigs.stream().filter(
+        Optional<TenantConfigurationDTO> tenant = tenantConfigs.stream().filter(
                 t -> getFqdnTenantNames(t).contains(search)).findFirst();
-        return tenant.map(TenantConfigDTO::getTenantCode);
+        return tenant.map(TenantConfigurationDTO::getTenantCode);
     }
 
-    private List<String> getFqdnTenantNames(TenantConfigDTO tenant) {
+    private List<String> getFqdnTenantNames(TenantConfigurationDTO tenant) {
         String[] fqdns = tenant.getFqdns().replaceAll("\\s", "").split(",");
         return Arrays.asList(fqdns);
     }

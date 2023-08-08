@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
@@ -35,7 +36,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
-        classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
+        classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class,
+                TestTenantConfiguration.class})
 @AutoConfigureMockMvc
 @ActiveProfiles({"test"})
 @Tag("component")

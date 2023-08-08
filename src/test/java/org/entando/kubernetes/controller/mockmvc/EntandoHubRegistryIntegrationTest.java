@@ -20,6 +20,7 @@ import org.entando.kubernetes.assertionhelper.EntandoHubRegistryAssertionHelper;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
@@ -59,7 +60,8 @@ import wiremock.com.jayway.jsonpath.JsonPath;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class
+                TestAppConfiguration.class,
+                TestTenantConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")

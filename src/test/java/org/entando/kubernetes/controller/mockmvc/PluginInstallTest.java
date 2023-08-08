@@ -9,6 +9,7 @@ import org.entando.kubernetes.client.K8SServiceClientTestDouble;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.entando.kubernetes.model.common.DbmsVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
@@ -25,7 +26,8 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureMockMvc
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
-        classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class})
+        classes = {EntandoKubernetesJavaApplication.class, TestSecurityConfiguration.class, TestKubernetesConfig.class,
+        TestTenantConfiguration.class})
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser

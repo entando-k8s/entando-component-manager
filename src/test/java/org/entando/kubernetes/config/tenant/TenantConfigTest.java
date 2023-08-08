@@ -17,15 +17,15 @@ class TenantConfigTest {
 
         String input = "[" + getTenantConfigMock("tenant1") + "," + getTenantConfigMock("tenant2") + "]";
 
-        TenantConfig tenantConfiguration = new TenantConfig(input, objectMapper);
-        List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs();
+        TenantConfiguration tenantConfiguration = new TenantConfiguration(input, objectMapper);
+        List<TenantConfigurationDTO> tenantConfigs = tenantConfiguration.tenantConfigs();
 
         assertThat(tenantConfigs).hasSize(2);
 
-        TenantConfigDTO tenant1 = tenantConfigs.get(0);
+        TenantConfigurationDTO tenant1 = tenantConfigs.get(0);
         assertTenantConfig(tenant1, "tenant1");
 
-        TenantConfigDTO tenant2 = tenantConfigs.get(1);
+        TenantConfigurationDTO tenant2 = tenantConfigs.get(1);
         assertTenantConfig(tenant2, "tenant2");
 
     }
@@ -35,7 +35,16 @@ class TenantConfigTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // Invalid JSON data (missing closing bracket)
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
-        TenantConfig tenantConfiguration = new TenantConfig(invalidInput, objectMapper);
+        TenantConfiguration tenantConfiguration = new TenantConfiguration(invalidInput, objectMapper);
+
+        assertThrows(EntandoComponentManagerException.class, tenantConfiguration::tenantConfigs);
+    }
+
+    @Test
+    void shouldThrowExceptionOnInvalidDeDBConfiguration() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String invalidInput = getInvalidTenantConfigMock("tenant1");
+        TenantConfiguration tenantConfiguration = new TenantConfiguration(invalidInput, objectMapper);
 
         assertThrows(EntandoComponentManagerException.class, tenantConfiguration::tenantConfigs);
     }
@@ -59,7 +68,26 @@ class TenantConfigTest {
                 + "}";
     }
 
-    private void assertTenantConfig(TenantConfigDTO tenant, String tenantName) {
+    private String getInvalidTenantConfigMock(String tenantName) {
+        return "[{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-fqdns\""
+                + ",\"kcEnabled\":true,\"kcAuthUrl\":\"mock-auth-url\",\"kcRealm\":\"tenant1\","
+                +  "\"kcClientId\":\"mock-client-id\",\"kcClientSecret\":\"mock-client-secret\","
+                +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\","
+                + "\"dbDriverClassName\":\"org.postgresql.Driver\","
+                +  "\"dbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
+                +  "\"dbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
+                +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"solraddress\",\"solrCore\":\"tenant1\","
+                +  "\"deDbDriverClassName\": \"org.postgresql.Driver\","
+                // The commented line below will trigger validation error
+                // +  "\"deDbPassword\": \"pwd\","
+                +  "\"deDbUrl\": \"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\","
+                +  "\"deDbUsername\": \"postgres\","
+                +  "\"deKcClientId\": \"dekcclientid\","
+                +  "\"deKcClientSecret\": \"dekcsecret\""
+                + "}]";
+    }
+
+    private void assertTenantConfig(TenantConfigurationDTO tenant, String tenantName) {
         assertThat(tenant.getTenantCode()).isEqualTo(tenantName);
         assertThat(tenant.getDbMaxTotal()).isEqualTo(5);
         assertThat(tenant.isInitializationAtStartRequired()).isFalse();

@@ -37,6 +37,7 @@ import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.TestTenantConfiguration;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
@@ -83,7 +84,8 @@ import org.springframework.web.context.WebApplicationContext;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class
+                TestAppConfiguration.class,
+                TestTenantConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")
