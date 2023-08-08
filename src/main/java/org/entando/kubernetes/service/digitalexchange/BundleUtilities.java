@@ -319,7 +319,7 @@ public class BundleUtilities {
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
                 .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables()))
                 .withResourceRequirements(generateResourceRequirementsFromDescriptor(descriptor))
-                .withTenantCode(descriptor.getTenantCode())
+                .withTenantCode(descriptor.getDescriptorMetadata().getTenantCode())
                 .endSpec()
                 .build();
     }
@@ -359,6 +359,7 @@ public class BundleUtilities {
                 .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
                 .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSpec().getSecurityLevel()))
+                .withTenantCode(descriptor.getDescriptorMetadata().getTenantCode())
                 .endSpec()
                 .build();
     }
