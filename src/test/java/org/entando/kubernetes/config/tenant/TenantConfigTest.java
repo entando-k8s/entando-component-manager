@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.stubhelper.TenantConfigStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +19,8 @@ class TenantConfigTest {
         String input = "[" + getTenantConfigMock("tenant1") + "," + getTenantConfigMock("tenant2") + "]";
 
         TenantConfig tenantConfiguration = new TenantConfig(input, objectMapper);
-        List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs();
+        List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs(
+                TenantConfigStubHelper.stubPrimaryTenantConfig("6"));
 
         assertThat(tenantConfigs).hasSize(2);
 
@@ -37,7 +39,8 @@ class TenantConfigTest {
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
         TenantConfig tenantConfiguration = new TenantConfig(invalidInput, objectMapper);
 
-        assertThrows(EntandoComponentManagerException.class, tenantConfiguration::tenantConfigs);
+        assertThrows(EntandoComponentManagerException.class,
+                () -> tenantConfiguration.tenantConfigs(TenantConfigStubHelper.stubPrimaryTenantConfig("6")));
     }
 
 

@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.security.MultipleIdps;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,40 +38,61 @@ public class TenantConfig {
     }
 
     @Bean
-    public List<TenantConfigDTO> tenantConfigs() {
-        List<TenantConfigDTO> tenantConfigList = null;
+    public List<TenantConfigDTO> tenantConfigs(PrimaryTenantConfig primaryTenantConfig) {
+
+        List<TenantConfigDTO> tenantConfigList = new ArrayList<>();
+
         if (StringUtils.isNotBlank(tenantConfigs)) {
             try {
-                tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigDTO>>() {});
+                tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigDTO>>() {
+                });
                 log.info("Tenant configurations have been parsed successfully");
             } catch (final IOException e) {
                 throw new EntandoComponentManagerException(e);
             }
         }
+
+        // add primary
+        tenantConfigList.add(primaryTenantConfig);
+
         return tenantConfigList;
     }
 
     @Bean
-    public MultipleIdps multipleIdps(
-            @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") String issuerUri,
-            List<TenantConfigDTO> tenantConfigs) {
+    public PrimaryTenantConfig primaryTenantConfig(
+            @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") final String primaryIssuerUri,
+            @Value("${entando.app.host.name}") final String primaryHostName,
+            @Value("${spring.jpa.database-platform}") final String primaryDbDialect,
+            @Value("${spring.datasource.username}") final String primaryDbUsername,
+            @Value("${spring.datasource.password}") final String primaryDbPassword,
+            @Value("${spring.datasource.url}") final String primaryDbUrl) {
 
-        KcTenantConfig primaryConfig = new KcTenantConfig()
-                .setKcAuthUrl(issuerUri)
-                .setTenantCode("primary"); // FIXME use custom model constant
+        return new PrimaryTenantConfig()
+                .setTenantCode("primary") // fixme
+                .setFqdns(primaryHostName)
+                .setKcAuthUrl(primaryIssuerUri)
+                .setDeDbDriverClassName(primaryDbDialect)
+                .setDeDbUrl(primaryDbUrl)
+                .setDeDbUsername(primaryDbUsername)
+                .setDeDbPassword(primaryDbUsername);
+    }
 
-        List<TenantConfigDTO> fullTenantConfigs = new ArrayList<>(tenantConfigs);
-        fullTenantConfigs.add(primaryConfig);
-
-        return new MultipleIdps(fullTenantConfigs);
+    @Bean
+    public MultipleIdps multipleIdps(List<TenantConfigDTO> tenantConfigs) {
+        return new MultipleIdps(tenantConfigs);
     }
 
     @Setter
     @Getter
     @Accessors(chain = true)
-    private static class KcTenantConfig extends TenantConfigDTO {
+    public static class PrimaryTenantConfig extends TenantConfigDTO {
 
         private String tenantCode;
+        private String fqdns;
         private String kcAuthUrl;
+        private String deDbDriverClassName;
+        private String deDbUrl;
+        private String deDbUsername;
+        private String deDbPassword;
     }
 }

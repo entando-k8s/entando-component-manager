@@ -1,4 +1,4 @@
-package org.entando.kubernetes.config.tenant;
+package org.entando.kubernetes.config.security;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j

@@ -22,6 +22,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
     private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
     private static final String HOST = "Host";
+    private static final String REQUEST_SERVER_NAME = "Request server name";
     private static final String PRIMARY_TENANT_CODE = "primary"; // FIXME use the custom model constant
 
     private final List<TenantConfigDTO> tenantConfigs;
@@ -52,16 +53,21 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String tenantCode = Optional.ofNullable(tenantConfigs)
                 .flatMap(tcs ->
-                        getTenantCodeFromConfig(headerXForwardedHost)
-                                .or(() -> getTenantCodeFromConfig(headerHost))
-                                .or(() -> getTenantCodeFromConfig(servletRequestServerName)))
-                .orElse(PRIMARY_TENANT_CODE);
+                        getTenantCodeFromConfig(X_FORWARDED_HOST, headerXForwardedHost)
+                                .or(() -> getTenantCodeFromConfig(HOST, headerHost))
+                                .or(() -> getTenantCodeFromConfig(REQUEST_SERVER_NAME, servletRequestServerName)))
+                .orElseGet(() -> {
+                    log.info(
+                            "No tenant identified for the received request. {}, {} and {} are empty. Falling back to {}",
+                            X_FORWARDED_HOST, HOST, REQUEST_SERVER_NAME, PRIMARY_TENANT_CODE);
+                    return PRIMARY_TENANT_CODE;
+                });
 
         log.info("TenantCode: " + tenantCode);
         return tenantCode;
     }
 
-    private Optional<String> getTenantCodeFromConfig(String search) {
+    private Optional<String> getTenantCodeFromConfig(String searchInputName, String search) {
 
         if (StringUtils.isBlank(search)) {
             return Optional.empty();
@@ -69,7 +75,12 @@ public class TenantFilter extends OncePerRequestFilter {
 
         return tenantConfigs.stream().filter(t -> getFqdnTenantNames(t).contains(search)).findFirst()
                 .map(TenantConfigDTO::getTenantCode)
-                .or(() -> Optional.of(PRIMARY_TENANT_CODE));
+                .or(() -> {
+                    log.info(
+                            "No tenant identified for the received request. {} = '{}'. Falling back to {}",
+                            searchInputName, search, PRIMARY_TENANT_CODE);
+                    return Optional.of(PRIMARY_TENANT_CODE);
+                });
     }
 
     private List<String> getFqdnTenantNames(TenantConfigDTO tenant) {
