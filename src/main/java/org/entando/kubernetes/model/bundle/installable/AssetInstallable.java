@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
+import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -27,7 +28,7 @@ public class AssetInstallable extends Installable<AssetDescriptor> {
 
     @Override
     public CompletableFuture<Void> install() {
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsync(() -> {
 
             logConflictStrategyAction();
 
@@ -41,11 +42,6 @@ public class AssetInstallable extends Installable<AssetDescriptor> {
                 engineService.updateAsset(representation, file);
             }
         });
-    }
-
-    @Override
-    public CompletableFuture<Void> uninstallFromEcr() {
-        return CompletableFuture.runAsync(() -> log.info("Removing Asset {}", getName()));
     }
 
     @Override

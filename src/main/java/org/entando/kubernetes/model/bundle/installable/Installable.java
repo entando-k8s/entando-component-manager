@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.Descriptor;
@@ -46,7 +48,9 @@ public abstract class Installable<T extends Descriptor> {
      *
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
-    public abstract CompletableFuture<Void> uninstallFromEcr();
+    public CompletableFuture<Void> uninstallFromEcr() {
+        return ContextCompletableFuture.runAsync(this::logDeletion);
+    }
 
     /**
      * This method will be return true if the component must be deleted from AppEngine.
@@ -135,6 +139,12 @@ public abstract class Installable<T extends Descriptor> {
                 break;
         }
 
-        log.info("{} {} {}", actionLogName, getComponentType().getTypeName(), getName());
+        log.info("{} {} {} in tenant {}", actionLogName, getComponentType().getTypeName(), getName(),
+                TenantContextHolder.getCurrentTenantCode());
+    }
+
+    protected void logDeletion() {
+        log.info("Removing {} {} from tenant {}", getComponentType().getTypeName(), getName(),
+                TenantContextHolder.getCurrentTenantCode());
     }
 }
