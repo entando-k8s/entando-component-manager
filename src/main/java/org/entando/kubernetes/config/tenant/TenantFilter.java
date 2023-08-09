@@ -34,7 +34,9 @@ public class TenantFilter extends OncePerRequestFilter {
         String headerServerName = request.getServerName();
 
         String tenantCode = this.getTenantCode(headerXForwardedHost, headerHost, headerServerName);
-
+        log.error("FILTER -- headerHost {}", headerHost);
+        log.error("FILTER -- headerXForwardedHost {}", headerXForwardedHost);
+        log.error("FILTER -- tenantCode {}", tenantCode);
         TenantContextHolder.setCurrentTenantCode(tenantCode);
 
         try {

@@ -38,7 +38,11 @@ public class TenantConfig {
         if (StringUtils.isNotBlank(tenantConfigs)) {
             try {
                 tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigDTO>>() {});
-                log.info("Tenant configurations have been parsed successfully");
+                log.info("Tenant configurations have been parsed successfully, it has size {}", tenantConfigList.size());
+                for (TenantConfigDTO config : tenantConfigList) {
+                    log.error("Tenant code item: {}", config.getTenantCode());
+                    log.error("Tenant fqdns: {}", config.getFqdns());
+                }
             } catch (final IOException e) {
                 throw new EntandoComponentManagerException(e);
             }
