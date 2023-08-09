@@ -76,8 +76,9 @@ public class AuthenticationManagerConfig {
     }
 
     /**
-     * @return a JwtClaimValidator which compares the issuer extracted by the JWT and the one extracted by the config of
-     * the current tenant
+     * create a JwtClaimValidator to compares the issuer of the JWT and the one extracted by the current tenant config.
+     *
+     * @return the created JwtClaimValidator
      */
     private JwtClaimValidator createTenantIssuerValidator(OAuth2IdpConfig config) {
         return new JwtClaimValidator<String>(ISS,

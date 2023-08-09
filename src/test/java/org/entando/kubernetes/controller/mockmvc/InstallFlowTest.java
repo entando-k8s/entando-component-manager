@@ -70,6 +70,7 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.config.tenant.TenantFilter;
+import org.entando.kubernetes.config.tenant.TestTenantConfig;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -127,7 +128,8 @@ import org.springframework.web.util.UriComponentsBuilder;
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class,
-                TenantContextJunitExt.class
+                TenantContextJunitExt.class,
+                TestTenantConfig.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")

@@ -31,7 +31,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.config.tenant.TestTenantConfiguration;
+import org.entando.kubernetes.config.tenant.TestTenantConfig;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
@@ -52,10 +52,12 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.EntandoBundleJobStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -83,12 +85,13 @@ import org.springframework.web.context.WebApplicationContext;
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class,
-                TestTenantConfiguration.class
+                TestTenantConfig.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
 @DirtiesContext
+@ExtendWith(TenantContextJunitExt.class)
 class EntandoBundleResourceControllerIntegrationTest {
 
     private final String componentsUrl = "/components";

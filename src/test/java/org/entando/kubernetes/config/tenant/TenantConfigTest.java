@@ -22,7 +22,7 @@ class TenantConfigTest {
         List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs(
                 TenantConfigStubHelper.stubPrimaryTenantConfig("6"));
 
-        assertThat(tenantConfigs).hasSize(2);
+        assertThat(tenantConfigs).hasSize(3);
 
         TenantConfigDTO tenant1 = tenantConfigs.get(0);
         assertTenantConfig(tenant1, "tenant1");
