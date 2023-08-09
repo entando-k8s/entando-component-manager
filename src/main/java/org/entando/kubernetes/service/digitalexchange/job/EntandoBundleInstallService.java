@@ -228,7 +228,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private CompletableFuture<Void> submitInstallAsync(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
             EntandoDeBundleTag tag, InstallAction conflictStrategy, InstallPlan installPlan) {
 
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
             log.info("Started new install job for component " + parentJob.getComponentId() + "@" + tag.getVersion());
 
             JobTracker<EntandoBundleJobEntity> parentJobTracker = new JobTracker<>(parentJob, jobRepo);
