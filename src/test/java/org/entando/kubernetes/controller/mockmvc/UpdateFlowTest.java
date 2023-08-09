@@ -32,6 +32,7 @@ import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.config.tenant.TenantFilter;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.CategoryDescriptor;
@@ -124,6 +125,9 @@ public class UpdateFlowTest {
     @Autowired
     private BundleDownloaderFactory downloaderFactory;
 
+    @Autowired
+    private TenantFilter tenantFilter;
+
     @MockBean
     private K8SServiceClient k8SServiceClient;
 
@@ -144,6 +148,7 @@ public class UpdateFlowTest {
         defaultBundleDownloaderSupplier = downloaderFactory.getDefaultSupplier();
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
+                .addFilters(tenantFilter)
                 .apply(springSecurity())
                 .build();
         TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8089);

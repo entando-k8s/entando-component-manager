@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ContextCompletableFuture<T> extends CompletableFuture<T> {
 
-    static CompletableFuture<Void> runAsyncWithContext(Runnable runnable) {
+    public static CompletableFuture<Void> runAsyncWithContext(Runnable runnable) {
         return CompletableFuture.runAsync(runnable, new RequestContextSavingForkJoinPool());
     }
 }

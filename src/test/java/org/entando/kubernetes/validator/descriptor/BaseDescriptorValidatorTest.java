@@ -14,6 +14,7 @@ import javax.annotation.PostConstruct;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
+import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.validator.descriptor.DescriptorValidatorConfigBean.DescriptorValidationFunction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -84,7 +85,10 @@ class BaseDescriptorValidatorTest {
                 Collections.emptyMap());
 
         PluginDescriptor descriptor = (PluginDescriptor) new PluginDescriptor()
-                .setDescriptorMetadata("abcdefgh", "abcdefgh-my-bundle", "1ab2c3d4", "code", "name", "endpooint", "cusIngr")
+                .setDescriptorMetadata("abcdefgh", "abcdefgh-my-bundle",
+                        "1ab2c3d4", "code",
+                        "name", "endpooint",
+                        "cusIngr", PluginStubHelper.PRIMARY_TENANT_CODE)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
         // existent version should work

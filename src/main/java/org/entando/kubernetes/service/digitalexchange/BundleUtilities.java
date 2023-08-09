@@ -319,6 +319,7 @@ public class BundleUtilities {
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
                 .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables()))
                 .withResourceRequirements(generateResourceRequirementsFromDescriptor(descriptor))
+                .withTenantCode(descriptor.getDescriptorMetadata().getTenantCode())
                 .endSpec()
                 .build();
     }
@@ -358,6 +359,7 @@ public class BundleUtilities {
                 .withRoles(extractRolesFromRoleList(descriptor.getSpec().getRoles()))
                 .withHealthCheckPath(descriptor.getSpec().getHealthCheckPath())
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSpec().getSecurityLevel()))
+                .withTenantCode(descriptor.getDescriptorMetadata().getTenantCode())
                 .endSpec()
                 .build();
     }
@@ -570,6 +572,16 @@ public class BundleUtilities {
      */
     public static String getBundleId(String bundleUrl) {
         return DigestUtils.sha256Hex(bundleUrl).substring(0, ENTITY_CODE_HASH_LENGTH);
+    }
+
+    /**
+     * get the tenant id returning the first 8 chars of the tenant code digest.
+     *
+     * @param tenantCode the code of the tenant
+     * @return the signed tenant id
+     */
+    public static String getTenantId(String tenantCode) {
+        return DigestUtils.sha256Hex(tenantCode).substring(0, ENTITY_CODE_HASH_LENGTH);
     }
 
     /**

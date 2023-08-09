@@ -140,7 +140,8 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -165,7 +166,8 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -196,7 +198,8 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                null);
+                null,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -222,7 +225,9 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
+
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -244,7 +249,8 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -266,7 +272,8 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV3-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4);
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
+                PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
