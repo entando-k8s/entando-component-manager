@@ -21,7 +21,7 @@ public class ContentTemplateInstallable extends Installable<ContentTemplateDescr
 
     @Override
     public CompletableFuture<Void> install() {
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             logConflictStrategyAction();
 

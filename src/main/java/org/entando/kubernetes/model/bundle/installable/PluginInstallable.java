@@ -32,7 +32,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public CompletableFuture<Void> install() {
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             logConflictStrategyAction();
 
@@ -111,7 +111,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public CompletableFuture<Void> uninstallFromEcr() {
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             String pluginCode = representation.getComponentKey().getKey();
 

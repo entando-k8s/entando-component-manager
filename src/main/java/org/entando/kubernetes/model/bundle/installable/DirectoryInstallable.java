@@ -16,7 +16,7 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
 
     @Override
     public CompletableFuture<Void> install() {
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
             //Do nothing
         });
     }

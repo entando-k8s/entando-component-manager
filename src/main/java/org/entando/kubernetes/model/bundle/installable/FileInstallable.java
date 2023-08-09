@@ -22,7 +22,7 @@ public class FileInstallable extends Installable<FileDescriptor> {
 
     @Override
     public CompletableFuture<Void> install() {
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             logConflictStrategyAction();
 

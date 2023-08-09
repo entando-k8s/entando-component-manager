@@ -21,7 +21,7 @@ public class ContentInstallable extends Installable<ContentDescriptor> {
 
     @Override
     public CompletableFuture<Void> install() {
-        return ContextCompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             logConflictStrategyAction();
 

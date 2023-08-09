@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.security.MultipleIdps;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -68,7 +69,7 @@ public class TenantConfig {
             @Value("${spring.datasource.url}") final String primaryDbUrl) {
 
         return new PrimaryTenantConfig()
-                .setTenantCode("primary") // fixme
+                .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
                 .setFqdns(primaryHostName)
                 .setKcAuthUrl(primaryIssuerUri)
                 .setDeDbDriverClassName(primaryDbDialect)

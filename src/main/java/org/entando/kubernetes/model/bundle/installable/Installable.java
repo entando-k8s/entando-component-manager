@@ -49,7 +49,7 @@ public abstract class Installable<T extends Descriptor> {
      * @return should return a CompletableFuture with its processing inside. It can be run asynchronously or not.
      */
     public CompletableFuture<Void> uninstallFromEcr() {
-        return ContextCompletableFuture.runAsync(this::logDeletion);
+        return ContextCompletableFuture.runAsyncWithContext(this::logDeletion);
     }
 
     /**

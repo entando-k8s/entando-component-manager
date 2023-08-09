@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
+import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,7 +24,6 @@ public class TenantFilter extends OncePerRequestFilter {
     private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
     private static final String HOST = "Host";
     private static final String REQUEST_SERVER_NAME = "Request server name";
-    private static final String PRIMARY_TENANT_CODE = "primary"; // FIXME use the custom model constant
 
     private final List<TenantConfigDTO> tenantConfigs;
 
@@ -59,8 +59,8 @@ public class TenantFilter extends OncePerRequestFilter {
                 .orElseGet(() -> {
                     log.info(
                             "No tenant identified for the received request. {}, {} and {} are empty. Falling back to {}",
-                            X_FORWARDED_HOST, HOST, REQUEST_SERVER_NAME, PRIMARY_TENANT_CODE);
-                    return PRIMARY_TENANT_CODE;
+                            X_FORWARDED_HOST, HOST, REQUEST_SERVER_NAME, EntandoMultiTenancy.PRIMARY_TENANT);
+                    return EntandoMultiTenancy.PRIMARY_TENANT;
                 });
 
         log.info("TenantCode: " + tenantCode);
@@ -78,8 +78,8 @@ public class TenantFilter extends OncePerRequestFilter {
                 .or(() -> {
                     log.info(
                             "No tenant identified for the received request. {} = '{}'. Falling back to {}",
-                            searchInputName, search, PRIMARY_TENANT_CODE);
-                    return Optional.of(PRIMARY_TENANT_CODE);
+                            searchInputName, search, EntandoMultiTenancy.PRIMARY_TENANT);
+                    return Optional.of(EntandoMultiTenancy.PRIMARY_TENANT);
                 });
     }
 
