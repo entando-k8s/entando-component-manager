@@ -6,13 +6,13 @@ import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.jwk.source.DefaultJWKSetCache;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.JWSAlgorithmFamilyJWSKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.security.MultipleIdps.OAuth2IdpConfig;
@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -29,23 +30,23 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 @Configuration
 @Slf4j
-@RequiredArgsConstructor
 public class AuthenticationManagerConfig {
 
-    private final JwtAuthorityExtractor jwtAuthorityExtractor;
-
     @Bean
-    public Map<String, AuthenticationManager> authenticationManagers(MultipleIdps multipleIdps) {
+    public Map<String, AuthenticationManager> authenticationManagers(MultipleIdps multipleIdps,
+                                                                     JwtAuthorityExtractor jwtAuthorityExtractor) {
         return multipleIdps.getTrustedIssuers().keySet()
                 .stream()
                 .collect(Collectors.toMap(issuer -> issuer,
                         issuer -> {
                             log.info("Loading authentication manager for issuer: '{}'", issuer);
-                            return createJwtAuthProvider(multipleIdps.getIdpConfigForIssuer(issuer))::authenticate;
+                            return createJwtAuthProvider(multipleIdps
+                                    .getIdpConfigForIssuer(issuer), jwtAuthorityExtractor)::authenticate;
                         }));
     }
 
-    private JwtAuthenticationProvider createJwtAuthProvider(OAuth2IdpConfig config) {
+    private JwtAuthenticationProvider createJwtAuthProvider(OAuth2IdpConfig config,
+                                                            JwtAuthorityExtractor jwtAuthorityExtractor) {
         var jwtDecoder = new NimbusJwtDecoder(this.configureJwksCache(config));
         jwtDecoder.setJwtValidator(this.createValidators(config));
         var authenticationProvider = new JwtAuthenticationProvider(jwtDecoder);
@@ -53,7 +54,7 @@ public class AuthenticationManagerConfig {
         return authenticationProvider;
     }
 
-    private DefaultJWTProcessor configureJwksCache(OAuth2IdpConfig config) {
+    private DefaultJWTProcessor<SecurityContext> configureJwksCache(OAuth2IdpConfig config) {
         try {
             var jwkSetCache = new DefaultJWKSetCache(
                     config.getJwkCacheTtl().toMinutes(),
@@ -62,7 +63,7 @@ public class AuthenticationManagerConfig {
             var jwsKeySelector = JWSAlgorithmFamilyJWSKeySelector.fromJWKSource(
                     new RemoteJWKSet<>(new URL(config.getJwkUri()), null, jwkSetCache));
 
-            var jwtProcessor = new DefaultJWTProcessor();
+            var jwtProcessor = new DefaultJWTProcessor<>();
             jwtProcessor.setJWSKeySelector(jwsKeySelector);
             return jwtProcessor;
         } catch (KeySourceException | MalformedURLException e) {
@@ -70,8 +71,8 @@ public class AuthenticationManagerConfig {
         }
     }
 
-    private DelegatingOAuth2TokenValidator createValidators(OAuth2IdpConfig config) {
-        return new DelegatingOAuth2TokenValidator(JwtValidators.createDefaultWithIssuer(config.getIssuerUri()),
+    private DelegatingOAuth2TokenValidator<Jwt> createValidators(OAuth2IdpConfig config) {
+        return new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(config.getIssuerUri()),
                 createTenantIssuerValidator(config));
     }
 
@@ -80,8 +81,8 @@ public class AuthenticationManagerConfig {
      *
      * @return the created JwtClaimValidator
      */
-    private JwtClaimValidator createTenantIssuerValidator(OAuth2IdpConfig config) {
-        return new JwtClaimValidator<String>(ISS,
+    private JwtClaimValidator<String> createTenantIssuerValidator(OAuth2IdpConfig config) {
+        return new JwtClaimValidator<>(ISS,
                 iss -> {
                     log.debug(
                             "Request received by tenant: '{}'. Issuer extracted by JWT: '{}' - tenant got by config: '{}'",

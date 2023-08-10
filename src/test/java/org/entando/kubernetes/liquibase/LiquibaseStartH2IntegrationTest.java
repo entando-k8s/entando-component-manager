@@ -29,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
                 TestAppConfiguration.class,
                 TestTenantConfig.class
         })
-@ActiveProfiles("testdb")
+@ActiveProfiles({"testdb"})
 @Slf4j
 @Tag("component")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)

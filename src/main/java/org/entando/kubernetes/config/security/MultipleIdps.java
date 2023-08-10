@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Getter
@@ -25,7 +24,7 @@ public class MultipleIdps {
     private static final long JWK_CACHE_TTL_DURATION = 30L;
     private static final long JWK_CACHE_REFRESH_DURATION = 15L;
 
-    public MultipleIdps(@Autowired List<TenantConfigDTO> tenantConfigs) {
+    public MultipleIdps(List<TenantConfigDTO> tenantConfigs) {
 
         this.trustedIssuers = Optional.ofNullable(tenantConfigs)
                 .orElseGet(ArrayList::new)

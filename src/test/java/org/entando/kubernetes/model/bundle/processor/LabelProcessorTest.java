@@ -22,14 +22,17 @@ import org.entando.kubernetes.model.bundle.installable.LabelInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 class LabelProcessorTest extends BaseProcessorTest {
 
     @Mock

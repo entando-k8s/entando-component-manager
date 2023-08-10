@@ -89,7 +89,7 @@ class LanguageProcessorTest extends BaseProcessorTest {
                 .stream().sorted(Comparator.comparing(langDescriptor -> langDescriptor.getCode().toLowerCase()))
                 .collect(Collectors.toList());
 
-        assertThat(languageDescriptorList1.size()).isEqualTo(languageDescriptorList.size());
+        assertThat(languageDescriptorList1).hasSameSizeAs(languageDescriptorList);
         IntStream.range(0, languageDescriptorList1.size()).forEach(i -> {
             assertThat(languageDescriptorList1.get(i).getCode()).isEqualTo(languageDescriptorList.get(i).getCode());
             assertThat(languageDescriptorList1.get(i).getDescription())

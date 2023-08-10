@@ -8,12 +8,14 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.security.MultipleIdps;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 @TestConfiguration
 public class TestTenantConfig {
 
+    @Value("${entando.tenants:#{null}}")
     private String tenantConfigs;
 
     private ObjectMapper objectMapper = new ObjectMapper();

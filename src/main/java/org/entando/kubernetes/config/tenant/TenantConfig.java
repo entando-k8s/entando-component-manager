@@ -21,7 +21,9 @@ import org.springframework.context.annotation.Profile;
 
 
 @Configuration
-@Profile("!test")
+// https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Profile.html
+// the profile are by default in OR we need AND
+@Profile("!test  & !testdb")
 @Slf4j
 public class TenantConfig {
 
