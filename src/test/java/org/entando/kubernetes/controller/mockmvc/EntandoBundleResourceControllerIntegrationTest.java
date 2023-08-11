@@ -31,7 +31,6 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
-import org.entando.kubernetes.config.tenant.TestTenantConfig;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
 import org.entando.kubernetes.model.bundle.BundleStatus;
@@ -85,8 +84,7 @@ import org.springframework.web.context.WebApplicationContext;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class,
-                TestTenantConfig.class
+                TestAppConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")

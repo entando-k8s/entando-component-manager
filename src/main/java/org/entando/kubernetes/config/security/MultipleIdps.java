@@ -1,6 +1,5 @@
 package org.entando.kubernetes.config.security;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +19,6 @@ public class MultipleIdps {
     private final Map<String, OAuth2IdpConfig> trustedIssuers;
 
     private static final String JWK_REALM_SECTION = "/realms/";
-    private static final String JWK_URI_SUFFIX = "/protocol/openid-connect/certs";
-    private static final long JWK_CACHE_TTL_DURATION = 30L;
-    private static final long JWK_CACHE_REFRESH_DURATION = 15L;
 
     public MultipleIdps(List<TenantConfigDTO> tenantConfigs) {
 
@@ -31,10 +27,7 @@ public class MultipleIdps {
                 .stream()
                 .collect(Collectors.toMap(this::composeIssuerUri, tc -> {
                     String issuer = composeIssuerUri(tc);
-                    Duration jwkCacheTtl = Duration.ofMinutes(JWK_CACHE_TTL_DURATION);
-                    Duration jwkCacheRefresh = Duration.ofMinutes(JWK_CACHE_REFRESH_DURATION);
-                    String jwkSetUri = issuer + JWK_URI_SUFFIX;
-                    return new OAuth2IdpConfig(issuer, jwkCacheTtl, jwkCacheRefresh, jwkSetUri, tc.getTenantCode());
+                    return new OAuth2IdpConfig(issuer, tc.getTenantCode());
                 }));
 
         log.debug("Extracted issuers {}", trustedIssuers.keySet());
@@ -61,9 +54,6 @@ public class MultipleIdps {
     public static class OAuth2IdpConfig {
 
         private final String issuerUri;
-        private final Duration jwkCacheTtl;
-        private final Duration jwkCacheRefresh;
-        private final String jwkUri;
         private final String tenantCode;
     }
 

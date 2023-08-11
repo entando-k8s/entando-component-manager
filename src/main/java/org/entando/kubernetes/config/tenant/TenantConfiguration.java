@@ -51,8 +51,7 @@ public class TenantConfiguration {
     @Bean
     public PrimaryTenantConfig primaryTenantConfig(
             @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") final String primaryIssuerUri,
-            // FIXME this prevent default behavior not work
-            @Value("${entando.app.host.name}") final String primaryHostName,
+            @Value("${entando.app.host.name:localhost}") final String primaryHostName,
             @Value("${spring.jpa.database-platform}") final String primaryDbDialect,
             @Value("${spring.datasource.username}") final String primaryDbUsername,
             @Value("${spring.datasource.password}") final String primaryDbPassword,

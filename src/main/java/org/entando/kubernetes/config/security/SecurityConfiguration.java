@@ -45,7 +45,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http
                 .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf()
-                .disable()
+                // disable sonar because csrf disabled is the standard behavior for a long time
+                .disable() // NOSONAR
                 .exceptionHandling()
                 .accessDeniedHandler(problemSupport)
                 .and()
@@ -77,7 +78,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(authenticationManagerResolver))
                 .oauth2Client();
-        // @formatter:on
+                // @formatter:on
     }
 
     @Bean
