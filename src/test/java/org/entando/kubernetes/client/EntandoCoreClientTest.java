@@ -167,16 +167,17 @@ class EntandoCoreClientTest {
     @Test
     void shouldComponentsUsageDetailsReturnException() {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_REQUEST.value());
-        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentUsageRequest> usageRequests = Collections
+                .singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(usageRequests));
     }
 
     @Test
     void shouldComponentsUsageDetailsWithErrorExecuteRetry() {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_GATEWAY.value());
-
-        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentUsageRequest> usageRequests = Collections
+                .singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(usageRequests));
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
@@ -218,15 +219,17 @@ class EntandoCoreClientTest {
     @Test
     void shouldComponentsDeleteReturnException() {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_REQUEST.value());
-        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentDeleteRequest> deleteRequests = Collections
+                .singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(deleteRequests));
     }
 
     @Test
     void shouldComponentsDeleteWithErrorExecuteRetry() {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_GATEWAY.value());
-        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentDeleteRequest> deleteRequests = Collections
+                .singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(deleteRequests));
         coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
     }
 

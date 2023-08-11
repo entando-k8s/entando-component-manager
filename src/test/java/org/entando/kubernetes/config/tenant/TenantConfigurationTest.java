@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.stubhelper.TenantConfigStubHelper;
 import org.junit.jupiter.api.Tag;
@@ -38,11 +39,10 @@ class TenantConfigurationTest {
         // Invalid JSON data (missing closing bracket)
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
         TenantConfiguration tenantConfiguration = new TenantConfiguration();
+        PrimaryTenantConfig primary = TenantConfigStubHelper.stubPrimaryTenantConfig("6");
 
         assertThrows(EntandoComponentManagerException.class,
-                () -> tenantConfiguration.tenantConfigs(TenantConfigStubHelper.stubPrimaryTenantConfig("6"),
-                        objectMapper,
-                        invalidInput));
+                () -> tenantConfiguration.tenantConfigs(primary, objectMapper, invalidInput));
     }
 
 

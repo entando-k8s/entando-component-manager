@@ -49,7 +49,7 @@ public class AuthenticationManagerConfiguration {
     }
 
     JwtDecoder buildJwtDecoder(OAuth2IdpConfig config) {
-        log.debug("build jwt decoder for issued uri {}", config.getIssuerUri());
+        log.debug("build jwt decoder for issuer uri {}", config.getIssuerUri());
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromOidcIssuerLocation(config.getIssuerUri());
         OAuth2TokenValidator<Jwt> withAudience = buildValidators(config);
         jwtDecoder.setJwtValidator(withAudience);

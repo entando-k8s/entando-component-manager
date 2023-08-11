@@ -35,7 +35,7 @@ public class TenantFilter extends OncePerRequestFilter {
         String headerHost = request.getHeader(HOST);
         String headerServerName = request.getServerName();
 
-        String tenantCode = this.getTenantCode(headerXForwardedHost, headerHost, headerServerName);
+        String tenantCode = this.fetchTenantCode(headerXForwardedHost, headerHost, headerServerName);
 
         TenantContextHolder.setCurrentTenantCode(tenantCode);
 
@@ -47,15 +47,17 @@ public class TenantFilter extends OncePerRequestFilter {
         }
     }
 
-    public String getTenantCode(final String headerXForwardedHost,
-            final String headerHost,
-            final String servletRequestServerName) {
+    public String fetchTenantCode(final String headerXForwardedHost,
+                                  final String headerHost,
+                                  final String servletRequestServerName) {
 
+        log.debug("Extracting tenantCode from headerXForwardedHost:'{}' headerHost:'{}' servletRequestServerName:'{}'",
+                headerXForwardedHost, headerHost, servletRequestServerName);
         String tenantCode = Optional.ofNullable(tenantConfigs)
                 .flatMap(tcs ->
-                        getTenantCodeFromConfig(X_FORWARDED_HOST, headerXForwardedHost)
-                                .or(() -> getTenantCodeFromConfig(HOST, headerHost))
-                                .or(() -> getTenantCodeFromConfig(REQUEST_SERVER_NAME, servletRequestServerName)))
+                        searchTenantCodeInConfigs(X_FORWARDED_HOST, headerXForwardedHost)
+                                .or(() -> searchTenantCodeInConfigs(HOST, headerHost))
+                                .or(() -> searchTenantCodeInConfigs(REQUEST_SERVER_NAME, servletRequestServerName)))
                 .orElseGet(() -> {
                     log.info(
                             "No tenant identified for the received request. {}, {} and {} are empty. Falling back to {}",
@@ -63,11 +65,11 @@ public class TenantFilter extends OncePerRequestFilter {
                     return EntandoMultiTenancy.PRIMARY_TENANT;
                 });
 
-        log.info("TenantCode: " + tenantCode);
+        log.info("Extracted tenantCode: '{}'", tenantCode);
         return tenantCode;
     }
 
-    private Optional<String> getTenantCodeFromConfig(String searchInputName, String search) {
+    private Optional<String> searchTenantCodeInConfigs(String searchInputName, String search) {
 
         if (StringUtils.isBlank(search)) {
             return Optional.empty();

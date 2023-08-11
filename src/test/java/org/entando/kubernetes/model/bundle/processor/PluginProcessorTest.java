@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +40,7 @@ import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TestUtils;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -67,6 +69,13 @@ class PluginProcessorTest extends BaseProcessorTest {
     private PluginProcessor processor;
 
     private YAMLMapper yamlMapper = new YAMLMapper();
+
+    private static final Map<String, String> originalEnv = System.getenv();
+
+    @AfterAll
+    public static void reset() throws Exception {
+        TestUtils.setEnv(new HashMap<>(originalEnv));
+    }
 
     @BeforeEach
     public void setUp() {
@@ -366,7 +375,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldAddTheCmEndpointEnvVarHttps() throws Exception {
 
         TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
-                "http://www.mykc.com/auth/realms/entando",
+                "http://localhost:8899/auth/realms/entando",
                 "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
                 "ENTANDO_APP_HOST_NAME", "www.myentando.com",
                 "ENTANDO_APP_USE_TLS", "true"));
@@ -387,7 +396,7 @@ class PluginProcessorTest extends BaseProcessorTest {
     void shouldAddTheCmEndpointEnvVarHttp() throws Exception {
 
         TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
-                "http://www.mykc.com/auth/realms/entando",
+                "http://localhost:8899/auth/realms/entando",
                 "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
                 "ENTANDO_APP_HOST_NAME", "www.myentando.com",
                 "ENTANDO_APP_USE_TLS", "false"));
