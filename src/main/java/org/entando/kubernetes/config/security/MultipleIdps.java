@@ -9,8 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
+import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
 
 @Slf4j
 @Getter
@@ -34,7 +34,7 @@ public class MultipleIdps {
     }
 
     private String composeIssuerUri(TenantConfigDTO tenantConfig) {
-        if (StringUtils.isBlank(tenantConfig.getKcRealm())) {
+        if (tenantConfig instanceof PrimaryTenantConfig) {
             return tenantConfig.getKcAuthUrl();
         } else {
             return tenantConfig.getKcAuthUrl() + JWK_REALM_SECTION + tenantConfig.getKcRealm();
