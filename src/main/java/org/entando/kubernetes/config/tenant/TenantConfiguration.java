@@ -13,35 +13,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.security.MultipleIdps;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 
 @Configuration
 // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Profile.html
 // the profile are by default in OR we need AND
-@Profile("!test  & !testdb")
+//@Profile("!test  & !testdb")
 @Slf4j
-public class TenantConfig {
-
-    private String tenantConfigs;
-
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    public TenantConfig(
-            @Value("${entando.tenants:#{null}}")
-            String tenantConfigs,
-            ObjectMapper objectMapper) {
-        this.tenantConfigs = tenantConfigs;
-        this.objectMapper = objectMapper;
-    }
+public class TenantConfiguration {
 
     @Bean
-    public List<TenantConfigDTO> tenantConfigs(PrimaryTenantConfig primaryTenantConfig) {
+    public List<TenantConfigDTO> tenantConfigs(PrimaryTenantConfig primaryTenantConfig,
+                                               ObjectMapper objectMapper,
+                                               @Value("${entando.tenants:#{null}}") String tenantConfigs) {
 
         List<TenantConfigDTO> tenantConfigList = new ArrayList<>();
 
@@ -64,6 +51,7 @@ public class TenantConfig {
     @Bean
     public PrimaryTenantConfig primaryTenantConfig(
             @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") final String primaryIssuerUri,
+            // FIXME this prevent default behavior not work
             @Value("${entando.app.host.name}") final String primaryHostName,
             @Value("${spring.jpa.database-platform}") final String primaryDbDialect,
             @Value("${spring.datasource.username}") final String primaryDbUsername,
@@ -72,6 +60,7 @@ public class TenantConfig {
 
         return new PrimaryTenantConfig()
                 .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
+                .setKcRealm("entando")
                 .setFqdns(primaryHostName)
                 .setKcAuthUrl(primaryIssuerUri)
                 .setDeDbDriverClassName(primaryDbDialect)
@@ -93,6 +82,7 @@ public class TenantConfig {
         private String tenantCode;
         private String fqdns;
         private String kcAuthUrl;
+        private String kcRealm;
         private String deDbDriverClassName;
         private String deDbUrl;
         private String deDbUsername;

@@ -2,7 +2,7 @@ package org.entando.kubernetes.stubhelper;
 
 import java.time.Duration;
 import org.entando.kubernetes.config.security.MultipleIdps.OAuth2IdpConfig;
-import org.entando.kubernetes.config.tenant.TenantConfig.PrimaryTenantConfig;
+import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
 
 public class TenantConfigStubHelper {
 

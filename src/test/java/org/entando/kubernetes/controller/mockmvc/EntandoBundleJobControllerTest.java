@@ -19,10 +19,12 @@ import org.entando.kubernetes.config.tenant.TestTenantConfig;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,6 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
+@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
 public class EntandoBundleJobControllerTest {
 
     MockMvc mvc;

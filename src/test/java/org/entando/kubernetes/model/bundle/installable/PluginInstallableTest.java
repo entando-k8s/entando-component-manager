@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.ExecutionException;
 import org.entando.kubernetes.client.PluginDataRepositoryTestDouble;
-import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor.DescriptorMetadata;
@@ -17,6 +16,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(value = {MockitoExtension.class, TenantContextJunitExt.class})
 class PluginInstallableTest {
 
     private PluginInstallable pluginInstallable;

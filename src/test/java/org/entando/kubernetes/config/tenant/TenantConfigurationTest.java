@@ -11,16 +11,16 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-class TenantConfigTest {
+class TenantConfigurationTest {
     @Test
     void shouldParseTenantConfig() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String input = "[" + getTenantConfigMock("tenant1") + "," + getTenantConfigMock("tenant2") + "]";
 
-        TenantConfig tenantConfiguration = new TenantConfig(input, objectMapper);
+        TenantConfiguration tenantConfiguration = new TenantConfiguration();
         List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs(
-                TenantConfigStubHelper.stubPrimaryTenantConfig("6"));
+                TenantConfigStubHelper.stubPrimaryTenantConfig("6"), objectMapper, input);
 
         assertThat(tenantConfigs).hasSize(3);
 
@@ -37,10 +37,12 @@ class TenantConfigTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // Invalid JSON data (missing closing bracket)
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
-        TenantConfig tenantConfiguration = new TenantConfig(invalidInput, objectMapper);
+        TenantConfiguration tenantConfiguration = new TenantConfiguration();
 
         assertThrows(EntandoComponentManagerException.class,
-                () -> tenantConfiguration.tenantConfigs(TenantConfigStubHelper.stubPrimaryTenantConfig("6")));
+                () -> tenantConfiguration.tenantConfigs(TenantConfigStubHelper.stubPrimaryTenantConfig("6"),
+                        objectMapper,
+                        invalidInput));
     }
 
 
