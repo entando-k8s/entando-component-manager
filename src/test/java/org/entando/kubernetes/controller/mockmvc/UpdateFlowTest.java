@@ -58,8 +58,10 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
+import org.entando.kubernetes.utils.TenantTestUtils;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,14 +91,13 @@ import org.springframework.web.context.WebApplicationContext;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class,
-                TenantContextJunitExt.class
+                TestAppConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
 @DirtiesContext
-@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 public class UpdateFlowTest {
 
     private MockMvc mockMvc;
@@ -161,7 +162,8 @@ public class UpdateFlowTest {
     @AfterEach
     public void cleanup() {
         WireMock.reset();
-        databaseCleaner.cleanup();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> databaseCleaner.cleanup());
         downloaderFactory.setDefaultSupplier(defaultBundleDownloaderSupplier);
     }
 

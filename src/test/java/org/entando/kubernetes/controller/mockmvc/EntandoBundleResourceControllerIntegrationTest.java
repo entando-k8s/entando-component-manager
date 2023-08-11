@@ -51,6 +51,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.EntandoBundleJobStubHelper;
+import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.AfterEach;
@@ -90,7 +91,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 @DirtiesContext
-@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class EntandoBundleResourceControllerIntegrationTest {
 
     private final String componentsUrl = "/components";
@@ -123,14 +124,15 @@ class EntandoBundleResourceControllerIntegrationTest {
                 .apply(springSecurity())
                 .build();
         mapper = new ObjectMapper();
+        bundleEntityRepository.deleteAll();
+        bundleJobRepository.deleteAll();
     }
 
     @AfterEach
     public void cleanup() {
         WireMock.reset();
-        bundleEntityRepository.deleteAll();
-        bundleJobRepository.deleteAll();
         ((K8SServiceClientTestDouble) k8sServiceClient).cleanInMemoryDatabases();
+
     }
 
     @Test

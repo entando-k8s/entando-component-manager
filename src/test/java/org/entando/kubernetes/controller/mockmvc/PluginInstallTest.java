@@ -13,6 +13,7 @@ import org.entando.kubernetes.model.common.DbmsVendor;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 public class PluginInstallTest {
 
     @Autowired

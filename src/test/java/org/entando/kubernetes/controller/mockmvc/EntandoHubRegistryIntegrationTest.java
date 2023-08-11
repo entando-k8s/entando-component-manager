@@ -25,6 +25,8 @@ import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
+import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.hamcrest.core.IsNull;
@@ -67,7 +69,7 @@ import wiremock.com.jayway.jsonpath.JsonPath;
 @Tag("component")
 @WithMockUser
 @DirtiesContext
-@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class EntandoHubRegistryIntegrationTest {
 
     private final String baseUrl = "/registries";
@@ -90,6 +92,7 @@ class EntandoHubRegistryIntegrationTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+        entandoHubRegistryRepository.deleteAll();
         entandoHubRegistryRepository.saveAll(entityToSaveList);
 
         TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8103);
@@ -98,7 +101,6 @@ class EntandoHubRegistryIntegrationTest {
 
     @AfterEach
     public void tearDown() {
-        entandoHubRegistryRepository.deleteAll();
     }
 
     @Test

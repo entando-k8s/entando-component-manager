@@ -72,16 +72,16 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     private static final Map<String, String> originalEnv = System.getenv();
 
-    @AfterAll
-    public static void reset() throws Exception {
-        TestUtils.setEnv(new HashMap<>(originalEnv));
-    }
-
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
         TenantContextHolder.setCurrentTenantCode("primary");
+    }
+
+    @AfterAll
+    public static void reset() throws Exception {
+        TestUtils.setEnv(new HashMap<>(originalEnv));
     }
 
     @Test

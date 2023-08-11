@@ -16,6 +16,7 @@ import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.service.HubService;
 import org.entando.kubernetes.stubhelper.HubStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class EntandoHubRestTest {
 
     @Autowired

@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,10 +65,12 @@ public class K8SServiceClientTest {
     private static final String SERVICE_ACCOUNT_TOKEN_FILEPATH = "src/test/resources/k8s-service-account-token";
     private static EntandoK8SServiceMockServer mockServer;
     private DefaultK8SServiceClient client;
+    private Map<String, String> originalEnv;
 
     @BeforeEach
     public void setup() throws Exception {
         //needed by DefaultK8SServiceClient constructor
+        originalEnv = System.getenv();
         TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
 
         mockServer = new EntandoK8SServiceMockServer();
@@ -77,8 +80,9 @@ public class K8SServiceClientTest {
     }
 
     @AfterEach
-    public void reset() {
+    public void reset() throws Exception {
         mockServer.tearDown();
+        TestUtils.setEnv(new HashMap<>(originalEnv));
     }
 
     @Test

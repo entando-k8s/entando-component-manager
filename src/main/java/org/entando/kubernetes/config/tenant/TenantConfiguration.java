@@ -2,11 +2,14 @@ package org.entando.kubernetes.config.tenant;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +18,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -52,7 +56,11 @@ public class TenantConfiguration {
                 .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
                 .setKcRealm("entando")
                 .setFqdns(primaryHostName)
-                .setKcAuthUrl(primaryIssuerUri));
+                .setKcAuthUrl(primaryIssuerUri)
+                .setCmDbDriverClassName(DatabaseDriver.fromJdbcUrl(primaryDbUrl).getDriverClassName())
+                .setCmDbJdbcUrl(primaryDbUrl)
+                .setCmDbUsername(primaryDbUsername)
+                .setCmDbPassword(primaryDbPassword));
 
         return tenantConfigList;
     }
@@ -65,6 +73,8 @@ public class TenantConfiguration {
 
     @Setter
     @Getter
+    @EqualsAndHashCode
+    @ToString(exclude = {"cmDbPassword"})
     @Accessors(chain = true)
     public static class PrimaryTenantConfig extends TenantConfigDTO {
 
@@ -72,9 +82,9 @@ public class TenantConfiguration {
         private String fqdns;
         private String kcAuthUrl;
         private String kcRealm;
-        private String deDbDriverClassName;
-        private String deDbUrl;
-        private String deDbUsername;
-        private String deDbPassword;
+        private String cmDbDriverClassName;
+        private String cmDbJdbcUrl;
+        private String cmDbUsername;
+        private String cmDbPassword;
     }
 }

@@ -18,6 +18,8 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 public class EntandoBundleJobControllerTest {
 
     MockMvc mvc;
@@ -58,12 +60,12 @@ public class EntandoBundleJobControllerTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+        jobRepository.deleteAll();
         populateTestDatabase();
     }
 
     @AfterEach
     public void teardown() {
-        jobRepository.deleteAll();
     }
 
     @Test
