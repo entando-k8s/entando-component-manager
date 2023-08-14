@@ -100,7 +100,7 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(singleAppResponse)));
-        wireMockServer.stubFor(get(urlMatching("/apps/my-app/ingress/?"))
+        wireMockServer.stubFor(get(urlEqualTo("/apps/my-app/ingress?tenantCode=primary"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
