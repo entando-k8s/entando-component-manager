@@ -6,17 +6,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-class TenantFilterTest {
+class TenantFilterUtilsTest {
 
-    private TenantFilter filter;
-    private TenantContextHolder tenantContextHolder;
-    ObjectMapper objectMapper = new ObjectMapper();
+    List<TenantConfigDTO> configDTOList;
 
     @BeforeEach
     void init() throws JsonProcessingException {
@@ -29,58 +26,62 @@ class TenantFilterTest {
         config.append(getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com"));
         config.append("]");
         String tenantsConfig = config.toString();
-        List<TenantConfigDTO> configDTOList = objectMapper.readValue(tenantsConfig,
+        configDTOList = (new ObjectMapper()).readValue(tenantsConfig,
                 new TypeReference<List<TenantConfigDTO>>() {
                 });
-        filter = new TenantFilter(configDTOList);
+    }
+
+    @Test
+    void shouldReturnTheTenantCodeFromExistingXEntandoCustomHeader() {
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "xtenant", "tenant2.entando.com", "", "");
+        assertEquals("xtenant", tenantCode);
     }
 
     @Test
     void getByExistingXForwardedHostHeaderShouldReturnTheTenantCode() {
-        String tenantCode = filter.fetchTenantCode("tenant2.entando.com", "", "");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "tenant2.entando.com", "", "");
         assertEquals("tenant2", tenantCode);
     }
 
     @Test
     void getByNotExistingXForwardedHostHeaderShouldReturnPrimary() {
-        String tenantCode = filter.fetchTenantCode("tenant256.entando.com", "", "");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "tenant256.entando.com", "", "");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByExistingHostHeaderShouldReturnTheTenantCode() {
-        String tenantCode = filter.fetchTenantCode("", "tenant2.entando.com", "");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "", "tenant2.entando.com", "");
         assertEquals("tenant2", tenantCode);
     }
 
     @Test
     void getByNotExistingHostHeaderShouldReturnPrimary() {
-        String tenantCode = filter.fetchTenantCode("", "tenant256.entando.com", "");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "", "tenant256.entando.com", "");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByNotExistingXForwardedHostHeaderAndExistingHostShouldReturnPrimary() {
-        String tenantCode = filter.fetchTenantCode("tenant256.entando.com", "tenant2.entando.com", "");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "tenant256.entando.com", "tenant2.entando.com", "");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByExistingServletNameShouldReturnTheTenantCode() {
-        String tenantCode = filter.fetchTenantCode("", "", "tenant1.entando.com");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "", "", "tenant1.entando.com");
         assertEquals("tenant1", tenantCode);
     }
 
     @Test
     void getByNotExistingServletNameShouldReturnPrimary() {
-        String tenantCode = filter.fetchTenantCode("", "", "tenant256.entando.com");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(configDTOList, "", "", "", "tenant256.entando.com");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getPrimaryIfConfigNull() {
-        TenantFilter filter2 = new TenantFilter(null);
-        String tenantCode = filter2.fetchTenantCode("tenant2.entando.com", "", "");
+        String tenantCode = TenantFilterUtils.fetchTenantCode(null, "", "tenant2.entando.com", "", "");
         assertEquals("primary", tenantCode);
     }
 
