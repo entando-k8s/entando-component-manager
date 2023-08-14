@@ -16,10 +16,13 @@ import org.entando.kubernetes.model.common.ExpectedRole;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 class PluginDescriptorConvertionTest {
 
     @Test
