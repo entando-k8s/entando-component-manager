@@ -306,7 +306,20 @@ class EntandoCoreClientTest {
                 WireMock::post, HttpStatus.BAD_GATEWAY.value());
         assertThrows(RestClientResponseException.class, () -> this.client.createWidget(wd));
         coreMockServer.verify(3, EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
+    }
 
+    @Test
+    void createWidgetWithNoErrorAndWithEntandoCustomHeader() {
+        final String code = "DDAABBCC";
+        WidgetDescriptor wd = new WidgetDescriptor();
+        wd.setCode(code);
+
+        coreMockServer = coreMockServer.withGenericSupportAndStatusCodeAndPrimaryCustomEntandoHeaders(EntandoCoreMockServer.WIDGET_ENDPOINT,
+                null,
+                WireMock::post,
+                HttpStatus.OK.value());
+        this.client.createWidget(wd);
+        coreMockServer.verify(1, EntandoCoreMockServer.WIDGET_ENDPOINT, WireMock::postRequestedFor);
     }
 
     @Test

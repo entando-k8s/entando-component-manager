@@ -15,6 +15,7 @@ import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequest;
 import org.entando.kubernetes.client.request.AnalysisReportClientRequestFactory;
+import org.entando.kubernetes.client.request.RestTemplateHeaderTenantCodeInterceptor;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.descriptor.AssetDescriptor;
@@ -125,7 +126,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         this.restTemplate = new OAuth2RestTemplate(resourceDetails);
         this.restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
         this.restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
-
+        this.restTemplate.getInterceptors().add(new RestTemplateHeaderTenantCodeInterceptor());
     }
 
     @Override
