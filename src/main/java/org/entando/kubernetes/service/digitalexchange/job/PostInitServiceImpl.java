@@ -26,6 +26,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.tenant.TenantConfigDTO;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.exception.EntandoGeneralException;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
@@ -58,6 +60,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     private final KubernetesService kubernetesService;
     private final String postInitConfigurationData;
     private static final ObjectMapper mapper = new ObjectMapper();
+    private final List<TenantConfigDTO> tenantConfigs;
 
     private PostInitStatus status;
     private boolean finished;
@@ -88,9 +91,11 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     public PostInitServiceImpl(@Value("${entando.ecr.postinit:#{null}}") String postInitConfigurationData,
+                               List<TenantConfigDTO> tenantConfigs,
             EntandoBundleService bundleService, EntandoBundleInstallService installService,
             KubernetesService kubernetesService, EntandoBundleJobService entandoBundleJobService) {
         this.postInitConfigurationData = postInitConfigurationData;
+        this.tenantConfigs = tenantConfigs;
         this.bundleService = bundleService;
         this.installService = installService;
         this.kubernetesService = kubernetesService;
@@ -139,94 +144,106 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         Optional<String> appStatus = retrieveApplicationStatus();
         if (appStatus.isPresent() && EntandoDeploymentPhase.SUCCESSFUL.toValue().toLowerCase()
                 .equals(appStatus.get())) {
-            log.info("Application is ready, starting the post-init installation process");
-            // sort bundle ootb to manage priority
-            Comparator<PostInitItem> compareByPriorityAndThenName = Comparator
-                    .comparingInt(PostInitItem::getPriority).reversed()
-                    .thenComparing(PostInitItem::getName);
 
-            List<PostInitItem> bundleToInstall = configurationData.getItems().stream()
-                    .sorted(compareByPriorityAndThenName)
-                    .collect(Collectors.toList());
-
-            // list ALL bundles installed (for update) or not
-            Map<String, EntandoBundle> bundlesInstalledOrDeployed = bundleService.listBundles().getBody().stream()
-                    .collect(Collectors.toMap(
-                            EntandoBundle::getCode,
-                            Function.identity(),
-                            (item1, item2) -> item1));
-
-            try {
-
-                for (PostInitItem itemFromConfig : bundleToInstall) {
-                    final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
-                    log.info("Post init installing action '{}' on bundle '{}'", item.getAction(), item.getName());
-
-                    final String bundleCode = calculateBundleCode(item);
-
-                    EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
-                            .orElseGet(() -> deployPostInitBundle(item));
-
-                    computeInstallStrategy(bundle, item)
-                            .or(() -> computeUpdateStrategy(bundle, item))
-                            .ifPresent(strategy -> {
-                                // try to install
-                                EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
-                                        .orElseThrow(() -> {
-                                            log.debug("EntandoDeBundle not found with bundleCode:'{}'", bundleCode);
-                                            return new BundleNotFoundException(bundleCode);
-                                        });
-                                EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
-
-                                EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy);
-
-                                Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
-
-                                Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
-                                        JobStatus.INSTALL_ERROR);
-                                Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
-                                waitStatuses.add(JobStatus.INSTALL_COMPLETED);
-
-                                waitForJobStatus(getJobStatus, waitStatuses);
-
-                                if (errorStatuses.contains(getJobStatus.get())) {
-                                    throw new EntandoGeneralException("error installing " + item.getName());
-                                }
-                            });
-                }
-
-                log.info("Post init install executed successfully");
-                status = PostInitStatus.SUCCESSFUL;
-                retries = MAX_RETIES;
-                finished = true;
-
-            } catch (BundleNotFoundException ex) {
-                log.info("Error Post init bundle install not found with bundle code:'{}'", getArgBundleIdentifier(ex));
-                log.debug("BundleNotFoundException error:", ex);
-                status = PostInitStatus.FAILED;
-                retries = MAX_RETIES;
-                finished = true;
-
-            } catch (EntandoGeneralException | InvalidBundleException ex) {
-                log.info("Error Post init bundle install with error message:'{}'", ex.getMessage());
-                log.debug("EntandoGeneralException | InvalidBundleException error:", ex);
-                status = PostInitStatus.FAILED;
-                retries = MAX_RETIES;
-                finished = true;
-
-            } catch (Throwable ex) {
-                // useful catch to manage executor bug
-                log.error("Error unmanaged post init bundle install", ex.getMessage(), ex);
-                status = PostInitStatus.UNKNOWN;
-                finished = true;
-
-            }
+            tenantConfigs.stream().map(TenantConfigDTO::getTenantCode).forEach(tenantCode -> {
+                TenantContextHolder.setCurrentTenantCode(tenantCode);
+                postInitInstallation();
+            });
 
         } else {
             log.debug("Error Post init: EntandoApp not yet ready");
             status = PostInitStatus.UNKNOWN;
             finished = true;
         }
+    }
+
+    private void postInitInstallation() {
+        if (log.isInfoEnabled()) {
+            log.info("Application is ready, starting the post-init installation process for tenant:'{}'",
+                    TenantContextHolder.getCurrentTenantCode());
+        }
+        // sort bundle ootb to manage priority
+        Comparator<PostInitItem> compareByPriorityAndThenName = Comparator
+                .comparingInt(PostInitItem::getPriority).reversed()
+                .thenComparing(PostInitItem::getName);
+
+        List<PostInitItem> bundleToInstall = configurationData.getItems().stream()
+                .sorted(compareByPriorityAndThenName)
+                .collect(Collectors.toList());
+
+        // list ALL bundles installed (for update) or not
+        Map<String, EntandoBundle> bundlesInstalledOrDeployed = bundleService.listBundles().getBody().stream()
+                .collect(Collectors.toMap(
+                        EntandoBundle::getCode,
+                        Function.identity(),
+                        (item1, item2) -> item1));
+
+        try {
+
+            for (PostInitItem itemFromConfig : bundleToInstall) {
+                final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);
+                log.info("Post init installing action '{}' on bundle '{}'", item.getAction(), item.getName());
+
+                final String bundleCode = calculateBundleCode(item);
+
+                EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
+                        .orElseGet(() -> deployPostInitBundle(item));
+
+                computeInstallStrategy(bundle, item)
+                        .or(() -> computeUpdateStrategy(bundle, item))
+                        .ifPresent(strategy -> {
+                            // try to install
+                            EntandoDeBundle entandoDeBundle = kubernetesService.fetchBundleByName(bundleCode)
+                                    .orElseThrow(() -> {
+                                        log.debug("EntandoDeBundle not found with bundleCode:'{}'", bundleCode);
+                                        return new BundleNotFoundException(bundleCode);
+                                    });
+                            EntandoDeBundleTag tag = getBundleTagOrFail(entandoDeBundle, item.getVersion());
+
+                            EntandoBundleJobEntity job = installService.install(entandoDeBundle, tag, strategy);
+
+                            Supplier<JobStatus> getJobStatus = () -> getEntandoBundleJobStatus(job.getId());
+
+                            Set<JobStatus> errorStatuses = Set.of(JobStatus.INSTALL_ROLLBACK,
+                                    JobStatus.INSTALL_ERROR);
+                            Set<JobStatus> waitStatuses = new HashSet<>(errorStatuses);
+                            waitStatuses.add(JobStatus.INSTALL_COMPLETED);
+
+                            waitForJobStatus(getJobStatus, waitStatuses);
+
+                            if (errorStatuses.contains(getJobStatus.get())) {
+                                throw new EntandoGeneralException("error installing " + item.getName());
+                            }
+                        });
+            }
+
+            log.info("Post init install executed successfully");
+            status = PostInitStatus.SUCCESSFUL;
+            retries = MAX_RETIES;
+            finished = true;
+
+        } catch (BundleNotFoundException ex) {
+            log.info("Error Post init bundle install not found with bundle code:'{}'", getArgBundleIdentifier(ex));
+            log.debug("BundleNotFoundException error:", ex);
+            status = PostInitStatus.FAILED;
+            retries = MAX_RETIES;
+            finished = true;
+
+        } catch (EntandoGeneralException | InvalidBundleException ex) {
+            log.info("Error Post init bundle install with error message:'{}'", ex.getMessage());
+            log.debug("EntandoGeneralException | InvalidBundleException error:", ex);
+            status = PostInitStatus.FAILED;
+            retries = MAX_RETIES;
+            finished = true;
+
+        } catch (Throwable ex) {
+            // useful catch to manage executor bug
+            log.error("Error unmanaged post init bundle install", ex.getMessage(), ex);
+            status = PostInitStatus.UNKNOWN;
+            finished = true;
+
+        }
+
     }
 
     private String getArgBundleIdentifier(BundleNotFoundException ex) {
