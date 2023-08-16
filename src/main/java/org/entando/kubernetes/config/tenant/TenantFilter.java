@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
 
-    public static final String X_ENTANDO_TENANTCODE = " X-ENTANDO-TENANTCODE";
+    public static final String X_ENTANDO_TENANTCODE = "X-ENTANDO-TENANTCODE";
     private final List<TenantConfigDTO> tenantConfigs;
 
     @Override
