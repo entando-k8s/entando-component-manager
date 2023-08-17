@@ -82,7 +82,6 @@ class TenantConfigurationTest {
         assertThat(tenant.getFqdns()).isEqualTo("mock-fqdns");
         assertThat(tenant.getKcAuthUrl()).isEqualTo("mock-auth-url");
         assertThat(tenant.getKcRealm()).isEqualTo("tenant1");
-        assertThat(tenant.getCmDbDriverClassName()).isEqualTo("org.postgresql.Driver");
         assertThat(tenant.getCmDbJdbcUrl())
                 .isEqualTo("jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1");
         assertThat(tenant.getCmDbUsername()).isEqualTo("username");

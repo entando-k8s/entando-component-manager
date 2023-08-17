@@ -18,7 +18,6 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -57,7 +56,6 @@ public class TenantConfiguration {
                 .setKcRealm("entando")
                 .setFqdns(primaryHostName)
                 .setKcAuthUrl(primaryIssuerUri)
-                .setCmDbDriverClassName(DatabaseDriver.fromJdbcUrl(primaryDbUrl).getDriverClassName())
                 .setCmDbJdbcUrl(primaryDbUrl)
                 .setCmDbUsername(primaryDbUsername)
                 .setCmDbPassword(primaryDbPassword));
@@ -82,7 +80,6 @@ public class TenantConfiguration {
         private String fqdns;
         private String kcAuthUrl;
         private String kcRealm;
-        private String cmDbDriverClassName;
         private String cmDbJdbcUrl;
         private String cmDbUsername;
         private String cmDbPassword;

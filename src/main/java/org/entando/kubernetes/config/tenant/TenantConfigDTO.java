@@ -16,10 +16,8 @@ public class TenantConfigDTO {
     private String kcAuthUrl;
     private String kcRealm;
 
-    private String cmDbDriverClassName;
     private String cmDbJdbcUrl;
     private String cmDbUsername;
     private String cmDbPassword;
-    private int cmDbMaxTotal;
 
 }

@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,7 +31,7 @@ public class TenantDataSourceConfiguration {
     private DataSource buildDataSourceFromTenantConfiguration(TenantConfigDTO config) {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        dataSourceBuilder.driverClassName(config.getCmDbDriverClassName());
+        dataSourceBuilder.driverClassName(DatabaseDriver.fromJdbcUrl(config.getCmDbJdbcUrl()).getDriverClassName());
         dataSourceBuilder.username(config.getCmDbUsername());
         dataSourceBuilder.password(config.getCmDbPassword());
         dataSourceBuilder.url(config.getCmDbJdbcUrl());

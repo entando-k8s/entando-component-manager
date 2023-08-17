@@ -22,7 +22,6 @@ public class TenantConfigStubHelper {
                 .setTenantCode(TENANT_CODE + suffix)
                 .setFqdns(HOSTNAME + suffix)
                 .setKcAuthUrl(ISSUER_URI + suffix)
-                .setCmDbDriverClassName(DB_DIALECT + suffix)
                 .setCmDbJdbcUrl(DB_DIALECT + suffix)
                 .setCmDbUsername(DB_DIALECT + suffix)
                 .setCmDbPassword(DB_DIALECT + suffix);
