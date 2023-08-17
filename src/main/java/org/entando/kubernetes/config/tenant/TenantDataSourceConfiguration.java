@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,8 @@ import org.springframework.context.annotation.Configuration;
 public class TenantDataSourceConfiguration {
 
     @Bean
-    public DataSource dataSource(List<TenantConfigDTO> tenantConfigs) {
+    public DataSource dataSource(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs) {
+        log.debug("==== starting DB routing ====");
         Map<Object, Object> resolvedDataSources =  tenantConfigs.stream()
                 .collect(Collectors.toMap(TenantConfigDTO::getTenantCode, this::buildDataSourceFromTenantConfiguration));
 
