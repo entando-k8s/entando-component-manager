@@ -32,6 +32,8 @@ public class TenantConfiguration {
     public List<TenantConfigDTO> tenantConfigs(ObjectMapper objectMapper,
                                                @Value("${entando.tenants:#{null}}") String tenantConfigs,
                                                @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") final String primaryIssuerUri,
+                                               @Value("${spring.security.oauth2.client.registration.oidc.client-id}") final String clientId,
+                                               @Value("${spring.security.oauth2.client.registration.oidc.client-secret}") final String clientSecret,
                                                @Value("${entando.app.host.name:localhost}") final String primaryHostName,
                                                @Value("${spring.datasource.username}") final String primaryDbUsername,
                                                @Value("${spring.datasource.password}") final String primaryDbPassword,
@@ -55,6 +57,8 @@ public class TenantConfiguration {
                 .setKcRealm("entando")
                 .setFqdns(primaryHostName)
                 .setKcAuthUrl(primaryIssuerUri)
+                .setKcCmClientId(clientId)
+                .setKcCmClientSecret(clientSecret)
                 .setCmDbJdbcUrl(primaryDbUrl)
                 .setCmDbUsername(primaryDbUsername)
                 .setCmDbPassword(primaryDbPassword));
@@ -82,5 +86,7 @@ public class TenantConfiguration {
         private String cmDbJdbcUrl;
         private String cmDbUsername;
         private String cmDbPassword;
+        private String kcCmClientId;
+        private String kcCmClientSecret;
     }
 }

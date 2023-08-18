@@ -7,6 +7,8 @@ public class TenantConfigStubHelper {
 
     public static final String ISSUER_URI = "http://issuer";
     public static final String REALM = "myreaml";
+    public static final String KC_CLIENT_ID = "ent-de";
+    public static final String KC_CLIENT_SECRET = "ent-de-secret";
     public static final String HOSTNAME = "hostname";
     public static final String DB_DIALECT = "dialect";
     public static final String TENANT_CODE = "tenantCode";

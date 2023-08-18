@@ -23,6 +23,7 @@ import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteResponseStatus;
+import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.exception.web.WebHttpException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -36,6 +37,7 @@ import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.contenttype.ContentTypeDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
@@ -65,10 +67,15 @@ class EntandoCoreClientTest {
         coreMockServer = new EntandoCoreMockServer();
         String keycloakClientId = "clientId";
         String keycloakClientSecret = "clientSecret";
-        String keycloakAuthEndpoint = coreMockServer.getApiRoot() + "/auth/protocol/openid-connect/auth";
+        String keycloakAuthEndpoint = coreMockServer.getApiRoot() + "/protocol/openid-connect/token";
         String entandoCoreUrl = coreMockServer.getApiRoot() + "/";
-        this.client = new DefaultEntandoCoreClient(keycloakClientId, keycloakClientSecret, keycloakAuthEndpoint,
-                entandoCoreUrl);
+        this.client = new DefaultEntandoCoreClient(entandoCoreUrl, Collections.singletonList(new PrimaryTenantConfig()
+                .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
+                .setKcRealm("entando")
+                .setFqdns("localhost")
+                .setKcAuthUrl(coreMockServer.getApiRoot())
+                .setKcCmClientId(keycloakClientId)
+                .setKcCmClientSecret(keycloakClientSecret)));
     }
 
     @AfterEach

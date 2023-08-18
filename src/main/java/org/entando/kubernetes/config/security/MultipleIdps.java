@@ -25,7 +25,7 @@ public class MultipleIdps {
         this.trustedIssuers = Optional.ofNullable(tenantConfigs)
                 .orElseGet(ArrayList::new)
                 .stream()
-                .collect(Collectors.toMap(this::composeIssuerUri, tc -> {
+                .collect(Collectors.toMap(MultipleIdps::composeIssuerUri, tc -> {
                     String issuer = composeIssuerUri(tc);
                     return new OAuth2IdpConfig(issuer, tc.getTenantCode());
                 }));
@@ -33,7 +33,7 @@ public class MultipleIdps {
         log.debug("Extracted issuers {}", trustedIssuers.keySet());
     }
 
-    private String composeIssuerUri(TenantConfigDTO tenantConfig) {
+    public static String composeIssuerUri(TenantConfigDTO tenantConfig) {
         if (tenantConfig instanceof PrimaryTenantConfig) {
             return tenantConfig.getKcAuthUrl();
         } else {
