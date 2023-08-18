@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.security.MultipleIdps;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +27,14 @@ import org.springframework.context.annotation.Configuration;
 public class TenantConfiguration {
 
     @Bean
-    public List<TenantConfigDTO> tenantConfigs(PrimaryTenantConfig primaryTenantConfig,
-                                               ObjectMapper objectMapper,
-                                               @Value("${entando.tenants:#{null}}") String tenantConfigs) {
-
+    public List<TenantConfigDTO> tenantConfigs(ObjectMapper objectMapper,
+                                               @Value("${entando.tenants:#{null}}") String tenantConfigs,
+                                               @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") final String primaryIssuerUri,
+                                               @Value("${entando.app.host.name:localhost}") final String primaryHostName,
+                                               @Value("${spring.datasource.username}") final String primaryDbUsername,
+                                               @Value("${spring.datasource.password}") final String primaryDbPassword,
+                                               @Value("${spring.datasource.url}") final String primaryDbUrl) {
+        log.debug("==== starting Tenant Configs ====");
         List<TenantConfigDTO> tenantConfigList = new ArrayList<>();
 
         if (StringUtils.isNotBlank(tenantConfigs)) {
@@ -43,33 +48,18 @@ public class TenantConfiguration {
         }
 
         // add primary
-        tenantConfigList.add(primaryTenantConfig);
+        tenantConfigList.add(new PrimaryTenantConfig()
+                .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
+                .setKcRealm("entando")
+                .setFqdns(primaryHostName)
+                .setKcAuthUrl(primaryIssuerUri));
 
         return tenantConfigList;
     }
 
     @Bean
-    public PrimaryTenantConfig primaryTenantConfig(
-            @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}") final String primaryIssuerUri,
-            @Value("${entando.app.host.name:localhost}") final String primaryHostName,
-            @Value("${spring.jpa.database-platform}") final String primaryDbDialect,
-            @Value("${spring.datasource.username}") final String primaryDbUsername,
-            @Value("${spring.datasource.password}") final String primaryDbPassword,
-            @Value("${spring.datasource.url}") final String primaryDbUrl) {
-
-        return new PrimaryTenantConfig()
-                .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
-                .setKcRealm("entando")
-                .setFqdns(primaryHostName)
-                .setKcAuthUrl(primaryIssuerUri)
-                .setDeDbDriverClassName(primaryDbDialect)
-                .setDeDbUrl(primaryDbUrl)
-                .setDeDbUsername(primaryDbUsername)
-                .setDeDbPassword(primaryDbUsername);
-    }
-
-    @Bean
-    public MultipleIdps multipleIdps(List<TenantConfigDTO> tenantConfigs) {
+    public MultipleIdps multipleIdps(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs) {
+        log.debug("==== starting MultipleIdps configs ====");
         return new MultipleIdps(tenantConfigs);
     }
 

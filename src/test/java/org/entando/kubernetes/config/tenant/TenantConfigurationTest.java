@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.stubhelper.TenantConfigStubHelper;
 import org.junit.jupiter.api.Tag;
@@ -18,10 +17,16 @@ class TenantConfigurationTest {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String input = "[" + getTenantConfigMock("tenant1") + "," + getTenantConfigMock("tenant2") + "]";
-
+        String suffix = "6";
         TenantConfiguration tenantConfiguration = new TenantConfiguration();
         List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs(
-                TenantConfigStubHelper.stubPrimaryTenantConfig("6"), objectMapper, input);
+                objectMapper,
+                input,
+                TenantConfigStubHelper.ISSUER_URI + suffix,
+                TenantConfigStubHelper.HOSTNAME + suffix,
+                TenantConfigStubHelper.DB_DIALECT + suffix,
+                TenantConfigStubHelper.DB_DIALECT + suffix,
+                TenantConfigStubHelper.DB_DIALECT + suffix);
 
         assertThat(tenantConfigs).hasSize(3);
 
@@ -39,10 +44,17 @@ class TenantConfigurationTest {
         // Invalid JSON data (missing closing bracket)
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
         TenantConfiguration tenantConfiguration = new TenantConfiguration();
-        PrimaryTenantConfig primary = TenantConfigStubHelper.stubPrimaryTenantConfig("6");
+        String suffix = "6";
 
         assertThrows(EntandoComponentManagerException.class,
-                () -> tenantConfiguration.tenantConfigs(primary, objectMapper, invalidInput));
+                () -> tenantConfiguration.tenantConfigs(
+                        objectMapper,
+                        invalidInput,
+                        TenantConfigStubHelper.ISSUER_URI + suffix,
+                        TenantConfigStubHelper.HOSTNAME + suffix,
+                        TenantConfigStubHelper.DB_DIALECT + suffix,
+                        TenantConfigStubHelper.DB_DIALECT + suffix,
+                        TenantConfigStubHelper.DB_DIALECT + suffix));
     }
 
 
