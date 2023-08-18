@@ -44,6 +44,7 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.validator.ValidationFunctions;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -91,7 +92,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     }
 
     public PostInitServiceImpl(@Value("${entando.ecr.postinit:#{null}}") String postInitConfigurationData,
-                               List<TenantConfigDTO> tenantConfigs,
+                               @Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs,
             EntandoBundleService bundleService, EntandoBundleInstallService installService,
             KubernetesService kubernetesService, EntandoBundleJobService entandoBundleJobService) {
         this.postInitConfigurationData = postInitConfigurationData;
