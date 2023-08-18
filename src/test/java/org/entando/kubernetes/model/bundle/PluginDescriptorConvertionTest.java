@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
@@ -80,13 +81,13 @@ class PluginDescriptorConvertionTest {
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
 
         // with tag
-        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d, Optional.empty());
         assertOnConvertedEntandoPluginWithTag(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
 
         // with sha
         d.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
-        p = BundleUtilities.generatePluginFromDescriptor(d);
+        p = BundleUtilities.generatePluginFromDescriptor(d, Optional.empty());
         assertOnConvertedEntandoPluginWithSha(p, PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }
@@ -104,7 +105,7 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                         PluginStubHelper.PRIMARY_TENANT_CODE)
                 .setDescriptorVersion(DescriptorVersion.V2.getVersion());
-        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d, Optional.empty());
 
         assertOnConvertedEntandoPlugin(p, PluginStubHelper.EXPECTED_PLUGIN_NAME);
     }
@@ -123,13 +124,13 @@ class PluginDescriptorConvertionTest {
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
 
         // with sha
-        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d);
+        EntandoPlugin p = BundleUtilities.generatePluginFromDescriptor(d, Optional.empty());
         assertOnConvertedEntandoPluginWithSha(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
 
         // with tag
         d.getDockerImage().setSha256(null);
-        p = BundleUtilities.generatePluginFromDescriptor(d);
+        p = BundleUtilities.generatePluginFromDescriptor(d, Optional.empty());
         assertOnConvertedEntandoPluginWithTag(p, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5);
     }

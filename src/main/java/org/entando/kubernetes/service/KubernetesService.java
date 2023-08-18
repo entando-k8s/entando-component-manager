@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient.PluginConfiguration;
 import org.entando.kubernetes.exception.k8ssvc.EntandoAppPluginLinkingProcessException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
@@ -64,6 +65,11 @@ public class KubernetesService {
                 .map(k8sServiceClient::getPluginForLink)
                 .orElseThrow(PluginNotFoundException::new);
     }
+
+    public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
+        return k8sServiceClient.getPluginConfiguration(pluginName);
+    }
+
 
     public boolean isLinkedPlugin(String pluginId) {
         return getCurrentAppLinkToPlugin(pluginId).isPresent();
