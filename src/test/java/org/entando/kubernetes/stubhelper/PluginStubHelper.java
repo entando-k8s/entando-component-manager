@@ -127,6 +127,7 @@ public class PluginStubHelper {
                 TEST_DESCRIPTOR_IMAGE_SHA,
                 EXPECTED_PLUGIN_NAME,
                 TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME,
+                TEST_DESCRIPTOR_IMAGE_SHA + "-" + EXPECTED_PLUGIN_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                 PluginStubHelper.PRIMARY_TENANT_CODE);

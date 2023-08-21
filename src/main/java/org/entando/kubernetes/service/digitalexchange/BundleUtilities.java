@@ -316,7 +316,7 @@ public class BundleUtilities {
                                                                    Optional<PluginConfiguration> conf) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(descriptor.getDescriptorMetadata().getPluginCode())
+                .withName(descriptor.getDescriptorMetadata().getPluginCodeTenantAware())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
                 .withAnnotations(getAnnotationsFromImage(descriptor.getDockerImage()))
                 .endMetadata()

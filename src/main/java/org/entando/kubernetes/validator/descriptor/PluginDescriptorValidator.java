@@ -336,12 +336,12 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
      * @return the validated string
      */
     private PluginDescriptor validateFullDeploymentNameLength(PluginDescriptor descriptor) {
-        if (descriptor.getDescriptorMetadata().getPluginCode().length() > fullDeploymentNameMaxlength) {
+        if (descriptor.getDescriptorMetadata().getPluginCodeTenantAware().length() > fullDeploymentNameMaxlength) {
 
             throw new EntandoComponentManagerException(
                     String.format(
                             DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR,
-                            descriptor.getDescriptorMetadata().getPluginCode(),
+                            descriptor.getDescriptorMetadata().getPluginCodeTenantAware(),
                             fullDeploymentNameMaxlength));
         }
 

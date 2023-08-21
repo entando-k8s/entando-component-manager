@@ -57,7 +57,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     private EntandoPlugin buildPlugin(PluginDescriptor descriptor) {
         Optional<PluginConfiguration> configuration = kubernetesService
-                .getPluginConfiguration(descriptor.getDescriptorMetadata().getPluginName());
+                .getPluginConfiguration(descriptor.getDescriptorMetadata().getPluginCode());
         return BundleUtilities.generatePluginFromDescriptor(descriptor, configuration);
 
     }
@@ -155,7 +155,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public String getName() {
-        return this.representation.getDescriptorMetadata().getPluginCode();
+        return this.representation.getDescriptorMetadata().getPluginCodeTenantAware();
     }
 
     /**

@@ -28,6 +28,7 @@ public class PluginDescriptor extends VersionedDescriptor {
         private final String pluginId;
         private final String pluginName;
         private final String pluginCode;
+        private final String pluginCodeTenantAware;
         private final String endpoint;
         private final String customEndpoint;
         private final String tenantCode;
@@ -150,11 +151,12 @@ public class PluginDescriptor extends VersionedDescriptor {
 
     @Override
     public ComponentKey getComponentKey() {
-        return new ComponentKey(this.getDescriptorMetadata().getPluginCode());
+        return new ComponentKey(this.getDescriptorMetadata().getPluginCodeTenantAware());
     }
 
     public PluginDescriptor setDescriptorMetadata(String bundleId, String bundleCode, String pluginId,
-            String pluginName, String pluginCode, String endpoint, String customEndpoint, String tenantCode) {
+                                                  String pluginName, String pluginCode, String pluginCodeTenantAware,
+                                                  String endpoint, String customEndpoint, String tenantCode) {
         if (ObjectUtils.isEmpty(bundleId)) {
             throw new EntandoComponentManagerException("Empty bundle id received as plugin metadata");
         }
@@ -170,13 +172,17 @@ public class PluginDescriptor extends VersionedDescriptor {
         if (ObjectUtils.isEmpty(pluginCode)) {
             throw new EntandoComponentManagerException("Empty plugin code received as plugin metadata");
         }
+        if (ObjectUtils.isEmpty(pluginCodeTenantAware)) {
+            throw new EntandoComponentManagerException("Empty plugin code with tenant received as plugin metadata");
+        }
         if (ObjectUtils.isEmpty(endpoint)) {
             throw new EntandoComponentManagerException("Empty endpoint received as plugin metadata");
         }
         if (ObjectUtils.isEmpty(tenantCode)) {
             throw new EntandoComponentManagerException("Empty tenantCode received as plugin metadata");
         }
-        this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginId, pluginName, pluginCode,
+        this.descriptorMetadata = new DescriptorMetadata(bundleId, bundleCode, pluginId, pluginName,
+                pluginCode, pluginCodeTenantAware,
                 endpoint, customEndpoint, tenantCode);
         return this;
     }

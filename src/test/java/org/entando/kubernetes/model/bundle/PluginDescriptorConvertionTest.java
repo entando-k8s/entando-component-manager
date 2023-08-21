@@ -75,6 +75,7 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                         PluginStubHelper.PRIMARY_TENANT_CODE)
@@ -101,6 +102,7 @@ class PluginDescriptorConvertionTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                         PluginStubHelper.PRIMARY_TENANT_CODE)
@@ -116,6 +118,7 @@ class PluginDescriptorConvertionTest {
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID,
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
