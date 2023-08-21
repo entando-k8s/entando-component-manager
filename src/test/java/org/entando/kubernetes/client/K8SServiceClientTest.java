@@ -259,7 +259,7 @@ public class K8SServiceClientTest {
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles", Optional.empty());
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles&tenantCode=primary")));
         assertThat(bundles).hasSize(1);
     }
 
@@ -283,9 +283,9 @@ public class K8SServiceClientTest {
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"),
                 Optional.empty());
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first&tenantCode=primary")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second&tenantCode=primary")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third&tenantCode=primary")));
         assertThat(bundles).isEmpty();
     }
 
@@ -305,9 +305,9 @@ public class K8SServiceClientTest {
     @Test
     void shouldNotFindBundleWithNameInNamespace() {
         String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundle-not-found.json");
-        mockServer.addStub(get(urlEqualTo("/bundles/my-bundle"))
+        mockServer.addStub(get(urlEqualTo("/bundles/my-bundle?namespace=my-namespace&tenantCode=primary"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(500)
                         .withBody(stubResponse)
                         .withHeader("Content-Type", HAL_JSON_VALUE)));
 
@@ -418,7 +418,7 @@ public class K8SServiceClientTest {
 
         // then the returned EntandoDeBundle object is the same as the one sent
         assertThat(current).isEqualToComparingFieldByField(expected);
-        mockServer.getInnerServer().verify(1, postRequestedFor(urlMatching("/bundles")));
+        mockServer.getInnerServer().verify(1, postRequestedFor(urlEqualTo("/bundles?tenantCode=primary")));
     }
 
     @Test
