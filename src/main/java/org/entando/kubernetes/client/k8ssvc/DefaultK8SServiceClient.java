@@ -294,13 +294,24 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public List<EntandoDeBundle> getBundlesInObservedNamespaces(Optional<String> repoUrlFilter) {
 
-        LOGGER.info("### fetching bundles from all namespaces");
-        return tryOrThrow(() -> repoUrlFilter
+        String tenantCode = TenantContextHolder.getCurrentTenantCode();
+        LOGGER.info("### fetching bundles from all namespaces and tenant:'{}'", tenantCode);
+        Link listBundles = repoUrlFilter
                 .map(filter -> traverson.follow(Hop.rel(BUNDLES_ENDPOINT).withParameter("repoUrl", filter)))
-                .orElse(traverson.follow(BUNDLES_ENDPOINT))
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                .orElse(traverson.follow(BUNDLES_ENDPOINT)).asLink();
+
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(listBundles.toUri())
+                .queryParam("tenantCode", tenantCode)
+                .build();
+        RequestEntity<?> request = RequestEntity
+                .get(URI.create(uriComponents.toUriString()))
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
+
+        return tryOrThrow(() -> restTemplate
+                .exchange(request, new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
                 })
-                .getContent()
+                .getBody().getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
     }
@@ -308,13 +319,23 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter) {
 
-        LOGGER.info("### fetching bundles from namespace:'{}'", namespace);
+        String tenantCode = TenantContextHolder.getCurrentTenantCode();
+        LOGGER.info("### fetching bundles from namespace:'{}' and tenant:'{}'", namespace, tenantCode);
         Hop baseHop = Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace);
-        return tryOrThrow(() -> traverson.follow(
-                        repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop))
-                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
-                })
-                .getContent()
+        Link listBundles = traverson.follow(
+                repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop)).asLink();
+
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(listBundles.toUri())
+                .queryParam("tenantCode", tenantCode)
+                .build();
+        RequestEntity<?> request = RequestEntity
+                .get(URI.create(uriComponents.toUriString()))
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
+
+        return tryOrThrow(() -> restTemplate
+                .exchange(request, new ParameterizedTypeReference<CollectionModel<EntityModel<EntandoDeBundle>>>() {
+                }).getBody().getContent()
                 .stream().map(EntityModel::getContent)
                 .collect(Collectors.toList()));
     }
@@ -340,11 +361,20 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public Optional<EntandoDeBundle> getBundleWithName(String name) {
         EntandoDeBundle bundle = null;
+        String tenantCode = TenantContextHolder.getCurrentTenantCode();
+        Link bundleLink = traverson.follow(BUNDLES_ENDPOINT)
+                .follow(Hop.rel("bundle").withParameter("name", name)).asLink();
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(bundleLink.toUri())
+                .queryParam("tenantCode", tenantCode)
+                .build();
+        RequestEntity<?> request = RequestEntity
+                .get(URI.create(uriComponents.toUriString()))
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
+
         try {
-            bundle = traverson.follow(BUNDLES_ENDPOINT)
-                    .follow(Hop.rel("bundle").withParameter("name", name))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
-                    })
+            bundle = restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+                    }).getBody()
                     .getContent();
 
         } catch (RestClientResponseException ex) {
@@ -361,13 +391,22 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public Optional<EntandoDeBundle> getBundleWithNameAndNamespace(String name, String namespace) {
         EntandoDeBundle bundle = null;
+        String tenantCode = TenantContextHolder.getCurrentTenantCode();
+        Link bundleLink = traverson.follow(BUNDLES_ENDPOINT)
+                .follow(Hop.rel("bundle")
+                        .withParameter("name", name)).asLink();
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(bundleLink.toUri())
+                .queryParam("namespace", namespace)
+                .queryParam("tenantCode", tenantCode)
+                .build();
+        RequestEntity<?> request = RequestEntity
+                .get(URI.create(uriComponents.toUriString()))
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
+
         try {
-            final EntityModel<EntandoDeBundle> entityModel = traverson.follow(BUNDLES_ENDPOINT)
-                    .follow(Hop.rel("bundle")
-                            .withParameter("name", name)
-                            .withParameter("namespace", namespace))
-                    .toObject(new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
-                    });
+            final EntityModel<EntandoDeBundle> entityModel = restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+            }).getBody();
             if (entityModel != null) {
                 bundle = entityModel.getContent();
             }
@@ -486,9 +525,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                         : entandoDeBundle.getMetadata().getName());
 
         Link deployBundleHref = traverson.follow(BUNDLES_ENDPOINT).asLink();
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(deployBundleHref.toUri())
+                .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                .build();
+
 
         RequestEntity<EntandoDeBundle> request = RequestEntity
-                .post(deployBundleHref.toUri())
+                .post(uriComponents.toUri())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(entandoDeBundle);
 
@@ -517,6 +560,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(bundlesEndpoint.toUri())
                 .pathSegment(bundleName)
+                .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
                 .build();
 
         try {
