@@ -492,11 +492,24 @@ public class BundleUtilities {
                                                      List<EnvVar> customEnvironmentVariablesList) {
         Map<String, EnvVar> customConfigurations = customEnvironmentVariablesList.stream()
                 .collect(Collectors.toMap(EnvVar::getName, e -> e));
-        return Optional.ofNullable(environmentVariableList)
+        List<EnvVar> assembledEnvVar = Optional.ofNullable(environmentVariableList)
                 .orElseGet(ArrayList::new)
                 .stream().map(envVar -> Optional.ofNullable(customConfigurations.get(envVar.getName()))
                         .orElseGet(() -> buildFromEnvironmentVariable(envVar)))
                 .collect(Collectors.toList());
+
+        List<String> defaultPluginEnvVarKeys = Optional.ofNullable(environmentVariableList)
+                .orElseGet(ArrayList::new).stream()
+                .map(EnvironmentVariable::getName)
+                .collect(Collectors.toList());
+
+        customConfigurations.entrySet().stream()
+                .filter(e -> !defaultPluginEnvVarKeys.contains(e.getKey()))
+                .forEach(e -> {
+                    assembledEnvVar.add(e.getValue());
+                });
+
+        return assembledEnvVar;
     }
 
     private EnvVar buildFromEnvironmentVariable(EnvironmentVariable envVar) {

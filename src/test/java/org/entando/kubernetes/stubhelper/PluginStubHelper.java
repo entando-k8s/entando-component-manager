@@ -96,8 +96,7 @@ public class PluginStubHelper {
                 new EnvironmentVariable(TEST_ENV_VAR_2_NAME, null,
                         new ValueFrom(
                                 new SecretKeyRef(TEST_ENV_VAR_2_SECRET_NAME, TEST_ENV_VAR_2_SECRET_KEY))
-                ),
-                new EnvironmentVariable(TEST_ENV_VAR_3_NAME, null, null)
+                )
         );
     }
 
