@@ -61,10 +61,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     public static final String APPS_ENDPOINT = "apps";
     public static final String PLUGINS_ENDPOINT = "plugins";
+    public static final String PLUGIN_ENDPOINT = "plugin";
     public static final String BUNDLES_ENDPOINT = "bundles";
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
     public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
-
+    public static final String TENANT_CODE_REQUEST_PARAM_NAME = "tenantCode";
     public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
@@ -127,7 +128,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public EntandoPlugin getPluginForLink(EntandoAppPluginLink el) {
         return tryOrThrow(() -> traverson.follow(APP_PLUGIN_LINKS_ENDPOINT)
                 .follow(Hop.rel("app-plugin-link").withParameter("name", el.getMetadata().getName()))
-                .follow("plugin")
+                .follow(PLUGIN_ENDPOINT)
                 .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
                 })
                 .getContent(), "get plugin associated with link " + el.getMetadata().getName());
@@ -138,7 +139,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         EntandoPlugin plugin = null;
         try {
             plugin = traverson.follow(PLUGINS_ENDPOINT)
-                    .follow(Hop.rel("plugin").withParameter("name", name))
+                    .follow(Hop.rel(PLUGIN_ENDPOINT).withParameter("name", name))
                     .toObject(new ParameterizedTypeReference<EntityModel<EntandoPlugin>>() {
                     })
                     .getContent();
@@ -154,11 +155,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
         try {
             Link endpoint = traverson.follow(PLUGINS_ENDPOINT)
-                    .follow(Hop.rel("plugin").withParameter("name", pluginName))
+                    .follow(Hop.rel(PLUGIN_ENDPOINT).withParameter("name", pluginName))
                     .follow(Hop.rel("plugin-configuration")).asLink();
-
+                    
             UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
-                    .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                    .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, TenantContextHolder.getCurrentTenantCode())
                     .build();
             String url = uriComponents.toUriString();
             LOGGER.debug("For plugin:'{}' fetching configuration from url:'{}'", pluginName, url);
@@ -301,7 +302,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .orElse(traverson.follow(BUNDLES_ENDPOINT)).asLink();
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(listBundles.toUri())
-                .queryParam("tenantCode", tenantCode)
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, tenantCode)
                 .build();
         RequestEntity<?> request = RequestEntity
                 .get(URI.create(uriComponents.toUriString()))
@@ -326,7 +327,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop)).asLink();
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(listBundles.toUri())
-                .queryParam("tenantCode", tenantCode)
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, tenantCode)
                 .build();
         RequestEntity<?> request = RequestEntity
                 .get(URI.create(uriComponents.toUriString()))
@@ -365,7 +366,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         Link bundleLink = traverson.follow(BUNDLES_ENDPOINT)
                 .follow(Hop.rel("bundle").withParameter("name", name)).asLink();
         UriComponents uriComponents = UriComponentsBuilder.fromUri(bundleLink.toUri())
-                .queryParam("tenantCode", tenantCode)
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, tenantCode)
                 .build();
         RequestEntity<?> request = RequestEntity
                 .get(URI.create(uriComponents.toUriString()))
@@ -373,9 +374,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .build();
 
         try {
-            bundle = restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
-                    }).getBody()
-                    .getContent();
+            final EntityModel<EntandoDeBundle> entityModel = restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<EntandoDeBundle>>() {
+            }).getBody();
+            if (entityModel != null) {
+                bundle = entityModel.getContent();
+            }
 
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
@@ -397,7 +400,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                         .withParameter("name", name)).asLink();
         UriComponents uriComponents = UriComponentsBuilder.fromUri(bundleLink.toUri())
                 .queryParam("namespace", namespace)
-                .queryParam("tenantCode", tenantCode)
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, tenantCode)
                 .build();
         RequestEntity<?> request = RequestEntity
                 .get(URI.create(uriComponents.toUriString()))
@@ -526,7 +529,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         Link deployBundleHref = traverson.follow(BUNDLES_ENDPOINT).asLink();
         UriComponents uriComponents = UriComponentsBuilder.fromUri(deployBundleHref.toUri())
-                .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, TenantContextHolder.getCurrentTenantCode())
                 .build();
 
 
@@ -560,7 +563,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(bundlesEndpoint.toUri())
                 .pathSegment(bundleName)
-                .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, TenantContextHolder.getCurrentTenantCode())
                 .build();
 
         try {
@@ -586,7 +589,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .follow(Hop.rel("app-ingress")).asLink();
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
-                .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, TenantContextHolder.getCurrentTenantCode())
                 .build();
 
         RequestEntity<?> request = RequestEntity
