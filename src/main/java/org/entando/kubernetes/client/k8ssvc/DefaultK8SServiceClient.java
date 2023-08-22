@@ -153,9 +153,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
         try {
-            Link endpoint = traverson.follow(APPS_ENDPOINT)
+            Link endpoint = traverson.follow(PLUGINS_ENDPOINT)
                     .follow(Hop.rel("plugin").withParameter("name", pluginName))
-                    .follow(Hop.rel("plugin-ingress")).asLink();
+                    .follow(Hop.rel("plugin-configuration")).asLink();
 
             UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
                     .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
