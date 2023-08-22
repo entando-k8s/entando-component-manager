@@ -41,7 +41,7 @@ public class TenantFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             TenantContextHolder.destroy();
-            log.info("Remove custom context from thread local.");
+            log.debug("Remove custom context from thread local.");
         }
     }
 

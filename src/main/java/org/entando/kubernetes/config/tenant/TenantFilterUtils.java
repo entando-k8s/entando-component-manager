@@ -29,7 +29,7 @@ public class TenantFilterUtils {
                 .filter(StringUtils::isNotBlank)
                 .orElseGet(() -> fetchFromHeaderForClientToServer(tenantConfigs, headerXForwardedHost, headerHost, servletRequestServerName));
 
-        log.info("Extracted tenantCode: '{}'", tenantCode);
+        log.debug("Extracted tenantCode: '{}'", tenantCode);
         return tenantCode;
     }
 
@@ -43,7 +43,7 @@ public class TenantFilterUtils {
                                 .or(() -> searchTenantCodeInConfigs(tenantConfigs, HOST, headerHost))
                                 .or(() -> searchTenantCodeInConfigs(tenantConfigs, REQUEST_SERVER_NAME, servletRequestServerName)))
                 .orElseGet(() -> {
-                    log.info(
+                    log.debug(
                             "No tenant identified for the received request. {}, {} and {} are empty. Falling back to {}",
                             X_FORWARDED_HOST, HOST, REQUEST_SERVER_NAME, EntandoMultiTenancy.PRIMARY_TENANT);
                     return EntandoMultiTenancy.PRIMARY_TENANT;
@@ -61,7 +61,7 @@ public class TenantFilterUtils {
         return tenantConfigs.stream().filter(t -> getFqdnTenantNames(t).contains(search)).findFirst()
                 .map(TenantConfigDTO::getTenantCode)
                 .or(() -> {
-                    log.info(
+                    log.debug(
                             "No tenant identified for the received request. {} = '{}'. Falling back to {}",
                             searchInputName, search, EntandoMultiTenancy.PRIMARY_TENANT);
                     return Optional.of(EntandoMultiTenancy.PRIMARY_TENANT);
