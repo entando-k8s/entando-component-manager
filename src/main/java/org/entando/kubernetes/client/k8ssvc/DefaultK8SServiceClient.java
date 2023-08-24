@@ -380,6 +380,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         RequestEntity<?> request = RequestEntity
                 .get(URI.create(pluginHealthCheck.toUriString()))
                 .accept(MediaType.APPLICATION_JSON)
+                .accept(MediaType.TEXT_HTML)
                 .build();
         try {
             ResponseEntity<Object> response = this.noAuthRestTemplate.exchange(request, Object.class);
