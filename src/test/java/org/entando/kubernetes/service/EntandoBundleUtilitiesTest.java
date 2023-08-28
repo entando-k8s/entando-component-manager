@@ -45,12 +45,15 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 public class EntandoBundleUtilitiesTest {
 
     private BundleReader bundleReader;
@@ -149,7 +152,7 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV1@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
-                "/entando/todomvcv1/1-0-0", "/api/v1/todos",
+                "/986a1b71/entando/todomvcv1/1-0-0", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.<Permission>emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
@@ -178,7 +181,7 @@ public class EntandoBundleUtilitiesTest {
                         + "n-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong"
                         + "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong@"
                         + PluginStubHelper.PLUGIN_IMAGE_SHA,
-                "/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
+                "/986a1b71/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
                         + "d-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-to"
                         + "o-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong/1-0-0",
                 "/api/v1/todos",
@@ -501,7 +504,7 @@ public class EntandoBundleUtilitiesTest {
                 .setName("MyStrange___plugin.Name");
         final String ingressPath = BundleUtilities.extractIngressPathFromDescriptor(descriptor,
                 PluginStubHelper.BUNDLE_CODE);
-        assertThat(ingressPath).isEqualTo("/" + PluginStubHelper.BUNDLE_CODE + "/mystrange---plugin-name");
+        assertThat(ingressPath).isEqualTo("/" + PluginStubHelper.BUNDLE_CODE + "-986a1b71/mystrange---plugin-name");
     }
 
     @Test
@@ -596,7 +599,7 @@ public class EntandoBundleUtilitiesTest {
         // when the ingress path is composed starting by the docker image
         String ingressPath = BundleUtilities.composeIngressPathForV1(descriptor);
         // then the expected ingress path is generated
-        assertThat(ingressPath).isEqualTo("/entando/the-lucas");
+        assertThat(ingressPath).isEqualTo("/986a1b71/entando/the-lucas");
     }
 
     @Test

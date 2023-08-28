@@ -336,7 +336,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         deploymentParts.add(BundleUtilities.makeKubernetesCompatible(bundleId));
 
         if (StringUtils.isNotEmpty(tenantCode) && !tenantCode.equals(EntandoMultiTenancy.PRIMARY_TENANT)) {
-            String tenantId = BundleUtilities.getTenantId(tenantCode);
+            String tenantId = BundleUtilities.calculateTenantId(tenantCode);
             deploymentParts.add(tenantId);
         }
 

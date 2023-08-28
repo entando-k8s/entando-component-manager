@@ -25,6 +25,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
@@ -218,6 +219,8 @@ public class BundleUtilities {
             if (ingressPath.charAt(0) != '/') {
                 ingressPath = "/" + ingressPath;
             }
+            ingressPath = buildTenantIdPath() + ingressPath;
+
         }
 
         return ingressPath;
@@ -235,9 +238,13 @@ public class BundleUtilities {
         List<String> kubeCompatiblesSegmentList = ingressSegmentList.stream()
                 .map(BundleUtilities::makeKubernetesCompatible).collect(Collectors.toList());
 
-        return "/" + String.join("/", kubeCompatiblesSegmentList);
+        return buildTenantIdPath() + "/" + String.join("/", kubeCompatiblesSegmentList);
     }
 
+    private String buildTenantIdPath() {
+        return "/" + calculateTenantId(TenantContextHolder.getCurrentTenantCode());
+    }
+    
     /**
      * compose the plugin ingress path starting by its docker image.
      *
@@ -259,9 +266,12 @@ public class BundleUtilities {
      * @return the composed ingress path
      */
     public static String composeIngressPathForV5(PluginDescriptor descriptor, String bundleCode) {
+        String buildBundleCodeWithTenant = Optional.ofNullable(TenantContextHolder.getCurrentTenantCode())
+                .map(tenantCode -> bundleCode + "-" + calculateTenantId(tenantCode))
+                .orElse(bundleCode);
 
         return "/"
-                + Stream.of(bundleCode,
+                + Stream.of(buildBundleCodeWithTenant,
                         makeKubernetesCompatible(descriptor.getName()))
                 .map(BundleUtilities::makeKubernetesCompatible)
                 .collect(Collectors.joining("/"));
@@ -580,7 +590,7 @@ public class BundleUtilities {
      * @param tenantCode the code of the tenant
      * @return the signed tenant id
      */
-    public static String getTenantId(String tenantCode) {
+    public static String calculateTenantId(String tenantCode) {
         return DigestUtils.sha256Hex(tenantCode).substring(0, ENTITY_CODE_HASH_LENGTH);
     }
 
