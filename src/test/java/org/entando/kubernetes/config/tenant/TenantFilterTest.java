@@ -37,50 +37,50 @@ class TenantFilterTest {
 
     @Test
     void getByExistingXForwardedHostHeaderShouldReturnTheTenantCode() {
-        String tenantCode = filter.getTenantCode("tenant2.entando.com", "", "");
+        String tenantCode = filter.fetchTenantCode("tenant2.entando.com", "", "");
         assertEquals("tenant2", tenantCode);
     }
 
     @Test
     void getByNotExistingXForwardedHostHeaderShouldReturnPrimary() {
-        String tenantCode = filter.getTenantCode("tenant256.entando.com", "", "");
+        String tenantCode = filter.fetchTenantCode("tenant256.entando.com", "", "");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByExistingHostHeaderShouldReturnTheTenantCode() {
-        String tenantCode = filter.getTenantCode("", "tenant2.entando.com", "");
+        String tenantCode = filter.fetchTenantCode("", "tenant2.entando.com", "");
         assertEquals("tenant2", tenantCode);
     }
 
     @Test
     void getByNotExistingHostHeaderShouldReturnPrimary() {
-        String tenantCode = filter.getTenantCode("", "tenant256.entando.com", "");
+        String tenantCode = filter.fetchTenantCode("", "tenant256.entando.com", "");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByNotExistingXForwardedHostHeaderAndExistingHostShouldReturnPrimary() {
-        String tenantCode = filter.getTenantCode("tenant256.entando.com", "tenant2.entando.com", "");
+        String tenantCode = filter.fetchTenantCode("tenant256.entando.com", "tenant2.entando.com", "");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getByExistingServletNameShouldReturnTheTenantCode() {
-        String tenantCode = filter.getTenantCode("", "", "tenant1.entando.com");
+        String tenantCode = filter.fetchTenantCode("", "", "tenant1.entando.com");
         assertEquals("tenant1", tenantCode);
     }
 
     @Test
     void getByNotExistingServletNameShouldReturnPrimary() {
-        String tenantCode = filter.getTenantCode("", "", "tenant256.entando.com");
+        String tenantCode = filter.fetchTenantCode("", "", "tenant256.entando.com");
         assertEquals("primary", tenantCode);
     }
 
     @Test
     void getPrimaryIfConfigNull() {
         TenantFilter filter2 = new TenantFilter(null);
-        String tenantCode = filter2.getTenantCode("tenant2.entando.com", "", "");
+        String tenantCode = filter2.fetchTenantCode("tenant2.entando.com", "", "");
         assertEquals("primary", tenantCode);
     }
 

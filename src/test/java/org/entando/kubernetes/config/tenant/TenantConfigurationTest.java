@@ -6,21 +6,29 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
+import org.entando.kubernetes.stubhelper.TenantConfigStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-class TenantConfigTest {
+class TenantConfigurationTest {
     @Test
     void shouldParseTenantConfig() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String input = "[" + getTenantConfigMock("tenant1") + "," + getTenantConfigMock("tenant2") + "]";
+        String suffix = "6";
+        TenantConfiguration tenantConfiguration = new TenantConfiguration();
+        List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs(
+                objectMapper,
+                input,
+                TenantConfigStubHelper.ISSUER_URI + suffix,
+                TenantConfigStubHelper.HOSTNAME + suffix,
+                TenantConfigStubHelper.DB_DIALECT + suffix,
+                TenantConfigStubHelper.DB_DIALECT + suffix,
+                TenantConfigStubHelper.DB_DIALECT + suffix);
 
-        TenantConfig tenantConfiguration = new TenantConfig(input, objectMapper);
-        List<TenantConfigDTO> tenantConfigs = tenantConfiguration.tenantConfigs();
-
-        assertThat(tenantConfigs).hasSize(2);
+        assertThat(tenantConfigs).hasSize(3);
 
         TenantConfigDTO tenant1 = tenantConfigs.get(0);
         assertTenantConfig(tenant1, "tenant1");
@@ -35,9 +43,18 @@ class TenantConfigTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // Invalid JSON data (missing closing bracket)
         String invalidInput = "[{\"dbMaxTotal\":\"5\"";
-        TenantConfig tenantConfiguration = new TenantConfig(invalidInput, objectMapper);
+        TenantConfiguration tenantConfiguration = new TenantConfiguration();
+        String suffix = "6";
 
-        assertThrows(EntandoComponentManagerException.class, tenantConfiguration::tenantConfigs);
+        assertThrows(EntandoComponentManagerException.class,
+                () -> tenantConfiguration.tenantConfigs(
+                        objectMapper,
+                        invalidInput,
+                        TenantConfigStubHelper.ISSUER_URI + suffix,
+                        TenantConfigStubHelper.HOSTNAME + suffix,
+                        TenantConfigStubHelper.DB_DIALECT + suffix,
+                        TenantConfigStubHelper.DB_DIALECT + suffix,
+                        TenantConfigStubHelper.DB_DIALECT + suffix));
     }
 
 

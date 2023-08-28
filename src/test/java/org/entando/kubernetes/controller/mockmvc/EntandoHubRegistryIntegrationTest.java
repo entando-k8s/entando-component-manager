@@ -25,6 +25,7 @@ import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.hamcrest.core.IsNull;
 import org.hamcrest.text.IsEmptyString;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -65,6 +67,7 @@ import wiremock.com.jayway.jsonpath.JsonPath;
 @Tag("component")
 @WithMockUser
 @DirtiesContext
+@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
 class EntandoHubRegistryIntegrationTest {
 
     private final String baseUrl = "/registries";

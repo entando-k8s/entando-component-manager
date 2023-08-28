@@ -19,8 +19,10 @@ import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.service.KubernetesService;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +40,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
+@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
 public class PluginControllerTest {
 
     private static final String URL = "/plugins";

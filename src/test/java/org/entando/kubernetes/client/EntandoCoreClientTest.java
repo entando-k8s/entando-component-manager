@@ -40,17 +40,20 @@ import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsageRequest;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.utils.EntandoCoreMockServer;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
 
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 class EntandoCoreClientTest {
 
     public static final String CODE = "code";
@@ -164,16 +167,17 @@ class EntandoCoreClientTest {
     @Test
     void shouldComponentsUsageDetailsReturnException() {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_REQUEST.value());
-        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentUsageRequest> usageRequests = Collections
+                .singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(usageRequests));
     }
 
     @Test
     void shouldComponentsUsageDetailsWithErrorExecuteRetry() {
         this.stubForPostComponentsUsageDetailsWithError(HttpStatus.BAD_GATEWAY.value());
-
-        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(
-                Collections.singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentUsageRequest> usageRequests = Collections
+                .singletonList(new EntandoCoreComponentUsageRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.getComponentsUsageDetails(usageRequests));
         coreMockServer.verify(3, "/api/components/usageDetails", WireMock::postRequestedFor);
     }
 
@@ -215,15 +219,17 @@ class EntandoCoreClientTest {
     @Test
     void shouldComponentsDeleteReturnException() {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_REQUEST.value());
-        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentDeleteRequest> deleteRequests = Collections
+                .singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(deleteRequests));
     }
 
     @Test
     void shouldComponentsDeleteWithErrorExecuteRetry() {
         this.stubForDeleteAllComponentsWithError(HttpStatus.BAD_GATEWAY.value());
-        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(
-                Collections.singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"))));
+        List<EntandoCoreComponentDeleteRequest> deleteRequests = Collections
+                .singletonList(new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "W23D"));
+        assertThrows(WebHttpException.class, () -> this.client.deleteComponents(deleteRequests));
         coreMockServer.verify(3, "/api/components/allInternals", WireMock::deleteRequestedFor);
     }
 

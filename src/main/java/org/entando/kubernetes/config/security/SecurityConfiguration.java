@@ -1,15 +1,20 @@
-package org.entando.kubernetes.config;
+package org.entando.kubernetes.config.security;
 
-import org.entando.kubernetes.security.oauth2.JwtAuthorityExtractor;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.config.tenant.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.client.RestTemplate;
 import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
@@ -17,25 +22,31 @@ import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Import(SecurityProblemSupport.class)
+@Slf4j
+@RequiredArgsConstructor
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private static final String ADMIN = "ROLE_ADMIN";//From JHipster generated code.
-    private final JwtAuthorityExtractor jwtAuthorityExtractor;
-    private final SecurityProblemSupport problemSupport;
-    @Value("${spring.security.oauth2.client.provider.oidc.issuer-uri}")
-    private String issuerUri;
 
-    public SecurityConfiguration(JwtAuthorityExtractor jwtAuthorityExtractor, SecurityProblemSupport problemSupport) {
-        this.problemSupport = problemSupport;
-        this.jwtAuthorityExtractor = jwtAuthorityExtractor;
-    }
+    private final SecurityProblemSupport problemSupport;
+    private final TenantFilter tenantFilter;
+    private final Map<String, AuthenticationManager> authenticationManagers;
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
+
+        JwtIssuerAuthenticationManagerResolver authenticationManagerResolver =
+                new JwtIssuerAuthenticationManagerResolver(issuer -> {
+                    log.debug("Resolving authentication manager for issuer: '{}'", issuer);
+                    return authenticationManagers.get(issuer);
+                });
+
         // @formatter:off
         http
+                .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf()
-                .disable()
+                // disable sonar because csrf disabled is the standard behavior for a long time
+                .disable() // NOSONAR
                 .exceptionHandling()
                 .accessDeniedHandler(problemSupport)
                 .and()
@@ -65,13 +76,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/actuator/**").hasAuthority(ADMIN)
                 .antMatchers("/**").authenticated()
                 .and()
-                .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(jwtAuthorityExtractor)
-                .and()
-                .and()
+                .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(authenticationManagerResolver))
                 .oauth2Client();
-        // @formatter:on
+                // @formatter:on
     }
 
     @Bean

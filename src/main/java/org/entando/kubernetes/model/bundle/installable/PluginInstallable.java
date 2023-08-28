@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -30,7 +32,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public CompletableFuture<Void> install() {
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             logConflictStrategyAction();
 
@@ -71,10 +73,10 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
     }
 
     /**
-     * Certain error conditions can lead to plugin present but not registered in the PluginDataRepository.
-     * In turn this causes a query plan SKIP that is inconsistent with the status of the PluginDataRepository.
-     * Therefore, in case of SKIP this function double-checks the actual presence of the plugin and in case
-     * it registers it on the PluginDataRepository.
+     * Certain error conditions can lead to plugin present but not registered in the PluginDataRepository. In turn this
+     * causes a query plan SKIP that is inconsistent with the status of the PluginDataRepository. Therefore, in case of
+     * SKIP this function double-checks the actual presence of the plugin and in case it registers it on the
+     * PluginDataRepository.
      */
     private void fixPluginRegistrationIfNecessary() {
         DescriptorMetadata meta = representation.getDescriptorMetadata();
@@ -109,7 +111,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public CompletableFuture<Void> uninstallFromEcr() {
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
 
             String pluginCode = representation.getComponentKey().getKey();
 
@@ -117,10 +119,12 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 return; //Do nothing
             }
 
-            log.info("Removing ingress path to plugin with code:'{}'", pluginCode);
+            log.info("Removing ingress path to plugin with code:'{}' from tenant {}", pluginCode,
+                    TenantContextHolder.getCurrentTenantCode());
             kubernetesService.removeIngressPathForPlugin(pluginCode);
 
-            log.info("Removing link to plugin {}", pluginCode);
+            log.info("Removing link to plugin {} from tenant {}", pluginCode,
+                    TenantContextHolder.getCurrentTenantCode());
             kubernetesService.unlinkAndScaleDownPlugin(pluginCode);
 
             if (!deletePluginData(pluginCode)) {

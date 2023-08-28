@@ -9,9 +9,11 @@ import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -27,10 +29,11 @@ import org.springframework.test.context.ActiveProfiles;
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class
         })
-@ActiveProfiles("testdb")
+@ActiveProfiles({"testdb"})
 @Slf4j
 @Tag("component")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
+@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
 class LiquibaseStartH2IntegrationTest {
 
     private static Properties propsBackup;
@@ -44,6 +47,7 @@ class LiquibaseStartH2IntegrationTest {
         System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.H2Dialect");
         System.setProperty("spring.datasource.username", "testuser");
         System.setProperty("spring.datasource.password", "testuser");
+
     }
 
     @AfterAll

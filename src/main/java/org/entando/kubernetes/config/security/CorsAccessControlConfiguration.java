@@ -1,4 +1,4 @@
-package org.entando.kubernetes.config;
+package org.entando.kubernetes.config.security;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,6 +1,6 @@
 package org.entando.kubernetes;
 
-import org.entando.kubernetes.config.CorsAccessControlConfiguration;
+import org.entando.kubernetes.config.security.CorsAccessControlConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;

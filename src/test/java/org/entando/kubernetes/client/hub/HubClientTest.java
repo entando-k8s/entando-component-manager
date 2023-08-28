@@ -30,6 +30,7 @@ import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
 import org.entando.kubernetes.stubhelper.HubStubHelper;
 import org.entando.kubernetes.utils.EntandoHubMockServer;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Spy;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpEntity;
@@ -49,6 +51,7 @@ import wiremock.org.apache.http.impl.client.HttpClients;
 
 @Tag("unit")
 @AutoConfigureMockMvc
+@ExtendWith(TenantContextJunitExt.class)
 class HubClientTest {
 
     private static EntandoHubMockServer mockServer;

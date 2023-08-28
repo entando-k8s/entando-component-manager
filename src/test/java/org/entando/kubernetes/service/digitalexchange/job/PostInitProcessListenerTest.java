@@ -6,15 +6,18 @@ import static org.mockito.Mockito.when;
 import java.time.Duration;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 
 @Slf4j
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 class PostInitProcessListenerTest {
 
     private static Properties propsBackup;

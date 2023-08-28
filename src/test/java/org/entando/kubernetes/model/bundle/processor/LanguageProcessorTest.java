@@ -25,14 +25,17 @@ import org.entando.kubernetes.model.bundle.installable.LanguageInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Tag("unit")
+@ExtendWith(TenantContextJunitExt.class)
 class LanguageProcessorTest extends BaseProcessorTest {
 
     @Mock
@@ -86,7 +89,7 @@ class LanguageProcessorTest extends BaseProcessorTest {
                 .stream().sorted(Comparator.comparing(langDescriptor -> langDescriptor.getCode().toLowerCase()))
                 .collect(Collectors.toList());
 
-        assertThat(languageDescriptorList1.size()).isEqualTo(languageDescriptorList.size());
+        assertThat(languageDescriptorList1).hasSameSizeAs(languageDescriptorList);
         IntStream.range(0, languageDescriptorList1.size()).forEach(i -> {
             assertThat(languageDescriptorList1.get(i).getCode()).isEqualTo(languageDescriptorList.get(i).getCode());
             assertThat(languageDescriptorList1.get(i).getDescription())

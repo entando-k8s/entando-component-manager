@@ -89,13 +89,14 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
@@ -126,8 +127,7 @@ import org.springframework.web.util.UriComponentsBuilder;
                 EntandoKubernetesJavaApplication.class,
                 TestSecurityConfiguration.class,
                 TestKubernetesConfig.class,
-                TestAppConfiguration.class,
-                TenantContextJunitExt.class
+                TestAppConfiguration.class
         })
 @ActiveProfiles({"test"})
 @Tag("component")
@@ -135,6 +135,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
 @DirtiesContext
+@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
 public class InstallFlowTest {
 
     private MockMvc mockMvc;
