@@ -141,7 +141,7 @@ public class K8SServiceClientTest {
         EntandoPlugin testPlugin = getTestEntandoPlugin();
         boolean pluginReady = client.isPluginReadyToServeApp(testPlugin, "my-app");
         assertThat(pluginReady).isFalse();
-        mockServer.getInnerServer().verify(0, getRequestedFor(urlEqualTo("/apps/my-app/ingress")));
+        mockServer.getInnerServer().verify(0, getRequestedFor(urlEqualTo("/apps/my-app/ingress?tenantCode=primary")));
     }
 
     @Test
@@ -153,7 +153,7 @@ public class K8SServiceClientTest {
                         .withHeader("Content-Type", HAL_JSON_VALUE)));
         boolean pluginReady = client.isPluginReadyToServeApp(testPlugin, "my-app");
         assertThat(pluginReady).isTrue();
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/apps/my-app/ingress")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/apps/my-app/ingress?tenantCode=primary")));
         mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/my-plugin")));
     }
 

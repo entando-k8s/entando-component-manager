@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -279,7 +280,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     @Override
     public List<EntandoDeBundle> getBundlesInNamespace(String namespace, Optional<String> repoUrlFilter) {
 
-        LOGGER.info("### fetching bundles from " + namespace + " namespace");
+        LOGGER.info("### fetching bundles from namespace:'{}'", namespace);
         Hop baseHop = Hop.rel(BUNDLES_ENDPOINT).withParameter("namespace", namespace);
         return tryOrThrow(() -> traverson.follow(
                         repoUrlFilter.map(filter -> baseHop.withParameter("repoUrl", filter)).orElse(baseHop))
@@ -508,12 +509,23 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     private Ingress getAppIngress(String appName) {
-        return tryOrThrow(() -> traverson.follow(APPS_ENDPOINT)
+        Link endpoint = traverson.follow(APPS_ENDPOINT)
                 .follow(Hop.rel("app").withParameter("name", appName))
-                .follow("app-ingress")
-                .toObject(new ParameterizedTypeReference<EntityModel<Ingress>>() {
-                })
-                .getContent());
+                .follow(Hop.rel("app-ingress")).asLink();
+
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
+                .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                .build();
+
+        RequestEntity<?> request = RequestEntity
+                .get(URI.create(uriComponents.toUriString()))
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
+
+        return tryOrThrow(() ->
+                restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<Ingress>>() {
+                }).getBody().getContent());
+
     }
 
 
