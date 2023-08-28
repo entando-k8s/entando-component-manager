@@ -1,6 +1,7 @@
 package org.entando.kubernetes.utils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
@@ -52,7 +53,7 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     }
 
     private void addKeycloakEndpoints() {
-        this.wireMockServer.stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
+        this.wireMockServer.stubFor(WireMock.post(urlEqualTo("/protocol/openid-connect/token"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\" }")));
     }
@@ -155,6 +156,24 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
                 .willReturn(aResponse().withStatus(statusCode)
                         .withHeader("Content-Type", "application/json")));
 
+        return this;
+    }
+
+    public EntandoCoreMockServer withGenericSupportAndStatusCodeAndPrimaryCustomEntandoHeaders(String urlPath,
+                                                                                               String code,
+                                                                                               Function<UrlPattern, MappingBuilder> wireMockHttpMethod,
+                                                                                               int statusCode) {
+
+        String url = Optional.ofNullable(code)
+                .map(c -> UriComponentsBuilder.newInstance().path(urlPath + CODE_PATH_PARAM).buildAndExpand(code)
+                        .toUriString())
+                .orElseGet(() -> UriComponentsBuilder.newInstance().path(urlPath).buildAndExpand().toUriString());
+
+        this.wireMockServer.stubFor(wireMockHttpMethod.apply(urlEqualTo(url))
+                .withHeader("X-ENTANDO-TENANTCODE", equalTo("primary"))
+                .willReturn(aResponse().withStatus(statusCode)
+                        .withHeader("Content-Type", "application/json")
+                ));
         return this;
     }
 

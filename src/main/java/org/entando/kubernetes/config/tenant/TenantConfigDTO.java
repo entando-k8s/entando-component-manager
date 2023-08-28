@@ -13,8 +13,11 @@ public class TenantConfigDTO {
 
     private String tenantCode;
     private String fqdns;
+    
     private String kcAuthUrl;
     private String kcRealm;
+    private String kcCmClientId;
+    private String kcCmClientSecret;
 
     private String cmDbJdbcUrl;
     private String cmDbUsername;

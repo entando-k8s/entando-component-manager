@@ -3,6 +3,7 @@ package org.entando.kubernetes.config.security;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.client.request.RestTemplateHeaderTenantCodeInterceptor;
 import org.entando.kubernetes.config.tenant.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -83,6 +84,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Bean
     public RestTemplate simpleRestTemplate() {
-        return new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(new RestTemplateHeaderTenantCodeInterceptor());
+        return restTemplate;
     }
 }

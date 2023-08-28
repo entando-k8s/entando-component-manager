@@ -24,6 +24,8 @@ class TenantConfigurationTest {
                 objectMapper,
                 input,
                 TenantConfigStubHelper.ISSUER_URI + suffix,
+                TenantConfigStubHelper.KC_CLIENT_ID + suffix,
+                TenantConfigStubHelper.KC_CLIENT_SECRET + suffix,
                 TenantConfigStubHelper.HOSTNAME + suffix,
                 TenantConfigStubHelper.DB_DIALECT + suffix,
                 TenantConfigStubHelper.DB_DIALECT + suffix,
@@ -52,6 +54,8 @@ class TenantConfigurationTest {
                         objectMapper,
                         invalidInput,
                         TenantConfigStubHelper.ISSUER_URI + suffix,
+                        TenantConfigStubHelper.KC_CLIENT_ID + suffix,
+                        TenantConfigStubHelper.KC_CLIENT_SECRET + suffix,
                         TenantConfigStubHelper.HOSTNAME + suffix,
                         TenantConfigStubHelper.DB_DIALECT + suffix,
                         TenantConfigStubHelper.DB_DIALECT + suffix,
@@ -62,7 +66,7 @@ class TenantConfigurationTest {
     private String getTenantConfigMock(String tenantName) {
         return "{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-fqdns\""
                 + ",\"kcEnabled\":true,\"kcAuthUrl\":\"mock-auth-url\",\"kcRealm\":\"tenant1\","
-                +  "\"kcClientId\":\"mock-client-id\",\"kcClientSecret\":\"mock-client-secret\","
+                + "\"kcCmClientId\":\"mock-client-id\",\"kcCmClientSecret\":\"mock-client-secret\","
                 +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\","
                 + "\"dbDriverClassName\":\"org.postgresql.Driver\","
                 + "\"cmDbJdbcUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
@@ -82,6 +86,8 @@ class TenantConfigurationTest {
         assertThat(tenant.getFqdns()).isEqualTo("mock-fqdns");
         assertThat(tenant.getKcAuthUrl()).isEqualTo("mock-auth-url");
         assertThat(tenant.getKcRealm()).isEqualTo("tenant1");
+        assertThat(tenant.getKcCmClientId()).isEqualTo("mock-client-id");
+        assertThat(tenant.getKcCmClientSecret()).isEqualTo("mock-client-secret");
         assertThat(tenant.getCmDbJdbcUrl())
                 .isEqualTo("jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1");
         assertThat(tenant.getCmDbUsername()).isEqualTo("username");
