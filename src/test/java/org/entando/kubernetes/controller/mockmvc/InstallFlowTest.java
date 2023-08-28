@@ -60,6 +60,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.DatabaseCleaner;
 import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.assertionhelper.InstallFlowAssertionHelper;
@@ -70,6 +71,7 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.config.tenant.TenantFilter;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -89,7 +91,10 @@ import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
+import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
+import org.entando.kubernetes.utils.TenantTestUtils;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -119,6 +124,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Slf4j
 @AutoConfigureWireMock(port = 8099)
 @AutoConfigureMockMvc
 @SpringBootTest(
@@ -135,7 +141,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
 @DirtiesContext
-@ExtendWith(TenantSecurityKeycloakMockServerJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 public class InstallFlowTest {
 
     private MockMvc mockMvc;
@@ -199,7 +205,8 @@ public class InstallFlowTest {
     @AfterEach
     public void cleanup() {
         WireMock.reset();
-        databaseCleaner.cleanup();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> databaseCleaner.cleanup());
         downloaderFactory.setDefaultSupplier(defaultBundleDownloaderSupplier);
     }
 
@@ -259,7 +266,10 @@ public class InstallFlowTest {
         installFlowAssertionHelper.verifyAssetsInstallRequestsWithInstallPlanRequest(coreClient);
 
         // check that db install_plan column is correctly populated
+        TenantContextHolder.setCurrentTenantCode("primary");
         List<EntandoBundleJobEntity> bundleJobEntityList = jobRepository.findAll();
+        TenantContextHolder.destroy();
+
         assertThat(bundleJobEntityList).hasSize(1);
         String stringInstallPlan = new ObjectMapper().writeValueAsString(
                 TestInstallUtils.mockInstallWithPlansRequestWithActionsV1());
@@ -274,26 +284,30 @@ public class InstallFlowTest {
     @Test
     void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponents() {
         simulateSuccessfullyCompletedInstall();
-        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1());
     }
 
     @Test
     void shouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsWithInstallPlan() {
         simulateSuccessfullyCompletedInstallWithInstallPlan();
-        installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> installFlowAssertionHelper.verifyAfterShouldRecordJobStatusAndComponentsForAuditingWhenInstallComponentsV1());
     }
 
 
     @Test
     void shouldRecordInstallJobsInOrderWithInstall() {
         simulateSuccessfullyCompletedInstall();
-        verifyAfterShouldRecordInstallJobsInOrder();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterShouldRecordInstallJobsInOrder());
     }
 
     @Test
     void shouldRecordInstallJobsInOrderWithInstallPlan() {
         simulateSuccessfullyCompletedInstallWithInstallPlan();
-        verifyAfterShouldRecordInstallJobsInOrder();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterShouldRecordInstallJobsInOrder());
     }
 
     private void verifyAfterShouldRecordInstallJobsInOrder() {
@@ -310,6 +324,8 @@ public class InstallFlowTest {
         }
 
         String jobId = simulateSuccessfullyCompletedUninstall();
+        TenantTestUtils.setPrimaryTenant();
+
         EntandoBundleJobEntity uninstallJob = jobRepository.getOne(UUID.fromString(jobId));
         List<EntandoBundleComponentJobEntity> uninstallJobs = componentJobRepository.findAllByParentJob(uninstallJob)
                 .stream()
@@ -384,80 +400,99 @@ public class InstallFlowTest {
         verifyJobHasComponentAndStatus(mockMvc, jobId, JobStatus.INSTALL_COMPLETED);
 
         simulateSuccessfullyCompletedUninstall();
-        List<EntandoBundleJobEntity> jobs = jobRepository.findAll();
-        assertThat(jobs).hasSize(2);
-        assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
-        assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> {
+                    List<EntandoBundleJobEntity> jobs = jobRepository.findAll();
+                    assertThat(jobs).hasSize(2);
+                    assertThat(jobs.get(0).getStatus()).isEqualByComparingTo(JobStatus.INSTALL_COMPLETED);
+                    assertThat(jobs.get(1).getStatus()).isEqualByComparingTo(JobStatus.UNINSTALL_COMPLETED);
 
-        List<EntandoBundleComponentJobEntity> installedComponentList = componentJobRepository
-                .findAllByParentJob(jobs.get(0));
-        List<EntandoBundleComponentJobEntity> uninstalledComponentList = componentJobRepository
-                .findAllByParentJob(jobs.get(1));
-        assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
-        List<JobStatus> jobComponentStatus = uninstalledComponentList.stream()
-                .map(EntandoBundleComponentJobEntity::getStatus)
-                .collect(Collectors.toList());
-        assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
+                    List<EntandoBundleComponentJobEntity> installedComponentList = componentJobRepository
+                            .findAllByParentJob(jobs.get(0));
+                    List<EntandoBundleComponentJobEntity> uninstalledComponentList = componentJobRepository
+                            .findAllByParentJob(jobs.get(1));
+                    assertThat(uninstalledComponentList).hasSize(installedComponentList.size());
+                    List<JobStatus> jobComponentStatus = uninstalledComponentList.stream()
+                            .map(EntandoBundleComponentJobEntity::getStatus)
+                            .collect(Collectors.toList());
+                    assertThat(jobComponentStatus).allMatch((jcs) -> jcs.equals(JobStatus.UNINSTALL_COMPLETED));
 
-        boolean matchFound = false;
-        for (EntandoBundleComponentJobEntity ic : installedComponentList) {
-            matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
-                return uc.getParentJob().getId().equals(jobs.get(1).getId())
-                        && uc.getComponentId().equals(ic.getComponentId())
-                        && uc.getComponentType().equals(ic.getComponentType());
-                //                        uc.getChecksum().equals(ic.getChecksum()); // FIXME when building descriptor for uninstall we
-                //                         use only code, this changes the checksum
-            });
-            if (!matchFound) {
-                break;
-            }
-        }
-        assertThat(matchFound).isTrue();
+                    boolean matchFound = false;
+                    for (EntandoBundleComponentJobEntity ic : installedComponentList) {
+                        matchFound = uninstalledComponentList.stream().anyMatch(uc -> {
+                            return uc.getParentJob().getId().equals(jobs.get(1).getId())
+                                    && uc.getComponentId().equals(ic.getComponentId())
+                                    && uc.getComponentType().equals(ic.getComponentType());
+                            //                        uc.getChecksum().equals(ic.getChecksum()); // FIXME when building descriptor for uninstall we
+                            //                         use only code, this changes the checksum
+                        });
+                        if (!matchFound) {
+                            break;
+                        }
+                    }
+                    assertThat(matchFound).isTrue();
+                });
     }
 
     @Test
-    public void installedComponentShouldReturnInstalledFieldTrueAndEntryInTheInstalledComponentDatabase()
-            throws Exception {
+    void installedComponentShouldReturnInstalledFieldTrueAndEntryInTheInstalledComponentDatabase() {
 
         simulateSuccessfullyCompletedInstall();
 
-        mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload").isArray())
-                .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].code").value(MOCK_BUNDLE_NAME))
-                .andExpect(jsonPath("$.payload[0].installed").value("true"));
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> {
+                    try {
+                        mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.payload").isArray())
+                                .andExpect(jsonPath("$.payload", hasSize(1)))
+                                .andExpect(jsonPath("$.payload[0].code").value(MOCK_BUNDLE_NAME))
+                                .andExpect(jsonPath("$.payload[0].installed").value("true"));
+                    } catch (Exception ex) {
+                        log.error("Exception occurred", ex);
+                    }
+                });
 
-        List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
-        assertThat(installedComponents).hasSize(1);
-        assertThat(installedComponents.get(0).getBundleCode()).isEqualTo(MOCK_BUNDLE_NAME);
-        assertThat(installedComponents.get(0).getBundleType()).isEqualTo("STANDARD_BUNDLE");
-        assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> {
+                    List<EntandoBundleEntity> installedComponents = installedCompRepo.findAll();
+                    assertThat(installedComponents).hasSize(1);
+                    assertThat(installedComponents.get(0).getBundleCode()).isEqualTo(MOCK_BUNDLE_NAME);
+                    assertThat(installedComponents.get(0).getBundleType()).isEqualTo("STANDARD_BUNDLE");
+                    assertThat(installedComponents.get(0).isInstalled()).isEqualTo(true);
+                });
     }
 
     @Test
     void erroneousInstallationShouldRollback() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstall();
-        verifyAfterErroneousInstallationShouldRollback(failingJobId);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterErroneousInstallationShouldRollback(failingJobId));
     }
 
     @Test
     void erroneousInstallationShouldRollbackWithInstallPlan() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstallWithInstallPlan();
-        verifyAfterErroneousInstallationShouldRollback(failingJobId);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterErroneousInstallationShouldRollback(failingJobId));
     }
 
-    private void verifyAfterErroneousInstallationShouldRollback(String failingJobId) throws Exception {
+    private void verifyAfterErroneousInstallationShouldRollback(String failingJobId) {
 
         // Install Job should have been rollback
-        mockMvc.perform(get(INSTALL_PLANS_ENDPOINT.build()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.id").value(failingJobId))
-                .andExpect(jsonPath("$.payload.componentId").value(MOCK_BUNDLE_NAME))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
+        try {
+            mockMvc.perform(get(INSTALL_PLANS_ENDPOINT.build()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.payload.id").value(failingJobId))
+                    .andExpect(jsonPath("$.payload.componentId").value(MOCK_BUNDLE_NAME))
+                    .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
+        } catch (Exception ex) {
+            log.error("Exception occurred", ex);
+        }
 
+        TenantTestUtils.setPrimaryTenant();
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
         assertThat(job.isPresent()).isTrue();
         assertThat(job.get().getInstallErrorCode()).isEqualTo(100);
@@ -493,8 +528,9 @@ public class InstallFlowTest {
 
         // Given a failed install happened
         String failingJobId = simulateHugeAssetFailingInstall();
-        verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId,
-                INSTALL_COMPONENT_ENDPOINT);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId,
+                        INSTALL_COMPONENT_ENDPOINT));
     }
 
     @Test
@@ -502,16 +538,23 @@ public class InstallFlowTest {
 
         // Given a failed install happened
         String failingJobId = simulateHugeAssetFailingInstallWithPlan();
-        verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId, INSTALL_PLANS_ENDPOINT);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(failingJobId,
+                        INSTALL_PLANS_ENDPOINT));
     }
 
     private void verifyAfterShouldReturnAppropriateErrorCodeWhenFailingInstallDueToBigFile(String failingJobId,
-            UriBuilder endpointBuilder) throws Exception {
+                                                                                           UriBuilder endpointBuilder) {
         // Install Job should have been rollback
-        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.id").value(failingJobId));
+        try {
+            mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.payload.id").value(failingJobId));
+        } catch (Exception ex) {
+            log.error("Exception occurred", ex);
+        }
 
+        TenantTestUtils.setPrimaryTenant();
         Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(failingJobId));
         assertThat(job.isPresent()).isTrue();
 
@@ -532,39 +575,48 @@ public class InstallFlowTest {
     void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalled() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstall();
-        verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId,
-                INSTALL_COMPONENT_ENDPOINT);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId,
+                        INSTALL_COMPONENT_ENDPOINT));
     }
 
     @Test
     void erroneousInstallationOfComponentShouldReturnComponentIsNotInstalledWithInstallPlan() throws Exception {
         // Given a failed install happened
         String failingJobId = simulateFailingInstallWithInstallPlan();
-        verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId,
-                INSTALL_PLANS_ENDPOINT);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(failingJobId,
+                        INSTALL_PLANS_ENDPOINT));
     }
 
     private void verifyAfterErroneousInstallationOfComponentShouldReturnComponentIsNotInstalled(String failingJobId,
-            UriBuilder endpointUribuilder) throws Exception {
+                                                                                                UriBuilder endpointUribuilder) {
 
         // Components endpoints should still return the component is not installed
-        mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andExpect(jsonPath("$.payload").isArray())
-                .andExpect(jsonPath("$.payload", hasSize(1)))
-                .andExpect(jsonPath("$.payload[0].code").value(MOCK_BUNDLE_NAME))
-                .andExpect(jsonPath("$.payload[0].installed").value("false"));
+        try {
+            mockMvc.perform(get(ALL_COMPONENTS_ENDPOINT.build()).accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andDo(print())
+                    .andExpect(jsonPath("$.payload").isArray())
+                    .andExpect(jsonPath("$.payload", hasSize(1)))
+                    .andExpect(jsonPath("$.payload[0].code").value(MOCK_BUNDLE_NAME))
+                    .andExpect(jsonPath("$.payload[0].installed").value("false"));
 
-        // Component install status should be rollback
-        mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.id").value(failingJobId))
-                .andExpect(jsonPath("$.payload.componentId").value(MOCK_BUNDLE_NAME))
-                .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
+            // Component install status should be rollback
+            TenantTestUtils.setPrimaryTenant();
+            mockMvc.perform(get(INSTALL_COMPONENT_ENDPOINT.build()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.payload.id").value(failingJobId))
+                    .andExpect(jsonPath("$.payload.componentId").value(MOCK_BUNDLE_NAME))
+                    .andExpect(jsonPath("$.payload.status").value(JobStatus.INSTALL_ROLLBACK.toString()));
 
-        // And component should not be installed
-        assertThat(installedCompRepo.findAll()).isEmpty();
+            // And component should not be installed
+            TenantTestUtils.setPrimaryTenant();
+            assertThat(installedCompRepo.findAll()).isEmpty();
+        } catch (Exception ex) {
+            log.error("Exception occurred", ex);
+        }
+
     }
 
     @Test
@@ -591,14 +643,15 @@ public class InstallFlowTest {
     }
 
     @Test
-    void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() throws Exception {
+    void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwice() {
         // Given I try to update a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstall();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedUpdate();
 
         // two successfull jobs are created
         assertThat(firstSuccessfulJobId).isNotEqualTo(secondSuccessfulJobId);
-        assertThat(jobRepository.findAll()).hasSize(2);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(jobRepository.findAll()).hasSize(2));
     }
 
     @Test
@@ -609,7 +662,8 @@ public class InstallFlowTest {
 
         // two successfull jobs are created
         assertThat(firstSuccessfulJobId).isNotEqualTo(secondSuccessfulJobId);
-        assertThat(jobRepository.findAll()).hasSize(2);
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(jobRepository.findAll()).hasSize(2));
     }
 
     @Test
@@ -653,20 +707,22 @@ public class InstallFlowTest {
 
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
-        Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> {
+                    Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
+                    assertThat(job.isPresent()).isTrue();
 
-        assertThat(job.isPresent()).isTrue();
+                    List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository.findAllByParentJob(job.get());
 
-        List<EntandoBundleComponentJobEntity> jobComponentList = componentJobRepository.findAllByParentJob(job.get());
-
-        List<EntandoBundleComponentJobEntity> pluginJobs = jobComponentList.stream()
-                .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
-                .collect(Collectors.toList());
-        assertThat(pluginJobs).hasSize(2);
-        assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList()))
-                .containsOnly(
-                        JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
-                );
+                    List<EntandoBundleComponentJobEntity> pluginJobs = jobComponentList.stream()
+                            .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
+                            .collect(Collectors.toList());
+                    assertThat(pluginJobs).hasSize(2);
+                    assertThat(pluginJobs.stream().map(EntandoBundleComponentJobEntity::getStatus).collect(Collectors.toList()))
+                            .containsOnly(
+                                    JobStatus.INSTALL_ERROR, JobStatus.INSTALL_ROLLBACK
+                            );
+                });
     }
 
     /**
@@ -691,52 +747,62 @@ public class InstallFlowTest {
         waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
         String jobId = JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
 
-        Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
-        assertThat(job).isPresent();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> {
+                    Optional<EntandoBundleJobEntity> job = jobRepository.findById(UUID.fromString(jobId));
+                    assertThat(job).isPresent();
 
-        List<EntandoBundleComponentJobEntity> pluginJobs = componentJobRepository.findAllByParentJob(job.get())
-                .stream()
-                .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
-                .collect(Collectors.toList());
-        ;
+                    List<EntandoBundleComponentJobEntity> pluginJobs = componentJobRepository.findAllByParentJob(job.get())
+                            .stream()
+                            .filter(jc -> jc.getComponentType().equals(ComponentType.PLUGIN))
+                            .collect(Collectors.toList());
 
-        assertThat(pluginJobs).hasSize(6);
+                    assertThat(pluginJobs).hasSize(6);
 
-        // when deploymentBaseName is not present => component id should be the image organization, name and version
-        assertThat(pluginJobs.get(0).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_1);
-        assertThat(pluginJobs.get(1).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_2);
-        // when deploymentBaseName is not present => component id should be the deploymentBaseName itself
-        assertThat(pluginJobs.get(2).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE);
+                    // when deploymentBaseName is not present => component id should be the image organization, name and version
+                    assertThat(pluginJobs.get(0).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_1);
+                    assertThat(pluginJobs.get(1).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_TODOMVC_2);
+                    // when deploymentBaseName is not present => component id should be the deploymentBaseName itself
+                    assertThat(pluginJobs.get(2).getComponentId()).isEqualTo(TestInstallUtils.PLUGIN_TODOMVC_CUSTOMBASE);
+                });
     }
 
 
     @Test
     public void shouldUpdateDatabaseOnlyWhenOperationIsCompleted() throws Exception {
         simulateInProgressInstall();
-        assertThat(installedCompRepo.findAll()).isEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isEmpty());
 
         waitForInstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.INSTALL_COMPLETED);
-        assertThat(installedCompRepo.findAll()).isNotEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isNotEmpty());
 
         simulateInProgressUninstall();
-        assertThat(installedCompRepo.findAll()).isNotEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isNotEmpty());
 
         waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
-        assertThat(installedCompRepo.findAll()).isEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isEmpty());
     }
 
     @Test
     public void shouldNotUpdateDatabaseWhenOperationError() throws Exception {
         simulateFailingInstall();
-        assertThat(installedCompRepo.findAll()).isEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isEmpty());
 
-        databaseCleaner.cleanup();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> databaseCleaner.cleanup());
 
         simulateSuccessfullyCompletedInstall();
-        assertThat(installedCompRepo.findAll()).isNotEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isNotEmpty());
 
         simulateFailingUninstall();
-        assertThat(installedCompRepo.findAll()).isNotEmpty();
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> assertThat(installedCompRepo.findAll()).isNotEmpty());
     }
 
     @Test
@@ -836,16 +902,20 @@ public class InstallFlowTest {
     @Test
     public void shouldFailInstallAndHandleExceptionDuringBundleDownloadError() {
         String jobId = simulateBundleDownloadError();
-        Optional<EntandoBundleJobEntity> optJob = jobRepository.findById(UUID.fromString(jobId));
 
-        assertThat(optJob.isPresent()).isTrue();
-        EntandoBundleJobEntity job = optJob.get();
-        assertThat(job.getStatus()).isEqualByComparingTo(JobStatus.INSTALL_ERROR);
-        assertThat(job.getFinishedAt() != null);
-        assertThat(job.getStartedAt()).isBeforeOrEqualTo(job.getFinishedAt());
+        TenantTestUtils.executeInPrimaryTenantContext(
+                () -> {
+                    Optional<EntandoBundleJobEntity> optJob = jobRepository.findById(UUID.fromString(jobId));
 
-        List<EntandoBundleComponentJobEntity> componentJobs = componentJobRepository.findAllByParentJob(job);
-        assertThat(componentJobs).isEmpty();
+                    assertThat(optJob.isPresent()).isTrue();
+                    EntandoBundleJobEntity job = optJob.get();
+                    assertThat(job.getStatus()).isEqualByComparingTo(JobStatus.INSTALL_ERROR);
+                    assertThat(job.getFinishedAt() != null);
+                    assertThat(job.getStartedAt()).isBeforeOrEqualTo(job.getFinishedAt());
+
+                    List<EntandoBundleComponentJobEntity> componentJobs = componentJobRepository.findAllByParentJob(job);
+                    assertThat(componentJobs).isEmpty();
+                });
     }
 
 

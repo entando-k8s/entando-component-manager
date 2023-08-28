@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +54,10 @@ public class TenantConfiguration {
                 .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
                 .setKcRealm("entando")
                 .setFqdns(primaryHostName)
-                .setKcAuthUrl(primaryIssuerUri));
+                .setKcAuthUrl(primaryIssuerUri)
+                .setCmDbJdbcUrl(primaryDbUrl)
+                .setCmDbUsername(primaryDbUsername)
+                .setCmDbPassword(primaryDbPassword));
 
         return tenantConfigList;
     }
@@ -65,6 +70,8 @@ public class TenantConfiguration {
 
     @Setter
     @Getter
+    @EqualsAndHashCode
+    @ToString(exclude = {"cmDbPassword"})
     @Accessors(chain = true)
     public static class PrimaryTenantConfig extends TenantConfigDTO {
 
@@ -72,9 +79,8 @@ public class TenantConfiguration {
         private String fqdns;
         private String kcAuthUrl;
         private String kcRealm;
-        private String deDbDriverClassName;
-        private String deDbUrl;
-        private String deDbUsername;
-        private String deDbPassword;
+        private String cmDbJdbcUrl;
+        private String cmDbUsername;
+        private String cmDbPassword;
     }
 }
