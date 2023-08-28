@@ -1,18 +1,17 @@
 package org.entando.kubernetes.config.tenant;
 
+import static com.google.common.net.HttpHeaders.HOST;
+import static com.google.common.net.HttpHeaders.X_FORWARDED_HOST;
+
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
-import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,21 +20,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
 
-    private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
-    private static final String HOST = "Host";
-    private static final String REQUEST_SERVER_NAME = "Request server name";
-
+    public static final String X_ENTANDO_TENANTCODE = "X-ENTANDO-TENANTCODE";
     private final List<TenantConfigDTO> tenantConfigs;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String headerXEntandoTenantCode = request.getHeader(X_ENTANDO_TENANTCODE);
         String headerXForwardedHost = request.getHeader(X_FORWARDED_HOST);
         String headerHost = request.getHeader(HOST);
         String headerServerName = request.getServerName();
 
-        String tenantCode = this.fetchTenantCode(headerXForwardedHost, headerHost, headerServerName);
+        String tenantCode = TenantFilterUtils.fetchTenantCode(tenantConfigs, headerXEntandoTenantCode, headerXForwardedHost,
+                headerHost, headerServerName);
 
         TenantContextHolder.setCurrentTenantCode(tenantCode);
 
@@ -43,50 +41,8 @@ public class TenantFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             TenantContextHolder.destroy();
-            log.info("Remove custom context from thread local.");
+            log.debug("Remove custom context from thread local.");
         }
     }
 
-    public String fetchTenantCode(final String headerXForwardedHost,
-                                  final String headerHost,
-                                  final String servletRequestServerName) {
-
-        log.debug("Extracting tenantCode from headerXForwardedHost:'{}' headerHost:'{}' servletRequestServerName:'{}'",
-                headerXForwardedHost, headerHost, servletRequestServerName);
-        String tenantCode = Optional.ofNullable(tenantConfigs)
-                .flatMap(tcs ->
-                        searchTenantCodeInConfigs(X_FORWARDED_HOST, headerXForwardedHost)
-                                .or(() -> searchTenantCodeInConfigs(HOST, headerHost))
-                                .or(() -> searchTenantCodeInConfigs(REQUEST_SERVER_NAME, servletRequestServerName)))
-                .orElseGet(() -> {
-                    log.info(
-                            "No tenant identified for the received request. {}, {} and {} are empty. Falling back to {}",
-                            X_FORWARDED_HOST, HOST, REQUEST_SERVER_NAME, EntandoMultiTenancy.PRIMARY_TENANT);
-                    return EntandoMultiTenancy.PRIMARY_TENANT;
-                });
-
-        log.info("Extracted tenantCode: '{}'", tenantCode);
-        return tenantCode;
-    }
-
-    private Optional<String> searchTenantCodeInConfigs(String searchInputName, String search) {
-
-        if (StringUtils.isBlank(search)) {
-            return Optional.empty();
-        }
-
-        return tenantConfigs.stream().filter(t -> getFqdnTenantNames(t).contains(search)).findFirst()
-                .map(TenantConfigDTO::getTenantCode)
-                .or(() -> {
-                    log.info(
-                            "No tenant identified for the received request. {} = '{}'. Falling back to {}",
-                            searchInputName, search, EntandoMultiTenancy.PRIMARY_TENANT);
-                    return Optional.of(EntandoMultiTenancy.PRIMARY_TENANT);
-                });
-    }
-
-    private List<String> getFqdnTenantNames(TenantConfigDTO tenant) {
-        String[] fqdns = tenant.getFqdns().replaceAll("\\s", "").split(",");
-        return Arrays.asList(fqdns);
-    }
 }

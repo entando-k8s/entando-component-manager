@@ -114,10 +114,8 @@ class PostInitServiceTest {
 
     @Test
     void postInitDefault_ShouldInstall() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
-        EntandoBundleService bundleServiceSpy = Mockito.spy(bundleService);
 
-        initServiceToTest(null, bundleServiceSpy, installServiceSpy, kubernetesService,
+        initServiceToTest(null, bundleService, installService, kubernetesService,
                 entandoBundleJobService);
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
@@ -128,10 +126,10 @@ class PostInitServiceTest {
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
 
-        when(bundleServiceSpy.listBundles()).thenReturn(
+        when(bundleService.listBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleServiceSpy.deployDeBundle(any())).thenReturn(new EntandoBundle());
-        when(installServiceSpy.install(any(), any(), any())).thenReturn(
+        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(installService.install(any(), any(), any())).thenReturn(
                 EntandoBundleJobEntity.builder().id(UUID.randomUUID()).build());
         when(entandoBundleJobService.getById(any())).thenReturn(
                 Optional.of(EntandoBundleJobEntity.builder().status(JobStatus.INSTALL_COMPLETED).build()));
@@ -140,25 +138,23 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(1)).deployDeBundle(any());
-        verify(installServiceSpy, times(1)).install(any(), any(), any());
+        verify(bundleService, times(1)).deployDeBundle(any());
+        verify(installService, times(1)).install(any(), any(), any());
 
     }
 
     @Test
     void postInit_WithoutActionShouldNotInstall() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
-        EntandoBundleService bundleServiceSpy = Mockito.spy(bundleService);
 
         PostInitData data = convertConfigDataToString();
         data.getItems().get(0).setAction(null);
-        initServiceToTest(convertConfigDataToString(data), bundleServiceSpy, installServiceSpy, kubernetesService,
+        initServiceToTest(convertConfigDataToString(data), bundleService, installService, kubernetesService,
                 entandoBundleJobService);
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
-        when(bundleServiceSpy.listBundles()).thenReturn(
+        when(bundleService.listBundles()).thenReturn(
                 new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
-        when(bundleServiceSpy.deployDeBundle(any())).thenReturn(new EntandoBundle());
+        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
         EntandoDeBundleSpecBuilder deBundleBuilder = new EntandoDeBundleSpecBuilder();
@@ -171,8 +167,8 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(bundleServiceSpy, times(1)).deployDeBundle(any());
-        verify(installServiceSpy, times(0)).install(any(), any(), any());
+        verify(bundleService, times(1)).deployDeBundle(any());
+        verify(installService, times(0)).install(any(), any(), any());
     }
 
     @Test
@@ -280,9 +276,8 @@ class PostInitServiceTest {
 
     @Test
     void postInit_ShouldUpdate() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
 
-        initServiceToTest(convertConfigDataToString(convertConfigDataToString()), bundleService, installServiceSpy,
+        initServiceToTest(convertConfigDataToString(convertConfigDataToString()), bundleService, installService,
                 kubernetesService,
                 entandoBundleJobService);
 
@@ -299,7 +294,7 @@ class PostInitServiceTest {
 
         EntandoBundleJobEntity job = EntandoBundleJobEntity.builder().id(UUID.randomUUID())
                 .status(JobStatus.INSTALL_COMPLETED).build();
-        when(installServiceSpy.install(any(), any(), eq(InstallAction.OVERRIDE))).thenReturn(job);
+        when(installService.install(any(), any(), eq(InstallAction.OVERRIDE))).thenReturn(job);
         when(entandoBundleJobService.getById(any())).thenReturn(Optional.of(job));
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
@@ -314,7 +309,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
 
-        verify(installServiceSpy, times(1)).install(any(), any(), eq(InstallAction.OVERRIDE));
+        verify(installService, times(1)).install(any(), any(), eq(InstallAction.OVERRIDE));
 
     }
 

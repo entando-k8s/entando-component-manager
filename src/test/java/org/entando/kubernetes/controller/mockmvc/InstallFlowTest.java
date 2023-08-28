@@ -656,6 +656,7 @@ public class InstallFlowTest {
 
     @Test
     void shouldReturnDifferentJobIdWhenAttemptingToInstallTheSameComponentTwiceWithInstallPlan() {
+        databaseCleaner.cleanup();
         // Given I try to update a component which is already installed
         String firstSuccessfulJobId = simulateSuccessfullyCompletedInstallWithInstallPlan();
         String secondSuccessfulJobId = simulateSuccessfullyCompletedInstallWithInstallPlan();
