@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -17,6 +18,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -141,7 +143,8 @@ public class EntandoBundleUtilitiesTest {
                 .readDescriptorFile("plugins/todomvcV1.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
-                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcv1",
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "entando-todomvcv1", "entando-todomvcv1",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                 PluginStubHelper.PRIMARY_TENANT_CODE);
@@ -167,7 +170,8 @@ public class EntandoBundleUtilitiesTest {
                 .readDescriptorFile("plugins/todomvcV1_docker_image_too_long.yaml", PluginDescriptor.class);
         descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
-                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "loooong-entando", "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                 PluginStubHelper.PRIMARY_TENANT_CODE);
@@ -199,14 +203,14 @@ public class EntandoBundleUtilitiesTest {
         PluginDescriptor descriptor = bundleReader
                 .readDescriptorFile("plugins/todomvcV2_complete.yaml", PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
-                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME, "loooong-entando",
-                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
-                null,
+                PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "loooong-entando", "loooong-entando",
+                PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, null,
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
-        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor, Optional.empty());
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
@@ -227,6 +231,7 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                 PluginStubHelper.PRIMARY_TENANT_CODE);
@@ -234,7 +239,7 @@ public class EntandoBundleUtilitiesTest {
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
-        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor, Optional.empty());
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
@@ -251,13 +256,14 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
+                "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
-        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor, Optional.empty());
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
@@ -274,13 +280,14 @@ public class EntandoBundleUtilitiesTest {
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "entando-todomvcV3-1-0-0-" + bundleReader.getDeBundleMetadataName(),
+                "entando-todomvcV3-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
-        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor);
+        EntandoPlugin entandoPlugin = BundleUtilities.generatePluginFromDescriptorV2Plus(descriptor, Optional.empty());
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV3@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
@@ -318,8 +325,10 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void receivingAListOfEnvironmentVariableShouldCorrectlyConvertThemToAListOfEnvVar() {
-
-        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables());
+        EnvVar customEnvvar = new EnvVarBuilder()
+                .withName(PluginStubHelper.TEST_ENV_VAR_3_NAME).withValue("val3").build();
+        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
+                Collections.singletonList(customEnvvar));
 
         assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_NAME);
         assertThat(envVars.get(0).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
@@ -331,6 +340,10 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_NAME);
         assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
+        assertThat(envVars.get(2).getValue()).isNotNull();
+        assertThat(envVars.get(2).getValueFrom()).isNull();
+        assertThat(envVars.get(2).getValue()).isEqualTo("val3");
+
     }
 
 

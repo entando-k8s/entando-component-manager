@@ -50,7 +50,9 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint", "custIngr",
+                PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "entando-todomvcV1-1-0-0", "entando-todomvcV1-1-0-0",
+                "endpoint", "custIngr",
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         validator.validateOrThrow(descriptor);
     }
@@ -62,7 +64,9 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint", "custIngr",
+                PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "entando-todomvcV2-1-0-0", "entando-todomvcV2-1-0-0",
+                "endpoint", "custIngr",
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         validator.validateOrThrow(descriptor);
 
@@ -71,7 +75,9 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint", "custIngr",
+                PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "customBaseName", "customBaseName",
+                "endpoint", "custIngr",
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         validator.validateOrThrow(descriptor);
     }
@@ -83,7 +89,9 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV1-1-0-0", "endpoint", "custIngr",
+                PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "entando-todomvcV1-1-0-0", "entando-todomvcV1-1-0-0",
+                "endpoint", "custIngr",
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         validator.validateOrThrow(descriptor);
 
@@ -92,7 +100,9 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class);
         descriptor.setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                PluginStubHelper.EXPECTED_PLUGIN_NAME, "customBaseName", "endpoint", "custIngr",
+                PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                "customBaseName", "customBaseName",
+                "endpoint", "custIngr",
                 PluginStubHelper.PRIMARY_TENANT_CODE);
         validator.validateOrThrow(descriptor);
     }
@@ -119,7 +129,9 @@ class PluginDescriptorValidatorTest {
                         PluginDescriptor.class)
                 .setDescriptorMetadata(PluginStubHelper.BUNDLE_ID, PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
-                        PluginStubHelper.EXPECTED_PLUGIN_NAME, "entando-todomvcV2-1-0-0", "endpoint", "custIngr",
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        "entando-todomvcV2-1-0-0", "entando-todomvcV2-1-0-0",
+                        "endpoint", "custIngr",
                         PluginStubHelper.PRIMARY_TENANT_CODE);
         descriptor.setDescriptorVersion("v2.5");
 
@@ -188,6 +200,7 @@ class PluginDescriptorValidatorTest {
                 PluginStubHelper.BUNDLE_CODE,
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                 PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
@@ -275,6 +288,7 @@ class PluginDescriptorValidatorTest {
                     PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME,
                     PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                    PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                     PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                     PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                     PluginStubHelper.PRIMARY_TENANT_CODE);
@@ -295,6 +309,7 @@ class PluginDescriptorValidatorTest {
                         "abcd1234-mybundle",
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
+                        PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME,
                         PluginStubHelper.TEST_DESCRIPTOR_DEPLOYMENT_BASE_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
@@ -320,6 +335,7 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
+                        PluginStubHelper.EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
                         PluginStubHelper.PRIMARY_TENANT_CODE)
@@ -339,6 +355,7 @@ class PluginDescriptorValidatorTest {
                         PluginStubHelper.BUNDLE_CODE,
                         PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA,
                         PluginStubHelper.EXPECTED_PLUGIN_NAME,
+                        "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name",
                         "my-very-very-very-very-very-very-very-very-very-very-very-long-deployment-name",
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                         PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,

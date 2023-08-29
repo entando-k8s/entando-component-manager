@@ -272,6 +272,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 ObjectUtils.isEmpty(pluginDescriptor.getName())
                         ? signedPluginDeplName.split("-", 2)[1]
                         : pluginDescriptor.getName(),
+                generateFullDeploymentName(bundleId, signedPluginDeplName, false),
                 generateFullDeploymentName(bundleId, signedPluginDeplName),
                 endpoint,
                 customEndpoint,
@@ -316,7 +317,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
     public PluginDescriptor buildDescriptorFromComponentJob(EntandoBundleComponentJobEntity component) {
         return new PluginDescriptor()
                 .setDescriptorMetadata(
-                        new DescriptorMetadata(null, null, null, null, component.getComponentId(), null, null, null));
+                        new DescriptorMetadata(null, null, null, null, component.getComponentId(),
+                                component.getComponentId(), null, null, null));
     }
 
     /**
@@ -328,6 +330,10 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
      * @return the generated full deployment name
      */
     public String generateFullDeploymentName(String bundleId, String signedPluginName) {
+        return generateFullDeploymentName(bundleId, signedPluginName, true);
+    }
+
+    public String generateFullDeploymentName(String bundleId, String signedPluginName, boolean addTenant) {
         String tenantCode = TenantContextHolder.getCurrentTenantCode();
 
         List<String> deploymentParts = new ArrayList<>();
@@ -335,7 +341,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         deploymentParts.add(PLUGIN_DEPLOYMENT_PREFIX);
         deploymentParts.add(BundleUtilities.makeKubernetesCompatible(bundleId));
 
-        if (StringUtils.isNotEmpty(tenantCode) && !tenantCode.equals(EntandoMultiTenancy.PRIMARY_TENANT)) {
+        if (addTenant && StringUtils.isNotEmpty(tenantCode) && !tenantCode.equals(EntandoMultiTenancy.PRIMARY_TENANT)) {
             String tenantId = BundleUtilities.calculateTenantId(tenantCode);
             deploymentParts.add(tenantId);
         }
