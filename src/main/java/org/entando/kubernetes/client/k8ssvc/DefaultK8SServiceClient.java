@@ -547,7 +547,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     private HttpMessageConverter<?> getJsonConverter() {
-        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_HTML);
+        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
