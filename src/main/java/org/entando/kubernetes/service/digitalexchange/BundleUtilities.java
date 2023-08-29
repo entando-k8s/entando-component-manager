@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -25,6 +26,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient.PluginConfiguration;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
@@ -299,10 +301,10 @@ public class BundleUtilities {
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
      */
-    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor) {
+    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor, Optional<PluginConfiguration> conf) {
         return descriptor.isVersion1()
                 ? generatePluginFromDescriptorV1(descriptor) :
-                generatePluginFromDescriptorV2Plus(descriptor);
+                generatePluginFromDescriptorV2Plus(descriptor, conf);
     }
 
     /**
@@ -311,10 +313,11 @@ public class BundleUtilities {
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
      */
-    public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor) {
+    public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor,
+                                                                   Optional<PluginConfiguration> conf) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
-                .withName(descriptor.getDescriptorMetadata().getPluginCode())
+                .withName(descriptor.getDescriptorMetadata().getPluginCodeTenantAware())
                 .withLabels(extractLabelsFromDescriptor(descriptor))
                 .withAnnotations(getAnnotationsFromImage(descriptor.getDockerImage()))
                 .endMetadata()
@@ -327,7 +330,8 @@ public class BundleUtilities {
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
                 .withPermissions(extractPermissionsFromDescriptor(descriptor))
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
-                .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables()))
+                .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables(),
+                        conf.map(PluginConfiguration::getEnvironmentVariables).orElse(Collections.emptyList())))
                 .withResourceRequirements(generateResourceRequirementsFromDescriptor(descriptor))
                 .withTenantCode(descriptor.getDescriptorMetadata().getTenantCode())
                 .endSpec()
@@ -485,28 +489,40 @@ public class BundleUtilities {
      * @param environmentVariableList the PluginDescriptor from which get the env vars to convert
      * @return the list of K8S compatible EnvVar
      */
-    public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList) {
+    public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
+                                                     List<EnvVar> customEnvironmentVariablesList) {
 
-        return Optional.ofNullable(environmentVariableList)
-                .orElseGet(ArrayList::new)
-                .stream().map(envVar -> {
-                    EnvVarBuilder builder = new EnvVarBuilder()
-                            .withName(envVar.getName());
+        Map<String, EnvVar> assembledEnvVar = new HashMap<>();
+        Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
+                .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
+                    assembledEnvVar.put(env.getName(), env);
+                }));
 
-                    if (envVar.safeGetValueFrom().getSecretKeyRef() == null) {
-                        builder.withValue(envVar.getValue());
-                    } else {
-                        builder.withNewValueFrom()
-                                .withNewSecretKeyRef()
-                                .withName(envVar.safeGetValueFrom().getSecretKeyRef().getName())
-                                .withKey(envVar.safeGetValueFrom().getSecretKeyRef().getKey())
-                                .endSecretKeyRef()
-                                .endValueFrom();
-                    }
+        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
+            assembledEnvVar.put(env.getName(), env);
+        }));
 
-                    return builder.build();
-                })
+        return assembledEnvVar.entrySet().stream()
+                .map(Entry::getValue)
+                .sorted(Comparator.comparing(EnvVar::getName))
                 .collect(Collectors.toList());
+    }
+
+    private EnvVar buildFromEnvironmentVariable(EnvironmentVariable envVar) {
+        EnvVarBuilder builder = new EnvVarBuilder()
+                .withName(envVar.getName());
+
+        if (envVar.safeGetValueFrom().getSecretKeyRef() == null) {
+            builder.withValue(envVar.getValue());
+        } else {
+            builder.withNewValueFrom()
+                    .withNewSecretKeyRef()
+                    .withName(envVar.safeGetValueFrom().getSecretKeyRef().getName())
+                    .withKey(envVar.safeGetValueFrom().getSecretKeyRef().getKey())
+                    .endSecretKeyRef()
+                    .endValueFrom();
+        }
+        return builder.build();
     }
 
     /**

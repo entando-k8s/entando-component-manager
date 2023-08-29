@@ -150,6 +150,34 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         return Optional.ofNullable(plugin);
     }
 
+    @Override
+    public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
+        try {
+            Link endpoint = traverson.follow(PLUGINS_ENDPOINT)
+                    .follow(Hop.rel("plugin").withParameter("name", pluginName))
+                    .follow(Hop.rel("plugin-configuration")).asLink();
+
+            UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
+                    .queryParam("tenantCode", TenantContextHolder.getCurrentTenantCode())
+                    .build();
+            String url = uriComponents.toUriString();
+            LOGGER.debug("For plugin:'{}' fetching configuration from url:'{}'", pluginName, url);
+            RequestEntity<?> request = RequestEntity
+                    .get(URI.create(url))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .build();
+
+            return Optional.ofNullable(restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<PluginConfiguration>>() {
+            })).map(m -> m.getBody()).map(t -> t.getContent());
+            
+        } catch (RestClientResponseException ex) {
+            if (ex.getRawStatusCode() != 404) {
+                throw new KubernetesClientException(String.format("An error occurred while retrieving plugin with name '%s'", pluginName), ex);
+            }
+        }
+        return Optional.empty();
+    }
+
     /**
      * UPDATES A PLUGIN.
      * <p>

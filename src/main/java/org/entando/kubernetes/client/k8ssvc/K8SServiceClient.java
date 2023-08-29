@@ -1,5 +1,7 @@
 package org.entando.kubernetes.client.k8ssvc;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -18,6 +20,8 @@ public interface K8SServiceClient extends ECMClient {
     EntandoPlugin getPluginForLink(EntandoAppPluginLink el);
 
     Optional<EntandoPlugin> getPluginByName(String pluginName);
+
+    Optional<PluginConfiguration> getPluginConfiguration(String pluginName);
 
     void unlink(EntandoAppPluginLink el);
 
@@ -56,6 +60,13 @@ public interface K8SServiceClient extends ECMClient {
     class ApplicationStatus {
 
         private String status;
+    }
+
+    @Data
+    class PluginConfiguration {
+
+        @JsonProperty("environment_variables")
+        private List<EnvVar> environmentVariables;
     }
 
 }

@@ -87,7 +87,8 @@ class BaseDescriptorValidatorTest {
         PluginDescriptor descriptor = (PluginDescriptor) new PluginDescriptor()
                 .setDescriptorMetadata("abcdefgh", "abcdefgh-my-bundle",
                         "1ab2c3d4", "code",
-                        "name", "endpooint",
+                        "name", "name",
+                        "endpooint",
                         "cusIngr", PluginStubHelper.PRIMARY_TENANT_CODE)
                 .setDescriptorVersion(DescriptorVersion.V5.getVersion());
 

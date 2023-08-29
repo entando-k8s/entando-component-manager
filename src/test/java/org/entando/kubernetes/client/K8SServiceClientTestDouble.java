@@ -75,6 +75,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
+    public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
+        return Optional.empty();
+    }
+
+    @Override
     public void unlink(EntandoAppPluginLink el) {
 
     }

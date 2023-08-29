@@ -1,9 +1,11 @@
 package org.entando.kubernetes.model.bundle.installable;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient.PluginConfiguration;
 import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
@@ -36,7 +38,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
             logConflictStrategyAction();
 
-            EntandoPlugin plugin = BundleUtilities.generatePluginFromDescriptor(representation);
+            EntandoPlugin plugin = buildPlugin(representation);
 
             if (shouldSkip()) {
                 fixPluginRegistrationIfNecessary();
@@ -51,6 +53,13 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
                 throw new EntandoComponentManagerException("Illegal state detected");
             }
         });
+    }
+
+    private EntandoPlugin buildPlugin(PluginDescriptor descriptor) {
+        Optional<PluginConfiguration> configuration = kubernetesService
+                .getPluginConfiguration(descriptor.getDescriptorMetadata().getPluginCode());
+        return BundleUtilities.generatePluginFromDescriptor(descriptor, configuration);
+
     }
 
     private void installPlugin(EntandoPlugin plugin) {
@@ -146,7 +155,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
     @Override
     public String getName() {
-        return this.representation.getDescriptorMetadata().getPluginCode();
+        return this.representation.getDescriptorMetadata().getPluginCodeTenantAware();
     }
 
     /**
