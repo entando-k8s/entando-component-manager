@@ -46,6 +46,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
@@ -535,11 +536,11 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate setMessageConverters(RestTemplate restTemplate) {
         List<HttpMessageConverter<?>> messageConverters = Traverson
                 .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
-        messageConverters.add(0, getJsonConverter());
-        /*if (messageConverters.stream()
+        messageConverters.add(0, getTextHtmlConverter());
+        if (messageConverters.stream()
                 .noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
             messageConverters.add(0, getJsonConverter());
-        }*/
+        }
         restTemplate.setMessageConverters(messageConverters);
 
         return restTemplate;
@@ -556,6 +557,12 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         converter.setObjectMapper(mapper);
         converter.setSupportedMediaTypes(supportedMediatypes);
 
+        return converter;
+    }
+
+    private HttpMessageConverter<?> getTextHtmlConverter() {
+        StringHttpMessageConverter converter = new StringHttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.TEXT_HTML));
         return converter;
     }
 
