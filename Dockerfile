@@ -65,7 +65,6 @@ COPY passwd.template entrypoint.sh /
 
 EXPOSE 8080
 
-
 # copy pom.xml and wildcards to avoid this command failing if there's no target/lib directory
 COPY pom.xml target/lib* /opt/lib/
 
