@@ -2,6 +2,7 @@ package org.entando.kubernetes.validator;
 
 import java.net.URL;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ObjectUtils;
@@ -25,7 +26,9 @@ public class ValidationFunctions {
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";
     public static final List<String> VALID_PROTOCOLS = List.of(GIT_PROTOCOL, HTTP_PROTOCOL, HTTPS_PROTOCOL);
-
+    public static final String SEPARATOR = "://";
+    public static final String DEFAULT_PROTOCOL = "http".concat(SEPARATOR);
+    public static final String FQDN_REGEXP = "(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63}$)";
     /**
      * if the url uses the git or ssh protocol, replace it with http validate the received url using url regex. checks
      * that the url is not empty. if this fails, throw EntandoValidationException with nullError message checks that the
@@ -124,4 +127,58 @@ public class ValidationFunctions {
 
         return entityCode;
     }
+
+    /**
+     * Check the URL for correctness. Database connection string are NOT handled by this method
+     * The strategy here is to convert the URL to a URI object and take advantage of the Java library
+     * to detect any error.
+     *
+     * @param candidate the URL to test
+     * @param validateProtocol when false, the check against the protocol is skipped
+     * @param validatePort when false, the port presence is ignored
+     * @param validatePath when false the presence of the path is ignored
+     * @return true if the URL is correct
+     */
+    public static boolean validateURL(String candidate, boolean validateProtocol, boolean validatePort,
+            boolean validatePath) {
+
+        try {
+            candidate = validateProtocol ? candidate : appendProtocolIfMissing(candidate, null);
+
+            final URL url = new URL(candidate);
+            final String port = String.valueOf(url.getPort());
+
+            return ((StringUtils.isNotBlank(url.toURI().toString())
+                    && StringUtils.isNotBlank(url.getProtocol()))
+                    && StringUtils.isNotBlank(url.getHost())
+                    && (!validatePort
+                    || (StringUtils.isNotBlank(port) && StringUtils.isNumeric(port)))
+                    && (!validatePath || StringUtils.isNotBlank(url.getPath())));
+        } catch (Throwable t) {
+            // no op
+        }
+        return false;
+    }
+
+    private String appendProtocolIfMissing(String candidate, String proto) {
+        if (StringUtils.isNotBlank(candidate)
+                && !candidate.contains(SEPARATOR)) {
+            return StringUtils.isNotBlank(proto) ? proto.concat(candidate)
+                    : DEFAULT_PROTOCOL.concat(candidate);
+        }
+        return candidate;
+    }
+
+    /**
+     * Validate a FQDN using regexp
+     *
+     * @param fqdn the fully qualified domain to validate
+     * @return true if the verification is successful
+     */
+    public static boolean validateFQDN(String fqdn) {
+        Pattern pattern = Pattern.compile(FQDN_REGEXP);
+        Matcher matcher = pattern.matcher(fqdn);
+        return matcher.matches();
+    }
+
 }

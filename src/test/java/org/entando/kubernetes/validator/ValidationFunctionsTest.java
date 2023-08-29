@@ -101,4 +101,108 @@ class ValidationFunctionsTest {
         final String code = ValidationFunctions.validateEntityCodeOrThrow(BundleStubHelper.BUNDLE_CODE);
         assertThat(code).isEqualTo(BundleStubHelper.BUNDLE_CODE);
     }
+
+    @Test
+    void testUrl() {
+        final String VALID_URL1 = "tenant1.mt720.k8s-domain.org";
+
+        // w/o protocol
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                false, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                true, false, false)).isFalse();
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                true, true, false)).isFalse();
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                false, false, true)).isFalse();
+        
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL1)).isTrue();
+
+        // with protocol
+        final String VALID_URL2 = "https://mt720.k8s-domain.org/auth";
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                true, false, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                false, false, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                false, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                false, true, false)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL2)).isFalse();
+
+        // with protocol and port
+        final String VALID_URL3 = "http://mt720-cds-tenant1-service.test-mt-720.svc.cluster.local:8080";
+        assertThat(ValidationFunctions.validateURL(VALID_URL3,
+                true, true, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL3,
+                false, false, true)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL3)).isFalse();
+
+        final String VALID_URL4 = "https://cds-mt720.k8s-domain.org/tenant1/";
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                true, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                true, false, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                true, true, true)).isFalse();
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                false, false, false)).isTrue();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL4)).isFalse();
+
+        final String VALID_URL5 = "https://cds-mt720.k8s-domain.org:2677/tenant1/";
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                true, true, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                false, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                true, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                false, true, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                false, false, true)).isTrue();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL5)).isFalse();
+
+        final String INVALID_FQDN1 = "tenant1.mt720.k8s-domain.o rg";
+
+        assertThat(ValidationFunctions.validateURL(INVALID_FQDN1,
+                false, false, false)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN1)).isFalse();
+
+        final String INVALID_FQDN2 = "jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1";
+        assertThat(ValidationFunctions.validateURL(INVALID_FQDN2,
+                true, true, true)).isFalse();
+
+        final String INVALID_FQDN3 = "tenant1.mt720.k8s-domain.org:123q2/tenant1";
+        assertThat(ValidationFunctions.validateURL(INVALID_FQDN3,
+                false, true, true)).isFalse();
+        assertThat(ValidationFunctions.validateURL(INVALID_FQDN3,
+                false, false, true)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN3)).isFalse();
+
+        final String INVALID_FQDN4 = "http://tenant1";
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN4)).isFalse();
+
+        final String INVALID_FQDN5 = "tenant1";
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN5)).isFalse();
+
+        final String INVALID_FQDN6 = ".com";
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN6)).isFalse();
+
+        final String INVALID_FQDN7 = "mock-url";
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN7)).isFalse();
+
+        final String INVALID_FQDN8 = "8-8-8-8.nip.io";
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN8)).isTrue();
+
+        final String INVALID_FQDN9 = "192.168.1.234";
+        assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN9)).isFalse();
+
+    }
+
 }
