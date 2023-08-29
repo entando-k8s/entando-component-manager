@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -490,26 +491,21 @@ public class BundleUtilities {
      */
     public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
                                                      List<EnvVar> customEnvironmentVariablesList) {
-        Map<String, EnvVar> customConfigurations = customEnvironmentVariablesList.stream()
-                .collect(Collectors.toMap(EnvVar::getName, e -> e));
-        List<EnvVar> assembledEnvVar = Optional.ofNullable(environmentVariableList)
-                .orElseGet(ArrayList::new)
-                .stream().map(envVar -> Optional.ofNullable(customConfigurations.get(envVar.getName()))
-                        .orElseGet(() -> buildFromEnvironmentVariable(envVar)))
+
+        Map<String, EnvVar> assembledEnvVar = new HashMap<>();
+        Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
+                .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
+                    assembledEnvVar.put(env.getName(), env);
+                }));
+
+        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
+            assembledEnvVar.put(env.getName(), env);
+        }));
+
+        return assembledEnvVar.entrySet().stream()
+                .map(Entry::getValue)
+                .sorted(Comparator.comparing(EnvVar::getName))
                 .collect(Collectors.toList());
-
-        List<String> defaultPluginEnvVarKeys = Optional.ofNullable(environmentVariableList)
-                .orElseGet(ArrayList::new).stream()
-                .map(EnvironmentVariable::getName)
-                .collect(Collectors.toList());
-
-        customConfigurations.entrySet().stream()
-                .filter(e -> !defaultPluginEnvVarKeys.contains(e.getKey()))
-                .forEach(e -> {
-                    assembledEnvVar.add(e.getValue());
-                });
-
-        return assembledEnvVar;
     }
 
     private EnvVar buildFromEnvironmentVariable(EnvironmentVariable envVar) {
