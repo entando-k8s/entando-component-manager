@@ -7,7 +7,7 @@ import lombok.ToString;
 
 @Getter
 @EqualsAndHashCode
-@ToString(exclude = {"cmDbPassword"})
+@ToString(exclude = {"deDbPassword"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TenantConfigDTO {
 
