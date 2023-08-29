@@ -62,11 +62,11 @@ public class TenantConfiguration {
                 .setKcRealm("entando")
                 .setFqdns(primaryHostName)
                 .setKcAuthUrl(primaryIssuerUri)
-                .setKcCmClientId(clientId)
-                .setKcCmClientSecret(clientSecret)
-                .setCmDbJdbcUrl(primaryDbUrl)
-                .setCmDbUsername(primaryDbUsername)
-                .setCmDbPassword(primaryDbPassword));
+                .setDeKcClientId(clientId)
+                .setDeKcClientSecret(clientSecret)
+                .setDeDbUrl(primaryDbUrl)
+                .setDeDbUsername(primaryDbUsername)
+                .setDeDbPassword(primaryDbPassword));
 
         return tenantConfigList;
     }
@@ -80,7 +80,7 @@ public class TenantConfiguration {
     @Setter
     @Getter
     @EqualsAndHashCode
-    @ToString(exclude = {"cmDbPassword"})
+    @ToString(exclude = {"deDbPassword"})
     @Accessors(chain = true)
     public static class PrimaryTenantConfig extends TenantConfigDTO {
 
@@ -88,10 +88,10 @@ public class TenantConfiguration {
         private String fqdns;
         private String kcAuthUrl;
         private String kcRealm;
-        private String cmDbJdbcUrl;
-        private String cmDbUsername;
-        private String cmDbPassword;
-        private String kcCmClientId;
-        private String kcCmClientSecret;
+        private String deDbUrl;
+        private String deDbUsername;
+        private String deDbPassword;
+        private String deKcClientId;
+        private String deKcClientSecret;
     }
 }

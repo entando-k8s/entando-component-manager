@@ -128,8 +128,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private OAuth2RestTemplate buildRestTemplate(TenantConfigDTO config) {
         final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
         resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(config.getKcCmClientId());
-        resourceDetails.setClientSecret(config.getKcCmClientSecret());
+        resourceDetails.setClientId(config.getDeKcClientId());
+        resourceDetails.setClientSecret(config.getDeKcClientSecret());
         resourceDetails.setAccessTokenUri(MultipleIdps.composeIssuerUri(config) + "/protocol/openid-connect/token");
 
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(resourceDetails);

@@ -91,35 +91,27 @@ class TenantConfigurationTest {
         return "{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-"
                 + System.currentTimeMillis() + "-fqdns.tld\""
                 + ",\"kcEnabled\":true,\"kcAuthUrl\":\"https://tenenats.k8s-server.org/auth\",\"kcRealm\":\"tenant1\","
-                + "\"kcCmClientId\":\"mock-client-id\",\"kcCmClientSecret\":\"mock-client-secret\","
+                + "\"deKcClientId\":\"mock-client-id\",\"deKcClientSecret\":\"mock-client-secret\","
                 +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\","
                 + "\"dbDriverClassName\":\"org.postgresql.Driver\","
-                + "\"cmDbJdbcUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
-                + "\"cmDbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
+                + "\"deDbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
+                + "\"deDbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
                 +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"solraddress\",\"solrCore\":\"tenant1\","
                 + "\"cmDbDriverClassName\": \"org.postgresql.Driver\","
-                + "\"cmDbPassword\": \"password\","
-                + "\"deDbUrl\": \"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\","
-                + "\"deDbUsername\": \"postgres\","
-                +  "\"deKcClientId\": \"dekcclientid\","
-                +  "\"deKcClientSecret\": \"dekcsecret\""
+                + "\"deDbPassword\": \"password\""
                 + "}";
     }
 
     private String getInvalidTenantConfigMock(String tenantName) {
         return "{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-fqdns\""
                 + ",\"kcEnabled\":true,\"kcAuthUrl\":\"mock-auth-url\",\"kcRealm\":\"tenant1\","
-                + "\"kcCmClientId\":\"mock-client-id\",\"kcCmClientSecret\":\"mock-client-secret\","
+                + "\"deKcClientId\":\"mock-client-id\",\"deKcClientSecret\":\"mock-client-secret\","
                 +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\","
                 + "\"dbDriverClassName\":\"org.postgresql.Driver\","
-                // + "\"cmDbJdbcUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
-                // + "\"cmDbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
-                +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"solraddress\",\"solrCore\":\"tenant1\","
-                // + "\"cmDbPassword\": \"password\","
-                + "\"deDbUrl\": \"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\","
-                + "\"deDbUsername\": \"postgres\","
-                +  "\"deKcClientId\": \"dekcclientid\","
-                +  "\"deKcClientSecret\": \"dekcsecret\""
+                // + "\"deDbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\","
+                // + "\"deDbUsername\":\"username\",\"dbPassword\":\"password\",\"cdsPublicUrl\":\"cdspublicurl\",\"cdsPrivateUrl\":\"cdsprivateurl\","
+                +  "\"cdsPath\":\"api/v1\",\"solrAddress\":\"solraddress\",\"solrCore\":\"tenant1\""
+                // + "\"deDbPassword\": \"password\","
                 + "}";
     }
 
@@ -129,12 +121,12 @@ class TenantConfigurationTest {
         assertThat(tenant.getFqdns()).endsWith("-fqdns.tld");
         assertThat(tenant.getKcAuthUrl()).isEqualTo("https://tenenats.k8s-server.org/auth");
         assertThat(tenant.getKcRealm()).isEqualTo("tenant1");
-        assertThat(tenant.getKcCmClientId()).isEqualTo("mock-client-id");
-        assertThat(tenant.getKcCmClientSecret()).isEqualTo("mock-client-secret");
-        assertThat(tenant.getCmDbJdbcUrl())
+        assertThat(tenant.getDeKcClientId()).isEqualTo("mock-client-id");
+        assertThat(tenant.getDeKcClientSecret()).isEqualTo("mock-client-secret");
+        assertThat(tenant.getDeDbUrl())
                 .isEqualTo("jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1");
-        assertThat(tenant.getCmDbUsername()).isEqualTo("username");
-        assertThat(tenant.getCmDbPassword()).isEqualTo("password");
+        assertThat(tenant.getDeDbUsername()).isEqualTo("username");
+        assertThat(tenant.getDeDbPassword()).isEqualTo("password");
     }
 
 }

@@ -37,9 +37,9 @@ public class TenantValidatorTest {
         List<String> errors = map.get("tenant2");
         assertFalse(errors.isEmpty());
         MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder("fqdns: 'mock-fqdns' already used for tenant 'tenant1'",
-                "cmDbUsername: missing configuration value",
-                "cmDbPassword: missing configuration value",
-                "cmDbJdbcUrl: missing configuration value",
+                "deDbUsername: missing configuration value",
+                "deDbPassword: missing configuration value",
+                "deDbUrl: missing configuration value",
                 "kcAuthUrl: invalid URL detected 'mock-auth-url'",
                 "fqdns: invalid value detected 'mock-fqdns'")
         );
@@ -58,9 +58,9 @@ public class TenantValidatorTest {
         List<String> errors = map.get("tenant1");
         assertFalse(errors.isEmpty());
         MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder(
-                "cmDbUsername: missing configuration value",
-                "cmDbPassword: missing configuration value",
-                "cmDbJdbcUrl: missing configuration value",
+                "deDbUsername: missing configuration value",
+                "deDbPassword: missing configuration value",
+                "deDbUrl: missing configuration value",
                 "kcAuthUrl: invalid URL detected 'mock-auth-url'",
                 "tenant with FQDNs' mock-fqdns' is using the same tenant id (tenant1)",
                 "fqdns: invalid value detected 'mock-fqdns'")
@@ -84,18 +84,14 @@ public class TenantValidatorTest {
             + "      \"kcAuthUrl\":\"mock-auth-url\",\n"
             + "      \"kcRealm\":\"tenant1\",\n"
             + "      \"kcCmClientId\":\"mock-client-id\",\n"
-            + "      \"kcCmClientSecret\":\"mock-client-secret\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
             + "      \"kcPublicClientId\":\"mock\",\n"
             + "      \"kcSecureUris\":\"kcsecureuris\",\n"
             + "      \"kcDefaultAuthorizations\":\"\",\n"
             + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
             + "      \"cdsPath\":\"api/v1\",\n"
             + "      \"solrAddress\":\"solraddress\",\n"
-            + "      \"solrCore\":\"tenant1\",\n"
-            + "      \"deDbUrl\":\"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\",\n"
-            + "      \"deDbUsername\":\"postgres\",\n"
-            + "      \"deKcClientId\":\"dekcclientid\",\n"
-            + "      \"deKcClientSecret\":\"dekcsecret\"\n"
+            + "      \"solrCore\":\"tenant1\"\n"
             + "   },\n"
             + "   {\n"
             + "      \"dbMaxTotal\":\"5\",\n"
@@ -106,18 +102,14 @@ public class TenantValidatorTest {
             + "      \"kcAuthUrl\":\"mock-auth-url\",\n"
             + "      \"kcRealm\":\"tenant1\",\n"
             + "      \"kcCmClientId\":\"mock-client-id\",\n"
-            + "      \"kcCmClientSecret\":\"mock-client-secret\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
             + "      \"kcPublicClientId\":\"mock\",\n"
             + "      \"kcSecureUris\":\"kcsecureuris\",\n"
             + "      \"kcDefaultAuthorizations\":\"\",\n"
             + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
             + "      \"cdsPath\":\"api/v1\",\n"
             + "      \"solrAddress\":\"solraddress\",\n"
-            + "      \"solrCore\":\"tenant1\",\n"
-            + "      \"deDbUrl\":\"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\",\n"
-            + "      \"deDbUsername\":\"postgres\",\n"
-            + "      \"deKcClientId\":\"dekcclientid\",\n"
-            + "      \"deKcClientSecret\":\"dekcsecret\"\n"
+            + "      \"solrCore\":\"tenant1\"\n"
             + "   },\n"
             + "   {\n"
             + "      \"dbMaxTotal\":\"5\",\n"
@@ -128,24 +120,20 @@ public class TenantValidatorTest {
             + "      \"kcAuthUrl\":\"https://tenenats.k8s-server.org/auth\",\n"
             + "      \"kcRealm\":\"tenant1\",\n"
             + "      \"kcCmClientId\":\"mock-client-id\",\n"
-            + "      \"kcCmClientSecret\":\"mock-client-secret\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
             + "      \"kcPublicClientId\":\"mock\",\n"
             + "      \"kcSecureUris\":\"kcsecureuris\",\n"
             + "      \"kcDefaultAuthorizations\":\"\",\n"
             + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
-            + "      \"cmDbJdbcUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\",\n"
-            + "      \"cmDbUsername\":\"username\",\n"
+            + "      \"deDbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\",\n"
+            + "      \"deDbUsername\":\"username\",\n"
             + "      \"dbPassword\":\"password\",\n"
             + "      \"cdsPublicUrl\":\"cdspublicurl\",\n"
             + "      \"cdsPrivateUrl\":\"cdsprivateurl\",\n"
             + "      \"cdsPath\":\"api/v1\",\n"
             + "      \"solrAddress\":\"solraddress\",\n"
             + "      \"solrCore\":\"tenant1\",\n"
-            + "      \"cmDbPassword\":\"password\",\n"
-            + "      \"deDbUrl\":\"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\",\n"
-            + "      \"deDbUsername\":\"postgres\",\n"
-            + "      \"deKcClientId\":\"dekcclientid\",\n"
-            + "      \"deKcClientSecret\":\"dekcsecret\"\n"
+            + "      \"deDbPassword\":\"password\"\n"
             + "   },\n"
             + "   {\n"
             + "      \"dbMaxTotal\":\"5\",\n"
@@ -156,18 +144,14 @@ public class TenantValidatorTest {
             + "      \"kcAuthUrl\":\"mock-auth-url\",\n"
             + "      \"kcRealm\":\"tenant1\",\n"
             + "      \"kcCmClientId\":\"mock-client-id\",\n"
-            + "      \"kcCmClientSecret\":\"mock-client-secret\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
             + "      \"kcPublicClientId\":\"mock\",\n"
             + "      \"kcSecureUris\":\"kcsecureuris\",\n"
             + "      \"kcDefaultAuthorizations\":\"\",\n"
             + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
             + "      \"cdsPath\":\"api/v1\",\n"
             + "      \"solrAddress\":\"solraddress\",\n"
-            + "      \"solrCore\":\"tenant1\",\n"
-            + "      \"deDbUrl\":\"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\",\n"
-            + "      \"deDbUsername\":\"postgres\",\n"
-            + "      \"deKcClientId\":\"dekcclientid\",\n"
-            + "      \"deKcClientSecret\":\"dekcsecret\"\n"
+            + "      \"solrCore\":\"tenant1\"\n"
             + "   }\n"
             + "]";
 
@@ -181,22 +165,21 @@ public class TenantValidatorTest {
             + "      \"kcAuthUrl\":\"https://tenenats.k8s-server.org/auth\",\n"
             + "      \"kcRealm\":\"tenant1\",\n"
             + "      \"kcCmClientId\":\"mock-client-id\",\n"
-            + "      \"kcCmClientSecret\":\"mock-client-secret\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
             + "      \"kcPublicClientId\":\"mock\",\n"
             + "      \"kcSecureUris\":\"kcsecureuris\",\n"
             + "      \"kcDefaultAuthorizations\":\"\",\n"
             + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
-            + "      \"cmDbJdbcUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\",\n"
-            + "      \"cmDbUsername\":\"username\",\n"
+            + "      \"deDbUrl\":\"jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-720.svc.cluster.local:5432/tenant1\",\n"
+            + "      \"deDbUsername\":\"username\",\n"
             + "      \"dbPassword\":\"password\",\n"
             + "      \"cdsPublicUrl\":\"cdspublicurl\",\n"
             + "      \"cdsPrivateUrl\":\"cdsprivateurl\",\n"
             + "      \"cdsPath\":\"api/v1\",\n"
             + "      \"solrAddress\":\"solraddress\",\n"
             + "      \"solrCore\":\"tenant1\",\n"
-            + "      \"cmDbPassword\":\"password\",\n"
+            + "      \"deDbPassword\":\"password\",\n"
             + "      \"deDbUrl\":\"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\",\n"
-            + "      \"deDbUsername\":\"postgres\",\n"
             + "      \"deKcClientId\":\"dekcclientid\",\n"
             + "      \"deKcClientSecret\":\"dekcsecret\"\n"
             + "   },\n"
@@ -209,7 +192,7 @@ public class TenantValidatorTest {
             + "      \"kcAuthUrl\":\"mock-auth-url\",\n"
             + "      \"kcRealm\":\"tenant1\",\n"
             + "      \"kcCmClientId\":\"mock-client-id\",\n"
-            + "      \"kcCmClientSecret\":\"mock-client-secret\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
             + "      \"kcPublicClientId\":\"mock\",\n"
             + "      \"kcSecureUris\":\"kcsecureuris\",\n"
             + "      \"kcDefaultAuthorizations\":\"\",\n"
@@ -217,8 +200,6 @@ public class TenantValidatorTest {
             + "      \"cdsPath\":\"api/v1\",\n"
             + "      \"solrAddress\":\"solraddress\",\n"
             + "      \"solrCore\":\"tenant1\",\n"
-            + "      \"deDbUrl\":\"jdbc:postgresql://db-address:5432/tenant1_cm?currentSchema=quickstart_dedb_12345\",\n"
-            + "      \"deDbUsername\":\"postgres\",\n"
             + "      \"deKcClientId\":\"dekcclientid\",\n"
             + "      \"deKcClientSecret\":\"dekcsecret\"\n"
             + "   }\n"

@@ -33,10 +33,10 @@ public class TenantDataSourceConfiguration {
     private DataSource buildDataSourceFromTenantConfiguration(TenantConfigDTO config) {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        dataSourceBuilder.driverClassName(DatabaseDriver.fromJdbcUrl(config.getCmDbJdbcUrl()).getDriverClassName());
-        dataSourceBuilder.username(config.getCmDbUsername());
-        dataSourceBuilder.password(config.getCmDbPassword());
-        dataSourceBuilder.url(config.getCmDbJdbcUrl());
+        dataSourceBuilder.driverClassName(DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName());
+        dataSourceBuilder.username(config.getDeDbUsername());
+        dataSourceBuilder.password(config.getDeDbPassword());
+        dataSourceBuilder.url(config.getDeDbUrl());
         log.info("Built database settings for {}", config.getTenantCode());
 
         return dataSourceBuilder.build();
