@@ -535,18 +535,18 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate setMessageConverters(RestTemplate restTemplate) {
         List<HttpMessageConverter<?>> messageConverters = Traverson
                 .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
-        messageConverters.add(0, getTextHtmlConverter());
-        if (messageConverters.stream()
+        messageConverters.add(0, getJsonConverter());
+        /*if (messageConverters.stream()
                 .noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
             messageConverters.add(0, getJsonConverter());
-        }
+        }*/
         restTemplate.setMessageConverters(messageConverters);
 
         return restTemplate;
     }
 
     private HttpMessageConverter<?> getJsonConverter() {
-        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON);
+        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_HTML);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -556,12 +556,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         converter.setObjectMapper(mapper);
         converter.setSupportedMediaTypes(supportedMediatypes);
 
-        return converter;
-    }
-
-    private HttpMessageConverter<?> getTextHtmlConverter() {
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.TEXT_HTML));
         return converter;
     }
 
