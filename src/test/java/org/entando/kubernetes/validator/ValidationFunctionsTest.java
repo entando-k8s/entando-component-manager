@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
-import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

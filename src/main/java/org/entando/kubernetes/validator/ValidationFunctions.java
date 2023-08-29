@@ -39,6 +39,7 @@ public class ValidationFunctions {
      * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
      * @return the received url
      */
+
     public static String composeUrlForcingHttpProtocolOrThrow(String stringUrl, String nullError, String invalidError) {
         final String httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(stringUrl);
         composeUrlOrThrow(httpProtocolUrl, nullError, invalidError);
@@ -170,7 +171,7 @@ public class ValidationFunctions {
     }
 
     /**
-     * Validate a FQDN using regexp
+     * Validate a FQDN using regexp.
      *
      * @param fqdn the fully qualified domain to validate
      * @return true if the verification is successful
