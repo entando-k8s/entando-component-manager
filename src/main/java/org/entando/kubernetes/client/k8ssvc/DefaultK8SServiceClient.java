@@ -383,7 +383,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .build();
         try {
-            ResponseEntity<Object> response = this.noAuthRestTemplate.exchange(request, Object.class);
+            ResponseEntity<?> response = this.noAuthRestTemplate.exchange(request, Void.class);
 
             log = String.format("Plugin is%s ready", response.getStatusCode().is2xxSuccessful() ? "" : " NOT");
             LOGGER.info(log);
@@ -536,7 +536,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate setMessageConverters(RestTemplate restTemplate) {
         List<HttpMessageConverter<?>> messageConverters = Traverson
                 .getDefaultMessageConverters(MediaType.APPLICATION_JSON, MediaTypes.HAL_JSON);
-        messageConverters.add(0, getTextHtmlConverter());
         if (messageConverters.stream()
                 .noneMatch(mc -> mc.getSupportedMediaTypes().contains(MediaType.APPLICATION_JSON))) {
             messageConverters.add(0, getJsonConverter());
@@ -557,12 +556,6 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         converter.setObjectMapper(mapper);
         converter.setSupportedMediaTypes(supportedMediatypes);
 
-        return converter;
-    }
-
-    private HttpMessageConverter<?> getTextHtmlConverter() {
-        StringHttpMessageConverter converter = new StringHttpMessageConverter();
-        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.TEXT_HTML));
         return converter;
     }
 
