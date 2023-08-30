@@ -36,7 +36,7 @@ public class TenantValidatorTest {
         MatcherAssert.assertThat(map, Matchers.not(Matchers.hasKey("tenant4")));
         List<String> errors = map.get("tenant2");
         assertFalse(errors.isEmpty());
-        MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder("fqdns: 'mock-fqdns' already used for tenant 'tenant1'",
+        MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder("fqdns: 'mock-fqdns' already used by tenant 'tenant1'",
                 "cmDbUsername: missing configuration value",
                 "cmDbPassword: missing configuration value",
                 "cmDbJdbcUrl: missing configuration value",
