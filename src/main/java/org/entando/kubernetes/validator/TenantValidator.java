@@ -101,11 +101,7 @@ public class TenantValidator {
         if (validationErrors == null) {
             validationErrors = new HashMap<>();
         }
-        validationErrors.computeIfAbsent(id, s -> {
-            final List<String> tenantValidationErrors = new ArrayList<>();
-
-            return tenantValidationErrors;
-        });
+        validationErrors.computeIfAbsent(id, key -> new ArrayList<>());
         return validationErrors.get(id);
     }
 
