@@ -155,7 +155,7 @@ public class ValidationFunctions {
                     && (!validatePort
                     || (StringUtils.isNotBlank(port) && StringUtils.isNumeric(port)))
                     && (!validatePath || StringUtils.isNotBlank(url.getPath())));
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // no op
         }
         return false;

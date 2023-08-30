@@ -53,19 +53,17 @@ public class TenantValidator {
     private void validateTenantIdUniqueness(List<TenantConfigDTO> tenants) {
         final Map<String, Boolean> ids = new HashMap<>();
 
-        if (tenants != null && !tenants.isEmpty()) {
-            tenants.stream()
-                    .filter(cfg -> {
-                        boolean isDuplicated = ids.containsKey(cfg.getTenantCode());
+        tenants.stream()
+                .filter(cfg -> {
+                    boolean isDuplicated = ids.containsKey(cfg.getTenantCode());
 
-                        if (isDuplicated) {
-                            getErrorListForTenant(cfg.getTenantCode())
-                                    .add("tenant with FQDNs' " + cfg.getFqdns() + "' is using the same tenant id (" + cfg.getTenantCode() + ")");
-                        }
-                        return !isDuplicated;
-                    })
-                    .forEach(cfg -> ids.put(cfg.getTenantCode(), true));
-        }
+                    if (isDuplicated) {
+                        getErrorListForTenant(cfg.getTenantCode())
+                                .add("tenant with FQDNs' " + cfg.getFqdns() + "' is using the same tenant id (" + cfg.getTenantCode() + ")");
+                    }
+                    return !isDuplicated;
+                })
+                .forEach(cfg -> ids.put(cfg.getTenantCode(), true));
     }
 
     private void validateFqdns(String fqdnsValueString, String tenantCode) {
@@ -80,47 +78,44 @@ public class TenantValidator {
     }
 
     private void validateFqdnsUniqueness(List<TenantConfigDTO> tenants) {
-        if (tenants != null && !tenants.isEmpty()) {
-            final Map<String, String> fqdns = new HashMap<>();
+        final Map<String, String> fqdns = new HashMap<>();
 
-            tenants.forEach(config -> {
-                final String tenantCode = config.getTenantCode();
-                final String fqdnsStr = config.getFqdns();
-                if (StringUtils.isNotBlank(fqdnsStr)) {
-                    String[] fqdnsarr = fqdnsStr.split(",");
+        tenants.forEach(config -> {
+            final String tenantCode = config.getTenantCode();
+            final String fqdnsStr = config.getFqdns();
+            if (StringUtils.isNotBlank(fqdnsStr)) {
+                String[] fqdnsarr = fqdnsStr.split(",");
 
-                    Arrays.asList(fqdnsarr).forEach(fqdn -> {
-                        if (!fqdns.containsKey(fqdn)) {
-                            fqdns.put(fqdn, tenantCode);
-                        } else {
-                            getErrorListForTenant(tenantCode).add("fqdns: '" + fqdn + "' already used for tenant '" + fqdns.get(fqdn) + "'");
-                        }
-                    });
-                }
-            });
-        }
+                Arrays.asList(fqdnsarr).forEach(fqdn -> {
+                    if (!fqdns.containsKey(fqdn)) {
+                        fqdns.put(fqdn, tenantCode);
+                    } else {
+                        getErrorListForTenant(tenantCode).add("fqdns: '" + fqdn + "' already used by tenant '" + fqdns.get(fqdn) + "'");
+                    }
+                });
+            }
+        });
     }
 
     private List<String> getErrorListForTenant(String id) {
         if (validationErrors == null) {
             validationErrors = new HashMap<>();
         }
-        if (!validationErrors.containsKey(id)) {
-            final List<String> tenantValidationErrors = new ArrayList<>();
-
-            validationErrors.put(id, tenantValidationErrors);
-            return tenantValidationErrors;
-        }
+        validationErrors.computeIfAbsent(id, key -> new ArrayList<>());
         return validationErrors.get(id);
     }
 
     public Optional<Map<String, List<String>>> getValidationErrorMap() {
         if (validationErrors != null
                 && !validationErrors.isEmpty()) {
+            final StringBuilder logline = new StringBuilder();
+
+            logline.append("Tenant configuration error detected! See details below:\n");
             validationErrors.keySet().forEach(k -> {
-                log.error("Tenant '{}'", k);
-                validationErrors.get(k).forEach(e -> log.error("\t{}", e));
+                logline.append("Tenant '").append(k).append("'\n");
+                validationErrors.get(k).forEach(e -> logline.append("\t").append(e).append("\n"));
             });
+            log.error(logline.toString());
         }
         return Optional.ofNullable(validationErrors);
     }
