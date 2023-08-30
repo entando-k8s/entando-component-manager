@@ -382,7 +382,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .build();
         try {
-            ResponseEntity<Object> response = this.noAuthRestTemplate.exchange(request, Object.class);
+            ResponseEntity<?> response = this.noAuthRestTemplate.exchange(request, Void.class);
 
             log = String.format("Plugin is%s ready", response.getStatusCode().is2xxSuccessful() ? "" : " NOT");
             LOGGER.info(log);
