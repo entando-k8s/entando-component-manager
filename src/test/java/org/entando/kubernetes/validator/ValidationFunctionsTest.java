@@ -102,69 +102,7 @@ class ValidationFunctionsTest {
     }
 
     @Test
-    void testUrl() {
-        final String VALID_URL1 = "tenant1.mt720.k8s-domain.org";
-
-        // w/o protocol
-        assertThat(ValidationFunctions.validateURL(VALID_URL1,
-                false, false, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL1,
-                true, false, false)).isFalse();
-        assertThat(ValidationFunctions.validateURL(VALID_URL1,
-                true, true, false)).isFalse();
-        assertThat(ValidationFunctions.validateURL(VALID_URL1,
-                false, false, true)).isFalse();
-        
-        assertThat(ValidationFunctions.validateFQDN(VALID_URL1)).isTrue();
-
-        // with protocol
-        final String VALID_URL2 = "https://mt720.k8s-domain.org/auth";
-        assertThat(ValidationFunctions.validateURL(VALID_URL2,
-                true, false, true)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL2,
-                false, false, true)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL2,
-                false, false, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL2,
-                false, true, false)).isFalse();
-
-        assertThat(ValidationFunctions.validateFQDN(VALID_URL2)).isFalse();
-
-        // with protocol and port
-        final String VALID_URL3 = "http://mt720-cds-tenant1-service.test-mt-720.svc.cluster.local:8080";
-        assertThat(ValidationFunctions.validateURL(VALID_URL3,
-                true, true, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL3,
-                false, false, true)).isFalse();
-
-        assertThat(ValidationFunctions.validateFQDN(VALID_URL3)).isFalse();
-
-        final String VALID_URL4 = "https://cds-mt720.k8s-domain.org/tenant1/";
-        assertThat(ValidationFunctions.validateURL(VALID_URL4,
-                true, false, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL4,
-                true, false, true)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL4,
-                true, true, true)).isFalse();
-        assertThat(ValidationFunctions.validateURL(VALID_URL4,
-                false, false, false)).isTrue();
-
-        assertThat(ValidationFunctions.validateFQDN(VALID_URL4)).isFalse();
-
-        final String VALID_URL5 = "https://cds-mt720.k8s-domain.org:2677/tenant1/";
-        assertThat(ValidationFunctions.validateURL(VALID_URL5,
-                true, true, true)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL5,
-                false, false, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL5,
-                true, false, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL5,
-                false, true, false)).isTrue();
-        assertThat(ValidationFunctions.validateURL(VALID_URL5,
-                false, false, true)).isTrue();
-
-        assertThat(ValidationFunctions.validateFQDN(VALID_URL5)).isFalse();
-
+    void testFQDN() {
         final String INVALID_FQDN1 = "tenant1.mt720.k8s-domain.o rg";
 
         assertThat(ValidationFunctions.validateURL(INVALID_FQDN1,
@@ -202,6 +140,83 @@ class ValidationFunctionsTest {
         final String INVALID_FQDN9 = "192.168.1.234";
         assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN9)).isFalse();
 
+    }
+
+    @Test
+    void testUrl5() {
+        final String VALID_URL5 = "https://cds-mt720.k8s-domain.org:2677/tenant1/";
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                true, true, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                false, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                true, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                false, true, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL5,
+                false, false, true)).isTrue();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL5)).isFalse();
+    }
+
+    @Test
+    void testUrl4() {
+        final String VALID_URL4 = "https://cds-mt720.k8s-domain.org/tenant1/";
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                true, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                true, false, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                true, true, true)).isFalse();
+        assertThat(ValidationFunctions.validateURL(VALID_URL4,
+                false, false, false)).isTrue();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL4)).isFalse();
+    }
+
+    @Test
+    void testUrl3() {
+        // with protocol and port
+        final String VALID_URL3 = "http://mt720-cds-tenant1-service.test-mt-720.svc.cluster.local:8080";
+        assertThat(ValidationFunctions.validateURL(VALID_URL3,
+                true, true, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL3,
+                false, false, true)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL3)).isFalse();
+    }
+
+    @Test
+    void testUrl2() {
+        // with protocol
+        final String VALID_URL2 = "https://mt720.k8s-domain.org/auth";
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                true, false, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                false, false, true)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                false, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL2,
+                false, true, false)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL2)).isFalse();
+    }
+
+    @Test
+    void testUrl1() {
+        final String VALID_URL1 = "tenant1.mt720.k8s-domain.org";
+
+        // w/o protocol
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                false, false, false)).isTrue();
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                true, false, false)).isFalse();
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                true, true, false)).isFalse();
+        assertThat(ValidationFunctions.validateURL(VALID_URL1,
+                false, false, true)).isFalse();
+
+        assertThat(ValidationFunctions.validateFQDN(VALID_URL1)).isTrue();
     }
 
 }
