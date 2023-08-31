@@ -179,9 +179,12 @@ public class ValidationFunctions {
      * @return true if the verification is successful
      */
     public static boolean validateFQDN(String fqdn) {
-        Pattern pattern = Pattern.compile(FQDN_REGEXP);
-        Matcher matcher = pattern.matcher(fqdn);
-        return matcher.matches();
+        if (StringUtils.isNotBlank(fqdn) && fqdn.length() <= 255) {
+            Pattern pattern = Pattern.compile(FQDN_REGEXP);
+            Matcher matcher = pattern.matcher(fqdn);
+            return matcher.matches();
+        }
+        return false;
     }
 
 }
