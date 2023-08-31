@@ -30,7 +30,7 @@ public class ValidationFunctions {
     public static final List<String> VALID_PROTOCOLS = List.of(GIT_PROTOCOL, HTTP_PROTOCOL, HTTPS_PROTOCOL);
     public static final String SEPARATOR = "://";
     public static final String DEFAULT_PROTOCOL = "http".concat(SEPARATOR);
-    public static final String FQDN_REGEXP = "(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63}$)";
+
     /**
      * if the url uses the git or ssh protocol, replace it with http validate the received url using url regex. checks
      * that the url is not empty. if this fails, throw EntandoValidationException with nullError message checks that the
@@ -180,6 +180,8 @@ public class ValidationFunctions {
      */
     public static boolean validateFQDN(String fqdn) {
         if (StringUtils.isNotBlank(fqdn) && fqdn.length() <= 255) {
+            final String FQDN_REGEXP = "(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63}$)"; // NOSONAR
+
             Pattern pattern = Pattern.compile(FQDN_REGEXP);
             Matcher matcher = pattern.matcher(fqdn);
             return matcher.matches();
