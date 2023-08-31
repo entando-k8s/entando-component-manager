@@ -221,7 +221,9 @@ class ValidationFunctionsTest {
 
     @Test
     void testFqdnLength() {
-        final String INVALID_FQDN_6 = "m3SxbwmmVz7RWyALTCBfwlteCAHHMnStV3c3LYeN9aZUylhsMtFxoC0lW3Y42N3taxCccgRZteESuQsvH8N1iQ6xlEzj7eUH8oPfG1YtjtNsqIxapuvt5DmLuMPTCpXbqw9IRinuJJGl9Auo8Di2MSOxHt3FmNmclPDoCmbnJMuGjVxgTboxa8SrRRZZXbn5UNHK1pSVygo2T6Oemv4E7VI0yqAOXDTuobclq5BGNc3IsLAblzYSPucNA5joH.com";
+        final String INVALID_FQDN_6 = "m3SxbwmmVz7RWyALTCBfwlteCAHHMnStV3c3LYeN9aZUylhsMtFxoC0lW3Y42N3taxCccgRZteESuQsv"
+                + "H8N1iQ6xlEzj7eUH8oPfG1YtjtNsqIxapuvt5DmLuMPTCpXbqw9IRinuJJGl9Auo8Di2MSOxHt3FmNmclPDoCmbnJMuGjVxgTbox"
+                + "a8SrRRZZXbn5UNHK1pSVygo2T6Oemv4E7VI0yqAOXDTuobclq5BGNc3IsLAblzYSPucNA5joH.com";
         assertThat(ValidationFunctions.validateFQDN(INVALID_FQDN_6)).isFalse();
     }
 
