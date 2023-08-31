@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -12,6 +13,7 @@ import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @UtilityClass
+@Slf4j
 public class ValidationFunctions {
 
     public static final String HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX = "^[a-zA-Z0-9].*[a-zA-Z0-9]$";
@@ -156,7 +158,7 @@ public class ValidationFunctions {
                     || (StringUtils.isNotBlank(port) && StringUtils.isNumeric(port)))
                     && (!validatePath || StringUtils.isNotBlank(url.getPath())));
         } catch (Exception t) {
-            // no op
+            log.debug("URL validation failed for '{}'", candidate);
         }
         return false;
     }
