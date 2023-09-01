@@ -2,8 +2,10 @@ package org.entando.kubernetes.validator;
 
 import java.net.URL;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -11,6 +13,7 @@ import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @UtilityClass
+@Slf4j
 public class ValidationFunctions {
 
     public static final String HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX = "^[a-zA-Z0-9].*[a-zA-Z0-9]$";
@@ -25,6 +28,8 @@ public class ValidationFunctions {
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";
     public static final List<String> VALID_PROTOCOLS = List.of(GIT_PROTOCOL, HTTP_PROTOCOL, HTTPS_PROTOCOL);
+    public static final String SEPARATOR = "://";
+    public static final String DEFAULT_PROTOCOL = "http".concat(SEPARATOR);
 
     /**
      * if the url uses the git or ssh protocol, replace it with http validate the received url using url regex. checks
@@ -36,6 +41,7 @@ public class ValidationFunctions {
      * @param invalidError the message to add to the EntandoValidationException if the url is not compliant
      * @return the received url
      */
+
     public static String composeUrlForcingHttpProtocolOrThrow(String stringUrl, String nullError, String invalidError) {
         final String httpProtocolUrl = BundleUtilities.gitSshProtocolToHttp(stringUrl);
         composeUrlOrThrow(httpProtocolUrl, nullError, invalidError);
@@ -124,4 +130,63 @@ public class ValidationFunctions {
 
         return entityCode;
     }
+
+    /**
+     * Check the URL for correctness. Database connection string are NOT handled by this method
+     * The strategy here is to convert the URL to a URI object and take advantage of the Java library
+     * to detect any error.
+     *
+     * @param candidate the URL to test
+     * @param validateProtocol when false, the check against the protocol is skipped
+     * @param validatePort when false, the port presence is ignored
+     * @param validatePath when false the presence of the path is ignored
+     * @return true if the URL is correct
+     */
+    public static boolean validateURL(String candidate, boolean validateProtocol, boolean validatePort,
+            boolean validatePath) {
+
+        try {
+            candidate = validateProtocol ? candidate : appendProtocolIfMissing(candidate, null);
+
+            final URL url = new URL(candidate);
+            final String port = String.valueOf(url.getPort());
+
+            return ((StringUtils.isNotBlank(url.toURI().toString())
+                    && StringUtils.isNotBlank(url.getProtocol()))
+                    && StringUtils.isNotBlank(url.getHost())
+                    && (!validatePort
+                    || (StringUtils.isNotBlank(port) && StringUtils.isNumeric(port)))
+                    && (!validatePath || StringUtils.isNotBlank(url.getPath())));
+        } catch (Exception t) {
+            log.debug("URL validation failed for '{}'", candidate);
+        }
+        return false;
+    }
+
+    private String appendProtocolIfMissing(String candidate, String proto) {
+        if (StringUtils.isNotBlank(candidate)
+                && !candidate.contains(SEPARATOR)) {
+            return StringUtils.isNotBlank(proto) ? proto.concat(candidate)
+                    : DEFAULT_PROTOCOL.concat(candidate);
+        }
+        return candidate;
+    }
+
+    /**
+     * Validate a FQDN using regexp.
+     *
+     * @param fqdn the fully qualified domain to validate
+     * @return true if the verification is successful
+     */
+    public static boolean validateFQDN(String fqdn) {
+        if (StringUtils.isNotBlank(fqdn) && fqdn.length() <= 255) {
+            final String FQDN_REGEXP = "(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63}$)"; // NOSONAR
+
+            Pattern pattern = Pattern.compile(FQDN_REGEXP);
+            Matcher matcher = pattern.matcher(fqdn);
+            return matcher.matches();
+        }
+        return false;
+    }
+
 }

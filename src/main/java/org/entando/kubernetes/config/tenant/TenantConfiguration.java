@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.security.MultipleIdps;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
+import org.entando.kubernetes.validator.TenantValidator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -43,11 +44,15 @@ public class TenantConfiguration {
 
         if (StringUtils.isNotBlank(tenantConfigs)) {
             try {
-                tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<List<TenantConfigDTO>>() {
+                tenantConfigList = objectMapper.readValue(tenantConfigs, new TypeReference<>() {
                 });
                 log.info("Tenant configurations have been parsed successfully");
             } catch (final IOException e) {
                 throw new EntandoComponentManagerException(e);
+            }
+            // validate config
+            if (TenantValidator.validate(tenantConfigList).getValidationErrorMap().isPresent()) {
+                throw new EntandoComponentManagerException("Tenant validation configuration errors detected");
             }
         }
 
