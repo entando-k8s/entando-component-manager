@@ -31,17 +31,17 @@ public class TenantValidator {
                             .add("kcAuthUrl: invalid URL detected '" + config.getKcAuthUrl() + "'");
                 }
                 // check for database values
-                if (StringUtils.isBlank(config.getCmDbJdbcUrl())) {
+                if (StringUtils.isBlank(config.getDeDbUrl())) {
                     getErrorListForTenant(config.getTenantCode())
-                            .add("cmDbJdbcUrl: missing configuration value");
+                            .add("deDbUrl: missing configuration value");
                 }
-                if (StringUtils.isBlank(config.getCmDbPassword())) {
+                if (StringUtils.isBlank(config.getDeDbPassword())) {
                     getErrorListForTenant(config.getTenantCode())
-                            .add("cmDbPassword: missing configuration value");
+                            .add("deDbPassword: missing configuration value");
                 }
-                if (StringUtils.isBlank(config.getCmDbUsername())) {
+                if (StringUtils.isBlank(config.getDeDbUsername())) {
                     getErrorListForTenant(config.getTenantCode())
-                            .add("cmDbUsername: missing configuration value");
+                            .add("deDbUsername: missing configuration value");
                 }
             });
             // check uniqueness of crucial settings

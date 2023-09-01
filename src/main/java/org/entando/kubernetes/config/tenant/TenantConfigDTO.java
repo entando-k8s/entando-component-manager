@@ -7,7 +7,7 @@ import lombok.ToString;
 
 @Getter
 @EqualsAndHashCode
-@ToString(exclude = {"cmDbPassword"})
+@ToString(exclude = {"deDbPassword"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TenantConfigDTO {
 
@@ -16,11 +16,11 @@ public class TenantConfigDTO {
     
     private String kcAuthUrl;
     private String kcRealm;
-    private String kcCmClientId;
-    private String kcCmClientSecret;
+    private String deKcClientId;
+    private String deKcClientSecret;
 
-    private String cmDbJdbcUrl;
-    private String cmDbUsername;
-    private String cmDbPassword;
+    private String deDbUrl;
+    private String deDbUsername;
+    private String deDbPassword;
 
 }

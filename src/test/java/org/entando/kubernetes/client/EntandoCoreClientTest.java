@@ -74,8 +74,8 @@ class EntandoCoreClientTest {
                 .setKcRealm("entando")
                 .setFqdns("localhost")
                 .setKcAuthUrl(coreMockServer.getApiRoot())
-                .setKcCmClientId(keycloakClientId)
-                .setKcCmClientSecret(keycloakClientSecret)));
+                .setDeKcClientId(keycloakClientId)
+                .setDeKcClientSecret(keycloakClientSecret)));
     }
 
     @AfterEach
