@@ -212,7 +212,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
     }
 
     @Override
-    public SimpleRestResponse<LastJobInstallStatus> getLastInstallOrUninstallJob(
+    public SimpleRestResponse<LastJobInstallStatus> getLastInstallOrUninstallJobInProgress(
             @PathVariable("component") String componentId) {
         log.debug("Get installation or uninstallation info about component {}", componentId);
         LastJobInstallStatus installStatus = jobService.getLastJob(componentId)

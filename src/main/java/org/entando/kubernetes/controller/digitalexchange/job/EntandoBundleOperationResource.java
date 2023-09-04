@@ -103,7 +103,7 @@ public interface EntandoBundleOperationResource {
     @Operation(description = "Checks last install or uninstall job status")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/lastJob", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<LastJobInstallStatus> getLastInstallOrUninstallJob(@PathVariable("component") String componentId);
+    SimpleRestResponse<LastJobInstallStatus> getLastInstallOrUninstallJobInProgress(@PathVariable("component") String componentId);
 
 
 }

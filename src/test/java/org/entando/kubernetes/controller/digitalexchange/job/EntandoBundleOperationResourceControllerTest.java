@@ -140,7 +140,7 @@ class EntandoBundleOperationResourceControllerTest {
 
         when(jobService.getLastJob(componentId)).thenReturn(Optional.of(jobEntity1));
         // When
-        SimpleRestResponse<LastJobInstallStatus> lastUninstallJob = entandoBundleOperationResourceController.getLastInstallOrUninstallJob(
+        SimpleRestResponse<LastJobInstallStatus> lastUninstallJob = entandoBundleOperationResourceController.getLastInstallOrUninstallJobInProgress(
                 componentId);
         // Then
         Assertions.assertEquals(InstallationStatus.UNINSTALLING.label, lastUninstallJob.getPayload().getStatus());
@@ -155,7 +155,7 @@ class EntandoBundleOperationResourceControllerTest {
 
         when(jobService.getLastJob(componentId)).thenReturn(Optional.of(jobEntity1));
         // When
-        SimpleRestResponse<LastJobInstallStatus> lastUninstallJob = entandoBundleOperationResourceController.getLastInstallOrUninstallJob(
+        SimpleRestResponse<LastJobInstallStatus> lastUninstallJob = entandoBundleOperationResourceController.getLastInstallOrUninstallJobInProgress(
                 componentId);
         // Then
         Assertions.assertEquals(InstallationStatus.INSTALLING.label, lastUninstallJob.getPayload().getStatus());
@@ -172,7 +172,7 @@ class EntandoBundleOperationResourceControllerTest {
 
         // Then
         JobNotFoundException jobNotFoundException = Assertions.assertThrows(JobNotFoundException.class,
-                () -> entandoBundleOperationResourceController.getLastInstallOrUninstallJob(componentId));
+                () -> entandoBundleOperationResourceController.getLastInstallOrUninstallJobInProgress(componentId));
         Assertions.assertEquals(HttpStatus.NOT_FOUND, jobNotFoundException.getStatus());
     }
 }
