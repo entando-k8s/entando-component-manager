@@ -20,6 +20,8 @@ import org.entando.kubernetes.model.job.EntandoBundleJob;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.UninstallJobResult;
+import org.entando.kubernetes.model.web.response.LastJobInstallStatus;
+import org.entando.kubernetes.model.web.response.LastJobInstallStatus.InstallationStatus;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.KubernetesService;
@@ -127,5 +129,50 @@ class EntandoBundleOperationResourceControllerTest {
                 componentId);
         // Then
         Assertions.assertEquals(JobStatus.UNINSTALL_COMPLETED, lastUninstallJob.getPayload().getStatus());
+    }
+
+    @Test
+    void shouldReturnTheCurrentUninstallationStatusIfUninstallationIsInProgressOnGet() {
+        // Given
+        final String componentId = "comp-id";
+        EntandoBundleJobEntity jobEntity1 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
+                JobStatus.UNINSTALL_IN_PROGRESS, componentId);
+
+        when(jobService.getLastJob(componentId)).thenReturn(Optional.of(jobEntity1));
+        // When
+        SimpleRestResponse<LastJobInstallStatus> lastUninstallJob = entandoBundleOperationResourceController.getLastInstallOrUninstallJob(
+                componentId);
+        // Then
+        Assertions.assertEquals(InstallationStatus.UNINSTALLING.label, lastUninstallJob.getPayload().getStatus());
+    }
+
+    @Test
+    void shouldReturnTheCurrentInstallationStatusIfInstallationIsInProgressOnGet() {
+        // Given
+        final String componentId = "comp-id";
+        EntandoBundleJobEntity jobEntity1 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
+                JobStatus.INSTALL_IN_PROGRESS, componentId);
+
+        when(jobService.getLastJob(componentId)).thenReturn(Optional.of(jobEntity1));
+        // When
+        SimpleRestResponse<LastJobInstallStatus> lastUninstallJob = entandoBundleOperationResourceController.getLastInstallOrUninstallJob(
+                componentId);
+        // Then
+        Assertions.assertEquals(InstallationStatus.INSTALLING.label, lastUninstallJob.getPayload().getStatus());
+    }
+
+    @Test
+    void  shouldThrowJobNotFoundExceptionWith404StatusIfNorInstallationOrUninstallationIsInProgressOnGet() {
+        // Given
+        final String componentId = "comp-id";
+        EntandoBundleJobEntity jobEntity1 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
+                JobStatus.INSTALL_COMPLETED, componentId);
+
+        when(jobService.getLastJob(componentId)).thenReturn(Optional.of(jobEntity1));
+
+        // Then
+        JobNotFoundException jobNotFoundException = Assertions.assertThrows(JobNotFoundException.class,
+                () -> entandoBundleOperationResourceController.getLastInstallOrUninstallJob(componentId));
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, jobNotFoundException.getStatus());
     }
 }

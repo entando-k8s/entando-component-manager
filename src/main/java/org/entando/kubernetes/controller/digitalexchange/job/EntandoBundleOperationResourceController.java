@@ -3,6 +3,7 @@ package org.entando.kubernetes.controller.digitalexchange.job;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
@@ -22,8 +23,11 @@ import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
+import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.job.UninstallJobResult;
+import org.entando.kubernetes.model.web.response.LastJobInstallStatus;
+import org.entando.kubernetes.model.web.response.LastJobInstallStatus.InstallationStatus;
 import org.entando.kubernetes.model.web.response.RestError;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.security.AuthorizationChecker;
@@ -205,6 +209,23 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
                 .flatMap(UninstallJobResult::fromEntity)
                 .orElseThrow(() -> new JobNotFoundException(componentId));
         return new SimpleRestResponse<>(uninstallJobResult);
+    }
+
+    @Override
+    public SimpleRestResponse<LastJobInstallStatus> getLastInstallOrUninstallJob(
+            @PathVariable("component") String componentId) {
+        log.debug("Get installation or uninstallation info about component {}", componentId);
+        LastJobInstallStatus installStatus = jobService.getLastJob(componentId)
+                .filter(entity -> Arrays.asList(JobStatus.INSTALL_IN_PROGRESS, JobStatus.UNINSTALL_IN_PROGRESS)
+                        .contains(entity.getStatus()))
+                .map(entity -> {
+                    String status = JobStatus.INSTALL_IN_PROGRESS.equals(entity.getStatus())
+                            ? InstallationStatus.INSTALLING.label
+                            : InstallationStatus.UNINSTALLING.label;
+                    return LastJobInstallStatus.builder().status(status).build();
+                })
+                .orElseThrow(() -> new JobNotFoundException(componentId));
+        return new SimpleRestResponse<>(installStatus);
     }
 
     private URI getJobLocationURI(EntandoBundleJobEntity job) {

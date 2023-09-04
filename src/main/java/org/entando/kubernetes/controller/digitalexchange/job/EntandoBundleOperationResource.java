@@ -31,6 +31,7 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallReques
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.UninstallJobResult;
+import org.entando.kubernetes.model.web.response.LastJobInstallStatus;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -98,6 +99,11 @@ public interface EntandoBundleOperationResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{component}/uninstall", produces = MediaType.APPLICATION_JSON_VALUE)
     SimpleRestResponse<UninstallJobResult> getLastUninstallJob(@PathVariable("component") String componentId);
+
+    @Operation(description = "Checks last install or uninstall job status")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @GetMapping(value = "/{component}/lastJob", produces = MediaType.APPLICATION_JSON_VALUE)
+    SimpleRestResponse<LastJobInstallStatus> getLastInstallOrUninstallJob(@PathVariable("component") String componentId);
 
 
 }
