@@ -87,6 +87,10 @@ public class EntandoBundleJobService {
         return Optional.ofNullable(installCompletedJob);
     }
 
+    public Optional<EntandoBundleJobEntity> getLastJob(String componentId) {
+        return jobRepository.findFirstByComponentIdOrderByStartedAtDesc(componentId);
+    }
+
     private Optional<EntandoBundleJobEntity> getExistingJob(EntandoDeBundle bundle) {
         String componentId = bundle.getMetadata().getName();
         Optional<EntandoBundleJobEntity> lastJobStarted = jobRepository
