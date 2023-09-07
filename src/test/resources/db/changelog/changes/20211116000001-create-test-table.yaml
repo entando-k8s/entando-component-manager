@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-test-table
+      author: developer_entando
+      changes:
+        - createTable:
+            tableName: generictable
+            columns:
+              - column:
+                  name: id
+                  type: varchar(10)
