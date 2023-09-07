@@ -66,6 +66,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
 
     public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
+    public static final String PLUGIN_CONF_SECRET_SUFFIX = "-conf";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
     private Path tokenFilePath;
@@ -154,7 +155,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
         try {
             Link endpoint = traverson.follow(PLUGINS_ENDPOINT)
-                    .follow(Hop.rel("plugin").withParameter("name", pluginName))
+                    .follow(Hop.rel("plugin").withParameter("name", buildPluginConfigurationSecretName(pluginName)))
                     .follow(Hop.rel("plugin-configuration")).asLink();
 
             UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
@@ -167,15 +168,21 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     .accept(MediaType.APPLICATION_JSON)
                     .build();
 
-            return Optional.ofNullable(restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<PluginConfiguration>>() {
-            })).map(m -> m.getBody()).map(t -> t.getContent());
-            
+            return Optional.ofNullable(
+                    restTemplate.exchange(request, new ParameterizedTypeReference<EntityModel<PluginConfiguration>>() {
+                    })).map(m -> m.getBody()).map(t -> t.getContent());
+
         } catch (RestClientResponseException ex) {
             if (ex.getRawStatusCode() != 404) {
-                throw new KubernetesClientException(String.format("An error occurred while retrieving plugin with name '%s'", pluginName), ex);
+                throw new KubernetesClientException(
+                        String.format("An error occurred while retrieving plugin with name '%s'", pluginName), ex);
             }
         }
         return Optional.empty();
+    }
+
+    public String buildPluginConfigurationSecretName(String pluginName) {
+        return pluginName + PLUGIN_CONF_SECRET_SUFFIX;
     }
 
     /**

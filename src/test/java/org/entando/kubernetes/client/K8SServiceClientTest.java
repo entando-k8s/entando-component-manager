@@ -447,6 +447,13 @@ public class K8SServiceClientTest {
         assertDoesNotThrow(() -> client.undeployDeBundle(BundleInfoStubHelper.NAME));
     }
 
+    @Test
+    void shouldCreateTheExpectedPluginConfSecretName() {
+        String pluginName = "pn-a1a1a1a1-b2b2b2b2-myms";
+        final String pluginConfSecretName = client.buildPluginConfigurationSecretName(pluginName);
+        assertThat(pluginConfSecretName).isEqualTo(pluginName + "-conf");
+    }
+
 
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();
