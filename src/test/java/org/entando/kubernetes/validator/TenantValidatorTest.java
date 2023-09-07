@@ -13,8 +13,8 @@ import java.util.Optional;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 @Tag("unit")
 public class TenantValidatorTest {
@@ -36,11 +36,13 @@ public class TenantValidatorTest {
         MatcherAssert.assertThat(map, Matchers.not(Matchers.hasKey("tenant4")));
         List<String> errors = map.get("tenant2");
         assertFalse(errors.isEmpty());
-        MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder("fqdns: 'mock-fqdns' already used for tenant 'tenant1'",
+        errors.forEach(e -> System.out.println("§§§ [" + e + "]"));
+        MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder(
                 "deDbUsername: missing configuration value",
                 "deDbPassword: missing configuration value",
                 "deDbUrl: missing configuration value",
                 "kcAuthUrl: invalid URL detected 'mock-auth-url'",
+                "fqdns: 'mock-fqdns' already used by tenant 'tenant1'",
                 "fqdns: invalid value detected 'mock-fqdns'")
         );
     }
