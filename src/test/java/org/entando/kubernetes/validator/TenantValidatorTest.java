@@ -36,7 +36,6 @@ public class TenantValidatorTest {
         MatcherAssert.assertThat(map, Matchers.not(Matchers.hasKey("tenant4")));
         List<String> errors = map.get("tenant2");
         assertFalse(errors.isEmpty());
-        errors.forEach(e -> System.out.println("§§§ [" + e + "]"));
         MatcherAssert.assertThat(errors, Matchers.containsInAnyOrder(
                 "deDbUsername: missing configuration value",
                 "deDbPassword: missing configuration value",
