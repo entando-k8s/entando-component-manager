@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 public class TenantValidatorTest {
 
     @Test
-    public void testInvalidConfiguration1() throws JsonProcessingException {
+    void testInvalidConfiguration1() throws JsonProcessingException {
         Optional<Map<String, List<String>>> opt = TenantValidator
                 .validate(getConfigFromJson(INVALID_TENANT_CONFIG1))
                 .getValidationErrorMap();
@@ -48,7 +48,7 @@ public class TenantValidatorTest {
     }
 
     @Test
-    public void testInvalidConfiguration2() throws JsonProcessingException {
+    void testInvalidConfiguration2() throws JsonProcessingException {
         Optional<Map<String, List<String>>> opt = TenantValidator
                 .validate(getConfigFromJson(INVALID_TENANT_CONFIG2))
                 .getValidationErrorMap();
