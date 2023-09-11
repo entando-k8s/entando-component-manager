@@ -120,7 +120,7 @@ public class UpdateDatabase implements IUpdateDatabase {
                     .peek(cfg -> log.debug("actual jdbcUrl {} {}", cfg.getDeDbUrl(), actualJdbcUrl))
                     .filter(cfg -> !cfg.getDeDbUrl().contains(actualJdbcUrl))
                     .forEach(cfg -> {
-                        lillo(cfg, masterFilePath);
+                        updateTenantDatabase_alt(cfg, masterFilePath);
                     });
         } catch (SQLException e) {
             log.error("error updating database", e);
@@ -132,7 +132,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     public void updateTenantDatabase(TenantConfigDTO tenantConfig, String masterFilePath) {
         try {
             Database database = createTenantDatasource(tenantConfig);
-            Liquibase liquibase = new Liquibase(masterFilePath, new FileSystemResourceAccessor(), database);
+            Liquibase liquibase = new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor("/home/matteo/lavoro/progetti/entando/entando-component-manager/target/classes/db/changelog"), database);
 
             if (liquibase.listUnrunChangeSets(null, null).size() > 0) {
 //                                liquibase.update("");
@@ -159,7 +159,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
 
-    public void lillo(TenantConfigDTO tenantConfig, String changelogFilePath) {
+    public void updateTenantDatabase_alt(TenantConfigDTO tenantConfig, String changelogFilePath) {
         Map<String, Object> config = new HashMap<>();
         config.put("liquibase.licenseKey", "YOUR_PRO_KEY");
 

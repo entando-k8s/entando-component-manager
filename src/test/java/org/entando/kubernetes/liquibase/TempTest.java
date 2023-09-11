@@ -18,7 +18,6 @@ import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.entando.kubernetes.service.update.IUpdateDatabase;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,9 +29,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(
@@ -43,17 +40,17 @@ import org.testcontainers.utility.DockerImageName;
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class
         })
-@ActiveProfiles("testdb")
-@Testcontainers
-@Slf4j
 @Tag("component")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
+@Slf4j
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
-class LiquibaseUpdateMysqlOnBootIntegrationTest {
-
+public class TempTest {
 
     @Autowired
     private IUpdateDatabase updateDatabase;
+
+    @Autowired
+    private ResourceLoader resourceLoader;
 
     private static final String CONTAINER_IMAGE = System.getenv()
             .getOrDefault("MYSQL_CONTAINER_IMAGE", "mysql:8");
@@ -80,25 +77,15 @@ class LiquibaseUpdateMysqlOnBootIntegrationTest {
         System.setProperty("spring.datasource.password", PASSWORD);
     }
 
-    @AfterAll
-    public static void cleanUp() {
-        log.debug("cleanUp");
-        System.setProperties(propsBackup);
-        propsBackup.keySet().forEach(k -> {
-            log.trace("key:'{}', value:'{}'", k, propsBackup.get(k));
-        });
-    }
-
-    @Autowired
-    private ResourceLoader resourceLoader;
-
     @Test
-    void testMysqlApplicationStart() {
+    void testMe() {
         assertNotNull(updateDatabase);
 
         try {
+//            Resource changelog = resourceLoader.getResource(
+//                    "classpath:db/changelog/db.changelog-slave.yaml");
             Resource changelog = resourceLoader.getResource(
-                    "classpath:db/changelog/db.changelog-slave.yaml");
+                    "classpath:db/changelog/db.changelog-master.yaml");
 
             TenantConfigRwDto cfg = new TenantConfigRwDto();
 
