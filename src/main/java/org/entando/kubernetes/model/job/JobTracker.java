@@ -36,6 +36,7 @@ public class JobTracker<T extends TrackableJob> {
             this.job.setUninstallErrorCode(result.getUninstallErrorCode());
             this.job.setUninstallErrorMessage(result.getUninstallErrorMessage());
             this.job.setUninstallErrors(result.getUninstallErrors());
+            this.job.setInstallWarnings(result.getInstallWarnings());
             this.job.setRollbackErrorCode(result.getRollbackErrorCode());
             this.job.setRollbackErrorMessage(result.getRollbackErrorMessage());
         }
