@@ -1,5 +1,6 @@
 package org.entando.kubernetes.service.update;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -28,18 +29,18 @@ public class UpdateDatabase implements IUpdateDatabase {
     private final DataSource dataSource;
     private final List<TenantConfigDTO> tenantConfigs;
     private final ResourceLoader resourceLoader;
-    private Resource changelog;
+    private final Resource changelog;
 
 
     public UpdateDatabase(DataSource dataSource, List<TenantConfigDTO> tenantConfigs, ResourceLoader resourceLoader) {
+        this.dataSource = dataSource;
+        this.tenantConfigs = tenantConfigs;
+        this.resourceLoader = resourceLoader;
         this.changelog = resourceLoader.getResource(CHANGELOG_MASTER_YAML);
         if (!changelog.exists()) {
             log.error("Liquibase changelog file not found {} ", CHANGELOG_MASTER_YAML);
             throw new RuntimeException("Invalid Liquibase master changelog!");
         }
-        this.dataSource = dataSource;
-        this.tenantConfigs = tenantConfigs;
-        this.resourceLoader = resourceLoader;
     }
 
     @PostConstruct
@@ -76,13 +77,12 @@ public class UpdateDatabase implements IUpdateDatabase {
         final String driver = DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName();
         ResourceAccessor resourceAccessor = new FileSystemResourceAccessor();
 
-        Database database = DatabaseFactory.getInstance().openDatabase(
+        return DatabaseFactory.getInstance().openDatabase(
                 config.getDeDbUrl(),
                 config.getDeDbUsername(),
                 config.getDeDbPassword(),
                 driver,
                 null, null, null, resourceAccessor);
-        return database;
     }
 
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
@@ -91,24 +91,26 @@ public class UpdateDatabase implements IUpdateDatabase {
         String changeLogFilePath =  changelog.getFile().getAbsolutePath();
         String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
         log.debug("Path of the master changelog {} ", changelogPath);
-        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(changelogPath), database);
+        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(new File(changelogPath)), database);
     }
 
     @Override
     public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
-        Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig);
-        return (liquibase.listUnrunChangeSets(null, null).size() > 0);
+        try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
+            return (liquibase.listUnrunChangeSets(null, null).size() > 0);
+        }
     }
 
     @Override
     public void updateTenantDatabase(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
         log.info("Checking tenant {} for schema update", tenantConfig.getTenantCode());
-        Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig);
-        if (liquibase.listUnrunChangeSets(null, null).size() > 0) {
-            log.debug("Applying database updates to tenant {}", tenantConfig.getTenantCode());
-            liquibase.update("");
-        } else {
-            log.debug("No database update available for tenant {}", tenantConfig.getTenantCode());
+        try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
+            if (liquibase.listUnrunChangeSets(null, null).size() > 0) {
+                log.debug("Applying database updates to tenant {}", tenantConfig.getTenantCode());
+                liquibase.update("");
+            } else {
+                log.debug("No database update available for tenant {}", tenantConfig.getTenantCode());
+            }
         }
     }
 

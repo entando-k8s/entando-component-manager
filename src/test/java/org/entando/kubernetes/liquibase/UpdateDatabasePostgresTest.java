@@ -25,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
@@ -50,9 +49,6 @@ public class UpdateDatabasePostgresTest {
 
     @Autowired
     private IUpdateDatabase updateDatabase;
-
-    @Autowired
-    private ResourceLoader resourceLoader;
 
     private static final String USERNAME = System.getenv().getOrDefault("POSTGRES_USER", "testuser");
     private static final String PASSWORD = System.getenv().getOrDefault("POSTGRES_PASSWORD", "testpassword");
@@ -88,7 +84,7 @@ public class UpdateDatabasePostgresTest {
     @EqualsAndHashCode
     @ToString(exclude = {"deDbPassword"})
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public class TenantConfigRwDto extends TenantConfigDTO {
+    public static class TenantConfigRwDto extends TenantConfigDTO {
 
         private String tenantCode;
         private String fqdns;

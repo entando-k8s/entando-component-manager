@@ -1,7 +1,6 @@
 package org.entando.kubernetes.service.update;
 
 import java.io.IOException;
-import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 
