@@ -40,6 +40,7 @@ import org.testcontainers.utility.DockerImageName;
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class
         })
+//@ActiveProfiles("testdb")
 @Tag("component")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 @Slf4j
@@ -82,10 +83,8 @@ public class TempTest {
         assertNotNull(updateDatabase);
 
         try {
-//            Resource changelog = resourceLoader.getResource(
-//                    "classpath:db/changelog/db.changelog-slave.yaml");
-            Resource changelog = resourceLoader.getResource(
-                    "classpath:db/changelog/db.changelog-master.yaml");
+            //            Resource changelog = resourceLoader.getResource(
+            //                    "classpath:db/changelog/db.changelog-slave.yaml");
 
             TenantConfigRwDto cfg = new TenantConfigRwDto();
 
@@ -93,6 +92,9 @@ public class TempTest {
             cfg.setDeDbUrl(db.getJdbcUrl());
             cfg.setDeDbUsername(USERNAME);
             cfg.setDeDbPassword(PASSWORD);
+
+            Resource changelog = resourceLoader.getResource(
+                    "classpath:db/changelog/db.changelog-master.yaml");
 
             updateDatabase.updateTenantDatabase(cfg, changelog.getFile().getAbsolutePath());
         } catch (Exception e) {

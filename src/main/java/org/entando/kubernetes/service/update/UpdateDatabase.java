@@ -19,6 +19,7 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.EntandoKubernetesJavaApplication;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UpdateDatabase implements IUpdateDatabase {
 
-//    public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
+    //    public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
     public static final String CHANGELOG_MASTER_YAML = "db.changelog-master.yaml";
 
     private final DataSource dataSource;
@@ -55,7 +56,7 @@ public class UpdateDatabase implements IUpdateDatabase {
                 tenantConfigs.forEach(cfg -> System.out.println(" " + cfg.getDeDbUrl()));
                 System.out.println("*******\n*******\n*******\n*******\n*******\n");
             } else {
-
+                System.out.println("ERRROE");
             }
 
         } catch (Exception e) {
@@ -99,14 +100,14 @@ public class UpdateDatabase implements IUpdateDatabase {
         database.setDatabaseChangeLogLockTableName("liquibasechangeloglock");
 
         return database;
-//
-//        return DataSourceBuilder
-//                .create()
-//                .url(config.getDeDbUrl())
-//                .username(config.getDeDbUsername())
-//                .password(config.getDeDbPassword())
-//                .driverClassName(driver)
-//                .build();
+        //
+        //        return DataSourceBuilder
+        //                .create()
+        //                .url(config.getDeDbUrl())
+        //                .username(config.getDeDbUsername())
+        //                .password(config.getDeDbPassword())
+        //                .driverClassName(driver)
+        //                .build();
 
     }
 
@@ -128,18 +129,39 @@ public class UpdateDatabase implements IUpdateDatabase {
         return false;
     }
 
+
+    private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig, String masterFilePath)
+            throws DatabaseException, IOException {
+        Liquibase liquibase = null;
+        Database database = createTenantDatasource(tenantConfig);
+
+//        return new Liquibase("db.changelog-master.yaml",
+//                new FileSystemResourceAccessor("/home/matteo/lavoro/progetti/entando/entando-component-manager/target/classes/db/changelog"), database);
+        String changeLogFilePath =  changelog.getFile().getAbsolutePath();
+        String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
+        log.debug("Path of the master changelog {} ", changelogPath);
+        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(changelogPath), database);
+
+    }
+
+
     @Override
     public void updateTenantDatabase(TenantConfigDTO tenantConfig, String masterFilePath) {
         try {
             Database database = createTenantDatasource(tenantConfig);
-            Liquibase liquibase = new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor("/home/matteo/lavoro/progetti/entando/entando-component-manager/target/classes/db/changelog"), database);
+//            Liquibase liquibase = new Liquibase("db.changelog-master.yaml",
+//                    new FileSystemResourceAccessor("/home/matteo/lavoro/progetti/entando/entando-component-manager/target/classes/db/changelog"), database);
 
+            Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig, masterFilePath);
             if (liquibase.listUnrunChangeSets(null, null).size() > 0) {
-//                                liquibase.update("");
+                System.out.println("§§§§§ " + liquibase.listUnrunChangeSets(null, null).size() + " UPDATE AVAILABLE §§§§");
+//                  liquibase.update("");
+            } else {
+                System.out.println("§§§§§ UPDATE NOT AVAILABLE §§§§");
             }
             System.out.println("@@@ " + liquibase.getDatabase().getShortName());
 
-        } catch (LiquibaseException e) {
+        } catch (Exception e) {
             log.error("error checking for schema update");
             e.printStackTrace();
         }
@@ -167,12 +189,16 @@ public class UpdateDatabase implements IUpdateDatabase {
             Scope.child(config, () -> {
                 Connection connection = createDataSource(tenantConfig).getConnection();
 
-                ResourceAccessor accessor= new FileSystemResourceAccessor("/home/matteo/lavoro/progetti/entando/entando-component-manager/target/test-classes/db/changelog");
-//                ClassLoaderResourceAccessor accessor2 = new ClassLoaderResourceAccessor();
+                // ResourceAccessor accessor= new FileSystemResourceAccessor("/home/matteo/lavoro/progetti/entando/
+                // entando-component-manager/target/test-classes/db/changelog");
+                // ClassLoaderResourceAccessor accessor = new ClassLoaderResourceAccessor();
+
+                ClassLoader classLoader = EntandoKubernetesJavaApplication.class.getClassLoader();
+                ClassLoaderResourceAccessor accessor = new ClassLoaderResourceAccessor(classLoader);
 
                 Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
-                Liquibase liquibase = new Liquibase("db.changelog-slave.yaml", accessor, database);
+                Liquibase liquibase = new Liquibase("classpath:db/changelog/changelog-master.yaml", accessor, database);
 
                 //Liquibase calls will go here
                 System.out.println("@@@@ " + liquibase.getDatabase().getShortName());

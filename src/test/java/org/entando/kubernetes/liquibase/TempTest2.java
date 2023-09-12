@@ -1,11 +1,9 @@
 package org.entando.kubernetes.liquibase;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Properties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -15,14 +13,14 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
+import org.entando.kubernetes.liquibase.TempTest.TenantConfigRwDto;
 import org.entando.kubernetes.service.update.IUpdateDatabase;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -31,9 +29,9 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+
 
 @SpringBootTest(
         webEnvironment = WebEnvironment.RANDOM_PORT,
@@ -43,75 +41,63 @@ import org.testcontainers.utility.DockerImageName;
                 TestKubernetesConfig.class,
                 TestAppConfiguration.class
         })
-@ActiveProfiles("testdb")
-@Testcontainers
-@Slf4j
+@ActiveProfiles("testupdatedb")
 @Tag("component")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
+@Slf4j
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
-class LiquibaseUpdateMysqlOnBootIntegrationTest {
-
+public class TempTest2 {
 
     @Autowired
     private IUpdateDatabase updateDatabase;
 
-    private static final String CONTAINER_IMAGE = System.getenv()
-            .getOrDefault("MYSQL_CONTAINER_IMAGE", "mysql:8");
-    private static final String USERNAME = System.getenv().getOrDefault("MYSQL_USER", "testuser");
-    private static final String PASSWORD = System.getenv().getOrDefault("MYSQL_PASSWORD", "testuser");
-    private static final String DATABASE = System.getenv().getOrDefault("MYSQL_DATABASE", "testdb");
-
-    private static Properties propsBackup;
-
-    public static MySQLContainer db = new MySQLContainer(
-            DockerImageName.parse(CONTAINER_IMAGE).asCompatibleSubstituteFor("mysql")).withDatabaseName(
-            DATABASE).withUsername(USERNAME).withPassword(PASSWORD);
-
-    static {
-        propsBackup = new Properties(System.getProperties());
-        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("root").setLevel(Level.INFO);
-        db.start();
-        log.debug("calculated jdbc url:'{}'", db.getJdbcUrl());
-        System.setProperty("spring.datasource.url", db.getJdbcUrl());
-        System.setProperty("spring.datasource.driverClassName", "com.mysql.cj.jdbc.Driver");
-        System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.MySQLDialect");
-        System.setProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-        System.setProperty("spring.datasource.username", USERNAME);
-        System.setProperty("spring.datasource.password", PASSWORD);
-    }
-
-    @AfterAll
-    public static void cleanUp() {
-        log.debug("cleanUp");
-        System.setProperties(propsBackup);
-        propsBackup.keySet().forEach(k -> {
-            log.trace("key:'{}', value:'{}'", k, propsBackup.get(k));
-        });
-    }
-
     @Autowired
     private ResourceLoader resourceLoader;
 
+    private static final String USERNAME = System.getenv().getOrDefault("POSTGRES_USER", "testuser");
+    private static final String PASSWORD = System.getenv().getOrDefault("POSTGRES_PASSWORD", "testpassword");
+    private static final String DATABASE = System.getenv().getOrDefault("POSTGRES_DATABASE", "mypersonaltestdb");
+
+
+    @Container
+    private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:14")
+            .withDatabaseName(DATABASE)
+            .withUsername(USERNAME)
+            .withPassword(PASSWORD);
+
+    @BeforeAll
+    static void beforeAll() {
+        postgreSQLContainer.start();
+        // Puoi ottenere l'URL JDBC del database Testcontainers con:
+        String jdbcUrl = postgreSQLContainer.getJdbcUrl();
+        // Configura la connessione al database nel tuo codice di test
+        System.out.println("\n****\n****\n****\n\t" + jdbcUrl);
+        System.out.println(">> " + USERNAME);
+        System.out.println(">> " + PASSWORD);
+    }
+
     @Test
-    void testMysqlApplicationStart() {
+    void testMe() {
         assertNotNull(updateDatabase);
 
         try {
-            Resource changelog = resourceLoader.getResource(
-                    "classpath:db/changelog/db.changelog-slave.yaml");
+            //            Resource changelog = resourceLoader.getResource(
+            //                    "classpath:db/changelog/db.changelog-slave.yaml");
 
             TenantConfigRwDto cfg = new TenantConfigRwDto();
 
 
-            cfg.setDeDbUrl(db.getJdbcUrl());
+            cfg.setDeDbUrl(postgreSQLContainer.getJdbcUrl());
             cfg.setDeDbUsername(USERNAME);
             cfg.setDeDbPassword(PASSWORD);
+
+            Resource changelog = resourceLoader.getResource(
+                    "classpath:db/changelog/db.changelog-master.yaml");
 
             updateDatabase.updateTenantDatabase(cfg, changelog.getFile().getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        log.debug("testMysqlApplicationStart");
     }
 
 

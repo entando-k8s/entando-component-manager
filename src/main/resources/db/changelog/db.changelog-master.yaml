@@ -1,5 +1,5 @@
 databaseChangeLog:
   - includeAll:
       context: standard
-      path: /db/changelog/changes/
+      path: changes
       relativeToChangelogFile: true
