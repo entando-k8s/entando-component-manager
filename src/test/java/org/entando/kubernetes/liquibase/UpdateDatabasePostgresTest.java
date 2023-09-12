@@ -70,6 +70,7 @@ public class UpdateDatabasePostgresTest {
     void testUpdateDatabaseWithMasterChangelog() throws IOException, LiquibaseException {
         TenantConfigRwDto cfg = new TenantConfigRwDto();
 
+        cfg.setTenantCode("TestTenant");
         cfg.setDeDbUrl(postgreSQLContainer.getJdbcUrl());
         cfg.setDeDbUsername(USERNAME);
         cfg.setDeDbPassword(PASSWORD);

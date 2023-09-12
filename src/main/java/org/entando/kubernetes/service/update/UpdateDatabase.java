@@ -106,6 +106,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             if (liquibase.listUnrunChangeSets(null, null).size() > 0) {
                 log.debug("Applying database updates to tenant {}", tenantConfig.getTenantCode());
                 liquibase.update("");
+                log.debug("Schema update completed for tenant {}", tenantConfig.getTenantCode());
             } else {
                 log.debug("No database update available for tenant {}", tenantConfig.getTenantCode());
             }
