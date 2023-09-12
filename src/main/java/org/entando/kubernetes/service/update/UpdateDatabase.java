@@ -15,6 +15,7 @@ import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -24,14 +25,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UpdateDatabase implements IUpdateDatabase {
 
-    //    public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
     public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
     private final DataSource dataSource;
     private final List<TenantConfigDTO> tenantConfigs;
     private final Resource changelog;
 
 
-    public UpdateDatabase(DataSource dataSource, List<TenantConfigDTO> tenantConfigs, ResourceLoader resourceLoader) {
+    public UpdateDatabase(DataSource dataSource, @Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, ResourceLoader resourceLoader) {
         this.dataSource = dataSource;
         this.tenantConfigs = tenantConfigs;
         this.changelog = resourceLoader.getResource(CHANGELOG_MASTER_YAML);
