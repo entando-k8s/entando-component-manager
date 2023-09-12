@@ -39,6 +39,12 @@ public class UpdateDatabase implements IUpdateDatabase {
             log.error("Liquibase changelog file not found {} ", CHANGELOG_MASTER_YAML);
             throw new RuntimeException("Invalid Liquibase master changelog!");
         }
+        try {
+            log.error("CURRENT DATASOURCE {}", dataSource.getConnection().getMetaData().getURL())
+            tenantConfigs.forEach(cfg -> log.error("{} - {}", cfg.getTenantCode(), cfg.getDeDbUrl()));
+        } catch (Exception e) {
+            log.error("FIXME ", e);
+        }
     }
 
     @PostConstruct
