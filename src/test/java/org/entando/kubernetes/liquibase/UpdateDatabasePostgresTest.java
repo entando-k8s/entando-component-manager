@@ -1,9 +1,11 @@
 package org.entando.kubernetes.liquibase;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.io.IOException;
+import liquibase.exception.LiquibaseException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -13,7 +15,6 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.config.TestKubernetesConfig;
 import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
-import org.entando.kubernetes.liquibase.TempTest.TenantConfigRwDto;
 import org.entando.kubernetes.service.update.IUpdateDatabase;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
@@ -24,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -46,7 +46,7 @@ import org.testcontainers.junit.jupiter.Container;
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 @Slf4j
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
-public class TempTest2 {
+public class UpdateDatabasePostgresTest {
 
     @Autowired
     private IUpdateDatabase updateDatabase;
@@ -68,36 +68,19 @@ public class TempTest2 {
     @BeforeAll
     static void beforeAll() {
         postgreSQLContainer.start();
-        // Puoi ottenere l'URL JDBC del database Testcontainers con:
-        String jdbcUrl = postgreSQLContainer.getJdbcUrl();
-        // Configura la connessione al database nel tuo codice di test
-        System.out.println("\n****\n****\n****\n\t" + jdbcUrl);
-        System.out.println(">> " + USERNAME);
-        System.out.println(">> " + PASSWORD);
     }
 
     @Test
-    void testMe() {
-        assertNotNull(updateDatabase);
+    void testUpdateDatabaseWithMasterChangelog() throws IOException, LiquibaseException {
+        TenantConfigRwDto cfg = new TenantConfigRwDto();
 
-        try {
-            //            Resource changelog = resourceLoader.getResource(
-            //                    "classpath:db/changelog/db.changelog-slave.yaml");
+        cfg.setDeDbUrl(postgreSQLContainer.getJdbcUrl());
+        cfg.setDeDbUsername(USERNAME);
+        cfg.setDeDbPassword(PASSWORD);
 
-            TenantConfigRwDto cfg = new TenantConfigRwDto();
-
-
-            cfg.setDeDbUrl(postgreSQLContainer.getJdbcUrl());
-            cfg.setDeDbUsername(USERNAME);
-            cfg.setDeDbPassword(PASSWORD);
-
-            Resource changelog = resourceLoader.getResource(
-                    "classpath:db/changelog/db.changelog-master.yaml");
-
-            updateDatabase.updateTenantDatabase(cfg, changelog.getFile().getAbsolutePath());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        assertTrue(updateDatabase.isTenantDbUpdatePending(cfg));
+        updateDatabase.updateTenantDatabase(cfg);
+        assertFalse(updateDatabase.isTenantDbUpdatePending(cfg));
     }
 
 
