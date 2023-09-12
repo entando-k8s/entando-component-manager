@@ -40,7 +40,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             throw new RuntimeException("Invalid Liquibase master changelog!");
         }
         try {
-            log.error("CURRENT DATASOURCE {}", dataSource.getConnection().getMetaData().getURL())
+            log.error("CURRENT DATASOURCE {}", dataSource.getConnection().getMetaData().getURL());
             tenantConfigs.forEach(cfg -> log.error("{} - {}", cfg.getTenantCode(), cfg.getDeDbUrl()));
         } catch (Exception e) {
             log.error("FIXME ", e);
