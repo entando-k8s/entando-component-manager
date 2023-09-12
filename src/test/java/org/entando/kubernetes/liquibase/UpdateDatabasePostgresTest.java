@@ -45,7 +45,7 @@ import org.testcontainers.junit.jupiter.Container;
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 @Slf4j
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
-public class UpdateDatabasePostgresTest {
+class UpdateDatabasePostgresTest {
 
     @Autowired
     private IUpdateDatabase updateDatabase;

@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.update;
 
+import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TENANT;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -39,12 +41,6 @@ public class UpdateDatabase implements IUpdateDatabase {
             log.error("Liquibase changelog file not found {} ", CHANGELOG_MASTER_YAML);
             throw new RuntimeException("Invalid Liquibase master changelog!");
         }
-        try {
-            log.error("CURRENT DATASOURCE {}", dataSource.getConnection().getMetaData().getURL());
-            tenantConfigs.forEach(cfg -> log.error("{} - {}", cfg.getTenantCode(), cfg.getDeDbUrl()));
-        } catch (Exception e) {
-            log.error("FIXME ", e);
-        }
     }
 
     @PostConstruct
@@ -60,7 +56,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             tenantConfigs
                     .stream()
                     .peek(cfg -> log.debug("actual jdbcUrl {} {}", cfg.getDeDbUrl(), actualJdbcUrl))
-                    .filter(cfg -> !cfg.getDeDbUrl().contains(actualJdbcUrl))
+                    .filter(cfg -> !cfg.getTenantCode().equals(PRIMARY_TENANT))
                     .forEach(cfg -> {
                         try {
                             updateTenantDatabase(cfg);
@@ -101,7 +97,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     @Override
     public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
-            return (liquibase.listUnrunChangeSets(null, null).size() > 0);
+            return (!liquibase.listUnrunChangeSets(null, null).isEmpty());
         }
     }
 
@@ -109,7 +105,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     public void updateTenantDatabase(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
         log.info("Checking tenant {} for schema update", tenantConfig.getTenantCode());
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
-            if (liquibase.listUnrunChangeSets(null, null).size() > 0) {
+            if (!liquibase.listUnrunChangeSets(null, null).isEmpty()) {
                 log.info("Applying database updates to tenant {}", tenantConfig.getTenantCode());
                 liquibase.update("");
                 log.info("Schema update completed for tenant {}", tenantConfig.getTenantCode());
