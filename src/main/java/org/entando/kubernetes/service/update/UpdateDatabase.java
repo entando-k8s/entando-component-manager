@@ -28,14 +28,12 @@ public class UpdateDatabase implements IUpdateDatabase {
     public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
     private final DataSource dataSource;
     private final List<TenantConfigDTO> tenantConfigs;
-    private final ResourceLoader resourceLoader;
     private final Resource changelog;
 
 
     public UpdateDatabase(DataSource dataSource, List<TenantConfigDTO> tenantConfigs, ResourceLoader resourceLoader) {
         this.dataSource = dataSource;
         this.tenantConfigs = tenantConfigs;
-        this.resourceLoader = resourceLoader;
         this.changelog = resourceLoader.getResource(CHANGELOG_MASTER_YAML);
         if (!changelog.exists()) {
             log.error("Liquibase changelog file not found {} ", CHANGELOG_MASTER_YAML);
