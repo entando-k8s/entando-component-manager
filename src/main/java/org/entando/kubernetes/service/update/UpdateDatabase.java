@@ -42,7 +42,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     @PostConstruct
-    public void testOnStart() {
+    public void checkOnStart() {
         log.info("Starting schema update check...");
         checkForDbSchemaUpdate();
         log.info("schema update check completed");
