@@ -2,7 +2,6 @@ package org.entando.kubernetes.service.update;
 
 import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TENANT;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -13,6 +12,7 @@ import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,10 +62,8 @@ public class UpdateDatabase implements IUpdateDatabase {
                             updateTenantDatabase(cfg);
                         } catch (IOException e) {
                             log.error("IOException during schema update for tenant " + cfg.getTenantCode(), e);
-                            throw new RuntimeException(e);
                         } catch (LiquibaseException e) {
                             log.error("Liquibase exception during schema update for tenant " + cfg.getTenantCode(), e);
-                            throw new RuntimeException(e);
                         }
                     });
         } catch (SQLException e) {
@@ -86,13 +84,19 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
-            throws DatabaseException, IOException {
+            throws DatabaseException {
         Database database = createTenantDatasource(tenantConfig);
-        String changeLogFilePath =  changelog.getFile().getAbsolutePath();
-        String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
-        log.debug("Path of the master changelog {} ", changelogPath);
-        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(new File(changelogPath)), database);
+        return new Liquibase("db/changelog/db.changelog-master.yaml", new ClassLoaderResourceAccessor(), database);
     }
+
+//    private Liquibase createLiquibaseFromTenantDefinition_(TenantConfigDTO tenantConfig)
+//            throws DatabaseException, IOException {
+//        Database database = createTenantDatasource(tenantConfig);
+//        String changeLogFilePath =  changelog.getFile().getAbsolutePath();
+//        String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
+//        log.debug("Path of the master changelog {} ", changelogPath);
+//        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(new File(changelogPath)), database);
+//    }
 
     @Override
     public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
