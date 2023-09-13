@@ -58,8 +58,8 @@ public class UpdateDatabase implements IUpdateDatabase {
     public void copyLiquibaseResources() {
         try {
             ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
-            Resource[] AllResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
-            for(Resource resource: AllResources) {
+            Resource[] allResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
+            for (Resource resource: allResources) {
                 InputStream inputStream = resource.getInputStream();
                 String uri = resource.getURI().toString();
                 uri = uri.substring(uri.lastIndexOf("/db/"));
