@@ -114,18 +114,50 @@ class EntandoBundleOperationResourceControllerTest {
     }
 
     @Test
-    void shouldReturnTheCurrentUninstallationStatusIfUninstallationExistsOnGet() {
+    void shouldReturnTheCurrentUninstallationStatusOnGetIfUninstallationExistsAndItWasTheLastOperationDone() {
         // Given
         final String componentId = "comp-id";
         EntandoBundleJobEntity jobEntity1 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
                 JobStatus.INSTALL_COMPLETED, componentId);
         EntandoBundleJobEntity jobEntity2 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
                 JobStatus.UNINSTALL_COMPLETED);
-        when(jobService.getJobs(componentId)).thenReturn(List.of(jobEntity1, jobEntity2));
+        // here the order of job entities is important because the "jobService.getJobs" method stubbed in the real code
+        // retrieves all the related job entities ordered by start date descendant. So the last one matters
+        when(jobService.getJobs(componentId)).thenReturn(List.of(jobEntity2, jobEntity1));
         // When
         SimpleRestResponse<UninstallJobResult> lastUninstallJob = entandoBundleOperationResourceController.getLastUninstallJob(
                 componentId);
         // Then
         Assertions.assertEquals(JobStatus.UNINSTALL_COMPLETED, lastUninstallJob.getPayload().getStatus());
+    }
+
+    @Test
+    void shouldThrowJobNotFoundExceptionOnGetIfUninstallationExistsButItWasNotTheLastOperationDone() {
+        // Given
+        final String componentId = "comp-id";
+        EntandoBundleJobEntity jobEntity1 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
+                JobStatus.INSTALL_COMPLETED, componentId);
+        EntandoBundleJobEntity jobEntity2 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
+                JobStatus.UNINSTALL_COMPLETED);
+        // here the order of job entities is important because the "jobService.getJobs" method stubbed in the real code
+        // retrieves all the related job entities ordered by start date descendant. So the last one matters
+        when(jobService.getJobs(componentId)).thenReturn(List.of(jobEntity1, jobEntity2));
+        // When/Then
+        Assertions.assertThrows(JobNotFoundException.class,
+                () -> entandoBundleOperationResourceController.getLastUninstallJob(
+                        componentId));
+    }
+
+    @Test
+    void shouldThrowJobNotFoundExceptionOnGetIfUninstallationDoNotExists() {
+        // Given
+        final String componentId = "comp-id";
+        EntandoBundleJobEntity jobEntity1 = EntandoBundleJobStubHelper.stubEntandoBundleJobEntity(
+                JobStatus.INSTALL_COMPLETED, componentId);
+        when(jobService.getJobs(componentId)).thenReturn(List.of(jobEntity1));
+        // When/Then
+        Assertions.assertThrows(JobNotFoundException.class,
+                () -> entandoBundleOperationResourceController.getLastUninstallJob(
+                        componentId));
     }
 }

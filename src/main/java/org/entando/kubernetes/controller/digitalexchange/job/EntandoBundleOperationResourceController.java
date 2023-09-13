@@ -161,8 +161,8 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         // try to find the first job related to the given componentId and jobType
         Optional<EntandoBundleJobEntity> result = jobService.getJobs(componentId)
                 .stream()
-                .filter(j -> j.getStatus().isOfType(jobType))
-                .findFirst();
+                .findFirst()
+                .filter(j -> j.getStatus().isOfType(jobType));
         // some log to show the query and filter result
         if (log.isDebugEnabled()) {
             result.ifPresentOrElse(
