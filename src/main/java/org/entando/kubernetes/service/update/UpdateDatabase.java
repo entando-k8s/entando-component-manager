@@ -30,13 +30,12 @@ public class UpdateDatabase implements IUpdateDatabase {
     public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
     private final DataSource dataSource;
     private final List<TenantConfigDTO> tenantConfigs;
-    private final Resource changelog;
 
 
     public UpdateDatabase(DataSource dataSource, @Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, ResourceLoader resourceLoader) {
         this.dataSource = dataSource;
         this.tenantConfigs = tenantConfigs;
-        this.changelog = resourceLoader.getResource(CHANGELOG_MASTER_YAML);
+        Resource changelog = resourceLoader.getResource(CHANGELOG_MASTER_YAML);
         if (!changelog.exists()) {
             log.error("Liquibase changelog file not found {} ", CHANGELOG_MASTER_YAML);
             throw new RuntimeException("Invalid Liquibase master changelog!");
@@ -99,7 +98,7 @@ public class UpdateDatabase implements IUpdateDatabase {
 //    }
 
     @Override
-    public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
+    public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws LiquibaseException {
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
             return (!liquibase.listUnrunChangeSets(null, null).isEmpty());
         }
