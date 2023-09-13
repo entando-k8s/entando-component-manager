@@ -88,14 +88,14 @@ public class UpdateDatabase implements IUpdateDatabase {
         return new Liquibase("db/changelog/db.changelog-master.yaml", new ClassLoaderResourceAccessor(), database);
     }
 
-//    private Liquibase createLiquibaseFromTenantDefinition_(TenantConfigDTO tenantConfig)
-//            throws DatabaseException, IOException {
-//        Database database = createTenantDatasource(tenantConfig);
-//        String changeLogFilePath =  changelog.getFile().getAbsolutePath();
-//        String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
-//        log.debug("Path of the master changelog {} ", changelogPath);
-//        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(new File(changelogPath)), database);
-//    }
+    //    private Liquibase createLiquibaseFromTenantDefinition_(TenantConfigDTO tenantConfig)
+    //            throws DatabaseException, IOException {
+    //        Database database = createTenantDatasource(tenantConfig);
+    //        String changeLogFilePath =  changelog.getFile().getAbsolutePath();
+    //        String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
+    //        log.debug("Path of the master changelog {} ", changelogPath);
+    //        return new Liquibase("db.changelog-master.yaml", new FileSystemResourceAccessor(new File(changelogPath)), database);
+    //    }
 
     @Override
     public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws LiquibaseException {
