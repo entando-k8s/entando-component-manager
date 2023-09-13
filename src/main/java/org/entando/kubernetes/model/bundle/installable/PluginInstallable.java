@@ -110,7 +110,7 @@ public class PluginInstallable extends Installable<PluginDescriptor> {
 
         return pluginData.setBundleId(metadata.getBundleId())
                 .setPluginName(metadata.getPluginName())
-                .setPluginCode(metadata.getPluginCode())
+                .setPluginCode(metadata.getPluginCodeTenantAware())
                 .setEndpoint(metadata.getEndpoint())
                 .setCustomEndpoint(metadata.getCustomEndpoint())
                 .setRoles(representation.getRoles() != null ? new HashSet<String>(representation.getRoles()) : null)
