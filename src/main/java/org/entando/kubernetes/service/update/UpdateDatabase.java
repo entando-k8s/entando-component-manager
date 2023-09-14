@@ -69,15 +69,7 @@ public class UpdateDatabase implements IUpdateDatabase {
         tenantConfigs
                 .stream()
                 .filter(cfg -> !cfg.getTenantCode().equals(PRIMARY_TENANT))
-                .forEach(cfg -> {
-                    try {
-                        updateTenantDatabase(cfg);
-                    } catch (IOException e) {
-                        log.error("IOException during schema update for tenant " + cfg.getTenantCode(), e);
-                    } catch (LiquibaseException e) {
-                        log.error("Liquibase exception during schema update for tenant " + cfg.getTenantCode(), e);
-                    }
-                });
+                .forEach(this::updateTenantDatabase);
     }
 
     private Database createTenantDatasource(TenantConfigDTO config) throws DatabaseException {
@@ -97,7 +89,6 @@ public class UpdateDatabase implements IUpdateDatabase {
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
             throws DatabaseException {
         Database database = createTenantDatasource(tenantConfig);
-
         return new Liquibase("db/changelog/db.changelog-master.yaml", new ClassLoaderResourceAccessor(), database);
     } */
 
@@ -120,7 +111,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     @Override
-    public void updateTenantDatabase(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException {
+    public void updateTenantDatabase(TenantConfigDTO tenantConfig) {
         log.info("Checking tenant '{}' for schema update", tenantConfig.getTenantCode());
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
             if (!liquibase.listUnrunChangeSets(null, null).isEmpty()) {
@@ -130,6 +121,8 @@ public class UpdateDatabase implements IUpdateDatabase {
             } else {
                 log.info("No database update available for tenant '{}'", tenantConfig.getTenantCode());
             }
+        } catch (LiquibaseException e) {
+            log.error("error executing tenant '" + tenantConfig.getTenantCode() + "' database update", e);
         }
     }
 

@@ -4,7 +4,7 @@ databaseChangeLog:
       author: Entando
       changes:
         - createTable:
-            tableName: cm_entando_table
+            tableName: mt_entando_table
             columns:
               - column:
                   name: test_column
