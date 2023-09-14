@@ -67,7 +67,8 @@ public class TenantConfiguration {
                 .setDeDbUrl(primaryDbUrl)
                 .setDeDbUsername(primaryDbUsername)
                 .setDeDbPassword(primaryDbPassword));
-
+        log.info("Defined PRIMARY tenant with name '{}'\n\thostname: {}\n\tDB url: {}\n\tDB username: {}",
+                EntandoMultiTenancy.PRIMARY_TENANT, primaryHostName, primaryDbUrl, primaryDbUsername);
         return tenantConfigList;
     }
 
