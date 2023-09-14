@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,7 @@ public class EntandoBundle {
     private EntandoBundleJob lastJob;
     private Boolean customInstallation;
     private EntandoBundleVersion latestVersion;
+    private Map<String, String> annotations;
 
     @Default
     private List<EntandoBundleVersion> versions = new ArrayList<>();
