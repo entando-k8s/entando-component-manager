@@ -4,7 +4,6 @@ import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TE
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -32,14 +31,12 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     public static final String CHANGELOG_MASTER_YAML = "classpath:db/changelog/db.changelog-master.yaml";
     private final List<TenantConfigDTO> tenantConfigs;
-
     private File changelog;
 
 
-    public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, ResourceLoader resourceLoader)
+    public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs)
             throws LiquibaseException {
         this.tenantConfigs = tenantConfigs;
-        Resource changelog = resourceLoader.getResource(CHANGELOG_MASTER_YAML);
         if (!changelog.exists()) {
             log.error("Liquibase changelog file not found {} ", CHANGELOG_MASTER_YAML);
             throw new LiquibaseException("Invalid Liquibase master changelog!");
@@ -60,7 +57,6 @@ public class UpdateDatabase implements IUpdateDatabase {
             ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
             Resource[] allResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
             for (Resource resource: allResources) {
-                InputStream inputStream = resource.getInputStream();
                 String uri = resource.getURI().toString();
                 uri = uri.substring(uri.lastIndexOf("/db/"));
                 String tmpFolder = System.getProperty("java.io.tmpdir");
@@ -72,7 +68,7 @@ public class UpdateDatabase implements IUpdateDatabase {
                 FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error copying Liquibase resources", e);
         }
     }
 
@@ -113,7 +109,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     } */
 
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
-            throws DatabaseException, IOException {
+            throws DatabaseException {
         Database database = createTenantDatasource(tenantConfig);
         String changeLogFilePath =  changelog.getAbsolutePath();
         String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
