@@ -32,8 +32,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     private File changelog;
 
 
-    public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs)
-            throws LiquibaseException {
+    public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs) {
         this.tenantConfigs = tenantConfigs;
     }
 
