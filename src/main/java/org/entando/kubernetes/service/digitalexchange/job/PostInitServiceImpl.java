@@ -190,18 +190,9 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 final String bundleCode = calculateBundleCode(item);
 
                 EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
-                        .flatMap(entandoBundle -> {
-                                    if ((Objects.isNull(entandoBundle.getAnnotations()))
-                                            || entandoBundle.getAnnotations().containsKey(
-                                            ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
-                                            && !entandoBundle.getAnnotations().get(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
-                                            .contains(TenantContextHolder.getCurrentTenantCode())) {
-                                        return Optional.empty();
-                                    }
-
-                                    return Optional.of(entandoBundle);
-                                }
-                        )
+                        .flatMap(entandoBundle -> checkIfMustAddCurrentTenantToDeployedBundleAnnotation(entandoBundle)
+                                ? Optional.empty()
+                                : Optional.of(entandoBundle))
                         .orElseGet(() -> deployPostInitBundle(item));
 
                 computeInstallStrategy(bundle, item)
@@ -259,6 +250,13 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
         }
 
+    }
+
+    private static boolean checkIfMustAddCurrentTenantToDeployedBundleAnnotation(EntandoBundle entandoBundle) {
+        return (Objects.isNull(entandoBundle.getAnnotations()))
+                || entandoBundle.getAnnotations().containsKey(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
+                && !entandoBundle.getAnnotations().get(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
+                .contains(TenantContextHolder.getCurrentTenantCode());
     }
 
     private String getArgBundleIdentifier(BundleNotFoundException ex) {
