@@ -33,6 +33,7 @@ import org.entando.kubernetes.service.update.IUpdateDatabase;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -87,6 +88,12 @@ class UpdateDatabasePostgresTest {
     static void beforeAll() {
         referenceDatabase.start();
         targetDatabase.start();
+    }
+
+    @AfterAll
+    static void closeContainers() {
+        referenceDatabase.close();
+        targetDatabase.close();
     }
 
     @Test
