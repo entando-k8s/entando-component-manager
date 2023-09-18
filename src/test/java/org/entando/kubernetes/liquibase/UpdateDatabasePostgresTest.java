@@ -167,7 +167,7 @@ class UpdateDatabasePostgresTest {
         final String TMP_DIR = System.getProperty("java.io.tmpdir");
         final Database targetDb = createTenantDatasource(getTenantForTest(database));
         final List<ChangeSet> changesets;
-        try (Liquibase liquibase = new Liquibase(changelogFile, new FileSystemResourceAccessor(TMP_DIR), targetDb)) {
+        try (Liquibase liquibase = new Liquibase(changelogFile, new FileSystemResourceAccessor(new File(TMP_DIR)), targetDb)) {
             changesets = liquibase.getDatabaseChangeLog().getChangeSets();
         }
 
