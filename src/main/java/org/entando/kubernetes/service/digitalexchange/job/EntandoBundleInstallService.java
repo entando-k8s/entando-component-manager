@@ -268,7 +268,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     EntandoBundleComponentJobEntity installJob = optCompJob.get();
 
                     JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(
-                            installJob, this::executeInstall
+                            installJob, this::executeInstall, JobStatus.INSTALL_IN_PROGRESS
                     );
 
                     scheduler.recordProcessedComponentJob(tracker.getJob());
@@ -368,7 +368,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
                     JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob,
-                            this::executeRollback);
+                            this::executeRollback, JobStatus.INSTALL_IN_PROGRESS);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
                         throw new EntandoComponentManagerException(
                                 rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
@@ -414,7 +414,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 // TODO: is it necessary?
                 //  if (isUninstallable(uninstallDiffJob)) {
                 JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(uninstallDiffJob,
-                        this::executeUninstallDiff);
+                        this::executeUninstallDiff, JobStatus.UNINSTALL_IN_PROGRESS);
                 if (tracker.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
                     throw new EntandoComponentManagerException(
                             uninstallDiffJob.getComponentType() + " " + uninstallDiffJob.getComponentId()
@@ -540,10 +540,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity job,
-            Function<Installable<?>, JobResult> action) {
+            Function<Installable<?>, JobResult> action, JobStatus jobStatus) {
         JobTracker<EntandoBundleComponentJobEntity> componentJobTracker = new JobTracker<>(job, compJobRepo);
-        // TODO: make parametric the status for uninstall diff -> Uninstall in progress
-        componentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
+        componentJobTracker.startTracking(jobStatus);
         JobResult result = action.apply(job.getInstallable());
         componentJobTracker.finishTracking(result);
         return componentJobTracker;
