@@ -17,6 +17,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -368,7 +369,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
                     JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob,
-                            this::executeRollback, JobStatus.INSTALL_IN_PROGRESS);
+                            installable -> executeUninstallFromEcr(installable, "ROLLBACK"), JobStatus.INSTALL_IN_PROGRESS);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
                         throw new EntandoComponentManagerException(
                                 rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
@@ -414,7 +415,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 // TODO: is it necessary?
                 //  if (isUninstallable(uninstallDiffJob)) {
                 JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(uninstallDiffJob,
-                        this::executeUninstallDiff, JobStatus.UNINSTALL_IN_PROGRESS);
+                        installable -> executeUninstallFromEcr(installable, "UNINSTALL"), JobStatus.UNINSTALL_IN_PROGRESS);
                 if (tracker.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
                     throw new EntandoComponentManagerException(
                             uninstallDiffJob.getComponentType() + " " + uninstallDiffJob.getComponentId()
@@ -682,33 +683,46 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 && component.getComponentType() == ComponentType.PLUGIN);
     }
 
-    private JobResult executeRollback(Installable<?> installable) {
-        return installable.uninstallFromEcr()
-                .thenApply(vd -> JobResult.builder().status(JobStatus.INSTALL_ROLLBACK).build())
-                .exceptionally(th -> {
-                    log.error(String.format("Error rolling back %s %s",
-                            installable.getComponentType(),
-                            installable.getName()), th);
-                    String message = getMeaningfulErrorMessage(th, installable);
-                    return JobResult.builder()
-                            .status(JobStatus.INSTALL_ROLLBACK_ERROR)
-                            .rollbackException(new EntandoComponentManagerException(message))
-                            .build();
-                })
-                .join();
+    // TODO: moves the inner class
+    @Getter
+    public class JobInfo {
+        String operation;
+        JobStatus ok;
+        JobStatus error;
+        String msg;
+
+        public JobInfo(String operation) {
+            switch (operation) {
+                case "ROLLBACK":
+                    this.ok = JobStatus.INSTALL_ROLLBACK;
+                    this.error = JobStatus.INSTALL_ROLLBACK_ERROR;
+                    this.msg = "rolling back";
+                    break;
+                case "UNINSTALL":
+                    this.ok = JobStatus.UNINSTALL_COMPLETED;
+                    this.error = JobStatus.UNINSTALL_ERROR;
+                    this.msg = "uninstall orphans components";
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid Operation");
+            }
+
+        }
+
+
     }
 
-    // TODO: refactoring
-    private JobResult executeUninstallDiff(Installable<?> installable) {
+    private JobResult executeUninstallFromEcr(Installable<?> installable, String operation) {
+        JobInfo jobInfo = new JobInfo(operation);
         return installable.uninstallFromEcr()
-                .thenApply(vd -> JobResult.builder().status(JobStatus.UNINSTALL_COMPLETED).build())
+                .thenApply(vd -> JobResult.builder().status(jobInfo.ok).build())
                 .exceptionally(th -> {
-                    log.error(String.format("Error uninstall orphans fields %s %s",
+                    log.error(String.format("Error ", jobInfo.msg, " %s %s",
                             installable.getComponentType(),
                             installable.getName()), th);
                     String message = getMeaningfulErrorMessage(th, installable);
                     return JobResult.builder()
-                            .status(JobStatus.UNINSTALL_ERROR)
+                            .status(jobInfo.error)
                             .rollbackException(new EntandoComponentManagerException(message))
                             .build();
                 })
