@@ -41,7 +41,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     private final List<TenantConfigDTO> tenantConfigs;
     private File changelog;
     final DataSource referenceDataSource;
-    final String tempDir = System.getProperty("java.io.tmpdir");
+    final File tempDir = new File(System.getProperty("java.io.tmpdir"));
 
     public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, DataSource dataSource) {
         this.tenantConfigs = tenantConfigs;
