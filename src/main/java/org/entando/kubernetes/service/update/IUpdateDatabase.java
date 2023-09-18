@@ -12,6 +12,8 @@ public interface IUpdateDatabase {
 
     void updateTenantDatabase(TenantConfigDTO tenantConfig) throws IOException, LiquibaseException;
 
+    void updateTenantDatabaseByDiff(TenantConfigDTO tenantConfig);
+
     void generateDiff(TenantConfigDTO tenantConfig, String changelog)
             throws SQLException, LiquibaseException, ParserConfigurationException, IOException;
 

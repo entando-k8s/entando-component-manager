@@ -4,6 +4,7 @@ import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TE
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,7 +25,6 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -139,8 +139,9 @@ public class UpdateDatabase implements IUpdateDatabase {
         }
     }
 
+    @Override
     public void updateTenantDatabaseByDiff(TenantConfigDTO tenantConfig) {
-        final String tmpDiffXmlChangelog = tenantConfig.getTenantCode();
+        final String tmpDiffXmlChangelog = tenantConfig.getTenantCode() + ".xml";
 
         log.info("Checking tenant '{}' for schema update", tenantConfig.getTenantCode());
         try {
@@ -226,15 +227,12 @@ public class UpdateDatabase implements IUpdateDatabase {
      * Check that a given file exists and deletes it in the case.
      * @param file the file name to check, everything is local to the tmp directory
      */
-    private void deleteIfExists(String file) throws FileExistsException {
+    private void deleteIfExists(String file) throws IOException {
         Path tmpFile = Path.of(tempDir, file);
 
         if (tmpFile.toFile().exists()) {
             log.debug("deleting existing file {}", tmpFile);
-            if (!tmpFile.toFile().delete()) {
-                log.error("error deleting {}", tmpFile);
-                throw new FileExistsException("couldn't delete the file " + tmpFile.toAbsolutePath());
-            }
+            Files.delete(tmpFile);
         }
     }
 

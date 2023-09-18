@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import liquibase.Liquibase;
@@ -64,6 +65,8 @@ import org.testcontainers.junit.jupiter.Container;
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class UpdateDatabasePostgresTest {
 
+    public static final String TMP_DIR = System.getProperty("java.io.tmpdir");
+
     @Autowired
     private IUpdateDatabase updateDatabase;
 
@@ -99,7 +102,6 @@ class UpdateDatabasePostgresTest {
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws IOException, LiquibaseException, ParserConfigurationException {
         TenantConfigRwDto cfg = getTenantForTest(referenceDatabase);
-        final String TMP_DIR = System.getProperty("java.io.tmpdir");
 
         assertTrue(updateDatabase.isTenantDbUpdatePending(cfg));
         updateDatabase.updateTenantDatabase(cfg);
@@ -125,6 +127,42 @@ class UpdateDatabasePostgresTest {
         testChangeSet(NO_DIFF_CHANGELOG_FILE, targetDatabase, true);
     }
 
+    @Test
+    void evaluateDiffBetweenDatabases() throws LiquibaseException, ParserConfigurationException, IOException {
+        final String DIFF_CHANGELOG_FILE = "diff.xml";
+
+        updateDatabase.generateDiff(getTenantForTest(referenceDatabase),
+                getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
+        File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
+        assertTrue(changelog.exists());
+    }
+
+    @Test
+    void evaluateDiffWithCmDatabase() throws LiquibaseException, ParserConfigurationException, IOException, SQLException {
+        final String DIFF_CHANGELOG_FILE = "diff2.xml";
+
+        updateDatabase.generateDiff(getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
+        File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
+        assertTrue(changelog.exists());
+        testChangeSet(DIFF_CHANGELOG_FILE, targetDatabase, false);
+    }
+
+    @Test
+    void testUpdateTargetTest() {
+        updateDatabase.updateTenantDatabaseByDiff(getTenantForTest(targetDatabase));
+    }
+
+    @NotNull
+    private static TenantConfigRwDto getTenantForTest(PostgreSQLContainer<?> container) {
+        TenantConfigRwDto cfg = new TenantConfigRwDto();
+
+        cfg.setTenantCode("TestTenant");
+        cfg.setDeDbUrl(container.getJdbcUrl());
+        cfg.setDeDbUsername(USERNAME);
+        cfg.setDeDbPassword(PASSWORD);
+        return cfg;
+    }
+
     private void testChangeSet(String changelogFile, PostgreSQLContainer<?> database, boolean isZero) throws LiquibaseException {
         final String TMP_DIR = System.getProperty("java.io.tmpdir");
         final Database targetDb = createTenantDatasource(getTenantForTest(database));
@@ -138,29 +176,6 @@ class UpdateDatabasePostgresTest {
         } else {
             assertThat(changesets, hasSize(greaterThan(0)));
         }
-    }
-
-
-    @Test
-    void evaluateDiffBetweenDatabases() throws LiquibaseException, ParserConfigurationException, IOException {
-        final String DIFF_CHANGELOG_FILE = "diff.xml";
-        final String TMP_DIR = System.getProperty("java.io.tmpdir");
-
-        updateDatabase.generateDiff(getTenantForTest(referenceDatabase),
-                getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
-        File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
-        assertTrue(changelog.exists());
-    }
-
-    @NotNull
-    private static TenantConfigRwDto getTenantForTest(PostgreSQLContainer<?> container) {
-        TenantConfigRwDto cfg = new TenantConfigRwDto();
-
-        cfg.setTenantCode("TestTenant");
-        cfg.setDeDbUrl(container.getJdbcUrl());
-        cfg.setDeDbUsername(USERNAME);
-        cfg.setDeDbPassword(PASSWORD);
-        return cfg;
     }
 
     private Database createTenantDatasource(TenantConfigDTO config) throws DatabaseException {
