@@ -469,22 +469,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private InstallPlan calculateDiffInstallPlan(InstallPlan currentInstallPlan, InstallPlan latestInstallPlan) {
         InstallPlan diff = new InstallPlan();
-
         diff.setWidgets(calculateDiffMap(currentInstallPlan.getWidgets(), latestInstallPlan.getWidgets()));
-        diff.setFragments(calculateDiffMap(currentInstallPlan.getFragments(), latestInstallPlan.getFragments()));
-        diff.setPages(calculateDiffMap(currentInstallPlan.getPages(), latestInstallPlan.getPages()));
-        diff.setPageTemplates(calculateDiffMap(currentInstallPlan.getPageTemplates(), latestInstallPlan.getPageTemplates()));
-        diff.setContents(calculateDiffMap(currentInstallPlan.getContents(), latestInstallPlan.getContents()));
-        diff.setContentTemplates(calculateDiffMap(currentInstallPlan.getContentTemplates(), latestInstallPlan.getContentTemplates()));
-        diff.setContentTypes(calculateDiffMap(currentInstallPlan.getContentTypes(), latestInstallPlan.getContentTypes()));
-        diff.setAssets(calculateDiffMap(currentInstallPlan.getAssets(), latestInstallPlan.getAssets()));
-        diff.setDirectories(calculateDiffMap(currentInstallPlan.getDirectories(), latestInstallPlan.getDirectories()));
-        diff.setResources(calculateDiffMap(currentInstallPlan.getResources(), latestInstallPlan.getResources()));
-        diff.setPlugins(calculateDiffMap(currentInstallPlan.getPlugins(), latestInstallPlan.getPlugins()));
-        diff.setCategories(calculateDiffMap(currentInstallPlan.getCategories(), latestInstallPlan.getCategories()));
-        diff.setGroups(calculateDiffMap(currentInstallPlan.getGroups(), latestInstallPlan.getGroups()));
-        diff.setGroups(calculateDiffMap(currentInstallPlan.getLabels(), latestInstallPlan.getLabels()));
-        diff.setGroups(calculateDiffMap(currentInstallPlan.getLanguages(), latestInstallPlan.getLanguages()));
 
         return diff;
     }
