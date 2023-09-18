@@ -51,30 +51,8 @@ public class UpdateDatabase implements IUpdateDatabase {
     @PostConstruct
     public void checkOnStart() {
         log.info("Starting schema update check...");
-        // copy the Liquibase resources in a safe place
-        // copyLiquibaseResources();
         checkForDbSchemaUpdate();
         log.info("schema update check completed");
-    }
-
-    public void copyLiquibaseResources() {
-        try {
-            ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
-            Resource[] allResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
-            for (Resource resource: allResources) {
-                String uri = resource.getURI().toString();
-                uri = uri.substring(uri.lastIndexOf("/db/"));
-                String tmpFolder = System.getProperty("java.io.tmpdir");
-                Path destinationFile = Path.of(tmpFolder, uri);
-
-                if (destinationFile.getFileName().endsWith("db.changelog-master.yaml")) {
-                    changelog = destinationFile.toFile();
-                }
-                FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
-            }
-        } catch (IOException e) {
-            log.error("Error copying Liquibase resources", e);
-        }
     }
 
     private void checkForDbSchemaUpdate() {
@@ -96,14 +74,6 @@ public class UpdateDatabase implements IUpdateDatabase {
                 driver,
                 null, null, null, resourceAccessor);
     }
-
-    // FIXME when https://github.com/liquibase/liquibase/pull/2353 is fixed use this method
-    /*
-    private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
-            throws DatabaseException {
-        Database database = createTenantDatasource(tenantConfig);
-        return new Liquibase("db/changelog/db.changelog-master.yaml", new ClassLoaderResourceAccessor(), database);
-    } */
 
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
             throws DatabaseException {
