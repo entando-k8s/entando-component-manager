@@ -40,10 +40,8 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     private final List<TenantConfigDTO> tenantConfigs;
     private File changelog;
-
-    final private DataSource referenceDataSource;
-
-    final public String TMP_DIR = System.getProperty("java.io.tmpdir");
+    final DataSource referenceDataSource;
+    final String tempDir = System.getProperty("java.io.tmpdir");
 
     public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, DataSource dataSource) {
         this.tenantConfigs = tenantConfigs;
@@ -131,7 +129,6 @@ public class UpdateDatabase implements IUpdateDatabase {
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
             if (!liquibase.listUnrunChangeSets(null, null).isEmpty()) {
                 log.info("Applying database updates to tenant '{}'", tenantConfig.getTenantCode());
-//                liquibase.clearCheckSums();
                 liquibase.update("");
                 log.info("Schema update completed for tenant '{}'", tenantConfig.getTenantCode());
             } else {
@@ -152,8 +149,8 @@ public class UpdateDatabase implements IUpdateDatabase {
             // step 2: apply the changelogs to the tenant DB
             updateDatabase(tenantConfig, tmpDiffXmlChangelog);
             log.info("schema updated completed for tenant '{}'", tenantConfig.getTenantCode());
-        } catch (LiquibaseException | SQLException |ParserConfigurationException | IOException e) {
-            log.error("error updating tenant schema '{}", tenantConfig.getTenantCode(), e );
+        } catch (LiquibaseException | SQLException | ParserConfigurationException | IOException e) {
+            log.error("error updating tenant schema '{}", tenantConfig.getTenantCode(), e);
         }
     }
 
@@ -190,7 +187,8 @@ public class UpdateDatabase implements IUpdateDatabase {
     public void updateDatabase(TenantConfigDTO targetTenant, String changelog) throws LiquibaseException {
         Database targetDatabase = createTenantDatasource(targetTenant);
 
-        try (Liquibase liquibase = new Liquibase(changelog, new FileSystemResourceAccessor(TMP_DIR), targetDatabase)) {
+        log.info("updating the tenant database {}:{}", targetTenant.getTenantCode(), targetTenant.getDeDbUrl());
+        try (Liquibase liquibase = new Liquibase(changelog, new FileSystemResourceAccessor(tempDir), targetDatabase)) {
             liquibase.clearCheckSums();
             liquibase.update("");
         } catch (LiquibaseException t) {
@@ -203,34 +201,33 @@ public class UpdateDatabase implements IUpdateDatabase {
             throws LiquibaseException, ParserConfigurationException, IOException {
         log.info("generating database diff between {} and {}", referenceDatabase.getConnection().getURL(),
                 targetDatabase.getConnection().getURL());
-        try (Liquibase liquibase = new Liquibase("", new FileSystemResourceAccessor(TMP_DIR), referenceDatabase)) {
+        try (Liquibase liquibase = new Liquibase("", new FileSystemResourceAccessor(tempDir), referenceDatabase)) {
             DiffResult diffResult = liquibase.diff(referenceDatabase, targetDatabase, new CompareControl());
             DiffToChangeLog diffChangelog = new DiffToChangeLog(diffResult, new DiffOutputControl());
-            final String changelogTmpFile = Path.of(TMP_DIR, changelog).toString();
+            final String changelogTmpFile = Path.of(tempDir, changelog).toString();
             log.info("changelog produced in {}", changelogTmpFile);
             diffChangelog.print(changelogTmpFile);
         }
     }
 
     /**
-     * Return the database currently in use
-     * @return
-     * @throws SQLException
-     * @throws DatabaseException
+     * Return the database currently in use.
+     * @return the Liquibase Database object
+     * @throws SQLException in case of Liquibase error
+     * @throws DatabaseException in case of Liquibase error
      */
     private Database getCurrentDatabase() throws SQLException, DatabaseException {
         Connection referenceConnection = referenceDataSource.getConnection();
-        Database referenceDatabase = DatabaseFactory.getInstance()
+        return DatabaseFactory.getInstance()
                 .findCorrectDatabaseImplementation(new JdbcConnection(referenceConnection));
-        return referenceDatabase;
     }
 
     /**
-     * Check that a given file exists and deletes it in the case
+     * Check that a given file exists and deletes it in the case.
      * @param file the file name to check, everything is local to the tmp directory
      */
     private void deleteIfExists(String file) throws FileExistsException {
-        Path tmpFile = Path.of(TMP_DIR, file);
+        Path tmpFile = Path.of(tempDir, file);
 
         if (tmpFile.toFile().exists()) {
             log.debug("deleting existing file {}", tmpFile);

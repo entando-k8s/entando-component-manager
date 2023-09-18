@@ -121,8 +121,10 @@ class UpdateDatabasePostgresTest {
     private void testChangeSet(String changelogFile, PostgreSQLContainer<?> database, boolean isZero) throws LiquibaseException {
         final String TMP_DIR = System.getProperty("java.io.tmpdir");
         final Database targetDb = createTenantDatasource(getTenantForTest(database));
-        final Liquibase liquibase = new Liquibase(changelogFile, new FileSystemResourceAccessor(TMP_DIR), targetDb);
-        final List<ChangeSet> changesets = liquibase.getDatabaseChangeLog().getChangeSets();
+        final List<ChangeSet> changesets;
+        try (Liquibase liquibase = new Liquibase(changelogFile, new FileSystemResourceAccessor(TMP_DIR), targetDb)) {
+            changesets = liquibase.getDatabaseChangeLog().getChangeSets();
+        }
 
         if (isZero) {
             assertThat(changesets, empty());
