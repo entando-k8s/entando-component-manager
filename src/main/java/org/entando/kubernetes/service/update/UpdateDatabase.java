@@ -41,7 +41,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     private final List<TenantConfigDTO> tenantConfigs;
     private File changelog;
     final DataSource referenceDataSource;
-    final File tempDir = new File(System.getProperty("java.io.tmpdir"));
+    final String tempDir = System.getProperty("java.io.tmpdir");
 
     public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, DataSource dataSource) {
         this.tenantConfigs = tenantConfigs;
@@ -188,7 +188,7 @@ public class UpdateDatabase implements IUpdateDatabase {
         Database targetDatabase = createTenantDatasource(targetTenant);
 
         log.info("updating the tenant database {}:{}", targetTenant.getTenantCode(), targetTenant.getDeDbUrl());
-        try (Liquibase liquibase = new Liquibase(changelog, new FileSystemResourceAccessor(tempDir), targetDatabase)) {
+        try (Liquibase liquibase = new Liquibase(changelog, new FileSystemResourceAccessor(new File(tempDir)), targetDatabase)) {
             liquibase.clearCheckSums();
             liquibase.update("");
         } catch (LiquibaseException t) {
@@ -201,7 +201,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             throws LiquibaseException, ParserConfigurationException, IOException {
         log.info("generating database diff between {} and {}", referenceDatabase.getConnection().getURL(),
                 targetDatabase.getConnection().getURL());
-        try (Liquibase liquibase = new Liquibase("", new FileSystemResourceAccessor(tempDir), referenceDatabase)) {
+        try (Liquibase liquibase = new Liquibase("", new FileSystemResourceAccessor(new File(tempDir)), referenceDatabase)) {
             DiffResult diffResult = liquibase.diff(referenceDatabase, targetDatabase, new CompareControl());
             DiffToChangeLog diffChangelog = new DiffToChangeLog(diffResult, new DiffOutputControl());
             final String changelogTmpFile = Path.of(tempDir, changelog).toString();
