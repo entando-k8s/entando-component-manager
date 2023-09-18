@@ -190,7 +190,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 final String bundleCode = calculateBundleCode(item);
 
                 EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
-                        .flatMap(entandoBundle -> checkIfMustAddCurrentTenantToDeployedBundleAnnotation(entandoBundle)
+                        .flatMap(entandoBundle -> shouldAddCurrentTenantToDeployedBundleAnnotation(entandoBundle)
                                 ? Optional.empty()
                                 : Optional.of(entandoBundle))
                         .orElseGet(() -> deployPostInitBundle(item));
@@ -252,7 +252,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
     }
 
-    private static boolean checkIfMustAddCurrentTenantToDeployedBundleAnnotation(EntandoBundle entandoBundle) {
+    private static boolean shouldAddCurrentTenantToDeployedBundleAnnotation(EntandoBundle entandoBundle) {
         return (Objects.isNull(entandoBundle.getAnnotations()))
                 || entandoBundle.getAnnotations().containsKey(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
                 && !entandoBundle.getAnnotations().get(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
