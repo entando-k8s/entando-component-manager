@@ -25,13 +25,9 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DatabaseDriver;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 @Service
