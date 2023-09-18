@@ -148,8 +148,19 @@ class UpdateDatabasePostgresTest {
     }
 
     @Test
-    void testUpdateTargetTest() {
-        updateDatabase.updateTenantDatabaseByDiff(getTenantForTest(targetDatabase));
+    void testUpdateTenant() throws LiquibaseException {
+        final String DIFF_CHANGELOG_FILE = "TestTenant.xml";
+        final PostgreSQLContainer<?> yetAnotherDatabase = new PostgreSQLContainer<>("postgres:14")
+                .withDatabaseName(DATABASE)
+                .withUsername(USERNAME)
+                .withPassword(PASSWORD);
+        yetAnotherDatabase.start();
+        updateDatabase.updateTenantDatabaseByDiff(getTenantForTest(yetAnotherDatabase));
+
+        File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
+        assertTrue(changelog.exists());
+        testChangeSet(DIFF_CHANGELOG_FILE, targetDatabase, false);
+        yetAnotherDatabase.close();
     }
 
     @NotNull

@@ -40,7 +40,7 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     private final List<TenantConfigDTO> tenantConfigs;
     private File changelog;
-    final DataSource referenceDataSource;
+    private final DataSource referenceDataSource;
     final String tempDir = System.getProperty("java.io.tmpdir");
 
     public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, DataSource dataSource) {
@@ -52,7 +52,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     public void checkOnStart() {
         log.info("Starting schema update check...");
         // copy the Liquibase resources in a safe place
-        copyLiquibaseResources();
+        // copyLiquibaseResources();
         checkForDbSchemaUpdate();
         log.info("schema update check completed");
     }
