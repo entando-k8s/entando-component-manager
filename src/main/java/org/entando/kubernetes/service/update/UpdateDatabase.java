@@ -25,9 +25,13 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DatabaseDriver;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -47,8 +51,30 @@ public class UpdateDatabase implements IUpdateDatabase {
     @PostConstruct
     public void checkOnStart() {
         log.info("Starting schema update check...");
+        // copy the Liquibase resources in a safe place
+        copyLiquibaseResources();
         checkForDbSchemaUpdate();
         log.info("schema update check completed");
+    }
+
+    public void copyLiquibaseResources() {
+        try {
+            ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
+            Resource[] allResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
+            for (Resource resource: allResources) {
+                String uri = resource.getURI().toString();
+                uri = uri.substring(uri.lastIndexOf("/db/"));
+                String tmpFolder = System.getProperty("java.io.tmpdir");
+                Path destinationFile = Path.of(tmpFolder, uri);
+
+                if (destinationFile.getFileName().endsWith("db.changelog-master.yaml")) {
+                    changelog = destinationFile.toFile();
+                }
+                FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
+            }
+        } catch (IOException e) {
+            log.error("Error copying Liquibase resources", e);
+        }
     }
 
     private void checkForDbSchemaUpdate() {
@@ -70,6 +96,14 @@ public class UpdateDatabase implements IUpdateDatabase {
                 driver,
                 null, null, null, resourceAccessor);
     }
+
+    // FIXME when https://github.com/liquibase/liquibase/pull/2353 is fixed use this method
+    /*
+    private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
+            throws DatabaseException {
+        Database database = createTenantDatasource(tenantConfig);
+        return new Liquibase("db/changelog/db.changelog-master.yaml", new ClassLoaderResourceAccessor(), database);
+    } */
 
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
             throws DatabaseException {
