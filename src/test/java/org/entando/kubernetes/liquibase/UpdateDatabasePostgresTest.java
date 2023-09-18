@@ -143,13 +143,14 @@ class UpdateDatabasePostgresTest {
 
     @Test
     void evaluateDiffBetweenDatabases() throws LiquibaseException, ParserConfigurationException, IOException {
-        final String DIFF_CHANGELOG_FILE = "/tmp/diff.xml";
+        final String DIFF_CHANGELOG_FILE = "diff.xml";
+        final String TMP_DIR = System.getProperty("java.io.tmpdir");
+
         updateDatabase.generateDiff(getTenantForTest(referenceDatabase),
                 getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
-        File changelog = new File(DIFF_CHANGELOG_FILE);
+        File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
         assertTrue(changelog.exists());
     }
-
 
     @NotNull
     private static TenantConfigRwDto getTenantForTest(PostgreSQLContainer<?> container) {
