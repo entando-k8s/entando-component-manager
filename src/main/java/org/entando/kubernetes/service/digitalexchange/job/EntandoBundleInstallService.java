@@ -30,7 +30,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInst
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.digitalexchange.ReportAnalysisException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
@@ -314,21 +313,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         });
     }
 
-    // TODO: duplicate -> remove
-    private EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String version) {
-        String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
-        return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
-                .orElseThrow(
-                        () -> new InvalidBundleException("Version " + versionToFind + " not defined in bundle versions"));
-    }
-
     private String uninstallOrphanedComponents(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
                                             InstallAction conflictStrategy, InstallPlan installPlan) {
         try {
             Optional<EntandoBundleJobEntity> latestBundleJob = jobRepo
                     .findFirstByComponentIdAndStatusOrderByStartedAtDesc(parentJob.getComponentId(), JobStatus.INSTALL_COMPLETED);
             String version = latestBundleJob.get().getComponentVersion();
-            EntandoDeBundleTag latestTag = getBundleTagOrFail(bundle, version);
+            EntandoDeBundleTag latestTag = BundleUtilities.getBundleTagOrFail(bundle, version);
             BundleDownloader latestBundleDownloader = downloaderFactory.newDownloader(latestTag);
             BundleReader latestBundleReader = this.downloadBundleAndGetBundleReader(latestBundleDownloader, bundle, latestTag);
 
