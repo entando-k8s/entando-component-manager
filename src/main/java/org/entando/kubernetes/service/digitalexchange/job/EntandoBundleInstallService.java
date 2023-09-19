@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_APPBUILDER;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -332,6 +334,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 Queue<Installable> bundleInstallableComponentsDiff = getBundleInstallableComponents(latestBundleReader, conflictStrategy, diff);
 
                 Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff = bundleInstallableComponentsDiff.stream()
+                        .filter(i -> {
+                            if (i.getRepresentation() instanceof WidgetDescriptor) {
+                                WidgetDescriptor wd = (WidgetDescriptor) i.getRepresentation();
+                                return TYPE_WIDGET_APPBUILDER.equals(wd.getType());
+                            }
+                            return false;
+                        })
                         .map(i -> {
                             EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
                             cj.setParentJob(parentJob);
