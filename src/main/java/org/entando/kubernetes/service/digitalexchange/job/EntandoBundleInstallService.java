@@ -51,6 +51,7 @@ import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -66,6 +67,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -91,6 +93,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull BundleDescriptorValidator bundleDescriptorValidator;
     private final @NonNull EntandoCoreClient entandoCoreClient;
     private final @NonNull BundleUninstallUtility bundleUninstallUtility;
+    private final @NonNull EntandoBundleComponentUsageService usageService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -353,11 +356,23 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                         })
                         .collect(Collectors.toCollection(ArrayDeque::new));
 
+                List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
+                List<ComponentUsage> componentUsageList = usageService.getComponentsUsageDetails(componentJobListDiff).stream()
+                        .filter(componentUsage -> {
+                            if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
+                                log.debug(String.format(
+                                        "Component '%s' is not found or contains external references so it can't be uninstalled",
+                                        componentUsage.getCode()));
+                                return false;
+                            }
+                            return true;
+                        }).collect(Collectors.toList());
+
                 JobScheduler schedulerDiff = new JobScheduler();
                 schedulerDiff.queuePrimaryComponents(componentJobQueueDiff);
                 String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(latestBundleReader);
-                String warnings = uninstallDiff(bundleRootFolder, schedulerDiff);
-                return warnings;
+
+                return uninstallDiff(bundleRootFolder, schedulerDiff, componentUsageList);
             } else {
                 log.debug("The unistallation of orphaned components is not necessary since the bundle is not installed on the system");
                 return null;
@@ -407,7 +422,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return result;
     }
 
-    private String uninstallDiff(String bundleRootName, JobScheduler uninstallDiffScheduler) {
+    private String uninstallDiff(String bundleRootName, JobScheduler uninstallDiffScheduler, List<ComponentUsage> componentUsageList) {
         try {
             List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
             Optional<EntandoBundleComponentJobEntity> optCompJob = uninstallDiffScheduler.extractFromQueue();
@@ -433,9 +448,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
                 uninstallDiffScheduler.recordProcessedComponentJob(tracker.getJob());
 
-                if (tracker.getJob().getInstallable().shouldUninstallFromAppEngine()) {
-                    componentToUninstallFromAppEngine.add(tracker.getJob());
-                }
+                componentUsageList.stream()
+                        .filter(component -> component.getCode().equals(tracker.getJob().getComponentId()))
+                        .findFirst()
+                        .ifPresent(matchingComponent -> componentToUninstallFromAppEngine.add(tracker.getJob()));
 
                 // }
                 optCompJob = uninstallDiffScheduler.extractFromQueue();
