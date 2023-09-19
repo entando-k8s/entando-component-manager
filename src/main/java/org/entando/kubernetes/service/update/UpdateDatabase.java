@@ -40,19 +40,21 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     private final List<TenantConfigDTO> tenantConfigs;
     private File changelog;
+
     private final DataSource referenceDataSource;
     final String tempDir = System.getProperty("java.io.tmpdir");
 
-    public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs, DataSource dataSource) {
+    public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs,
+            DataSource referenceDataSource) {
         this.tenantConfigs = tenantConfigs;
-        this.referenceDataSource = dataSource;
+        this.referenceDataSource = referenceDataSource;
     }
 
     @PostConstruct
-    public void checkOnStart() {
+    public void checkOnStart() throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
         log.info("Starting schema update check...");
         // copy the Liquibase resources in a safe place
-        copyLiquibaseResources();
+         copyLiquibaseResources();
         checkForDbSchemaUpdate();
         log.info("schema update check completed");
     }
@@ -77,12 +79,14 @@ public class UpdateDatabase implements IUpdateDatabase {
         }
     }
 
-    private void checkForDbSchemaUpdate() {
-        tenantConfigs
-                .stream()
-                .filter(cfg -> !cfg.getTenantCode().equals(PRIMARY_TENANT))
-                // .forEach(this::updateTenantDatabase);
-                .forEach(this:: updateTenantDatabaseByDiff);
+    private void checkForDbSchemaUpdate()
+            throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
+        // .forEach(this::updateTenantDatabase);
+        for (TenantConfigDTO cfg : tenantConfigs) {
+            if (!cfg.getTenantCode().equals(PRIMARY_TENANT)) {
+                updateTenantDatabaseByDiff(cfg);
+            }
+        }
     }
 
     private Database createTenantDatasource(TenantConfigDTO config) throws DatabaseException {
@@ -140,7 +144,8 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     @Override
-    public void updateTenantDatabaseByDiff(TenantConfigDTO tenantConfig) {
+    public void updateTenantDatabaseByDiff(TenantConfigDTO tenantConfig)
+            throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
         final String tmpDiffXmlChangelog = tenantConfig.getTenantCode() + ".xml";
 
         log.info("Checking tenant '{}' for schema update", tenantConfig.getTenantCode());
@@ -152,6 +157,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             log.info("schema updated completed for tenant '{}'", tenantConfig.getTenantCode());
         } catch (LiquibaseException | SQLException | ParserConfigurationException | IOException e) {
             log.error("error updating tenant schema '{}", tenantConfig.getTenantCode(), e);
+            throw e;
         }
     }
 
@@ -161,7 +167,16 @@ public class UpdateDatabase implements IUpdateDatabase {
         Database referenceDatabase = getCurrentDatabase();
         Database targetDatabase = createTenantDatasource(tenantConfig);
 
-        performDiff(referenceDatabase, targetDatabase, changelog);
+        try {
+            performDiff(referenceDatabase, targetDatabase, changelog);
+        } catch (LiquibaseException
+                 | ParserConfigurationException
+                 | IOException t) {
+            log.error("error while comparing the databases {}:{} and {}:{}",
+                    "primary", referenceDatabase.getConnection().getURL(),
+                    tenantConfig.getTenantCode(), tenantConfig.getDeDbUrl());
+            throw t;
+        }
     }
 
     @Override
@@ -202,6 +217,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             throws LiquibaseException, ParserConfigurationException, IOException {
         log.info("generating database diff between {} and {}", referenceDatabase.getConnection().getURL(),
                 targetDatabase.getConnection().getURL());
+        deleteIfExists(changelog);
         try (Liquibase liquibase = new Liquibase("", new FileSystemResourceAccessor(new File(tempDir)), referenceDatabase)) {
             DiffResult diffResult = liquibase.diff(referenceDatabase, targetDatabase, new CompareControl());
             DiffToChangeLog diffChangelog = new DiffToChangeLog(diffResult, new DiffOutputControl());
