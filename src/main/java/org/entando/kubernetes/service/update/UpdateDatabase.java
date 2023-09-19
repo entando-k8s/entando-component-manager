@@ -54,7 +54,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     public void checkOnStart() throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
         log.info("Starting schema update check...");
         // copy the Liquibase resources in a safe place
-         copyLiquibaseResources();
+        copyLiquibaseResources();
         checkForDbSchemaUpdate();
         log.info("schema update check completed");
     }
