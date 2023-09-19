@@ -171,7 +171,7 @@ public class InstallServiceTest {
         installService = new EntandoBundleInstallService(
                 bundleService, downloaderFactory, jobRepository, compJobRepo, installRepo, processorMap,
                 reportableComponentProcessorList, analysisReportStrategies, bundleOperationsConcurrencyManager,
-                bundleDescriptorValidator, coreClient, bundleUninstallUtility);
+                bundleDescriptorValidator, coreClient, bundleUninstallUtility, usageService);
 
         uninstallService = new EntandoBundleUninstallService(
                 jobRepository, compJobRepo, installRepo, usageService, postInitService, processorMap, coreClient,
