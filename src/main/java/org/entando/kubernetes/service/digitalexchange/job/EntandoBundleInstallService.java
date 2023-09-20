@@ -431,6 +431,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         Map<String, JobStatus> componentsFeedbackCM = new HashMap<>();
         Map<String, JobStatus> componentsFeedbackAppEngine = new HashMap<>();
         Map<String, Map<String, JobStatus>> componentsFeedback = new HashMap<>();
+        final String uninstallationCMKey = "uninstallationOnCM";
+        final String uninstallationAppEngineKey = "uninstallationOnAppEngine";
 
         List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
 
@@ -454,8 +456,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
                 if (tracker.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
                     log.debug("uninstall of orphaned components on cm can't proceed due to an error with one of the components");
-                    componentsFeedback.put("uninstallationOnCM", componentsFeedbackCM);
-                    componentsFeedback.put("uninstallationOnAppEngine", componentsFeedbackAppEngine);
+                    componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
+                    componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
                     return objectMapper.writeValueAsString(componentsFeedback);
                 }
 
@@ -478,14 +480,14 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             componentsFeedbackAppEngine = componentToUninstallFromAppEngine.stream()
                     .collect(Collectors.toMap(EntandoBundleComponentJobEntity::getComponentId, EntandoBundleComponentJobEntity::getStatus));
 
-            componentsFeedback.put("uninstallationOnCM", componentsFeedbackCM);
-            componentsFeedback.put("uninstallationOnAppEngine", componentsFeedbackAppEngine);
+            componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
+            componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
             return objectMapper.writeValueAsString(componentsFeedback);
 
         } catch (Exception uninstallException) {
             log.error("An error occurred during component uninstall", uninstallException);
-            componentsFeedback.put("uninstallationOnCM", componentsFeedbackCM);
-            componentsFeedback.put("uninstallationOnAppEngine", componentsFeedbackAppEngine);
+            componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
+            componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
             return objectMapper.writeValueAsString(componentsFeedback);
         }
 
@@ -760,7 +762,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return installable.uninstallFromEcr()
                 .thenApply(vd -> JobResult.builder().status(jobInfo.ok).build())
                 .exceptionally(th -> {
-                    log.error(String.format("Error ", jobInfo.msg, " %s %s",
+                    log.error(String.format("Error %s %s %s",
+                            jobInfo.msg,
                             installable.getComponentType(),
                             installable.getName()), th);
                     String message = getMeaningfulErrorMessage(th, installable);
