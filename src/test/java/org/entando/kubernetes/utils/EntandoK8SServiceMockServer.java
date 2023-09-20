@@ -41,12 +41,22 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(bundleListResponse)));
-        wireMockServer.stubFor(get(urlEqualTo("/bundles?namespace=entando-de-bundles"))
+        wireMockServer.stubFor(get(urlEqualTo("/bundles?tenantCode=primary"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(bundleListResponse)));
-        wireMockServer.stubFor(get(urlMatching("/bundles/my-bundle/?"))
+        wireMockServer.stubFor(get(urlEqualTo("/bundles?namespace=entando-de-bundles&tenantCode=primary"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(bundleListResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/bundles/my-bundle?tenantCode=primary"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(singleBundleResponse)));
+        wireMockServer.stubFor(get(urlEqualTo("/bundles/my-bundle?namespace=entando-de-bundles&tenantCode=primary"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", HAL_JSON_VALUE)
@@ -198,7 +208,7 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
     }
 
     private void addDeployDeBundle(WireMockServer server, int status) {
-        server.stubFor(post(urlMatching("/bundles"))
+        server.stubFor(post(urlEqualTo("/bundles?tenantCode=primary"))
                         .withRequestBody(new AnythingPattern())
                         .willReturn(aResponse()
                                 .withStatus(status)
@@ -206,7 +216,7 @@ public class EntandoK8SServiceMockServer extends EntandoGenericMockServer {
     }
 
     public void addUndeployDeBundle(WireMockServer server) {
-        server.stubFor(delete(urlMatching("/bundles/" + BundleInfoStubHelper.NAME))
+        server.stubFor(delete(urlEqualTo("/bundles/" + BundleInfoStubHelper.NAME + "?tenantCode=primary"))
                 .willReturn(aResponse()
                         .withStatus(200)));
     }
