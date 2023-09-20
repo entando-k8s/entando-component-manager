@@ -1,10 +1,12 @@
 package org.entando.kubernetes.service.update;
 
 import java.util.Arrays;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
+@UtilityClass
 public class UpdateUtils {
 
     public static String getSchemaFromJdbc(String jdbcUrl) {
