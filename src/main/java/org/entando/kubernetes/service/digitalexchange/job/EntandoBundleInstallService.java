@@ -413,7 +413,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             // remove from appEngine
-            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result);
+            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result, "ROLLBACK");
             result.setStatus(finalStatus);
             log.info("Rollback operation completed");
 
@@ -474,7 +474,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             // remove from appEngine
             log.debug("Start uninstalling orphaned components on AppEngine");
-            executeDeleteFromAppEngine2(componentToUninstallFromAppEngine);
+            executeDeleteFromAppEngine(componentToUninstallFromAppEngine, "UNINSTALL");
             log.info("Uninstall operation completed");
 
             componentsFeedbackAppEngine = componentToUninstallFromAppEngine.stream()
@@ -512,50 +512,38 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
-            JobResult parentJobResult) {
+                                                 JobResult parentJobResult, String operation) {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
                 .collect(Collectors.toList()));
 
+        JobInfo jobInfo = new JobInfo(operation);
+
         switch (response.getStatus()) {
             case FAILURE:
-                log.debug("In rollback All deletes are in error with response:'{}'", response);
-                bundleUninstallUtility.markGlobalError(parentJobResult, response);
-                bundleUninstallUtility.markSingleErrors(toDelete,response);
-                return JobStatus.INSTALL_ERROR;
+                log.debug("In {} All deletes are in error with response:'{}'", operation.toLowerCase(), response);
+                if (parentJobResult != null) {
+                    bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                    bundleUninstallUtility.markSingleErrors(toDelete,response);
+                }
+                return jobInfo.error;
             case PARTIAL_SUCCESS:
-                log.debug("In rollback Partial deletes are in error with response:'{}'", response);
-                bundleUninstallUtility.markGlobalError(parentJobResult, response);
-                bundleUninstallUtility.markSingleErrors(toDelete,response);
-                return JobStatus.INSTALL_ROLLBACK_PARTIAL;
+                log.debug("In {} Partial deletes are in error with response:'{}'", operation.toLowerCase(), response);
+                if (parentJobResult != null) {
+                    bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                    bundleUninstallUtility.markSingleErrors(toDelete,response);
+                }
+                return jobInfo.partial;
             case SUCCESS:
             default:
-                log.debug("In rollback all deletes ok with response:'{}'", response);
-                return JobStatus.INSTALL_ROLLBACK;
+                log.debug("In {} all deletes ok with response:'{}'", operation.toLowerCase(), response);
+                return jobInfo.ok;
         }
     }
 
-
-    // TODO: duplicate -> refactoring
-    private JobStatus executeDeleteFromAppEngine2(List<EntandoBundleComponentJobEntity> toDelete) {
-        EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
-                .map(EntandoCoreComponentDeleteRequest::fromEntity)
-                .flatMap(Optional::stream)
-                .collect(Collectors.toList()));
-
-        switch (response.getStatus()) {
-            case FAILURE:
-                log.debug("In uninstall orphan All deletes are in error with response:'{}'", response);
-                return JobStatus.UNINSTALL_ERROR;
-            case PARTIAL_SUCCESS:
-                log.debug("In uninstall orphan Partial deletes are in error with response:'{}'", response);
-                return JobStatus.UNINSTALL_PARTIAL_COMPLETED;
-            case SUCCESS:
-            default:
-                log.debug("In uninstall orphan all deletes ok with response:'{}'", response);
-                return JobStatus.UNINSTALL_COMPLETED;
-        }
+    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete, String operation) {
+        return  executeDeleteFromAppEngine(toDelete, null, operation);
     }
 
     /**
@@ -734,6 +722,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         String operation;
         JobStatus ok;
         JobStatus error;
+        JobStatus partial;
         String msg;
 
         public JobInfo(String operation) {
@@ -741,11 +730,13 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 case "ROLLBACK":
                     this.ok = JobStatus.INSTALL_ROLLBACK;
                     this.error = JobStatus.INSTALL_ROLLBACK_ERROR;
+                    this.partial = JobStatus.INSTALL_ROLLBACK_PARTIAL;
                     this.msg = "rolling back";
                     break;
                 case "UNINSTALL":
                     this.ok = JobStatus.UNINSTALL_COMPLETED;
                     this.error = JobStatus.UNINSTALL_ERROR;
+                    this.partial = JobStatus.UNINSTALL_PARTIAL_COMPLETED;
                     this.msg = "uninstall orphans components";
                     break;
                 default:
