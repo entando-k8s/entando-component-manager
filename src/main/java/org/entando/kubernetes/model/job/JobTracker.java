@@ -30,13 +30,13 @@ public class JobTracker<T extends TrackableJob> {
     public void finishTracking(JobResult result) {
         this.job.setStatus(result.getStatus());
         this.job.setFinishedAt(LocalDateTime.now());
+        this.job.setInstallWarnings(result.getInstallWarnings());
         if (result.hasException()) {
             this.job.setInstallErrorCode(result.getInstallErrorCode());
             this.job.setInstallErrorMessage(result.getInstallErrorMessage());
             this.job.setUninstallErrorCode(result.getUninstallErrorCode());
             this.job.setUninstallErrorMessage(result.getUninstallErrorMessage());
             this.job.setUninstallErrors(result.getUninstallErrors());
-            this.job.setInstallWarnings(result.getInstallWarnings());
             this.job.setRollbackErrorCode(result.getRollbackErrorCode());
             this.job.setRollbackErrorMessage(result.getRollbackErrorMessage());
         }

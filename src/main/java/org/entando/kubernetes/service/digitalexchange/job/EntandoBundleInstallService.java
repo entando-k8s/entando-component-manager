@@ -373,13 +373,16 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(latestBundleReader);
 
                 return uninstallDiff(bundleRootFolder, schedulerDiff, componentUsageList);
+
             } else {
-                log.debug("The unistallation of orphaned components is not necessary since the bundle is not installed on the system");
-                return null;
+                String warnings = "The unistallation of orphaned components is not necessary since the bundle is not installed on the system";
+                log.debug(warnings);
+                return warnings;
             }
         } catch (Exception e) {
-            log.error("The uninstallation of orphaned components failed with error {}", e);
-            return null;
+            String error = "The uninstallation of orphaned components failed with error " + e;
+            log.error(error);
+            return error;
         }
 
     }
@@ -422,9 +425,16 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return result;
     }
 
-    private String uninstallDiff(String bundleRootName, JobScheduler uninstallDiffScheduler, List<ComponentUsage> componentUsageList) {
+    private String uninstallDiff(String bundleRootName, JobScheduler uninstallDiffScheduler, List<ComponentUsage> componentUsageList)
+            throws JsonProcessingException {
+
+        Map<String, JobStatus> componentsFeedbackCM = new HashMap<>();
+        Map<String, JobStatus> componentsFeedbackAppEngine = new HashMap<>();
+        Map<String, Map<String, JobStatus>> componentsFeedback = new HashMap<>();
+
+        List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
+
         try {
-            List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
             Optional<EntandoBundleComponentJobEntity> optCompJob = uninstallDiffScheduler.extractFromQueue();
 
             while (optCompJob.isPresent()) {
@@ -436,12 +446,17 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     continue;
                 }
 
+                log.debug("Start uninstalling orphaned components on CM");
                 JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(uninstallDiffJob,
                         installable -> executeUninstallFromEcr(installable, "UNINSTALL"), JobStatus.UNINSTALL_IN_PROGRESS);
+
+                componentsFeedbackCM.put(optCompJob.get().getComponentId(), tracker.getJob().getStatus());
+
                 if (tracker.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
-                    throw new EntandoComponentManagerException(
-                            uninstallDiffJob.getComponentType() + " " + uninstallDiffJob.getComponentId()
-                                    + " uninstall of orphaned components can't proceed due to an error with one of the components");
+                    log.debug("uninstall of orphaned components on cm can't proceed due to an error with one of the components");
+                    componentsFeedback.put("uninstallationOnCM", componentsFeedbackCM);
+                    componentsFeedback.put("uninstallationOnAppEngine", componentsFeedbackAppEngine);
+                    return objectMapper.writeValueAsString(componentsFeedback);
                 }
 
                 uninstallDiffScheduler.recordProcessedComponentJob(tracker.getJob());
@@ -456,19 +471,24 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             // remove from appEngine
-            JobStatus finalStatus = executeDeleteFromAppEngine2(componentToUninstallFromAppEngine);
+            log.debug("Start uninstalling orphaned components on AppEngine");
+            executeDeleteFromAppEngine2(componentToUninstallFromAppEngine);
             log.info("Uninstall operation completed");
 
-            if (JobStatus.UNINSTALL_COMPLETED.equals(finalStatus)) {
-                return null;
-            } else  {
-                return "The uninstallation of orphaned components failed";
-            }
+            componentsFeedbackAppEngine = componentToUninstallFromAppEngine.stream()
+                    .collect(Collectors.toMap(EntandoBundleComponentJobEntity::getComponentId, EntandoBundleComponentJobEntity::getStatus));
+
+            componentsFeedback.put("uninstallationOnCM", componentsFeedbackCM);
+            componentsFeedback.put("uninstallationOnAppEngine", componentsFeedbackAppEngine);
+            return objectMapper.writeValueAsString(componentsFeedback);
 
         } catch (Exception uninstallException) {
             log.error("An error occurred during component uninstall", uninstallException);
-            return "The uninstallation of orphaned components failed";
+            componentsFeedback.put("uninstallationOnCM", componentsFeedbackCM);
+            componentsFeedback.put("uninstallationOnAppEngine", componentsFeedbackAppEngine);
+            return objectMapper.writeValueAsString(componentsFeedback);
         }
+
     }
 
     private Map<String, ComponentInstallPlan> calculateDiffMap(Map<String, ComponentInstallPlan> currentMap, Map<String, ComponentInstallPlan> latestMap) {
