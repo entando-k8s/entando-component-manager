@@ -436,8 +436,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     continue;
                 }
 
-                // TODO: is it necessary?
-                //  if (isUninstallable(uninstallDiffJob)) {
                 JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(uninstallDiffJob,
                         installable -> executeUninstallFromEcr(installable, "UNINSTALL"), JobStatus.UNINSTALL_IN_PROGRESS);
                 if (tracker.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
@@ -453,8 +451,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                         .findFirst()
                         .ifPresent(matchingComponent -> componentToUninstallFromAppEngine.add(tracker.getJob()));
 
-                // }
                 optCompJob = uninstallDiffScheduler.extractFromQueue();
+
             }
 
             // remove from appEngine
