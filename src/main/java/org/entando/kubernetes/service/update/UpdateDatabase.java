@@ -71,11 +71,12 @@ public class UpdateDatabase implements IUpdateDatabase {
             ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
             Resource[] allResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
 
-            if (allResources != null
-                    || allResources.length == 0) {
+            if (allResources.length == 0) {
+                // resource in the filesystem - we only need the path of the changelog
                 Resource master = resourceLoader.getResource("classpath:db/changelog/db.changelog-master.yaml");
                 changelog = master.getFile();
             } else {
+                // inside a JAR
                 for (Resource resource: allResources) {
                     String uri = resource.getURI().toString();
                     uri = uri.substring(uri.lastIndexOf("/db/"));

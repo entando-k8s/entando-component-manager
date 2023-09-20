@@ -8,7 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
 
+@ActiveProfiles({"test"})
 public class UpdateUtilsTest {
 
     @Test
@@ -28,9 +30,7 @@ public class UpdateUtilsTest {
 
     @Test
     void testNullArgs() {
-        Exception exception = assertThrows(NullPointerException.class, () -> {
-            getSchemaFromJdbc(null);
-        });
+        assertThrows(NullPointerException.class, () -> getSchemaFromJdbc(null));
     }
 
 }
