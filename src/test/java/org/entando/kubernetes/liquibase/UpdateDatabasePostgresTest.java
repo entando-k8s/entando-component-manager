@@ -10,10 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
 import liquibase.Liquibase;
 import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
@@ -103,7 +100,7 @@ class UpdateDatabasePostgresTest {
     }
 
     @Test
-    void testUpdateDatabaseWithMasterChangelog() throws IOException, LiquibaseException, ParserConfigurationException {
+    void testUpdateDatabaseWithMasterChangelog() throws Exception {
         TenantConfigRwDto cfg = getTenantForTest(referenceDatabase, null);
 
         assertTrue(updateDatabase.isTenantDbUpdatePending(cfg));
@@ -131,7 +128,7 @@ class UpdateDatabasePostgresTest {
     }
 
     @Test
-    void evaluateDiffBetweenDatabases() throws LiquibaseException, ParserConfigurationException, IOException {
+    void evaluateDiffBetweenDatabases() throws Exception {
         final String DIFF_CHANGELOG_FILE = "diff.xml";
 
         updateDatabase.generateDiff(getTenantForTest(referenceDatabase, null),
@@ -142,7 +139,7 @@ class UpdateDatabasePostgresTest {
     }
 
     @Test
-    void evaluateDiffWithCmDatabase() throws LiquibaseException, ParserConfigurationException, IOException, SQLException {
+    void evaluateDiffWithCmDatabase() throws Exception {
         final String DIFF_CHANGELOG_FILE = "diff2.xml";
 
         updateDatabase.generateDiff(getTenantForTest(targetDatabase, null), DIFF_CHANGELOG_FILE);

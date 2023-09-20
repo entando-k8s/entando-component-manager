@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -24,13 +25,11 @@ import liquibase.diff.output.changelog.DiffToChangeLog;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
-import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -58,7 +57,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     @PostConstruct
-    public void checkOnStart() throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
+    public void checkOnStart() throws Exception {
         log.info("Starting schema update check...");
         // copy the Liquibase resources in a safe place
         copyLiquibaseResources();
@@ -95,7 +94,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     private void checkForDbSchemaUpdate()
-            throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
+            throws Exception {
         // .forEach(this::updateTenantDatabase);
         for (TenantConfigDTO cfg : tenantConfigs) {
             if (!cfg.getTenantCode().equals(PRIMARY_TENANT)) {
@@ -104,10 +103,25 @@ public class UpdateDatabase implements IUpdateDatabase {
         }
     }
 
-    private Database createTenantDatasource(TenantConfigDTO config) throws DatabaseException {
-        final String driver = DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName();
-        ResourceAccessor resourceAccessor = new FileSystemResourceAccessor();
+    private Database createTenantDatasource(TenantConfigDTO config) throws Exception {
+        // remove -> final String driver = DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName();
+        // remove -> ResourceAccessor resourceAccessor = new FileSystemResourceAccessor();
 
+
+
+        Connection connection = DriverManager.getConnection(config.getDeDbUrl(), config.getDeDbUsername(),
+                config.getDeDbPassword());
+        JdbcConnection jdbcConnection = new JdbcConnection(connection);
+        Database database = DatabaseFactory.getInstance()
+                .findCorrectDatabaseImplementation(jdbcConnection);
+        final String schema = getSchemaFromJdbc(config.getDeDbUrl());
+        if (StringUtils.isNotBlank(schema)) {
+            log.info("setting schema '{}' for tenant '{}'", schema, config.getTenantCode());
+            database.setLiquibaseSchemaName(schema);
+            database.setDefaultSchemaName(schema);
+        }
+
+        /* keep this for reference!
         Database db = DatabaseFactory.getInstance().openDatabase(
                 config.getDeDbUrl(),
                 config.getDeDbUsername(),
@@ -115,12 +129,15 @@ public class UpdateDatabase implements IUpdateDatabase {
                 driver,
                 null, null, null, resourceAccessor);
 
+
         final String schema = getSchemaFromJdbc(config.getDeDbUrl());
         if (StringUtils.isNotBlank(schema)) {
             log.info("setting schema '{}' for tenant '{}'", schema, config.getTenantCode());
             db.setDefaultSchemaName(schema);
+            db.setLiquibaseSchemaName(schema);
         }
-        return db;
+        */
+        return database;
     }
 
     // FIXME when https://github.com/liquibase/liquibase/pull/2353 is fixed use this method
@@ -132,7 +149,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     } */
 
     private Liquibase createLiquibaseFromTenantDefinition(TenantConfigDTO tenantConfig)
-            throws DatabaseException {
+            throws Exception {
         Database database = createTenantDatasource(tenantConfig);
         String changeLogFilePath =  changelog.getAbsolutePath();
         String changelogPath = changeLogFilePath.substring(0, changeLogFilePath.lastIndexOf('/'));
@@ -143,14 +160,14 @@ public class UpdateDatabase implements IUpdateDatabase {
 
 
     @Override
-    public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws LiquibaseException {
+    public boolean isTenantDbUpdatePending(TenantConfigDTO tenantConfig) throws Exception {
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
             return (!liquibase.listUnrunChangeSets(null, null).isEmpty());
         }
     }
 
     @Override
-    public void updateTenantDatabase(TenantConfigDTO tenantConfig) {
+    public void updateTenantDatabase(TenantConfigDTO tenantConfig) throws Exception {
         log.info("Checking tenant '{}' for schema update", tenantConfig.getTenantCode());
         try (Liquibase liquibase = createLiquibaseFromTenantDefinition(tenantConfig)) {
             if (!liquibase.listUnrunChangeSets(null, null).isEmpty()) {
@@ -166,8 +183,7 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     @Override
-    public void updateTenantDatabaseByDiff(TenantConfigDTO tenantConfig)
-            throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
+    public void updateTenantDatabaseByDiff(TenantConfigDTO tenantConfig) throws Exception {
         final String tmpDiffXmlChangelog = tenantConfig.getTenantCode() + ".xml";
 
         log.info("Checking tenant '{}' for schema update", tenantConfig.getTenantCode());
@@ -185,7 +201,7 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     @Override
     public void generateDiff(TenantConfigDTO tenantConfig, String changelog)
-            throws SQLException, LiquibaseException, ParserConfigurationException, IOException {
+            throws Exception {
         Database referenceDatabase = getCurrentDatabase();
         Database targetDatabase = createTenantDatasource(tenantConfig);
 
@@ -203,7 +219,7 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     @Override
     public void generateDiff(TenantConfigDTO reference, TenantConfigDTO target, String changelog)
-            throws LiquibaseException, ParserConfigurationException, IOException {
+            throws Exception {
 
         deleteIfExists(changelog);
         try {
@@ -222,15 +238,15 @@ public class UpdateDatabase implements IUpdateDatabase {
     }
 
     @Override
-    public void updateDatabase(TenantConfigDTO targetTenant, String changelog) throws LiquibaseException {
+    public void updateDatabase(TenantConfigDTO targetTenant, String changelog) throws Exception {
         Database targetDatabase = createTenantDatasource(targetTenant);
 
-        log.info("updating the tenant database {}:{}", targetTenant.getTenantCode(), targetTenant.getDeDbUrl());
+        log.info("updating the tenant database {}:{}", targetTenant.getTenantCode(), targetDatabase.getConnection().getURL());
         try (Liquibase liquibase = new Liquibase(changelog, new FileSystemResourceAccessor(new File(tempDir)), targetDatabase)) {
             liquibase.clearCheckSums();
             liquibase.update("");
         } catch (LiquibaseException t) {
-            log.error("error updating the target database {}:{}", targetTenant.getTenantCode(), targetTenant.getDeDbUrl());
+            log.error("error updating the target database {}:{}", targetTenant.getTenantCode(), targetDatabase.getConnection().getURL());
             throw t;
         }
     }
