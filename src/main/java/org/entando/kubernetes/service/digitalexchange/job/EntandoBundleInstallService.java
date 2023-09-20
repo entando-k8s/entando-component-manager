@@ -81,6 +81,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     public static final boolean PERFORM_CONCURRENT_CHECKS = true;
     public static final boolean DONT_PERFORM_CONCURRENT_CHECKS = false;
 
+    public enum Operation {
+        ROLLBACK,
+        UNINSTALL
+    }
+
     private final @NonNull EntandoBundleService bundleService;
     private final @NonNull BundleDownloaderFactory downloaderFactory;
     private final @NonNull EntandoBundleJobRepository jobRepo;
@@ -396,7 +401,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
                     JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob,
-                            installable -> executeUninstallFromEcr(installable, "ROLLBACK"), JobStatus.INSTALL_IN_PROGRESS);
+                            installable -> executeUninstallFromEcr(installable, Operation.ROLLBACK), JobStatus.INSTALL_IN_PROGRESS);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
                         throw new EntandoComponentManagerException(
                                 rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
@@ -413,7 +418,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             // remove from appEngine
-            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result, "ROLLBACK");
+            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result, Operation.ROLLBACK);
             result.setStatus(finalStatus);
             log.info("Rollback operation completed");
 
@@ -450,7 +455,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
                 log.debug("Start uninstalling orphaned components on CM");
                 JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(uninstallDiffJob,
-                        installable -> executeUninstallFromEcr(installable, "UNINSTALL"), JobStatus.UNINSTALL_IN_PROGRESS);
+                        installable -> executeUninstallFromEcr(installable, Operation.UNINSTALL), JobStatus.UNINSTALL_IN_PROGRESS);
 
                 componentsFeedbackCM.put(optCompJob.get().getComponentId(), tracker.getJob().getStatus());
 
@@ -474,7 +479,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             // remove from appEngine
             log.debug("Start uninstalling orphaned components on AppEngine");
-            executeDeleteFromAppEngine(componentToUninstallFromAppEngine, "UNINSTALL");
+            executeDeleteFromAppEngine(componentToUninstallFromAppEngine, Operation.UNINSTALL);
             log.info("Uninstall operation completed");
 
             componentsFeedbackAppEngine = componentToUninstallFromAppEngine.stream()
@@ -512,7 +517,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
-                                                 JobResult parentJobResult, String operation) {
+                                                 JobResult parentJobResult, Operation operation) {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
@@ -522,14 +527,14 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
         switch (response.getStatus()) {
             case FAILURE:
-                log.debug("In {} All deletes are in error with response:'{}'", operation.toLowerCase(), response);
+                log.debug("In {} All deletes are in error with response:'{}'", operation, response);
                 if (parentJobResult != null) {
                     bundleUninstallUtility.markGlobalError(parentJobResult, response);
                     bundleUninstallUtility.markSingleErrors(toDelete,response);
                 }
                 return jobInfo.error;
             case PARTIAL_SUCCESS:
-                log.debug("In {} Partial deletes are in error with response:'{}'", operation.toLowerCase(), response);
+                log.debug("In {} Partial deletes are in error with response:'{}'", operation, response);
                 if (parentJobResult != null) {
                     bundleUninstallUtility.markGlobalError(parentJobResult, response);
                     bundleUninstallUtility.markSingleErrors(toDelete,response);
@@ -537,12 +542,12 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 return jobInfo.partial;
             case SUCCESS:
             default:
-                log.debug("In {} all deletes ok with response:'{}'", operation.toLowerCase(), response);
+                log.debug("In {} all deletes ok with response:'{}'", operation, response);
                 return jobInfo.ok;
         }
     }
 
-    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete, String operation) {
+    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete, Operation operation) {
         return  executeDeleteFromAppEngine(toDelete, null, operation);
     }
 
@@ -719,21 +724,21 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     // TODO: moves the inner class
     @Getter
     public class JobInfo {
-        String operation;
+        Operation operation;
         JobStatus ok;
         JobStatus error;
         JobStatus partial;
         String msg;
 
-        public JobInfo(String operation) {
+        public JobInfo(Operation operation) {
             switch (operation) {
-                case "ROLLBACK":
+                case ROLLBACK:
                     this.ok = JobStatus.INSTALL_ROLLBACK;
                     this.error = JobStatus.INSTALL_ROLLBACK_ERROR;
                     this.partial = JobStatus.INSTALL_ROLLBACK_PARTIAL;
                     this.msg = "rolling back";
                     break;
-                case "UNINSTALL":
+                case UNINSTALL:
                     this.ok = JobStatus.UNINSTALL_COMPLETED;
                     this.error = JobStatus.UNINSTALL_ERROR;
                     this.partial = JobStatus.UNINSTALL_PARTIAL_COMPLETED;
@@ -748,7 +753,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     }
 
-    private JobResult executeUninstallFromEcr(Installable<?> installable, String operation) {
+    private JobResult executeUninstallFromEcr(Installable<?> installable, Operation operation) {
         JobInfo jobInfo = new JobInfo(operation);
         return installable.uninstallFromEcr()
                 .thenApply(vd -> JobResult.builder().status(jobInfo.ok).build())
