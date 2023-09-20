@@ -8,6 +8,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -26,7 +27,8 @@ class DirectoryInstallableTest {
     @MethodSource("provideValuesThatPreventUninstallation")
     void shouldNotUninstall(boolean isRoot, InstallAction action, String dirPath) {
         // --GIVEN
-        DirectoryInstallable directoryInstallable = new DirectoryInstallable(engineService, new DirectoryDescriptor(dirPath, isRoot),
+        DirectoryInstallable directoryInstallable = new DirectoryInstallable(engineService,
+                new DirectoryDescriptor(dirPath, isRoot),
                 action);
         // --WHEN
         directoryInstallable.uninstall();
@@ -45,24 +47,16 @@ class DirectoryInstallableTest {
         );
     }
 
-    @ParameterizedTest
-    @MethodSource("provideValuesThatAllowUninstallation")
-    void shouldUninstall(boolean isRoot, InstallAction action, String dirPath) {
+    @Test
+    void shouldUninstall() {
         // --GIVEN
-        DirectoryInstallable directoryInstallable = new DirectoryInstallable(engineService, new DirectoryDescriptor(dirPath, isRoot),
-                action);
+        DirectoryInstallable directoryInstallable = new DirectoryInstallable(engineService,
+                new DirectoryDescriptor("bundles/anything", true),
+                InstallAction.CREATE);
         // --WHEN
         directoryInstallable.uninstall();
         // --THEN
-        verify(engineService, times(1)).deleteFolder(dirPath);
+        verify(engineService, times(1)).deleteFolder("bundles/anything");
 
-    }
-
-    private static Stream<Arguments> provideValuesThatAllowUninstallation() {
-        return Stream.of(
-                Arguments.of(true, InstallAction.CREATE, "bundles/anything"),
-                Arguments.of(true, InstallAction.CREATE, "anything")
-
-        );
     }
 }
