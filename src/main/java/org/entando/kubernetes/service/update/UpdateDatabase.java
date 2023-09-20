@@ -1,6 +1,7 @@
 package org.entando.kubernetes.service.update;
 
 import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TENANT;
+import static org.entando.kubernetes.service.update.UpdateUtils.getSchemaFromJdbc;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,10 +27,12 @@ import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -42,12 +45,16 @@ public class UpdateDatabase implements IUpdateDatabase {
     private File changelog;
 
     private final DataSource referenceDataSource;
+
+    private final ResourceLoader resourceLoader;
+
     final String tempDir = System.getProperty("java.io.tmpdir");
 
     public UpdateDatabase(@Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs,
-            DataSource referenceDataSource) {
+            DataSource referenceDataSource, ResourceLoader resourceLoader) {
         this.tenantConfigs = tenantConfigs;
         this.referenceDataSource = referenceDataSource;
+        this.resourceLoader = resourceLoader;
     }
 
     @PostConstruct
@@ -59,20 +66,27 @@ public class UpdateDatabase implements IUpdateDatabase {
         log.info("schema update check completed");
     }
 
-    public void copyLiquibaseResources() {
+    private void copyLiquibaseResources() {
         try {
             ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
             Resource[] allResources = resourcePatResolver.getResources("classpath:db/**/*.yaml");
-            for (Resource resource: allResources) {
-                String uri = resource.getURI().toString();
-                uri = uri.substring(uri.lastIndexOf("/db/"));
-                String tmpFolder = System.getProperty("java.io.tmpdir");
-                Path destinationFile = Path.of(tmpFolder, uri);
 
-                if (destinationFile.getFileName().endsWith("db.changelog-master.yaml")) {
-                    changelog = destinationFile.toFile();
+            if (allResources != null
+                    || allResources.length == 0) {
+                Resource master = resourceLoader.getResource("classpath:db/changelog/db.changelog-master.yaml");
+                changelog = master.getFile();
+            } else {
+                for (Resource resource: allResources) {
+                    String uri = resource.getURI().toString();
+                    uri = uri.substring(uri.lastIndexOf("/db/"));
+                    String tmpFolder = System.getProperty("java.io.tmpdir");
+                    Path destinationFile = Path.of(tmpFolder, uri);
+
+                    if (destinationFile.getFileName().endsWith("db.changelog-master.yaml")) {
+                        changelog = destinationFile.toFile();
+                    }
+                    FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
                 }
-                FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
             }
         } catch (IOException e) {
             log.error("Error copying Liquibase resources", e);
@@ -93,12 +107,19 @@ public class UpdateDatabase implements IUpdateDatabase {
         final String driver = DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName();
         ResourceAccessor resourceAccessor = new FileSystemResourceAccessor();
 
-        return DatabaseFactory.getInstance().openDatabase(
+        Database db = DatabaseFactory.getInstance().openDatabase(
                 config.getDeDbUrl(),
                 config.getDeDbUsername(),
                 config.getDeDbPassword(),
                 driver,
                 null, null, null, resourceAccessor);
+
+        String schema = getSchemaFromJdbc(config.getDeDbUrl());
+        if (StringUtils.isNotBlank(schema)) {
+            log.info("setting schema '{}' for tenant '{}'", schema, config.getTenantCode());
+            db.setDefaultCatalogName(schema);
+        }
+        return db;
     }
 
     // FIXME when https://github.com/liquibase/liquibase/pull/2353 is fixed use this method
@@ -156,7 +177,7 @@ public class UpdateDatabase implements IUpdateDatabase {
             updateDatabase(tenantConfig, tmpDiffXmlChangelog);
             log.info("schema updated completed for tenant '{}'", tenantConfig.getTenantCode());
         } catch (LiquibaseException | SQLException | ParserConfigurationException | IOException e) {
-            log.error("error updating tenant schema '{}", tenantConfig.getTenantCode(), e);
+            log.error("error updating tenant schema '{}'", tenantConfig.getTenantCode(), e);
             throw e;
         }
     }
@@ -218,8 +239,12 @@ public class UpdateDatabase implements IUpdateDatabase {
         log.info("generating database diff between {} and {}", referenceDatabase.getConnection().getURL(),
                 targetDatabase.getConnection().getURL());
         deleteIfExists(changelog);
+
         try (Liquibase liquibase = new Liquibase("", new FileSystemResourceAccessor(new File(tempDir)), referenceDatabase)) {
             DiffResult diffResult = liquibase.diff(referenceDatabase, targetDatabase, new CompareControl());
+            // leave only elements not present in target database
+            diffResult.getChangedObjects().clear();
+            diffResult.getUnexpectedObjects().clear();
             DiffToChangeLog diffChangelog = new DiffToChangeLog(diffResult, new DiffOutputControl());
             final String changelogTmpFile = Path.of(tempDir, changelog).toString();
             log.info("changelog produced in {}", changelogTmpFile);

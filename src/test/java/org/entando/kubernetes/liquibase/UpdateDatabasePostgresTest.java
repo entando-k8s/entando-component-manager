@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -103,26 +104,26 @@ class UpdateDatabasePostgresTest {
 
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws IOException, LiquibaseException, ParserConfigurationException {
-        TenantConfigRwDto cfg = getTenantForTest(referenceDatabase);
+        TenantConfigRwDto cfg = getTenantForTest(referenceDatabase, null);
 
         assertTrue(updateDatabase.isTenantDbUpdatePending(cfg));
         updateDatabase.updateTenantDatabase(cfg);
         assertFalse(updateDatabase.isTenantDbUpdatePending(cfg));
 
         final String DIFF_CHANGELOG_FILE = "onTheFlyUpdate.xml";
-        updateDatabase.generateDiff(getTenantForTest(referenceDatabase),
-                getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
+        updateDatabase.generateDiff(getTenantForTest(referenceDatabase, null),
+                getTenantForTest(targetDatabase, null), DIFF_CHANGELOG_FILE);
         File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
         assertTrue(changelog.exists());
         testChangeSet(DIFF_CHANGELOG_FILE, targetDatabase, false);
 
         // update
-        updateDatabase.updateDatabase(getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
+        updateDatabase.updateDatabase(getTenantForTest(targetDatabase, null), DIFF_CHANGELOG_FILE);
 
         // check the diff again
         final String NO_DIFF_CHANGELOG_FILE = "lastStep.xml";
-        updateDatabase.generateDiff(getTenantForTest(referenceDatabase),
-                getTenantForTest(targetDatabase), NO_DIFF_CHANGELOG_FILE);
+        updateDatabase.generateDiff(getTenantForTest(referenceDatabase, null),
+                getTenantForTest(targetDatabase, null), NO_DIFF_CHANGELOG_FILE);
         File noDiffChangelog = new File(TMP_DIR + File.separator + NO_DIFF_CHANGELOG_FILE);
         assertTrue(noDiffChangelog.exists());
 
@@ -133,17 +134,18 @@ class UpdateDatabasePostgresTest {
     void evaluateDiffBetweenDatabases() throws LiquibaseException, ParserConfigurationException, IOException {
         final String DIFF_CHANGELOG_FILE = "diff.xml";
 
-        updateDatabase.generateDiff(getTenantForTest(referenceDatabase),
-                getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
+        updateDatabase.generateDiff(getTenantForTest(referenceDatabase, null),
+                getTenantForTest(targetDatabase, null), DIFF_CHANGELOG_FILE);
         File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
         assertTrue(changelog.exists());
+        testChangeSet(DIFF_CHANGELOG_FILE, targetDatabase, true);
     }
 
     @Test
     void evaluateDiffWithCmDatabase() throws LiquibaseException, ParserConfigurationException, IOException, SQLException {
         final String DIFF_CHANGELOG_FILE = "diff2.xml";
 
-        updateDatabase.generateDiff(getTenantForTest(targetDatabase), DIFF_CHANGELOG_FILE);
+        updateDatabase.generateDiff(getTenantForTest(targetDatabase, null), DIFF_CHANGELOG_FILE);
         File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
         assertTrue(changelog.exists());
         testChangeSet(DIFF_CHANGELOG_FILE, targetDatabase, false);
@@ -155,10 +157,12 @@ class UpdateDatabasePostgresTest {
         final PostgreSQLContainer<?> yetAnotherDatabase = new PostgreSQLContainer<>("postgres:14")
                 .withDatabaseName(DATABASE)
                 .withUsername(USERNAME)
-                .withPassword(PASSWORD);
+                .withPassword(PASSWORD)
+                .withInitScript("db/init-postgres-schema.sql");
         yetAnotherDatabase.start();
         try {
-            updateDatabase.updateTenantDatabaseByDiff(getTenantForTest(yetAnotherDatabase));
+            // change this according to init script
+            updateDatabase.updateTenantDatabaseByDiff(getTenantForTest(yetAnotherDatabase, "test_tenant_schema"));
 
             File changelog = new File(TMP_DIR + File.separator + DIFF_CHANGELOG_FILE);
             assertTrue(changelog.exists());
@@ -173,11 +177,23 @@ class UpdateDatabasePostgresTest {
     }
 
     @NotNull
-    private static TenantConfigRwDto getTenantForTest(PostgreSQLContainer<?> container) {
+    // currentSchema works with Postgres and Oracle
+    private static TenantConfigRwDto getTenantForTest(PostgreSQLContainer<?> container, String schema) {
         TenantConfigRwDto cfg = new TenantConfigRwDto();
+        StringBuilder jdbc = new StringBuilder(container.getJdbcUrl());
 
+        if (StringUtils.isNotBlank(schema)) {
+
+            if (container.getJdbcUrl().contains("?")) {
+                jdbc.append("&");
+            } else {
+                jdbc.append("?");
+            }
+            jdbc.append("currentSchema=");
+            jdbc.append(schema);
+        }
         cfg.setTenantCode("TestTenant");
-        cfg.setDeDbUrl(container.getJdbcUrl());
+        cfg.setDeDbUrl(jdbc.toString());
         cfg.setDeDbUsername(USERNAME);
         cfg.setDeDbPassword(PASSWORD);
         return cfg;
@@ -185,7 +201,7 @@ class UpdateDatabasePostgresTest {
 
     private void testChangeSet(String changelogFile, PostgreSQLContainer<?> database, boolean isZero) throws LiquibaseException {
         final String TMP_DIR = System.getProperty("java.io.tmpdir");
-        final Database targetDb = createTenantDatasource(getTenantForTest(database));
+        final Database targetDb = createTenantDatasource(getTenantForTest(database, null));
         final List<ChangeSet> changesets;
         try (Liquibase liquibase = new Liquibase(changelogFile, new FileSystemResourceAccessor(new File(TMP_DIR)), targetDb)) {
             changesets = liquibase.getDatabaseChangeLog().getChangeSets();
