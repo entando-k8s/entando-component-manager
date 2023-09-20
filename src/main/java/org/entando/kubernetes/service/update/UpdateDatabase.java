@@ -115,10 +115,10 @@ public class UpdateDatabase implements IUpdateDatabase {
                 driver,
                 null, null, null, resourceAccessor);
 
-        String schema = getSchemaFromJdbc(config.getDeDbUrl());
+        final String schema = getSchemaFromJdbc(config.getDeDbUrl());
         if (StringUtils.isNotBlank(schema)) {
             log.info("setting schema '{}' for tenant '{}'", schema, config.getTenantCode());
-            db.setDefaultCatalogName(schema);
+            db.setDefaultSchemaName(schema);
         }
         return db;
     }

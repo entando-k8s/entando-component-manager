@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Entando
+      changes:
+        - createTable:
+            tableName: mt_entando_table-5
+            columns:
+              - column:
+                  name: test_column
+                  type: INT
+                  constraints:
+                    primaryKey:  true
+                    nullable:  false
