@@ -341,37 +341,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
                 Queue<Installable> bundleInstallableComponentsDiff = getBundleInstallableComponents(latestBundleReader, conflictStrategy, diff);
 
-                Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff = bundleInstallableComponentsDiff.stream()
-                        .filter(i -> {
-                            if (i.getRepresentation() instanceof WidgetDescriptor) {
-                                WidgetDescriptor wd = (WidgetDescriptor) i.getRepresentation();
-                                return TYPE_WIDGET_APPBUILDER.equals(wd.getType());
-                            }
-                            return false;
-                        })
-                        .map(i -> {
-                            EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
-                            cj.setParentJob(parentJob);
-                            cj.setComponentType(i.getComponentType());
-                            cj.setComponentId(i.getName());
-                            cj.setChecksum(i.getChecksum());
-                            cj.setInstallable(i);
-                            cj.setAction(i.getAction());
-                            return cj;
-                        })
-                        .collect(Collectors.toCollection(ArrayDeque::new));
 
-                List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
-                List<ComponentUsage> componentUsageList = usageService.getComponentsUsageDetails(componentJobListDiff).stream()
-                        .filter(componentUsage -> {
-                            if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
-                                log.debug(String.format(
-                                        "Component '%s' is not found or contains external references so it can't be uninstalled",
-                                        componentUsage.getCode()));
-                                return false;
-                            }
-                            return true;
-                        }).collect(Collectors.toList());
+                Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff = getBundleComponentJobEntityQueue(parentJob, bundleInstallableComponentsDiff);
+
+                List<ComponentUsage> componentUsageList = getComponentUsageList(componentJobQueueDiff);
 
                 JobScheduler schedulerDiff = new JobScheduler();
                 schedulerDiff.queuePrimaryComponents(componentJobQueueDiff);
@@ -380,7 +353,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 return uninstallDiff(bundleRootFolder, schedulerDiff, componentUsageList);
 
             } else {
-                String warnings = "The unistallation of orphaned components is not necessary since the bundle is not installed on the system";
+                String warnings = "The uninstallation of orphaned components is not necessary since the bundle is not installed on the system";
                 log.debug(warnings);
                 return warnings;
             }
@@ -390,6 +363,45 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             return error;
         }
 
+    }
+
+    private List<ComponentUsage> getComponentUsageList(Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff) {
+        List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
+        List<ComponentUsage> componentUsageList = usageService.getComponentsUsageDetails(componentJobListDiff).stream()
+                .filter(componentUsage -> {
+                    if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
+                        log.debug(String.format(
+                                "Component '%s' is not found or contains external references so it can't be uninstalled",
+                                componentUsage.getCode()));
+                        return false;
+                    }
+                    return true;
+                }).collect(Collectors.toList());
+        return componentUsageList;
+    }
+
+    private static Queue<EntandoBundleComponentJobEntity> getBundleComponentJobEntityQueue(EntandoBundleJobEntity parentJob,
+                                                                                           Queue<Installable> bundleInstallableComponentsDiff) {
+        Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff = bundleInstallableComponentsDiff.stream()
+                .filter(i -> {
+                    if (i.getRepresentation() instanceof WidgetDescriptor) {
+                        WidgetDescriptor wd = (WidgetDescriptor) i.getRepresentation();
+                        return TYPE_WIDGET_APPBUILDER.equals(wd.getType());
+                    }
+                    return false;
+                })
+                .map(i -> {
+                    EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
+                    cj.setParentJob(parentJob);
+                    cj.setComponentType(i.getComponentType());
+                    cj.setComponentId(i.getName());
+                    cj.setChecksum(i.getChecksum());
+                    cj.setInstallable(i);
+                    cj.setAction(i.getAction());
+                    return cj;
+                })
+                .collect(Collectors.toCollection(ArrayDeque::new));
+        return componentJobQueueDiff;
     }
 
     private JobResult rollback(JobScheduler scheduler, JobResult result) {
