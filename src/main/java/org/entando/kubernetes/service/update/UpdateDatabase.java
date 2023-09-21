@@ -207,7 +207,6 @@ public class UpdateDatabase implements IUpdateDatabase {
 
     @Override
     public void updateDatabase(TenantConfigDTO targetTenant, String changelog) throws LiquibaseException, SQLException {
-
         Database targetDatabase = createTenantDatasource(targetTenant);
 
         log.info("updating the tenant database {}:{}", targetTenant.getTenantCode(),
