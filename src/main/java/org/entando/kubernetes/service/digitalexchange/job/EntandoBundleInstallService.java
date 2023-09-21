@@ -329,12 +329,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         try {
             Optional<EntandoBundleJobEntity> latestBundleJob = jobRepo
                     .findFirstByComponentIdAndStatusOrderByStartedAtDesc(parentJob.getComponentId(), JobStatus.INSTALL_COMPLETED);
-            String version = latestBundleJob.get().getComponentVersion();
-            EntandoDeBundleTag latestTag = BundleUtilities.getBundleTagOrFail(bundle, version);
-            BundleDownloader latestBundleDownloader = downloaderFactory.newDownloader(latestTag);
-            BundleReader latestBundleReader = this.downloadBundleAndGetBundleReader(latestBundleDownloader, bundle, latestTag);
 
             if (latestBundleJob.isPresent()) {
+                EntandoDeBundleTag latestTag = BundleUtilities.getBundleTagOrFail(bundle, latestBundleJob.get().getComponentVersion());
+                BundleDownloader latestBundleDownloader = downloaderFactory.newDownloader(latestTag);
+                BundleReader latestBundleReader = this.downloadBundleAndGetBundleReader(latestBundleDownloader, bundle, latestTag);
                 String latestInstallPlanString = latestBundleJob.get().getInstallPlan();
                 InstallPlan latestInstallPlan = objectMapper.readValue(latestInstallPlanString, InstallPlan.class);
                 InstallPlan diff = calculateDiffInstallPlan(installPlan, latestInstallPlan);
@@ -367,7 +366,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
     private List<ComponentUsage> getComponentUsageList(Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff) {
         List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
-        List<ComponentUsage> componentUsageList = usageService.getComponentsUsageDetails(componentJobListDiff).stream()
+        return usageService.getComponentsUsageDetails(componentJobListDiff).stream()
                 .filter(componentUsage -> {
                     if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
                         log.debug(String.format(
@@ -377,12 +376,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     }
                     return true;
                 }).collect(Collectors.toList());
-        return componentUsageList;
     }
 
     private static Queue<EntandoBundleComponentJobEntity> getBundleComponentJobEntityQueue(EntandoBundleJobEntity parentJob,
                                                                                            Queue<Installable> bundleInstallableComponentsDiff) {
-        Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff = bundleInstallableComponentsDiff.stream()
+        return bundleInstallableComponentsDiff.stream()
                 .filter(i -> {
                     if (i.getRepresentation() instanceof WidgetDescriptor) {
                         WidgetDescriptor wd = (WidgetDescriptor) i.getRepresentation();
@@ -401,7 +399,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     return cj;
                 })
                 .collect(Collectors.toCollection(ArrayDeque::new));
-        return componentJobQueueDiff;
     }
 
     private JobResult rollback(JobScheduler scheduler, JobResult result) {
