@@ -123,7 +123,6 @@ class UpdateDatabasePostgresTest {
                 getTenantForTest(targetDatabase, null), NO_DIFF_CHANGELOG_FILE);
         File noDiffChangelog = new File(TMP_DIR + File.separator + NO_DIFF_CHANGELOG_FILE);
         assertTrue(noDiffChangelog.exists());
-
         testChangeSet(NO_DIFF_CHANGELOG_FILE, targetDatabase, true);
     }
 
@@ -222,6 +221,7 @@ class UpdateDatabasePostgresTest {
                 driver,
                 null, null, null, resourceAccessor);
     }
+
 
     @Data
     @EqualsAndHashCode
