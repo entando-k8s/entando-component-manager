@@ -6,6 +6,7 @@ import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Slf4j
 public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
@@ -23,7 +24,10 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
 
     @Override
     public boolean shouldUninstallFromAppEngine() {
-        boolean shouldCallDelete = this.representation.isRoot() && shouldCreate();
+        boolean shouldCallDelete = this.representation.isRoot()
+                && shouldCreate()
+                // 'bundles' is the root directory and should not be deleted
+                && !BundleUtilities.BUNDLES_FOLDER.equalsIgnoreCase(getName());
         log.debug("should delete:'{}' element type:'DIRECTORY' name:'{}'", shouldCallDelete, getName());
         return shouldCallDelete;
     }
