@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20230917000001
+      author: l.sportelli@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: entando_bundle_component_jobs
+      changes:
+        - addColumn:
+            tableName: entando_bundle_component_jobs
+            columns:
+              - column:
+                  name: test
+                  type: INT
+                  defaultValue: null
