@@ -6,6 +6,7 @@ import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.DirectoryDescriptor;
+import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 
 @Slf4j
 public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
@@ -27,7 +28,8 @@ public class DirectoryInstallable extends Installable<DirectoryDescriptor> {
     @Override
     public CompletableFuture<Void> uninstall() {
         return CompletableFuture.runAsync(() -> {
-            if (this.representation.isRoot() && shouldCreate()) {
+            if (this.representation.isRoot() && shouldCreate() && !BundleUtilities.BUNDLES_FOLDER.equalsIgnoreCase(
+                    getName())) {
                 log.info("Removing directory {}", this.representation.getName());
                 engineService.deleteFolder(this.representation.getName());
             }
