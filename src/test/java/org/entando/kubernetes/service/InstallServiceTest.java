@@ -941,15 +941,22 @@ public class InstallServiceTest {
         bundle.getMetadata().setName(BUNDLE_ID);
         bundle.getMetadata().setAnnotations(Map.of("entando.org/pbc", BundleInfoStubHelper.PBC_ANNOTATION_VALUE));
 
+        List<String> versions =  Collections.emptyList();
+        List<EntandoDeBundleTag> tags =  Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(BUNDLE_VERSION)
+                .withTarball(BundleStatusItemStubHelper.ID_DEPLOYED).build());
+
+        if (version != null) {
+            versions =  List.of(version);
+            tags =  Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(version)
+                    .withTarball(BundleStatusItemStubHelper.ID_DEPLOYED).build());
+        }
+
         EntandoDeBundleSpec bundleSpec = new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
                 .withName(BUNDLE_TITLE)
-                .withVersions(version == null ? Collections.emptyList() : List.of(version))
+                .withVersions(versions)
                 .endDetails()
-                .withTags(
-                        version == null ? Collections.emptyList() :
-                        Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(version)
-                                .withTarball(BundleStatusItemStubHelper.ID_DEPLOYED).build()))
+                .withTags(tags)
                 .build();
 
         bundle.setSpec(bundleSpec);
