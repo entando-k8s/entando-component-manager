@@ -14,6 +14,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDelete;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteResponseStatus;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse.EntandoCoreComponentDeleteStatus;
+import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -68,6 +71,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTagBuilder;
+import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
@@ -659,6 +663,255 @@ public class InstallServiceTest {
         assertThat(value.getPbcList()).isEqualTo(BundleInfoStubHelper.GROUPS_NAME.stream().collect(Collectors.joining(",")));
     }
 
+    @Test
+    public void shouldNotUninstallOrphanedComponents() throws JsonProcessingException {
+        processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
+        processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                widgetDescriptorValidator));
+        reportableComponentProcessorList.add(
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                        widgetDescriptorValidator));
+
+        configureTheAnalysisReportStrategies();
+
+        EntandoDeBundle bundle = getTestBundle("1.0.0");
+
+        EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
+                .bundleCode(bundle.getMetadata().getName())
+                .name(bundle.getSpec().getDetails().getName())
+                .build();
+
+        EntandoBundleJobEntity testBundleJob = getJobTestBundle(bundle);
+
+        // when bundle is not installed
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
+        when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
+
+        EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0));
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        List<Double> progress = getJobProgress();
+        assertThat(progress).containsExactly(0.0, 0.14, 0.28, 0.42, 0.56, 0.7, 0.84, 0.98, 1.0);
+
+        EntandoBundleJobEntity bundleJobEntity = jobRepository.getOne(job.getId());
+        assertThat(bundleJobEntity.getInstallWarnings()).contains("is not necessary since the bundle is not installed on the system");
+
+        // when AppEngine return FAILURE
+        var downloadedBundle = new DownloadedBundle(Paths.get(InstallServiceTest.class.getResource("/bundle-v5-with-widget-app-builder").getFile()), "");
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
+        when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
+        when(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(any(), any())).thenReturn(Optional.of(testBundleJob));
+
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(
+                Arrays.asList(ComponentUsage.builder()
+                        .code("todomvc_widget-f4a9c678")
+                        .type(ComponentType.WIDGET)
+                        .exist(true).hasExternal(false)
+                        .references(List.of()).usage(0).build()));
+
+        when(coreClient.deleteComponents(
+                Arrays.asList(
+                        new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "todomvc_widget-f4a9c678"))))
+                .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.FAILURE).build());
+
+        EntandoBundleJobEntity job2 = installService.install(bundle, bundle.getSpec().getTags().get(0), InstallAction.OVERRIDE);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job2.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        progress = getJobProgress();
+        assertThat(progress).contains(1.0);
+
+        bundleJobEntity = jobRepository.getOne(job2.getId());
+        var objectMapper = new ObjectMapper();
+        var warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
+        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_ERROR}");
+
+
+        // when AppEngine return PARTIAL_SUCCESS
+        when(coreClient.deleteComponents(
+                Arrays.asList(
+                        new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "todomvc_widget-f4a9c678"))))
+                .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.PARTIAL_SUCCESS).build());
+
+        EntandoBundleJobEntity job3 = installService.install(bundle, bundle.getSpec().getTags().get(0), InstallAction.OVERRIDE);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job3.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        progress = getJobProgress();
+        assertThat(progress).contains(1.0);
+
+        bundleJobEntity = jobRepository.getOne(job3.getId());
+        objectMapper = new ObjectMapper();
+        warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
+        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_PARTIAL_COMPLETED}");
+
+    }
+
+    @Test
+    public void shouldUninstallOrphanedComponentSuccessfully() throws JsonProcessingException {
+        reportableComponentProcessorList.add(
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                        widgetDescriptorValidator));
+
+        configureTheAnalysisReportStrategies();
+
+        processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                widgetDescriptorValidator));
+
+        EntandoDeBundle bundle = getTestBundle("1.0.0");
+
+        EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
+                .bundleCode(bundle.getMetadata().getName())
+                .name(bundle.getSpec().getDetails().getName())
+                .build();
+
+        EntandoBundleJobEntity testBundleJob = getJobTestBundle(bundle);
+
+        // when component exists either in Ecr and AppEngine
+        var downloadedBundle = new DownloadedBundle(Paths.get(InstallServiceTest.class.getResource("/bundle-v5-with-widget-app-builder").getFile()), "");
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
+        when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
+        when(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(any(), any())).thenReturn(Optional.of(testBundleJob));
+
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(
+                Arrays.asList(ComponentUsage.builder()
+                        .code("todomvc_widget-f4a9c678")
+                        .type(ComponentType.WIDGET)
+                        .exist(true).hasExternal(false)
+                        .references(List.of()).usage(0).build()));
+
+        when(coreClient.deleteComponents(
+                Arrays.asList(
+                new EntandoCoreComponentDeleteRequest(ComponentType.WIDGET, "todomvc_widget-f4a9c678"))))
+                .thenReturn(EntandoCoreComponentDeleteResponse.builder().status(
+                        EntandoCoreComponentDeleteResponseStatus.SUCCESS).build());
+
+        EntandoBundleJobEntity job = installService.install(bundle, bundle.getSpec().getTags().get(0), InstallAction.OVERRIDE);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        List<Double> progress = getJobProgress();
+        assertThat(progress).contains(1.0);
+
+        EntandoBundleJobEntity bundleJobEntity = jobRepository.getOne(job.getId());
+        var objectMapper = new ObjectMapper();
+        var warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
+        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+
+        // when component exists in Ecr but not in AppEngine
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(
+                Arrays.asList(ComponentUsage.builder()
+                        .code("todomvc_widget-f4a9c678")
+                        .type(ComponentType.WIDGET)
+                        .exist(false).hasExternal(false)
+                        .references(List.of()).usage(0).build()));
+
+
+        EntandoBundleJobEntity job2 = installService.install(bundle, bundle.getSpec().getTags().get(0), InstallAction.OVERRIDE);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job2.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        progress = getJobProgress();
+        assertThat(progress).contains(1.0);
+
+        bundleJobEntity = jobRepository.getOne(job2.getId());
+        objectMapper = new ObjectMapper();
+        warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
+        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{}");
+
+    }
+
+    @Test
+    public void shouldStopUninstallOrphanedComponentWhenUninstallOnEcrReturnsError() throws JsonProcessingException {
+        reportableComponentProcessorList.add(
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                        widgetDescriptorValidator));
+
+        configureTheAnalysisReportStrategies();
+
+        processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                widgetDescriptorValidator));
+
+        EntandoDeBundle bundle = getTestBundle("1.0.0");
+
+        EntandoBundleEntity testEntity = EntandoBundleEntity.builder()
+                .bundleCode(bundle.getMetadata().getName())
+                .name(bundle.getSpec().getDetails().getName())
+                .build();
+
+        EntandoBundleJobEntity testBundleJob = getJobTestBundle(bundle);
+
+        var downloadedBundle = new DownloadedBundle(Paths.get(InstallServiceTest.class.getResource("/bundle-v5-with-widget-app-builder").getFile()), "");
+        when(bundleDownloader.saveBundleLocally(any(), any())).thenReturn(downloadedBundle);
+        when(bundleService.convertToEntityFromEcr(any())).thenReturn(testEntity);
+        when(jobRepository.findFirstByComponentIdAndStatusOrderByStartedAtDesc(any(), any())).thenReturn(Optional.of(testBundleJob));
+
+
+        when(usageService.getComponentsUsageDetails(any())).thenReturn(
+                Arrays.asList(ComponentUsage.builder()
+                        .code("todomvc_widget-f4a9c678")
+                        .type(ComponentType.WIDGET)
+                        .exist(false).hasExternal(false)
+                        .references(List.of()).usage(0).build()));
+
+        when(componentDataRepository.findByComponentTypeAndComponentCode(ComponentType.WIDGET, "todomvc_widget-f4a9c678"))
+                .thenReturn(Optional.of(new ComponentDataEntity().setComponentName("todomvc_widget-f4a9c678")));
+
+        doThrow(RuntimeException.class).when(componentDataRepository).delete(any());
+
+        EntandoBundleJobEntity job3 = installService.install(bundle, bundle.getSpec().getTags().get(0), InstallAction.OVERRIDE);
+
+        await().atMost(5, TimeUnit.MINUTES)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> jobRepository.getOne(job3.getId()).getStatus().isOfType(JobType.FINISHED));
+
+        var progress = getJobProgress();
+        assertThat(progress).contains(1.0);
+
+        var bundleJobEntity = jobRepository.getOne(job3.getId());
+        var objectMapper = new ObjectMapper();
+        var warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
+        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_ERROR}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{}");
+
+    }
+
+    public String createLatestInstallPlan() throws JsonProcessingException {
+        var widget = new HashMap<String, ComponentInstallPlan>();
+        widget.put("WidThree", new ComponentInstallPlan());
+        var installPlan = new InstallPlan().setWidgets(widget);
+        return new ObjectMapper().writeValueAsString(installPlan);
+    }
+
+    private void configureTheAnalysisReportStrategies() {
+        // instruct the strategy map with stub data
+        analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_ENGINE,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper
+                        .stubFullEngineAnalysisReport());
+        analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_CMS,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper
+                        .getCmsAnalysisReport());
+        analysisReportStrategies.put(ReportableRemoteHandler.ENTANDO_K8S_SERVICE,
+                (List<Reportable> reportableList) -> AnalysisReportStubHelper
+                        .stubFullK8SServiceAnalysisReport());
+    }
 
     private List<Double> getJobProgress() {
         List<Double> allProgresses = Mockito.mockingDetails(jobRepository).getInvocations()
@@ -683,19 +936,39 @@ public class InstallServiceTest {
         return validProgress;
     }
 
-    private EntandoDeBundle getTestBundle() {
+    private EntandoDeBundle getTestBundle(String version) {
         EntandoDeBundle bundle = new EntandoDeBundle();
         bundle.getMetadata().setName(BUNDLE_ID);
         bundle.getMetadata().setAnnotations(Map.of("entando.org/pbc", BundleInfoStubHelper.PBC_ANNOTATION_VALUE));
+
         EntandoDeBundleSpec bundleSpec = new EntandoDeBundleSpecBuilder()
                 .withNewDetails()
                 .withName(BUNDLE_TITLE)
+                .withVersions(version == null ? Collections.emptyList() : List.of(version))
                 .endDetails()
                 .withTags(
-                        Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(BUNDLE_VERSION)
+                        version == null ? Collections.emptyList() :
+                        Collections.singletonList(new EntandoDeBundleTagBuilder().withVersion(version)
                                 .withTarball(BundleStatusItemStubHelper.ID_DEPLOYED).build()))
                 .build();
+
         bundle.setSpec(bundleSpec);
+
         return bundle;
+    }
+
+    private EntandoDeBundle getTestBundle() {
+        return getTestBundle(null);
+    }
+
+
+    private EntandoBundleJobEntity getJobTestBundle(EntandoDeBundle bundle) throws JsonProcessingException {
+        return EntandoBundleJobEntity.builder()
+                .componentId(bundle.getMetadata().getName())
+                .componentName(bundle.getSpec().getDetails().getName())
+                .componentVersion("1.0.0")
+                .installPlan(createLatestInstallPlan())
+                .status(JobStatus.INSTALL_COMPLETED)
+                .build();
     }
 }

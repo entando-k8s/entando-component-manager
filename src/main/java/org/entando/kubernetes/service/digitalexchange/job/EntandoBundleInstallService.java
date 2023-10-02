@@ -448,7 +448,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         final String uninstallationCMKey = "uninstallationOnCM";
         final String uninstallationAppEngineKey = "uninstallationOnAppEngine";
 
-        List<EntandoBundleComponentJobEntity> componentToUninstallFromAppEngine = new ArrayList<>();
+        List<EntandoBundleComponentJobEntity> componentsToUninstallFromAppEngine = new ArrayList<>();
 
         try {
             Optional<EntandoBundleComponentJobEntity> optCompJob = uninstallDiffScheduler.extractFromQueue();
@@ -480,7 +480,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 componentUsageList.stream()
                         .filter(component -> component.getCode().equals(tracker.getJob().getComponentId()))
                         .findFirst()
-                        .ifPresent(matchingComponent -> componentToUninstallFromAppEngine.add(tracker.getJob()));
+                        .ifPresent(matchingComponent -> componentsToUninstallFromAppEngine.add(tracker.getJob()));
 
                 optCompJob = uninstallDiffScheduler.extractFromQueue();
 
@@ -488,11 +488,22 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             // remove from appEngine
             log.debug("Start uninstalling orphaned components on AppEngine");
-            executeDeleteFromAppEngine(componentToUninstallFromAppEngine, Operation.UNINSTALL);
+
+            JobStatus response;
+            if (!componentsToUninstallFromAppEngine.isEmpty()) {
+                response = executeDeleteFromAppEngine(componentsToUninstallFromAppEngine, Operation.UNINSTALL);
+            } else {
+                response = JobStatus.UNINSTALL_ERROR;
+                log.debug("Nothing of orphaned components to remove on AppEngine");
+            }
+
             log.info("Uninstall operation completed");
 
-            componentsFeedbackAppEngine = componentToUninstallFromAppEngine.stream()
-                    .collect(Collectors.toMap(EntandoBundleComponentJobEntity::getComponentId, EntandoBundleComponentJobEntity::getStatus));
+            componentsFeedbackAppEngine = componentsToUninstallFromAppEngine.stream()
+                    .collect(Collectors.toMap(
+                            EntandoBundleComponentJobEntity::getComponentId,
+                            item -> response
+                    ));
 
             componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
             componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
