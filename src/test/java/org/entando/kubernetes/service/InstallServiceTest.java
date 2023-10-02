@@ -664,7 +664,7 @@ public class InstallServiceTest {
     }
 
     @Test
-    public void shouldNotUninstallOrphanedComponents() throws JsonProcessingException {
+    void shouldNotUninstallOrphanedComponents() throws JsonProcessingException {
         processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
         processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                 widgetDescriptorValidator));
@@ -730,8 +730,8 @@ public class InstallServiceTest {
         bundleJobEntity = jobRepository.getOne(job2.getId());
         var objectMapper = new ObjectMapper();
         var warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
-        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
-        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_ERROR}");
+        assertThat(warnings.get("uninstallationOnCM").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_ERROR}");
 
 
         // when AppEngine return PARTIAL_SUCCESS
@@ -753,13 +753,13 @@ public class InstallServiceTest {
         bundleJobEntity = jobRepository.getOne(job3.getId());
         objectMapper = new ObjectMapper();
         warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
-        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
-        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_PARTIAL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnCM").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_PARTIAL_COMPLETED}");
 
     }
 
     @Test
-    public void shouldUninstallOrphanedComponentSuccessfully() throws JsonProcessingException {
+    void shouldUninstallOrphanedComponentSuccessfully() throws JsonProcessingException {
         reportableComponentProcessorList.add(
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                         widgetDescriptorValidator));
@@ -809,8 +809,8 @@ public class InstallServiceTest {
         EntandoBundleJobEntity bundleJobEntity = jobRepository.getOne(job.getId());
         var objectMapper = new ObjectMapper();
         var warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
-        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
-        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnCM").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
 
         // when component exists in Ecr but not in AppEngine
         when(usageService.getComponentsUsageDetails(any())).thenReturn(
@@ -833,13 +833,13 @@ public class InstallServiceTest {
         bundleJobEntity = jobRepository.getOne(job2.getId());
         objectMapper = new ObjectMapper();
         warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
-        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
-        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{}");
+        assertThat(warnings.get("uninstallationOnCM").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_COMPLETED}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).hasToString("{}");
 
     }
 
     @Test
-    public void shouldStopUninstallOrphanedComponentWhenUninstallOnEcrReturnsError() throws JsonProcessingException {
+    void shouldStopUninstallOrphanedComponentWhenUninstallOnEcrReturnsError() throws JsonProcessingException {
         reportableComponentProcessorList.add(
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
                         widgetDescriptorValidator));
@@ -888,8 +888,8 @@ public class InstallServiceTest {
         var bundleJobEntity = jobRepository.getOne(job3.getId());
         var objectMapper = new ObjectMapper();
         var warnings = objectMapper.readValue(bundleJobEntity.getInstallWarnings(), Map.class);
-        assertThat(warnings.get("uninstallationOnCM").toString()).isEqualTo("{todomvc_widget-f4a9c678=UNINSTALL_ERROR}");
-        assertThat(warnings.get("uninstallationOnAppEngine").toString()).isEqualTo("{}");
+        assertThat(warnings.get("uninstallationOnCM").toString()).hasToString("{todomvc_widget-f4a9c678=UNINSTALL_ERROR}");
+        assertThat(warnings.get("uninstallationOnAppEngine").toString()).hasToString("{}");
 
     }
 
