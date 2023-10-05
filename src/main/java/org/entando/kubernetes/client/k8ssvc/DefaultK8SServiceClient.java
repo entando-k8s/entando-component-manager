@@ -68,6 +68,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String APP_PLUGIN_LINKS_ENDPOINT = "app-plugin-links";
     public static final String ERROR_RETRIEVING_BUNDLE_WITH_NAME = "An error occurred while retrieving bundle with name ";
     public static final String TENANT_CODE_REQUEST_PARAM_NAME = "tenantCode";
+    public static final String PLUGIN_NAME_REQUEST_PARAM_NAME = "name";
     public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
@@ -157,8 +158,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public Optional<PluginConfiguration> getPluginConfiguration(String pluginName) {
         try {
             Link endpoint = traverson.follow(PLUGINS_ENDPOINT)
-                    .follow(Hop.rel(PLUGIN_ENDPOINT).withParameter("name", pluginName))
-                    .follow(Hop.rel("plugin-configuration")).asLink();
+                    .follow(Hop.rel("plugin-configuration").withParameter(PLUGIN_NAME_REQUEST_PARAM_NAME, pluginName))
+                    .asLink();
                     
             UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
                     .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, TenantContextHolder.getCurrentTenantCode())
