@@ -454,7 +454,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldGetPluginConfiguration() throws JsonProcessingException {
+    void shouldGetPluginConfiguration() throws JsonProcessingException {
 
         String pluginName = "3c07adf0-fac54a9f-agenda-bff";
         mockServer.resetMappings();
@@ -473,7 +473,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldGetPluginConfigurationThrowKubernetesClientExceptionOn500Status() throws JsonProcessingException {
+    void shouldGetPluginConfigurationThrowKubernetesClientExceptionOn500Status() throws JsonProcessingException {
 
         String pluginName = "3c07adf0-fac54a9f-agenda-bff";
         mockServer.resetMappings();
@@ -490,7 +490,7 @@ public class K8SServiceClientTest {
     }
 
     @Test
-    public void shouldGetPluginConfigurationReturnEmptyOn404Status() throws JsonProcessingException {
+    void shouldGetPluginConfigurationReturnEmptyOn404Status() throws JsonProcessingException {
 
         String pluginName = "3c07adf0-fac54a9f-agenda-bff";
         mockServer.resetMappings();
