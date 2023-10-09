@@ -357,7 +357,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private List<ComponentUsage> getComponentUsageList(Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff) {
         List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
         return usageService.getComponentsUsageDetails(componentJobListDiff).stream()
-                .filter(componentUsage -> isUninstallableFromAppEngine(componentUsage)).collect(Collectors.toList());
+                .filter(this::isUninstallableFromAppEngine).collect(Collectors.toList());
     }
 
     private boolean isUninstallableFromAppEngine(ComponentUsage componentUsage) {
