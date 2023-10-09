@@ -1,7 +1,5 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
-import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_APPBUILDER;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -257,16 +255,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                         conflictStrategy, installPlan);
 
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
-                        .map(i -> {
-                            EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
-                            cj.setParentJob(parentJob);
-                            cj.setComponentType(i.getComponentType());
-                            cj.setComponentId(i.getName());
-                            cj.setChecksum(i.getChecksum());
-                            cj.setInstallable(i);
-                            cj.setAction(i.getAction());
-                            return cj;
-                        }).collect(Collectors.toCollection(ArrayDeque::new));
+                        .map(i -> createEntandoBundleComponentJobEntity(parentJob, i))
+                        .collect(Collectors.toCollection(ArrayDeque::new));
 
                 scheduler.queuePrimaryComponents(componentJobQueue);
 
@@ -367,38 +357,43 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private List<ComponentUsage> getComponentUsageList(Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff) {
         List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
         return usageService.getComponentsUsageDetails(componentJobListDiff).stream()
-                .filter(componentUsage -> {
-                    if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
-                        log.debug(String.format(
-                                "Component '%s' is not found or contains external references so it can't be uninstalled",
-                                componentUsage.getCode()));
-                        return false;
-                    }
-                    return true;
-                }).collect(Collectors.toList());
+                .filter(componentUsage -> isUninstallableFromAppEngine(componentUsage)).collect(Collectors.toList());
+    }
+
+    private boolean isUninstallableFromAppEngine(ComponentUsage componentUsage) {
+        if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
+            log.debug(String.format(
+                    "Component '%s' is not found or contains external references so it can't be uninstalled",
+                    componentUsage.getCode()));
+            return false;
+        }
+        return true;
     }
 
     private static Queue<EntandoBundleComponentJobEntity> getBundleComponentJobEntityQueue(EntandoBundleJobEntity parentJob,
                                                                                            Queue<Installable> bundleInstallableComponentsDiff) {
         return bundleInstallableComponentsDiff.stream()
-                .filter(i -> {
-                    if (i.getRepresentation() instanceof WidgetDescriptor) {
-                        WidgetDescriptor wd = (WidgetDescriptor) i.getRepresentation();
-                        return TYPE_WIDGET_APPBUILDER.equals(wd.getType());
-                    }
-                    return false;
-                })
-                .map(i -> {
-                    EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
-                    cj.setParentJob(parentJob);
-                    cj.setComponentType(i.getComponentType());
-                    cj.setComponentId(i.getName());
-                    cj.setChecksum(i.getChecksum());
-                    cj.setInstallable(i);
-                    cj.setAction(i.getAction());
-                    return cj;
-                })
+                .filter(i -> isAppBuilderWidget(i))
+                .map(i -> createEntandoBundleComponentJobEntity(parentJob, i))
                 .collect(Collectors.toCollection(ArrayDeque::new));
+    }
+
+    private static boolean isAppBuilderWidget(Installable i) {
+        if (i.getRepresentation() instanceof WidgetDescriptor) {
+            return ((WidgetDescriptor) i.getRepresentation()).isTypeAppBuilder();
+        }
+        return false;
+    }
+
+    private static EntandoBundleComponentJobEntity createEntandoBundleComponentJobEntity(EntandoBundleJobEntity parentJob, Installable i) {
+        EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
+        cj.setParentJob(parentJob);
+        cj.setComponentType(i.getComponentType());
+        cj.setComponentId(i.getName());
+        cj.setChecksum(i.getChecksum());
+        cj.setInstallable(i);
+        cj.setAction(i.getAction());
+        return cj;
     }
 
     private JobResult rollback(JobScheduler scheduler, JobResult result) {
@@ -741,7 +736,6 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 && component.getComponentType() == ComponentType.PLUGIN);
     }
 
-    // TODO: moves the inner class
     @Getter
     public class JobInfo {
         Operation operation;
