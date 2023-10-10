@@ -18,6 +18,7 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
@@ -53,6 +54,8 @@ public class EntandoBundleJobControllerTest {
     private WebApplicationContext context;
     @Autowired
     private EntandoBundleJobRepository jobRepository;
+    @Autowired
+    private InstalledEntandoBundleRepository installedEntandoBundleRepository;
 
     @BeforeEach
     public void setup() {
@@ -60,6 +63,7 @@ public class EntandoBundleJobControllerTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+        installedEntandoBundleRepository.deleteAll();
         jobRepository.deleteAll();
         populateTestDatabase();
     }
