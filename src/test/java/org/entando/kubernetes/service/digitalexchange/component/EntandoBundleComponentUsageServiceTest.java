@@ -3,7 +3,6 @@ package org.entando.kubernetes.service.digitalexchange.component;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -85,8 +84,8 @@ class EntandoBundleComponentUsageServiceTest {
         when(client.getComponentsUsageDetails(anyList()))
                 .thenReturn(entandoCoreComponentUsageList);
         componentDataEntityList.forEach(componentDataEntity -> when(
-                componentDataRepository.findByComponentTypeAndComponentCode(eq(componentDataEntity.getComponentType()),
-                        eq(componentDataEntity.getComponentCode())))
+                componentDataRepository.findByComponentTypeAndComponentCode(componentDataEntity.getComponentType(),
+                        componentDataEntity.getComponentCode()))
                 .thenReturn(Optional.of(componentDataEntity)));
 
         // When
