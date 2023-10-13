@@ -3,11 +3,14 @@ package org.entando.kubernetes.service.digitalexchange.component;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -19,7 +22,9 @@ import org.entando.kubernetes.model.bundle.usage.ComponentUsage.ComponentReferen
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.EntandoCoreComponentReference;
 import org.entando.kubernetes.model.entandocore.EntandoCoreComponentUsage.IrrelevantComponentUsage;
+import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -33,18 +38,24 @@ class EntandoBundleComponentUsageServiceTest {
 
     private EntandoBundleComponentUsageService usageService;
     private EntandoCoreClient client;
+    private ComponentDataRepository componentDataRepository;
+    public static final String APP_BUILDER_COMPONENT_SUBTYPE = "app-builder";
+
 
     @BeforeEach
     public void setup() {
         client = Mockito.mock(EntandoCoreClient.class);
-        this.usageService = new EntandoBundleComponentUsageService(client);
+        componentDataRepository = mock(ComponentDataRepository.class);
+        usageService = new EntandoBundleComponentUsageService(client, componentDataRepository);
+
     }
 
     @Test
     void shouldReturnComponentUsageForValidComponent() {
         when(client.getWidgetUsage("my-widget"))
                 .thenReturn(
-                        new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 1, Collections.emptyList()));
+                        new EntandoCoreComponentUsage(ComponentType.WIDGET, "my-widget", true, 1,
+                                Collections.emptyList()));
         EntandoCoreComponentUsage cu = this.usageService.getUsage(ComponentType.WIDGET, "my-widget");
         assertThat(cu.getCode()).isEqualTo("my-widget");
         assertThat(cu.getUsage()).isEqualTo(1);
@@ -66,16 +77,23 @@ class EntandoBundleComponentUsageServiceTest {
             List<EntandoCoreComponentUsage> entandoCoreComponentUsageList,
             Supplier<List<EntandoBundleComponentJobEntity>> componentJob,
             List<ComponentReferenceType> expectedReferenceTypes,
+            List<ComponentDataEntity> componentDataEntityList,
+            int expectedComputedComponentUsageListSize,
             int expectedUsage,
             boolean hasExternal) {
         // Given
         when(client.getComponentsUsageDetails(anyList()))
                 .thenReturn(entandoCoreComponentUsageList);
+        componentDataEntityList.forEach(componentDataEntity -> when(
+                componentDataRepository.findByComponentTypeAndComponentCode(eq(componentDataEntity.getComponentType()),
+                        eq(componentDataEntity.getComponentCode())))
+                .thenReturn(Optional.of(componentDataEntity)));
+
         // When
         List<ComponentUsage> cuList = this.usageService.getComponentsUsageDetails(
                 componentJob.get());
         // Then
-        assertThat(cuList).hasSize(1);
+        assertThat(cuList).hasSize(expectedComputedComponentUsageListSize);
         // the use list of the i-th component calculated by the service must contain the same number of elements
         // provided by Entando Core, except null references which are filtered by EntandoBundleComponentUsageService
         assertThat(cuList.get(0).getReferences()).hasSize(entandoCoreComponentUsageList.get(0).getReferences().size());
@@ -91,8 +109,8 @@ class EntandoBundleComponentUsageServiceTest {
         });
         // the expected usage should match the received one and the reference number in the computed list must mach with
         // this number
-        assertEquals(expectedUsage,cuList.get(0).getUsage());
-        assertEquals(expectedUsage,cuList.get(0).getReferences().size());
+        assertEquals(expectedUsage, cuList.get(0).getUsage());
+        assertEquals(expectedUsage, cuList.get(0).getReferences().size());
         // the boolean field 'hasExternal' must be set to true if at least one reference with a value equal to EXTERNAL
         // exists in the list of references
         assertEquals(hasExternal, cuList.get(0).getHasExternal());
@@ -123,6 +141,10 @@ class EntandoBundleComponentUsageServiceTest {
                         // expected values
                         // type of reference expected
                         List.of(ComponentReferenceType.INTERNAL),
+                        // no element of subtype app-builder
+                        List.of(),
+                        // expected computed component usage list size
+                        1,
                         // expected usage
                         1,
                         // has external
@@ -140,6 +162,10 @@ class EntandoBundleComponentUsageServiceTest {
                         // expected values
                         // type of reference expected
                         List.of(ComponentReferenceType.EXTERNAL),
+                        // no element of subtype app-builder
+                        List.of(),
+                        // expected computed component usage list size
+                        1,
                         // expected usage
                         1,
                         // has external
@@ -167,6 +193,10 @@ class EntandoBundleComponentUsageServiceTest {
                         // expected values
                         // type of reference expected
                         Arrays.asList(ComponentReferenceType.INTERNAL, ComponentReferenceType.EXTERNAL),
+                        // no element of subtype app-builder
+                        List.of(),
+                        // expected computed component usage list size
+                        1,
                         // expected usage
                         2,
                         // has external
@@ -196,7 +226,13 @@ class EntandoBundleComponentUsageServiceTest {
                         },
                         // expected values
                         Arrays.asList(ComponentReferenceType.INTERNAL, ComponentReferenceType.INTERNAL),
+                        // no element of subtype app-builder
+                        List.of(),
+                        // expected computed component usage list size
+                        1,
+                        // expected usage
                         2,
+                        // has external
                         false),
                 Arguments.of(
                         // test inputs
@@ -214,6 +250,44 @@ class EntandoBundleComponentUsageServiceTest {
                         // expected values
                         // type of reference expected
                         List.of(),
+                        // no element of subtype app-builder
+                        List.of(),
+                        // expected computed component usage list size
+                        1,
+                        // expected usage
+                        0,
+                        // has external
+                        false),
+                Arguments.of(
+                        // test inputs
+                        Collections.singletonList(
+                                // given that a bundle exist and the component inside it has no references and that a
+                                // bundle component is of subtype app-builder
+                                // then we expect a usage value equals to 0 and an empty references list because
+                                // internally managed component of subtype app-builder aren't used in any other
+                                // component
+                                new EntandoCoreComponentUsage(ComponentType.PAGE, "page-1", true, 0,
+                                        List.of())),
+                        (Supplier<List<EntandoBundleComponentJobEntity>>) () -> {
+                            EntandoBundleComponentJobEntity pageComponentJob = new EntandoBundleComponentJobEntity();
+                            pageComponentJob.setComponentId("page-1");
+                            pageComponentJob.setComponentType(ComponentType.PAGE);
+
+                            EntandoBundleComponentJobEntity widgetComponentJob = new EntandoBundleComponentJobEntity();
+                            widgetComponentJob.setComponentId(("mfe-87ad7863"));
+                            widgetComponentJob.setComponentType(ComponentType.WIDGET);
+
+                            return List.of(widgetComponentJob, pageComponentJob);
+                        },
+                        // expected values
+                        // type of reference expected
+                        List.of(),
+                        // one element of subtype app-builder
+                        List.of(ComponentDataEntity.builder().componentId("2a98ha2s86d97sd9a9u3")
+                                .componentCode("mfe-87ad7863").componentType(ComponentType.WIDGET)
+                                .componentSubType(APP_BUILDER_COMPONENT_SUBTYPE).build()),
+                        // expected computed component usage list size
+                        2,
                         // expected usage
                         0,
                         // has external

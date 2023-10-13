@@ -26,6 +26,7 @@ import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
+import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
@@ -39,17 +40,17 @@ import org.springframework.http.ResponseEntity;
 public class EntandoBundleControllerTest {
 
     private EntandoBundleResourceController controller;
-    private EntandoBundleComponentUsageService usageService;
     private EntandoCoreClient coreClient;
     private EntandoBundleService bundleService;
-    private AuthorizationChecker authorizationChecker;
 
     @BeforeEach
     public void setup() {
         bundleService = mock(EntandoBundleServiceImpl.class);
         coreClient = mock(EntandoCoreClient.class);
-        authorizationChecker = mock(AuthorizationChecker.class);
-        usageService = new EntandoBundleComponentUsageService(coreClient);
+        ComponentDataRepository componentDataRepository = mock(ComponentDataRepository.class);
+        AuthorizationChecker authorizationChecker = mock(AuthorizationChecker.class);
+        EntandoBundleComponentUsageService usageService = new EntandoBundleComponentUsageService(coreClient,
+                componentDataRepository);
         controller = new EntandoBundleResourceController(bundleService, usageService, authorizationChecker);
     }
 
@@ -150,11 +151,11 @@ public class EntandoBundleControllerTest {
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET) && usc.getCode()
                         .equals("my-magic-widget"))
-                .findFirst().get().getUsage()).isEqualTo(11);
+                .findFirst().orElseThrow().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.PAGE) && usc.getCode()
                         .equals("my-magic-page"))
-                .findFirst().get().getUsage()).isEqualTo(5);
+                .findFirst().orElseThrow().getUsage()).isEqualTo(5);
         assertThat(usageList.stream().map(ComponentUsage::getType).distinct().count())
                 .isEqualTo(2);
         assertThat(usageList.stream().map(ComponentUsage::getUsage).reduce(0, Integer::sum))
@@ -212,12 +213,12 @@ public class EntandoBundleControllerTest {
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET) && usc.getCode()
                         .equals("my-magic-widget"))
                 .findFirst()
-                .get().getUsage()).isEqualTo(11);
+                .orElseThrow().getUsage()).isEqualTo(11);
         assertThat(usageList.stream()
                 .filter(usc -> usc.getType().equals(ComponentType.WIDGET) && usc.getCode()
                         .equals("my-other-widget"))
                 .findFirst()
-                .get()
+                .orElseThrow()
                 .getUsage())
                 .isEqualTo(5);
 

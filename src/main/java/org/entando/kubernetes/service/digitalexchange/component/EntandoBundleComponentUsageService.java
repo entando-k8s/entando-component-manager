@@ -104,19 +104,20 @@ public class EntandoBundleComponentUsageService {
 
     }
 
-    private static List<ComponentUsage> extractInternallyManagedComponents(Map<UUID, EntandoBundleComponentJobEntity> appBuilderSubTypeComponent) {
+    private static List<ComponentUsage> extractInternallyManagedComponents(
+            Map<UUID, EntandoBundleComponentJobEntity> appBuilderSubTypeComponent) {
         // the following assumptions are made:
         // - if the component is present in the db managed by the component manager, even if it is not managed by
-        //   the core, then it exists and the related exist field of ComponentUsage is set to true
+        //   the core, then it exists and the related exist field of ComponentUsage is set to true and the usage is set
+        //   to 0
         //
         // - these components are included in the main menu and there is no nesting involved (there is no concept of
-        //   a submenu), so the value of the usage field of the ComponentUsage object is set to 0
+        //   a submenu), so the value of references is set to empty list
 
         return appBuilderSubTypeComponent.values().stream().map(componentJobEntity ->
                 ComponentUsage.builder()
                         .code(componentJobEntity.getComponentId())
                         .exist(true)
-                        .hasExternal(false)
                         .references(new ArrayList<>())
                         .usage(0)
                         .type(componentJobEntity.getComponentType())
@@ -124,8 +125,9 @@ public class EntandoBundleComponentUsageService {
         ).collect(Collectors.toList());
     }
 
-    private Map<UUID, EntandoBundleComponentJobEntity>  extractAppBuilderSubTypeComponent(List<EntandoBundleComponentJobEntity> bundleInstalledComponents) {
-       return  bundleInstalledComponents.stream()
+    private Map<UUID, EntandoBundleComponentJobEntity> extractAppBuilderSubTypeComponent(
+            List<EntandoBundleComponentJobEntity> bundleInstalledComponents) {
+        return bundleInstalledComponents.stream()
                 .filter(componentJobEntity -> {
                     Optional<ComponentDataEntity> componentDataEntity = componentDataRepository.findByComponentTypeAndComponentCode(
                             componentJobEntity.getComponentType(), componentJobEntity.getComponentId());
