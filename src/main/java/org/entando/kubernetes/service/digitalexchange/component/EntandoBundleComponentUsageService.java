@@ -44,7 +44,8 @@ public class EntandoBundleComponentUsageService {
             CATEGORY, PAGE, PAGE_TEMPLATE, CONTENT_TYPE, CONTENT_TEMPLATE);
     private static final String KEY_SEP = "_";
 
-    public EntandoBundleComponentUsageService(EntandoCoreClient client, ComponentDataRepository componentDataRepository) {
+    public EntandoBundleComponentUsageService(EntandoCoreClient client,
+            ComponentDataRepository componentDataRepository) {
         this.client = client;
         this.componentDataRepository = componentDataRepository;
     }
