@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.common.EntandoResourceRequirements;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
@@ -123,25 +124,7 @@ class BundleUtilitiesTest {
     }
 
     @Test
-    void shouldAddTenantComposeIngressPathFromIngressPathPropertyInV5Bundle() {
-        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
-        descriptor.setIngressPath("/customer");
-
-        try (MockedStatic<TenantContextHolder> tenantContextHolderMockedStatic = Mockito.mockStatic(
-                TenantContextHolder.class)) {
-            tenantContextHolderMockedStatic.when(TenantContextHolder::getCurrentTenantCode).thenReturn("tenant1");
-
-            String ingressPath = BundleUtilities.composeIngressPathFromIngressPathProperty(descriptor);
-            // this is the first 8 chars sha string derived from tenant code
-            // this behavior was left because is used in plugin descriptor
-            // validation (setupValidatorConfigurationDescriptorV2Onwards)
-            assertTrue(ingressPath.startsWith("/45b3e9dd"));
-
-        }
-    }
-
-    @Test
-    void shouldNotAddTenantComposeIngressPathFromIngressPathPropertyInV1Bundle() {
+    void shouldComposeIngressPathFromIngressPathPropertyMethodNotModifyIngressPath() {
         PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
         descriptor.setIngressPath("/customer");
 
@@ -152,5 +135,39 @@ class BundleUtilitiesTest {
             String ingressPath = BundleUtilities.composeIngressPathFromIngressPathProperty(descriptor);
             assertTrue(ingressPath.startsWith("/customer"));
         }
+    }
+
+    @Test
+    void shouldComposeIngressPathFromIngressPathPropertyMethodPrependSlashToIngressPath() {
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
+        descriptor.setIngressPath("customer");
+
+        try (MockedStatic<TenantContextHolder> tenantContextHolderMockedStatic = Mockito.mockStatic(
+                TenantContextHolder.class)) {
+            tenantContextHolderMockedStatic.when(TenantContextHolder::getCurrentTenantCode).thenReturn("tenant1");
+
+            String ingressPath = BundleUtilities.composeIngressPathFromIngressPathProperty(descriptor);
+            assertTrue(ingressPath.startsWith("/customer"));
+        }
+    }
+
+    @Test
+    void shouldComposeIngressPathFromDockerImagePrependSlashToPath() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+        String ingressPathFromDockerImage = BundleUtilities.composeIngressPathFromDockerImage(descriptor);
+        assertTrue(ingressPathFromDockerImage.startsWith("/"));
+
+    }
+
+    @Test
+    void shouldComposeIngressPathFromDockerImageAddImageTagToPathForVersionLowerThan3() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
+        String ingressPathFromDockerImage = BundleUtilities.composeIngressPathFromDockerImage(descriptor);
+        assertTrue(ingressPathFromDockerImage.startsWith("/"));
+        assertTrue(ingressPathFromDockerImage.endsWith("/0-0-1-snapshot"));
+
     }
 }

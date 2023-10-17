@@ -218,23 +218,12 @@ public class BundleUtilities {
 
         if (StringUtils.length(descriptor.getIngressPath()) > 0) {
             ingressPath = descriptor.getIngressPath();
-            if (ingressPath.charAt(0) != '/') {
-                ingressPath = "/" + ingressPath;
-            }
-            ingressPath = addTenantIdToPathIfBundleIsEqualOrGreaterThanV5(descriptor, ingressPath);
-
+            ingressPath = StringUtils.prependIfMissing(ingressPath, "/");
         }
 
         return ingressPath;
     }
 
-    private static String addTenantIdToPathIfBundleIsEqualOrGreaterThanV5(PluginDescriptor descriptor,
-            String ingressPath) {
-        if (descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
-            ingressPath = buildTenantIdPath() + ingressPath;
-        }
-        return ingressPath;
-    }
 
     public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
         DockerImage image = descriptor.getDockerImage();
@@ -248,11 +237,7 @@ public class BundleUtilities {
         List<String> kubeCompatiblesSegmentList = ingressSegmentList.stream()
                 .map(BundleUtilities::makeKubernetesCompatible).collect(Collectors.toList());
 
-        return buildTenantIdPath() + "/" + String.join("/", kubeCompatiblesSegmentList);
-    }
-
-    private String buildTenantIdPath() {
-        return "/" + calculateTenantId(TenantContextHolder.getCurrentTenantCode());
+        return StringUtils.prependIfMissing(String.join("/", kubeCompatiblesSegmentList), "/");
     }
 
     /**
@@ -405,7 +390,7 @@ public class BundleUtilities {
      *
      * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
      * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
-     * no type is found
+     *         no type is found
      */
     public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
 

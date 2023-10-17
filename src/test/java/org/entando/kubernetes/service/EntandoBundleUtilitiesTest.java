@@ -155,7 +155,7 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV1@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
-                "/986a1b71/entando/todomvcv1/1-0-0", "/api/v1/todos",
+                "/entando/todomvcv1/1-0-0", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.<Permission>emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
@@ -185,7 +185,7 @@ public class EntandoBundleUtilitiesTest {
                         + "n-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong"
                         + "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong@"
                         + PluginStubHelper.PLUGIN_IMAGE_SHA,
-                "/986a1b71/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
+                "/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
                         + "d-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-to"
                         + "o-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong/1-0-0",
                 "/api/v1/todos",
@@ -612,7 +612,7 @@ public class EntandoBundleUtilitiesTest {
         // when the ingress path is composed starting by the docker image
         String ingressPath = BundleUtilities.composeIngressPathForV1(descriptor);
         // then the expected ingress path is generated
-        assertThat(ingressPath).isEqualTo("/986a1b71/entando/the-lucas");
+        assertThat(ingressPath).isEqualTo("/entando/the-lucas");
     }
 
     @Test

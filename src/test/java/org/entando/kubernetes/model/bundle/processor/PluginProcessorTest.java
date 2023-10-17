@@ -93,7 +93,7 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
     }
 
     @Test
@@ -104,16 +104,16 @@ class PluginProcessorTest extends BaseProcessorTest {
 
         final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/986a1b71/custom/ingress", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV3() throws IOException, ExecutionException, InterruptedException {
         final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV3(),
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/986a1b71/entando/the-lucas", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
     }
 
 
@@ -123,16 +123,16 @@ class PluginProcessorTest extends BaseProcessorTest {
         descriptor.setIngressPath("custom/ingress");
         final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/986a1b71/custom/ingress", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
     void testCreatePluginV4() throws IOException, ExecutionException, InterruptedException {
         final List<? extends Installable> installables = execTestCreatePlugin(PluginStubHelper.stubPluginDescriptorV4(),
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/986a1b71/entando/the-lucas", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/entando/the-lucas", null);
     }
 
     @Test
@@ -141,8 +141,8 @@ class PluginProcessorTest extends BaseProcessorTest {
         descriptor.setIngressPath("custom/ingress");
         final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/986a1b71/custom/ingress", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/custom/ingress", null);
     }
 
     @Test
@@ -176,7 +176,7 @@ class PluginProcessorTest extends BaseProcessorTest {
                         repoSha, "24f085aa"),
                 repoSha);
 
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
         assertOnEndpoints(installables.get(1), "/my-component-89f28dad-986a1b71/my-bundle", null);
     }
 
@@ -185,8 +185,8 @@ class PluginProcessorTest extends BaseProcessorTest {
         final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5().setIngressPath("custom/ingress");
         final List<? extends Installable> installables = execTestCreatePlugin(descriptor,
                 BundleInfoStubHelper.GIT_REPO_ADDRESS, BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
-        assertOnEndpoints(installables.get(0), "/986a1b71/entando/the-lucas/0-0-1-snapshot", null);
-        assertOnEndpoints(installables.get(1), "/my-component-77b2b10e-986a1b71/my-bundle", "/986a1b71/custom/ingress");
+        assertOnEndpoints(installables.get(0), "/entando/the-lucas/0-0-1-snapshot", null);
+        assertOnEndpoints(installables.get(1), "/my-component-77b2b10e-986a1b71/my-bundle", "/custom/ingress");
     }
 
     private List<? extends Installable> execTestCreatePlugin(PluginDescriptor descriptor, String bundleAddress,
