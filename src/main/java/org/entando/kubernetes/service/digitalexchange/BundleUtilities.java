@@ -221,10 +221,18 @@ public class BundleUtilities {
             if (ingressPath.charAt(0) != '/') {
                 ingressPath = "/" + ingressPath;
             }
-            ingressPath = buildTenantIdPath() + ingressPath;
+            ingressPath = addTenantIdToPathIfBundleIsEqualOrGreaterThanV5(descriptor, ingressPath);
 
         }
 
+        return ingressPath;
+    }
+
+    private static String addTenantIdToPathIfBundleIsEqualOrGreaterThanV5(PluginDescriptor descriptor,
+            String ingressPath) {
+        if (descriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)) {
+            ingressPath = buildTenantIdPath() + ingressPath;
+        }
         return ingressPath;
     }
 
@@ -246,7 +254,7 @@ public class BundleUtilities {
     private String buildTenantIdPath() {
         return "/" + calculateTenantId(TenantContextHolder.getCurrentTenantCode());
     }
-    
+
     /**
      * compose the plugin ingress path starting by its docker image.
      *
@@ -301,7 +309,8 @@ public class BundleUtilities {
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
      */
-    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor, Optional<PluginConfiguration> conf) {
+    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor,
+            Optional<PluginConfiguration> conf) {
         return descriptor.isVersion1()
                 ? generatePluginFromDescriptorV1(descriptor) :
                 generatePluginFromDescriptorV2Plus(descriptor, conf);
@@ -314,7 +323,7 @@ public class BundleUtilities {
      * @return the EntandoPlugin CR generated starting by the descriptor data
      */
     public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor,
-                                                                   Optional<PluginConfiguration> conf) {
+            Optional<PluginConfiguration> conf) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
                 .withName(descriptor.getDescriptorMetadata().getPluginCodeTenantAware())
@@ -396,7 +405,7 @@ public class BundleUtilities {
      *
      * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
      * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
-     *          no type is found
+     * no type is found
      */
     public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
 
@@ -490,7 +499,7 @@ public class BundleUtilities {
      * @return the list of K8S compatible EnvVar
      */
     public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
-                                                     List<EnvVar> customEnvironmentVariablesList) {
+            List<EnvVar> customEnvironmentVariablesList) {
 
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
