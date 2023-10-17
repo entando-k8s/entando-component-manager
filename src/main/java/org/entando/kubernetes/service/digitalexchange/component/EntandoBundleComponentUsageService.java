@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.model.bundle.ComponentType;
+import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
 import org.entando.kubernetes.model.bundle.usage.ComponentUsage.ComponentReference;
 import org.entando.kubernetes.model.bundle.usage.ComponentUsage.ComponentReferenceType;
@@ -36,7 +37,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EntandoBundleComponentUsageService {
 
-    public static final String APP_BUILDER_COMPONENT_SUBTYPE = "app-builder";
     private final EntandoCoreClient client;
     private final ComponentDataRepository componentDataRepository;
 
@@ -133,7 +133,7 @@ public class EntandoBundleComponentUsageService {
                     Optional<ComponentDataEntity> componentDataEntity = componentDataRepository.findByComponentTypeAndComponentCode(
                             componentJobEntity.getComponentType(), componentJobEntity.getComponentId());
                     return componentDataEntity.isPresent() && componentDataEntity.get().getComponentSubType()
-                            .equalsIgnoreCase(APP_BUILDER_COMPONENT_SUBTYPE);
+                            .equalsIgnoreCase(WidgetDescriptor.TYPE_WIDGET_APPBUILDER);
                 })
                 .collect(Collectors.toMap(EntandoBundleComponentJobEntity::getId, Function.identity()));
     }
