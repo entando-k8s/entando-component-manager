@@ -21,8 +21,8 @@ public class PluginStubHelper {
     public static final String BUNDLE_CODE = BUNDLE_NAME + "-" + BUNDLE_ID;
     public static final String EXPECTED_PLUGIN_NAME = "entando-the-lucas";
     public static final String EXPECTED_PLUGIN_NAME_FROM_DEP_BASE_NAME = "customdepbasename";
-    public static final String EXPECTED_INGRESS_PATH_V_MINOR_THAN_3 = "/986a1b71/entando/the-lucas/0-0-1-snapshot";
-    public static final String EXPECTED_INGRESS_PATH_V_3_OR_V_4 = "/986a1b71/entando/the-lucas";
+    public static final String EXPECTED_INGRESS_PATH_V_MINOR_THAN_3 = "/entando/the-lucas/0-0-1-snapshot";
+    public static final String EXPECTED_INGRESS_PATH_V_3_OR_V_4 = "/entando/the-lucas";
     public static final String EXPECTED_INGRESS_PATH_V_5 = "/" + BUNDLE_CODE + "-986a1b71/" + BUNDLE_NAME;
     public static final String TEST_DESCRIPTOR_IMAGE = "entando/the-lucas:0.0.1-SNAPSHOT";
     public static final String TEST_DESCRIPTOR_IMAGE_SHA = "24f085aa";

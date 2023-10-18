@@ -5,12 +5,17 @@ import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.det
 import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.extractImageAddressRegistry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
+import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.common.EntandoResourceRequirements;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 @Tag("unit")
 class BundleUtilitiesTest {
@@ -116,5 +121,53 @@ class BundleUtilitiesTest {
         assertThat(resourceRequirements.getStorageRequest().isEmpty()).isTrue();
         assertThat(resourceRequirements.getMemoryRequest().isEmpty()).isTrue();
         assertThat(resourceRequirements.getCpuRequest().isEmpty()).isTrue();
+    }
+
+    @Test
+    void shouldComposeIngressPathFromIngressPathPropertyMethodNotModifyIngressPath() {
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
+        descriptor.setIngressPath("/customer");
+
+        try (MockedStatic<TenantContextHolder> tenantContextHolderMockedStatic = Mockito.mockStatic(
+                TenantContextHolder.class)) {
+            tenantContextHolderMockedStatic.when(TenantContextHolder::getCurrentTenantCode).thenReturn("tenant1");
+
+            String ingressPath = BundleUtilities.composeIngressPathFromIngressPathProperty(descriptor);
+            assertTrue(ingressPath.startsWith("/customer"));
+        }
+    }
+
+    @Test
+    void shouldComposeIngressPathFromIngressPathPropertyMethodPrependSlashToIngressPath() {
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
+        descriptor.setIngressPath("customer");
+
+        try (MockedStatic<TenantContextHolder> tenantContextHolderMockedStatic = Mockito.mockStatic(
+                TenantContextHolder.class)) {
+            tenantContextHolderMockedStatic.when(TenantContextHolder::getCurrentTenantCode).thenReturn("tenant1");
+
+            String ingressPath = BundleUtilities.composeIngressPathFromIngressPathProperty(descriptor);
+            assertTrue(ingressPath.startsWith("/customer"));
+        }
+    }
+
+    @Test
+    void shouldComposeIngressPathFromDockerImagePrependSlashToPath() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+        String ingressPathFromDockerImage = BundleUtilities.composeIngressPathFromDockerImage(descriptor);
+        assertTrue(ingressPathFromDockerImage.startsWith("/"));
+
+    }
+
+    @Test
+    void shouldComposeIngressPathFromDockerImageAddImageTagToPathForVersionLowerThan3() {
+
+        PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV1();
+        descriptor.setDescriptorVersion(DescriptorVersion.V1.getVersion());
+        String ingressPathFromDockerImage = BundleUtilities.composeIngressPathFromDockerImage(descriptor);
+        assertTrue(ingressPathFromDockerImage.startsWith("/"));
+        assertTrue(ingressPathFromDockerImage.endsWith("/0-0-1-snapshot"));
+
     }
 }
