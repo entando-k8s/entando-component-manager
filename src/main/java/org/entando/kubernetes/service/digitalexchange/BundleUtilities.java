@@ -88,6 +88,7 @@ public class BundleUtilities {
 
     public static final String ENTANDO_DOCKER_REGISTRY_OVERRIDE = "ENTANDO_DOCKER_REGISTRY_OVERRIDE";
     public static final String DOCKER_IMAGE_TRANSPORT_PREFIX = "docker://";
+    public static final String ENTANDO_TENANT_CODE = "ENTANDO_TENANT_CODE";
 
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
@@ -497,7 +498,8 @@ public class BundleUtilities {
                 .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
                     assembledEnvVar.put(env.getName(), env);
                 }));
-
+        assembledEnvVar.put(ENTANDO_TENANT_CODE, buildFromEnvironmentVariable(
+                new EnvironmentVariable(ENTANDO_TENANT_CODE, TenantContextHolder.getCurrentTenantCode(), null)));
         Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
             assembledEnvVar.put(env.getName(), env);
         }));

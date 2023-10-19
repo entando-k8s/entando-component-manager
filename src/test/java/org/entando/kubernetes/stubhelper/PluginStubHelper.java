@@ -32,6 +32,8 @@ public class PluginStubHelper {
     public static final String TEST_DESCRIPTOR_HEALTH_PATH = "/management/health";
     public static final String TEST_DESCRIPTOR_DBMS = "postgresql";
     public static final String TEST_DESCRIPTOR_SECURITY_LEVEL = "lenient";
+    public static final String TEST_ENV_VAR_0_NAME = "ENTANDO_TENANT_CODE";
+    public static final String TEST_ENV_VAR_0_VALUE = "primary";
     public static final String TEST_ENV_VAR_1_NAME = "env1Name";
     public static final String TEST_ENV_VAR_1_VALUE = "env1Value";
     public static final String TEST_ENV_VAR_2_NAME = "env2Name";
