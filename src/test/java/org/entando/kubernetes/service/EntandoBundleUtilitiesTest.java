@@ -330,19 +330,24 @@ public class EntandoBundleUtilitiesTest {
         final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
                 Collections.singletonList(customEnvvar));
 
-        assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_NAME);
-        assertThat(envVars.get(0).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
+        assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_0_NAME);
+        assertThat(envVars.get(0).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_0_VALUE);
         assertThat(envVars.get(0).getValueFrom()).isNull();
 
-        assertThat(envVars.get(1).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_2_NAME);
-        assertThat(envVars.get(1).getValue()).isNull();
-        assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getName()).isEqualTo(
+        assertThat(envVars.get(1).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_NAME);
+        assertThat(envVars.get(1).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
+        assertThat(envVars.get(1).getValueFrom()).isNull();
+
+        assertThat(envVars.get(2).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_2_NAME);
+        assertThat(envVars.get(2).getValue()).isNull();
+        assertThat(envVars.get(2).getValueFrom().getSecretKeyRef().getName()).isEqualTo(
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_NAME);
-        assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
+        assertThat(envVars.get(2).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
-        assertThat(envVars.get(2).getValue()).isNotNull();
-        assertThat(envVars.get(2).getValueFrom()).isNull();
-        assertThat(envVars.get(2).getValue()).isEqualTo("val3");
+
+        assertThat(envVars.get(3).getValue()).isNotNull();
+        assertThat(envVars.get(3).getValueFrom()).isNull();
+        assertThat(envVars.get(3).getValue()).isEqualTo("val3");
 
     }
 
