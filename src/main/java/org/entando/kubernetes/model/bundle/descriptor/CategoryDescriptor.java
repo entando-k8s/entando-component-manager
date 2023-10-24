@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CategoryDescriptor implements Descriptor {
 
     private String code;
