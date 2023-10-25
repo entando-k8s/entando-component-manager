@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PageTemplateDescriptor implements Descriptor {
 
     private String code;

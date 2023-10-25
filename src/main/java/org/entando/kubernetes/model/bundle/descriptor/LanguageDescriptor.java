@@ -1,5 +1,6 @@
 package org.entando.kubernetes.model.bundle.descriptor;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +14,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LanguageDescriptor implements Descriptor {
 
     private String code;
