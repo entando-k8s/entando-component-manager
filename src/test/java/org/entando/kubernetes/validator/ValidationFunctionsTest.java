@@ -143,6 +143,34 @@ class ValidationFunctionsTest {
     }
 
     @Test
+    void testDBUrlValidator() {
+        final String VALID_DB_URL_1 = "jdbc:postgresql://host:5432/my_tenant?schema=SCHEMA1&param=PARAM1";
+        final String VALID_DB_URL_2 = "jdbc:mysql://host:5432/tenant1";
+        final String VALID_DB_URL_3 = "jdbc:oracle://host:15432/myTenant-1";
+        final String INVALID_DB_URL_1 = "jdbc:test://host:5432/tenant";
+        final String INVALID_DB_URL_2 = "jdbc:postgre sql://host:5432/tenant1";
+        final String INVALID_DB_URL_3 = "jdbc:postgresql://ho st:5432/my:Tenant-1";
+        final String INVALID_DB_URL_4 = "jdbc:mysql://host:542/tenant1";
+        final String INVALID_DB_URL_5 = "jdbc:postgresql://ho st:5432/my Tenant-1";
+        final String INVALID_DB_URL_6 = "db:postgresql://host:5432/my_tenant";
+        final String INVALID_DB_URL_7 = "jdbc://postgresql:host:5432/my_tenant";
+        final String INVALID_DB_URL_8 = "jdbc:postgresql//host:5432/my_tenant";
+
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_1)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_2)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_3)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_1)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_2)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_3)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_4)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_5)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_6)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_7)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_8)).isFalse();
+
+    }
+
+    @Test
     void testUrl5() {
         final String VALID_URL5 = "https://cds-mt720.k8s-domain.org:2677/tenant1/";
         assertThat(ValidationFunctions.validateURL(VALID_URL5,
