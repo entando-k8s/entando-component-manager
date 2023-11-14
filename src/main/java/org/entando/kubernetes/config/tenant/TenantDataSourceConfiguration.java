@@ -1,5 +1,6 @@
 package org.entando.kubernetes.config.tenant;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,15 +29,13 @@ public class TenantDataSourceConfiguration {
 
     public static final String DB_RESOURCES_SEARCH_PARAM = "classpath:db/**/*.yaml";
 
-    private ResourceLoader resourceLoader;
-
     private List<TenantConfigDTO> tenantConfigs;
 
     @PostConstruct
     public void applyMigrationsToTenants() throws Exception {
         log.debug("checking for DB update");
-        final boolean resourcesOnTmp = copyLiquibaseResources(resourceLoader);
-        new TenantLiquibaseMigration().migrate(tenantConfigs, resourcesOnTmp);
+        copyLiquibaseResources();
+        new TenantLiquibaseMigration().migrate(tenantConfigs);
         log.debug("DB update check completed");
     }
 
@@ -66,31 +65,30 @@ public class TenantDataSourceConfiguration {
         return dataSourceBuilder.build();
     }
 
-    private boolean copyLiquibaseResources(@Qualifier("resourceLoader") ResourceLoader resourceLoader) {
-        boolean resourcesOnJar = false;
+    private void copyLiquibaseResources() throws IOException {
+        final String tmpFolder = System.getProperty("java.io.tmpdir");
 
         log.debug("==== starting DB changelog copy into filesystem ====");
-        try {
-            ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
-            Resource[] allResources = resourcePatResolver.getResources(DB_RESOURCES_SEARCH_PARAM);
+        ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
+        Resource[] allResources = resourcePatResolver.getResources(DB_RESOURCES_SEARCH_PARAM);
 
-            if (allResources.length != 0) {
-                // inside a JAR!
-                resourcesOnJar = true;
-                for (Resource resource: allResources) {
-                    String uri = resource.getURI().toString();
-                    uri = uri.substring(uri.lastIndexOf("/db/"));
-                    String tmpFolder = System.getProperty("java.io.tmpdir");
-                    Path destinationFile = Path.of(tmpFolder, uri);
+        if (allResources.length != 0) {
+            for (Resource resource: allResources) {
+                String uri = resource.getURI().toString();
+                uri = uri.substring(uri.lastIndexOf("/db/"));
+                Path destinationFile = Path.of(tmpFolder, uri);
 
-                    FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
-                    log.debug("Moving Liquibase file from JAR to {}", destinationFile.toFile().getAbsolutePath());
-                }
+                FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
+                log.debug("Moving Liquibase resources from JAR to {}", destinationFile.toFile().getAbsolutePath());
             }
-        } catch (IOException e) {
-            log.error("Error copying Liquibase resources", e);
+        } else {
+            final String resourcesPath = "src/main/resources/db";
+            final File destDir = new File(tmpFolder + File.separator + "db");
+            File dbDirectory = new File(resourcesPath);
+
+            log.debug("Moving Liquibase resources to {}", destDir.getAbsolutePath());
+            FileUtils.copyDirectory(dbDirectory, destDir);
         }
-        return resourcesOnJar;
     }
 
 }

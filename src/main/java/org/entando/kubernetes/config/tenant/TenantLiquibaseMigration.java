@@ -10,8 +10,6 @@ import liquibase.Liquibase;
 import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
-import liquibase.resource.AbstractResourceAccessor;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -23,12 +21,11 @@ import org.springframework.boot.jdbc.DatabaseDriver;
 public class TenantLiquibaseMigration {
 
     public static final String CHANGELOG_FILE_NAME = "db.changelog-master.yaml";
-    public static final String CLASSPATH_CHANGELOG_FILE_NAME = "classpath:db/changelog/" + CHANGELOG_FILE_NAME;
+    private static final FileSystemResourceAccessor resourceAccessor = new FileSystemResourceAccessor(
+            new File("/tmp/db/changelog/"));
 
-    public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs, boolean resourcesOnFs) throws Exception {
+    public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs) throws Exception {
         final Contexts standard = new Contexts("standard");
-        final String changeLogFile = resourcesOnFs ? CHANGELOG_FILE_NAME : CLASSPATH_CHANGELOG_FILE_NAME;
-        final AbstractResourceAccessor accessor = getResourceAccessor(resourcesOnFs);
         List<ChangeSet> pendingChangeset = new ArrayList<>();
 
         for (TenantConfigDTO config : tenantConfigs) {
@@ -36,9 +33,9 @@ public class TenantLiquibaseMigration {
                 continue;
             }
             log.info("Creating (or updating) tenant database '{}' DB URL is {}", config.getTenantCode(), config.getDeDbUrl());
-            Database database = createTenantDatasource(config, resourcesOnFs);
+            Database database = createTenantDatasource(config);
 
-            try (Liquibase liquibase = new Liquibase(changeLogFile, accessor, database)) {
+            try (Liquibase liquibase = new Liquibase(CHANGELOG_FILE_NAME, resourceAccessor, database)) {
                 liquibase.update(standard, new LabelExpression());
                 List<ChangeSet> currentPendingChangeSet = liquibase.listUnrunChangeSets(standard, new LabelExpression());
                 pendingChangeset.addAll(currentPendingChangeSet);
@@ -49,9 +46,8 @@ public class TenantLiquibaseMigration {
         return pendingChangeset;
     }
 
-    private Database createTenantDatasource(TenantConfigDTO config, boolean resourcesOnFs) throws Exception {
+    private Database createTenantDatasource(TenantConfigDTO config) throws Exception {
         final String driver = DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName();
-        AbstractResourceAccessor resourceAccessor = getResourceAccessor(resourcesOnFs);
         final String schema = UpdateUtils.getSchemaFromJdbc(config.getDeDbUrl());
 
         Database database = DatabaseFactory.getInstance().openDatabase(
@@ -68,15 +64,5 @@ public class TenantLiquibaseMigration {
         }
         return database;
     }
-
-    private AbstractResourceAccessor getResourceAccessor(boolean resourcesOnFs) {
-        if (resourcesOnFs) {
-            log.debug("accessing master filename through filesystem");
-            return new FileSystemResourceAccessor(new File("/tmp/db/changelog/"));
-        }
-        log.debug("accessing master filename through classpath");
-        return new ClassLoaderResourceAccessor();
-    }
-
 
 }

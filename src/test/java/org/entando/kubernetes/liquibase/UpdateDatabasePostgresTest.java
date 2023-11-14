@@ -67,7 +67,7 @@ public class UpdateDatabasePostgresTest extends UpdateDatabaseBase {
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws Exception {
         TenantConfigRwDto cfg = getTenantForTest(targetDatabase, "test_tenant_schema");
-        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg), false);
+        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg));
         assertThat(pendingChangeset, empty());
         assertValidLiquibaseInstance(targetDatabase, "SELECT id FROM test_tenant_schema.databasechangelog");
     }

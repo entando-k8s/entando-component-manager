@@ -65,7 +65,7 @@ public class UpdateDatabaseMySQLTest extends UpdateDatabaseBase {
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws Exception {
         TenantConfigRwDto cfg = getTenantForTest(targetDatabase, null);
-        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg), false);
+        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg));
         assertThat(pendingChangeset, empty());
         assertValidLiquibaseInstance(targetDatabase, "SELECT id FROM DATABASECHANGELOG");
     }
