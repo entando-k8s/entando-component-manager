@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import liquibase.changelog.ChangeSet;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,7 @@ public class UpdateDatabaseMySQLTest extends UpdateDatabaseBase {
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws Exception {
         TenantConfigRwDto cfg = getTenantForTest(targetDatabase, null);
-        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Arrays.asList(cfg), false);
+        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg), false);
         assertThat(pendingChangeset, empty());
         assertValidLiquibaseInstance(targetDatabase, "SELECT id FROM DATABASECHANGELOG");
     }

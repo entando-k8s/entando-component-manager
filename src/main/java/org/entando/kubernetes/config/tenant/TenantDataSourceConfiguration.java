@@ -70,7 +70,6 @@ public class TenantDataSourceConfiguration {
     }
 
     private boolean copyLiquibaseResources(@Qualifier("resourceLoader") ResourceLoader resourceLoader) {
-        File changelog;
         boolean resourcesOnJar = false;
 
         log.debug("==== starting DB changelog copy into filesystem ====");

@@ -37,12 +37,13 @@ public class TenantLiquibaseMigration {
             log.info("Creating (or updating) tenant database '{}' DB URL is {}", config.getTenantCode(), config.getDeDbUrl());
             Database database = createTenantDatasource(config, resourcesOnFs);
 
-            Liquibase liquibase = new Liquibase(changeLogFile, accessor, database);
-            liquibase.update(standard, new LabelExpression());
-            List<ChangeSet> currentPendingChangeSet = liquibase.listUnrunChangeSets(standard);
-            pendingChangeset.addAll(currentPendingChangeSet);
-            log.info("updating of tenant db '{}' completed ({} changeSet not applied)", config.getTenantCode(),
-                    currentPendingChangeSet.size());
+            try (Liquibase liquibase = new Liquibase(changeLogFile, accessor, database);) {
+                liquibase.update(standard, new LabelExpression());
+                List<ChangeSet> currentPendingChangeSet = liquibase.listUnrunChangeSets(standard);
+                pendingChangeset.addAll(currentPendingChangeSet);
+                log.info("updating of tenant db '{}' completed ({} changeSet not applied)", config.getTenantCode(),
+                        currentPendingChangeSet.size());
+            }
         }
         return pendingChangeset;
     }

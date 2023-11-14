@@ -3,9 +3,9 @@ package org.entando.kubernetes.liquibase;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import liquibase.changelog.ChangeSet;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +68,7 @@ public class UpdateDatabasePostgresTest extends UpdateDatabaseBase {
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws Exception {
         TenantConfigRwDto cfg = getTenantForTest(targetDatabase, "test_tenant_schema");
-        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Arrays.asList(cfg), false);
+        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg), false);
         assertThat(pendingChangeset, empty());
         assertValidLiquibaseInstance(targetDatabase, "SELECT id FROM test_tenant_schema.databasechangelog");
     }

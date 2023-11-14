@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 class UpdateUtilsTest {
 
     @Test
-    void testJdbcSchemaPostgres() {
+    void testExtractSchemaFromJDBCurl() {
         String jdbcUrl = "jdbc:postgresql://default-postgresql-dbms-in-namespace-service.test-mt-pj.svc.cluster.local:"
                 + "5432/default_postgresql_dbms_in_namespace_db?param1=value1&currentSchema=tenant1_cmschema";
 
@@ -30,7 +30,7 @@ class UpdateUtilsTest {
     }
 
     @Test
-    void testNullArgs() {
+    void testNullArgsThrowException() {
         assertThrows(NullPointerException.class, () -> getSchemaFromJdbc(null));
     }
 
