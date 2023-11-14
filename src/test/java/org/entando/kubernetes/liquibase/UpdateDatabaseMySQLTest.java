@@ -4,7 +4,6 @@ package org.entando.kubernetes.liquibase;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import liquibase.changelog.ChangeSet;

@@ -1,6 +1,5 @@
 package org.entando.kubernetes.config.tenant;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,8 +27,6 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 public class TenantDataSourceConfiguration {
 
     public static final String DB_RESOURCES_SEARCH_PARAM = "classpath:db/**/*.yaml";
-    public static final String DB_CHANGELOG_MASTER_FILE = "classpath:db/changelog/db.changelog-master.yaml";
-
 
     private ResourceLoader resourceLoader;
 

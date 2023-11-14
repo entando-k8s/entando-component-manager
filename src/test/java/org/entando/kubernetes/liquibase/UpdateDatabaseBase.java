@@ -54,7 +54,7 @@ public class UpdateDatabaseBase {
 
     public void assertValidLiquibaseInstance(JdbcDatabaseContainer<?> container, String sql) throws Exception {
         Class.forName(container.getDriverClassName());
-        try (Connection connection = DriverManager.getConnection(container.getJdbcUrl(), USERNAME, PASSWORD);) {
+        try (Connection connection = DriverManager.getConnection(container.getJdbcUrl(), USERNAME, PASSWORD)) {
             try (PreparedStatement preparedStatement =
                     connection.prepareStatement(sql)) {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {

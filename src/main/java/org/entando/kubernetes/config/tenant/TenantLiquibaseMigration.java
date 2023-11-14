@@ -1,6 +1,7 @@
 package org.entando.kubernetes.config.tenant;
 
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import liquibase.Contexts;
@@ -37,9 +38,9 @@ public class TenantLiquibaseMigration {
             log.info("Creating (or updating) tenant database '{}' DB URL is {}", config.getTenantCode(), config.getDeDbUrl());
             Database database = createTenantDatasource(config, resourcesOnFs);
 
-            try (Liquibase liquibase = new Liquibase(changeLogFile, accessor, database);) {
+            try (Liquibase liquibase = new Liquibase(changeLogFile, accessor, database)) {
                 liquibase.update(standard, new LabelExpression());
-                List<ChangeSet> currentPendingChangeSet = liquibase.listUnrunChangeSets(standard);
+                List<ChangeSet> currentPendingChangeSet = liquibase.listUnrunChangeSets(standard, new LabelExpression());
                 pendingChangeset.addAll(currentPendingChangeSet);
                 log.info("updating of tenant db '{}' completed ({} changeSet not applied)", config.getTenantCode(),
                         currentPendingChangeSet.size());
@@ -71,7 +72,7 @@ public class TenantLiquibaseMigration {
     private AbstractResourceAccessor getResourceAccessor(boolean resourcesOnFs) {
         if (resourcesOnFs) {
             log.debug("accessing master filename through filesystem");
-            return new FileSystemResourceAccessor("/tmp/db/changelog/");
+            return new FileSystemResourceAccessor(new File("/tmp/db/changelog/"));
         }
         log.debug("accessing master filename through classpath");
         return new ClassLoaderResourceAccessor();
