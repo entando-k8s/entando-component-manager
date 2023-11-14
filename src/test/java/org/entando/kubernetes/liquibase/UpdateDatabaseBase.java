@@ -62,8 +62,6 @@ public class UpdateDatabaseBase {
                     assertThat(resultSet.getRow(), Matchers.greaterThan(0));
                 }
             }
-        } catch (Exception e) {
-            throw e;
         }
     }
 
