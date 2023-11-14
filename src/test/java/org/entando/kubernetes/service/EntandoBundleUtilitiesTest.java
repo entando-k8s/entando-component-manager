@@ -381,6 +381,9 @@ public class EntandoBundleUtilitiesTest {
 
         url = BundleUtilities.removeProtocolFromUrl("https://www.github.com/entando/mybundle.git");
         assertThat(url).isEqualTo("www.github.com/entando/mybundle.git");
+
+        url = BundleUtilities.removeProtocolFromUrl("git@gitlab.com:entando/example-bundle.git");
+        assertThat(url).isEqualTo("gitlab.com/entando/example-bundle.git");
     }
 
     @Test
