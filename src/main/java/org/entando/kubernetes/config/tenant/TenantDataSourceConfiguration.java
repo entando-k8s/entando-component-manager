@@ -29,6 +29,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 public class TenantDataSourceConfiguration {
 
     public static final String DB_RESOURCES_SEARCH_PARAM = "classpath:db/**/*.yaml";
+    public static final String SRC_DB_DIR = "db";
 
     private List<TenantConfigDTO> tenantConfigs;
 
@@ -68,7 +69,7 @@ public class TenantDataSourceConfiguration {
 
     private String copyLiquibaseResources() throws IOException {
         final String tmpFolder = System.getProperty("java.io.tmpdir");
-        final String tmpDbFolder = "db"
+        final String dbDirectoryName = SRC_DB_DIR
                 + '-'
                 + generateSecureRandomHash(6);
 
@@ -80,7 +81,8 @@ public class TenantDataSourceConfiguration {
         if (allResources.length != 0) {
             for (Resource resource: allResources) {
                 String uri = resource.getURI().toString();
-                uri = uri.substring(uri.lastIndexOf(File.separator + tmpDbFolder + File.separator));
+                uri = uri.substring(uri.lastIndexOf(File.separator + SRC_DB_DIR + File.separator));
+                uri = uri.replace(SRC_DB_DIR, dbDirectoryName);
                 Path destinationFile = Path.of(tmpFolder, uri);
 
                 FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
@@ -88,13 +90,13 @@ public class TenantDataSourceConfiguration {
             }
         } else {
             final String resourcesPath = "src/main/resources/db";
-            final File destDir = new File(tmpFolder + File.separator + tmpDbFolder);
+            final File destDir = new File(tmpFolder + File.separator + dbDirectoryName);
             final File dbDirectory = new File(resourcesPath);
 
             log.debug("Moving Liquibase resources to {}", destDir.getAbsolutePath());
             FileUtils.copyDirectory(dbDirectory, destDir);
         }
-        return tmpDbFolder;
+        return dbDirectoryName;
     }
 
 }
