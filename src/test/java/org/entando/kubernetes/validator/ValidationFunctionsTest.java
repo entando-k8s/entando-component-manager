@@ -144,29 +144,33 @@ class ValidationFunctionsTest {
 
     @Test
     void testDBUrlValidator() {
-        final String VALID_DB_URL_1 = "jdbc:postgresql://host:5432/my_tenant?schema=SCHEMA1&param=PARAM1";
-        final String VALID_DB_URL_2 = "jdbc:mysql://host:5432/tenant1";
-        final String VALID_DB_URL_3 = "jdbc:oracle://host:15432/myTenant-1";
-        final String INVALID_DB_URL_1 = "jdbc:test://host:5432/tenant";
-        final String INVALID_DB_URL_2 = "jdbc:postgre sql://host:5432/tenant1";
-        final String INVALID_DB_URL_3 = "jdbc:postgresql://ho st:5432/my:Tenant-1";
-        final String INVALID_DB_URL_4 = "jdbc:mysql://host:542/tenant1";
-        final String INVALID_DB_URL_5 = "jdbc:postgresql://ho st:5432/my Tenant-1";
-        final String INVALID_DB_URL_6 = "db:postgresql://host:5432/my_tenant";
-        final String INVALID_DB_URL_7 = "jdbc://postgresql:host:5432/my_tenant";
-        final String INVALID_DB_URL_8 = "jdbc:postgresql//host:5432/my_tenant";
+        final String VALID_DB_URL_01 = "jdbc:postgresql://host:5432/my_tenant?schema=SCHEMA1&param=PARAM1";
+        final String VALID_DB_URL_02 = "jdbc:mysql://host:5432/tenant1";
+        final String VALID_DB_URL_03 = "jdbc:oracle://host:15432/myTenant-1";
+        final String INVALID_DB_URL_01 = "jdbc:test://host:5432/tenant";
+        final String INVALID_DB_URL_02 = "jdbc:postgre sql://host:5432/tenant1";
+        final String INVALID_DB_URL_03 = "jdbc:postgresql://ho st:5432/my:Tenant-1";
+        final String INVALID_DB_URL_04 = "jdbc:mysql://host:542/tenant1";
+        final String INVALID_DB_URL_05 = "jdbc:postgresql://ho st:5432/my Tenant-1";
+        final String INVALID_DB_URL_06 = "db:postgresql://host:5432/my_tenant";
+        final String INVALID_DB_URL_07 = "jdbc://postgresql:host:5432/my_tenant";
+        final String INVALID_DB_URL_08 = "jdbc:postgresql//host:5432/my_tenant";
+        final String INVALID_DB_URL_09 = "jdbc:mysql:///host5432/tenant1";
+        final String INVALID_DB_URL_10 = "jdbc:mysql:///host:5432/tenant1";
 
-        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_1)).isTrue();
-        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_2)).isTrue();
-        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_3)).isTrue();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_1)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_2)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_3)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_4)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_5)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_6)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_7)).isFalse();
-        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_8)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_01)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_02)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_03)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_01)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_02)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_03)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_04)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_05)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_06)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_07)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_08)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_09)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_10)).isFalse();
 
     }
 
