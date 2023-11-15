@@ -18,5 +18,5 @@ entando.auth-url=${spring.security.oauth2.client.provider.oidc.issuer-uri}/proto
 springdoc.swagger-ui.oauth.client-id=${spring.security.oauth2.client.registration.oidc.client-id}
 springdoc.swagger-ui.oauth.client-secret=${spring.security.oauth2.client.registration.oidc.client-secret}
 springdoc.swagger-ui.oauth2-redirect-url=${spring.security.oauth2.client.provider.oidc.issuer-uri}/protocol/openid-connect/auth
-
+entando.k8s.service-account.token-filepath=token.txt
 cors.enabled = true

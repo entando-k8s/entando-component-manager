@@ -1,18 +1,18 @@
 package org.entando.kubernetes.stubhelper;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 public class BundleStubHelper {
 
     public static final String BUNDLE_NAME = "my-component";
+
+    public static final String BUNDLE_NAME_NOT_SANITIZED = "My component";
     public static final String BUNDLE_CODE = BUNDLE_NAME + "-" + BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA;
     public static final String BUNDLE_DESCRIPTION = "desc";
     public static final BundleType BUNDLE_TYPE = BundleType.SYSTEM_LEVEL_BUNDLE;
@@ -56,6 +56,14 @@ public class BundleStubHelper {
         return entandoDeBundle;
     }
 
+    public static EntandoDeBundle stubEntandoDeBundleWithNotSanitizedMeta() {
+        ObjectMeta metadata = new ObjectMeta();
+        metadata.setLabels(Map.of("widgets", "true", "bundle-type", BUNDLE_TYPE.getType()));
+        metadata.setName(BUNDLE_NAME_NOT_SANITIZED);
+        EntandoDeBundle entandoDeBundle = new EntandoDeBundle();
+        entandoDeBundle.setMetadata(metadata);
+        return entandoDeBundle;
+    }
 
     public static BundleDescriptor stubBundleDescriptor(ComponentSpecDescriptor spec) {
         return stubBundleDescriptor(spec, BundleType.SYSTEM_LEVEL_BUNDLE);

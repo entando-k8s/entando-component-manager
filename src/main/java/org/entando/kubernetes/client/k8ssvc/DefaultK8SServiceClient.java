@@ -2,6 +2,7 @@ package org.entando.kubernetes.client.k8ssvc;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -505,6 +506,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
     @Override
     public EntandoDeBundle deployDeBundle(EntandoDeBundle entandoDeBundle) {
+        ObjectMeta sanitizedMetadata = sanitizeMetadata(entandoDeBundle);
+        entandoDeBundle.setMetadata(sanitizedMetadata);
 
         String logMessage = String.format("### deploy bundle %s",
                 ObjectUtils.isEmpty(entandoDeBundle.getMetadata().getName())
@@ -534,6 +537,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
                     null, null, null);
         }, logMessage);
+    }
+
+    private ObjectMeta sanitizeMetadata(EntandoDeBundle entandoDeBundle) {
+        // Sanitize metadata bundle name
+        ObjectMeta meta = entandoDeBundle.getMetadata();
+        meta.setName(meta.getName().replaceAll(" ","-").toLowerCase());
+        return meta;
     }
 
     @Override

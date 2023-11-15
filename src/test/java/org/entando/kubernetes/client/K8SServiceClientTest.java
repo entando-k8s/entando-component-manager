@@ -12,6 +12,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.entando.kubernetes.stubhelper.BundleStubHelper.BUNDLE_NAME_NOT_SANITIZED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -423,6 +425,24 @@ public class K8SServiceClientTest {
         EntandoDeBundle current = client.deployDeBundle(expected);
 
         // then the returned EntandoDeBundle object is the same as the one sent
+        assertThat(current).isEqualToComparingFieldByField(expected);
+        mockServer.getInnerServer().verify(1, postRequestedFor(urlEqualTo("/bundles?tenantCode=primary")));
+    }
+
+    @Test
+    void shouldSuccessfullyDeployADeBundleWithNotSanitizedMeta() {
+
+        // given that the k8s-service returns 200 when receives a deploy entando de bundle request
+        EntandoDeBundle deBundle = BundleStubHelper.stubEntandoDeBundleWithNotSanitizedMeta();
+        EntandoDeBundle expected = deBundle;
+        ObjectMeta metadata = expected.getMetadata();
+        metadata.setName(BUNDLE_NAME_NOT_SANITIZED.replaceAll(" ","-").toLowerCase());
+        expected.setMetadata(metadata);
+
+        // when the ECR sends the request
+        EntandoDeBundle current = client.deployDeBundle(deBundle);
+
+        // then the returned EntandoDeBundle object is the same as the one sent with sanitized metadata
         assertThat(current).isEqualToComparingFieldByField(expected);
         mockServer.getInnerServer().verify(1, postRequestedFor(urlEqualTo("/bundles?tenantCode=primary")));
     }
