@@ -21,8 +21,10 @@ import org.springframework.boot.jdbc.DatabaseDriver;
 public class TenantLiquibaseMigration {
 
     public static final String CHANGELOG_FILE_NAME = "db.changelog-master.yaml";
+    public static final String TMP_DB_CHANGELOG = "/tmp/db/changelog/";
+
     private static final FileSystemResourceAccessor resourceAccessor = new FileSystemResourceAccessor(
-            new File("/tmp/db/changelog/"));
+            new File(TMP_DB_CHANGELOG));
 
     public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs) throws Exception {
         final Contexts standard = new Contexts("standard");

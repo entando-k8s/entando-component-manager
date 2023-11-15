@@ -42,7 +42,7 @@ import org.testcontainers.utility.DockerImageName;
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 @Slf4j
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
-public class UpdateDatabaseOracleTest extends UpdateDatabaseBase {
+class UpdateDatabaseOracleTest extends UpdateDatabaseBase {
 
     private static final String CONTAINER_IMAGE = System.getenv()
             .getOrDefault("ORACLE_CONTAINER_IMAGE", "gvenzl/oracle-xe:18.4.0-slim");

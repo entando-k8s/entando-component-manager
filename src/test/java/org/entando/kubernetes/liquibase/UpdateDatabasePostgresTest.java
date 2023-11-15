@@ -41,7 +41,7 @@ import org.testcontainers.junit.jupiter.Container;
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 @Slf4j
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
-public class UpdateDatabasePostgresTest extends UpdateDatabaseBase {
+class UpdateDatabasePostgresTest extends UpdateDatabaseBase {
 
     private static final String DATABASE = System.getenv().getOrDefault("POSTGRES_DATABASE", "mypersonaltestdb");
 
