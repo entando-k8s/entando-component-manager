@@ -81,7 +81,7 @@ public class TenantDataSourceConfiguration {
             for (Resource resource: allResources) {
                 String uri = resource.getURI().toString();
                 uri = uri.substring(uri.lastIndexOf(File.separator + SRC_DB_DIR + File.separator));
-                uri = uri.replace(SRC_DB_DIR, dbDirectoryName);
+                uri = uri.replaceFirst(SRC_DB_DIR, dbDirectoryName);
                 Path destinationFile = Path.of(tmpFolder, uri);
 
                 FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
