@@ -542,7 +542,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private ObjectMeta sanitizeMetadata(EntandoDeBundle entandoDeBundle) {
         // Sanitize metadata bundle name
         ObjectMeta meta = entandoDeBundle.getMetadata();
-        meta.setName(meta.getName().replaceAll(" ","-").toLowerCase());
+        meta.setName(meta.getName().replace(" ","-").toLowerCase());
         return meta;
     }
 
