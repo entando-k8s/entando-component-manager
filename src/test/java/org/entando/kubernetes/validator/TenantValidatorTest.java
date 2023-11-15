@@ -48,7 +48,7 @@ public class TenantValidatorTest {
 
 
     @Test
-    public void testInvalidDeDBUrl() throws JsonProcessingException {
+    void testInvalidDeDBUrl() throws JsonProcessingException {
         Optional<Map<String, List<String>>> opt = TenantValidator
                 .validate(getConfigFromJson(INVALID_TENANT_CONFIG_DB_URL))
                 .getValidationErrorMap();
