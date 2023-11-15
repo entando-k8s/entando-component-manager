@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,6 +14,7 @@ import java.sql.ResultSet;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.commons.io.FileUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.hamcrest.Matchers;
 import org.testcontainers.containers.JdbcDatabaseContainer;
@@ -19,9 +22,8 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 public class UpdateDatabaseBase {
 
     public static final String USERNAME = "testuser";
-
     public static final String PASSWORD = "testpassword";
-
+    public static final String TMP_DB_FOLDER = "db-mEm2677";
     public static final String POSTGRES_USERNAME = System.getenv().getOrDefault("POSTGRES_USER", USERNAME);
     public static final String POSTGRES_PASSWORD = System.getenv().getOrDefault("POSTGRES_PASSWORD", PASSWORD);
 
@@ -30,6 +32,18 @@ public class UpdateDatabaseBase {
 
     public static final String ORACLE_USERNAME = System.getenv().getOrDefault("ORACLE_USER", USERNAME);
     public static final String ORACLE_PASSWORD = System.getenv().getOrDefault("ORACLE_PASSWORD", PASSWORD);
+
+    public void moveResources(String tmpDbFolder) throws IOException {
+        final String tmpFolder = File.separator + "tmp";
+        final String resourcesPath = "src/main/resources/db";
+        final File destDir = new File(tmpFolder + File.separator + tmpDbFolder);
+        final File dbDirectory = new File(resourcesPath);
+
+        if (!destDir.exists()) {
+            FileUtils.copyDirectory(dbDirectory, destDir);
+        }
+    }
+
 
     public TenantConfigRwDto getTenantForTest(JdbcDatabaseContainer<?> container,  String schema) {
         TenantConfigRwDto cfg = new TenantConfigRwDto();

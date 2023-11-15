@@ -14,22 +14,27 @@ import liquibase.resource.FileSystemResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
-import org.entando.kubernetes.liquibase.helper.UpdateUtils;
+import org.entando.kubernetes.liquibase.helper.DbMigrationUtils;
 import org.springframework.boot.jdbc.DatabaseDriver;
 
 @Slf4j
 public class TenantLiquibaseMigration {
 
     public static final String CHANGELOG_FILE_NAME = "db.changelog-master.yaml";
-    public static final String TMP_DB_CHANGELOG = "/tmp/db/changelog/";
+    public static final String CHANGELOG_DIR = "changelog";
+    private FileSystemResourceAccessor resourceAccessor;
 
-    private static final FileSystemResourceAccessor resourceAccessor = new FileSystemResourceAccessor(
-            new File(TMP_DB_CHANGELOG));
-
-    public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs) throws Exception {
+    public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs, String dbFolderName) throws Exception {
         final Contexts standard = new Contexts("standard");
-        List<ChangeSet> pendingChangeset = new ArrayList<>();
+        final List<ChangeSet> pendingChangeset = new ArrayList<>();
+        final String tmp_db_changelog = new StringBuilder("/tmp/")
+                .append(dbFolderName)
+                .append(File.separator)
+                .append(CHANGELOG_DIR)
+                .append(File.separator)
+                .toString();
 
+        resourceAccessor = new FileSystemResourceAccessor(new File(tmp_db_changelog));
         for (TenantConfigDTO config : tenantConfigs) {
             if (config instanceof PrimaryTenantConfig) {
                 continue;
@@ -50,7 +55,7 @@ public class TenantLiquibaseMigration {
 
     private Database createTenantDatasource(TenantConfigDTO config) throws Exception {
         final String driver = DatabaseDriver.fromJdbcUrl(config.getDeDbUrl()).getDriverClassName();
-        final String schema = UpdateUtils.getSchemaFromJdbc(config.getDeDbUrl());
+        final String schema = DbMigrationUtils.getSchemaFromJdbc(config.getDeDbUrl());
 
         Database database = DatabaseFactory.getInstance().openDatabase(
                 config.getDeDbUrl(),

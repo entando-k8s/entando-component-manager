@@ -1,18 +1,23 @@
 package org.entando.kubernetes.liquibase;
 
 
-import static org.entando.kubernetes.liquibase.helper.UpdateUtils.getSchemaFromJdbc;
+import static org.entando.kubernetes.liquibase.helper.DbMigrationUtils.generateSecureRandomHash;
+import static org.entando.kubernetes.liquibase.helper.DbMigrationUtils.getSchemaFromJdbc;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles({"test"})
-class UpdateUtilsTest {
+class DbMigrationUtilsTest {
 
     @Test
     void testExtractSchemaFromJDBCurl() {
@@ -32,6 +37,23 @@ class UpdateUtilsTest {
     @Test
     void testNullArgsThrowException() {
         assertThrows(NullPointerException.class, () -> getSchemaFromJdbc(null));
+    }
+
+    @Test
+    void testHashGenerationWithDifferentLength() {
+        String hash = generateSecureRandomHash(6);
+        validateHash(hash, 6);
+
+        hash = generateSecureRandomHash(1);
+        validateHash(hash, 1);
+
+        hash = generateSecureRandomHash(0);
+        validateHash(hash, 0);
+    }
+
+    private void validateHash(String hash, int expectedLength) {
+        assertNotNull(hash);
+        MatcherAssert.assertThat(hash, Matchers.hasLength(expectedLength));
     }
 
 }
