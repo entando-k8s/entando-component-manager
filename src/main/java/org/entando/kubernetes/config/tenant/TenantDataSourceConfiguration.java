@@ -77,7 +77,6 @@ public class TenantDataSourceConfiguration {
         ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
         Resource[] allResources = resourcePatResolver.getResources(DB_RESOURCES_SEARCH_PARAM);
 
-
         if (allResources.length != 0) {
             for (Resource resource: allResources) {
                 String uri = resource.getURI().toString();
