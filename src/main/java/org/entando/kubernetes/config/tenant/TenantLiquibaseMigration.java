@@ -27,12 +27,11 @@ public class TenantLiquibaseMigration {
     public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs, String dbFolderName) throws Exception {
         final Contexts standard = new Contexts("standard");
         final List<ChangeSet> pendingChangeset = new ArrayList<>();
-        final String tmp_db_changelog = new StringBuilder("/tmp/")
-                .append(dbFolderName)
-                .append(File.separator)
-                .append(CHANGELOG_DIR)
-                .append(File.separator)
-                .toString();
+        final String tmp_db_changelog = "/tmp/"
+                + dbFolderName
+                + File.separator
+                + CHANGELOG_DIR
+                + File.separator;
 
         resourceAccessor = new FileSystemResourceAccessor(new File(tmp_db_changelog));
         for (TenantConfigDTO config : tenantConfigs) {

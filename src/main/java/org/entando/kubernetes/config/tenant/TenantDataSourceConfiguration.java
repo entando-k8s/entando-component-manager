@@ -68,10 +68,9 @@ public class TenantDataSourceConfiguration {
 
     private String copyLiquibaseResources() throws IOException {
         final String tmpFolder = System.getProperty("java.io.tmpdir");
-        final String tmpDbFolder = new StringBuilder("db")
-                .append('-')
-                .append(generateSecureRandomHash(6))
-                .toString();
+        final String tmpDbFolder = "db"
+                + '-'
+                + generateSecureRandomHash(6);
 
         log.debug("==== starting DB changelog copy into filesystem ====");
         ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
