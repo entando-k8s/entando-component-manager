@@ -24,7 +24,7 @@ public class ValidationFunctions {
     public static final Pattern VALID_CHARS_RFC_1123_REGEX_PATTERN = Pattern.compile(VALID_CHARS_RFC_1123_REGEX);
     public static final Pattern VALID_ENTITY_CODE_REGEX_PATTERN = Pattern.compile(VALID_ENTITY_CODE_REGEX);
     public static final String SUPPORTED_DB = "mysql|postgresql|oracle";
-    public static final String DB_URL_REGEX = "^jdbc:(" + SUPPORTED_DB + ")://([a-zA-Z0-9_.]*[a-zA-Z0-9_]):([0-9]{4,5})(/)([a-zA-Z0-9-_?=&]+)$";
+    public static final String DB_URL_REGEX = "^jdbc:(" + SUPPORTED_DB + ")://([a-zA-Z0-9-.]*[a-zA-Z0-9-]):([0-9]{4,5})/([a-zA-Z0-9-_?=&]+)$";
     public static final String GIT_PROTOCOL = "git";
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";

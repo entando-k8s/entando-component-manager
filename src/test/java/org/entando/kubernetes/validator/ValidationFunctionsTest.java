@@ -147,6 +147,8 @@ class ValidationFunctionsTest {
         final String VALID_DB_URL_01 = "jdbc:postgresql://host:5432/my_tenant?schema=SCHEMA1&param=PARAM1";
         final String VALID_DB_URL_02 = "jdbc:mysql://host:5432/tenant1";
         final String VALID_DB_URL_03 = "jdbc:oracle://host:15432/myTenant-1";
+        final String VALID_DB_URL_04 = "jdbc:oracle://host.host-host:15432/myTenant-1";
+
         final String INVALID_DB_URL_01 = "jdbc:test://host:5432/tenant";
         final String INVALID_DB_URL_02 = "jdbc:postgre sql://host:5432/tenant1";
         final String INVALID_DB_URL_03 = "jdbc:postgresql://ho st:5432/my:Tenant-1";
@@ -155,12 +157,15 @@ class ValidationFunctionsTest {
         final String INVALID_DB_URL_06 = "db:postgresql://host:5432/my_tenant";
         final String INVALID_DB_URL_07 = "jdbc://postgresql:host:5432/my_tenant";
         final String INVALID_DB_URL_08 = "jdbc:postgresql//host:5432/my_tenant";
-        final String INVALID_DB_URL_09 = "jdbc:mysql:///host5432/tenant1";
+        final String INVALID_DB_URL_09 = "jdbc:mysql://host5432/tenant1";
         final String INVALID_DB_URL_10 = "jdbc:mysql:///host:5432/tenant1";
+        final String INVALID_DB_URL_11 = "jdbc:mysql://host:5432//tenant1";
+        final String INVALID_DB_URL_12 = "jdbc:mysql://host.host_host:5432/tenant1";
 
         assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_01)).isTrue();
         assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_02)).isTrue();
         assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_03)).isTrue();
+        assertThat(ValidationFunctions.validateDbURL(VALID_DB_URL_04)).isTrue();
         assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_01)).isFalse();
         assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_02)).isFalse();
         assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_03)).isFalse();
@@ -171,7 +176,8 @@ class ValidationFunctionsTest {
         assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_08)).isFalse();
         assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_09)).isFalse();
         assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_10)).isFalse();
-
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_11)).isFalse();
+        assertThat(ValidationFunctions.validateDbURL(INVALID_DB_URL_12)).isFalse();
     }
 
     @Test
