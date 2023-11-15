@@ -20,7 +20,6 @@ public class UpdateUtils {
                     && StringUtils.isNotBlank(url[1])) {
                 String[] query = url[1].split("&");
                 Arrays.asList(query).forEach(p -> {
-                    // works with Postgres and Oracle
                     if (p.contains("currentSchema")) {
                         String[] args = p.split("=");
 
