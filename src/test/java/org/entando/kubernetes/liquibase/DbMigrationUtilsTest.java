@@ -30,6 +30,14 @@ class DbMigrationUtilsTest {
                 + "svc.cluster.local:5432/default_postgresql_dbms_in_namespace_db?param1=value1";
         schema = getSchemaFromJdbc(jdbcUrl);
         assertNull(schema);
+
+        jdbcUrl = "jdbc:postgresql://simplefdqnnoport";
+        schema = getSchemaFromJdbc(jdbcUrl);
+        assertNull(schema);
+
+        jdbcUrl = "jdbc:postgresql://simplefdqnnoport?ignore=me";
+        schema = getSchemaFromJdbc(jdbcUrl);
+        assertNull(schema);
     }
 
     @Test
