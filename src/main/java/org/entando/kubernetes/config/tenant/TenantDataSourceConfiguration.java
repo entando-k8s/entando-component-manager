@@ -30,6 +30,8 @@ public class TenantDataSourceConfiguration {
 
     public static final String DB_RESOURCES_SEARCH_PARAM = "classpath:db/**/*.yaml";
     public static final String SRC_DB_DIR = "db";
+    public static final String RESOURCES_PATH = "src" + File.separator + "main" + File.separator + "resources"
+            + File.separator + "db";
 
     private List<TenantConfigDTO> tenantConfigs;
 
@@ -88,9 +90,8 @@ public class TenantDataSourceConfiguration {
                 log.debug("Moving Liquibase resources from JAR to {}", destinationFile.toFile().getAbsolutePath());
             }
         } else {
-            final String resourcesPath = "src/main/resources/db";
             final File destDir = new File(tmpFolder + File.separator + dbDirectoryName);
-            final File dbDirectory = new File(resourcesPath);
+            final File dbDirectory = new File(RESOURCES_PATH);
 
             log.debug("Moving Liquibase resources to {}", destDir.getAbsolutePath());
             FileUtils.copyDirectory(dbDirectory, destDir);
