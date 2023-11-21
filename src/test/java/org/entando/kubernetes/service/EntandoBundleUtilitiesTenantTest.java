@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @Tag("unit")
 @ExtendWith(TenantSecondaryContextJunitExt.class)
-public class EntandoBundleUtilitiesTenantTest {
+class EntandoBundleUtilitiesTenantTest {
 
     @Test
     void secretOwnedByPrimaryResultsInExceptionBeingThrownIfUsedInOtherTenant() {

@@ -491,9 +491,9 @@ public class BundleUtilities {
 
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
-                .map(BundleUtilities::buildFromEnvironmentVariable).forEach(env -> {
-                    assembledEnvVar.put(env.getName(), env);
-                }));
+                .map(BundleUtilities::buildFromEnvironmentVariable).forEach(env ->
+                    assembledEnvVar.put(env.getName(), env)
+                ));
         // adding tenant code
         final String currentTenantCode = TenantContextHolder.getCurrentTenantCode();
 
@@ -501,9 +501,9 @@ public class BundleUtilities {
                 new EnvironmentVariable(ENTANDO_TENANT_CODE, currentTenantCode, null)));
 
         Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream()
-                .forEach(env -> {
-                    assembledEnvVar.put(env.getName(), env);
-                }));
+                .forEach(env ->
+                    assembledEnvVar.put(env.getName(), env)
+                ));
 
         List<EnvVar> list = assembledEnvVar.values().stream()
                 .sorted(Comparator.comparing(EnvVar::getName))
@@ -514,10 +514,9 @@ public class BundleUtilities {
         } else {
             message = "Cannot reference a primary secret on the non-primary tenant '" + currentTenantCode + "'!";
         }
-
         // make sure the correct kind of secret name is referenced
         list.stream().filter(e -> e.getValueFrom() != null
-                        && verifyTenantSecretName(countHashesInSecretName(e.getValueFrom().getSecretKeyRef().getName(), ENTITY_CODE_HASH_LENGTH)))
+                        && isErrorConditionMet(countHashesInSecretName(e.getValueFrom().getSecretKeyRef().getName(), ENTITY_CODE_HASH_LENGTH)))
                 .findFirst()
                 .ifPresent(v -> {
                     throw new EntandoValidationException(message + "Faulting environment variable name '" + v.getName() + "'");
@@ -525,7 +524,12 @@ public class BundleUtilities {
         return list;
     }
 
-    private static boolean verifyTenantSecretName(Integer count) {
+    /**
+     * Make sure that the primary tenant got secrets with at least two hashes, three or more for non-primary tenants.
+     * @param count the number ho hashed detected in secret name
+     * @return true if there is an error, false otherwise
+     */
+    private static boolean isErrorConditionMet(Integer count) {
         return (TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count > 2)
                 || (!TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count < 3);
     }
