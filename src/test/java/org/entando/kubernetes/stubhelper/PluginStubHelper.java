@@ -46,6 +46,7 @@ public class PluginStubHelper {
     public static final String TEST_RES_MEMORY = "8G";
     public static final String TEST_RES_CPU = "6m";
     public static final String PRIMARY_TENANT_CODE = "primary";
+    public static final String SECONDARY_TENANT_CODE = "secondary";
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {

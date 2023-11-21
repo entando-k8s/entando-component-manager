@@ -2,11 +2,16 @@ package org.entando.kubernetes.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
+import static org.entando.kubernetes.stubhelper.PluginStubHelper.PRIMARY_TENANT_CODE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSource;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -147,7 +152,7 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcv1", "entando-todomvcv1",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
-                PluginStubHelper.PRIMARY_TENANT_CODE);
+                PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -174,7 +179,7 @@ public class EntandoBundleUtilitiesTest {
                 "loooong-entando", "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
-                PluginStubHelper.PRIMARY_TENANT_CODE);
+                PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -206,7 +211,7 @@ public class EntandoBundleUtilitiesTest {
                 PluginStubHelper.TEST_DESCRIPTOR_IMAGE_SHA, PluginStubHelper.EXPECTED_PLUGIN_NAME,
                 "loooong-entando", "loooong-entando",
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, null,
-                PluginStubHelper.PRIMARY_TENANT_CODE);
+                PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -234,7 +239,7 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
-                PluginStubHelper.PRIMARY_TENANT_CODE);
+                PRIMARY_TENANT_CODE);
 
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
@@ -259,7 +264,7 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcV2-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
-                PluginStubHelper.PRIMARY_TENANT_CODE);
+                PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -283,7 +288,7 @@ public class EntandoBundleUtilitiesTest {
                 "entando-todomvcV3-1-0-0-" + bundleReader.getDeBundleMetadataName(),
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_3_OR_V_4,
-                PluginStubHelper.PRIMARY_TENANT_CODE);
+                PRIMARY_TENANT_CODE);
         descriptor.getDockerImage().setSha256(PluginStubHelper.PLUGIN_IMAGE_SHA);
 
         // should generate the right populated EntandoPlugin
@@ -349,6 +354,58 @@ public class EntandoBundleUtilitiesTest {
         assertThat(envVars.get(3).getValueFrom()).isNull();
         assertThat(envVars.get(3).getValue()).isEqualTo("val3");
 
+    }
+
+    @Test
+    void testHashCountOnSecretName() {
+        String name = "pn-hasldk12-8dsjahj2-mypluginname-conf";
+        int count = BundleUtilities.countHashesInSecretName(name, 8);
+        assertEquals(2, count);
+
+        name = "pn-hasldk12-8dsjahj2-3dsjahj3-mypluginname-conf";
+        count = BundleUtilities.countHashesInSecretName(name, 8);
+        assertEquals(3, count);
+
+        name = "secretWithNoSeparator";
+        count = BundleUtilities.countHashesInSecretName(name, 8);
+        assertEquals(0, count);
+
+        count = BundleUtilities.countHashesInSecretName(null, 8);
+        assertEquals(0, count);
+    }
+
+    @Test
+    void secretOwnedByPrimaryDoesNotThrowException() {
+        EnvVarSource envVarSource = new EnvVarSourceBuilder()
+                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-mypluginname-conf", null)
+                .build();
+        EnvVar customEnvvar = new EnvVarBuilder()
+                .withName("ENVIRONMENT_VARIABLE")
+                .withValueFrom(envVarSource)
+                .build();
+
+        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
+                Collections.singletonList(customEnvvar));
+    }
+
+    @Test
+    void secretOwnedByOtherTenantsResultsInExceptionBeingThrownIfUsedInpRIMARY() {
+        final String ENVIRONMENT_VARIABLE = "ENVIRONMENT_VARIABLE";
+
+        EnvVarSource envVarSource = new EnvVarSourceBuilder()
+                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-ads6ahj4-mypluginname-conf", null)
+                .build();
+        EnvVar customEnvvar = new EnvVarBuilder()
+                .withName(ENVIRONMENT_VARIABLE)
+                .withValueFrom(envVarSource)
+                .build();
+
+        EntandoValidationException exception = assertThrows(EntandoValidationException.class,
+                () -> BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
+                        Collections.singletonList(customEnvvar)));
+        assertTrue(exception.getMessage().contains("Cannot reference a non-primary secret on the primary tenant!"));
+        assertTrue(exception.getMessage().contains(PRIMARY_TENANT_CODE));
+        assertTrue(exception.getMessage().contains(ENVIRONMENT_VARIABLE));
     }
 
 

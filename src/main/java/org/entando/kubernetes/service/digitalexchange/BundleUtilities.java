@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange;
 
+import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TENANT;
+
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -43,6 +46,7 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1R
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginResources;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.common.DbmsVendor;
+import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.entando.kubernetes.model.common.EntandoResourceRequirements;
 import org.entando.kubernetes.model.common.EntandoResourceRequirementsBuilder;
 import org.entando.kubernetes.model.common.ExpectedRole;
@@ -487,21 +491,71 @@ public class BundleUtilities {
     public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
             List<EnvVar> customEnvironmentVariablesList) {
 
+        String message;
+        int maxHashesInSecretName;
+
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
                 .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
                     assembledEnvVar.put(env.getName(), env);
                 }));
-        assembledEnvVar.put(ENTANDO_TENANT_CODE, buildFromEnvironmentVariable(
-                new EnvironmentVariable(ENTANDO_TENANT_CODE, TenantContextHolder.getCurrentTenantCode(), null)));
-        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
-            assembledEnvVar.put(env.getName(), env);
-        }));
+        // adding tenant code
+        final String currentTenantCode = TenantContextHolder.getCurrentTenantCode();
 
-        return assembledEnvVar.entrySet().stream()
+        assembledEnvVar.put(ENTANDO_TENANT_CODE, buildFromEnvironmentVariable(
+                new EnvironmentVariable(ENTANDO_TENANT_CODE, currentTenantCode, null)));
+
+        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream()
+                .forEach(env -> {
+                    assembledEnvVar.put(env.getName(), env);
+                }));
+
+        List<EnvVar> list = assembledEnvVar.entrySet().stream()
                 .map(Entry::getValue)
                 .sorted(Comparator.comparing(EnvVar::getName))
                 .collect(Collectors.toList());
+        // check for primary secrets
+        if (currentTenantCode.equals(PRIMARY_TENANT))  {
+            message = "Cannot reference a non-primary secret on the primary tenant!";
+        } else {
+            message = "Cannot reference a primary secret on the non-primary tenant '" + currentTenantCode + "'!";
+        }
+        Predicate<Integer> mah = (count) -> (TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count > 2)
+                || (!TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count < 3);
+
+        // make sure the correct kind of secret name is referenced
+        list.stream().filter(e -> e.getValueFrom() != null
+                        && verifyTenantSecretName(countHashesInSecretName(e.getValueFrom().getSecretKeyRef().getName(), ENTITY_CODE_HASH_LENGTH)))
+                .findFirst()
+                .ifPresent(v -> {
+                    throw new EntandoValidationException(message + "Faulting environment variable name '" + v.getName() + "'");
+                });
+        return list;
+    }
+
+    private static boolean verifyTenantSecretName(Integer count) {
+        return (TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count > 2)
+                || (!TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count < 3);
+    }
+
+    /**
+     * Get the number of hashes in the given (secret) name. Basically we look for alphanumeric strings of fixed length
+     * separated by a '-'
+     * @param name the name to analyze
+     * @param length the length of the hash
+     * @return the number of hashes found
+     */
+    public static Integer countHashesInSecretName(String name, int length) {
+        if (StringUtils.isNotBlank(name)) {
+            String[] tokens = name.split("-");
+            if (tokens.length > 2) {
+                List<String> hashes = Arrays.asList(tokens).stream()
+                        .filter(t -> StringUtils.isAlphanumeric(t) && t.length() == length)
+                        .collect(Collectors.toList());
+                return hashes != null ? hashes.size() : 0;
+            }
+        }
+        return 0;
     }
 
     private EnvVar buildFromEnvironmentVariable(EnvironmentVariable envVar) {
