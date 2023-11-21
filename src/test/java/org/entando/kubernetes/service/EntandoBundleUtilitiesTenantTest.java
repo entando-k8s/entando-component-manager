@@ -9,7 +9,6 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import java.util.Collections;
-import java.util.List;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
 import static org.entando.kubernetes.stubhelper.PluginStubHelper.PRIMARY_TENANT_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -386,6 +387,8 @@ public class EntandoBundleUtilitiesTest {
 
         final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
                 Collections.singletonList(customEnvvar));
+        assertFalse(envVars.isEmpty());
+        assertEquals(4, envVars.size());
     }
 
     @Test

@@ -9,12 +9,12 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class TenantSecondaryContextJunitExt implements BeforeAllCallback, AfterAllCallback {
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+    public void beforeAll(ExtensionContext extensionContext) {
         TenantTestUtils.setSecondaryTenant();
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         TenantTestUtils.cleanTenantContext();
     }
 

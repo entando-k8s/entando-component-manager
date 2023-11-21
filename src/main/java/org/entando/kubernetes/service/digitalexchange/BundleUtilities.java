@@ -17,10 +17,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -46,7 +44,6 @@ import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptorV1R
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginResources;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.common.DbmsVendor;
-import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.entando.kubernetes.model.common.EntandoResourceRequirements;
 import org.entando.kubernetes.model.common.EntandoResourceRequirementsBuilder;
 import org.entando.kubernetes.model.common.ExpectedRole;
@@ -490,13 +487,11 @@ public class BundleUtilities {
      */
     public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
             List<EnvVar> customEnvironmentVariablesList) {
-
         String message;
-        int maxHashesInSecretName;
 
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
-                .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
+                .map(BundleUtilities::buildFromEnvironmentVariable).forEach(env -> {
                     assembledEnvVar.put(env.getName(), env);
                 }));
         // adding tenant code
@@ -510,8 +505,7 @@ public class BundleUtilities {
                     assembledEnvVar.put(env.getName(), env);
                 }));
 
-        List<EnvVar> list = assembledEnvVar.entrySet().stream()
-                .map(Entry::getValue)
+        List<EnvVar> list = assembledEnvVar.values().stream()
                 .sorted(Comparator.comparing(EnvVar::getName))
                 .collect(Collectors.toList());
         // check for primary secrets
@@ -520,8 +514,6 @@ public class BundleUtilities {
         } else {
             message = "Cannot reference a primary secret on the non-primary tenant '" + currentTenantCode + "'!";
         }
-        Predicate<Integer> mah = (count) -> (TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count > 2)
-                || (!TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count < 3);
 
         // make sure the correct kind of secret name is referenced
         list.stream().filter(e -> e.getValueFrom() != null
@@ -549,10 +541,11 @@ public class BundleUtilities {
         if (StringUtils.isNotBlank(name)) {
             String[] tokens = name.split("-");
             if (tokens.length > 2) {
-                List<String> hashes = Arrays.asList(tokens).stream()
+                List<String> hashes = Arrays.asList(tokens)
+                        .stream()
                         .filter(t -> StringUtils.isAlphanumeric(t) && t.length() == length)
                         .collect(Collectors.toList());
-                return hashes != null ? hashes.size() : 0;
+                return hashes.size();
             }
         }
         return 0;
