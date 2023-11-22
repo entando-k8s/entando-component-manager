@@ -16,7 +16,7 @@ import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.repository.PluginDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
-@ExtendWith(value = {MockitoExtension.class, TenantContextJunitExt.class})
+@ExtendWith(value = {MockitoExtension.class, TenantPrimaryContextJunitExt.class})
 class PluginInstallableTest {
 
     private PluginInstallable pluginInstallable;

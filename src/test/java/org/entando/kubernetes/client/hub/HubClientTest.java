@@ -30,7 +30,7 @@ import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
 import org.entando.kubernetes.stubhelper.HubStubHelper;
 import org.entando.kubernetes.utils.EntandoHubMockServer;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,7 +51,7 @@ import wiremock.org.apache.http.impl.client.HttpClients;
 
 @Tag("unit")
 @AutoConfigureMockMvc
-@ExtendWith(TenantContextJunitExt.class)
+@ExtendWith(TenantPrimaryContextJunitExt.class)
 class HubClientTest {
 
     private static EntandoHubMockServer mockServer;

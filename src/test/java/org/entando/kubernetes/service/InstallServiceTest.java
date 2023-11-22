@@ -91,7 +91,7 @@ import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
@@ -104,7 +104,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 @Tag("unit")
-@ExtendWith(TenantContextJunitExt.class)
+@ExtendWith(TenantPrimaryContextJunitExt.class)
 public class InstallServiceTest {
 
     public static final String bundleFolder = InstallServiceTest.class.getResource("/bundle").getFile();

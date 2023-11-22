@@ -12,7 +12,7 @@ import org.entando.kubernetes.client.EntandoCoreClientTestDouble;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(TenantContextJunitExt.class)
+@ExtendWith(TenantPrimaryContextJunitExt.class)
 class WidgetInstallableTest {
 
     @Spy

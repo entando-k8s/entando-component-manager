@@ -26,7 +26,7 @@ import org.entando.kubernetes.model.bundle.downloader.BundleDownloader;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.entando.kubernetes.utils.TenantTestUtils;
 import org.entando.kubernetes.utils.TestInstallUtils;
@@ -66,7 +66,7 @@ import org.springframework.web.context.WebApplicationContext;
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
 @DirtiesContext
-@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantPrimaryContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class HubFlowTest {
 
     private MockMvc mockMvc;

@@ -53,7 +53,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.stubhelper.WidgetStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -61,7 +61,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
 
 @Tag("unit")
-@ExtendWith(TenantContextJunitExt.class)
+@ExtendWith(TenantPrimaryContextJunitExt.class)
 public class EntandoBundleUtilitiesTest {
 
     private BundleReader bundleReader;
@@ -392,7 +392,7 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    void secretOwnedByOtherTenantsResultsInExceptionBeingThrownIfUsedInpRIMARY() {
+    void secretOwnedByOtherTenantsResultsInExceptionBeingThrownIfUsedInPrimary() {
         final String ENVIRONMENT_VARIABLE = "ENVIRONMENT_VARIABLE";
 
         EnvVarSource envVarSource = new EnvVarSourceBuilder()
