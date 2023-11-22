@@ -34,6 +34,7 @@ import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.model.bundle.descriptor.plugin.PluginDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
 import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
@@ -403,9 +404,11 @@ public class EntandoBundleUtilitiesTest {
                 .withValueFrom(envVarSource)
                 .build();
 
+        final List<EnvVar> singletonList = Collections.singletonList(customEnvvar);
+        final List<EnvironmentVariable> environmentVariableList = PluginStubHelper.stubEnvironmentVariables();
+
         EntandoValidationException exception = assertThrows(EntandoValidationException.class,
-                () -> BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
-                        Collections.singletonList(customEnvvar)));
+                () -> BundleUtilities.assemblePluginEnvVars(environmentVariableList, singletonList));
         assertTrue(exception.getMessage().contains("Cannot reference a non-primary secret on the primary tenant!"));
         assertTrue(exception.getMessage().contains(PRIMARY_TENANT_CODE));
         assertTrue(exception.getMessage().contains(ENVIRONMENT_VARIABLE));

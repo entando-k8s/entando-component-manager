@@ -9,7 +9,9 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import java.util.Collections;
+import java.util.List;
 import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.model.bundle.descriptor.plugin.EnvironmentVariable;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TenantSecondaryContextJunitExt;
@@ -19,7 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @Tag("unit")
 @ExtendWith(TenantSecondaryContextJunitExt.class)
-class EntandoBundleUtilitiesTenantTest {
+class EntandoBundleUtilitiesSecondaryTenantTest {
 
     @Test
     void secretOwnedByPrimaryResultsInExceptionBeingThrownIfUsedInOtherTenant() {
@@ -33,9 +35,11 @@ class EntandoBundleUtilitiesTenantTest {
                 .withValueFrom(envVarSource)
                 .build();
 
+        final List<EnvironmentVariable> environmentVariableList = PluginStubHelper.stubEnvironmentVariables();
+        final List<EnvVar> singletonList
+                = Collections.singletonList(customEnvvar);
         EntandoValidationException exception = assertThrows(EntandoValidationException.class,
-                () -> BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
-                        Collections.singletonList(customEnvvar)));
+                () -> BundleUtilities.assemblePluginEnvVars(environmentVariableList, singletonList));
         assertTrue(exception.getMessage().contains("Cannot reference a primary secret on the non-primary tenant"));
         assertTrue(exception.getMessage().contains(SECONDARY_TENANT_CODE));
         assertTrue(exception.getMessage().contains(ENVIRONMENT_VARIABLE));
