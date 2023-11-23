@@ -86,8 +86,8 @@ public class TenantDataSourceConfiguration {
                 uri = uri.replaceFirst(SRC_DB_DIR, dbDirectoryName);
                 Path destinationFile = Path.of(tmpFolder, uri);
 
-                FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
                 log.debug("Moving Liquibase resources from JAR to {}", destinationFile.toFile().getAbsolutePath());
+                FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
             }
         } else {
             final File destDir = new File(tmpFolder + File.separator + dbDirectoryName);
