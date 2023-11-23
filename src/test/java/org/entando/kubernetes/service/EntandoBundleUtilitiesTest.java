@@ -360,11 +360,11 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void testHashCountOnSecretName() {
-        String name = "pn-hasldk12-8dsjahj2-mypluginname-conf";
+        String name = "pn-hasldk12-8dsjahj2-mypluginname";
         int count = BundleUtilities.countHashesInSecretName(name, 8);
         assertEquals(2, count);
 
-        name = "pn-hasldk12-8dsjahj2-3dsjahj3-mypluginname-conf";
+        name = "pn-hasldk12-8dsjahj2-3dsjahj3-mypluginname";
         count = BundleUtilities.countHashesInSecretName(name, 8);
         assertEquals(3, count);
 
@@ -379,7 +379,7 @@ public class EntandoBundleUtilitiesTest {
     @Test
     void secretOwnedByPrimaryDoesNotThrowException() {
         EnvVarSource envVarSource = new EnvVarSourceBuilder()
-                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-mypluginname-conf", null)
+                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-mypluginname", null)
                 .build();
         EnvVar customEnvvar = new EnvVarBuilder()
                 .withName("ENVIRONMENT_VARIABLE")
@@ -397,7 +397,7 @@ public class EntandoBundleUtilitiesTest {
         final String ENVIRONMENT_VARIABLE = "ENVIRONMENT_VARIABLE";
 
         EnvVarSource envVarSource = new EnvVarSourceBuilder()
-                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-ads6ahj4-mypluginname-conf", null)
+                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-ads6ahj4-mypluginname", null)
                 .build();
         EnvVar customEnvvar = new EnvVarBuilder()
                 .withName(ENVIRONMENT_VARIABLE)

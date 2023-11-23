@@ -28,7 +28,7 @@ class EntandoBundleUtilitiesSecondaryTenantTest {
         final String ENVIRONMENT_VARIABLE = "ENVIRONMENT_VARIABLE";
 
         EnvVarSource envVarSource = new EnvVarSourceBuilder()
-                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-mypluginname-conf", null)
+                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-mypluginname", null)
                 .build();
         EnvVar customEnvvar = new EnvVarBuilder()
                 .withName(ENVIRONMENT_VARIABLE)
