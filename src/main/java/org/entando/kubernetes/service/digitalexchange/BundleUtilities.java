@@ -516,7 +516,7 @@ public class BundleUtilities {
         }
         // make sure the correct kind of secret name is referenced
         list.stream().filter(e -> e.getValueFrom() != null
-                        && isSecretSuitableForCurrentTenant(e.getValueFrom().getSecretKeyRef().getName()))
+                        && !isSecretSuitableForCurrentTenant(e.getValueFrom().getSecretKeyRef().getName()))
                 .findFirst()
                 .ifPresent(v -> {
                     throw new EntandoValidationException(message + "Faulting environment variable name '" + v.getName() + "'");
@@ -532,8 +532,8 @@ public class BundleUtilities {
     private static boolean isSecretSuitableForCurrentTenant(String secretCode) {
         if (StringUtils.isNotBlank(secretCode)) {
             int count = countHashesInSecretName(secretCode, ENTITY_CODE_HASH_LENGTH);
-            return (TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count > 2)
-                    || (!TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count < 3);
+            return (TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count <= 2)
+                    || (!TenantContextHolder.getCurrentTenantCode().equals(PRIMARY_TENANT) && count >= 3);
         }
         return false;
     }
