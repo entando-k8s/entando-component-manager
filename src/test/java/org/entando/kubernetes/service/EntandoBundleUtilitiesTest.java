@@ -2,7 +2,11 @@ package org.entando.kubernetes.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.kubernetes.TestEntitiesGenerator.getTestBundle;
+import static org.entando.kubernetes.service.EntandoBundleUtilitiesSecondaryTenantTest.ENVIRONMENT_VARIABLE;
 import static org.entando.kubernetes.stubhelper.PluginStubHelper.PRIMARY_TENANT_CODE;
+import static org.entando.kubernetes.stubhelper.PluginStubHelper.TEST_ENV_VAR_2_NAME;
+import static org.entando.kubernetes.stubhelper.PluginStubHelper.stubEnvironmentVariableWithSecret;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -332,9 +336,14 @@ public class EntandoBundleUtilitiesTest {
 
     @Test
     void receivingAListOfEnvironmentVariableShouldCorrectlyConvertThemToAListOfEnvVar() {
+        final String SECRET_NAME = "ps-a1b2c3d4-24f085aa-mem_bundle";
         EnvVar customEnvvar = new EnvVarBuilder()
                 .withName(PluginStubHelper.TEST_ENV_VAR_3_NAME).withValue("val3").build();
-        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
+
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+        descriptor.setEnvironmentVariables(PluginStubHelper.stubEnvironmentVariables(TEST_ENV_VAR_2_NAME,
+                SECRET_NAME));
+        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(descriptor,
                 Collections.singletonList(customEnvvar));
 
         assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_0_NAME);
@@ -345,10 +354,10 @@ public class EntandoBundleUtilitiesTest {
         assertThat(envVars.get(1).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
         assertThat(envVars.get(1).getValueFrom()).isNull();
 
-        assertThat(envVars.get(2).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_2_NAME);
+        assertThat(envVars.get(2).getName()).isEqualTo(TEST_ENV_VAR_2_NAME);
         assertThat(envVars.get(2).getValue()).isNull();
         assertThat(envVars.get(2).getValueFrom().getSecretKeyRef().getName()).isEqualTo(
-                PluginStubHelper.TEST_ENV_VAR_2_SECRET_NAME);
+                SECRET_NAME);
         assertThat(envVars.get(2).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
 
@@ -359,35 +368,33 @@ public class EntandoBundleUtilitiesTest {
     }
 
     @Test
-    void testHashCountOnSecretName() {
+    void testHashCountOnSecretName() { // TODO refactor me
         String name = "pn-hasldk12-8dsjahj2-mypluginname";
-        int count = BundleUtilities.countHashesInSecretName(name, 8);
+        int count = BundleUtilities.getHashesInSecretName(name, 8).size();
         assertEquals(2, count);
 
         name = "pn-hasldk12-8dsjahj2-3dsjahj3-mypluginname";
-        count = BundleUtilities.countHashesInSecretName(name, 8);
+        count = BundleUtilities.getHashesInSecretName(name, 8).size();
         assertEquals(3, count);
 
         name = "secretWithNoSeparator";
-        count = BundleUtilities.countHashesInSecretName(name, 8);
+        count = BundleUtilities.getHashesInSecretName(name, 8).size();
         assertEquals(0, count);
 
-        count = BundleUtilities.countHashesInSecretName(null, 8);
+        count = BundleUtilities.getHashesInSecretName(null, 8).size();
         assertEquals(0, count);
     }
 
     @Test
     void secretOwnedByPrimaryDoesNotThrowException() {
-        EnvVarSource envVarSource = new EnvVarSourceBuilder()
-                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-mypluginname", null)
-                .build();
-        EnvVar customEnvvar = new EnvVarBuilder()
-                .withName("ENVIRONMENT_VARIABLE")
-                .withValueFrom(envVarSource)
-                .build();
+        EnvVar customEnvvar = stubEnvironmentVariableWithSecret(ENVIRONMENT_VARIABLE, "pn-a1b2c3d4-24f085aa-mypluginname");
 
-        final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
-                Collections.singletonList(customEnvvar));
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+        final List<EnvironmentVariable> environmentVariableList = PluginStubHelper
+                .stubEnvironmentVariables(TEST_ENV_VAR_2_NAME, "pn-a1b2c3d4-24f085aa-meh_plugin");
+        descriptor.setEnvironmentVariables(environmentVariableList);
+        final List<EnvVar> envVars = assertDoesNotThrow(() -> BundleUtilities.assemblePluginEnvVars(descriptor,
+                Collections.singletonList(customEnvvar)));
         assertFalse(envVars.isEmpty());
         assertEquals(4, envVars.size());
     }
@@ -397,7 +404,7 @@ public class EntandoBundleUtilitiesTest {
         final String ENVIRONMENT_VARIABLE = "ENVIRONMENT_VARIABLE";
 
         EnvVarSource envVarSource = new EnvVarSourceBuilder()
-                .withNewSecretKeyRef("key", "pn-hasldk12-8dsjahj2-ads6ahj4-mypluginname", null)
+                .withNewSecretKeyRef("key", "pn-a1b2c3d4-8dsjahj2-24f085aa-mypluginname", null)
                 .build();
         EnvVar customEnvvar = new EnvVarBuilder()
                 .withName(ENVIRONMENT_VARIABLE)
@@ -406,10 +413,12 @@ public class EntandoBundleUtilitiesTest {
 
         final List<EnvVar> singletonList = Collections.singletonList(customEnvvar);
         final List<EnvironmentVariable> environmentVariableList = PluginStubHelper.stubEnvironmentVariables();
+        final PluginDescriptor descriptor = PluginStubHelper.stubPluginDescriptorV5();
+        descriptor.setEnvironmentVariables(environmentVariableList);
 
         EntandoValidationException exception = assertThrows(EntandoValidationException.class,
-                () -> BundleUtilities.assemblePluginEnvVars(environmentVariableList, singletonList));
-        assertTrue(exception.getMessage().contains("Cannot reference a non-primary secret on the primary tenant!"));
+                () -> BundleUtilities.assemblePluginEnvVars(descriptor, singletonList));
+        assertTrue(exception.getMessage().contains("One or more malformed secrets were detected on tenant"));
         assertTrue(exception.getMessage().contains(PRIMARY_TENANT_CODE));
         assertTrue(exception.getMessage().contains(ENVIRONMENT_VARIABLE));
     }
