@@ -1,5 +1,6 @@
 package org.entando.kubernetes.validator;
 
+import static org.entando.kubernetes.validator.ValidationFunctions.validateDbURL;
 import static org.entando.kubernetes.validator.ValidationFunctions.validateFQDN;
 import static org.entando.kubernetes.validator.ValidationFunctions.validateURL;
 
@@ -34,6 +35,12 @@ public class TenantValidator {
                 if (StringUtils.isBlank(config.getDeDbUrl())) {
                     getErrorListForTenant(config.getTenantCode())
                             .add("deDbUrl: missing configuration value");
+                } else {
+                    //check DB connection URL
+                    if (!validateDbURL(config.getDeDbUrl())) {
+                        getErrorListForTenant(config.getTenantCode())
+                                .add("deDbUrl: invalid DB Url");
+                    }
                 }
                 if (StringUtils.isBlank(config.getDeDbPassword())) {
                     getErrorListForTenant(config.getTenantCode())
