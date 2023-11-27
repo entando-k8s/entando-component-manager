@@ -9,6 +9,7 @@ import static org.entando.kubernetes.stubhelper.PluginStubHelper.stubEnvironment
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -370,20 +371,31 @@ public class EntandoBundleUtilitiesTest {
     @Test
     void testHashCountOnSecretName() { // TODO refactor me
         String name = "pn-hasldk12-8dsjahj2-mypluginname";
-        int count = BundleUtilities.getHashesInSecretName(name, 8).size();
-        assertEquals(2, count);
+        List<String> hashes = BundleUtilities.getHashesInSecretName(name, 8);
+        assertNotNull(hashes);
+        assertEquals(2, hashes.size());
+        assertEquals("hasldk12", hashes.get(0));
+        assertEquals("8dsjahj2", hashes.get(1));
 
         name = "pn-hasldk12-8dsjahj2-3dsjahj3-mypluginname";
-        count = BundleUtilities.getHashesInSecretName(name, 8).size();
-        assertEquals(3, count);
+        hashes = BundleUtilities.getHashesInSecretName(name, 8);
+        assertNotNull(hashes);
+        assertEquals(3, hashes.size());
+        assertEquals("hasldk12", hashes.get(0));
+        assertEquals("8dsjahj2", hashes.get(1));
+        assertEquals("3dsjahj3", hashes.get(2));
 
         name = "secretWithNoSeparator";
-        count = BundleUtilities.getHashesInSecretName(name, 8).size();
-        assertEquals(0, count);
+        hashes = BundleUtilities.getHashesInSecretName(name, 8);
+        assertNotNull(hashes);
+        assertTrue(hashes.isEmpty());
 
-        count = BundleUtilities.getHashesInSecretName(null, 8).size();
-        assertEquals(0, count);
+        hashes = BundleUtilities.getHashesInSecretName(null, 8);
+        assertNotNull(hashes);
+        assertTrue(hashes.isEmpty());
     }
+
+
 
     @Test
     void secretOwnedByPrimaryDoesNotThrowException() {
