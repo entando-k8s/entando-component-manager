@@ -55,7 +55,7 @@ public abstract class Installable<T extends Descriptor> {
     /**
      * This method will be return true if the component must be deleted from AppEngine.
      *
-     * @return a boolean value representing whether or not to delete the component from AppEngine.
+     * @return a boolean value representing whether to delete the component from AppEngine.
      */
     public boolean shouldUninstallFromAppEngine() {
         boolean shouldCallDelete = shouldCreate();

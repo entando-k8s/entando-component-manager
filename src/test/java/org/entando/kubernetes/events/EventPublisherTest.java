@@ -13,7 +13,7 @@ import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.stubhelper.EntandoBundleJobStubHelper;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.entando.kubernetes.utils.TenantTestUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -40,7 +40,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles({"test"})
 @Tag("in-process")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
-@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantPrimaryContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class EventPublisherTest {
 
     @Autowired

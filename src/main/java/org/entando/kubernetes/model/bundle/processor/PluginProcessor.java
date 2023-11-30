@@ -166,7 +166,7 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 InstallAction action = extractInstallAction(pluginDescriptor.getComponentKey().getKey(),
                         conflictStrategy,
                         installPlan);
-                // add to installables
+                // add to installable
                 installableList.add(new PluginInstallable(kubernetesService, pluginDescriptor, action,
                         pluginPathRepository));
             }

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 
 @Slf4j
-public class TenantContextJunitExt implements BeforeAllCallback, AfterAllCallback {
+public class TenantPrimaryContextJunitExt implements BeforeAllCallback, AfterAllCallback {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {

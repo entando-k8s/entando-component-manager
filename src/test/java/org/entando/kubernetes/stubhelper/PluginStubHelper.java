@@ -1,5 +1,9 @@
 package org.entando.kubernetes.stubhelper;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSource;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +50,7 @@ public class PluginStubHelper {
     public static final String TEST_RES_MEMORY = "8G";
     public static final String TEST_RES_CPU = "6m";
     public static final String PRIMARY_TENANT_CODE = "primary";
+    public static final String SECONDARY_TENANT_CODE = "secondary";
 
 
     public static PluginDescriptor stubPluginDescriptorV2() {
@@ -100,6 +105,27 @@ public class PluginStubHelper {
                                 new SecretKeyRef(TEST_ENV_VAR_2_SECRET_NAME, TEST_ENV_VAR_2_SECRET_KEY))
                 )
         );
+    }
+
+    public static List<EnvironmentVariable> stubEnvironmentVariables(String envVarName, String secretName) {
+        return Arrays.asList(
+                new EnvironmentVariable(TEST_ENV_VAR_1_NAME, TEST_ENV_VAR_1_VALUE, null),
+                new EnvironmentVariable(envVarName, null,
+                        new ValueFrom(
+                                new SecretKeyRef(secretName, TEST_ENV_VAR_2_SECRET_KEY))
+                )
+        );
+    }
+
+    public static EnvVar stubEnvironmentVariableWithSecret(String envVarName, String secretName) {
+        EnvVarSource envVarSource = new EnvVarSourceBuilder()
+                .withNewSecretKeyRef("secret-key", secretName, null)
+                .build();
+        EnvVar customEnvvar = new EnvVarBuilder()
+                .withName(envVarName)
+                .withValueFrom(envVarSource)
+                .build();
+        return customEnvvar;
     }
 
     public static PluginDescriptor stubPluginDescriptorV1() {

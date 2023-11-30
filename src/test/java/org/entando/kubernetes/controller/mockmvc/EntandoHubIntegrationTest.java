@@ -26,7 +26,7 @@ import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
 import org.entando.kubernetes.service.digitalexchange.entandohub.EntandoHubRegistryService;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
 import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
-import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantPrimaryContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +56,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
-@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantPrimaryContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class EntandoHubIntegrationTest {
 
     @Autowired

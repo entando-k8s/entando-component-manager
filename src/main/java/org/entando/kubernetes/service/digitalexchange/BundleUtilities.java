@@ -1,5 +1,7 @@
 package org.entando.kubernetes.service.digitalexchange;
 
+import static org.entando.kubernetes.model.common.EntandoMultiTenancy.PRIMARY_TENANT;
+
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
@@ -15,9 +17,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -292,7 +294,7 @@ public class BundleUtilities {
 
 
     /**
-     * generate the EntandoPlugin CR starting by the received plugin descriptor.
+     * Generate the EntandoPlugin CR starting by the received plugin descriptor.
      *
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
@@ -305,7 +307,7 @@ public class BundleUtilities {
     }
 
     /**
-     * generate the EntandoPlugin CR starting by the received plugin descriptor version equal or major than 2.
+     * Generate the EntandoPlugin CR starting by the received plugin descriptor version equal or major than 2.
      *
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
@@ -327,7 +329,7 @@ public class BundleUtilities {
                 .withHealthCheckPath(descriptor.getHealthCheckPath())
                 .withPermissions(extractPermissionsFromDescriptor(descriptor))
                 .withSecurityLevel(PluginSecurityLevel.forName(descriptor.getSecurityLevel()))
-                .withEnvironmentVariables(assemblePluginEnvVars(descriptor.getEnvironmentVariables(),
+                .withEnvironmentVariables(assemblePluginEnvVars(descriptor,
                         conf.map(PluginConfiguration::getEnvironmentVariables).orElse(Collections.emptyList())))
                 .withResourceRequirements(generateResourceRequirementsFromDescriptor(descriptor))
                 .withTenantCode(descriptor.getDescriptorMetadata().getTenantCode())
@@ -481,29 +483,115 @@ public class BundleUtilities {
     }
 
     /**
-     * receives a list of environment variables and convert them to the K8S env var format.
+     * Receives a list of environment variables and convert them to the K8S env var format.
      *
-     * @param environmentVariableList the PluginDescriptor from which get the env vars to convert
+     * @param descriptor the PluginDescriptor from which get the env vars to convert
      * @return the list of K8S compatible EnvVar
      */
-    public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
+    public static List<EnvVar> assemblePluginEnvVars(PluginDescriptor descriptor,
             List<EnvVar> customEnvironmentVariablesList) {
+        final List<EnvironmentVariable> environmentVariableList = descriptor.getEnvironmentVariables();
+        final String bundleId = descriptor.getDescriptorMetadata().getBundleId();
+        final String pluginId = descriptor.getDescriptorMetadata().getPluginId();
+        final String currentTenantCode = TenantContextHolder.getCurrentTenantCode();
 
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
-                .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
-                    assembledEnvVar.put(env.getName(), env);
-                }));
+                .map(BundleUtilities::buildFromEnvironmentVariable).forEach(env ->
+                        assembledEnvVar.put(env.getName(), env)
+                ));
+        // adding tenant code
         assembledEnvVar.put(ENTANDO_TENANT_CODE, buildFromEnvironmentVariable(
-                new EnvironmentVariable(ENTANDO_TENANT_CODE, TenantContextHolder.getCurrentTenantCode(), null)));
-        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
-            assembledEnvVar.put(env.getName(), env);
-        }));
+                new EnvironmentVariable(ENTANDO_TENANT_CODE, currentTenantCode, null)));
 
-        return assembledEnvVar.entrySet().stream()
-                .map(Entry::getValue)
+        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream()
+                .forEach(env ->
+                        assembledEnvVar.put(env.getName(), env)
+                ));
+
+        List<EnvVar> list = assembledEnvVar.values().stream()
                 .sorted(Comparator.comparing(EnvVar::getName))
                 .collect(Collectors.toList());
+        // collect ill-formed secrets
+        Set<EnvVar> faultingSecrets = list.stream()
+                .filter(e -> e.getValueFrom() != null
+                        && !checkSecretOwnership(e.getValueFrom().getSecretKeyRef().getName(), bundleId, pluginId))
+                .collect(Collectors.toSet());
+        // wrap a nice message for the user
+        if (!faultingSecrets.isEmpty()) {
+            final StringBuilder message = new StringBuilder("One or more malformed secrets were detected on tenant '" + currentTenantCode + "':\n");
+
+            faultingSecrets.forEach(e -> message.append("\tfaulting environment variable name '" + e.getName() + "'\n"));
+            throw new EntandoValidationException(message.toString());
+        }
+        return list;
+    }
+
+    /**
+     * Check whether the secret referenced by an environment variable belongs to the current bundle plugin and, optionally,
+     * tenant.
+     * @param secretName self-explanatory
+     * @param bundleId self-explanatory
+     * @param pluginId self-explanatory
+     * @return true if the secret belongs to the current bundle, false otherwise
+     */
+    public static boolean checkSecretOwnership(String secretName, String bundleId, String pluginId) {
+        final String currentTenantCode = TenantContextHolder.getCurrentTenantCode();
+        final List<String> hashes = getHashesInSecretName(secretName, ENTITY_CODE_HASH_LENGTH);
+        final boolean isPrimary = currentTenantCode.equals(PRIMARY_TENANT);
+        final int expectedHashesCount = isPrimary ? 2 : 3;
+        int idx = 0;
+
+        if (hashes.isEmpty()) {
+            log.debug("no hashes to match the secret name with!");
+            return false;
+        }
+        if (hashes.size() < expectedHashesCount) {
+            log.debug("expected {} hashes, have {}", expectedHashesCount, hashes.size());
+            return false;
+        }
+        // first hash must be the bundle id
+        if (!hashes.get(idx++).equals(bundleId)) {
+            log.debug("mismatching BUNDLE ID! Expected {} have {}", bundleId, hashes.get(0));
+            return false;
+        }
+        // the second hash, if present in a non-primary must be the tenant code
+        if (!isPrimary) {
+            final String tenantId = calculateTenantId(currentTenantCode);
+
+            if (!hashes.get(idx++).equals(tenantId)) {
+                log.debug("mismatching TENANT ID! Expected {} have {}", tenantId, hashes.get(1));
+                return false;
+            }
+        }
+        // finally the plugin id
+        if (!hashes.get(idx).equals(pluginId)) {
+            log.debug("mismatching PLUGIN ID! Expected {} have {}", pluginId, hashes.get(idx));
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get the number of hashes in the given (secret) name. Basically we look for alphanumeric strings of fixed length
+     * separated by a '-'
+     * @param name the name to analyze
+     * @param length the length of the hash
+     * @return the number of hashes found
+     */
+    public static List<String> getHashesInSecretName(String name, int length) {
+        List<String> hashes = new ArrayList<String>();
+        if (StringUtils.isNotBlank(name)) {
+            String[] tokens = name.split("-");
+            if (tokens.length > 2) {
+                hashes = Arrays.asList(tokens)
+                        .stream()
+                        .filter(t -> StringUtils.isAlphanumeric(t) && t.length() == length)
+                        .collect(Collectors.toList());
+                return hashes;
+            }
+        }
+        return hashes;
     }
 
     private EnvVar buildFromEnvironmentVariable(EnvironmentVariable envVar) {
