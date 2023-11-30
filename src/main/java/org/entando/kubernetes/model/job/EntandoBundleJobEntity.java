@@ -84,6 +84,9 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
     @Column
     @Size(max = MAX_COMMON_SIZE_OF_STRINGS)
     private String uninstallErrors;
+    @Column
+    @Size(max = MAX_COMMON_SIZE_OF_STRINGS)
+    private String installWarnings;
 
     @PrePersist
     public void generateId() {
@@ -110,6 +113,7 @@ public class EntandoBundleJobEntity implements TrackableJob, HasProgress {
         newEntity.setUninstallErrorCode(this.uninstallErrorCode);
         newEntity.setUninstallErrorMessage(this.uninstallErrorMessage);
         newEntity.setUninstallErrors(this.uninstallErrors);
+        newEntity.setInstallWarnings(this.installWarnings);
         return newEntity;
     }
 }

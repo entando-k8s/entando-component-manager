@@ -30,6 +30,7 @@ import org.entando.kubernetes.client.k8ssvc.K8SServiceClient.PluginConfiguration
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
+import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.BundleProperty;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.EntandoBundleVersion;
@@ -49,6 +50,7 @@ import org.entando.kubernetes.model.common.ExpectedRole;
 import org.entando.kubernetes.model.common.Permission;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleDetails;
+import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.PluginSecurityLevel;
@@ -799,5 +801,12 @@ public class BundleUtilities {
     public static String extractIdFromEntityCode(String entityCode) throws EntandoComponentManagerException {
         ValidationFunctions.validateEntityCodeOrThrow(entityCode);
         return entityCode.substring(entityCode.length() - ENTITY_CODE_HASH_LENGTH);
+    }
+
+    public EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String version) {
+        String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
+        return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
+                .orElseThrow(
+                        () -> new InvalidBundleException("Version " + versionToFind + " not defined in bundle versions"));
     }
 }

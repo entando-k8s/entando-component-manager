@@ -17,6 +17,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
 import org.entando.kubernetes.client.model.assembler.InstallPlanAssembler;
 import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
+import org.entando.kubernetes.controller.digitalexchange.job.model.ComponentInstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -47,6 +49,7 @@ import org.entando.kubernetes.model.bundle.reportable.AnalysisReportFunction;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.bundle.reportable.ReportableComponentProcessor;
 import org.entando.kubernetes.model.bundle.reportable.ReportableRemoteHandler;
+import org.entando.kubernetes.model.bundle.usage.ComponentUsage;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
@@ -62,6 +65,7 @@ import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.EntandoDeBundleComposer;
+import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleComponentUsageService;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.service.digitalexchange.concurrency.BundleOperationsConcurrencyManager;
 import org.entando.kubernetes.validator.descriptor.BundleDescriptorValidator;
@@ -75,6 +79,11 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     public static final boolean PERFORM_CONCURRENT_CHECKS = true;
     public static final boolean DONT_PERFORM_CONCURRENT_CHECKS = false;
 
+    public enum Operation {
+        ROLLBACK,
+        UNINSTALL
+    }
+
     private final @NonNull EntandoBundleService bundleService;
     private final @NonNull BundleDownloaderFactory downloaderFactory;
     private final @NonNull EntandoBundleJobRepository jobRepo;
@@ -87,6 +96,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     private final @NonNull BundleDescriptorValidator bundleDescriptorValidator;
     private final @NonNull EntandoCoreClient entandoCoreClient;
     private final @NonNull BundleUninstallUtility bundleUninstallUtility;
+    private final @NonNull EntandoBundleComponentUsageService usageService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -245,16 +255,8 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                         conflictStrategy, installPlan);
 
                 Queue<EntandoBundleComponentJobEntity> componentJobQueue = bundleInstallableComponents.stream()
-                        .map(i -> {
-                            EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
-                            cj.setParentJob(parentJob);
-                            cj.setComponentType(i.getComponentType());
-                            cj.setComponentId(i.getName());
-                            cj.setChecksum(i.getChecksum());
-                            cj.setInstallable(i);
-                            cj.setAction(i.getAction());
-                            return cj;
-                        }).collect(Collectors.toCollection(ArrayDeque::new));
+                        .map(i -> createEntandoBundleComponentJobEntity(parentJob, i))
+                        .collect(Collectors.toCollection(ArrayDeque::new));
 
                 scheduler.queuePrimaryComponents(componentJobQueue);
 
@@ -267,7 +269,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                     EntandoBundleComponentJobEntity installJob = optCompJob.get();
 
                     JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(
-                            installJob, this::executeInstall
+                            installJob, this::executeInstall, JobStatus.INSTALL_IN_PROGRESS
                     );
 
                     scheduler.recordProcessedComponentJob(tracker.getJob());
@@ -290,9 +292,10 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                             .getComponentVersion());
                     parentJobResult = rollback(scheduler, parentJobResult);
                 } else {
-
+                    String warnings = uninstallOrphanedComponents(parentJob, bundle, conflictStrategy, installPlan);
                     saveAsInstalledBundle(bundle, parentJob, bundleReader.readBundleDescriptor(),
                             bundleReader.getBundleDigest());
+                    parentJobResult.setInstallWarnings(warnings);
                     parentJobResult.clearException();
                     parentJobResult.setStatus(JobStatus.INSTALL_COMPLETED);
                     parentJobResult.setProgress(1.0);
@@ -311,6 +314,88 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         });
     }
 
+    private String uninstallOrphanedComponents(EntandoBundleJobEntity parentJob, EntandoDeBundle bundle,
+                                            InstallAction conflictStrategy, InstallPlan installPlan) {
+        try {
+            Optional<EntandoBundleJobEntity> latestBundleJob = jobRepo
+                    .findFirstByComponentIdAndStatusOrderByStartedAtDesc(parentJob.getComponentId(), JobStatus.INSTALL_COMPLETED);
+
+            if (latestBundleJob.isPresent()) {
+                EntandoDeBundleTag latestTag = BundleUtilities.getBundleTagOrFail(bundle, latestBundleJob.get().getComponentVersion());
+                BundleDownloader latestBundleDownloader = downloaderFactory.newDownloader(latestTag);
+                BundleReader latestBundleReader = this.downloadBundleAndGetBundleReader(latestBundleDownloader, bundle, latestTag);
+                String latestInstallPlanString = latestBundleJob.get().getInstallPlan();
+                InstallPlan latestInstallPlan = objectMapper.readValue(latestInstallPlanString, InstallPlan.class);
+                InstallPlan diff = calculateDiffInstallPlan(installPlan, latestInstallPlan);
+
+                Queue<Installable> bundleInstallableComponentsDiff = getBundleInstallableComponents(latestBundleReader, conflictStrategy, diff);
+
+
+                Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff = getBundleComponentJobEntityQueue(parentJob, bundleInstallableComponentsDiff);
+
+                List<ComponentUsage> componentUsageList = getComponentUsageList(componentJobQueueDiff);
+
+                JobScheduler schedulerDiff = new JobScheduler();
+                schedulerDiff.queuePrimaryComponents(componentJobQueueDiff);
+                String bundleRootFolder = BundleUtilities.composeBundleResourceRootFolter(latestBundleReader);
+
+                return uninstallDiff(bundleRootFolder, schedulerDiff, componentUsageList);
+
+            } else {
+                String warnings = "The uninstallation of orphaned components is not necessary since the bundle is not installed on the system";
+                log.debug(warnings);
+                return warnings;
+            }
+        } catch (Exception e) {
+            String error = "The uninstallation of orphaned components failed with error " + e;
+            log.error(error);
+            return error;
+        }
+
+    }
+
+    private List<ComponentUsage> getComponentUsageList(Queue<EntandoBundleComponentJobEntity> componentJobQueueDiff) {
+        List<EntandoBundleComponentJobEntity> componentJobListDiff = new ArrayList<>(componentJobQueueDiff);
+        return usageService.getComponentsUsageDetails(componentJobListDiff).stream()
+                .filter(this::isUninstallableFromAppEngine).collect(Collectors.toList());
+    }
+
+    private boolean isUninstallableFromAppEngine(ComponentUsage componentUsage) {
+        if (!componentUsage.isExist() || componentUsage.getHasExternal()) {
+            log.debug(String.format(
+                    "Component '%s' is not found or contains external references so it can't be uninstalled",
+                    componentUsage.getCode()));
+            return false;
+        }
+        return true;
+    }
+
+    private static Queue<EntandoBundleComponentJobEntity> getBundleComponentJobEntityQueue(EntandoBundleJobEntity parentJob,
+                                                                                           Queue<Installable> bundleInstallableComponentsDiff) {
+        return bundleInstallableComponentsDiff.stream()
+                .filter(i -> isAppBuilderWidget(i))
+                .map(i -> createEntandoBundleComponentJobEntity(parentJob, i))
+                .collect(Collectors.toCollection(ArrayDeque::new));
+    }
+
+    private static boolean isAppBuilderWidget(Installable i) {
+        if (i.getRepresentation() instanceof WidgetDescriptor) {
+            return ((WidgetDescriptor) i.getRepresentation()).isTypeAppBuilder();
+        }
+        return false;
+    }
+
+    private static EntandoBundleComponentJobEntity createEntandoBundleComponentJobEntity(EntandoBundleJobEntity parentJob, Installable i) {
+        EntandoBundleComponentJobEntity cj = new EntandoBundleComponentJobEntity();
+        cj.setParentJob(parentJob);
+        cj.setComponentType(i.getComponentType());
+        cj.setComponentId(i.getName());
+        cj.setChecksum(i.getChecksum());
+        cj.setInstallable(i);
+        cj.setAction(i.getAction());
+        return cj;
+    }
+
     private JobResult rollback(JobScheduler scheduler, JobResult result) {
         JobScheduler rollbackScheduler = scheduler.createRollbackScheduler();
         try {
@@ -320,7 +405,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 EntandoBundleComponentJobEntity rollbackJob = optCompJob.get();
                 if (isUninstallable(rollbackJob)) {
                     JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(rollbackJob,
-                            this::executeRollback);
+                            installable -> executeUninstallFromEcr(installable, Operation.ROLLBACK), JobStatus.INSTALL_IN_PROGRESS);
                     if (tracker.getJob().getStatus().equals(JobStatus.INSTALL_ROLLBACK_ERROR)) {
                         throw new EntandoComponentManagerException(
                                 rollbackJob.getComponentType() + " " + rollbackJob.getComponentId()
@@ -337,7 +422,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
             }
 
             // remove from appEngine
-            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result);
+            JobStatus finalStatus = executeDeleteFromAppEngine(componentToUninstallFromAppEngine, result, Operation.ROLLBACK);
             result.setStatus(finalStatus);
             log.info("Rollback operation completed");
 
@@ -349,31 +434,137 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         return result;
     }
 
+    private String uninstallDiff(String bundleRootName, JobScheduler uninstallDiffScheduler, List<ComponentUsage> componentUsageList)
+            throws JsonProcessingException {
+
+        Map<String, JobStatus> componentsFeedbackCM = new HashMap<>();
+        Map<String, JobStatus> componentsFeedbackAppEngine = new HashMap<>();
+        Map<String, Map<String, JobStatus>> componentsFeedback = new HashMap<>();
+        final String uninstallationCMKey = "uninstallationOnCM";
+        final String uninstallationAppEngineKey = "uninstallationOnAppEngine";
+
+        List<EntandoBundleComponentJobEntity> componentsToUninstallFromAppEngine = new ArrayList<>();
+
+        try {
+            Optional<EntandoBundleComponentJobEntity> optCompJob = uninstallDiffScheduler.extractFromQueue();
+
+            while (optCompJob.isPresent()) {
+                EntandoBundleComponentJobEntity uninstallDiffJob = optCompJob.get();
+                if (bundleRootName.equals(uninstallDiffJob.getComponentId()) && ComponentType.DIRECTORY.equals(uninstallDiffJob.getComponentType())) {
+                    // root directory
+                    log.info("skip deletion for root folder");
+                    optCompJob = uninstallDiffScheduler.extractFromQueue();
+                    continue;
+                }
+
+                log.debug("Start uninstalling orphaned components on CM");
+                JobTracker<EntandoBundleComponentJobEntity> tracker = trackExecution(uninstallDiffJob,
+                        installable -> executeUninstallFromEcr(installable, Operation.UNINSTALL), JobStatus.UNINSTALL_IN_PROGRESS);
+
+                componentsFeedbackCM.put(optCompJob.get().getComponentId(), tracker.getJob().getStatus());
+
+                if (tracker.getJob().getStatus().equals(JobStatus.UNINSTALL_ERROR)) {
+                    log.debug("uninstall of orphaned components on cm can't proceed due to an error with one of the components");
+                    componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
+                    componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
+                    return objectMapper.writeValueAsString(componentsFeedback);
+                }
+
+                uninstallDiffScheduler.recordProcessedComponentJob(tracker.getJob());
+
+                componentUsageList.stream()
+                        .filter(component -> component.getCode().equals(tracker.getJob().getComponentId()))
+                        .findFirst()
+                        .ifPresent(matchingComponent -> componentsToUninstallFromAppEngine.add(tracker.getJob()));
+
+                optCompJob = uninstallDiffScheduler.extractFromQueue();
+
+            }
+
+            // remove from appEngine
+            log.debug("Start uninstalling orphaned components on AppEngine");
+
+            JobStatus response;
+            if (!componentsToUninstallFromAppEngine.isEmpty()) {
+                response = executeDeleteFromAppEngine(componentsToUninstallFromAppEngine, Operation.UNINSTALL);
+            } else {
+                response = JobStatus.UNINSTALL_ERROR;
+                log.debug("Nothing of orphaned components to remove on AppEngine");
+            }
+
+            log.info("Uninstall operation completed");
+
+            componentsFeedbackAppEngine = componentsToUninstallFromAppEngine.stream()
+                    .collect(Collectors.toMap(
+                            EntandoBundleComponentJobEntity::getComponentId,
+                            item -> response
+                    ));
+
+            componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
+            componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
+            return objectMapper.writeValueAsString(componentsFeedback);
+
+        } catch (Exception uninstallException) {
+            log.error("An error occurred during component uninstall", uninstallException);
+            componentsFeedback.put(uninstallationCMKey, componentsFeedbackCM);
+            componentsFeedback.put(uninstallationAppEngineKey, componentsFeedbackAppEngine);
+            return objectMapper.writeValueAsString(componentsFeedback);
+        }
+
+    }
+
+    private Map<String, ComponentInstallPlan> calculateDiffMap(Map<String, ComponentInstallPlan> currentMap, Map<String, ComponentInstallPlan> latestMap) {
+        Map<String, ComponentInstallPlan> diffMap = new HashMap<>();
+        latestMap.forEach((k, v) -> {
+            if (!currentMap.containsKey(k)) {
+                v.setAction(InstallAction.CREATE);
+                diffMap.put(k, v);
+            }
+        });
+        return diffMap;
+    }
+
+    private InstallPlan calculateDiffInstallPlan(InstallPlan currentInstallPlan, InstallPlan latestInstallPlan) {
+        InstallPlan diff = new InstallPlan();
+        diff.setWidgets(calculateDiffMap(currentInstallPlan.getWidgets(), latestInstallPlan.getWidgets()));
+
+        return diff;
+    }
+
     private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete,
-            JobResult parentJobResult) {
+                                                 JobResult parentJobResult, Operation operation) {
         EntandoCoreComponentDeleteResponse response = entandoCoreClient.deleteComponents(toDelete.stream()
                 .map(EntandoCoreComponentDeleteRequest::fromEntity)
                 .flatMap(Optional::stream)
                 .collect(Collectors.toList()));
 
+        JobInfo jobInfo = new JobInfo(operation);
+
         switch (response.getStatus()) {
             case FAILURE:
-                log.debug("In rollback All deletes are in error with response:'{}'", response);
-                bundleUninstallUtility.markGlobalError(parentJobResult, response);
-                bundleUninstallUtility.markSingleErrors(toDelete,response);
-                return JobStatus.INSTALL_ERROR;
+                log.debug("In {} All deletes are in error with response:'{}'", operation, response);
+                if (parentJobResult != null) {
+                    bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                    bundleUninstallUtility.markSingleErrors(toDelete,response);
+                }
+                return jobInfo.error;
             case PARTIAL_SUCCESS:
-                log.debug("In rollback Partial deletes are in error with response:'{}'", response);
-                bundleUninstallUtility.markGlobalError(parentJobResult, response);
-                bundleUninstallUtility.markSingleErrors(toDelete,response);
-                return JobStatus.INSTALL_ROLLBACK_PARTIAL;
+                log.debug("In {} Partial deletes are in error with response:'{}'", operation, response);
+                if (parentJobResult != null) {
+                    bundleUninstallUtility.markGlobalError(parentJobResult, response);
+                    bundleUninstallUtility.markSingleErrors(toDelete,response);
+                }
+                return jobInfo.partial;
             case SUCCESS:
             default:
-                log.debug("In rollback all deletes ok with response:'{}'", response);
-                return JobStatus.INSTALL_ROLLBACK;
+                log.debug("In {} all deletes ok with response:'{}'", operation, response);
+                return jobInfo.ok;
         }
     }
 
+    private JobStatus executeDeleteFromAppEngine(List<EntandoBundleComponentJobEntity> toDelete, Operation operation) {
+        return  executeDeleteFromAppEngine(toDelete, null, operation);
+    }
 
     /**
      * download the bundle, create a BundleReader to read it and return it.
@@ -403,9 +594,9 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
     }
 
     private JobTracker<EntandoBundleComponentJobEntity> trackExecution(EntandoBundleComponentJobEntity job,
-            Function<Installable<?>, JobResult> action) {
+            Function<Installable<?>, JobResult> action, JobStatus jobStatus) {
         JobTracker<EntandoBundleComponentJobEntity> componentJobTracker = new JobTracker<>(job, compJobRepo);
-        componentJobTracker.startTracking(JobStatus.INSTALL_IN_PROGRESS);
+        componentJobTracker.startTracking(jobStatus);
         JobResult result = action.apply(job.getInstallable());
         componentJobTracker.finishTracking(result);
         return componentJobTracker;
@@ -545,16 +736,49 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
                 && component.getComponentType() == ComponentType.PLUGIN);
     }
 
-    private JobResult executeRollback(Installable<?> installable) {
+    @Getter
+    public class JobInfo {
+        Operation operation;
+        JobStatus ok;
+        JobStatus error;
+        JobStatus partial;
+        String msg;
+
+        public JobInfo(Operation operation) {
+            switch (operation) {
+                case ROLLBACK:
+                    this.ok = JobStatus.INSTALL_ROLLBACK;
+                    this.error = JobStatus.INSTALL_ROLLBACK_ERROR;
+                    this.partial = JobStatus.INSTALL_ROLLBACK_PARTIAL;
+                    this.msg = "rolling back";
+                    break;
+                case UNINSTALL:
+                    this.ok = JobStatus.UNINSTALL_COMPLETED;
+                    this.error = JobStatus.UNINSTALL_ERROR;
+                    this.partial = JobStatus.UNINSTALL_PARTIAL_COMPLETED;
+                    this.msg = "uninstall orphans components";
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid Operation");
+            }
+
+        }
+
+
+    }
+
+    private JobResult executeUninstallFromEcr(Installable<?> installable, Operation operation) {
+        JobInfo jobInfo = new JobInfo(operation);
         return installable.uninstallFromEcr()
-                .thenApply(vd -> JobResult.builder().status(JobStatus.INSTALL_ROLLBACK).build())
+                .thenApply(vd -> JobResult.builder().status(jobInfo.ok).build())
                 .exceptionally(th -> {
-                    log.error(String.format("Error rolling back %s %s",
+                    log.error(String.format("Error %s %s %s",
+                            jobInfo.msg,
                             installable.getComponentType(),
                             installable.getName()), th);
                     String message = getMeaningfulErrorMessage(th, installable);
                     return JobResult.builder()
-                            .status(JobStatus.INSTALL_ROLLBACK_ERROR)
+                            .status(jobInfo.error)
                             .rollbackException(new EntandoComponentManagerException(message))
                             .build();
                 })
