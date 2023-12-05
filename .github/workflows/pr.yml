@@ -104,7 +104,7 @@ jobs:
         if: always()
         with:
           name: Test results
-          path: "local-checkout/target/surefire-reports/*.xml"
+          path: "local-checkout/*/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
           max-annotations: '0'
