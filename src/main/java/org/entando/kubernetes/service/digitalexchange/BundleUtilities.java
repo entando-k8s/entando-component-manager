@@ -491,14 +491,14 @@ public class BundleUtilities {
 
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
-                .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
-                    assembledEnvVar.put(env.getName(), env);
-                }));
+                .map(BundleUtilities::buildFromEnvironmentVariable).forEach(env ->
+                        assembledEnvVar.put(env.getName(), env)
+                ));
         assembledEnvVar.put(ENTANDO_TENANT_CODE, buildFromEnvironmentVariable(
                 new EnvironmentVariable(ENTANDO_TENANT_CODE, TenantContextHolder.getCurrentTenantCode(), null)));
-        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
-            assembledEnvVar.put(env.getName(), env);
-        }));
+        Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env ->
+                assembledEnvVar.put(env.getName(), env)
+        ));
 
         return assembledEnvVar.entrySet().stream()
                 .map(Entry::getValue)
