@@ -5,6 +5,7 @@ import java.util.Map;
 import lombok.Data;
 import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.model.bundle.descriptor.PageDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.SeoData;
 
 @Data
 public class EntandoCorePage {
@@ -17,6 +18,7 @@ public class EntandoCorePage {
     private List<String> joinGroups;
     private boolean displayedInMenu;
     private boolean seo;
+    private SeoData seoData;
     private String charset;
     private String status;
 
@@ -31,6 +33,7 @@ public class EntandoCorePage {
         this.ownerGroup = valueOrDefault(pd.getOwnerGroup(), "free");
         this.joinGroups = pd.getJoinGroups();
         this.seo = pd.isSeo();
+        this.seoData = pd.getSeoData();
         this.displayedInMenu = pd.isDisplayedInMenu();
         this.charset = valueOrDefault(pd.getCharset(), "utf-8");
         this.status = valueOrDefault(pd.getStatus(), "draft");

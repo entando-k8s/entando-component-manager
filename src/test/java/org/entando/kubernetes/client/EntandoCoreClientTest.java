@@ -422,9 +422,9 @@ class EntandoCoreClientTest {
 
     @Test
     void deletePage() {
-        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.PAGE_ENDPOINT, CODE, WireMock::delete);
+        coreMockServer = coreMockServer.withGenericSupport(EntandoCoreMockServer.DELETE_PAGE_ENDPOINT, CODE, WireMock::delete);
         this.client.deletePage(CODE);
-        coreMockServer.verify(EntandoCoreMockServer.PAGE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
+        coreMockServer.verify(EntandoCoreMockServer.DELETE_PAGE_ENDPOINT + "/" + CODE, WireMock::deleteRequestedFor);
     }
 
     @Test
@@ -568,7 +568,7 @@ class EntandoCoreClientTest {
                 new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.WIDGET_ENDPOINT, client::deleteWidget),
                 new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.FRAGMENT_ENDPOINT, client::deleteFragment),
                 new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.LABEL_ENDPOINT, client::deleteLabel),
-                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.PAGE_ENDPOINT, client::deletePage),
+                new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.DELETE_PAGE_ENDPOINT, client::deletePage),
                 new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.PAGE_TEMPLATE_ENDPOINT, client::deletePageModel),
                 new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.CONTENT_ENDPOINT, client::deleteContent),
                 new AbstractMap.SimpleEntry<String, Consumer<String>>(EntandoCoreMockServer.CONTENT_TEMPLATE_ENDPOINT, client::deleteContentModel),

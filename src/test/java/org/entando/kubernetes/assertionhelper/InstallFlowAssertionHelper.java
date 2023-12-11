@@ -41,6 +41,7 @@ import org.entando.kubernetes.repository.EntandoBundleComponentJobRepository;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
+import org.entando.kubernetes.utils.TenantTestUtils;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.mockito.ArgumentCaptor;
 
@@ -847,6 +848,8 @@ public class InstallFlowAssertionHelper {
     }
 
     public void verifyInstalledBundleV5DbRecord(InstalledEntandoBundleRepository bundleRepository) {
+        TenantTestUtils.setPrimaryTenant();
+
         EntandoBundleEntity installedBundle = bundleRepository.findAll().get(0);
         assertThat(installedBundle.getName()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME_V5);
         assertThat(installedBundle.getBundleCode()).isEqualTo(TestInstallUtils.MOCK_BUNDLE_NAME_V5);
