@@ -21,11 +21,15 @@ import org.entando.kubernetes.model.job.UninstallJobResult;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.stubhelper.EntandoBundleJobStubHelper;
+import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
+import org.entando.kubernetes.utils.TenantTestUtils;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
@@ -58,6 +62,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 @DirtiesContext
+@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class EntandoBundleOperationResourceControllerIT {
 
     @Autowired
@@ -81,6 +86,7 @@ class EntandoBundleOperationResourceControllerIT {
     @AfterEach
     public void cleanup() {
         WireMock.reset();
+        TenantTestUtils.setPrimaryTenant();
         jobRepository.deleteAll();
     }
 

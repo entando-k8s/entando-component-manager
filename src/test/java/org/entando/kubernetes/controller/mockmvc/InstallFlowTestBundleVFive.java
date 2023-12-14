@@ -52,6 +52,8 @@ import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
+import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
+import org.entando.kubernetes.utils.TenantTestUtils;
 import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,7 +90,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-@ExtendWith(TenantContextJunitExt.class)
+@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 //Sonar doesn't pick up MockMVC assertions
 @SuppressWarnings("java:S2699")
 @DirtiesContext
@@ -201,6 +203,8 @@ class InstallFlowTestBundleVFive {
         installFlowAssertionHelper.verifyWidgetsInstallRequestsV5(coreClient);
         installFlowAssertionHelper.verifyDirectoryInstallRequestsWithInstallPlanRequest(coreClient);
         installFlowAssertionHelper.verifyFileInstallRequestsWithInstallPlanRequestV5(coreClient);
+
+        TenantTestUtils.setPrimaryTenant();
 
         // check that db install_plan column is correctly populated
         List<EntandoBundleJobEntity> bundleJobEntityList = jobRepository.findAll();
