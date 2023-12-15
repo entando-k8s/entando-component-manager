@@ -584,7 +584,8 @@ public class BundleUtilities {
             if (tokens.length > 2) {
                 hashes = Arrays.asList(tokens)
                         .stream()
-                        .filter(t -> StringUtils.isAlphanumeric(t) && t.length() == length)
+                        // the SHA can be only numeric, so we rely on the length only
+                        .filter(t -> t.length() == length)
                         .collect(Collectors.toList());
                 return hashes;
             }
