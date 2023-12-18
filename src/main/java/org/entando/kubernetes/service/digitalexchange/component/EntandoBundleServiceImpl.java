@@ -207,7 +207,6 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
         } else {
             bundles = k8SServiceClient.getBundlesInNamespaces(accessibleDigitalExchanges, repoUrlFilter);
         }
-
         return bundles.stream()
                 .map(this::convertToBundleFromEcr)
                 .filter(Objects::nonNull)
@@ -337,6 +336,7 @@ public class EntandoBundleServiceImpl implements EntandoBundleService {
                         .map(EntandoBundleVersion::fromEntity) //TODO how to read timestamp from k8s custom model?
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList()))
+                .annotations(deBundle.getMetadata().getAnnotations())
                 .build();
 
         final EntandoBundleVersion latestVersionFromDistTag = BundleUtilities.composeLatestVersionFromDistTags(deBundle)

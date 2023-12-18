@@ -238,7 +238,8 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                         determineFqImageAddress(pluginDescriptor, bundleReader)
                 );
                 compList.add(
-                        new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCode(), sha256));
+                        new Reportable.Component(pluginDescriptor.getDescriptorMetadata().getPluginCodeTenantAware(),
+                                sha256));
             }
 
             return new Reportable(componentProcessor.getSupportedComponentType(), this.getReportableRemoteHandler(),

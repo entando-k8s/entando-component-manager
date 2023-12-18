@@ -132,6 +132,10 @@ public class BundleReader {
     public List<String> getWidgetsBaseFolders() throws IOException {
         Path widgetsPath = bundleBasePath.resolve(BundleProperty.WIDGET_FOLDER_PATH.getValue());
 
+        if (! widgetsPath.toFile().exists()) {
+            return Collections.emptyList();
+        }
+
         try (Stream<Path> foldersStream = Files.list(widgetsPath)) {
             return foldersStream.filter(Files::isDirectory)
                     .map(Path::getFileName)

@@ -11,10 +11,12 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
 import org.entando.kubernetes.config.tenant.TenantConfiguration.PrimaryTenantConfig;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.model.bundle.EntandoBundle;
 import org.entando.kubernetes.model.common.EntandoMultiTenancy;
@@ -124,7 +126,7 @@ class PostInitServiceTest {
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
         EntandoDeBundleSpecBuilder deBundleBuilder = new EntandoDeBundleSpecBuilder();
-        EntandoDeBundleTag tag = (new EntandoDeBundleTagBuilder()).withVersion("1.0.2")
+        EntandoDeBundleTag tag = (new EntandoDeBundleTagBuilder()).withVersion("1.0.3")
                 .withTarball("docker://docker.io/entando/post-init-01").build();
         deBundle.setSpec(deBundleBuilder.addToTags(tag).build());
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
@@ -314,6 +316,8 @@ class PostInitServiceTest {
                 .withTarball("docker://docker.io/test/test").build();
         deBundle.setSpec(deBundleBuilder.addToTags(tag).build());
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
+        when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
+
 
         serviceToTest.install();
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
@@ -323,6 +327,53 @@ class PostInitServiceTest {
         verify(installService, times(1)).install(any(), any(), eq(InstallAction.OVERRIDE));
 
     }
+
+    @Test
+    void postInitShouldUpdateIfBundleIsAlreadyDeployedForCurrentTenant() throws Exception {
+
+        initServiceToTest(convertConfigDataToString(convertConfigDataToString()),
+                Collections.singletonList(buildPrimaryTenantConfig()),
+                bundleService, installService,
+                kubernetesService,
+                entandoBundleJobService);
+
+        when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
+
+        String bundleCode = BundleUtilities.composeBundleCode(POST_INIT_BUNDLE_NAME,
+                BundleUtilities.removeProtocolAndGetBundleId(POST_INIT_BUNDLE_PUBLICATION_URL));
+        EntandoBundle installedBundle = EntandoBundle.builder().code(bundleCode).annotations(Map.of("entando.org/tenants", "primary"))
+                .repoUrl(POST_INIT_BUNDLE_PUBLICATION_URL)
+                .installedJob(EntandoBundleJob.builder().componentVersion("0.0.1").status(JobStatus.INSTALL_COMPLETED)
+                        .build()).build();
+        when(bundleService.listBundles()).thenReturn(new PagedMetadata(new PagedListRequest(),
+                Collections.singletonList(installedBundle), 0));
+
+        EntandoBundleJobEntity job = EntandoBundleJobEntity.builder().id(UUID.randomUUID())
+                .status(JobStatus.INSTALL_COMPLETED).build();
+        when(installService.install(any(), any(), eq(InstallAction.OVERRIDE))).thenReturn(job);
+        when(entandoBundleJobService.getById(any())).thenReturn(Optional.of(job));
+
+        EntandoDeBundle deBundle = new EntandoDeBundle();
+        EntandoDeBundleSpecBuilder deBundleBuilder = new EntandoDeBundleSpecBuilder();
+        EntandoDeBundleTag tag = (new EntandoDeBundleTagBuilder()).withVersion(POST_INIT_BUNDLE_VERSION)
+                .withTarball("docker://docker.io/test/test").build();
+        deBundle.setSpec(deBundleBuilder.addToTags(tag).build());
+        when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
+        TenantContextHolder.setCurrentTenantCode("primary");
+
+
+        serviceToTest.install();
+        assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
+        assertThat(serviceToTest.isCompleted()).isTrue();
+        assertThat(serviceToTest.shouldRetry()).isFalse();
+
+        verify(installService, times(1)).install(any(), any(), eq(InstallAction.OVERRIDE));
+
+        // clean
+        TenantContextHolder.destroy();
+
+    }
+
 
 
     private void initServiceToTest(String configData, List<TenantConfigDTO> tenantConfigurations) throws Exception {

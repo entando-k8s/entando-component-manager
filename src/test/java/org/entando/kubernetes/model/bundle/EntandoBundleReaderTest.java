@@ -3,10 +3,11 @@ package org.entando.kubernetes.model.bundle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,9 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.assertj.core.data.Index;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -49,7 +47,6 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
-import org.entando.kubernetes.utils.TestInstallUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -428,6 +425,16 @@ public class EntandoBundleReaderTest {
     void getWidgetsFilesShouldReturnEmptyIfNoWidgetsFolder() {
         var files = bundleReaderNoWidgetsV5.getWidgetsFiles();
         assertThat(files).isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenWidgetFolderDoesNotExist() throws IOException {
+        Path mockBundleFolder = mock(Path.class);
+        when(mockBundleFolder.resolve(anyString())).thenReturn(Path.of("non-existing"));
+        final List<String> widgetsBaseFolders = new BundleReader(mockBundleFolder,
+                BundleInfoStubHelper.GIT_REPO_ADDRESS).getWidgetsBaseFolders();
+
+        assertThat(widgetsBaseFolders).isEmpty();
     }
 
     private Path getBundlePath(String bundleName) throws IOException {

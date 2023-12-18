@@ -4,17 +4,22 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
@@ -28,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.entando.kubernetes.assertionhelper.AnalysisReportAssertionHelper;
 import org.entando.kubernetes.client.k8ssvc.DefaultK8SServiceClient;
+import org.entando.kubernetes.client.k8ssvc.K8SServiceClient.PluginConfiguration;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -259,7 +265,7 @@ public class K8SServiceClientTest {
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles", Optional.empty());
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles&tenantCode=primary")));
         assertThat(bundles).hasSize(1);
     }
 
@@ -283,9 +289,9 @@ public class K8SServiceClientTest {
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"),
                 Optional.empty());
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first&tenantCode=primary")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second&tenantCode=primary")));
+        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third&tenantCode=primary")));
         assertThat(bundles).isEmpty();
     }
 
@@ -305,9 +311,9 @@ public class K8SServiceClientTest {
     @Test
     void shouldNotFindBundleWithNameInNamespace() {
         String stubResponse = mockServer.readResourceAsString("/payloads/k8s-svc/bundles/bundle-not-found.json");
-        mockServer.addStub(get(urlEqualTo("/bundles/my-bundle"))
+        mockServer.addStub(get(urlEqualTo("/bundles/my-bundle?namespace=my-namespace&tenantCode=primary"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(500)
                         .withBody(stubResponse)
                         .withHeader("Content-Type", HAL_JSON_VALUE)));
 
@@ -418,7 +424,7 @@ public class K8SServiceClientTest {
 
         // then the returned EntandoDeBundle object is the same as the one sent
         assertThat(current).isEqualToComparingFieldByField(expected);
-        mockServer.getInnerServer().verify(1, postRequestedFor(urlMatching("/bundles")));
+        mockServer.getInnerServer().verify(1, postRequestedFor(urlEqualTo("/bundles?tenantCode=primary")));
     }
 
     @Test
@@ -447,6 +453,55 @@ public class K8SServiceClientTest {
         assertDoesNotThrow(() -> client.undeployDeBundle(BundleInfoStubHelper.NAME));
     }
 
+    @Test
+    void shouldGetPluginConfiguration() throws JsonProcessingException {
+
+        String pluginName = "3c07adf0-fac54a9f-agenda-bff";
+        mockServer.resetMappings();
+
+        mockServer.getInnerServer().stubFor(get(urlPathEqualTo(String.format("/plugins/%s/config", pluginName)))
+                .withQueryParam("tenantCode", equalTo("primary"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)
+                        .withBody(new ObjectMapper().writeValueAsString(new PluginConfiguration()))));
+
+        Optional<PluginConfiguration> pluginConfiguration = client.getPluginConfiguration(pluginName);
+        mockServer.getInnerServer().verify(1,
+                getRequestedFor(urlEqualTo(String.format("/plugins/%s/config?tenantCode=primary", pluginName))));
+        assertThat(pluginConfiguration).isNotEmpty();
+    }
+
+    @Test
+    void shouldGetPluginConfigurationThrowKubernetesClientExceptionOn500Status() throws JsonProcessingException {
+
+        String pluginName = "3c07adf0-fac54a9f-agenda-bff";
+        mockServer.resetMappings();
+
+        mockServer.getInnerServer().stubFor(get(urlPathEqualTo(String.format("/plugins/%s/config", pluginName)))
+
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)));
+        KubernetesClientException kubernetesClientException = assertThrows(KubernetesClientException.class, () ->
+                client.getPluginConfiguration(pluginName));
+        assertEquals(String.format("An error occurred while retrieving plugin with name '%s'", pluginName),
+                kubernetesClientException.getMessage());
+    }
+
+    @Test
+    void shouldGetPluginConfigurationReturnEmptyOn404Status() throws JsonProcessingException {
+
+        String pluginName = "3c07adf0-fac54a9f-agenda-bff";
+        mockServer.resetMappings();
+
+        mockServer.getInnerServer().stubFor(get(urlPathEqualTo(String.format("/plugins/%s/config", pluginName)))
+
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", HAL_JSON_VALUE)));
+        assertTrue(client.getPluginConfiguration(pluginName).isEmpty());
+    }
 
     private RestTemplate noOAuthRestTemplate() {
         RestTemplate template = new RestTemplate();

@@ -30,6 +30,7 @@ import org.entando.kubernetes.config.TestAppConfiguration;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.exception.EntandoValidationException;
 import org.entando.kubernetes.model.bundle.BundleInfo;
+import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.downloader.BundleDownloaderFactory;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
@@ -287,6 +288,7 @@ class EntandoDeBundleComposerTest {
 
         final EntandoDeBundle deBundle = deBundleComposer.composeEntandoDeBundle(bundleInfo);
         assertThat(deBundle.getSpec().getDetails().getThumbnail()).isEqualTo(DESCR_IMAGE);
+        assertThat(deBundle.getMetadata().getLabels().get("bundle-type")).isEqualTo(BundleType.STANDARD_BUNDLE.getType());
 
     }
 

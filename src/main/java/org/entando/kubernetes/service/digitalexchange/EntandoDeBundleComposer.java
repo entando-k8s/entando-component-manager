@@ -227,7 +227,13 @@ public class EntandoDeBundleComposer {
         putLabelIntoMap(labelsMap, components.getLabels(), ComponentType.LABEL.getTypeName());
         putLabelIntoMap(labelsMap, components.getLanguages(), ComponentType.LANGUAGE.getTypeName());
 
-        labelsMap.put("bundle-type", BundleType.STANDARD_BUNDLE.getType());
+        if (bundleDescriptor.isVersion1()) {
+            String bundleType = bundleDescriptor.getBundleType() != null ? bundleDescriptor.getBundleType().getType()
+                    : BundleType.STANDARD_BUNDLE.getType();
+            labelsMap.put("bundle-type", bundleType);
+        } else {
+            labelsMap.put("bundle-type", BundleType.STANDARD_BUNDLE.getType());
+        }
 
         return labelsMap;
     }

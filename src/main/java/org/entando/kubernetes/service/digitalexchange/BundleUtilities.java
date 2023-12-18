@@ -88,6 +88,7 @@ public class BundleUtilities {
 
     public static final String ENTANDO_DOCKER_REGISTRY_OVERRIDE = "ENTANDO_DOCKER_REGISTRY_OVERRIDE";
     public static final String DOCKER_IMAGE_TRANSPORT_PREFIX = "docker://";
+    public static final String ENTANDO_TENANT_CODE = "ENTANDO_TENANT_CODE";
 
 
     public static String getBundleVersionOrFail(EntandoDeBundle bundle, String versionReference) {
@@ -218,15 +219,12 @@ public class BundleUtilities {
 
         if (StringUtils.length(descriptor.getIngressPath()) > 0) {
             ingressPath = descriptor.getIngressPath();
-            if (ingressPath.charAt(0) != '/') {
-                ingressPath = "/" + ingressPath;
-            }
-            ingressPath = buildTenantIdPath() + ingressPath;
-
+            ingressPath = StringUtils.prependIfMissing(ingressPath, "/");
         }
 
         return ingressPath;
     }
+
 
     public static String composeIngressPathFromDockerImage(PluginDescriptor descriptor) {
         DockerImage image = descriptor.getDockerImage();
@@ -240,13 +238,9 @@ public class BundleUtilities {
         List<String> kubeCompatiblesSegmentList = ingressSegmentList.stream()
                 .map(BundleUtilities::makeKubernetesCompatible).collect(Collectors.toList());
 
-        return buildTenantIdPath() + "/" + String.join("/", kubeCompatiblesSegmentList);
+        return StringUtils.prependIfMissing(String.join("/", kubeCompatiblesSegmentList), "/");
     }
 
-    private String buildTenantIdPath() {
-        return "/" + calculateTenantId(TenantContextHolder.getCurrentTenantCode());
-    }
-    
     /**
      * compose the plugin ingress path starting by its docker image.
      *
@@ -301,7 +295,8 @@ public class BundleUtilities {
      * @param descriptor the plugin descriptor from which get the CR data
      * @return the EntandoPlugin CR generated starting by the descriptor data
      */
-    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor, Optional<PluginConfiguration> conf) {
+    public static EntandoPlugin generatePluginFromDescriptor(PluginDescriptor descriptor,
+            Optional<PluginConfiguration> conf) {
         return descriptor.isVersion1()
                 ? generatePluginFromDescriptorV1(descriptor) :
                 generatePluginFromDescriptorV2Plus(descriptor, conf);
@@ -314,7 +309,7 @@ public class BundleUtilities {
      * @return the EntandoPlugin CR generated starting by the descriptor data
      */
     public static EntandoPlugin generatePluginFromDescriptorV2Plus(PluginDescriptor descriptor,
-                                                                   Optional<PluginConfiguration> conf) {
+            Optional<PluginConfiguration> conf) {
         return new EntandoPluginBuilder()
                 .withNewMetadata()
                 .withName(descriptor.getDescriptorMetadata().getPluginCodeTenantAware())
@@ -396,7 +391,7 @@ public class BundleUtilities {
      *
      * @param entandoDeBundle the EntandoDeBundle from which extract the bundle type
      * @return the BundleType reflecting the value found in the received EntandoDeBundle, BundleType.STANDARD_BUNDLE if
-     *          no type is found
+     *         no type is found
      */
     public static BundleType extractBundleTypeFromBundle(EntandoDeBundle entandoDeBundle) {
 
@@ -490,14 +485,15 @@ public class BundleUtilities {
      * @return the list of K8S compatible EnvVar
      */
     public static List<EnvVar> assemblePluginEnvVars(List<EnvironmentVariable> environmentVariableList,
-                                                     List<EnvVar> customEnvironmentVariablesList) {
+            List<EnvVar> customEnvironmentVariablesList) {
 
         Map<String, EnvVar> assembledEnvVar = new HashMap<>();
         Optional.ofNullable(environmentVariableList).ifPresent(l -> l.stream()
                 .map(env -> buildFromEnvironmentVariable(env)).forEach(env -> {
                     assembledEnvVar.put(env.getName(), env);
                 }));
-
+        assembledEnvVar.put(ENTANDO_TENANT_CODE, buildFromEnvironmentVariable(
+                new EnvironmentVariable(ENTANDO_TENANT_CODE, TenantContextHolder.getCurrentTenantCode(), null)));
         Optional.ofNullable(customEnvironmentVariablesList).ifPresent(l -> l.stream().forEach(env -> {
             assembledEnvVar.put(env.getName(), env);
         }));

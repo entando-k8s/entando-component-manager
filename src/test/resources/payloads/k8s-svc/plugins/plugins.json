@@ -39,6 +39,9 @@
           },
           "namespace": {
             "href": "http://localhost:9080/namespaces/plugin-namespace"
+          },
+          "plugin-config": {
+            "href": "http://localhost:9080/plugins/{name}/config"
           }
         }
       }
@@ -59,6 +62,10 @@
     },
     "plugin-links": {
       "href": "http://localhost:9080/app-plugin-links?plugin={plugin}",
+      "templated": true
+    },
+    "plugin-configuration": {
+      "href": "http://localhost:9080/plugins/{name}/config",
       "templated": true
     }
   }

@@ -155,7 +155,7 @@ public class EntandoBundleUtilitiesTest {
 
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV1@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
-                "/986a1b71/entando/todomvcv1/1-0-0", "/api/v1/todos",
+                "/entando/todomvcv1/1-0-0", "/api/v1/todos",
                 getRolesForTodoMvc1(), Collections.<Permission>emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
@@ -185,7 +185,7 @@ public class EntandoBundleUtilitiesTest {
                         + "n-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong"
                         + "helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong@"
                         + PluginStubHelper.PLUGIN_IMAGE_SHA,
-                "/986a1b71/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
+                "/entando/helloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworl"
                         + "d-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-to"
                         + "o-looonghelloworld-plugin-v1-name-too-looonghelloworld-plugin-v1-name-too-looong/1-0-0",
                 "/api/v1/todos",
@@ -330,19 +330,24 @@ public class EntandoBundleUtilitiesTest {
         final List<EnvVar> envVars = BundleUtilities.assemblePluginEnvVars(PluginStubHelper.stubEnvironmentVariables(),
                 Collections.singletonList(customEnvvar));
 
-        assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_NAME);
-        assertThat(envVars.get(0).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
+        assertThat(envVars.get(0).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_0_NAME);
+        assertThat(envVars.get(0).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_0_VALUE);
         assertThat(envVars.get(0).getValueFrom()).isNull();
 
-        assertThat(envVars.get(1).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_2_NAME);
-        assertThat(envVars.get(1).getValue()).isNull();
-        assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getName()).isEqualTo(
+        assertThat(envVars.get(1).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_NAME);
+        assertThat(envVars.get(1).getValue()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_1_VALUE);
+        assertThat(envVars.get(1).getValueFrom()).isNull();
+
+        assertThat(envVars.get(2).getName()).isEqualTo(PluginStubHelper.TEST_ENV_VAR_2_NAME);
+        assertThat(envVars.get(2).getValue()).isNull();
+        assertThat(envVars.get(2).getValueFrom().getSecretKeyRef().getName()).isEqualTo(
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_NAME);
-        assertThat(envVars.get(1).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
+        assertThat(envVars.get(2).getValueFrom().getSecretKeyRef().getKey()).isEqualTo(
                 PluginStubHelper.TEST_ENV_VAR_2_SECRET_KEY);
-        assertThat(envVars.get(2).getValue()).isNotNull();
-        assertThat(envVars.get(2).getValueFrom()).isNull();
-        assertThat(envVars.get(2).getValue()).isEqualTo("val3");
+
+        assertThat(envVars.get(3).getValue()).isNotNull();
+        assertThat(envVars.get(3).getValueFrom()).isNull();
+        assertThat(envVars.get(3).getValue()).isEqualTo("val3");
 
     }
 
@@ -612,7 +617,7 @@ public class EntandoBundleUtilitiesTest {
         // when the ingress path is composed starting by the docker image
         String ingressPath = BundleUtilities.composeIngressPathForV1(descriptor);
         // then the expected ingress path is generated
-        assertThat(ingressPath).isEqualTo("/986a1b71/entando/the-lucas");
+        assertThat(ingressPath).isEqualTo("/entando/the-lucas");
     }
 
     @Test

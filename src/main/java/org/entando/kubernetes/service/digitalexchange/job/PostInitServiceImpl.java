@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -55,6 +56,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
     public static final String ACTION_INSTALL_OR_UPDATE = "install-or-update";
     public static final String DEFAULT_ACTION = "deploy-only";
     public static final String ECR_ACTION_UNINSTALL = "uninstall";
+    public static final String ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION = "entando.org/tenants";
     private final EntandoBundleService bundleService;
     private final EntandoBundleInstallService installService;
     private final EntandoBundleJobService entandoBundleJobService;
@@ -80,7 +82,7 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
         items.add(PostInitItem.builder()
                 .name("entando-epc-bootstrap")
                 .url("docker://registry.hub.docker.com/entando/entando-bootstrap-bundle")
-                .version("1.0.2")
+                .version("1.0.3")
                 .action(ACTION_INSTALL_OR_UPDATE)
                 .priority(1)
                 .build());
@@ -188,6 +190,9 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 final String bundleCode = calculateBundleCode(item);
 
                 EntandoBundle bundle = Optional.ofNullable(bundlesInstalledOrDeployed.get(bundleCode))
+                        .flatMap(entandoBundle -> shouldAddCurrentTenantToDeployedBundleAnnotation(entandoBundle)
+                                ? Optional.empty()
+                                : Optional.of(entandoBundle))
                         .orElseGet(() -> deployPostInitBundle(item));
 
                 computeInstallStrategy(bundle, item)
@@ -245,6 +250,13 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
 
         }
 
+    }
+
+    private static boolean shouldAddCurrentTenantToDeployedBundleAnnotation(EntandoBundle entandoBundle) {
+        return (Objects.isNull(entandoBundle.getAnnotations()))
+                || entandoBundle.getAnnotations().containsKey(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
+                && !entandoBundle.getAnnotations().get(ENTANDO_DE_BUNDLE_TENANTS_ANNOTATION)
+                .contains(TenantContextHolder.getCurrentTenantCode());
     }
 
     private String getArgBundleIdentifier(BundleNotFoundException ex) {
