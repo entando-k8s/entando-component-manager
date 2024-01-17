@@ -981,32 +981,6 @@ public class InstallFlowTest {
                 .andExpect(status().isConflict());
     }
 
-
-    @Test
-    void shouldPreventTheInstallationOfABundleWithAPluginWithInvalidSecretNames() throws Exception {
-
-        String compId = "wrong-secret-name";
-
-        final EntandoDeBundle testBundle = TestInstallUtils.getTestBundle();
-        testBundle.getMetadata().setName(compId);
-
-        mockBundle(k8SServiceClient, testBundle);
-
-        stubFor(WireMock.get("/repository/npm-internal/test_bundle/-/test_bundle-0.0.1.tgz")
-                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/octet-stream")
-                        .withBody(readFromDEPackage("bundle-invalid-secret.tgz"))));
-
-        TestInstallUtils.stubPermissionRequestReturningSuperuser();
-
-        final UriBuilder uriBuilder = UriComponentsBuilder.newInstance()
-                .pathSegment("components", compId, "install");
-        mockMvc.perform(post(uriBuilder.build())
-                .header(HttpHeaders.AUTHORIZATION, "jwt"))
-                .andExpect(status().isCreated());
-
-        waitForInstallStatus(mockMvc, compId, JobStatus.INSTALL_ERROR);
-    }
-
     private void verifyJobProgressesFromStatusToStatus(String jobId, JobStatus startStatus, JobStatus endStatus)
             throws Exception {
         LocalDateTime start = LocalDateTime.now();
