@@ -384,17 +384,28 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         try {
             ResponseEntity<?> response = this.noAuthRestTemplate.exchange(request, Void.class);
 
-            log = String.format("Plugin is%s ready", response.getStatusCode().is2xxSuccessful() ? "" : " NOT");
+            log = String.format("Plugin is%s ready. Status code: %d",
+                    response.getStatusCode().is2xxSuccessful() ? "" : " NOT", response.getStatusCode().value());
             LOGGER.info(log);
 
             return response.getStatusCode().is2xxSuccessful();
         } catch (RestClientResponseException e) {
             HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
             if (status.equals(HttpStatus.NOT_FOUND) || status.equals(HttpStatus.SERVICE_UNAVAILABLE)) {
+                LOGGER.warn(String.format("Error while checking plugin readiness. Status code: %d", status.value()));
                 return false;
+            } else {
+                log = String.format("Unexpected HTTP status code %s received", status);
+                LOGGER.warn(log, e);
+
+                //Note: Temporary workaround to treat 400 as a 404/503
+                if (status.equals(HttpStatus.BAD_REQUEST)) {
+                    return false;
+                }
             }
             throw e;
         } catch (RestClientException e) {
+            LOGGER.warn("Unexpected client exception received", e);
             throw e;
         }
 
