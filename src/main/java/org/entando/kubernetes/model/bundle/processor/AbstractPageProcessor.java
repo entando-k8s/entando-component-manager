@@ -179,9 +179,10 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
 
     private void replaceBundleIdPlaceholder(String bundleId, PageDescriptor descriptor) {
 
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getOwnerGroup, descriptor::setOwnerGroup);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getOwnerGroup, descriptor::setOwnerGroup);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getPageModel, descriptor::setPageModel);
 
         if (CollectionUtils.isEmpty(descriptor.getJoinGroups())) {
             return;
@@ -189,7 +190,7 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
 
         final List<String> joinGroups = descriptor.getJoinGroups().stream()
                 .map(gr ->
-                        super.replaceBundleIdPlaceholder(gr, bundleId))
+                        ProcessorHelper.replaceBundleIdPlaceholder(gr, bundleId))
                 .collect(Collectors.toList());
 
         descriptor.setJoinGroups(joinGroups);

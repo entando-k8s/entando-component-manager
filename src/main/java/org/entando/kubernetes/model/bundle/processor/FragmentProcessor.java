@@ -95,9 +95,9 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
     }
 
     private void replaceBundleIdPlaceholder(String bundleId, FragmentDescriptor descriptor) {
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCode, descriptor::setGuiCode);
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCodePath, descriptor::setGuiCodePath);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCode, descriptor::setGuiCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCodePath, descriptor::setGuiCodePath);
     }
 
 }
