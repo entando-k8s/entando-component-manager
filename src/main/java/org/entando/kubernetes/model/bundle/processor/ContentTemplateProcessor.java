@@ -103,6 +103,6 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
     }
 
     private void replaceBundleIdPlaceholder(String bundleId, ContentTemplateDescriptor descriptor) {
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getContentShape, descriptor::setContentShape);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getContentShape, descriptor::setContentShape);
     }
 }

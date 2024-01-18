@@ -106,7 +106,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
 
     private void replaceBundleIdPlaceholder(String bundleId, PageTemplateDescriptor descriptor) {
 
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode,
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode,
                 descriptor::setCode);
 
         final PageTemplateConfigurationDescriptor configurationDesc = descriptor.getConfiguration();
@@ -118,7 +118,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                 .filter(Objects::nonNull)
                 .map(f -> {
                     if (f.getDefaultWidget() != null) {
-                        super.applyBundleIdPlaceholderReplacement(bundleId,
+                        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId,
                                 f.getDefaultWidget()::getCode, f.getDefaultWidget()::setCode);
                     }
                     return f;

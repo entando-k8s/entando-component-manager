@@ -103,7 +103,7 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
     }
 
     private void replaceBundleIdPlaceholder(String bundleId, CategoryDescriptor descriptor) {
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
-        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
     }
 }

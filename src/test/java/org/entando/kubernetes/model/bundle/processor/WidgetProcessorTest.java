@@ -232,6 +232,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
         WidgetDescriptor widgetDescriptor1 = new WidgetDescriptor().setCode(BundleStubHelper.BUNDLE_CODE);
         when(bundleReader.readDescriptorFile("widget_descriptor_v1.yaml", WidgetDescriptor.class))
                 .thenReturn(widgetDescriptor1);
+        when(bundleReader.getBundleUrl()).thenReturn(BundleInfoStubHelper.GIT_REPO_ADDRESS);
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),

@@ -113,7 +113,7 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
 
         final String[] categories = Arrays.stream(descriptor.getCategories())
                 .map(cat ->
-                        super.replaceBundleIdPlaceholder(cat, bundleId))
+                        ProcessorHelper.replaceBundleIdPlaceholder(cat, bundleId))
                 .collect(Collectors.toList()).toArray(String[]::new);
 
         descriptor.setCategories(categories);
