@@ -1,10 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_CONFIG;
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -103,12 +103,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (final String fileName : descriptorList) {
                 final WidgetDescriptor widgetDescriptor = makeWidgetDescriptorFromFile(
                         bundleReader, fileName, pluginIngressPathMap
                 );
-
+                replaceBundleIdPlaceholder(bundleId, widgetDescriptor);
                 validateApiClaims(widgetDescriptor.getApiClaims());
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
@@ -381,5 +382,12 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
+    }
+
+    private void replaceBundleIdPlaceholder(String bundleId, WidgetDescriptor descriptor) {
+        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCustomUi,
+                descriptor::setCustomUi);
+        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCustomUiPath,
+                descriptor::setCustomUiPath);
     }
 }

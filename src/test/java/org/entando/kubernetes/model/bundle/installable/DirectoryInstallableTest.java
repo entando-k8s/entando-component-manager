@@ -54,7 +54,7 @@ class DirectoryInstallableTest {
                 new DirectoryDescriptor("bundles/anything", true),
                 InstallAction.CREATE);
         // --WHEN
-        directoryInstallable.uninstall();
+        directoryInstallable.uninstall().join();
         // --THEN
         verify(engineService, times(1)).deleteFolder("bundles/anything");
 

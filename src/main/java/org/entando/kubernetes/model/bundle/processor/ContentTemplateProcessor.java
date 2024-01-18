@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,6 +62,7 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (String fileName : descriptorList) {
                 ContentTemplateDescriptor contentTemplateDescriptor = bundleReader.readDescriptorFile(fileName,
@@ -70,6 +73,7 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
                     contentTemplateDescriptor.setContentShape(bundleReader.readFileAsString(csPath));
                 }
 
+                replaceBundleIdPlaceholder(bundleId, contentTemplateDescriptor);
                 InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), conflictStrategy,
                         installPlan);
                 installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor, action));
@@ -96,5 +100,9 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
         return ContentTemplateDescriptor.builder()
                 .id(component.getComponentId())
                 .build();
+    }
+
+    private void replaceBundleIdPlaceholder(String bundleId, ContentTemplateDescriptor descriptor) {
+        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getContentShape, descriptor::setContentShape);
     }
 }

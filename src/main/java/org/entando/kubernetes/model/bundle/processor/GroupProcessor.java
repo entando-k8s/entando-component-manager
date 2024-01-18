@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,11 +67,13 @@ public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> impl
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (String fileName : descriptorList) {
                 List<GroupDescriptor> groupDescriptorList = bundleReader
                         .readListOfDescriptorFile(fileName, GroupDescriptor.class);
                 for (GroupDescriptor gd : groupDescriptorList) {
+                    super.applyBundleIdPlaceholderReplacement(bundleId, gd::getCode, gd::setCode);
                     InstallAction action = extractInstallAction(gd.getCode(), conflictStrategy, installPlan);
                     installables.add(new GroupInstallable(engineService, gd, action));
                 }
