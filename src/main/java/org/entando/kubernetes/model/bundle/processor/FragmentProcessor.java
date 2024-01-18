@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +59,7 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (String fileName : descriptorList) {
                 FragmentDescriptor frDesc = bundleReader.readDescriptorFile(fileName, FragmentDescriptor.class);
@@ -64,6 +67,7 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
                     String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
                     frDesc.setGuiCode(bundleReader.readFileAsString(gcp));
                 }
+                replaceBundleIdPlaceholder(bundleId, frDesc);
                 InstallAction action = extractInstallAction(frDesc.getCode(), conflictStrategy, installPlan);
                 installableList.add(new FragmentInstallable(engineService, frDesc, action));
             }
@@ -88,6 +92,12 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
         return FragmentDescriptor.builder()
                 .code(component.getComponentId())
                 .build();
+    }
+
+    private void replaceBundleIdPlaceholder(String bundleId, FragmentDescriptor descriptor) {
+        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
+        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCode, descriptor::setGuiCode);
+        super.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCodePath, descriptor::setGuiCodePath);
     }
 
 }
