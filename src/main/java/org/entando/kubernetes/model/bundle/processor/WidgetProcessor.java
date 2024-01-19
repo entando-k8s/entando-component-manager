@@ -121,9 +121,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 final WidgetDescriptor widgetDescriptor = makeWidgetDescriptorFromFile(
                         bundleReader, fileName, pluginIngressPathMap
                 );
-                replaceBundleIdPlaceholder(bundleId, widgetDescriptor);
                 processPluginVariables(widgetDescriptor);
-
                 validateApiClaims(widgetDescriptor.getApiClaims());
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
@@ -133,6 +131,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 if (WidgetDescriptor.TYPE_WIDGET_APPBUILDER.equals(widgetDescriptor.getType())) {
                     composeAndSetAppBuilderMetadata(widgetDescriptor, bundleReader, fileName, pluginIngressPathMap);
                 }
+                replaceBundleIdPlaceholder(bundleId, widgetDescriptor);
 
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
                 installableList.add(
