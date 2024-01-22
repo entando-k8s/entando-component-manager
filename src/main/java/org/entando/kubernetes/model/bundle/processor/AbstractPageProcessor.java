@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +22,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageDescriptor> {
@@ -88,10 +91,13 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
             InstallPlan installPlan) {
         List<Installable<PageDescriptor>> installables = new LinkedList<>();
         List<PageDescriptor> pageDescriptorList = new LinkedList<>();
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
+                replaceBundleIdPlaceholder(bundleId, pageDescriptor);
                 this.descriptorValidator.validateOrThrow(pageDescriptor);
                 this.composeAndSetCode(pageDescriptor, bundleReader);
                 Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
@@ -171,4 +177,22 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
         return engineService;
     }
 
+    private void replaceBundleIdPlaceholder(String bundleId, PageDescriptor descriptor) {
+
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getOwnerGroup, descriptor::setOwnerGroup);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getPageModel, descriptor::setPageModel);
+
+        if (CollectionUtils.isEmpty(descriptor.getJoinGroups())) {
+            return;
+        }
+
+        final List<String> joinGroups = descriptor.getJoinGroups().stream()
+                .map(gr ->
+                        ProcessorHelper.replaceBundleIdPlaceholder(gr, bundleId))
+                .collect(Collectors.toList());
+
+        descriptor.setJoinGroups(joinGroups);
+    }
 }

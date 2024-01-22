@@ -1,7 +1,10 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -67,10 +71,12 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (String fileName : descriptorList) {
                 String assetDirectory = Paths.get(fileName).getParent().toString();
                 AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
+                replaceBundleIdPlaceholder(bundleId, assetDescriptor);
                 InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(),
                         conflictStrategy, installPlan);
                 installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
@@ -97,5 +103,19 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
         return AssetDescriptor.builder()
                 .correlationCode(component.getComponentId())
                 .build();
+    }
+
+    private void replaceBundleIdPlaceholder(String bundleId, AssetDescriptor descriptor) {
+
+        if (ArrayUtils.isEmpty(descriptor.getCategories())) {
+            return;
+        }
+
+        final String[] categories = Arrays.stream(descriptor.getCategories())
+                .map(cat ->
+                        ProcessorHelper.replaceBundleIdPlaceholder(cat, bundleId))
+                .collect(Collectors.toList()).toArray(String[]::new);
+
+        descriptor.setCategories(categories);
     }
 }

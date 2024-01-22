@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,12 +67,14 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (String fileName : descriptorList) {
                 List<CategoryDescriptor> categoryDescriptorList = bundleReader
                         .readListOfDescriptorFile(fileName, CategoryDescriptor.class);
                 for (CategoryDescriptor cd : categoryDescriptorList) {
                     InstallAction action = extractInstallAction(cd.getCode(), conflictStrategy, installPlan);
+                    replaceBundleIdPlaceholder(bundleId, cd);
                     installables.add(new CategoryInstallable(engineService, cd, action));
                 }
             }
@@ -96,5 +100,10 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
         return CategoryDescriptor.builder()
                 .code(component.getComponentId())
                 .build();
+    }
+
+    private void replaceBundleIdPlaceholder(String bundleId, CategoryDescriptor descriptor) {
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
     }
 }
