@@ -12,9 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.jackson.Jacksonized;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentKey;
-import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.VersionedDescriptor;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService.SystemParams;
@@ -129,7 +127,6 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     @Getter
     @Setter
-    @AllArgsConstructor
     @NoArgsConstructor
     public static class ApiClaim {
 
@@ -140,6 +137,14 @@ public class WidgetDescriptor extends VersionedDescriptor {
         private String type;
         private String pluginName;
         private String bundleId;
+        private String bundleReference;
+
+        public ApiClaim(String name, String type, String pluginName, String bundleId) {
+            this.name = name;
+            this.type = type;
+            this.pluginName = pluginName;
+            this.bundleId = bundleId;
+        }
     }
 
     @Getter

@@ -10,8 +10,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -36,7 +40,9 @@ import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
@@ -59,10 +65,14 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             + "because there is no service on the system with name \"%s\" and bundleId \"%s\"";
     public static final String INT_API_CLAIM_ERROR = "Internal apiClaim \"%s\" cannot be satisfied "
             + "because there no service with name \"%s\", declared in the same bundle";
+    public static final String PLUGIN_VARIABLES_REGEX = "\\$\\{([^}]*)\\}";
+    public static final Pattern PLUGIN_VARIABLES_REGEX_PATTERN = Pattern.compile(PLUGIN_VARIABLES_REGEX);
+
     private final ComponentDataRepository componentDataRepository;
     private final EntandoCoreClient engineService;
     @Getter
     private final WidgetTemplateGeneratorService templateGeneratorService;
+    private final KubernetesService kubernetesService;
     private final WidgetDescriptorValidator descriptorValidator;
     @Setter
     private Map<String, String> pluginIngressPathMap;
@@ -109,6 +119,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 final WidgetDescriptor widgetDescriptor = makeWidgetDescriptorFromFile(
                         bundleReader, fileName, pluginIngressPathMap
                 );
+
+                processPluginVariables(widgetDescriptor);
                 validateApiClaims(widgetDescriptor.getApiClaims());
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
@@ -157,6 +169,55 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         return installables;
     }
 
+    protected void processPluginVariables(WidgetDescriptor descriptor) {
+
+        // build a map to improve performance
+        final Map<String, ApiClaim> apiClaimsMap = Optional.ofNullable(descriptor.getApiClaims())
+                .orElseGet(ArrayList::new).stream()
+                .collect(Collectors.toMap(ApiClaim::getName, Function.identity()));
+
+        final Map<String, PluginVariable> pluginVariables = extractPluginVariablesFromApiClaims(apiClaimsMap);
+        resolvePluginVariables(apiClaimsMap, pluginVariables);
+
+        descriptor.setApiClaims(new ArrayList<>(apiClaimsMap.values()));
+    }
+
+    protected Map<String, PluginVariable> extractPluginVariablesFromApiClaims(Map<String, ApiClaim> apiClaimsMap) {
+        return apiClaimsMap.values().stream()
+                .filter(ac -> ac.getType().equals(ApiClaim.EXTERNAL_API) && Strings.isNotEmpty(ac.getBundleReference()))
+                .map(ac -> {
+                    Matcher matcher = PLUGIN_VARIABLES_REGEX_PATTERN.matcher(ac.getBundleReference());
+                    if (matcher.find()) {
+                        return new PluginVariable(ac.getName(), matcher.group(1), "");
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(PluginVariable::getApiClaimName, Function.identity()));
+    }
+
+    protected void resolvePluginVariables(Map<String, ApiClaim> apiClaimsMap,
+            Map<String, PluginVariable> pluginVariables) {
+        this.kubernetesService.resolvePluginsVariables(pluginVariables.values())
+                .forEach(pv -> {
+                    apiClaimsMap.compute(pv.getApiClaimName(), (k, ac) -> {
+                        if (ac == null) {
+                            log.warn(
+                                    "Resolved plugin variable {} but no correspondance has been found in the API Claim list",
+                                    pv.getName());
+                            return null;
+                        }
+                        // update bundle reference
+                        ac.setBundleReference(
+                                ac.getBundleReference().replace("${" + pv.getName() + "}", pv.getValue()));
+                        // update bundle id
+                        ac.setBundleId(BundleUtilities.getBundleId(ac.getBundleReference()));
+                        return ac;
+                    });
+                });
+    }
+
+
     private void validateApiClaims(List<ApiClaim> apiClaims) {
         if (apiClaims != null) {
             for (var apiClaim : apiClaims) {
@@ -167,7 +228,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                         ));
                     }
                 } else {
-                    if (!templateGeneratorService.checkApiClaim(apiClaim, apiClaim.getBundleId())) {
+                    if (Strings.isEmpty(apiClaim.getBundleReference())
+                            && !templateGeneratorService.checkApiClaim(apiClaim, apiClaim.getBundleId())) {
                         throw new EntandoComponentManagerException(String.format(EXT_API_CLAIM_ERROR,
                                 apiClaim.getName(), apiClaim.getPluginName(), apiClaim.getBundleId()
                         ));
