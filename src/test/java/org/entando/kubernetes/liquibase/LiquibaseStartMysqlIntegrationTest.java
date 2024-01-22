@@ -37,7 +37,7 @@ import org.testcontainers.utility.DockerImageName;
 class LiquibaseStartMysqlIntegrationTest {
 
     private static final String CONTAINER_IMAGE = System.getenv()
-            .getOrDefault("MYSQL_CONTAINER_IMAGE", "mysql:8");
+            .getOrDefault("MYSQL_CONTAINER_IMAGE", "mysql:8.0.36");
     private static final String USERNAME = System.getenv().getOrDefault("MYSQL_USER", "testuser");
     private static final String PASSWORD = System.getenv().getOrDefault("MYSQL_PASSWORD", "testuser");
     private static final String DATABASE = System.getenv().getOrDefault("MYSQL_DATABASE", "testdb");
