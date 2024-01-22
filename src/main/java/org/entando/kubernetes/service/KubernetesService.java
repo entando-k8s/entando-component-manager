@@ -8,12 +8,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -25,6 +30,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -195,4 +201,24 @@ public class KubernetesService {
         return Optional.ofNullable(namespace);
     }
 
+    public List<PluginVariable> resolvePluginsVariables(Collection<PluginVariable> pluginVariables) {
+
+        log.warn("Resolving plugin variables {}", pluginVariables.stream().map(PluginVariable::getName).collect(
+                Collectors.joining(", ")));
+
+        final Map<String, PluginVariable> pluginVariableMap = Optional.ofNullable(pluginVariables)
+                .orElseGet(ArrayList::new)
+                .stream()
+                .collect(Collectors.toMap(PluginVariable::getName, Function.identity()));
+
+        return k8sServiceClient.resolvePluginsVariables(pluginVariableMap.keySet()).stream()
+                .map(resolved -> {
+                    if (Strings.isEmpty(resolved.getValue())) {
+                        log.warn("Plugin variables {} resolved to empty value", resolved.getName());
+                    }
+                    return new PluginVariable(pluginVariableMap.get(resolved.getName()).getApiClaimName(),
+                            resolved.getName(),
+                            resolved.getValue());
+                }).collect(Collectors.toList());
+    }
 }

@@ -32,6 +32,7 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -474,7 +475,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     /**
      * check if the received EntandoPlugin and Reportable.Component correspond to the same plugin version.
      *
-     * @param plugin the EntandoPlugin of which check the version
+     * @param plugin    the EntandoPlugin of which check the version
      * @param component the Reportable.Component of which check the version
      * @return the SimpleEntry resulting from the comparison
      */
@@ -566,6 +567,18 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 traverson.follow(APPS_ENDPOINT).follow(Hop.rel("app").withParameter("name", appName))
                         .follow(Hop.rel("app-status"))
                         .toObject(ApplicationStatus.class));
+    }
+
+
+    @Override
+    public List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames) {
+        return tryOrThrow(() -> {
+            ParameterizedTypeReference<List<PluginVariable>> typeRef = new ParameterizedTypeReference<List<PluginVariable>>() {
+            };
+            final Hop resolveHop = Hop.rel("resolve");
+            variableNames.forEach(v -> resolveHop.withParameter("variableName", v));
+            return traverson.follow(PLUGINS_ENDPOINT).follow(resolveHop).toObject(typeRef);
+        });
     }
 
     private Ingress getAppIngress(String appName) {

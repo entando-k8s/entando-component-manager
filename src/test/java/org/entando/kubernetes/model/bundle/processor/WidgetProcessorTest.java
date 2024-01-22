@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.templating.WidgetTemplateGeneratorServiceDouble;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
@@ -51,6 +53,8 @@ class WidgetProcessorTest extends BaseProcessorTest {
     private WidgetDescriptorValidator validator;
     @Mock
     private ComponentDataRepository componentDataRepository;
+    @Mock
+    private KubernetesService kubernetesService;
 
     private final YAMLMapper yamlMapper = new YAMLMapper();
     private final Map<String, String> pluginIngressPathMap = WidgetStubHelper.stubPluginIngressPathMap();
@@ -61,7 +65,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         super.shouldReturnMeaningfulErrorIfExceptionAriseDuringProcessing(
                 new WidgetProcessor(componentDataRepository, new EntandoCoreClientTestDouble(),
-                        new WidgetTemplateGeneratorServiceDouble(),
+                        new WidgetTemplateGeneratorServiceDouble(), kubernetesService,
                         validator), "widget");
     }
 
@@ -134,11 +138,14 @@ class WidgetProcessorTest extends BaseProcessorTest {
         List<String> res = actual.getConfigUi().getResources();
         assertThat(res).hasSize(3)
                 .contains(
-                    "bundles/" + BundleStubHelper.BUNDLE_CODE + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js")
+                        "bundles/" + BundleStubHelper.BUNDLE_CODE
+                                + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js/js-res-2.js")
                 .contains(
-                    "bundles/" + BundleStubHelper.BUNDLE_CODE + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js")
+                        "bundles/" + BundleStubHelper.BUNDLE_CODE
+                                + "/widgets/my_widget_config_descriptor_v5-77b2b10e/static/js-res-1.js")
                 .contains(
-                    "bundles/" + BundleStubHelper.BUNDLE_CODE + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
+                        "bundles/" + BundleStubHelper.BUNDLE_CODE
+                                + "/widgets/my_widget_config_descriptor_v5-77b2b10e/assets/css-res.css");
     }
 
     @Test
@@ -184,7 +191,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
-                new WidgetTemplateGeneratorServiceDouble(), validator);
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator);
         widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
 
         if (widgConfigDescrFile != null) {
@@ -228,7 +235,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
-                new WidgetTemplateGeneratorServiceDouble(), validator);
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator);
 
         final Reportable reportable = widgetProcessor.getReportable(bundleReader, widgetProcessor);
 
@@ -253,7 +260,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
-                new WidgetTemplateGeneratorServiceDouble(), validator);
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator);
 
         final Reportable reportable = widgetProcessor.getReportable(bundleReader, widgetProcessor);
 
@@ -308,7 +315,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
-                new WidgetTemplateGeneratorServiceDouble(), validator);
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator);
         final InstallPlan installPlan = new InstallPlan();
 
         assertThrows(InvalidBundleException.class, () -> widgetProcessor.process(bundleReader, InstallAction.CREATE,
@@ -352,7 +359,7 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
-                new WidgetTemplateGeneratorServiceDouble(), validator);
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator);
         widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
 
         return widgetProcessor.process(bundleReader, InstallAction.CREATE, new InstallPlan());
@@ -390,13 +397,15 @@ class WidgetProcessorTest extends BaseProcessorTest {
         WidgetDescriptor descriptor2 = yamlMapper.readValue(new File(widg2DescrFile), WidgetDescriptor.class);
 
         when(bundleReader.readBundleDescriptor()).thenReturn(bundleDescriptor);
-        when(bundleReader.readDescriptorFile(eq("widgets/my_widget_descriptor_v5.yaml"), any())).thenReturn(descriptor1);
-        when(bundleReader.readDescriptorFile(eq("widgets/my_logical_widget_descriptor_v5.yaml"), any())).thenReturn(descriptor2);
+        when(bundleReader.readDescriptorFile(eq("widgets/my_widget_descriptor_v5.yaml"), any())).thenReturn(
+                descriptor1);
+        when(bundleReader.readDescriptorFile(eq("widgets/my_logical_widget_descriptor_v5.yaml"), any())).thenReturn(
+                descriptor2);
         when(validator.validateOrThrow(any())).thenReturn(true);
 
         final WidgetProcessor widgetProcessor = new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
-                new WidgetTemplateGeneratorServiceDouble(), validator);
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator);
         widgetProcessor.setPluginIngressPathMap(pluginIngressPathMap);
 
         WidgetDescriptor wcdesc = yamlMapper.readValue(new File(widg1ConfigDescrFile), WidgetDescriptor.class);
@@ -431,5 +440,18 @@ class WidgetProcessorTest extends BaseProcessorTest {
 
         assertOnWidgetDescriptors(logicWidget, expected);
 
+    }
+
+    @Test
+    void testProcessPluginVariablesWithEmptyApiClaims() {
+        WidgetDescriptor descriptor = new WidgetDescriptor();
+        descriptor.setApiClaims(new ArrayList<>());
+
+        new WidgetProcessor(componentDataRepository,
+                new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator)
+                .processPluginVariables(descriptor);
+
+        assertThat(descriptor.getApiClaims()).isEmpty();
     }
 }
