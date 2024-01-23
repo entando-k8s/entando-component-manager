@@ -57,7 +57,7 @@ public interface K8SServiceClient extends ECMClient {
 
     ApplicationStatus getAppStatusPhase(String appName);
 
-    List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames);
+    List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames, String namespace);
 
     @Data
     @NoArgsConstructor

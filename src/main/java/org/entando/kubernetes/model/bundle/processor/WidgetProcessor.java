@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -39,6 +38,7 @@ import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.plugin.ApiClaimPluginVariables;
 import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
@@ -47,6 +47,7 @@ import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 
@@ -185,39 +186,48 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
     protected void processPluginVariables(WidgetDescriptor descriptor) {
 
+        if (CollectionUtils.isEmpty(descriptor.getApiClaims())) {
+            return;
+        }
+
         // build a map to improve performance
-        final Map<String, ApiClaim> apiClaimsMap = Optional.ofNullable(descriptor.getApiClaims())
-                .orElseGet(ArrayList::new).stream()
+        final Map<String, ApiClaim> apiClaimsMap = descriptor.getApiClaims().stream()
                 .collect(Collectors.toMap(ApiClaim::getName, Function.identity()));
 
-        final Map<String, PluginVariable> pluginVariables = extractPluginVariablesFromApiClaims(apiClaimsMap);
+        final Map<String, ApiClaimPluginVariables> pluginVariables = extractPluginVariablesFromApiClaims(apiClaimsMap);
+        if (CollectionUtils.isEmpty(pluginVariables)) {
+            return;
+        }
+
         resolvePluginVariables(apiClaimsMap, pluginVariables);
 
         descriptor.setApiClaims(new ArrayList<>(apiClaimsMap.values()));
     }
 
-    protected Map<String, PluginVariable> extractPluginVariablesFromApiClaims(Map<String, ApiClaim> apiClaimsMap) {
+    private Map<String, ApiClaimPluginVariables> extractPluginVariablesFromApiClaims(Map<String, ApiClaim> apiClaimsMap) {
         return apiClaimsMap.values().stream()
                 .filter(ac -> ac.getType().equals(ApiClaim.EXTERNAL_API) && Strings.isNotEmpty(ac.getBundleReference()))
                 .map(ac -> {
+                    List<PluginVariable> pluginVariables = new ArrayList<>();
                     Matcher matcher = PLUGIN_VARIABLES_REGEX_PATTERN.matcher(ac.getBundleReference());
-                    if (matcher.find()) {
-                        return new PluginVariable(ac.getName(), matcher.group(1), "");
+                    while (matcher.find()) {
+                        pluginVariables.add(new PluginVariable(ac.getName(), matcher.group(1), ""));
                     }
-                    return null;
+                    return new ApiClaimPluginVariables(ac.getName(), pluginVariables);
                 })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(PluginVariable::getApiClaimName, Function.identity()));
+                .filter(acpv -> ! CollectionUtils.isEmpty(acpv.getPluginVariableList()))
+                .collect(Collectors.toMap(ApiClaimPluginVariables::getApiClaimName, Function.identity()));
     }
 
-    protected void resolvePluginVariables(Map<String, ApiClaim> apiClaimsMap,
-            Map<String, PluginVariable> pluginVariables) {
-        this.kubernetesService.resolvePluginsVariables(pluginVariables.values())
-                .forEach(pv -> {
+    private void resolvePluginVariables(Map<String, ApiClaim> apiClaimsMap,
+            Map<String, ApiClaimPluginVariables> pluginVariables) {
+
+        this.kubernetesService.resolvePluginsVariables(pluginVariables)
+                .forEach(pv ->
                     apiClaimsMap.compute(pv.getApiClaimName(), (k, ac) -> {
                         if (ac == null) {
-                            log.warn(
-                                    "Resolved plugin variable {} but no correspondance has been found in the API Claim list",
+                            log.error(
+                                    "Resolved plugin variable {} but no correspondence has been found in the API Claim list",
                                     pv.getName());
                             return null;
                         }
@@ -227,8 +237,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                         // update bundle id
                         ac.setBundleId(BundleUtilities.getBundleId(ac.getBundleReference()));
                         return ac;
-                    });
-                });
+                    })
+                );
     }
 
 
@@ -295,6 +305,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                         .bundleCode(bundleReader.getCode())
                         .bundleId(bundleId).templateGeneratorService(templateGeneratorService)
                         .build());
+        processPluginVariables(widgetDescriptor);
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
     }

@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +27,7 @@ import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.model.plugin.ApiClaimPluginVariables;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
 import org.entando.kubernetes.model.plugin.PluginVariable;
@@ -201,17 +201,34 @@ public class KubernetesService {
         return Optional.ofNullable(namespace);
     }
 
-    public List<PluginVariable> resolvePluginsVariables(Collection<PluginVariable> pluginVariables) {
+    public List<PluginVariable> resolvePluginsVariables(Map<String, ApiClaimPluginVariables> apiClaimPluginVariables) {
 
-        log.warn("Resolving plugin variables {}", pluginVariables.stream().map(PluginVariable::getName).collect(
-                Collectors.joining(", ")));
+        log.info("Resolving plugin variables {}",
+                apiClaimPluginVariables.values().stream()
+                        .flatMap(acpv -> acpv.getPluginVariableList().stream())
+                        .map(PluginVariable::getName)
+                        .collect(Collectors.joining(", ")));
 
-        final Map<String, PluginVariable> pluginVariableMap = Optional.ofNullable(pluginVariables)
+        final Map<String, PluginVariable> pluginVariableMap = Optional.ofNullable(apiClaimPluginVariables.values())
                 .orElseGet(ArrayList::new)
                 .stream()
+                .flatMap(acpv -> acpv.getPluginVariableList().stream())
                 .collect(Collectors.toMap(PluginVariable::getName, Function.identity()));
 
-        return k8sServiceClient.resolvePluginsVariables(pluginVariableMap.keySet()).stream()
+        final List<PluginVariable> pluginVariables = k8sServiceClient.resolvePluginsVariables(
+                pluginVariableMap.keySet(), this.entandoAppNamespace);
+
+        // collect errors
+        final List<String> nullPluginVars = pluginVariables.stream()
+                .filter(resolved -> resolved.getValue() == null)
+                .map(PluginVariable::getName)
+                .collect(Collectors.toList());
+        if (! CollectionUtils.isEmpty(nullPluginVars)) {
+            throw new IllegalArgumentException("Error resolving API claims: can't fetch a value for plugin variables "
+                    + String.join(",", nullPluginVars));
+        }
+
+        return pluginVariables.stream()
                 .map(resolved -> {
                     if (Strings.isEmpty(resolved.getValue())) {
                         log.warn("Plugin variables {} resolved to empty value", resolved.getName());
