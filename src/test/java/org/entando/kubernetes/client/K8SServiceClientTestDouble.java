@@ -1,6 +1,7 @@
 package org.entando.kubernetes.client;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -187,9 +188,8 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
     }
 
     @Override
-    public List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames) {
-        return variableNames.stream().map(v -> new PluginVariable("", v, "value"))
-                .collect(Collectors.toList());
+    public List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames, String namespace) {
+        return Collections.emptyList();
     }
 
 }

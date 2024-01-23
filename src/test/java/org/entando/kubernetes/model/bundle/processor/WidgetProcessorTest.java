@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +28,7 @@ import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.De
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.Reportable;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.entando.kubernetes.repository.ComponentDataRepository;
 import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
@@ -444,15 +444,52 @@ class WidgetProcessorTest extends BaseProcessorTest {
     }
 
     @Test
-    void testProcessPluginVariablesWithEmptyApiClaims() {
+    void showProcessPluginVariablesWithEmptyApiClaims() {
         WidgetDescriptor descriptor = new WidgetDescriptor();
-        descriptor.setApiClaims(new ArrayList<>());
 
         new WidgetProcessor(componentDataRepository,
                 new EntandoCoreClientTestDouble(),
                 new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator)
                 .processPluginVariables(descriptor);
 
-        assertThat(descriptor.getApiClaims()).isEmpty();
+        assertThat(descriptor.getApiClaims()).isNullOrEmpty();
+    }
+
+    @Test
+    void shouldProcessPluginVariables() {
+        final String pluVar1 = "my-reg";
+        final String pluVar2 = "my-org";
+        final String pluVar3 = "my-name";
+        final String pluVar4 = "your-org";
+
+        when(kubernetesService.resolvePluginsVariables(any())).thenReturn(List.of(
+                new PluginVariable(WidgetStubHelper.API_CLAIM_2_NAME, WidgetStubHelper.PLUGIN_VARIABLE_1, pluVar1),
+                new PluginVariable(WidgetStubHelper.API_CLAIM_2_NAME, WidgetStubHelper.PLUGIN_VARIABLE_2, pluVar2),
+                new PluginVariable(WidgetStubHelper.API_CLAIM_2_NAME, WidgetStubHelper.PLUGIN_VARIABLE_3, pluVar3),
+                new PluginVariable(WidgetStubHelper.API_CLAIM_3_NAME, WidgetStubHelper.PLUGIN_VARIABLE_4, pluVar4)));
+
+        WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5()
+                .setApiClaims(WidgetStubHelper.stubApiClaimsWithBundleReference());
+
+        new WidgetProcessor(componentDataRepository,
+                new EntandoCoreClientTestDouble(),
+                new WidgetTemplateGeneratorServiceDouble(), kubernetesService, validator)
+                .processPluginVariables(descriptor);
+
+        final Map<String, String> apiClaimToBundleId = Map.of(
+                WidgetStubHelper.API_CLAIM_3_NAME, "60ae211f",
+                WidgetStubHelper.API_CLAIM_2_NAME, "f2a30ee7");
+
+        final Map<String, String> apiClaimToBundleReference = Map.of(
+                WidgetStubHelper.API_CLAIM_3_NAME, "your-org/entando-ms",
+                WidgetStubHelper.API_CLAIM_2_NAME, "my-reg/my-org/my-name");
+
+        descriptor.getApiClaims().forEach(ac -> {
+            String bundleId = apiClaimToBundleId.getOrDefault(ac.getName(), null);
+            String bundleReference = apiClaimToBundleReference.getOrDefault(ac.getName(), null);
+
+            assertThat(ac.getBundleId()).isEqualTo(bundleId);
+            assertThat(ac.getBundleReference()).isEqualTo(bundleReference);
+        });
     }
 }

@@ -1,18 +1,18 @@
 package org.entando.kubernetes.model.plugin;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
 public class PluginVariable {
 
-    private final String apiClaimName;
-    private final String name;
-
-    @JsonInclude(Include.ALWAYS)
-    private final String value;
+    private String apiClaimName;
+    private String name;
+    private String value;
 
 }
