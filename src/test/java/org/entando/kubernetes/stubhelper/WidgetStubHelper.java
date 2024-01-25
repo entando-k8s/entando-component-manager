@@ -36,9 +36,16 @@ public class WidgetStubHelper {
     public static final String API_CLAIM_1_SERVICE_ID = "service-id-1";
     public static final String API_CLAIM_1_BUNDLE_ID = "a1a1a1a1";
     public static final String API_CLAIM_2_NAME = "ext-api";
+    public static final String API_CLAIM_3_NAME = "ext-api-2";
     public static final String API_CLAIM_2_TYPE = "external";
     public static final String API_CLAIM_2_SERVICE_ID = "service-id-2";
     public static final String API_CLAIM_2_BUNDLE_ID = "a2a2a2a2";
+    public static final String PLUGIN_VARIABLE_1 = "my-registry";
+    public static final String PLUGIN_VARIABLE_2 = "my_organization";
+    public static final String PLUGIN_VARIABLE_3 = "my-name";
+    public static final String PLUGIN_VARIABLE_4 = "your_organization";
+    public static final String API_CLAIM_BUNDLE_REFERENCE_1 = "${" + PLUGIN_VARIABLE_1 + "}/${" + PLUGIN_VARIABLE_2 + "}/${" + PLUGIN_VARIABLE_3 + "}";
+    public static final String API_CLAIM_BUNDLE_REFERENCE_2 = "${" + PLUGIN_VARIABLE_4 + "}/entando-ms";
     public static final List<String> RESOURCES = Arrays.asList("css/style.css", "js/main.js", "js/runtime.js");
     public static final String RESOURCE_BASE_PATH = "widgets/" + WIDGET_1_CODE + "/static";
     public static final List<String> JS_RESOURCES = Arrays.asList(RESOURCE_BASE_PATH + "/js/main.js",
@@ -128,5 +135,11 @@ public class WidgetStubHelper {
     public static List<ApiClaim> stubApiClaims() {
         return Arrays.asList(new ApiClaim(API_CLAIM_1_NAME, API_CLAIM_1_TYPE, API_CLAIM_1_SERVICE_ID, null),
                 new ApiClaim(API_CLAIM_2_NAME, API_CLAIM_2_TYPE, API_CLAIM_2_SERVICE_ID, API_CLAIM_2_BUNDLE_ID));
+    }
+
+    public static List<ApiClaim> stubApiClaimsWithBundleReference() {
+        return Arrays.asList(new ApiClaim(API_CLAIM_1_NAME, API_CLAIM_1_TYPE, API_CLAIM_1_SERVICE_ID, null),
+                new ApiClaim(API_CLAIM_2_NAME, API_CLAIM_2_TYPE, API_CLAIM_2_SERVICE_ID, null).setBundleReference(API_CLAIM_BUNDLE_REFERENCE_1),
+                new ApiClaim(API_CLAIM_3_NAME, API_CLAIM_2_TYPE, API_CLAIM_2_SERVICE_ID, null).setBundleReference(API_CLAIM_BUNDLE_REFERENCE_2));
     }
 }

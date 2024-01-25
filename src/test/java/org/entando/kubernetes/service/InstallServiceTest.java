@@ -187,8 +187,9 @@ public class InstallServiceTest {
         reportableComponentProcessorList.add(new PageTemplateProcessor(coreClient));
         reportableComponentProcessorList.add(new PluginProcessor(kubernetesService, pluginDescriptorValidator,
                 pluginDataRepository, craneCommand));
+        KubernetesService k8sService = mock(KubernetesService.class);
         reportableComponentProcessorList.add(
-                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService, k8sService,
                         widgetDescriptorValidator));
 
         // instruct the strategy map with stub data

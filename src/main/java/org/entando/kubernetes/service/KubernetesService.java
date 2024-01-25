@@ -8,12 +8,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
 import org.entando.kubernetes.client.k8ssvc.K8SServiceClient;
@@ -22,8 +26,10 @@ import org.entando.kubernetes.exception.k8ssvc.PluginNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.PluginNotReadyException;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
+import org.entando.kubernetes.model.plugin.ApiClaimPluginVariables;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -189,4 +195,41 @@ public class KubernetesService {
         return Optional.ofNullable(namespace);
     }
 
+    public List<PluginVariable> resolvePluginsVariables(Map<String, ApiClaimPluginVariables> apiClaimPluginVariables) {
+
+        log.info("Resolving plugin variables {}",
+                apiClaimPluginVariables.values().stream()
+                        .flatMap(acpv -> acpv.getPluginVariableList().stream())
+                        .map(PluginVariable::getName)
+                        .collect(Collectors.joining(", ")));
+
+        final Map<String, PluginVariable> pluginVariableMap = Optional.ofNullable(apiClaimPluginVariables.values())
+                .orElseGet(ArrayList::new)
+                .stream()
+                .flatMap(acpv -> acpv.getPluginVariableList().stream())
+                .collect(Collectors.toMap(PluginVariable::getName, Function.identity()));
+
+        final List<PluginVariable> pluginVariables = k8sServiceClient.resolvePluginsVariables(
+                pluginVariableMap.keySet(), this.entandoAppNamespace);
+
+        // collect errors
+        final List<String> nullPluginVars = pluginVariables.stream()
+                .filter(resolved -> resolved.getValue() == null)
+                .map(PluginVariable::getName)
+                .collect(Collectors.toList());
+        if (! CollectionUtils.isEmpty(nullPluginVars)) {
+            throw new IllegalArgumentException("Error resolving API claims: can't fetch a value for plugin variables "
+                    + String.join(",", nullPluginVars));
+        }
+
+        return pluginVariables.stream()
+                .map(resolved -> {
+                    if (Strings.isEmpty(resolved.getValue())) {
+                        log.warn("Plugin variables {} resolved to empty value", resolved.getName());
+                    }
+                    return new PluginVariable(pluginVariableMap.get(resolved.getName()).getApiClaimName(),
+                            resolved.getName(),
+                            resolved.getValue());
+                }).collect(Collectors.toList());
+    }
 }
