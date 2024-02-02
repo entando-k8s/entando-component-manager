@@ -50,6 +50,14 @@ class PageDescriptorValidatorTest {
                         PageDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
     }
+
+    @Test
+    void shouldCorrectlyValidateWidgetDescriptorV6_1() throws IOException {
+        PageDescriptor descriptor = yamlMapper
+                .readValue(new File("src/test/resources/bundle-v5/page/page_descriptor_v6.yaml"),
+                        PageDescriptor.class);
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+    }
     
     @Test
     void shouldThrowExceptionWhileValidatingAnInvalidWidgetDescriptorV1() throws IOException {
@@ -69,37 +77,59 @@ class PageDescriptorValidatorTest {
         descriptor.setParentCode("my_homepage");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
-    
+
     @Test
-    void shouldThrowExceptionWhileValidatingADescriptorV5NOTContainingTheExpectedFields() throws IOException {
+    void shouldCorrectlyValidateWidgetDescriptorV6_2() throws IOException {
         PageDescriptor descriptor = yamlMapper
-                .readValue(new File("src/test/resources/bundle-v5/page/page_descriptor_v5.yaml"),
+                .readValue(new File("src/test/resources/bundle-v5/page/page_descriptor_v6.yaml"),
                         PageDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+        descriptor.setParentCode("my_homepage");
+        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+    }
 
+    @Test
+    void shouldThrowExceptionWhileValidatingADescriptorV5OnwardNOTContainingTheExpectedFields() throws IOException {
+        PageDescriptor descriptorV5 = yamlMapper
+                .readValue(new File("src/test/resources/bundle-v5/page/page_descriptor_v5.yaml"),
+                        PageDescriptor.class);
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptorV5));
+
+        validateV5Onward(descriptorV5);
+
+        PageDescriptor descriptorV6 = yamlMapper
+                .readValue(new File("src/test/resources/bundle-v5/page/page_descriptor_v6.yaml"),
+                        PageDescriptor.class);
+        assertDoesNotThrow(() -> validator.validateOrThrow(descriptorV6));
+
+        validateV5Onward(descriptorV6);
+
+    }
+
+    private void validateV5Onward(PageDescriptor descriptor) {
         descriptor.setCode("code");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
 
         descriptor.setCode(null);
         descriptor.setTitles(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-        
+
         Map<String, String> titles = new HashMap<>();
         titles.put("en", "En title");
         titles.put("it", "IT title");
         descriptor.setTitles(titles);
         descriptor.setOwnerGroup(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-        
+
         descriptor.setOwnerGroup("group");
         descriptor.setParentCode("parentCode");
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-        
+
         descriptor.setParentName(null);
         assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-        
+
         descriptor.setParentCode("parentCode-12345678");
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
     }
-    
+
 }

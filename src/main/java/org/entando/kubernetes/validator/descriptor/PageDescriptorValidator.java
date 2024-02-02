@@ -48,6 +48,7 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
     public void setupValidatorConfiguration() {
         setupValidatorConfigurationDescriptorV1();
         setupValidatorConfigurationDescriptorV5();
+        setupValidatorConfigurationDescriptorV6();
     }
 
     private void setupValidatorConfigurationDescriptorV1() {
@@ -65,7 +66,7 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
                 objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
 
-    private void setupValidatorConfigurationDescriptorV5() {
+    private void setupValidatorConfigurationDescriptorV5Onward(DescriptorVersion version) {
         Map<String, Function<PageDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
         Map<String, Function<PageDescriptor, Object>> objectsThatMustNotBeNull
                 = this.getObjectsThatMustNotBeNullForEveryVersion();
@@ -73,8 +74,16 @@ public class PageDescriptorValidator extends BaseDescriptorValidator<PageDescrip
         List<DescriptorValidationFunction<PageDescriptor>> validationFunctionList = Arrays.asList(
                 super::validateDescriptorFormatOrThrow, this::validateNameAndCodeForV5, this::validateParentNameAndParentCodeForV5);
 
-        addValidationConfigMap(DescriptorVersion.V5,
+        addValidationConfigMap(version,
                 validationFunctionList, objectsThatMustNotBeNull, objectsThatMustBeNull);
+    }
+
+    private void setupValidatorConfigurationDescriptorV5() {
+        setupValidatorConfigurationDescriptorV5Onward(DescriptorVersion.V5);
+    }
+
+    private void setupValidatorConfigurationDescriptorV6() {
+        setupValidatorConfigurationDescriptorV5Onward(DescriptorVersion.V6);
     }
 
     private Map<String, Function<PageDescriptor, Object>> getObjectsThatMustNotBeNullForEveryVersion() {

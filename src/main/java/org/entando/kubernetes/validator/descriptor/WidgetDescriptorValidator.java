@@ -39,6 +39,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     public void setupValidatorConfiguration() {
         setupValidatorConfigurationDescriptorV1();
         setupValidatorConfigurationDescriptorV5();
+        setupValidatorConfigurationDescriptorV6();
     }
 
     private void setupValidatorConfigurationDescriptorV1() {
@@ -61,7 +62,14 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
     }
 
     private void setupValidatorConfigurationDescriptorV5() {
+        setupValidatorConfigurationDescriptorV5Onward(DescriptorVersion.V5);
+    }
 
+    private void setupValidatorConfigurationDescriptorV6() {
+        setupValidatorConfigurationDescriptorV5Onward(DescriptorVersion.V6);
+    }
+
+    private void setupValidatorConfigurationDescriptorV5Onward(DescriptorVersion version) {
         Map<String, Function<WidgetDescriptor, Object>> objectsThatMustBeNull = new LinkedHashMap<>();
         objectsThatMustBeNull.put("code", WidgetDescriptor::getCode);
         objectsThatMustBeNull.put("configUi", WidgetDescriptor::getConfigUi);
@@ -74,7 +82,7 @@ public class WidgetDescriptorValidator extends BaseDescriptorValidator<WidgetDes
         List<DescriptorValidationFunction<WidgetDescriptor>> validationFunctionList = Arrays.asList(
                 super::validateDescriptorFormatOrThrow, this::validateApiClaims,
                 this::validateParentNameAndParentCode, this::dynamicValidateWidgetTypeForV5);
-        addValidationConfigMap(DescriptorVersion.V5,
+        addValidationConfigMap(version,
                 validationFunctionList, objectsThatMustNotBeNull, objectsThatMustBeNull);
     }
 
