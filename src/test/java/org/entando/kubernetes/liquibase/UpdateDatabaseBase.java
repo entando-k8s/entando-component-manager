@@ -39,7 +39,7 @@ public class UpdateDatabaseBase {
         final File destDir = new File(tmpFolder + File.separator + tmpDbFolder);
         final File dbDirectory = new File(resourcesPath);
 
-        if (destDir.exists()) {
+        if (!destDir.exists()) {
             FileUtils.copyDirectory(dbDirectory, destDir);
         }
 
