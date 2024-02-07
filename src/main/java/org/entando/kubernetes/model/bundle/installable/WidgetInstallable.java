@@ -104,7 +104,7 @@ public class WidgetInstallable extends Installable<WidgetDescriptor> {
 
     @Override
     public CompletableFuture<Void> uninstallFromEcr() {
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsync(() -> {
             logDeletion();
             deleteWidgetDefinitionFromEcr();
         });
