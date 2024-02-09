@@ -27,10 +27,7 @@ public class TenantLiquibaseMigration {
     public List<ChangeSet> migrate(List<TenantConfigDTO> tenantConfigs, String dbFolderName) throws Exception {
         final Contexts standard = new Contexts("standard");
         final List<ChangeSet> pendingChangeset = new ArrayList<>();
-        final String tmp_db_changelog = File.separator
-                + "tmp"
-                + File.separator
-                + dbFolderName
+        final String tmp_db_changelog = dbFolderName
                 + File.separator
                 + CHANGELOG_DIR
                 + File.separator;

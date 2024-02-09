@@ -129,7 +129,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
 
             List<CompletableFuture<AnalysisReport>> futureList = reportableByHandler.keySet().stream()
                     // for each remote handler => get whole analysis report async
-                    .map(key -> CompletableFuture.supplyAsync(() -> analysisReportStrategies.get(key)
+                    .map(key -> ContextCompletableFuture.supplyAsyncWithContext(() -> analysisReportStrategies.get(key)
                             .getAnalysisReport(reportableByHandler.get(key))))
                     .collect(Collectors.toList());
 

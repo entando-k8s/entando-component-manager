@@ -33,7 +33,7 @@ public class UpdateDatabaseBase {
     public static final String ORACLE_USERNAME = System.getenv().getOrDefault("ORACLE_USER", USERNAME);
     public static final String ORACLE_PASSWORD = System.getenv().getOrDefault("ORACLE_PASSWORD", PASSWORD);
 
-    public void moveResources(String tmpDbFolder) throws IOException {
+    public String moveResources(String tmpDbFolder) throws IOException {
         final String tmpFolder = File.separator + "tmp";
         final String resourcesPath = "src/main/resources/db";
         final File destDir = new File(tmpFolder + File.separator + tmpDbFolder);
@@ -42,6 +42,8 @@ public class UpdateDatabaseBase {
         if (!destDir.exists()) {
             FileUtils.copyDirectory(dbDirectory, destDir);
         }
+
+        return destDir.getAbsolutePath();
     }
 
 

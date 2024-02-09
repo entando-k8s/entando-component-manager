@@ -96,8 +96,6 @@ class HubFlowTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
-
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8092);
     }
 
     @AfterEach

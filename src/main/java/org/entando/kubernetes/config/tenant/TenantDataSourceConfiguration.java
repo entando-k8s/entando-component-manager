@@ -74,6 +74,7 @@ public class TenantDataSourceConfiguration {
         final String dbDirectoryName = SRC_DB_DIR
                 + '-'
                 + generateSecureRandomHash(6);
+        final String changelogDestFolder = Path.of(tmpFolder, dbDirectoryName).toString();
 
         log.debug("==== starting DB changelog copy into filesystem ====");
         ResourcePatternResolver resourcePatResolver = new PathMatchingResourcePatternResolver();
@@ -83,20 +84,20 @@ public class TenantDataSourceConfiguration {
             for (Resource resource: allResources) {
                 String uri = resource.getURI().toString();
                 uri = uri.substring(uri.lastIndexOf(File.separator + SRC_DB_DIR + File.separator));
-                uri = uri.replaceFirst(SRC_DB_DIR, dbDirectoryName);
-                Path destinationFile = Path.of(tmpFolder, uri);
+                uri = uri.replaceFirst(SRC_DB_DIR + "/", "");
+                Path destinationFile = Path.of(changelogDestFolder, uri);
 
                 log.debug("Moving Liquibase resources from JAR to {}", destinationFile.toFile().getAbsolutePath());
                 FileUtils.copyInputStreamToFile(resource.getInputStream(), destinationFile.toFile());
             }
         } else {
-            final File destDir = new File(tmpFolder + File.separator + dbDirectoryName);
+            final File destDir = new File(changelogDestFolder);
             final File dbDirectory = new File(RESOURCES_PATH);
 
             log.debug("Moving Liquibase resources to {}", destDir.getAbsolutePath());
             FileUtils.copyDirectory(dbDirectory, destDir);
         }
-        return dbDirectoryName;
+        return changelogDestFolder;
     }
 
 }

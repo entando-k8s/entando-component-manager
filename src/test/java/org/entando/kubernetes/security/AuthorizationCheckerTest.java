@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.security.AuthorizationChecker.MyGroupPermission;
+import org.entando.kubernetes.security.EntandoAuthorizationChecker.MyGroupPermission;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class AuthorizationCheckerTest {
 
     @BeforeEach
     public void setup() {
-        this.target = new AuthorizationChecker("url", restTemplate);
+        this.target = new EntandoAuthorizationChecker("url", restTemplate);
     }
 
     @Test
