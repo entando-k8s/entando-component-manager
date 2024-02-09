@@ -29,9 +29,6 @@ import com.jayway.jsonpath.JsonPath;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +66,6 @@ import org.entando.kubernetes.model.job.JobType;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkSpec;
 import org.entando.kubernetes.model.web.response.PagedMetadata;
-import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.InstallPlanStubHelper;
 import org.junit.jupiter.api.Assertions;
@@ -1169,27 +1165,6 @@ public class TestInstallUtils {
         waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_IN_PROGRESS);
 
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
-    }
-
-
-    // FIXME refactor this code in order to overcome the reflection approach. https://www.baeldung.com/spring-dynamicpropertysource
-    /**
-     * inject the de app url pointing the wiremock server port.
-     */
-    @SneakyThrows
-    public static void injectEntandoUrlInto(AuthorizationChecker authorizationChecker, int serverPort) {
-        // get entandoUrl field
-        Field f = authorizationChecker.getClass().getDeclaredField("entandoUrl");
-        // set accessible
-        f.setAccessible(true);
-        // remove final
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
-        // compose and set new server port url
-        final URL entandoUrl = new URL((String) f.get(authorizationChecker));
-        URL finalUrl = new URL(entandoUrl.getProtocol(), entandoUrl.getHost(), serverPort, entandoUrl.getFile());
-        f.set(authorizationChecker, finalUrl.toString());
     }
 
     public static void stubPermissionRequestReturningSuperuser() {

@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -339,7 +340,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter) {
         @SuppressWarnings("unchecked")
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
-                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, repoUrlFilter))
+                .map(n -> ContextCompletableFuture.supplyAsyncWithContext(() -> getBundlesInNamespace(n, repoUrlFilter))
                         .exceptionally(ex -> {
                             LOGGER.error("An error occurred while retrieving bundle from a namespace", ex);
                             return Collections.emptyList();

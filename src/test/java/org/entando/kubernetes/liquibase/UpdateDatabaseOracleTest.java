@@ -68,9 +68,9 @@ class UpdateDatabaseOracleTest extends UpdateDatabaseBase {
 
     @Test
     void testUpdateDatabaseWithMasterChangelog() throws Exception {
-        moveResources(TMP_DB_FOLDER);
+        String dbDir = moveResources(TMP_DB_FOLDER);
         TenantConfigRwDto cfg = getTenantForTest(targetDatabase, null);
-        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg), TMP_DB_FOLDER);
+        List<ChangeSet> pendingChangeset = new TenantLiquibaseMigration().migrate(Collections.singletonList(cfg), dbDir);
         assertThat(pendingChangeset, empty());
         assertValidLiquibaseInstance(targetDatabase, "SELECT id FROM DATABASECHANGELOG");
     }

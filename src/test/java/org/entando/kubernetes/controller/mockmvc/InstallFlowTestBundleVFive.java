@@ -169,8 +169,6 @@ class InstallFlowTestBundleVFive {
         pluginDataRepository.save(pluginData2);
         pluginDataRepository.save(pluginData3);
 
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8091);
-
         when(craneCommand.getImageDigest(anyString())).thenReturn(PluginStubHelper.PLUGIN_IMAGE_SHA);
     }
 

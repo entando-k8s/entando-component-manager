@@ -27,7 +27,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,13 +47,13 @@ import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
-import org.entando.kubernetes.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.client.Traverson;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
@@ -63,6 +62,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 
 @Tag("unit")
 @ExtendWith(TenantContextJunitExt.class)
@@ -72,23 +72,26 @@ public class K8SServiceClientTest {
     private static EntandoK8SServiceMockServer mockServer;
     private DefaultK8SServiceClient client;
     private Map<String, String> originalEnv;
+    private EnvironmentVariables environmentVariables;
 
     @BeforeEach
     public void setup() throws Exception {
         //needed by DefaultK8SServiceClient constructor
-        originalEnv = System.getenv();
-        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
+        this.environmentVariables = new EnvironmentVariables();
+        this.environmentVariables.set(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app");
 
         mockServer = new EntandoK8SServiceMockServer();
-        client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, true);
-        client.setRestTemplate(noOAuthRestTemplate());
-        client.setNoAuthRestTemplate(noOAuthRestTemplate());
+
+        this.environmentVariables.execute(() -> {
+            client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, true);
+            client.setRestTemplate(noOAuthRestTemplate());
+            client.setNoAuthRestTemplate(noOAuthRestTemplate());
+        });
     }
 
     @AfterEach
     public void reset() throws Exception {
         mockServer.tearDown();
-        TestUtils.setEnv(new HashMap<>(originalEnv));
     }
 
     @Test
@@ -265,7 +268,8 @@ public class K8SServiceClientTest {
                         .withHeader("Content-Type", HAL_JSON_VALUE)
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespace("entando-de-bundles", Optional.empty());
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles&tenantCode=primary")));
+        mockServer.getInnerServer()
+                .verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=entando-de-bundles&tenantCode=primary")));
         assertThat(bundles).hasSize(1);
     }
 
@@ -289,9 +293,12 @@ public class K8SServiceClientTest {
                         .withBody(stubResponse)));
         List<EntandoDeBundle> bundles = client.getBundlesInNamespaces(Arrays.asList("first", "second", "third"),
                 Optional.empty());
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first&tenantCode=primary")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second&tenantCode=primary")));
-        mockServer.getInnerServer().verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third&tenantCode=primary")));
+        mockServer.getInnerServer()
+                .verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=first&tenantCode=primary")));
+        mockServer.getInnerServer()
+                .verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=second&tenantCode=primary")));
+        mockServer.getInnerServer()
+                .verify(1, getRequestedFor(urlEqualTo("/bundles?namespace=third&tenantCode=primary")));
         assertThat(bundles).isEmpty();
     }
 
@@ -361,8 +368,8 @@ public class K8SServiceClientTest {
         AnalysisReport expected = new AnalysisReport().setPlugins(pluginMap);
 
         List<Reportable> reportableList = ReportableStubHelper.stubAllReportableListWithTag();
-        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
 
+        AnalysisReport analysisReport = client.getAnalysisReport(reportableList);
         AnalysisReportAssertionHelper.assertOnAnalysisReports(expected, analysisReport);
     }
 
