@@ -55,7 +55,6 @@
         <!-- not working -->
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <testcontainers.version>1.17.2</testcontainers.version>
-        <sonar.scanner.force-deprecated-java-version>true</sonar.scanner.force-deprecated-java-version>
     </properties>
 
     <dependencies>
