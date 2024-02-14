@@ -668,9 +668,9 @@ public class InstallServiceTest {
     void shouldNotUninstallOrphanedComponents() throws JsonProcessingException {
         processorMap.put(ComponentType.RESOURCE, new FileProcessor(coreClient));
         processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
-                widgetDescriptorValidator));
+                kubernetesService, widgetDescriptorValidator));
         reportableComponentProcessorList.add(
-                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService, kubernetesService,
                         widgetDescriptorValidator));
 
         configureTheAnalysisReportStrategies();
@@ -762,13 +762,13 @@ public class InstallServiceTest {
     @Test
     void shouldUninstallOrphanedComponentSuccessfully() throws JsonProcessingException {
         reportableComponentProcessorList.add(
-                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService, kubernetesService,
                         widgetDescriptorValidator));
 
         configureTheAnalysisReportStrategies();
 
         processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
-                widgetDescriptorValidator));
+                kubernetesService, widgetDescriptorValidator));
 
         EntandoDeBundle bundle = getTestBundle("1.0.0");
 
@@ -842,13 +842,13 @@ public class InstallServiceTest {
     @Test
     void shouldStopUninstallOrphanedComponentWhenUninstallOnEcrReturnsError() throws JsonProcessingException {
         reportableComponentProcessorList.add(
-                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService, kubernetesService,
                         widgetDescriptorValidator));
 
         configureTheAnalysisReportStrategies();
 
         processorMap.put(ComponentType.WIDGET, new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
-                widgetDescriptorValidator));
+                kubernetesService, widgetDescriptorValidator));
 
         EntandoDeBundle bundle = getTestBundle("1.0.0");
 

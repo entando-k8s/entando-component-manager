@@ -612,9 +612,8 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         final UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(endpoint.toUri())
                 .path("/resolve").queryParam("namespace", namespace);
 
-        for (String v : variableNames) {
-            uriComponentsBuilder.queryParam("variableName", v);
-        }
+        Optional.ofNullable(variableNames).orElseGet(ArrayList::new)
+                .forEach(v -> uriComponentsBuilder.queryParam("variableName", v));
 
         return uriComponentsBuilder.build().toUriString();
     }
