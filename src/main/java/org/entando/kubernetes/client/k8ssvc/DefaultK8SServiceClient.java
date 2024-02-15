@@ -9,6 +9,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +33,7 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -474,7 +476,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     /**
      * check if the received EntandoPlugin and Reportable.Component correspond to the same plugin version.
      *
-     * @param plugin the EntandoPlugin of which check the version
+     * @param plugin    the EntandoPlugin of which check the version
      * @param component the Reportable.Component of which check the version
      * @return the SimpleEntry resulting from the comparison
      */
@@ -566,6 +568,54 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 traverson.follow(APPS_ENDPOINT).follow(Hop.rel("app").withParameter("name", appName))
                         .follow(Hop.rel("app-status"))
                         .toObject(ApplicationStatus.class));
+    }
+
+
+    @Override
+    public List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames, String namespace) {
+        return tryOrThrow(() -> {
+            ParameterizedTypeReference<CollectionModel<PluginVariable>> typeRef = new ParameterizedTypeReference<CollectionModel<PluginVariable>>() {
+            };
+
+            String url = buildPluginVariablesEndpoint(variableNames, namespace);
+
+            RequestEntity<?> request = RequestEntity
+                    .get(URI.create(url))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .build();
+
+            ResponseEntity<CollectionModel<PluginVariable>> response;
+            try {
+                response = restTemplate.exchange(request, typeRef);
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                    throw new RestClientResponseException("Error", HttpStatus.NOT_FOUND.value(),
+                            HttpStatus.NOT_FOUND.name(), null,
+                            "It appears that there is no config map in the cluster to manage plugin variables".getBytes(),
+                            null);
+                }
+                throw e;
+            }
+
+            final Collection<PluginVariable> collection = Optional.of(response)
+                    .map(HttpEntity::getBody)
+                    .orElseGet(CollectionModel::empty)
+                    .getContent();
+
+            return new ArrayList<>(collection);
+        });
+    }
+
+    private String buildPluginVariablesEndpoint(Collection<String> variableNames, String namespace) {
+        Link endpoint = traverson.follow(PLUGINS_ENDPOINT).asLink();
+
+        final UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(endpoint.toUri())
+                .path("/resolve").queryParam("namespace", namespace);
+
+        Optional.ofNullable(variableNames).orElseGet(ArrayList::new)
+                .forEach(v -> uriComponentsBuilder.queryParam("variableName", v));
+
+        return uriComponentsBuilder.build().toUriString();
     }
 
     private Ingress getAppIngress(String appName) {

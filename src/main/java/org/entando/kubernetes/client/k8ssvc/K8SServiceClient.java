@@ -2,6 +2,7 @@ package org.entando.kubernetes.client.k8ssvc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -12,6 +13,7 @@ import org.entando.kubernetes.model.bundle.reportable.Reportable;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 
 public interface K8SServiceClient extends ECMClient {
 
@@ -54,6 +56,8 @@ public interface K8SServiceClient extends ECMClient {
     void undeployDeBundle(String bundleName);
 
     ApplicationStatus getAppStatusPhase(String appName);
+
+    List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames, String namespace);
 
     @Data
     @NoArgsConstructor

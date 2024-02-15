@@ -127,7 +127,6 @@ public class WidgetDescriptor extends VersionedDescriptor {
 
     @Getter
     @Setter
-    @AllArgsConstructor
     @NoArgsConstructor
     public static class ApiClaim {
 
@@ -138,6 +137,14 @@ public class WidgetDescriptor extends VersionedDescriptor {
         private String type;
         private String pluginName;
         private String bundleId;
+        private String bundleReference;
+
+        public ApiClaim(String name, String type, String pluginName, String bundleId) {
+            this.name = name;
+            this.type = type;
+            this.pluginName = pluginName;
+            this.bundleId = bundleId;
+        }
     }
 
     @Getter
