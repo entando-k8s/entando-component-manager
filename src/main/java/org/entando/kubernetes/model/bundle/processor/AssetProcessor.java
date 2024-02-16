@@ -76,7 +76,7 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
             for (String fileName : descriptorList) {
                 String assetDirectory = Paths.get(fileName).getParent().toString();
                 AssetDescriptor assetDescriptor = bundleReader.readDescriptorFile(fileName, AssetDescriptor.class);
-                replaceBundleIdPlaceholder(bundleId, assetDescriptor);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, assetDescriptor);
                 InstallAction action = extractInstallAction(assetDescriptor.getCorrelationCode(),
                         conflictStrategy, installPlan);
                 installables.add(new AssetInstallable(engineService, assetDescriptor, bundleReader.getAssetFile(
@@ -105,7 +105,7 @@ public class AssetProcessor extends BaseComponentProcessor<AssetDescriptor>
                 .build();
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, AssetDescriptor descriptor) {
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, AssetDescriptor descriptor) {
 
         if (ArrayUtils.isEmpty(descriptor.getCategories())) {
             return;

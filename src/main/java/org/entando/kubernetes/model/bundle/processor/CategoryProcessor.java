@@ -74,7 +74,7 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
                         .readListOfDescriptorFile(fileName, CategoryDescriptor.class);
                 for (CategoryDescriptor cd : categoryDescriptorList) {
                     InstallAction action = extractInstallAction(cd.getCode(), conflictStrategy, installPlan);
-                    replaceBundleIdPlaceholder(bundleId, cd);
+                    replaceBundleIdPlaceholderInDescriptorProps(bundleId, cd);
                     installables.add(new CategoryInstallable(engineService, cd, action));
                 }
             }
@@ -102,8 +102,8 @@ public class CategoryProcessor extends BaseComponentProcessor<CategoryDescriptor
                 .build();
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, CategoryDescriptor descriptor) {
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, CategoryDescriptor descriptor) {
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getParentCode, descriptor::setParentCode);
     }
 }

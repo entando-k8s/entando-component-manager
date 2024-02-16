@@ -97,7 +97,7 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
             final List<String> descriptorList = getDescriptorList(bundleReader);
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
-                replaceBundleIdPlaceholder(bundleId, pageDescriptor);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, pageDescriptor);
                 this.descriptorValidator.validateOrThrow(pageDescriptor);
                 this.composeAndSetCode(pageDescriptor, bundleReader);
                 Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
@@ -175,12 +175,12 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
         return engineService;
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, PageDescriptor descriptor) {
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, PageDescriptor descriptor) {
 
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getParentCode, descriptor::setParentCode);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getOwnerGroup, descriptor::setOwnerGroup);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getPageModel, descriptor::setPageModel);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getParentCode, descriptor::setParentCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getOwnerGroup, descriptor::setOwnerGroup);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getPageModel, descriptor::setPageModel);
 
         if (CollectionUtils.isEmpty(descriptor.getJoinGroups())) {
             return;

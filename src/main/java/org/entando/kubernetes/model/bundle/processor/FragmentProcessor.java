@@ -67,7 +67,7 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
                     String gcp = getRelativePath(fileName, frDesc.getGuiCodePath());
                     frDesc.setGuiCode(bundleReader.readFileAsString(gcp));
                 }
-                replaceBundleIdPlaceholder(bundleId, frDesc);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, frDesc);
                 InstallAction action = extractInstallAction(frDesc.getCode(), conflictStrategy, installPlan);
                 installableList.add(new FragmentInstallable(engineService, frDesc, action));
             }
@@ -94,10 +94,10 @@ public class FragmentProcessor extends BaseComponentProcessor<FragmentDescriptor
                 .build();
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, FragmentDescriptor descriptor) {
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode, descriptor::setCode);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCode, descriptor::setGuiCode);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getGuiCodePath, descriptor::setGuiCodePath);
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, FragmentDescriptor descriptor) {
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getGuiCode, descriptor::setGuiCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getGuiCodePath, descriptor::setGuiCodePath);
     }
 
 }

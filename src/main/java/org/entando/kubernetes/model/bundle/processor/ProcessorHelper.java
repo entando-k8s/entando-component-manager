@@ -16,7 +16,7 @@ public class ProcessorHelper {
      * @param getter the supplier providing the input in which search the placeholder
      * @param setter the consumer to set the new replaced value
      */
-    public static void applyBundleIdPlaceholderReplacement(String bundleId, Supplier<String> getter, Consumer<String> setter) {
+    public static void replaceBundleIdPlaceholderInConsumer(String bundleId, Supplier<String> getter, Consumer<String> setter) {
         final String replacedValue = replaceBundleIdPlaceholder(getter.get(), bundleId);
         setter.accept(replacedValue);
     }

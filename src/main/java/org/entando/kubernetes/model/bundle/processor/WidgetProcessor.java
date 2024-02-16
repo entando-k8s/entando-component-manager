@@ -131,7 +131,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 if (WidgetDescriptor.TYPE_WIDGET_APPBUILDER.equals(widgetDescriptor.getType())) {
                     composeAndSetAppBuilderMetadata(widgetDescriptor, bundleReader, fileName, pluginIngressPathMap);
                 }
-                replaceBundleIdPlaceholder(bundleId, widgetDescriptor);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, widgetDescriptor);
 
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
                 installableList.add(
@@ -480,12 +480,12 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
         }
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, WidgetDescriptor descriptor) {
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode,
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, WidgetDescriptor descriptor) {
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode,
                 descriptor::setCode);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCustomUi,
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCustomUi,
                 descriptor::setCustomUi);
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCustomUiPath,
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCustomUiPath,
                 descriptor::setCustomUiPath);
     }
 }

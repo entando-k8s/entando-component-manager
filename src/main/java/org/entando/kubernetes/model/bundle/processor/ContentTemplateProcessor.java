@@ -73,7 +73,7 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
                     contentTemplateDescriptor.setContentShape(bundleReader.readFileAsString(csPath));
                 }
 
-                replaceBundleIdPlaceholder(bundleId, contentTemplateDescriptor);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, contentTemplateDescriptor);
                 InstallAction action = extractInstallAction(contentTemplateDescriptor.getId(), conflictStrategy,
                         installPlan);
                 installables.add(new ContentTemplateInstallable(engineService, contentTemplateDescriptor, action));
@@ -102,7 +102,7 @@ public class ContentTemplateProcessor extends BaseComponentProcessor<ContentTemp
                 .build();
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, ContentTemplateDescriptor descriptor) {
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getContentShape, descriptor::setContentShape);
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, ContentTemplateDescriptor descriptor) {
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getContentShape, descriptor::setContentShape);
     }
 }

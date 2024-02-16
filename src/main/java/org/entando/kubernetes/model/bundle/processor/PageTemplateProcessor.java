@@ -75,7 +75,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                     String tp = getRelativePath(fileName, pageTemplateDescriptor.getTemplatePath());
                     pageTemplateDescriptor.setTemplate(bundleReader.readFileAsString(tp));
                 }
-                replaceBundleIdPlaceholder(bundleId, pageTemplateDescriptor);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, pageTemplateDescriptor);
                 InstallAction action = extractInstallAction(pageTemplateDescriptor.getCode(), conflictStrategy,
                         installPlan);
                 installables.add(new PageTemplateInstallable(engineService, pageTemplateDescriptor, action));
@@ -104,9 +104,9 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                 .build();
     }
 
-    private void replaceBundleIdPlaceholder(String bundleId, PageTemplateDescriptor descriptor) {
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, PageTemplateDescriptor descriptor) {
 
-        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, descriptor::getCode,
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode,
                 descriptor::setCode);
 
         final PageTemplateConfigurationDescriptor configurationDesc = descriptor.getConfiguration();
@@ -118,7 +118,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                 .filter(Objects::nonNull)
                 .map(f -> {
                     if (f.getDefaultWidget() != null) {
-                        ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId,
+                        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId,
                                 f.getDefaultWidget()::getCode, f.getDefaultWidget()::setCode);
                     }
                     return f;

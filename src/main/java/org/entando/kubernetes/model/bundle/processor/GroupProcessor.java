@@ -73,7 +73,7 @@ public class GroupProcessor extends BaseComponentProcessor<GroupDescriptor> impl
                 List<GroupDescriptor> groupDescriptorList = bundleReader
                         .readListOfDescriptorFile(fileName, GroupDescriptor.class);
                 for (GroupDescriptor gd : groupDescriptorList) {
-                    ProcessorHelper.applyBundleIdPlaceholderReplacement(bundleId, gd::getCode, gd::setCode);
+                    ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, gd::getCode, gd::setCode);
                     InstallAction action = extractInstallAction(gd.getCode(), conflictStrategy, installPlan);
                     installables.add(new GroupInstallable(engineService, gd, action));
                 }
