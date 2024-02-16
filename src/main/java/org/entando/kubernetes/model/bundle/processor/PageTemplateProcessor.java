@@ -1,8 +1,11 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,6 +16,8 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.FrameDescriptor;
+import org.entando.kubernetes.model.bundle.descriptor.PageTemplateConfigurationDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.PageTemplateDescriptor;
 import org.entando.kubernetes.model.bundle.installable.Installable;
 import org.entando.kubernetes.model.bundle.installable.PageTemplateInstallable;
@@ -20,6 +25,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Processor to handle Page Templates.
@@ -60,6 +66,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (String fileName : descriptorList) {
                 PageTemplateDescriptor pageTemplateDescriptor = bundleReader
@@ -68,6 +75,7 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                     String tp = getRelativePath(fileName, pageTemplateDescriptor.getTemplatePath());
                     pageTemplateDescriptor.setTemplate(bundleReader.readFileAsString(tp));
                 }
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, pageTemplateDescriptor);
                 InstallAction action = extractInstallAction(pageTemplateDescriptor.getCode(), conflictStrategy,
                         installPlan);
                 installables.add(new PageTemplateInstallable(engineService, pageTemplateDescriptor, action));
@@ -96,4 +104,27 @@ public class PageTemplateProcessor extends BaseComponentProcessor<PageTemplateDe
                 .build();
     }
 
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, PageTemplateDescriptor descriptor) {
+
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode,
+                descriptor::setCode);
+
+        final PageTemplateConfigurationDescriptor configurationDesc = descriptor.getConfiguration();
+        if (configurationDesc == null || CollectionUtils.isEmpty(configurationDesc.getFrames())) {
+            return;
+        }
+
+        final List<FrameDescriptor> frames = configurationDesc.getFrames().stream()
+                .filter(Objects::nonNull)
+                .map(f -> {
+                    if (f.getDefaultWidget() != null) {
+                        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId,
+                                f.getDefaultWidget()::getCode, f.getDefaultWidget()::setCode);
+                    }
+                    return f;
+                })
+                .collect(Collectors.toList());
+
+        configurationDesc.setFrames(frames);
+    }
 }

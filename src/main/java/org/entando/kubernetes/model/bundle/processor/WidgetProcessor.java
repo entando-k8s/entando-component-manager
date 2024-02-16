@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_CONFIG;
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
 
@@ -80,8 +81,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
 
     /**
-     * Map of descriptors of type widgetConfig.
-     * used to recover information about the configWidgets when processing a widget
+     * Map of descriptors of type widgetConfig. used to recover information about the configWidgets when processing a
+     * widget
      */
     @Setter
     private Map<String, WidgetDescriptor> widgetConfigDescriptorsMap;
@@ -114,14 +115,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (final String fileName : descriptorList) {
                 final WidgetDescriptor widgetDescriptor = makeWidgetDescriptorFromFile(
                         bundleReader, fileName, pluginIngressPathMap
                 );
-
                 processPluginVariables(widgetDescriptor);
-
                 validateApiClaims(widgetDescriptor.getApiClaims());
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
@@ -131,6 +131,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 if (WidgetDescriptor.TYPE_WIDGET_APPBUILDER.equals(widgetDescriptor.getType())) {
                     composeAndSetAppBuilderMetadata(widgetDescriptor, bundleReader, fileName, pluginIngressPathMap);
                 }
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, widgetDescriptor);
 
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
                 installableList.add(
@@ -154,7 +155,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 .collect(Collectors.toList()));
     }
 
-    private List<Installable<WidgetDescriptor>> pushLogicWidgetsDownTheList(List<Installable<WidgetDescriptor>> installables) {
+    private List<Installable<WidgetDescriptor>> pushLogicWidgetsDownTheList(
+            List<Installable<WidgetDescriptor>> installables) {
         if (installables == null || installables.isEmpty()) {
             return installables;
         }
@@ -336,6 +338,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
     /**
      * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.
+     *
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param bundleReader     the bundle reader used to access the bundle files
      */
@@ -412,7 +415,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      * compose and set the widget code in the descriptor.
      */
     private void composeAndSetCode(WidgetDescriptor widgetDescriptor, BundleReader bundleReader) {
-        if (! widgetDescriptor.isVersion1()) {
+        if (!widgetDescriptor.isVersion1()) {
             // set the code
             String widgetCode = null;
             String widgetName = widgetDescriptor.getName();
@@ -420,7 +423,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 widgetCode = widgetName.substring(BundleUtilities.GLOBAL_PREFIX.length());
             } else {
                 widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
-                    widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
+                        widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
             }
             widgetDescriptor.setCode(widgetCode);
         }
@@ -431,7 +434,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      */
     private void composeAndSetParentCode(WidgetDescriptor descriptor, BundleReader bundleReader) {
         // set the code
-        if (!ObjectUtils.isEmpty(descriptor.getParentName()) && descriptor.getParentName().startsWith(BundleUtilities.GLOBAL_PREFIX)) {
+        if (!ObjectUtils.isEmpty(descriptor.getParentName()) && descriptor.getParentName()
+                .startsWith(BundleUtilities.GLOBAL_PREFIX)) {
             descriptor.setParentCode(descriptor.getParentName().substring(BundleUtilities.GLOBAL_PREFIX.length()));
         } else if (ObjectUtils.isEmpty(descriptor.getParentCode())
                 && !ObjectUtils.isEmpty(descriptor.getParentName())) {
@@ -456,6 +460,9 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     @Override
     public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
+
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
         try {
             WidgetDescriptor widgetDescriptor =
                     (WidgetDescriptor) bundleReader.readDescriptorFile(fileName,
@@ -464,11 +471,21 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
             composeAndSetCode(widgetDescriptor, bundleReader);
 
-            return List.of(widgetDescriptor.getComponentKey().getKey());
+            return List.of(
+                    ProcessorHelper.replaceBundleIdPlaceholder(widgetDescriptor.getComponentKey().getKey(), bundleId));
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format(
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
+    }
+
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, WidgetDescriptor descriptor) {
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode,
+                descriptor::setCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCustomUi,
+                descriptor::setCustomUi);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCustomUiPath,
+                descriptor::setCustomUiPath);
     }
 }

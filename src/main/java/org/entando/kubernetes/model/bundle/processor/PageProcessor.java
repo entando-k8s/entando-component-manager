@@ -1,5 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -41,11 +43,13 @@ public class PageProcessor extends AbstractPageProcessor implements EntandoEngin
     public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
 
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
         try {
             PageDescriptor descriptor = (PageDescriptor) bundleReader.readDescriptorFile(fileName,
                     componentProcessor.getDescriptorClass());
             composeAndSetCode(descriptor, bundleReader);
-            return List.of(descriptor.getComponentKey().getKey());
+            return List.of(ProcessorHelper.replaceBundleIdPlaceholder(descriptor.getComponentKey().getKey(), bundleId));
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format(
                     "Error parsing content type %s from descriptor %s",
