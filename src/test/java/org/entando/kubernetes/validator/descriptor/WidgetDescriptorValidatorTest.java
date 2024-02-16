@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Stream;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;
 import org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor;
@@ -98,74 +99,103 @@ class WidgetDescriptorValidatorTest {
     }
 
     @Test
-    void shouldThrowExceptionWhileValidatingAWidgetDescriptorV5NOTContainingTheExpectedFields() throws IOException {
+    void shouldCorrectlyValidateWidgetDescriptorV6() throws IOException {
         WidgetDescriptor descriptor = yamlMapper
-                .readValue(new File("src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml"),
+                .readValue(new File("src/test/resources/bundle-v5/widgets/my_widget_descriptor_v6.yaml"),
                         WidgetDescriptor.class);
         assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
-
-        descriptor.setName(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        descriptor.setName("name");
-        descriptor.setTitles(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        descriptor.setTitles(new HashMap());
-        descriptor.setGroup(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-
-        descriptor.setGroup("gree");
-        descriptor.setCustomElement(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
     }
 
     @Test
-    void shouldThrowExceptionWhileValidatingAWidgetDescriptorV5ContainingUnexpectedFields() throws IOException {
-        WidgetDescriptor descriptor = yamlMapper
-                .readValue(new File("src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml"),
-                        WidgetDescriptor.class);
-        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+    void shouldThrowExceptionWhileValidatingAWidgetDescriptorV5OnwardNOTContainingTheExpectedFields() {
+        Stream.of(
+                "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml",
+                 "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v6.yaml"
+        ).map(filePath -> {
+            try {
+                return yamlMapper.readValue(new File(filePath), WidgetDescriptor.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).forEach(widgetDescriptor -> {
 
-        descriptor.setConfigUi(new ConfigUi());
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+            assertDoesNotThrow(() -> validator.validateOrThrow(widgetDescriptor));
 
-        descriptor.setConfigUi(null);
+            widgetDescriptor.setName(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
 
-        descriptor.setCustomElement(null);
-        descriptor.setCustomUiPath(null);
-        descriptor.setCustomUi(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-        descriptor.setParentCode("a-widget-code");
-        descriptor.setParentName(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
-        descriptor.setParentCode("a-widget-code-12345678");
-        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
-        descriptor.setParentCode(null);
-        descriptor.setParentName("a-widget-name");
-        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
-        descriptor.setParentCode(null);
-        descriptor.setParentName(null);
+            widgetDescriptor.setName("name");
+            widgetDescriptor.setTitles(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
 
-        descriptor.setCustomElement(null);
-        descriptor.setCustomUiPath("myuipath");
-        descriptor.setCustomUi(null);
-        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+            widgetDescriptor.setTitles(new HashMap());
+            widgetDescriptor.setGroup(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
 
-        descriptor.setCustomElement(null);
-        descriptor.setCustomUiPath(null);
-        descriptor.setCustomUi("myui");
-        assertDoesNotThrow(() -> validator.validateOrThrow(descriptor));
+            widgetDescriptor.setGroup("gree");
+            widgetDescriptor.setCustomElement(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
+        });
+    }
 
-        descriptor.setCustomElement("element");
-        descriptor.setCustomUiPath("myuipath");
-        descriptor.setCustomUi(null);
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+    @Test
+    void shouldThrowExceptionWhileValidatingAWidgetDescriptorV5OnwardContainingUnexpectedFields() {
+        Stream.of(
+                "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v5.yaml",
+                "src/test/resources/bundle-v5/widgets/my_widget_descriptor_v6.yaml"
+        ).map(filePath -> {
+            try {
+                return yamlMapper.readValue(new File(filePath), WidgetDescriptor.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).forEach(widgetDescriptor -> {
 
-        descriptor.setCustomElement("element");
-        descriptor.setCustomUiPath(null);
-        descriptor.setCustomUi("myui");
-        assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(descriptor));
+            assertDoesNotThrow(() -> validator.validateOrThrow(widgetDescriptor));
+
+            widgetDescriptor.setConfigUi(new ConfigUi());
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
+
+            widgetDescriptor.setConfigUi(null);
+
+            widgetDescriptor.setCustomElement(null);
+            widgetDescriptor.setCustomUiPath(null);
+            widgetDescriptor.setCustomUi(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
+
+            widgetDescriptor.setParentCode("a-widget-code");
+            widgetDescriptor.setParentName(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
+            widgetDescriptor.setParentCode("a-widget-code-12345678");
+            assertDoesNotThrow(() -> validator.validateOrThrow(widgetDescriptor));
+            widgetDescriptor.setParentCode(null);
+            widgetDescriptor.setParentName("a-widget-name");
+            assertDoesNotThrow(() -> validator.validateOrThrow(widgetDescriptor));
+            widgetDescriptor.setParentCode(null);
+            widgetDescriptor.setParentName(null);
+
+            widgetDescriptor.setCustomElement(null);
+            widgetDescriptor.setCustomUiPath("myuipath");
+            widgetDescriptor.setCustomUi(null);
+            assertDoesNotThrow(() -> validator.validateOrThrow(widgetDescriptor));
+
+            widgetDescriptor.setCustomElement(null);
+            widgetDescriptor.setCustomUiPath(null);
+            widgetDescriptor.setCustomUi("myui");
+            assertDoesNotThrow(() -> validator.validateOrThrow(widgetDescriptor));
+
+            widgetDescriptor.setCustomElement("element");
+            widgetDescriptor.setCustomUiPath("myuipath");
+            widgetDescriptor.setCustomUi(null);
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
+
+            widgetDescriptor.setCustomElement("element");
+            widgetDescriptor.setCustomUiPath(null);
+            widgetDescriptor.setCustomUi("myui");
+            assertThrows(InvalidBundleException.class, () -> validator.validateOrThrow(widgetDescriptor));
+        });
+
+
     }
 
     @Test
