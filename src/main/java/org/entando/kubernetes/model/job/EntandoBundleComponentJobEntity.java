@@ -31,6 +31,8 @@ public class EntandoBundleComponentJobEntity implements TrackableJob, HasInstall
     Installable installable;
     @Transient
     private String uninstallErrors;
+    @Transient
+    private String installWarnings;
 
     @Id
     @Column

@@ -23,6 +23,7 @@ public class CraneCommand {
 
     private static final String ERROR_GETTING_IMAGE_DIGEST =
             "An error occurred while fetching the docker image digest using " + CRANE_CMD;
+    public static final int TIMEOUT = 10;
 
     public String getImageDigest(String image) {
 
@@ -33,11 +34,11 @@ public class CraneCommand {
         ProcessHandler processHandler;
         try {
             log.debug(LOG_CMD_TO_EXECUTE, CraneCommand.CRANE_CMD,
-                    String.join(" ", params), 10);
+                    String.join(" ", params), TIMEOUT);
 
             processHandler = ProcessHandlerBuilder.buildCommand(CRANE_CMD, params, false)
                     .start()
-                    .waitFor(10);
+                    .waitFor(TIMEOUT);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn(ERROR_GETTING_IMAGE_DIGEST, e.getCause());

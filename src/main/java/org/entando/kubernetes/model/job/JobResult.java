@@ -19,6 +19,7 @@ public class JobResult {
     String uninstallErrors;
     EntandoComponentManagerException rollbackException;
     Double progress;
+    String installWarnings;
 
     public boolean hasException() {
         return this.installException != null || this.rollbackException != null || this.uninstallException != null;

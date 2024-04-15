@@ -23,7 +23,6 @@ import org.entando.kubernetes.config.TestSecurityConfiguration;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistry;
 import org.entando.kubernetes.model.entandohub.EntandoHubRegistryEntity;
 import org.entando.kubernetes.repository.EntandoHubRegistryRepository;
-import org.entando.kubernetes.security.AuthorizationChecker;
 import org.entando.kubernetes.stubhelper.EntandoHubRegistryStubHelper;
 import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
@@ -83,8 +82,6 @@ class EntandoHubRegistryIntegrationTest {
     private WebApplicationContext context;
     @Autowired
     private EntandoHubRegistryRepository entandoHubRegistryRepository;
-    @Autowired
-    private AuthorizationChecker authorizationChecker;
 
     @BeforeEach
     public void setup() {
@@ -95,7 +92,6 @@ class EntandoHubRegistryIntegrationTest {
         entandoHubRegistryRepository.deleteAll();
         entandoHubRegistryRepository.saveAll(entityToSaveList);
 
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8103);
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
     }
 

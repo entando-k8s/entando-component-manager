@@ -6,6 +6,7 @@ import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.rea
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
@@ -152,6 +154,10 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
 
                 // set metadata
                 setPluginMetadata(pluginDescriptor, bundleReader);
+
+                // enrich secrets with bundle id
+                addBundleIdToSecrets(pluginDescriptor);
+
                 // validate
                 descriptorValidator.validateOrThrow(pluginDescriptor);
                 // add CM endpoint env var
@@ -184,6 +190,37 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
                 .map(c -> new PluginInstallable(kubernetesService, buildDescriptorFromComponentJob(c), c.getAction(),
                         pluginPathRepository))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * for each env var of the plugin descriptor which is referencing a secret that's not starting with the bundle id.
+     * prepend the secret name with the bundle id set the new env vars list in the plugin descriptor
+     *
+     * @param pluginDescriptor the PluginDescriptor from which get the env variables
+     */
+    private void addBundleIdToSecrets(PluginDescriptor pluginDescriptor) {
+
+        if (CollectionUtils.isEmpty(pluginDescriptor.getEnvironmentVariables())) {
+            return;
+        }
+
+        String bundleId = pluginDescriptor.getDescriptorMetadata().getBundleId();
+
+        final Map<String, EnvironmentVariable> envVarsMap = pluginDescriptor.getEnvironmentVariables().stream()
+                .collect(Collectors.toMap(EnvironmentVariable::getName, envVar -> envVar));
+
+        final Map<String, EnvironmentVariable> updatedEnvVars = pluginDescriptor.getEnvironmentVariables().stream()
+                .filter(envVar -> envVar.getValueFrom() != null
+                        && !envVar.getValueFrom().getSecretKeyRef().getName().startsWith(bundleId))
+                .map(envVar -> {
+                    String secretName = String.join("-", bundleId, envVar.getValueFrom().getSecretKeyRef().getName());
+                    envVar.getValueFrom().getSecretKeyRef().setName(secretName);
+                    return envVar;
+                })
+                .collect(Collectors.toMap(EnvironmentVariable::getName, envVar -> envVar));
+
+        envVarsMap.putAll(updatedEnvVars);
+        pluginDescriptor.setEnvironmentVariables(new ArrayList<>(envVarsMap.values()));
     }
 
     /**

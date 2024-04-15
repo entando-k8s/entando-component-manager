@@ -15,7 +15,6 @@ import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlansRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallRequest;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallWithPlansRequest;
-import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.exception.job.JobConflictException;
 import org.entando.kubernetes.exception.job.JobNotFoundException;
 import org.entando.kubernetes.exception.k8ssvc.BundleNotFoundException;
@@ -71,7 +70,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
-        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+        EntandoDeBundleTag tag = BundleUtilities.getBundleTagOrFail(bundle, request.getVersion());
 
         InstallPlan installPlan = installService
                 .generateInstallPlan(bundle, tag, EntandoBundleInstallService.PERFORM_CONCURRENT_CHECKS);
@@ -98,7 +97,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
             EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                     .orElseThrow(() -> new BundleNotFoundException(componentId));
-            EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+            EntandoDeBundleTag tag = BundleUtilities.getBundleTagOrFail(bundle, request.getVersion());
 
             EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
                     .orElseGet(() -> installService.install(bundle, tag, request.getConflictStrategy()));
@@ -137,7 +136,7 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
 
         EntandoDeBundle bundle = kubeService.fetchBundleByName(componentId)
                 .orElseThrow(() -> new BundleNotFoundException(componentId));
-        EntandoDeBundleTag tag = getBundleTagOrFail(bundle, request.getVersion());
+        EntandoDeBundleTag tag = BundleUtilities.getBundleTagOrFail(bundle, request.getVersion());
 
         EntandoBundleJobEntity installJob = jobService.findCompletedOrConflictingInstallJob(bundle)
                 .orElseGet(() -> installService.installWithInstallPlan(bundle, tag, request));
@@ -232,13 +231,6 @@ public class EntandoBundleOperationResourceController implements EntandoBundleOp
         return MvcUriComponentsBuilder
                 .fromMethodCall(on(EntandoBundleJobResourceController.class).getJob(job.getId().toString()))
                 .build().toUri();
-    }
-
-    private EntandoDeBundleTag getBundleTagOrFail(EntandoDeBundle bundle, String version) {
-        String versionToFind = BundleUtilities.getBundleVersionOrFail(bundle, version);
-        return bundle.getSpec().getTags().stream().filter(t -> t.getVersion().equals(versionToFind)).findAny()
-                .orElseThrow(
-                        () -> new InvalidBundleException("Version " + versionToFind + " not defined in bundle versions"));
     }
 
 }

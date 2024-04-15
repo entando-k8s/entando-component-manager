@@ -75,7 +75,8 @@ class PostInitServiceTest {
 
     @Test
     void kubernetesServiceAppStatusError_ShouldReturnStatusUnknow() throws Exception {
-        initServiceToTest(convertConfigDataToString(convertConfigDataToString()), Collections.singletonList(buildPrimaryTenantConfig()));
+        initServiceToTest(convertConfigDataToString(convertConfigDataToString()),
+                Collections.singletonList(buildPrimaryTenantConfig()));
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("undefined");
         serviceToTest.install();
@@ -93,7 +94,8 @@ class PostInitServiceTest {
 
     @Test
     void kubernetesCRwithDataError_ShouldReturnStatusFailed() throws Exception {
-        initServiceToTest(convertConfigDataToString(convertConfigDataToString()), Collections.singletonList(buildPrimaryTenantConfig()));
+        initServiceToTest(convertConfigDataToString(convertConfigDataToString()),
+                Collections.singletonList(buildPrimaryTenantConfig()));
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
         when(bundleService.listBundles()).thenReturn(new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
@@ -194,12 +196,10 @@ class PostInitServiceTest {
 
     @Test
     void postInit_errorInputName_ShouldNotInstall() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
-
         PostInitData data = convertConfigDataToString();
         data.getItems().get(0).setName("%$qw123");
         initServiceToTest(convertConfigDataToString(data), Collections.singletonList(buildPrimaryTenantConfig()),
-                bundleService, installServiceSpy, kubernetesService,
+                bundleService, installService, kubernetesService,
                 entandoBundleJobService);
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
@@ -209,11 +209,11 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.FAILED);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(installServiceSpy, times(0)).install(any(), any(), any());
+        verify(installService, times(0)).install(any(), any(), any());
 
         data.getItems().get(0).setName("-123456.");
         initServiceToTest(convertConfigDataToString(data), Collections.singletonList(buildPrimaryTenantConfig()),
-                bundleService, installServiceSpy, kubernetesService,
+                bundleService, installService, kubernetesService,
                 entandoBundleJobService);
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
@@ -223,13 +223,14 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.FAILED);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(installServiceSpy, times(0)).install(any(), any(), any());
+        verify(installService, times(0)).install(any(), any(), any());
 
     }
 
     @Test
     void isBundleOperationAllowed_shouldWork() throws Exception {
-        initServiceToTest(convertConfigDataToString(convertConfigDataToString()), Collections.singletonList(buildPrimaryTenantConfig()));
+        initServiceToTest(convertConfigDataToString(convertConfigDataToString()),
+                Collections.singletonList(buildPrimaryTenantConfig()));
 
         Optional<Boolean> resp = serviceToTest.isEcrActionAllowed("ciccio", "test");
         assertThat(resp.isEmpty()).isTrue();
@@ -260,7 +261,8 @@ class PostInitServiceTest {
 
     @Test
     void postInit_ShouldReturnOk() throws Exception {
-        initServiceToTest(convertConfigDataToString(convertConfigDataToString()), Collections.singletonList(buildPrimaryTenantConfig()));
+        initServiceToTest(convertConfigDataToString(convertConfigDataToString()),
+                Collections.singletonList(buildPrimaryTenantConfig()));
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
         when(bundleService.listBundles()).thenReturn(new PagedMetadata(new PagedListRequest(), new ArrayList<>(), 0));
@@ -318,7 +320,6 @@ class PostInitServiceTest {
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
         when(bundleService.deployDeBundle(any())).thenReturn(new EntandoBundle());
 
-
         serviceToTest.install();
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
@@ -341,7 +342,8 @@ class PostInitServiceTest {
 
         String bundleCode = BundleUtilities.composeBundleCode(POST_INIT_BUNDLE_NAME,
                 BundleUtilities.removeProtocolAndGetBundleId(POST_INIT_BUNDLE_PUBLICATION_URL));
-        EntandoBundle installedBundle = EntandoBundle.builder().code(bundleCode).annotations(Map.of("entando.org/tenants", "primary"))
+        EntandoBundle installedBundle = EntandoBundle.builder().code(bundleCode)
+                .annotations(Map.of("entando.org/tenants", "primary"))
                 .repoUrl(POST_INIT_BUNDLE_PUBLICATION_URL)
                 .installedJob(EntandoBundleJob.builder().componentVersion("0.0.1").status(JobStatus.INSTALL_COMPLETED)
                         .build()).build();
@@ -361,7 +363,6 @@ class PostInitServiceTest {
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
         TenantContextHolder.setCurrentTenantCode("primary");
 
-
         serviceToTest.install();
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.SUCCESSFUL);
         assertThat(serviceToTest.isCompleted()).isTrue();
@@ -375,17 +376,17 @@ class PostInitServiceTest {
     }
 
 
-
     private void initServiceToTest(String configData, List<TenantConfigDTO> tenantConfigurations) throws Exception {
-        serviceToTest = new PostInitServiceImpl(configData, tenantConfigurations, bundleService, installService, kubernetesService,
+        serviceToTest = new PostInitServiceImpl(configData, tenantConfigurations, bundleService, installService,
+                kubernetesService,
                 entandoBundleJobService);
         serviceToTest.afterPropertiesSet();
     }
 
     private void initServiceToTest(String configData,
-                                   List<TenantConfigDTO> tenantConfigurations,
-                                   EntandoBundleService bundleService,
-                                   EntandoBundleInstallService installService,
+            List<TenantConfigDTO> tenantConfigurations,
+            EntandoBundleService bundleService,
+            EntandoBundleInstallService installService,
             KubernetesService kubernetesService, EntandoBundleJobService entandoBundleJobService)
             throws Exception {
         serviceToTest = new PostInitServiceImpl(configData, tenantConfigurations,

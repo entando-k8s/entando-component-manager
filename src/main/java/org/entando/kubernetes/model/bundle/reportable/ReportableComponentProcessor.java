@@ -4,6 +4,8 @@
 
 package org.entando.kubernetes.model.bundle.reportable;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.entando.kubernetes.model.bundle.processor.ComponentProcessor;
+import org.entando.kubernetes.model.bundle.processor.ProcessorHelper;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 
 public interface ReportableComponentProcessor {
@@ -60,14 +63,20 @@ public interface ReportableComponentProcessor {
     default List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
 
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
         try {
             if (componentProcessor.doesComponentDscriptorContainMoreThanOneSingleEntity()) {
                 return bundleReader.readListOfDescriptorFile(fileName, componentProcessor.getDescriptorClass())
-                        .stream().map(descriptor -> descriptor.getComponentKey().getKey())
+                        .stream().map(descriptor ->
+                                ProcessorHelper.replaceBundleIdPlaceholder(descriptor.getComponentKey().getKey(),
+                                        bundleId)
+                        )
                         .collect(Collectors.toList());
             } else {
-                return Arrays.asList(bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
-                        .getComponentKey().getKey());
+                final String key = bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
+                        .getComponentKey().getKey();
+                return Arrays.asList(ProcessorHelper.replaceBundleIdPlaceholder(key, bundleId));
             }
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format(

@@ -1,5 +1,7 @@
 package org.entando.kubernetes.client;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,7 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.entando.kubernetes.stubhelper.AnalysisReportStubHelper;
 
 public class K8SServiceClientTestDouble implements K8SServiceClient {
@@ -187,6 +190,11 @@ public class K8SServiceClientTestDouble implements K8SServiceClient {
         ApplicationStatus appStatus = new ApplicationStatus();
         appStatus.setStatus(deployedLinkPhase.toValue());
         return appStatus;
+    }
+
+    @Override
+    public List<PluginVariable> resolvePluginsVariables(Collection<String> variableNames, String namespace) {
+        return Collections.emptyList();
     }
 
 }

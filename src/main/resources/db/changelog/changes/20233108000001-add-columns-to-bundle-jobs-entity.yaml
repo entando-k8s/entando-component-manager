@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20233108000001
+      author: a.romeo@entando.com
+      preConditions:
+        - onFail: HALT
+        - tableExists:
+            tableName: entando_bundle_jobs
+      changes:
+        - addColumn:
+            tableName: entando_bundle_jobs
+            columns:
+              - column:
+                  name: install_warnings
+                  type: TEXT
+                  defaultValue: null

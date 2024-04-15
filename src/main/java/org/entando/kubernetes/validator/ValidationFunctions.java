@@ -23,7 +23,8 @@ public class ValidationFunctions {
             HOST_MUST_START_AND_END_WITH_ALPHANUMERIC_REGEX);
     public static final Pattern VALID_CHARS_RFC_1123_REGEX_PATTERN = Pattern.compile(VALID_CHARS_RFC_1123_REGEX);
     public static final Pattern VALID_ENTITY_CODE_REGEX_PATTERN = Pattern.compile(VALID_ENTITY_CODE_REGEX);
-
+    public static final String SUPPORTED_DB = "mysql|postgresql|oracle";
+    public static final String DB_URL_REGEX = "^jdbc:(" + SUPPORTED_DB + ")://([a-zA-Z0-9-.]*[a-zA-Z0-9-]):([0-9]{4,5})/([a-zA-Z0-9-_?=&]+)$";
     public static final String GIT_PROTOCOL = "git";
     public static final String HTTP_PROTOCOL = "http";
     public static final String HTTPS_PROTOCOL = "https";
@@ -161,6 +162,12 @@ public class ValidationFunctions {
             log.debug("URL validation failed for '{}'", candidate);
         }
         return false;
+    }
+
+    public static boolean validateDbURL(String dbUrl) {
+        Pattern pattern = Pattern.compile(DB_URL_REGEX);
+        Matcher matcher = pattern.matcher(dbUrl);
+        return matcher.matches();
     }
 
     private String appendProtocolIfMissing(String candidate, String proto) {

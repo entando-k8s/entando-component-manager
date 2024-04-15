@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
-@ExtendWith(value = {MockitoExtension.class})
+@ExtendWith(MockitoExtension.class)
 class DirectoryInstallableTest {
 
 

@@ -1,0 +1,23 @@
+descriptorVersion: v5
+name: todomvc_widget
+type: app-builder
+titles:
+  en: TODO MVC Widget
+  it: TODO MVC Widget
+group: free
+customElement: my-widget
+configMfe: todomvc_widget_config
+params:
+  - name: url
+    description: "the url"
+  - name: title
+    description: "the title"
+contextParams:
+  - "page_code"
+  - "info_startLang"
+
+ext:
+  appBuilder:
+    test1: "value1"
+  adminConsole:
+    test2: "value2"

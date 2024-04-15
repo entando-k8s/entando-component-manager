@@ -46,6 +46,26 @@ public class TenantValidatorTest {
         );
     }
 
+
+    @Test
+    void testInvalidDeDBUrl() throws JsonProcessingException {
+        Optional<Map<String, List<String>>> opt = TenantValidator
+                .validate(getConfigFromJson(INVALID_TENANT_CONFIG_DB_URL))
+                .getValidationErrorMap();
+        assertNotNull(opt);
+        assertTrue(opt.isPresent());
+        Map<String, List<String>> map = opt.get();
+        assertFalse(map.isEmpty());
+        MatcherAssert.assertThat(map, Matchers.allOf(
+                Matchers.hasKey("tenant1")
+        ));
+        List<String> errors = map.get("tenant1");
+        assertFalse(errors.isEmpty());
+        MatcherAssert.assertThat(errors, Matchers.contains(
+                "deDbUrl: invalid DB Url")
+        );
+    }
+
     @Test
     void testInvalidConfiguration2() throws JsonProcessingException {
         Optional<Map<String, List<String>>> opt = TenantValidator
@@ -203,6 +223,51 @@ public class TenantValidatorTest {
             + "      \"solrCore\":\"tenant1\",\n"
             + "      \"deKcClientId\":\"dekcclientid\",\n"
             + "      \"deKcClientSecret\":\"dekcsecret\"\n"
+            + "   }\n"
+            + "]";
+
+    public static final String INVALID_TENANT_CONFIG_DB_URL = "[\n"
+            + "   {\n"
+            + "      \"dbMaxTotal\":\"5\",\n"
+            + "      \"tenantCode\":\"tenant1\",\n"
+            + "      \"initializationAtStartRequired\":\"false\",\n"
+            + "      \"fqdns\":\"tenant1.test-entando.com\",\n"
+            + "      \"kcEnabled\":true,\n"
+            + "      \"kcAuthUrl\":\"https://tenant1.test-entando.com/auth\",\n"
+            + "      \"kcRealm\":\"tenant1\",\n"
+            + "      \"kcCmClientId\":\"mock-client-id\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
+            + "      \"kcPublicClientId\":\"mock\",\n"
+            + "      \"kcSecureUris\":\"kcsecureuris\",\n"
+            + "      \"kcDefaultAuthorizations\":\"\",\n"
+            + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
+            + "      \"cdsPath\":\"api/v1\",\n"
+            + "      \"solrAddress\":\"solraddress\",\n"
+            + "      \"solrCore\":\"tenant1\",\n"
+            + "      \"deDbUrl\":\"jdbc:test://test:5432/tenant1\",\n"
+            + "      \"deDbUsername\":\"username\",\n"
+            + "      \"deDbPassword\":\"password\"\n"
+            + "   },\n"
+            + "   {\n"
+            + "      \"dbMaxTotal\":\"5\",\n"
+            + "      \"tenantCode\":\"tenant2\",\n"
+            + "      \"initializationAtStartRequired\":\"false\",\n"
+            + "      \"fqdns\":\"tenant2.test-entando.com\",\n"
+            + "      \"kcEnabled\":true,\n"
+            + "      \"kcAuthUrl\":\"https://tenant2.test-entando.com/auth\",\n"
+            + "      \"kcRealm\":\"tenant1\",\n"
+            + "      \"kcCmClientId\":\"mock-client-id\",\n"
+            + "      \"deKcClientSecret\":\"mock-client-secret\",\n"
+            + "      \"kcPublicClientId\":\"mock\",\n"
+            + "      \"kcSecureUris\":\"kcsecureuris\",\n"
+            + "      \"kcDefaultAuthorizations\":\"\",\n"
+            + "      \"dbDriverClassName\":\"org.postgresql.Driver\",\n"
+            + "      \"cdsPath\":\"api/v1\",\n"
+            + "      \"solrAddress\":\"solraddress\",\n"
+            + "      \"solrCore\":\"tenant1\",\n"
+            + "      \"deDbUrl\":\"jdbc:postgresql://test:5432/tenant2\",\n"
+            + "      \"deDbUsername\":\"username\",\n"
+            + "      \"deDbPassword\":\"password\"\n"
             + "   }\n"
             + "]";
 }

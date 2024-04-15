@@ -36,6 +36,10 @@ public interface TrackableJob {
 
     void setUninstallErrors(String message);
 
+    String getInstallWarnings();
+
+    void setInstallWarnings(String message);
+
     String getRollbackErrorMessage();
 
     void setRollbackErrorMessage(String message);

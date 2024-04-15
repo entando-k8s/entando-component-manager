@@ -1,0 +1,18 @@
+descriptorVersion: v5
+
+name: something
+description: bundle description
+
+components:
+  widgets:
+    - widgets/my_widget_app_builder_descriptor_v5.yaml
+
+ext:
+  nav:
+    - label:
+        en: Dashboard
+        it: Dashboard
+      target: platform
+      url: /dashboard
+
+thumbnail: data:image/png;base64,dGhpcyBpcyBub3QgYW4gaW1hZ2UK

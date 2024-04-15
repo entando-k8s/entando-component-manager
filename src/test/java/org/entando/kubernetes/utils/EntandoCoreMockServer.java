@@ -34,7 +34,8 @@ public class EntandoCoreMockServer extends EntandoGenericMockServer {
     public static final String FRAGMENT_ENDPOINT = "/api/fragments";
     public static final String LABEL_ENDPOINT = "/api/labels";
     public static final String LANGUAGE_ENDPOINT = "/api/languages";
-    public static final String PAGE_ENDPOINT = "/api/pages";
+    public static final String PAGE_ENDPOINT = "/api/plugins/seo/pages";
+    public static final String DELETE_PAGE_ENDPOINT = "/api/pages";
     public static final String PAGE_TEMPLATE_ENDPOINT = "/api/pageModels";
     public static final String CONTENT_ENDPOINT = "/api/plugins/cms/contents";
     public static final String CONTENT_TEMPLATE_ENDPOINT = "/api/plugins/cms/contentmodels";

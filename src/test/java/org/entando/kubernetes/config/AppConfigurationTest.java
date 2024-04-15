@@ -99,10 +99,11 @@ class AppConfigurationTest {
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository, craneCommand));
         processors.put(ComponentType.WIDGET.toString(),
                 new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
-                        widgetDescriptorValidator));
+                        k8sService, widgetDescriptorValidator));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));
-        processors.put(ComponentType.PAGE_CONFIGURATION.toString(), new PageConfigurationProcessor(coreClient, pageDescriptorValidator));
+        processors.put(ComponentType.PAGE_CONFIGURATION.toString(),
+                new PageConfigurationProcessor(coreClient, pageDescriptorValidator));
 
         return processors;
     }
@@ -151,7 +152,7 @@ class AppConfigurationTest {
         processors.put(ComponentType.PLUGIN.toString(),
                 new PluginProcessor(k8sService, pluginDescriptorValidator, pluginDataRepository, craneCommand));
         processors.put(ComponentType.WIDGET.toString(),
-                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService,
+                new WidgetProcessor(componentDataRepository, coreClient, templateGeneratorService, k8sService,
                         widgetDescriptorValidator));
         processors.put(ComponentType.GROUP.toString(), new GroupProcessor(coreClient));
         processors.put(ComponentType.CATEGORY.toString(), new CategoryProcessor(coreClient));

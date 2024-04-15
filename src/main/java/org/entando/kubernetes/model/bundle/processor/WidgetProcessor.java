@@ -1,6 +1,7 @@
 package org.entando.kubernetes.model.bundle.processor;
 
 import static org.entando.kubernetes.model.bundle.descriptor.widget.WidgetDescriptor.TYPE_WIDGET_CONFIG;
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.CSS_TYPE;
 import static org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorServiceImpl.JS_TYPE;
 
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.entando.kubernetes.client.core.EntandoCoreClient;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallAction;
 import org.entando.kubernetes.controller.digitalexchange.job.model.InstallPlan;
@@ -35,12 +39,16 @@ import org.entando.kubernetes.model.bundle.installable.WidgetInstallable;
 import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.bundle.reportable.EntandoEngineReportableProcessor;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
+import org.entando.kubernetes.model.plugin.ApiClaimPluginVariables;
+import org.entando.kubernetes.model.plugin.PluginVariable;
 import org.entando.kubernetes.repository.ComponentDataRepository;
+import org.entando.kubernetes.service.KubernetesService;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.service.digitalexchange.JSONUtilities;
 import org.entando.kubernetes.service.digitalexchange.templating.WidgetTemplateGeneratorService;
 import org.entando.kubernetes.validator.descriptor.WidgetDescriptorValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 
@@ -59,18 +67,22 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
             + "because there is no service on the system with name \"%s\" and bundleId \"%s\"";
     public static final String INT_API_CLAIM_ERROR = "Internal apiClaim \"%s\" cannot be satisfied "
             + "because there no service with name \"%s\", declared in the same bundle";
+    public static final String PLUGIN_VARIABLES_REGEX = "\\$\\{([^}]*)\\}";
+    public static final Pattern PLUGIN_VARIABLES_REGEX_PATTERN = Pattern.compile(PLUGIN_VARIABLES_REGEX);
+
     private final ComponentDataRepository componentDataRepository;
     private final EntandoCoreClient engineService;
     @Getter
     private final WidgetTemplateGeneratorService templateGeneratorService;
+    private final KubernetesService kubernetesService;
     private final WidgetDescriptorValidator descriptorValidator;
     @Setter
     private Map<String, String> pluginIngressPathMap;
 
 
     /**
-     * Map of descriptors of type widgetConfig.
-     * used to recover information about the configWidgets when processing a widget
+     * Map of descriptors of type widgetConfig. used to recover information about the configWidgets when processing a
+     * widget
      */
     @Setter
     private Map<String, WidgetDescriptor> widgetConfigDescriptorsMap;
@@ -103,12 +115,13 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
+            final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
             for (final String fileName : descriptorList) {
                 final WidgetDescriptor widgetDescriptor = makeWidgetDescriptorFromFile(
                         bundleReader, fileName, pluginIngressPathMap
                 );
-
+                processPluginVariables(widgetDescriptor);
                 validateApiClaims(widgetDescriptor.getApiClaims());
 
                 composeAndSetCode(widgetDescriptor, bundleReader);
@@ -118,6 +131,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 if (WidgetDescriptor.TYPE_WIDGET_APPBUILDER.equals(widgetDescriptor.getType())) {
                     composeAndSetAppBuilderMetadata(widgetDescriptor, bundleReader, fileName, pluginIngressPathMap);
                 }
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, widgetDescriptor);
 
                 InstallAction action = extractInstallAction(widgetDescriptor.getCode(), conflictStrategy, installPlan);
                 installableList.add(
@@ -141,7 +155,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 .collect(Collectors.toList()));
     }
 
-    private List<Installable<WidgetDescriptor>> pushLogicWidgetsDownTheList(List<Installable<WidgetDescriptor>> installables) {
+    private List<Installable<WidgetDescriptor>> pushLogicWidgetsDownTheList(
+            List<Installable<WidgetDescriptor>> installables) {
         if (installables == null || installables.isEmpty()) {
             return installables;
         }
@@ -171,6 +186,64 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 });
     }
 
+    protected void processPluginVariables(WidgetDescriptor descriptor) {
+
+        if (CollectionUtils.isEmpty(descriptor.getApiClaims())) {
+            return;
+        }
+
+        // build a map to improve performance
+        final Map<String, ApiClaim> apiClaimsMap = descriptor.getApiClaims().stream()
+                .collect(Collectors.toMap(ApiClaim::getName, Function.identity()));
+
+        final Map<String, ApiClaimPluginVariables> pluginVariables = extractPluginVariablesFromApiClaims(apiClaimsMap);
+        if (CollectionUtils.isEmpty(pluginVariables)) {
+            return;
+        }
+
+        resolvePluginVariables(apiClaimsMap, pluginVariables);
+
+        descriptor.setApiClaims(new ArrayList<>(apiClaimsMap.values()));
+    }
+
+    private Map<String, ApiClaimPluginVariables> extractPluginVariablesFromApiClaims(Map<String, ApiClaim> apiClaimsMap) {
+        return apiClaimsMap.values().stream()
+                .filter(ac -> ac.getType().equals(ApiClaim.EXTERNAL_API) && Strings.isNotEmpty(ac.getBundleReference()))
+                .map(ac -> {
+                    List<PluginVariable> pluginVariables = new ArrayList<>();
+                    Matcher matcher = PLUGIN_VARIABLES_REGEX_PATTERN.matcher(ac.getBundleReference());
+                    while (matcher.find()) {
+                        pluginVariables.add(new PluginVariable(ac.getName(), matcher.group(1), ""));
+                    }
+                    return new ApiClaimPluginVariables(ac.getName(), pluginVariables);
+                })
+                .filter(acpv -> ! CollectionUtils.isEmpty(acpv.getPluginVariableList()))
+                .collect(Collectors.toMap(ApiClaimPluginVariables::getApiClaimName, Function.identity()));
+    }
+
+    private void resolvePluginVariables(Map<String, ApiClaim> apiClaimsMap,
+            Map<String, ApiClaimPluginVariables> pluginVariables) {
+
+        this.kubernetesService.resolvePluginsVariables(pluginVariables)
+                .forEach(pv ->
+                    apiClaimsMap.compute(pv.getApiClaimName(), (k, ac) -> {
+                        if (ac == null) {
+                            log.error(
+                                    "Resolved plugin variable {} but no correspondence has been found in the API Claim list",
+                                    pv.getName());
+                            return null;
+                        }
+                        // update bundle reference
+                        ac.setBundleReference(
+                                ac.getBundleReference().replace("${" + pv.getName() + "}", pv.getValue()));
+                        // update bundle id
+                        ac.setBundleId(BundleUtilities.getBundleId(ac.getBundleReference()));
+                        return ac;
+                    })
+                );
+    }
+
+
     private void validateApiClaims(List<ApiClaim> apiClaims) {
         if (apiClaims != null) {
             for (var apiClaim : apiClaims) {
@@ -181,7 +254,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                         ));
                     }
                 } else {
-                    if (!templateGeneratorService.checkApiClaim(apiClaim, apiClaim.getBundleId())) {
+                    if (Strings.isEmpty(apiClaim.getBundleReference())
+                            && !templateGeneratorService.checkApiClaim(apiClaim, apiClaim.getBundleId())) {
                         throw new EntandoComponentManagerException(String.format(EXT_API_CLAIM_ERROR,
                                 apiClaim.getName(), apiClaim.getPluginName(), apiClaim.getBundleId()
                         ));
@@ -233,6 +307,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                         .bundleCode(bundleReader.getCode())
                         .bundleId(bundleId).templateGeneratorService(templateGeneratorService)
                         .build());
+        processPluginVariables(widgetDescriptor);
         descriptorValidator.validateOrThrow(widgetDescriptor);
         return widgetDescriptor;
     }
@@ -263,6 +338,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
     /**
      * Sets the data related to the widget configUi by looking up to the descriptor referenced by configMfe.
+     *
      * @param widgetDescriptor the widget descriptor on which operate on
      * @param bundleReader     the bundle reader used to access the bundle files
      */
@@ -339,7 +415,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      * compose and set the widget code in the descriptor.
      */
     private void composeAndSetCode(WidgetDescriptor widgetDescriptor, BundleReader bundleReader) {
-        if (! widgetDescriptor.isVersion1()) {
+        if (!widgetDescriptor.isVersion1()) {
             // set the code
             String widgetCode = null;
             String widgetName = widgetDescriptor.getName();
@@ -347,7 +423,7 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
                 widgetCode = widgetName.substring(BundleUtilities.GLOBAL_PREFIX.length());
             } else {
                 widgetCode = BundleUtilities.composeDescriptorCode(widgetDescriptor.getCode(),
-                    widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
+                        widgetDescriptor.getName(), widgetDescriptor, bundleReader.getBundleUrl());
             }
             widgetDescriptor.setCode(widgetCode);
         }
@@ -358,7 +434,8 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
      */
     private void composeAndSetParentCode(WidgetDescriptor descriptor, BundleReader bundleReader) {
         // set the code
-        if (!ObjectUtils.isEmpty(descriptor.getParentName()) && descriptor.getParentName().startsWith(BundleUtilities.GLOBAL_PREFIX)) {
+        if (!ObjectUtils.isEmpty(descriptor.getParentName()) && descriptor.getParentName()
+                .startsWith(BundleUtilities.GLOBAL_PREFIX)) {
             descriptor.setParentCode(descriptor.getParentName().substring(BundleUtilities.GLOBAL_PREFIX.length()));
         } else if (ObjectUtils.isEmpty(descriptor.getParentCode())
                 && !ObjectUtils.isEmpty(descriptor.getParentName())) {
@@ -383,6 +460,9 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
     @Override
     public List<String> readDescriptorKeys(BundleReader bundleReader, String fileName,
             ComponentProcessor<?> componentProcessor) {
+
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
         try {
             WidgetDescriptor widgetDescriptor =
                     (WidgetDescriptor) bundleReader.readDescriptorFile(fileName,
@@ -391,11 +471,21 @@ public class WidgetProcessor extends BaseComponentProcessor<WidgetDescriptor> im
 
             composeAndSetCode(widgetDescriptor, bundleReader);
 
-            return List.of(widgetDescriptor.getComponentKey().getKey());
+            return List.of(
+                    ProcessorHelper.replaceBundleIdPlaceholder(widgetDescriptor.getComponentKey().getKey(), bundleId));
         } catch (IOException e) {
             throw new EntandoComponentManagerException(String.format(
                     "Error parsing content type %s from widget descriptor %s",
                     componentProcessor.getSupportedComponentType(), fileName), e);
         }
+    }
+
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, WidgetDescriptor descriptor) {
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode,
+                descriptor::setCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCustomUi,
+                descriptor::setCustomUi);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCustomUiPath,
+                descriptor::setCustomUiPath);
     }
 }

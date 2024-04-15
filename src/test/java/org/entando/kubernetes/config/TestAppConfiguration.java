@@ -13,6 +13,8 @@ import org.entando.kubernetes.model.bundle.downloader.DownloadedBundle;
 import org.entando.kubernetes.model.bundle.downloader.GitBundleDownloader;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleTag;
+import org.entando.kubernetes.security.AuthorizationChecker;
+import org.entando.kubernetes.security.AuthorizationCheckerDouble;
 import org.entando.kubernetes.service.digitalexchange.crane.CraneCommand;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.utils.TestInstallUtils;

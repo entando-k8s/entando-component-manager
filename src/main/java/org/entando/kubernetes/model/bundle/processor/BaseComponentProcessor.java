@@ -50,5 +50,4 @@ public abstract class BaseComponentProcessor<T extends Descriptor> implements Co
         return new EntandoComponentManagerException(
                 String.format("Error processing %s components", getSupportedComponentType().getTypeName()), e);
     }
-
 }

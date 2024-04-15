@@ -89,6 +89,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String LANGUAGES_PATH_SEGMENT = "languages";
     private static final String GROUPS_PATH_SEGMENT = "groups";
     private static final String PLUGINS_PATH_SEGMENT = "plugins";
+    private static final String SEO_PATH_SEGMENT = "seo";
     private static final String CONTENT_TYPES_PATH_SEGMENT = "contentTypes";
     private static final String CONTENT_MODELS_PATH_SEGMENT = "contentmodels";
     private static final String CONTENTS_PATH_SEGMENT = "contents";
@@ -182,7 +183,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updateFragment(FragmentDescriptor descriptor) {
-        getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT, descriptor.getCode()).build()
+        getRestTemplate().put(
+                resolvePathSegments(API_PATH_SEGMENT, FRAGMENTS_PATH_SEGMENT, descriptor.getCode()).build()
                         .toUri(),
                 new EntandoCoreFragment(descriptor));
     }
@@ -223,7 +225,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void enableLanguage(final LanguageDescriptor descriptor) {
         descriptor.setActive(true);
-        getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, descriptor.getCode()).build()
+        getRestTemplate().put(
+                resolvePathSegments(API_PATH_SEGMENT, LANGUAGES_PATH_SEGMENT, descriptor.getCode()).build()
                         .toUri(),
                 new EntandoCoreLanguage(descriptor));
     }
@@ -276,14 +279,17 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void createPage(PageDescriptor pageDescriptor) {
         getRestTemplate()
-                .postForEntity(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT).build().toUri(),
+                .postForEntity(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, SEO_PATH_SEGMENT,
+                                PAGES_PATH_SEGMENT).build().toUri(),
                         new EntandoCorePage(pageDescriptor),
                         Void.class);
     }
 
     @Override
     public void updatePageConfiguration(PageDescriptor pageDescriptor) {
-        getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode()).build()
+        getRestTemplate().put(
+                resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, SEO_PATH_SEGMENT, PAGES_PATH_SEGMENT,
+                        pageDescriptor.getCode()).build()
                         .toUri(),
                 new EntandoCorePage(pageDescriptor));
     }
@@ -291,8 +297,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     @Override
     public void configurePageWidget(PageDescriptor pageDescriptor, WidgetConfigurationDescriptor widgetDescriptor) {
         getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, pageDescriptor.getCode(),
-                WIDGETS_PATH_SEGMENT,
-                widgetDescriptor.getPos().toString()).build().toUri(),
+                        WIDGETS_PATH_SEGMENT,
+                        widgetDescriptor.getPos().toString()).build().toUri(),
                 new EntandoCorePageWidgetConfiguration(widgetDescriptor));
     }
 
@@ -300,7 +306,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void setPageStatus(String code, String status) {
         getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PAGES_PATH_SEGMENT, code,
-                        STATUS_PATH_SEGMENT).build().toUri(),
+                                STATUS_PATH_SEGMENT).build().toUri(),
                         Collections.singletonMap("status", status));   // NOSONAR
     }
 
@@ -325,7 +331,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
     @Override
     public void updatePageTemplate(PageTemplateDescriptor descriptor) {
-        getRestTemplate().put(resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT, descriptor.getCode()).build()
+        getRestTemplate().put(
+                resolvePathSegments(API_PATH_SEGMENT, PAGE_MODELS_PATH_SEGMENT, descriptor.getCode()).build()
                         .toUri(),
                 new EntandoCorePageTemplate(descriptor));
     }
@@ -389,7 +396,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void updateContentType(ContentTypeDescriptor descriptor) {
         getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
-                        CONTENT_TYPES_PATH_SEGMENT).build().toUri(),
+                                CONTENT_TYPES_PATH_SEGMENT).build().toUri(),
                         descriptor);
     }
 
@@ -425,7 +432,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     public void updateContent(ContentDescriptor descriptor) {
         getRestTemplate()
                 .put(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
-                        CONTENTS_PATH_SEGMENT, descriptor.getId())
+                                CONTENTS_PATH_SEGMENT, descriptor.getId())
                                 .build().toUri(),
                         descriptor);
     }
@@ -459,7 +466,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
 
         getRestTemplate()
                 .exchange(resolvePathSegments(API_PATH_SEGMENT, PLUGINS_PATH_SEGMENT, CMS_PATH_SEGMENT,
-                        ASSETS_PATH_SEGMENT)
+                                ASSETS_PATH_SEGMENT)
                                 .build().toUri(),
                         HttpMethod.POST, requestEntity, String.class);
     }
@@ -601,7 +608,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                             new ParameterizedTypeReference<>() {
                             });
 
-            if (! reportResponseEntity.getStatusCode().is2xxSuccessful()) {
+            if (!reportResponseEntity.getStatusCode().is2xxSuccessful()) {
                 throw new ReportAnalysisException(String.format(
                         "An error occurred fetching the %s report analysis", reportableRemoteHandler));
             } else {
@@ -661,7 +668,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     .waitFor(backOffPeriod)
                     .execMethod(
                             (Supplier<ResponseEntity<SimpleRestResponse<List<EntandoCoreComponentUsage>>>> s,
-                             int executionNumber) -> s.get()
+                                    int executionNumber) -> s.get()
                     )
                     .checkerMethod(this::isSuccessCall)
                     .build();
@@ -699,7 +706,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     .waitFor(backOffPeriod)
                     .execMethod(
                             (Supplier<ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>> s,
-                             int executionNumber) -> s.get()
+                                    int executionNumber) -> s.get()
                     )
                     .checkerMethod(this::isSuccessCall)
                     .build();
@@ -713,7 +720,8 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                                     new ParameterizedTypeReference<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>() {
                                     });
 
-            var deleteResponse = (ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>) retryer.execute(r);
+            var deleteResponse = (ResponseEntity<SimpleRestResponse<EntandoCoreComponentDeleteResponse>>) retryer.execute(
+                    r);
 
             EntandoCoreComponentDeleteResponse response = Optional.ofNullable(deleteResponse.getBody())
                     .map(RestResponse::getPayload)
@@ -729,7 +737,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                     "Some error occurred while deleting components:'%s'", ex.getMessage()));
         }
     }
-    
+
     private void notFoundOrUnauthorizedProtectedDelete(URI url) {
         try {
             getRestTemplate().delete(url);

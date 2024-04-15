@@ -5,14 +5,17 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.awaitility.core.ConditionFactory;
 import org.entando.kubernetes.TestEntitiesGenerator;
@@ -23,14 +26,16 @@ import org.entando.kubernetes.model.common.EntandoDeploymentPhase;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.link.EntandoAppPluginLink;
 import org.entando.kubernetes.model.link.EntandoAppPluginLinkBuilder;
+import org.entando.kubernetes.model.plugin.ApiClaimPluginVariables;
 import org.entando.kubernetes.model.plugin.EntandoPlugin;
 import org.entando.kubernetes.model.plugin.EntandoPluginBuilder;
+import org.entando.kubernetes.model.plugin.PluginVariable;
+import org.entando.kubernetes.stubhelper.WidgetStubHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 @Tag("unit")
 public class KubernetesServiceTest {
@@ -46,7 +51,8 @@ public class KubernetesServiceTest {
     @BeforeEach
     public void setup() {
         client = new K8SServiceClientTestDouble();
-        kubernetesService = new KubernetesService(APP_NAME, APP_NAMESPACE, DIGITAL_EXCHANGES_NAMES, client, composeCf());
+        kubernetesService = new KubernetesService(APP_NAME, APP_NAMESPACE, DIGITAL_EXCHANGES_NAMES, client,
+                composeCf());
     }
 
     private ConditionFactory composeCf() {
@@ -106,7 +112,7 @@ public class KubernetesServiceTest {
         final EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
 
         // instruct the mock to return the bundle only if getBundleWithName method is called
-        final K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
+        final K8SServiceClient mockK8SServiceClient = mock(K8SServiceClient.class);
         when(mockK8SServiceClient.getBundleWithName(any())).thenReturn(Optional.of(bundle));
         when(mockK8SServiceClient
                 .getBundleWithNameAndNamespace(bundle.getSpec().getDetails().getName(),
@@ -131,20 +137,78 @@ public class KubernetesServiceTest {
         final EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
 
         // instruct the mock to return the bundle only if getBundleWithNameAndNamespace method is called
-        final K8SServiceClient mockK8SServiceClient = Mockito.mock(K8SServiceClient.class);
+        final K8SServiceClient mockK8SServiceClient = mock(K8SServiceClient.class);
         when(mockK8SServiceClient.getBundleWithName(any())).thenReturn(Optional.empty());
         when(mockK8SServiceClient
                 .getBundleWithNameAndNamespace(bundle.getSpec().getDetails().getName(),
                         bundle.getMetadata().getNamespace()))
                 .thenReturn(Optional.of(bundle));
 
-        KubernetesService kubernetesService = new KubernetesService(APP_NAME, APP_NAMESPACE, DIGITAL_EXCHANGES_NAMES, mockK8SServiceClient,
+        KubernetesService kubernetesService = new KubernetesService(APP_NAME, APP_NAMESPACE, DIGITAL_EXCHANGES_NAMES,
+                mockK8SServiceClient,
                 composeCf());
 
         final Optional<EntandoDeBundle> entandoDeBundleOpt = kubernetesService
                 .fetchBundleByName(bundle.getSpec().getDetails().getName());
 
         assertThat(entandoDeBundleOpt.isPresent()).isTrue();
+    }
+
+    @Test
+    void shouldResolvePluginVariablesAndCorrectlyMapThem() {
+        final K8SServiceClient k8SServiceClient = mock(K8SServiceClient.class);
+
+        final Map<String, String> pluginVariableToValue = Map.of(
+                WidgetStubHelper.PLUGIN_VARIABLE_1, "my-reg",
+                WidgetStubHelper.PLUGIN_VARIABLE_2, "my-org",
+                WidgetStubHelper.PLUGIN_VARIABLE_3, "my-name",
+                WidgetStubHelper.PLUGIN_VARIABLE_4, "your-org");
+
+        final Map<String, String> pluginVariableToApiClaimName = Map.of(
+                WidgetStubHelper.PLUGIN_VARIABLE_1, WidgetStubHelper.API_CLAIM_2_NAME,
+                WidgetStubHelper.PLUGIN_VARIABLE_2, WidgetStubHelper.API_CLAIM_2_NAME,
+                WidgetStubHelper.PLUGIN_VARIABLE_3, WidgetStubHelper.API_CLAIM_2_NAME,
+                WidgetStubHelper.PLUGIN_VARIABLE_4, WidgetStubHelper.API_CLAIM_3_NAME);
+
+        when(k8SServiceClient.resolvePluginsVariables(anyList(), any())).thenAnswer(invocation -> {
+            final Collection<String> varNames = invocation.getArgument(0, Collection.class);
+            return varNames.stream()
+                    .map(name -> new PluginVariable(
+                            pluginVariableToApiClaimName.getOrDefault(name, ""),
+                            name,
+                            pluginVariableToValue.getOrDefault(name, "")
+                    ))
+                    .collect(Collectors.toList());
+        });
+
+        Map<String, ApiClaimPluginVariables> apiClaimPluginVariables = Map.of(
+                // api claim 1
+                WidgetStubHelper.API_CLAIM_2_NAME, new ApiClaimPluginVariables(WidgetStubHelper.API_CLAIM_2_NAME,
+                        List.of(new PluginVariable(WidgetStubHelper.API_CLAIM_2_NAME,
+                                        WidgetStubHelper.PLUGIN_VARIABLE_1, null),
+                                new PluginVariable(WidgetStubHelper.API_CLAIM_2_NAME,
+                                        WidgetStubHelper.PLUGIN_VARIABLE_2, null),
+                                new PluginVariable(WidgetStubHelper.API_CLAIM_2_NAME,
+                                        WidgetStubHelper.PLUGIN_VARIABLE_3, null))),
+                // api claim 2
+                WidgetStubHelper.API_CLAIM_3_NAME, new ApiClaimPluginVariables(WidgetStubHelper.API_CLAIM_3_NAME,
+                        List.of(new PluginVariable(WidgetStubHelper.API_CLAIM_3_NAME,
+                                WidgetStubHelper.PLUGIN_VARIABLE_4, null))));
+
+        kubernetesService = new KubernetesService(APP_NAME, APP_NAMESPACE, DIGITAL_EXCHANGES_NAMES, k8SServiceClient,
+                composeCf());
+
+        final List<PluginVariable> pluginVariables = kubernetesService.resolvePluginsVariables(apiClaimPluginVariables);
+        pluginVariables.forEach(pv -> {
+            final Map<String, String> pluginVariableValues = Map.of(
+                    WidgetStubHelper.PLUGIN_VARIABLE_1, "my-reg",
+                    WidgetStubHelper.PLUGIN_VARIABLE_2, "my-org",
+                    WidgetStubHelper.PLUGIN_VARIABLE_3, "my-name",
+                    WidgetStubHelper.PLUGIN_VARIABLE_4, "your-org");
+
+            String value = pluginVariableValues.getOrDefault(pv.getName(), null);
+            assertThat(pv.getValue()).isEqualTo(value);
+        });
     }
 
     private EntandoAppPluginLink getTestEntandoAppPluginLink() {

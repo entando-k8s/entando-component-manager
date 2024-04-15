@@ -46,6 +46,8 @@ import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
 import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
 import org.entando.kubernetes.security.AuthorizationChecker;
+import org.entando.kubernetes.security.AuthorizationCheckerDouble;
+import org.entando.kubernetes.security.EntandoAuthorizationChecker;
 import org.entando.kubernetes.service.digitalexchange.component.EntandoBundleService;
 import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStatusItemStubHelper;
@@ -59,6 +61,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -91,7 +94,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Tag("component")
 @WithMockUser
 @DirtiesContext
-@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class, MockitoExtension.class})
 class EntandoBundleResourceControllerIntegrationTest {
 
     private final String componentsUrl = "/components";
@@ -110,8 +113,8 @@ class EntandoBundleResourceControllerIntegrationTest {
     private InstalledEntandoBundleRepository bundleEntityRepository;
     @Autowired
     private EntandoBundleJobRepository bundleJobRepository;
-    @MockBean
-    private AuthorizationChecker authorizationChecker;
+    @Autowired
+    private AuthorizationCheckerDouble authorizationChecker;
 
     final String deployedRepoUrl = "http://www.entando.bundle.git";
     final String installedNotDeployedRepoUrl = "http://www.entando.bundle-not-deployed.git";
@@ -126,6 +129,7 @@ class EntandoBundleResourceControllerIntegrationTest {
         mapper = new ObjectMapper();
         bundleEntityRepository.deleteAll();
         bundleJobRepository.deleteAll();
+        authorizationChecker.setError(false);
     }
 
     @AfterEach
@@ -137,8 +141,6 @@ class EntandoBundleResourceControllerIntegrationTest {
 
     @Test
     void shouldCorrectlyDeployAnEntandoDeBundle() {
-
-        doNothing().when(authorizationChecker).checkPermissions(anyString());
 
         Stream.of(
                         BundleInfoStubHelper.GIT_REPO_ADDRESS,
@@ -195,6 +197,7 @@ class EntandoBundleResourceControllerIntegrationTest {
         String payload = mapper.writeValueAsString(bundleInfo);
         mockMvc.perform(post(componentsUrl)
                         .content(payload)
+                        .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is4xxClientError());
 
@@ -213,24 +216,22 @@ class EntandoBundleResourceControllerIntegrationTest {
     @Test
     void shouldReturnErrorWhileDeployingBundleWithoutPermissions() throws Exception {
 
-        doThrow(new AuthorizationDeniedException("err")).when(authorizationChecker).checkPermissions(anyString());
+        authorizationChecker.setError(true);
 
         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with an empty repoUrl
-        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
-                .setGitRepoAddress("");
+        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo();
         // when the user sends the request
         // then he receives 4xx status code
         String payload = mapper.writeValueAsString(bundleInfo);
         mockMvc.perform(post(componentsUrl)
                         .content(payload)
+                        .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is4xxClientError());
     }
 
     @Test
     void shouldSuccessfullyUndeployAnExistingEntandoDeBundle() throws Exception {
-
-        doNothing().when(authorizationChecker).checkPermissions(anyString());
 
         // given an existing bundle in the cluster
         final EntandoDeBundle bundle = TestEntitiesGenerator.getTestBundle();
@@ -248,8 +249,6 @@ class EntandoBundleResourceControllerIntegrationTest {
     @Test
     void shouldSuccessfullyUndeployANonExistingEntandoDeBundle() throws Exception {
 
-        doNothing().when(authorizationChecker).checkPermissions(anyString());
-
         // given that no bundles exist in the cluster
         // when the user sends the request to undeploy a bundle
         // then he receives 200 status code and the name of the bundle (even if the bundle does not exist)
@@ -262,7 +261,7 @@ class EntandoBundleResourceControllerIntegrationTest {
     @Test
     void shouldReturnErrorWhileUndeployingBundleWithoutPermissions() throws Exception {
 
-        doThrow(new AuthorizationDeniedException("err")).when(authorizationChecker).checkPermissions(anyString());
+        authorizationChecker.setError(true);
 
         // given that the user wants to undeploy an EntandoDeBundle
         // when the user sends the request

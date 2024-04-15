@@ -155,7 +155,6 @@ public class UpdateFlowTest {
                 .addFilters(tenantFilter)
                 .apply(springSecurity())
                 .build();
-        TestInstallUtils.injectEntandoUrlInto(authorizationChecker, 8089);
         when(craneCommand.getImageDigest(anyString())).thenReturn(PluginStubHelper.PLUGIN_IMAGE_SHA);
     }
 

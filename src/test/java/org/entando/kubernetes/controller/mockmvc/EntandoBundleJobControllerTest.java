@@ -53,9 +53,9 @@ public class EntandoBundleJobControllerTest {
     @Autowired
     private WebApplicationContext context;
     @Autowired
-    private EntandoBundleJobRepository jobRepository;
-    @Autowired
     private InstalledEntandoBundleRepository installedEntandoBundleRepository;
+    @Autowired
+    private EntandoBundleJobRepository jobRepository;
 
     @BeforeEach
     public void setup() {

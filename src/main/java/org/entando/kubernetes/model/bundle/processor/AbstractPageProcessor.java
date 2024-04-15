@@ -1,9 +1,12 @@
 package org.entando.kubernetes.model.bundle.processor;
 
+import static org.entando.kubernetes.service.digitalexchange.BundleUtilities.removeProtocolAndGetBundleId;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ import org.entando.kubernetes.model.bundle.reader.BundleReader;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.service.digitalexchange.BundleUtilities;
 import org.entando.kubernetes.validator.descriptor.PageDescriptorValidator;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageDescriptor> {
@@ -42,6 +46,41 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
         return Optional.of(ComponentSpecDescriptor::getPages);
     }
 
+    private List<PageDescriptor> partialSortingOfPageDescriptorParentCodeBased(List<PageDescriptor> pageDescriptorList) {
+        List<PageDescriptor> pageDescList = new LinkedList<>(pageDescriptorList);
+        List<PageDescriptor> sortedPageDescriptorList = new LinkedList<>();
+
+        List<PageDescriptor> itemsWithGlobalPrefix = pageDescList.stream()
+                .filter(descriptor -> descriptor.getParentCode().startsWith(BundleUtilities.GLOBAL_PREFIX))
+                .collect(Collectors.toList());
+
+        sortedPageDescriptorList.addAll(itemsWithGlobalPrefix);
+        pageDescList.removeAll(itemsWithGlobalPrefix);
+
+        Set<String> codes = pageDescList.stream()
+                .map(PageDescriptor::getCode)
+                .collect(Collectors.toSet());
+
+        List<PageDescriptor> itemsWithoutParentInList = pageDescList.stream()
+                .filter(descriptor -> !codes.contains(descriptor.getParentCode()))
+                .collect(Collectors.toList());
+
+        sortedPageDescriptorList.addAll(itemsWithoutParentInList);
+        pageDescList.removeAll(itemsWithoutParentInList);
+
+        List<PageDescriptor> itemsWithParentInList = pageDescList.stream()
+                .filter(descriptor -> codes.contains(descriptor.getParentCode()))
+                .collect(Collectors.toList());
+
+        sortedPageDescriptorList.addAll(itemsWithParentInList);
+        pageDescList.removeAll(itemsWithParentInList);
+
+        // remaining items
+        sortedPageDescriptorList.addAll(pageDescList);
+
+        return sortedPageDescriptorList;
+    }
+
     @Override
     public List<Installable<PageDescriptor>> process(BundleReader bundleReader) {
         return this.process(bundleReader, InstallAction.CREATE, new InstallPlan());
@@ -51,15 +90,24 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
     public List<Installable<PageDescriptor>> process(BundleReader bundleReader, InstallAction conflictStrategy,
             InstallPlan installPlan) {
         List<Installable<PageDescriptor>> installables = new LinkedList<>();
+        List<PageDescriptor> pageDescriptorList = new LinkedList<>();
+        final String bundleId = removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
+
         try {
             final List<String> descriptorList = getDescriptorList(bundleReader);
             for (String fileName : descriptorList) {
                 PageDescriptor pageDescriptor = bundleReader.readDescriptorFile(fileName, PageDescriptor.class);
+                replaceBundleIdPlaceholderInDescriptorProps(bundleId, pageDescriptor);
                 this.descriptorValidator.validateOrThrow(pageDescriptor);
                 this.composeAndSetCode(pageDescriptor, bundleReader);
                 Optional.ofNullable(pageDescriptor.getWidgets()).ifPresent(widgets
                         -> widgets.stream().forEach(wd -> this.composeAndSetWidgetCode(wd, pageDescriptor, bundleReader))
                 );
+                pageDescriptorList.add(pageDescriptor);
+            }
+
+            List<PageDescriptor> sortedPageDescriptorList = this.partialSortingOfPageDescriptorParentCodeBased(pageDescriptorList);
+            for (PageDescriptor pageDescriptor : sortedPageDescriptorList) {
                 InstallAction action = extractInstallAction(pageDescriptor.getCode(), conflictStrategy, installPlan);
                 installables.add(this.getInstallable(pageDescriptor, action));
             }
@@ -127,4 +175,22 @@ public abstract class AbstractPageProcessor extends BaseComponentProcessor<PageD
         return engineService;
     }
 
+    private void replaceBundleIdPlaceholderInDescriptorProps(String bundleId, PageDescriptor descriptor) {
+
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getCode, descriptor::setCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getParentCode, descriptor::setParentCode);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getOwnerGroup, descriptor::setOwnerGroup);
+        ProcessorHelper.replaceBundleIdPlaceholderInConsumer(bundleId, descriptor::getPageModel, descriptor::setPageModel);
+
+        if (CollectionUtils.isEmpty(descriptor.getJoinGroups())) {
+            return;
+        }
+
+        final List<String> joinGroups = descriptor.getJoinGroups().stream()
+                .map(gr ->
+                        ProcessorHelper.replaceBundleIdPlaceholder(gr, bundleId))
+                .collect(Collectors.toList());
+
+        descriptor.setJoinGroups(joinGroups);
+    }
 }

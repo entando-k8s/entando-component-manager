@@ -11,7 +11,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -39,9 +38,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
-import org.entando.kubernetes.utils.TestUtils;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -51,6 +48,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testcontainers.shaded.org.apache.commons.lang3.ObjectUtils;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 
 @Tag("unit")
 @ExtendWith(TenantContextForMethodJunitExt.class)
@@ -75,15 +73,13 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     private static final Map<String, String> originalEnv = System.getenv();
 
+    private EnvironmentVariables environmentVariables;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
-    }
-
-    @AfterAll
-    public static void reset() throws Exception {
-        TestUtils.setEnv(new HashMap<>(originalEnv));
+        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository,
+                craneCommand);
     }
 
     @Test
@@ -259,16 +255,17 @@ class PluginProcessorTest extends BaseProcessorTest {
         initBundleReaderWithTwoPlugins("plugins/todomvcV1_docker_image_too_long.yaml", descriptorV1);
     }
 
-    private void initBundleReaderWithTwoPlugins(String descriptorFilename, PluginDescriptor descriptor) throws IOException {
+    private void initBundleReaderWithTwoPlugins(String descriptorFilename, PluginDescriptor descriptor)
+            throws IOException {
 
         when(bundleReader.readDescriptorFile(eq(descriptorFilename), any())).thenReturn(descriptor);
         this.initGenericBundleReader(descriptorFilename, pluginV2Filename);
     }
 
     /**
-     * init the bundle reader mock to return the expected plugins.
-     * a plugin v2 is automatically added to the mocked plugin list
-     * you have to mock other plugins outside of this method
+     * init the bundle reader mock to return the expected plugins. a plugin v2 is automatically added to the mocked
+     * plugin list you have to mock other plugins outside of this method
+     *
      * @param pluginFilenames an array of filenames of plugin to add to the bundle plugin list
      */
     @SneakyThrows
@@ -376,44 +373,50 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Test
     void shouldAddTheCmEndpointEnvVarHttps() throws Exception {
 
-        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
+        this.environmentVariables = new EnvironmentVariables("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
                 "http://localhost:8899/auth/realms/entando",
                 "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
                 "ENTANDO_APP_HOST_NAME", "www.myentando.com",
-                "ENTANDO_APP_USE_TLS", "true"));
+                "ENTANDO_APP_USE_TLS", "true");
+        this.environmentVariables.execute(() -> {
 
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
+            processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository,
+                    craneCommand);
 
-        final List<? extends Installable> installablesHttps = execTestCreatePlugin(
-                PluginStubHelper.stubPluginDescriptorV5(), BundleInfoStubHelper.GIT_REPO_ADDRESS,
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+            final List<? extends Installable> installablesHttps = execTestCreatePlugin(
+                    PluginStubHelper.stubPluginDescriptorV5(), BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                    BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
 
-        final PluginDescriptor representationHttps = (PluginDescriptor) installablesHttps.get(0).getRepresentation();
-        final EnvironmentVariable environmentVariableHttps = representationHttps.getEnvironmentVariables().get(0);
-        assertThat(environmentVariableHttps.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
-        assertThat(environmentVariableHttps.getValue()).isEqualTo("https://www.myentando.com/digital-exchange");
+            final PluginDescriptor representationHttps = (PluginDescriptor) installablesHttps.get(0)
+                    .getRepresentation();
+            final EnvironmentVariable environmentVariableHttps = representationHttps.getEnvironmentVariables().get(0);
+            assertThat(environmentVariableHttps.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+            assertThat(environmentVariableHttps.getValue()).isEqualTo("https://www.myentando.com/digital-exchange");
+        });
     }
 
     @Test
     void shouldAddTheCmEndpointEnvVarHttp() throws Exception {
 
-        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
+        this.environmentVariables = new EnvironmentVariables("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
                 "http://localhost:8899/auth/realms/entando",
                 "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
                 "ENTANDO_APP_HOST_NAME", "www.myentando.com",
-                "ENTANDO_APP_USE_TLS", "false"));
+                "ENTANDO_APP_USE_TLS", "false");
+        this.environmentVariables.execute(() -> {
 
-        processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
+            processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository,
+                    craneCommand);
 
-        final List<? extends Installable> installablesHttp = execTestCreatePlugin(
-                PluginStubHelper.stubPluginDescriptorV5(), BundleInfoStubHelper.GIT_REPO_ADDRESS,
-                BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
+            final List<? extends Installable> installablesHttp = execTestCreatePlugin(
+                    PluginStubHelper.stubPluginDescriptorV5(), BundleInfoStubHelper.GIT_REPO_ADDRESS,
+                    BundleInfoStubHelper.GIT_REPO_ADDRESS_8_CHARS_SHA);
 
-        final PluginDescriptor representationHttp = (PluginDescriptor) installablesHttp.get(0).getRepresentation();
-        final EnvironmentVariable environmentVariableHttp = representationHttp.getEnvironmentVariables().get(0);
-        assertThat(environmentVariableHttp.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
-        assertThat(environmentVariableHttp.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
-
+            final PluginDescriptor representationHttp = (PluginDescriptor) installablesHttp.get(0).getRepresentation();
+            final EnvironmentVariable environmentVariableHttp = representationHttp.getEnvironmentVariables().get(0);
+            assertThat(environmentVariableHttp.getName()).isEqualTo("ENTANDO_ECR_INGRESS_URL");
+            assertThat(environmentVariableHttp.getValue()).isEqualTo("http://www.myentando.com/digital-exchange");
+        });
     }
 
     private void assertOnEndpoints(Installable installable, String endpoint, String customEndpoint) {

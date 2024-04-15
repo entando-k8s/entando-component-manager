@@ -29,6 +29,7 @@ public class PageDescriptor extends VersionedDescriptor {
     private List<String> joinGroups;
     private boolean displayedInMenu;
     private boolean seo;
+    private SeoData seoData;
     private String charset;
     private String status;
     private List<WidgetConfigurationDescriptor> widgets;

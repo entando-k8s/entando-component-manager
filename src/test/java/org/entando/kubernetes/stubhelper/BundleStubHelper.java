@@ -1,13 +1,11 @@
 package org.entando.kubernetes.stubhelper;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.entando.kubernetes.model.bundle.BundleType;
 import org.entando.kubernetes.model.bundle.descriptor.BundleDescriptor;
 import org.entando.kubernetes.model.bundle.descriptor.ComponentSpecDescriptor;
-import org.entando.kubernetes.model.bundle.descriptor.content.ContentAttribute;
 import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 
 public class BundleStubHelper {
