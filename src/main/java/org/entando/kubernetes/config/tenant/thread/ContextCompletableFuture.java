@@ -9,6 +9,6 @@ import java.util.concurrent.CompletableFuture;
 public class ContextCompletableFuture<T> extends CompletableFuture<T> {
 
     public static CompletableFuture<Void> runAsyncWithContext(Runnable runnable) {
-        return CompletableFuture.runAsync(runnable, new RequestContextSavingForkJoinPool());
+        return CompletableFuture.runAsync(runnable, RequestContextSavingForkJoinPool.getInstance());
     }
 }
