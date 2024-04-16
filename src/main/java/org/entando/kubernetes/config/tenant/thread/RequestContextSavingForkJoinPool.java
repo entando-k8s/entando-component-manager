@@ -8,6 +8,19 @@ import java.util.concurrent.ForkJoinTask;
 
 public class RequestContextSavingForkJoinPool extends ForkJoinPool {
 
+    private static RequestContextSavingForkJoinPool instance;
+
+    private RequestContextSavingForkJoinPool() {
+        super();
+    }
+
+    public static synchronized RequestContextSavingForkJoinPool getInstance() {
+        if (instance == null) {
+            instance = new RequestContextSavingForkJoinPool();
+        }
+        return instance;
+    }
+
     @Override
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
         return super.submit(wrapWithRequestContext(task));
