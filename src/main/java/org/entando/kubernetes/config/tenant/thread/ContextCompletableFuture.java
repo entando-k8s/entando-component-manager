@@ -10,10 +10,10 @@ import java.util.function.Supplier;
 public class ContextCompletableFuture<T> extends CompletableFuture<T> {
 
     public static CompletableFuture<Void> runAsyncWithContext(Runnable runnable) {
-        return CompletableFuture.runAsync(runnable, new RequestContextSavingForkJoinPool());
+        return CompletableFuture.runAsync(runnable, RequestContextSavingForkJoinPool.getInstance());
     }
 
     public static <U> CompletableFuture<U> supplyAsyncWithContext(Supplier<U> supplier) {
-        return CompletableFuture.supplyAsync(supplier, new RequestContextSavingForkJoinPool());
+        return CompletableFuture.supplyAsync(supplier, RequestContextSavingForkJoinPool.getInstance());
     }
 }
