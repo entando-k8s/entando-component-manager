@@ -218,6 +218,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
         final String bundleId = BundleUtilities.removeProtocolAndGetBundleId(bundleReader.getBundleUrl());
 
         String ftl = bundleReader.getWidgetResourcesOfType(widgetFolder, JS_TYPE).stream()
+                .sorted()
                 .map(file -> formatTagFilePath(bundleReader, SCRIPT_TAG, file, bundleId))
                 .collect(Collectors.joining("\n"));
 
