@@ -1,9 +1,13 @@
 package org.entando.kubernetes.model.bundle.downloader;
 
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.utils.Sleeper;
+import org.entando.kubernetes.utils.ThreadSleeper;
 
 @Slf4j
 @Data
@@ -37,12 +41,12 @@ public class MethodRetryer<I, O> {
             }
             success = checkerMethod.test(result, ex, executionNumber);
             if (executionNumber >= retries) {
-
                 manageErrorToThrowRuntime(ex);
                 break;
             }
-            waitStrategy.wait(unit, waitFor, executionNumber);
-
+            if (!success) {
+                waitStrategy.wait(unit, waitFor, executionNumber);
+            }
         }
         manageErrorToThrowRuntime(ex);
         return result;
@@ -74,11 +78,18 @@ public class MethodRetryer<I, O> {
         void wait(TimeUnit time, long waitFor, int executionNumber);
     }
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class DefaultRetryerWaitStrategy implements RetryerWaitStrategy {
 
+        @Builder.Default
+        private final Sleeper sleeper = new ThreadSleeper();
+
+        @Override
         public void wait(TimeUnit time, long waitFor, int executionNumber) {
             try {
-                Thread.sleep(time.toMillis(waitFor));
+                this.sleeper.sleep(time.toMillis(waitFor));
             } catch (InterruptedException ex) {
                 log.error("error wait for retryer", ex);
                 Thread.currentThread().interrupt();
@@ -87,3 +98,5 @@ public class MethodRetryer<I, O> {
 
     }
 }
+
+
