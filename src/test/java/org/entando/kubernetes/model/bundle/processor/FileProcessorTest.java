@@ -53,16 +53,16 @@ class FileProcessorTest extends BaseProcessorTest {
     private final EntandoDeBundle entandoDeBundle = TestEntitiesGenerator.getTestBundle();
     private DownloadedBundle downloadedBundle;
 
-    private List<String> resourceFolderV1 = Arrays.asList("resources/ootb-widgets/static/css/main.ootb.chunk.css",
+    private final List<String> resourceFolderV1 = Arrays.asList("resources/ootb-widgets/static/css/main.ootb.chunk.css",
             "resources/ootb-widgets/static/css/sitemap.css",
             "resources/ootb-widgets/static/js/2.ootb.chunk.js",
             "resources/static/css/ootb/page-templates/index.css",
             "resources/ootb-widgets/static/js/runtime-main.ootb.js",
             "resources/ootb-widgets/static/js/main.ootb.chunk.js");
-    private List<String> widgetsFilesV5 = Arrays.asList("widgets/ootb-widgets/css/main.css",
+    private final List<String> widgetsFilesV5 = Arrays.asList("widgets/ootb-widgets/css/main.css",
             "widgets/ootb-widgets/static/css/sitemap.css",
             "widgets/ootb-widgets/static/js/2.ootb.chunk.js");
-    private List<String> resourceFilesV5 = Arrays.asList("resources/txt/my-text.txt",
+    private final List<String> resourceFilesV5 = Arrays.asList("resources/txt/my-text.txt",
             "resources/js/my-js.js",
             "resources/my-style.css");
 

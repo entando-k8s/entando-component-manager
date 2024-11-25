@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 public class HashMapConverter implements AttributeConverter<Map<String, String>, String> {
 
-    private static Logger log = LoggerFactory.getLogger(HashMapConverter.class);
+    private static final Logger log = LoggerFactory.getLogger(HashMapConverter.class);
 
     private ObjectMapper objectMapper;
 

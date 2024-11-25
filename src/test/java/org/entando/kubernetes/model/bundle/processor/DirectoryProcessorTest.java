@@ -47,11 +47,11 @@ class DirectoryProcessorTest extends BaseProcessorTest {
     private final EntandoDeBundle entandoDeBundle = TestEntitiesGenerator.getTestBundle();
     private DownloadedBundle downloadedBundle;
 
-    private List<String> resourceFolder = Arrays
+    private final List<String> resourceFolder = Arrays
             .asList("resources/ootb-widgets", "resources/ootb-widgets/static", "resources/ootb-widgets/static/css",
                     "resources/ootb-widgets/static/js", "resources/static", "resources/static/css",
                     "resources/static/css/ootb", "resources/static/css/ootb/page-templates");
-    private List<String> widgetsFolder = Arrays.asList("widgets/my-widget", "widgets/my-widget/static",
+    private final List<String> widgetsFolder = Arrays.asList("widgets/my-widget", "widgets/my-widget/static",
             "widgets/my-widget/static/css", "widgets/my-widget/static/js");
 
     @BeforeEach

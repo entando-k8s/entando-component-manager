@@ -61,7 +61,7 @@ class EntandoDeBundleComposerTest {
     private final BundleDownloaderFactory bundleDownloaderFactory = new TestAppConfiguration(null,
             null).bundleDownloaderFactory(new CraneCommand());
     private EntandoDeBundleComposer deBundleComposer;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private K8SServiceClientTestDouble k8SServiceClient;
     private BundleTagFilterManager bundleTagFilterManager;
 

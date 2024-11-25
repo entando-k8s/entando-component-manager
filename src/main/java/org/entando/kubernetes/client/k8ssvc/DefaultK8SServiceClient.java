@@ -72,7 +72,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public static final String ENTANDO_APP_NAME = "ENTANDO_APP_NAME";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
-    private Path tokenFilePath;
+    private final Path tokenFilePath;
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
@@ -415,7 +415,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             return false;
         }
         Ingress appIngress = getAppIngress(appName);
-        IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().<RuntimeException>orElseThrow(
+        IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().orElseThrow(
                 () -> {
                     throw new K8SServiceClientException(
                             "EntandoApp ingress " + appIngress.getMetadata().getName() + " does not have an host");
@@ -617,7 +617,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     private HttpMessageConverter<?> getJsonConverter() {
-        final List<MediaType> supportedMediatypes = Arrays.asList(MediaType.APPLICATION_JSON);
+        final List<MediaType> supportedMediatypes = List.of(MediaType.APPLICATION_JSON);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new Jackson2HalModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

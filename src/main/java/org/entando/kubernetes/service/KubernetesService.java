@@ -40,7 +40,7 @@ public class KubernetesService {
     private final K8SServiceClient k8sServiceClient;
     private final String entandoAppName;
     private final String entandoAppNamespace;
-    private Set<String> digitalExchangesNames;
+    private final Set<String> digitalExchangesNames;
 
     public KubernetesService(@Value("${entando.app.name}") String entandoAppName,
             @Value("${entando.app.namespace}") String entandoAppNamespace,
@@ -189,7 +189,7 @@ public class KubernetesService {
                 namespace = new String(Files.readAllBytes(namespacePath));
             } catch (IOException e) {
                 log.error(String.format("An error occurred while reading the namespace from file %s",
-                        namespacePath.toString()), e);
+                        namespacePath), e);
             }
         }
         return Optional.ofNullable(namespace);

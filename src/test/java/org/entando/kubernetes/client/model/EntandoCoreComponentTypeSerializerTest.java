@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 @Tag("unit")
 class EntandoCoreComponentTypeSerializerTest {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void shouldSerialize() throws Exception {

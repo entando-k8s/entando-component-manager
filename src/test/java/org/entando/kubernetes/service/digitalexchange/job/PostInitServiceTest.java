@@ -58,7 +58,7 @@ class PostInitServiceTest {
     private static final String POST_INIT_BUNDLE_VERSION = "0.0.2";
     private static final String POST_INIT_BUNDLE_NAME = "test-bundle-entando-post-init-01";
     private static final String POST_INIT_BUNDLE_PUBLICATION_URL = "docker://docker.io/entando/post-init";
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() throws Exception {

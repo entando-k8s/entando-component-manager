@@ -46,7 +46,7 @@ class LiquibaseStartMysqlIntegrationTest {
     private static final String PASSWORD = System.getenv().getOrDefault("MYSQL_PASSWORD", "testuser");
     private static final String DATABASE = System.getenv().getOrDefault("MYSQL_DATABASE", "testdb");
 
-    private static Properties propsBackup;
+    private static final Properties propsBackup;
     public static MySQLContainer db = new MySQLContainer(
             DockerImageName.parse(CONTAINER_IMAGE).asCompatibleSubstituteFor("mysql")).withDatabaseName(
             DATABASE).withUsername(USERNAME).withPassword(PASSWORD);

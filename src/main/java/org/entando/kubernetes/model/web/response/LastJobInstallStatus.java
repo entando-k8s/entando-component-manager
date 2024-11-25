@@ -19,7 +19,7 @@ public class LastJobInstallStatus {
 
         public final String label;
 
-        private InstallationStatus(String label) {
+        InstallationStatus(String label) {
             this.label = label;
         }
     }

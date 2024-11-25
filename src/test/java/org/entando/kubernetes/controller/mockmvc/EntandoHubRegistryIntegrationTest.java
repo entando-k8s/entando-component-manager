@@ -75,9 +75,9 @@ class EntandoHubRegistryIntegrationTest {
     private final String baseUrl = "/registries";
 
     private MockMvc mockMvc;
-    private List<EntandoHubRegistryEntity> entityToSaveList = EntandoHubRegistryStubHelper.stubListOfEntandoHubRegistryEntity();
-    private List<EntandoHubRegistry> savedRegistryList = EntandoHubRegistryStubHelper.stubListOfEntandoHubRegistry();
-    private ObjectMapper mapper = new ObjectMapper();
+    private final List<EntandoHubRegistryEntity> entityToSaveList = EntandoHubRegistryStubHelper.stubListOfEntandoHubRegistryEntity();
+    private final List<EntandoHubRegistry> savedRegistryList = EntandoHubRegistryStubHelper.stubListOfEntandoHubRegistry();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private WebApplicationContext context;

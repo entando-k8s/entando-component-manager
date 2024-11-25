@@ -389,8 +389,7 @@ public class PluginDescriptorValidator extends BaseDescriptorValidator<PluginDes
             "The received plugin descriptor contains an unknown securityLevel. Accepted values are: "
                     + Arrays.stream(PluginSecurityLevel.values()).map(PluginSecurityLevel::toName)
                     .collect(Collectors.joining(", "));
-    public static final String NON_OWNED_SECRET = ""
-            + "The descriptor of the plugin \"%s\" of the bundle \"%s\" contains an invalid environment variable \"%s\""
+    public static final String NON_OWNED_SECRET = "The descriptor of the plugin \"%s\" of the bundle \"%s\" contains an invalid environment variable \"%s\""
             + " that points to a secret that doesn't belong to the plugin. Check documentation for details about "
             + "bundles secrets.";
     public static final String DEPLOYMENT_BASE_NAME_MAX_LENGTH_EXCEEDED_ERROR =

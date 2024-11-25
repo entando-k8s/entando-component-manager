@@ -47,10 +47,10 @@ import org.mockito.ArgumentCaptor;
 
 public class InstallFlowAssertionHelper {
 
-    private K8SServiceClient k8SServiceClient;
-    private EntandoCoreClient coreClient;
-    private EntandoBundleJobRepository jobRepository;
-    private EntandoBundleComponentJobRepository componentJobRepository;
+    private final K8SServiceClient k8SServiceClient;
+    private final EntandoCoreClient coreClient;
+    private final EntandoBundleJobRepository jobRepository;
+    private final EntandoBundleComponentJobRepository componentJobRepository;
 
     public InstallFlowAssertionHelper(K8SServiceClient k8SServiceClient, EntandoCoreClient coreClient,
             EntandoBundleJobRepository jobRepository, EntandoBundleComponentJobRepository componentJobRepository) {

@@ -246,7 +246,7 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
         if (this.database.containsKey(uuid)) {
             return this.database.get(uuid);
         }
-        throw new EntityNotFoundException("Entity with uuid " + uuid.toString() + " not found in the database");
+        throw new EntityNotFoundException("Entity with uuid " + uuid + " not found in the database");
     }
 
     @Override

@@ -45,7 +45,7 @@ class LiquibaseStartOracleIntegrationTest {
     private static final String USERNAME = System.getenv().getOrDefault("ORACLE_USER", "testuser");
     private static final String PASSWORD = System.getenv().getOrDefault("ORACLE_PASSWORD", "testuser");
     private static final String DATABASE = System.getenv().getOrDefault("ORACLE_DATABASE", "testdb");
-    private static Properties propsBackup;
+    private static final Properties propsBackup;
 
     public static OracleContainer db = new OracleContainer(
             DockerImageName.parse(CONTAINER_IMAGE).asCompatibleSubstituteFor("oracle")).withDatabaseName(DATABASE)

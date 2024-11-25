@@ -35,7 +35,7 @@ public class EntandoBundleDownloaderTest {
 
     public static final String BUNDLE_REMOTE_REPOSITORY = "https://github.com/Kerruba/entando-sample-bundle";
     private static final int port;
-    private CraneCommand craneCommand = new CraneCommand();
+    private final CraneCommand craneCommand = new CraneCommand();
 
     static {
         port = findFreePort().orElse(9080);

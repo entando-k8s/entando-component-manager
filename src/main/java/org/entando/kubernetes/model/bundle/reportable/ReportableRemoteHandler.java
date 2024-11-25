@@ -12,5 +12,5 @@ public enum ReportableRemoteHandler {
 
     ENTANDO_ENGINE,
     ENTANDO_CMS,
-    ENTANDO_K8S_SERVICE;
+    ENTANDO_K8S_SERVICE
 }

@@ -1,0 +1,51 @@
+# Build stage
+FROM maven:3.9.4-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Crane installation stage
+FROM alpine AS crane
+RUN apk add --no-cache curl
+RUN curl -L https://github.com/google/go-containerregistry/releases/download/v0.20.2/go-containerregistry_Linux_arm64.tar.gz -o crane.tar.gz \
+    && tar xzf crane.tar.gz crane \
+    && mv crane /usr/local/bin/ \
+    && rm crane.tar.gz
+
+# Runtime stage
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# Copy the built artifact from the build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Copy crane from the crane stage
+COPY --from=crane /usr/local/bin/crane /usr/local/bin/crane
+
+# Expose all environment variables
+ENV ENTANDO_URL=""
+ENV ENTANDO_APP_NAMESPACE="test-namespace"
+ENV ENTANDO_APP_NAME="test-entando"
+ENV ENTANDO_ECR_DEAPP_REQUEST_RETRIES="3"
+ENV ENTANDO_ECR_DEAPP_REQUEST_BACKOFF="5"
+ENV SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER-URI=""
+ENV SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-ID=""
+ENV SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT-SECRET=""
+ENV DB_VENDOR="postgres"
+ENV DB_HOST="localhost"
+ENV DB_PORT="5432"
+ENV DB_NAME="digital_exchange"
+ENV DB_OPTIONS="useSSL=false"
+ENV DB_USER="admin"
+ENV DB_PASS="admin"
+ENV ENTANDO_BUNDLE_TAGS_TYPES="prod"
+ENV ENTANDO_BUNDLE_DOWNLOAD_TIMEOUT="300"
+ENV ENTANDO_BUNDLE_DOWNLOAD_RETRIES="3"
+ENV ENTANDO_BUNDLE_DECOMPRESS_TIMEOUT="600"
+
+# Expose the application port
+EXPOSE 8080
+
+# Run the application
+CMD ["java", "-jar", "app.jar"]

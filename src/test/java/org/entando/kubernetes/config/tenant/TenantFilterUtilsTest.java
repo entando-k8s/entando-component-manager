@@ -17,15 +17,13 @@ class TenantFilterUtilsTest {
 
     @BeforeEach
     void init() throws JsonProcessingException {
-        StringBuilder config = new StringBuilder();
-        config.append("[");
-        config.append(getTenantConfigMock("tenant1", "test.entando.com, test2.entando.com, tenant1.entando.com"));
-        config.append(",");
-        config.append(getTenantConfigMock("tenant2", "tenant2.entando.com, test3.entando.com"));
-        config.append(",");
-        config.append(getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com"));
-        config.append("]");
-        String tenantsConfig = config.toString();
+        String tenantsConfig = "[" +
+                getTenantConfigMock("tenant1", "test.entando.com, test2.entando.com, tenant1.entando.com") +
+                "," +
+                getTenantConfigMock("tenant2", "tenant2.entando.com, test3.entando.com") +
+                "," +
+                getTenantConfigMock("tenant3", "tenant3.entando.com, test4.entando.com") +
+                "]";
         configDTOList = (new ObjectMapper()).readValue(tenantsConfig,
                 new TypeReference<List<TenantConfigDTO>>() {
                 });

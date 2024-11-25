@@ -5,5 +5,5 @@ public enum PostInitStatus {
     STARTED,
     SUCCESSFUL,
     FAILED,
-    UNKNOWN;
+    UNKNOWN
 }

@@ -31,7 +31,7 @@ class MethodRetryerTest {
             counter.incrementAndGet();
             return EXECUTION_OK;
         }).checkerMethod((d, ex, execNumber) -> {
-            return ex != null || false;
+            return ex != null;
         }).retries(3).waitFor(1).build();
         method.execute("test");
         assertThat(counter.get()).isEqualTo(3);
@@ -45,7 +45,7 @@ class MethodRetryerTest {
             counter.incrementAndGet();
             throw new Exception();
         }).checkerMethod((d, ex, execNumber) -> {
-            return ex == null || false;
+            return ex == null;
         }).retries(3).waitFor(1).build();
         Assert.assertThrows(Exception.class, () -> method.execute("test"));
         assertThat(counter.get()).isEqualTo(3);

@@ -48,8 +48,8 @@ public class EntandoDeBundleComposer {
     private final BundleDownloaderFactory downloaderFactory;
     private final K8SServiceClient k8SServiceClient;
     private static final String MAIN_VERSION = "main";
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private BundleTagFilterManager bundleTagFilterManager;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final BundleTagFilterManager bundleTagFilterManager;
 
     @Autowired
     public EntandoDeBundleComposer(BundleDownloaderFactory downloaderFactory, K8SServiceClient k8SServiceClient,

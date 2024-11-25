@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Setter
 public class CorsAccessControlConfiguration implements WebMvcConfigurer {
 
-    private List<String> origins = Arrays.asList("*");
+    private List<String> origins = List.of("*");
     private List<String> headers = Arrays.asList("Content-Type", "Authorization");
     private List<String> methods = Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH");
     private boolean credentials = true;

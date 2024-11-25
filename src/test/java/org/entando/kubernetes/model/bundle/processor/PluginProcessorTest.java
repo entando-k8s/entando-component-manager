@@ -71,7 +71,7 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     private PluginProcessor processor;
 
-    private YAMLMapper yamlMapper = new YAMLMapper();
+    private final YAMLMapper yamlMapper = new YAMLMapper();
 
     private static final Map<String, String> originalEnv = System.getenv();
 

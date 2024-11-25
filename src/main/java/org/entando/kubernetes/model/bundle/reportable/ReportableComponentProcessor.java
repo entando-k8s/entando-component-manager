@@ -7,6 +7,7 @@ package org.entando.kubernetes.model.bundle.reportable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
@@ -66,7 +67,7 @@ public interface ReportableComponentProcessor {
                         .stream().map(descriptor -> descriptor.getComponentKey().getKey())
                         .collect(Collectors.toList());
             } else {
-                return Arrays.asList(bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
+                return Collections.singletonList(bundleReader.readDescriptorFile(fileName, componentProcessor.getDescriptorClass())
                         .getComponentKey().getKey());
             }
         } catch (IOException e) {

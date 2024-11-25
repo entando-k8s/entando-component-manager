@@ -12,7 +12,7 @@ import org.springframework.util.CollectionUtils;
 
 public final class AnalysisReportClientRequestFactory {
 
-    private EnumMap<ComponentType, Consumer<List<String>>> strategy;
+    private final EnumMap<ComponentType, Consumer<List<String>>> strategy;
 
     List<String> widgets = new ArrayList<>();
     List<String> fragments = new ArrayList<>();

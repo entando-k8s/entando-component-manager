@@ -21,7 +21,7 @@ class EntandoBundleJobExecutorTest {
     private final String componentCode = "BRN";
     @Mock
     private Installable<FragmentDescriptor> installable;
-    private EntandoBundleJobExecutor entandoBundleJobExecutor = new EntandoBundleJobExecutor() {
+    private final EntandoBundleJobExecutor entandoBundleJobExecutor = new EntandoBundleJobExecutor() {
     };
 
     @Test

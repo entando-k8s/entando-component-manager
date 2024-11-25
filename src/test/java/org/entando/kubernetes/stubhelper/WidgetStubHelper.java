@@ -43,7 +43,7 @@ public class WidgetStubHelper {
     public static final String RESOURCE_BASE_PATH = "widgets/" + WIDGET_1_CODE + "/static";
     public static final List<String> JS_RESOURCES = Arrays.asList(RESOURCE_BASE_PATH + "/js/main.js",
             RESOURCE_BASE_PATH + "/js/runtime.js");
-    public static final List<String> CSS_RESOURCES = Arrays.asList(RESOURCE_BASE_PATH + "/css/style.css");
+    public static final List<String> CSS_RESOURCES = List.of(RESOURCE_BASE_PATH + "/css/style.css");
     public static final String PLUGIN_INGRESS_1_CODE = API_CLAIM_1_SERVICE_ID;
     public static final String PLUGIN_INGRESS_1_PATH = "/" + API_CLAIM_1_SERVICE_ID + "/path";
     public static final String PLUGIN_INGRESS_2_CODE = API_CLAIM_2_SERVICE_ID;

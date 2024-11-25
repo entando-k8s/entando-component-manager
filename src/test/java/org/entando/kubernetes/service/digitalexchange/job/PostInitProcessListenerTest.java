@@ -21,8 +21,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 class PostInitProcessListenerTest {
 
     private static Properties propsBackup;
-    private static int POST_INIT_CONFIG_TIMEOUT = 5;
-    private static int POST_INIT_CONFIG_FREQUENCY = 1;
+    private static final int POST_INIT_CONFIG_TIMEOUT = 5;
+    private static final int POST_INIT_CONFIG_FREQUENCY = 1;
 
     private PostInitProcessListener postInitProcessListener;
     private PostInitService postInitService;
@@ -50,7 +50,7 @@ class PostInitProcessListenerTest {
         postInitProcessListener.onApplicationEvent(event);
 
         try {
-            await().atMost(Duration.ofSeconds(POST_INIT_CONFIG_TIMEOUT * 2)).until(() -> false);
+            await().atMost(Duration.ofSeconds(POST_INIT_CONFIG_TIMEOUT * 2L)).until(() -> false);
         } catch (Exception ex) {
             log.debug("test end");
         }

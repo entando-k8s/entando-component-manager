@@ -26,7 +26,7 @@ public enum JobType {
     SUCCESSFUL(INSTALL_COMPLETED, UNINSTALL_COMPLETED, UNINSTALL_PARTIAL_COMPLETED),
     ERROR(INSTALL_ERROR, UNINSTALL_ERROR);
 
-    private Set<JobStatus> statusSet;
+    private final Set<JobStatus> statusSet;
 
     JobType(JobStatus status, JobStatus... others) {
         this.statusSet = EnumSet.of(status, others);

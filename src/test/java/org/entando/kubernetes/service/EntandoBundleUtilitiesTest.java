@@ -156,7 +156,7 @@ public class EntandoBundleUtilitiesTest {
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV1@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
                 "/entando/todomvcv1/1-0-0", "/api/v1/todos",
-                getRolesForTodoMvc1(), Collections.<Permission>emptyList(), this::assertOnLabelsForTodoMvc1,
+                getRolesForTodoMvc1(), Collections.emptyList(), this::assertOnLabelsForTodoMvc1,
                 PluginSecurityLevel.forName("strict"));
     }
 
@@ -244,7 +244,7 @@ public class EntandoBundleUtilitiesTest {
         assertOnEntandoPlugin(entandoPlugin, DbmsVendor.MYSQL,
                 "entando/todomvcV2@" + PluginStubHelper.PLUGIN_IMAGE_SHA,
                 PluginStubHelper.EXPECTED_INGRESS_PATH_V_5, "/api/v1/todos",
-                Collections.<ExpectedRole>emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
+                Collections.emptyList(), Collections.emptyList(), this::assertOnLabelsForTodoMvc2, null);
     }
 
     @Test

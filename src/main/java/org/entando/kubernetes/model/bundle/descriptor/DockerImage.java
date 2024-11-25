@@ -78,7 +78,7 @@ public class DockerImage {
     }
 
     private static String joinOrganizationPath(String[] paths, String imageAddress) {
-        StringBuilder org = new StringBuilder("");
+        StringBuilder org = new StringBuilder();
         for (int i = 0; i < paths.length - 1; i++) {
             if (i > 1 || (i == 1 && !StringUtils.contains(paths[0], "."))) {
                 org.append("/");

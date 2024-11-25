@@ -432,7 +432,7 @@ class EntandoCoreClientTest {
 
         PageTemplateConfigurationDescriptor pageTemplateConfigurationDescriptor = PageTemplateConfigurationDescriptor
                 .builder()
-                .frames(Arrays.asList(new FrameDescriptor()))
+                .frames(List.of(new FrameDescriptor()))
                 .build();
         PageTemplateDescriptor ptd = PageTemplateDescriptor.builder()
                 .configuration(pageTemplateConfigurationDescriptor)

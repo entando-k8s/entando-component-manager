@@ -136,7 +136,7 @@ public class InstallServiceTest {
     private PageDescriptorValidator pageDescriptorValidator;
     private BundleDescriptorValidator bundleDescriptorValidator;
     private CraneCommand craneCommand;
-    private DownloadedBundle downloadedBundle = new DownloadedBundle(Paths.get(bundleFolder), "");
+    private final DownloadedBundle downloadedBundle = new DownloadedBundle(Paths.get(bundleFolder), "");
     private BundleUninstallUtility bundleUninstallUtility;
 
     @BeforeEach

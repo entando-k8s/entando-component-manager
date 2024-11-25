@@ -8,8 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 public class TenantContextHolder {
 
     public static String getCurrentTenantCode() {
-        log.debug("Getting tenant {}", threadLocal.get().getTenantCode());
-        return threadLocal.get().getTenantCode();
+
+//        log.info("Getting tenant {}", threadLocal.get().getTenantCode());
+        log.debug("Getting tenant {}", threadLocal.get() != null ? threadLocal.get().getTenantCode(): "primary");
+        return threadLocal.get() != null ? threadLocal.get().getTenantCode(): "primary";
     }
 
     public static void setCurrentTenantCode(String tenant) {

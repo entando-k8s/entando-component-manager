@@ -33,9 +33,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping(value = "/bundles")
 public interface EntandoBundleResourceNg {
 
-    static final String REPO_URL_PATH_PARAM = "url";
-    static final String VERSION = "v1";
-    static final String ACCEPTED_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE + ";v=" + VERSION;
+    String REPO_URL_PATH_PARAM = "url";
+    String VERSION = "v1";
+    String ACCEPTED_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE + ";v=" + VERSION;
 
     @Operation(description = "Returns available bundles")
     @ApiResponse(responseCode = "200", description = "OK")

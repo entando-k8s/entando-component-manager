@@ -37,7 +37,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 class LiquibaseStartH2IntegrationTest {
 
-    private static Properties propsBackup;
+    private static final Properties propsBackup;
 
     static {
         propsBackup = new Properties(System.getProperties());

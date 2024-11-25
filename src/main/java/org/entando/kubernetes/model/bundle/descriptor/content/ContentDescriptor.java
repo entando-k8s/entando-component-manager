@@ -37,6 +37,6 @@ public class ContentDescriptor implements Descriptor {
     @Getter
     public enum ContentStatus {
 
-        PUBLIC;
+        PUBLIC
     }
 }

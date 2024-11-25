@@ -220,7 +220,7 @@ public class EntandoBundleInstallService implements EntandoBundleJobExecutor {
         }
 
         EntandoBundleJobEntity createdJob = jobRepo.save(job);
-        log.debug("New installation job created " + job.toString());
+        log.debug("New installation job created " + job);
         createdJob.getComponentId();
         return createdJob;
     }

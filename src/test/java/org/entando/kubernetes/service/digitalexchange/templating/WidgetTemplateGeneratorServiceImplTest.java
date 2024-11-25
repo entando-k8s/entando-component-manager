@@ -39,9 +39,9 @@ class WidgetTemplateGeneratorServiceImplTest {
     @Mock
     private BundleReader bundleReader;
 
-    private PluginDataRepository repository = new PluginDataRepositoryTestDouble();
+    private final PluginDataRepository repository = new PluginDataRepositoryTestDouble();
 
-    private WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
+    private final WidgetDescriptor descriptor = WidgetStubHelper.stubWidgetDescriptorV5();
     private WidgetTemplateGeneratorServiceImpl service;
 
     @BeforeEach

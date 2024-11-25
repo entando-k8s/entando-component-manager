@@ -40,7 +40,7 @@ class PageProcessorTest extends BaseProcessorTest {
     @Mock
     private DefaultEntandoCoreClient entandoCoreClient;
 
-    private PageDescriptorValidator validator = new PageDescriptorValidator();
+    private final PageDescriptorValidator validator = new PageDescriptorValidator();
 
     @Mock
     private BundleReader bundleReader;

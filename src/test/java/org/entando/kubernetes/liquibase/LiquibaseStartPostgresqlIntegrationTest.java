@@ -46,7 +46,7 @@ class LiquibaseStartPostgresqlIntegrationTest {
     private static final String USERNAME = System.getenv().getOrDefault("POSTGRESQL_USER", "testuser");
     private static final String PASSWORD = System.getenv().getOrDefault("POSTGRESQL_PASSWORD", "testuser");
     private static final String DATABASE = System.getenv().getOrDefault("POSTGRESQL_DATABASE", "testdb");
-    private static Properties propsBackup;
+    private static final Properties propsBackup;
 
     public static PostgreSQLContainer db = new PostgreSQLContainer(
             DockerImageName.parse(CONTAINER_IMAGE).asCompatibleSubstituteFor("postgres")).withDatabaseName(

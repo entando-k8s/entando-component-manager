@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 @Tag("unit")
 class WidgetDescriptorTest {
 
-    private static final String APP_BUILDER_JSON = String.format("{\"slot\":\"content\"}");
-    private static final String ADMIN_CONSOLE_JSON = String.format("{}");
+    private static final String APP_BUILDER_JSON = "{\"slot\":\"content\"}";
+    private static final String ADMIN_CONSOLE_JSON = "{}";
     private static final String ROOT_JSON = String.format("{\"appBuilder\":%s,\"adminConsole\":%s}", APP_BUILDER_JSON,
             ADMIN_CONSOLE_JSON);
 

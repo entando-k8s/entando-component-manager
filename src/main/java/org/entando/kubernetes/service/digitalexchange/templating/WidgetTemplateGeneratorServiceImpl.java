@@ -72,7 +72,7 @@ public class WidgetTemplateGeneratorServiceImpl implements WidgetTemplateGenerat
 
     private final PluginDataRepository apiPathRepository;
 
-    private ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     @Override
     public String generateWidgetTemplate(String descriptorFileName, WidgetDescriptor descriptor,

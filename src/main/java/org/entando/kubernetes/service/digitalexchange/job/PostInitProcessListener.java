@@ -18,7 +18,7 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
     private static final long START_DELAY = 1;
     private final PostInitService service;
     private Instant startTime;
-    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     TimerTask repeatedTask = new TimerTask() {
         public void run() {

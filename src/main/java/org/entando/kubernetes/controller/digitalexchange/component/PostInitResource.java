@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping(value = "/post-inits")
 public interface PostInitResource {
 
-    static final String VERSION = "v1";
-    static final String ACCEPTED_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE + ";v=" + VERSION;
+    String VERSION = "v1";
+    String ACCEPTED_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE + ";v=" + VERSION;
 
     @Operation(description = "Returns post init installation status")
     @ApiResponse(responseCode = "200", description = "OK")

@@ -232,7 +232,7 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     @Override
     public EntandoBundleComponentJobEntity getOne(UUID uuid) {
         if (!database.containsKey(uuid)) {
-            throw new EntityNotFoundException("Entity with uuid " + uuid.toString() + " not found");
+            throw new EntityNotFoundException("Entity with uuid " + uuid + " not found");
         }
         return database.get(uuid);
     }
