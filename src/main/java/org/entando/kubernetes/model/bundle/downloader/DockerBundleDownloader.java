@@ -91,6 +91,10 @@ public class DockerBundleDownloader extends BundleDownloader {
             String fullyQualifiedImageUrl = generateFullyQualifiedWithTag(tag);
             ImageValidator.parse(fullyQualifiedImageUrl).isValidOrThrow(ERROR_WHILE_DOWNLOADING_IMAGE);
 
+            if (useCredentials()) {
+                getCredentials(fullyQualifiedImageUrl).ifPresent(this::doCraneAuthLogin);
+            }
+
             final String imageDigest = craneCommand.getImageDigest(fullyQualifiedImageUrl);
             saveContainerImage(fullyQualifiedImageUrl, targetPath);
             log.info("Docker image saved");
@@ -373,6 +377,7 @@ public class DockerBundleDownloader extends BundleDownloader {
                         jsonContainerRegistryCredentials);
                 JSONObject authObj = (JSONObject) rootObj.get("auths");
                 JSONObject domainRegistryObj = (JSONObject) authObj.get(image.getDomainRegistry());
+
                 if (domainRegistryObj == null) {
                     // WARNING I could use multiple registry one private other public
                     return Optional.empty();
