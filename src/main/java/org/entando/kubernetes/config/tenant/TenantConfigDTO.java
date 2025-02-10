@@ -13,6 +13,7 @@ public class TenantConfigDTO {
 
     private String tenantCode;
     private String fqdns;
+    private String context;
     
     private String kcAuthUrl;
     private String kcRealm;

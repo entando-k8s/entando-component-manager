@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.config.tenant.routing.VirtualContextHelper;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,13 +33,16 @@ public class TenantFilter extends OncePerRequestFilter {
         String headerHost = request.getHeader(HOST);
         String headerServerName = request.getServerName();
 
+        HttpServletRequest customizedRequest = VirtualContextHelper.customizeRequest(request);
+        String context = customizedRequest.getContextPath();
+
         String tenantCode = TenantFilterUtils.fetchTenantCode(tenantConfigs, headerXEntandoTenantCode, headerXForwardedHost,
-                headerHost, headerServerName);
+                headerHost, headerServerName, context);
 
         TenantContextHolder.setCurrentTenantCode(tenantCode);
 
         try {
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(customizedRequest, response);
         } finally {
             TenantContextHolder.destroy();
             log.debug("Remove custom context from thread local.");

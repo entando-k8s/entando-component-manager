@@ -61,6 +61,7 @@ public class TenantConfiguration {
                 .setTenantCode(EntandoMultiTenancy.PRIMARY_TENANT)
                 .setKcRealm("entando")
                 .setFqdns(primaryHostName)
+                .setContext(null)
                 .setKcAuthUrl(primaryIssuerUri)
                 .setDeKcClientId(clientId)
                 .setDeKcClientSecret(clientSecret)
@@ -86,6 +87,7 @@ public class TenantConfiguration {
 
         private String tenantCode;
         private String fqdns;
+        private String context;
         private String kcAuthUrl;
         private String kcRealm;
         private String deDbUrl;
