@@ -1,14 +1,17 @@
 package org.entando.kubernetes.config.tenant.routing;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletMapping;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.MappingMatch;
 import java.util.*;
 
-public class CustomWrappedRequest extends HttpServletRequestWrapper
-{
+public class CustomWrappedRequest extends HttpServletRequestWrapper {
 
+    public static final String VIRTUAL_CONTEXT = "virtual-context";
     private final String virtualContextPath;
+    private Map<String, String> headersOverrides = new HashMap<>();
 
     /**
      * Create a new request wrapper that will merge additional parameters into
@@ -34,17 +37,6 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
     @Override
     public String getServletPath() {
         return stripVirtualContextIfRequired(this.getOriginalServletPath());
-    }
-
-    @Override
-    public String getRequestURI() {
-        return stripVirtualContextIfRequired(super.getRequestURI());
-    }
-
-    @Override
-    public StringBuffer getRequestURL() {
-        StringBuffer res = new StringBuffer();
-        return res.append(stripVirtualContextIfRequired(super.getRequestURL().toString()));
     }
 
     public boolean hasVirtualContext() {
@@ -74,5 +66,32 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
         } else {
             return null;
         }
+    }
+
+    /**
+     * As for some reason "alwaysUseFullPath" seems to be set to try, spring is matching the routes against the
+     * full request path (instead of the servletPath) and the below change in getMappingMatch is the workaround
+     * I've found by checking the code.
+     */
+    @Override
+    public HttpServletMapping getHttpServletMapping() {
+        HttpServletMapping res = super.getHttpServletMapping();
+        return new HttpServletMapping() {
+            public String getMatchValue() {
+                return res.getMatchValue();
+            }
+
+            public String getPattern() {
+                return res.getPattern();
+            }
+
+            public String getServletName() {
+                return res.getServletName();
+            }
+
+            public MappingMatch getMappingMatch() {
+                return MappingMatch.PATH;
+            }
+        };
     }
 }

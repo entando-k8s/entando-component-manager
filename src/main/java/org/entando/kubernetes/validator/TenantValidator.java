@@ -3,12 +3,8 @@ package org.entando.kubernetes.validator;
 import static org.entando.kubernetes.validator.ValidationFunctions.validateFQDN;
 import static org.entando.kubernetes.validator.ValidationFunctions.validateURL;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
@@ -70,7 +66,7 @@ public class TenantValidator {
         if (StringUtils.isNotBlank(fqdnsValueString)) {
             String[] fqdns = fqdnsValueString.split(",");
             Arrays.asList(fqdns).forEach(fqdn -> {
-                if (!validateFQDN(fqdn)) {
+                if (!Objects.equals(fqdn, "localhost") && !validateFQDN(fqdn)) {
                     getErrorListForTenant(tenantCode).add("fqdns: invalid value detected '" + fqdn + "'");
                 }
             });

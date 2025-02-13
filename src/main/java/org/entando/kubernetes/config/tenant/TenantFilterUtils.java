@@ -22,15 +22,15 @@ public class TenantFilterUtils {
     public static String fetchTenantCode(final List<TenantConfigDTO> tenantConfigs,
                                          final String headerXEntandoTenantCode,
                                          final String headerXForwardedHost,
-                                  final String headerHost,
+                                  final String fqdn,
                                   final String servletRequestServerName,
                                   final String context) {
 
-        log.debug("Extracting tenantCode from headerXEntandoTenantCode:'{}' headerXForwardedHost:'{}' headerHost:'{}' servletRequestServerName:'{}' context:'{}'",
-                headerXEntandoTenantCode, headerXForwardedHost, headerHost, servletRequestServerName, context);
+        log.debug("Extracting tenantCode from headerXEntandoTenantCode:'{}' headerXForwardedHost:'{}' fqdn:'{}' servletRequestServerName:'{}' context:'{}'",
+                headerXEntandoTenantCode, headerXForwardedHost, fqdn, servletRequestServerName, context);
         String tenantCode = Optional.ofNullable(headerXEntandoTenantCode)
                 .filter(StringUtils::isNotBlank)
-                .orElseGet(() -> fetchFromHeaderForClientToServer(tenantConfigs, headerXForwardedHost, headerHost, servletRequestServerName, context));
+                .orElseGet(() -> fetchFromHeaderForClientToServer(tenantConfigs, headerXForwardedHost, fqdn, servletRequestServerName, context));
 
         log.debug("Extracted tenantCode: '{}'", tenantCode);
         return tenantCode;
@@ -38,13 +38,13 @@ public class TenantFilterUtils {
 
     private static String fetchFromHeaderForClientToServer(final List<TenantConfigDTO> tenantConfigs,
                                                            final String headerXForwardedHost,
-                                                           final String headerHost,
+                                                           final String fqdn,
                                                            final String servletRequestServerName,
                                                            final String context) {
         return Optional.ofNullable(tenantConfigs)
                 .flatMap(tcs ->
                         searchTenantCodeInConfigs(tenantConfigs, X_FORWARDED_HOST, headerXForwardedHost, context)
-                                .or(() -> searchTenantCodeInConfigs(tenantConfigs, HOST, headerHost, context))
+                                .or(() -> searchTenantCodeInConfigs(tenantConfigs, HOST, fqdn, context))
                                 .or(() -> searchTenantCodeInConfigs(tenantConfigs, REQUEST_SERVER_NAME, servletRequestServerName, context)))
                 .orElseGet(() -> {
                     log.debug(

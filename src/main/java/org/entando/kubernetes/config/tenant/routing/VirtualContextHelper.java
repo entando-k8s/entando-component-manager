@@ -13,37 +13,24 @@
  */
 package org.entando.kubernetes.config.tenant.routing;
 
+import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.model.web.SystemConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
+@Slf4j
 public class VirtualContextHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VirtualContextHelper.class);
     public static final String ENABLED_VIRTUAL_CONTEXTS = System.getenv(SystemConstants.ENTANDO_VIRTUAL_CONTEXTS);
-
 
     /**
      * Returns a customized wrapper of the provided request
      */
     public static HttpServletRequest customizeRequest(final HttpServletRequest originalRequest) {
-        debugRequest("[ORIG]", originalRequest);
         HttpServletRequest customizedRequest = applyVirtualContext(originalRequest);
-        debugRequest("[CUST]", customizedRequest);
+        debugRequest(originalRequest, customizedRequest);
         return customizedRequest;
-    }
-
-    private static void debugRequest(String tag, HttpServletRequest customRequest) {
-        LOGGER.info(" * FILTER: {} ContextPath: {}", tag, customRequest.getContextPath());
-        LOGGER.info(" * FILTER: {} ServletPath: {}", tag, customRequest.getServletPath());
     }
 
     /**
@@ -63,17 +50,10 @@ public class VirtualContextHelper {
         String requestVirtualContext = (parts.length >= 2) ? parts[1] : null;
 
         if (requestVirtualContext == null || !allowedVirtualContexts.contains(requestVirtualContext)) {
-            LOGGER.error(invalidVirtualContext(requestVirtualContext).getMessage());
             return request;
         }
 
         return new CustomWrappedRequest(request, requestVirtualContext, new TreeMap<>());
-    }
-
-    private static HttpClientErrorException invalidVirtualContext(String requestVirtualContext) {
-        return (requestVirtualContext != null)
-                ? new HttpClientErrorException(HttpStatus.NOT_FOUND, String.format("The requested virtual context \"%s\" doesn't exist", requestVirtualContext))
-                : new HttpClientErrorException(HttpStatus.NOT_FOUND, "The requested null virtual context doesn't exist");
     }
 
     public static List<String> getVirtualContexts() {
@@ -84,4 +64,15 @@ public class VirtualContextHelper {
         return Collections.emptyList();
     }
 
+    private static void debugRequest(HttpServletRequest originalRequest, HttpServletRequest customizedRequest) {
+        log.trace("Original ContextPath: {}", originalRequest.getContextPath());
+        log.trace("Original ServletPath: {}", originalRequest.getServletPath());
+        log.trace("Customized ContextPath: {}", customizedRequest.getContextPath());
+        log.trace("Customized ServletPath: {}", customizedRequest.getServletPath());
+    }
+
+    public static String contextPathToContext(String contextPath) {
+        if (contextPath == null) return null;
+        return contextPath.replaceAll("/$", "").replaceAll("^/", "");
+    }
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.entando.kubernetes.client.core.DefaultEntandoCoreClient;
+import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.exception.web.AuthorizationDeniedException;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
+
+import static org.entando.kubernetes.client.core.DefaultEntandoCoreClient.pathConcat;
 
 @Component
 public class AuthorizationChecker {
@@ -53,10 +57,9 @@ public class AuthorizationChecker {
      * @return the extracted permissions or null if not present
      */
     private String fetchAndExtractRequiredPermission(String authorizationHeader) {
-
-        final ResponseEntity<SimpleRestResponse<List<MyGroupPermission>>> response = fetchMyGroupPermissions(
-                authorizationHeader);
-        return extractRequiredPermission(response);
+        return extractRequiredPermission(fetchMyGroupPermissions(
+                authorizationHeader
+        ));
     }
 
 
@@ -72,8 +75,14 @@ public class AuthorizationChecker {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", authorizationHeader);
 
+        String url = pathConcat(entandoUrl,
+                pathConcat(TenantContextHolder.getCurrentVirtualContext(),
+                        "/api/users/myGroupPermissions"
+                )
+        );
+
         return restTemplate.exchange(
-                entandoUrl + "/api/users/myGroupPermissions", HttpMethod.GET,
+                url, HttpMethod.GET,
                 new HttpEntity<>(null, headers),
                 new ParameterizedTypeReference<SimpleRestResponse<List<MyGroupPermission>>>() {
                 });

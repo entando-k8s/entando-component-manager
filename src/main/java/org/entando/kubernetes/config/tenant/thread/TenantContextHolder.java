@@ -14,14 +14,25 @@ public class TenantContextHolder {
 
     public static void setCurrentTenantCode(String tenant) {
         log.debug("Setting tenant {}", tenant);
-        threadLocal.set(new TenantContext(tenant));
+        threadLocal.set(new TenantContext(tenant, getNullableVirtualContext()));
+    }
+
+    public static String getCurrentVirtualContext() {
+        String res = getNullableVirtualContext();
+        log.debug("Getting virtual context {}", res);
+        return res;
+    }
+
+    public static void setCurrentVirtualContext(String context) {
+        log.debug("Setting virtual context {}", context);
+        threadLocal.set(new TenantContext(getNullableTenantCode(), context));
     }
 
     private static final ThreadLocal<TenantContext> threadLocal = new InheritableThreadLocal<>() {
 
         @Override
         protected TenantContext childValue(TenantContext parentValue) {
-            return new TenantContext(parentValue.getTenantCode());
+            return new TenantContext(parentValue.getTenantCode(), parentValue.getVirtualContext());
         }
     };
 
@@ -29,5 +40,12 @@ public class TenantContextHolder {
         log.debug("destroy tenant context");
         threadLocal.remove();
     }
-    
+
+    private static String getNullableVirtualContext() {
+        return (threadLocal.get() == null) ? null : threadLocal.get().getVirtualContext();
+    }
+
+    private static String getNullableTenantCode() {
+        return (threadLocal.get() == null) ? null : threadLocal.get().getTenantCode();
+    }
 }

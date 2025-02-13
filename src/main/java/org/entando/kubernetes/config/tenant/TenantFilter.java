@@ -30,16 +30,21 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String headerXEntandoTenantCode = request.getHeader(X_ENTANDO_TENANTCODE);
         String headerXForwardedHost = request.getHeader(X_FORWARDED_HOST);
-        String headerHost = request.getHeader(HOST);
+        String fqdn = request.getHeader(HOST).replaceFirst(":.*", "");
         String headerServerName = request.getServerName();
 
         HttpServletRequest customizedRequest = VirtualContextHelper.customizeRequest(request);
-        String context = customizedRequest.getContextPath();
+        String context = VirtualContextHelper.contextPathToContext(customizedRequest.getContextPath());
 
         String tenantCode = TenantFilterUtils.fetchTenantCode(tenantConfigs, headerXEntandoTenantCode, headerXForwardedHost,
-                headerHost, headerServerName, context);
+                fqdn, headerServerName, context);
 
         TenantContextHolder.setCurrentTenantCode(tenantCode);
+        if (tenantCode.equals("primary")) {
+            TenantContextHolder.setCurrentVirtualContext(null);
+        } else {
+            TenantContextHolder.setCurrentVirtualContext(context);
+        }
 
         try {
             filterChain.doFilter(customizedRequest, response);

@@ -8,5 +8,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TenantContext {
     private String tenantCode;
+    private String virtualContext;
 }
 
