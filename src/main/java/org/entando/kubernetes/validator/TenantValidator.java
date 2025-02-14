@@ -55,7 +55,7 @@ public class TenantValidator {
 
                     if (isDuplicated) {
                         getErrorListForTenant(cfg.getTenantCode())
-                                .add("tenant with FQDNs' " + cfg.getFqdns() + "' is using the same tenant id (" + cfg.getTenantCode() + ")");
+                                .add("tenant with the couple FQDNs: '" + cfg.getFqdns() + "' - context: '" + cfg.getContext() + "' is using the same tenant id (" + cfg.getTenantCode() + ")");
                     }
                     return !isDuplicated;
                 })
@@ -74,19 +74,21 @@ public class TenantValidator {
     }
 
     private void validateFqdnsUniqueness(List<TenantConfigDTO> tenants) {
-        final Map<String, String> fqdns = new HashMap<>();
+        final Map<String, String> tenantsMap = new HashMap<>();
 
         tenants.forEach(config -> {
             final String tenantCode = config.getTenantCode();
             final String fqdnsStr = config.getFqdns();
+            final String context = config.getContext();
             if (StringUtils.isNotBlank(fqdnsStr)) {
-                String[] fqdnsarr = fqdnsStr.split(",");
+                String[] fqdnsArray = fqdnsStr.split(",");
 
-                Arrays.asList(fqdnsarr).forEach(fqdn -> {
-                    if (!fqdns.containsKey(fqdn)) {
-                        fqdns.put(fqdn, tenantCode);
+                Arrays.asList(fqdnsArray).forEach(fqdn -> {
+                    String tenantKey = fqdn + (StringUtils.isBlank(context) ? "" : ("|" + context));
+                    if (!tenantsMap.containsKey(tenantKey)) {
+                        tenantsMap.put(tenantKey, tenantCode);
                     } else {
-                        getErrorListForTenant(tenantCode).add("fqdns: '" + fqdn + "' already used by tenant '" + fqdns.get(fqdn) + "'");
+                        getErrorListForTenant(tenantCode).add("The couple fqdns: '" + fqdn + "' - context: '" + context + "' already used by tenant '" + tenantsMap.get(tenantKey) + "'");
                     }
                 });
             }
