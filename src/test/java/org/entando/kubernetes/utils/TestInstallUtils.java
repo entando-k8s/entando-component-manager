@@ -123,6 +123,7 @@ public class TestInstallUtils {
         mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -137,6 +138,7 @@ public class TestInstallUtils {
         mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT_V5.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -151,6 +153,7 @@ public class TestInstallUtils {
         mockSuccessfullyCompletedInstall(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -165,6 +168,7 @@ public class TestInstallUtils {
         mockSuccessfullyCompletedInstallV5(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT_V5.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -184,6 +188,7 @@ public class TestInstallUtils {
 
         MvcResult result = mockMvc.perform(
                         put(INSTALL_PLANS_ENDPOINT.build())
+                                .header(HttpHeaders.HOST, "example.com")
                                 .header(HttpHeaders.AUTHORIZATION, "jwt")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(installWithPlansReq)))
@@ -208,6 +213,7 @@ public class TestInstallUtils {
                         put(INSTALL_PLANS_ENDPOINT_V5.build())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(installWithPlansRequest))
+                                .header(HttpHeaders.HOST, "example.com")
                                 .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -312,6 +318,7 @@ public class TestInstallUtils {
                 .build();
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(new ObjectMapper().writeValueAsString(request)))
@@ -754,6 +761,7 @@ public class TestInstallUtils {
     @SneakyThrows
     public static JobStatus getJobStatus(MockMvc mockMvc, String jobId) {
         MockHttpServletResponse response = mockMvc.perform(get("/jobs/" + jobId)
+                        .header(HttpHeaders.HOST, "example.com")
                         .with(user("user")))
                 .andReturn().getResponse();
         return JobStatus.valueOf(JsonPath.read(response.getContentAsString(), "$.payload.status"));
@@ -770,7 +778,8 @@ public class TestInstallUtils {
                         + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
                         .join(",", allowedValues)
                         + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=" + component)
-                        .with(user("user")))
+                        .with(user("user")
+                        ).header(HttpHeaders.HOST, "example.com"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.payload").value(hasSize(1)))
@@ -780,7 +789,9 @@ public class TestInstallUtils {
     }
 
     public static EntandoBundleJobEntity getJob(MockMvc mockMvc, String jobId) throws Exception {
-        String responseContent = mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+        String responseContent = mockMvc.perform(
+                        get(JOBS_ENDPOINT + "/{id}", jobId).header(HttpHeaders.HOST, "example.com")
+                )
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         String status = JsonPath.read(responseContent, "$.payload.status");
@@ -798,7 +809,9 @@ public class TestInstallUtils {
 
     public static void verifyJobHasComponentAndStatus(MockMvc mockMvc, String bundleName, String jobId, JobStatus expectedStatus)
             throws Exception {
-        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+        mockMvc.perform(
+                        get(JOBS_ENDPOINT + "/{id}", jobId).header(HttpHeaders.HOST, "example.com")
+                )
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value(bundleName))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
@@ -806,7 +819,9 @@ public class TestInstallUtils {
 
     public static void verifyJobHasComponentAndStatusV5(MockMvc mockMvc, String jobId, JobStatus expectedStatus)
             throws Exception {
-        mockMvc.perform(get(JOBS_ENDPOINT + "/{id}", jobId))
+        mockMvc.perform(
+                        get(JOBS_ENDPOINT + "/{id}", jobId).header(HttpHeaders.HOST, "example.com")
+                )
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload.componentId").value(TestInstallUtils.MOCK_BUNDLE_NAME_V5))
                 .andExpect(jsonPath("payload.status").value(expectedStatus.toString()));
@@ -835,6 +850,7 @@ public class TestInstallUtils {
         stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -867,6 +883,7 @@ public class TestInstallUtils {
                 .when(coreClient).deleteComponents(any());
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -899,6 +916,7 @@ public class TestInstallUtils {
                 .build());
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT_V5.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -919,6 +937,7 @@ public class TestInstallUtils {
         mockFailingInstall(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -933,6 +952,7 @@ public class TestInstallUtils {
         mockFailingInstall(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -989,6 +1009,7 @@ public class TestInstallUtils {
         mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -1003,6 +1024,7 @@ public class TestInstallUtils {
         mockHugeAssetFailingInstall(coreClient, k8sServiceClient, bundleName);
 
         MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -1080,6 +1102,7 @@ public class TestInstallUtils {
         stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -1128,6 +1151,7 @@ public class TestInstallUtils {
         stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -1160,6 +1184,7 @@ public class TestInstallUtils {
         stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -1229,7 +1254,10 @@ public class TestInstallUtils {
     }
 
     public static PagedMetadata<EntandoBundleJobEntity> getInstallJob(MockMvc mockMvc) throws Exception {
-        return new ObjectMapper().readValue(mockMvc.perform(get(JOBS_ENDPOINT + "?component=todomvcV1&type=INSTALL"))
+        return new ObjectMapper().readValue(
+                mockMvc.perform(
+                                get(JOBS_ENDPOINT + "?component=todomvcV1&type=INSTALL").header(HttpHeaders.HOST, "example.com")
+                        )
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
                 new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {
@@ -1244,7 +1272,9 @@ public class TestInstallUtils {
                                 + "&direction=DESC"
                                 + "&filters[0].attribute=status&filters[0].operator=eq&filters[0].allowedValues=" + String
                                 .join(",", allowedValues)
-                                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc"))
+                                + "&filters[1].attribute=componentId&filters[1].operator=eq&filters[1].value=todomvc")
+                                .header(HttpHeaders.HOST, "example.com")
+                        )
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
                 new TypeReference<PagedMetadata<EntandoBundleJobEntity>>() {

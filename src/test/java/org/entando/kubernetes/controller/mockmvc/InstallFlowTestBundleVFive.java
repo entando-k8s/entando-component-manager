@@ -257,7 +257,8 @@ class InstallFlowTestBundleVFive {
 
         InstallPlan expected = TestInstallUtils.mockInstallPlanV5();
         MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
-                .header(HttpHeaders.AUTHORIZATION, "jwt"))
+                        .header(HttpHeaders.HOST, "example.com")
+                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isOk())
                 .andReturn();
 

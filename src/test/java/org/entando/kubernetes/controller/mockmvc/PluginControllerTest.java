@@ -30,6 +30,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -59,7 +60,7 @@ public class PluginControllerTest {
     public void testListEmpty() throws Exception {
         when(kubernetesService.getLinkedPlugins()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get(URL))
+        mockMvc.perform(get(URL).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
     }
@@ -69,7 +70,7 @@ public class PluginControllerTest {
         String pluginId = "arbitrary-plugin";
         when(kubernetesService.getLinkedPlugin(anyString())).thenThrow(new PluginNotFoundException());
 
-        mockMvc.perform(get(String.format("%s/%s", URL, pluginId)))
+        mockMvc.perform(get(String.format("%s/%s", URL, pluginId)).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isNotFound());
 
     }
@@ -79,7 +80,7 @@ public class PluginControllerTest {
         List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPlugin());
         when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
 
-        mockMvc.perform(get(URL))
+        mockMvc.perform(get(URL).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)));
 
@@ -89,7 +90,7 @@ public class PluginControllerTest {
     public void testSinglePlugin() throws Exception {
         when(kubernetesService.getLinkedPlugin(anyString())).thenReturn(getTestEntandoPlugin());
 
-        mockMvc.perform(get(URL))
+        mockMvc.perform(get(URL).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk());
 
     }
@@ -98,7 +99,7 @@ public class PluginControllerTest {
     public void testListPluginInfoEmpty() throws Exception {
         when(kubernetesService.getLinkedPlugins()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get(URL_INFO))
+        mockMvc.perform(get(URL_INFO).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
     }
@@ -108,7 +109,7 @@ public class PluginControllerTest {
         List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoAllData());
         when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
 
-        mockMvc.perform(get(URL_INFO))
+        mockMvc.perform(get(URL_INFO).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0].id", is("plugin-info-uid")))
@@ -121,7 +122,7 @@ public class PluginControllerTest {
         List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoOnlyId());
         when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
 
-        mockMvc.perform(get(URL_INFO))
+        mockMvc.perform(get(URL_INFO).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
 
@@ -135,7 +136,7 @@ public class PluginControllerTest {
         List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoOnlyName());
         when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
 
-        mockMvc.perform(get(URL_INFO))
+        mockMvc.perform(get(URL_INFO).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0].id", nullValue()))
@@ -148,7 +149,7 @@ public class PluginControllerTest {
         List<EntandoPlugin> linkedPlugins = Collections.singletonList(getTestEntandoPluginInfoOnlyDescription());
         when(kubernetesService.getLinkedPlugins()).thenReturn(linkedPlugins);
 
-        mockMvc.perform(get(URL_INFO))
+        mockMvc.perform(get(URL_INFO).header(HttpHeaders.HOST, "example.com"))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0].id", nullValue()))

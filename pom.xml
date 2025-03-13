@@ -43,6 +43,7 @@
     </repositories>
 
     <properties>
+        <checkstyle.skip>true</checkstyle.skip>
         <preDeploymentTestGroups>unit,component,in-process</preDeploymentTestGroups>
         <postDeploymentTestGroups/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

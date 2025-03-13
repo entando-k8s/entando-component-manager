@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -76,6 +77,7 @@ class EntandoHubRestTest {
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .get("/hub/bundlegroups/123-abop-4560/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
+                            .header(HttpHeaders.HOST, "example.com")
                             .accept(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -100,6 +102,7 @@ class EntandoHubRestTest {
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .get("/hub/bundles/123-abop-4560/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1")
+                            .header(HttpHeaders.HOST, "example.com")
                             .accept(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())

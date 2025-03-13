@@ -19,9 +19,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 class TenantFilterTest {
 
     @Test
-    void shouldSetCorrectTwnantWithExistingXEntandoCustomHeader() throws ServletException, IOException {
+    void shouldSetCorrectTenantWithExistingXEntandoCustomHeader() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("X-ENTANDO-TENANTCODE", "tenant2");
+        request.addHeader("HOST", "example.com");
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
         try (MockedStatic<TenantContextHolder> tenantContextHolder = Mockito

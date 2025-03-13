@@ -38,6 +38,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -104,6 +105,7 @@ class EntandoBundleOperationResourceControllerIT {
         // Then he gets the 200 http status and the uninstall job result
         ResultActions uninstallCompleted = mockMvc.perform(
                         get(componentsUrl + String.format("/%s/uninstall", componentId))
+                                .header(HttpHeaders.HOST, "example.com")
                                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.status", Matchers.equalTo("UNINSTALL_COMPLETED")));
@@ -118,6 +120,7 @@ class EntandoBundleOperationResourceControllerIT {
         // When the user sends the request
         // Then he gets the 400 http status and a proper message
         mockMvc.perform(get(componentsUrl + String.format("/%s/%s", componentId, urlPath))
+                        .header(HttpHeaders.HOST, "example.com")
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
                 .andExpect(content().json(String.format("{\"message\":\"Job '%s' has not been found\"}", componentId)));
@@ -133,6 +136,7 @@ class EntandoBundleOperationResourceControllerIT {
         // When the user sends the request
         // Then he gets the 400 http status and a proper message
         mockMvc.perform(get(componentsUrl + String.format("/%s/uninstall", componentId))
+                        .header(HttpHeaders.HOST, "example.com")
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
                 .andExpect(content().json(String.format("{\"message\":\"Job '%s' has not been found\"}", componentId)));
@@ -184,6 +188,7 @@ class EntandoBundleOperationResourceControllerIT {
         // only uninstall properties should be part of the response
         mockMvc.perform(
                         get(componentsUrl + String.format("/%s/uninstall", componentId))
+                                .header(HttpHeaders.HOST, "example.com")
                                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(new SimpleRestResponse<>(expectedPayload))));

@@ -79,19 +79,14 @@ import org.springframework.web.context.WebApplicationContext;
 
 @AutoConfigureWireMock(port = 8100)
 @AutoConfigureMockMvc
-@SpringBootTest(
-        webEnvironment = WebEnvironment.RANDOM_PORT,
-        classes = {
-                EntandoKubernetesJavaApplication.class,
-                TestSecurityConfiguration.class,
-                TestKubernetesConfig.class,
-                TestAppConfiguration.class
-        })
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = {EntandoKubernetesJavaApplication.class,
+        TestSecurityConfiguration.class, TestKubernetesConfig.class, TestAppConfiguration.class})
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
 @DirtiesContext
-@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class,
+        TenantSecurityKeycloakMockServerJunitExt.class})
 class EntandoBundleResourceControllerIntegrationTest {
 
     private final String componentsUrl = "/components";
@@ -119,10 +114,7 @@ class EntandoBundleResourceControllerIntegrationTest {
     @BeforeEach
     public void setup() {
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
-        mockMvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(springSecurity())
-                .build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
         mapper = new ObjectMapper();
         bundleEntityRepository.deleteAll();
         bundleJobRepository.deleteAll();
@@ -140,11 +132,8 @@ class EntandoBundleResourceControllerIntegrationTest {
 
         doNothing().when(authorizationChecker).checkPermissions(anyString());
 
-        Stream.of(
-                        BundleInfoStubHelper.GIT_REPO_ADDRESS,
-                        "git@www.github.com/entando/mybundle.git",
-                        "git://www.github.com/entando/mybundle.git",
-                        "ssh://www.github.com/entando/mybundle.git")
+        Stream.of(BundleInfoStubHelper.GIT_REPO_ADDRESS, "git@www.github.com/entando/mybundle.git",
+                        "git://www.github.com/entando/mybundle.git", "ssh://www.github.com/entando/mybundle.git")
                 .forEach(bundleUrl -> {
                     try {
                         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo
@@ -153,29 +142,21 @@ class EntandoBundleResourceControllerIntegrationTest {
 
                         // when the user sends the request
                         String payload = mapper.writeValueAsString(bundleInfo);
-                        final ResultActions resultActions = mockMvc.perform(post(componentsUrl)
-                                        .header(HttpHeaders.AUTHORIZATION, "jwt")
-                                        .content(payload)
-                                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                                .andExpect(status().isOk());
+                        final ResultActions resultActions = mockMvc.perform(
+                                post(componentsUrl).header(HttpHeaders.HOST, "example.com")
+                                        .header(HttpHeaders.AUTHORIZATION, "jwt").content(payload)
+                                        .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
 
                         // then he receives success and the expected deployed EntandoBundle
-                        EntandoBundleVersion latestVersion = new EntandoBundleVersion()
-                                .setVersion(BundleStubHelper.V1_2_0);
-                        EntandoBundle entandoBundle = new EntandoBundle()
-                                .setCode("something-77b2b10e")
-                                .setTitle("something")
-                                .setDescription("bundle description")
-                                .setRepoUrl(bundleUrl)
+                        EntandoBundleVersion latestVersion = new EntandoBundleVersion().setVersion(
+                                BundleStubHelper.V1_2_0);
+                        EntandoBundle entandoBundle = new EntandoBundle().setCode("something-77b2b10e")
+                                .setTitle("something").setDescription("bundle description").setRepoUrl(bundleUrl)
                                 .setBundleType(BundleType.STANDARD_BUNDLE)
-                                .setThumbnail(BundleInfoStubHelper.DESCR_IMAGE)
-                                .setComponentTypes(
+                                .setThumbnail(BundleInfoStubHelper.DESCR_IMAGE).setComponentTypes(
                                         Set.of("widget", "contentTemplate", "pageTemplate", "language", "label",
-                                                "content",
-                                                "fragment",
-                                                "plugin", "page", "category", "asset", "bundle", "contentType",
-                                                "group"))
-                                .setLatestVersion(latestVersion);
+                                                "content", "fragment", "plugin", "page", "category", "asset", "bundle",
+                                                "contentType", "group")).setLatestVersion(latestVersion);
 
                         BundleAssertionHelper.assertOnEntandoBundle(resultActions, entandoBundle);
                     } catch (Exception e) {
@@ -188,26 +169,20 @@ class EntandoBundleResourceControllerIntegrationTest {
     void shouldReturnErrorWhileDeployingBundleAndReceivingEmptyOrNullRepoUrl() throws Exception {
 
         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with an empty repoUrl
-        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
-                .setGitRepoAddress("");
+        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setGitRepoAddress("");
         // when the user sends the request
         // then he receives 4xx status code
         String payload = mapper.writeValueAsString(bundleInfo);
-        mockMvc.perform(post(componentsUrl)
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(post(componentsUrl).header(HttpHeaders.HOST, "example.com").content(payload)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().is4xxClientError());
 
         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with a null repoUrl
-        bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
-                .setGitRepoAddress(null);
+        bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setGitRepoAddress(null);
         // when the user sends the request
         // then he receives 4xx status code
         payload = mapper.writeValueAsString(bundleInfo);
-        mockMvc.perform(post(componentsUrl)
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(post(componentsUrl).header(HttpHeaders.HOST, "example.com").content(payload)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -216,15 +191,12 @@ class EntandoBundleResourceControllerIntegrationTest {
         doThrow(new AuthorizationDeniedException("err")).when(authorizationChecker).checkPermissions(anyString());
 
         // given that the user wants to deploy an EntandoDeBundle using a bundleInfo with an empty repoUrl
-        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo()
-                .setGitRepoAddress("");
+        BundleInfo bundleInfo = BundleInfoStubHelper.stubBunbleInfo().setGitRepoAddress("");
         // when the user sends the request
         // then he receives 4xx status code
         String payload = mapper.writeValueAsString(bundleInfo);
-        mockMvc.perform(post(componentsUrl)
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(post(componentsUrl).header(HttpHeaders.HOST, "example.com").content(payload)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -239,9 +211,9 @@ class EntandoBundleResourceControllerIntegrationTest {
 
         // when the user sends the request to undeploy the bundle
         // then he receives 200 status code and the name of the bundle
-        mockMvc.perform(delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME)
-                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
-                .andExpect(status().is2xxSuccessful())
+        mockMvc.perform(
+                        delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME).header(HttpHeaders.HOST, "example.com")
+                                .header(HttpHeaders.AUTHORIZATION, "jwt")).andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.payload.name", is(TestEntitiesGenerator.BUNDLE_NAME)));
     }
 
@@ -253,9 +225,9 @@ class EntandoBundleResourceControllerIntegrationTest {
         // given that no bundles exist in the cluster
         // when the user sends the request to undeploy a bundle
         // then he receives 200 status code and the name of the bundle (even if the bundle does not exist)
-        mockMvc.perform(delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME)
-                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
-                .andExpect(status().is2xxSuccessful())
+        mockMvc.perform(
+                        delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME).header(HttpHeaders.HOST, "example.com")
+                                .header(HttpHeaders.AUTHORIZATION, "jwt")).andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.payload.name", is(TestEntitiesGenerator.BUNDLE_NAME)));
     }
 
@@ -267,9 +239,9 @@ class EntandoBundleResourceControllerIntegrationTest {
         // given that the user wants to undeploy an EntandoDeBundle
         // when the user sends the request
         // then he receives 4xx status code
-        mockMvc.perform(delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME)
-                        .header(HttpHeaders.AUTHORIZATION, "jwt"))
-                .andExpect(status().is4xxClientError());
+        mockMvc.perform(
+                delete(componentsUrl + "/" + TestEntitiesGenerator.BUNDLE_NAME).header(HttpHeaders.HOST, "example.com")
+                        .header(HttpHeaders.AUTHORIZATION, "jwt")).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -280,10 +252,8 @@ class EntandoBundleResourceControllerIntegrationTest {
 
         // when the user sends the request
         // then he gets an error
-        mockMvc.perform(post(componentsUrl + "/status/query")
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk())
+        mockMvc.perform(post(componentsUrl + "/status/query").header(HttpHeaders.HOST, "example.com").content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.bundlesStatuses", hasSize(0)));
     }
 
@@ -294,15 +264,13 @@ class EntandoBundleResourceControllerIntegrationTest {
         String notFound1 = "http://notfound.com";
         String notFound2 = "https://notfoundone.com";
 
-        final BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
-                List.of(notFound1, notFound2));
+        final BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(List.of(notFound1, notFound2));
 
         // when the user sends the request
         String payload = mapper.writeValueAsString(bundlesStatusQuery);
-        final ResultActions resultActions = mockMvc.perform(post(componentsUrl + "/status/query")
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is2xxSuccessful());
+        final ResultActions resultActions = mockMvc.perform(
+                post(componentsUrl + "/status/query").header(HttpHeaders.HOST, "example.com").content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().is2xxSuccessful());
 
         // then he receives the expected result
         List<BundlesStatusItem> bundlesStatusItemList = List.of(
@@ -318,15 +286,14 @@ class EntandoBundleResourceControllerIntegrationTest {
         prepareInMemoryBundlesAndDbForBundleStatusTests();
 
         // when the user requests for the status of some bundles
-        BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(List.of(
-                TestEntitiesGenerator.BUNDLE_TARBALL_URL, deployedRepoUrl, installedNotDeployedRepoUrl,
-                BundleStatusItemStubHelper.ID_NOT_FOUND, BundleStatusItemStubHelper.ID_INVALID_REPO_URL));
+        BundlesStatusQuery bundlesStatusQuery = new BundlesStatusQuery().setIds(
+                List.of(TestEntitiesGenerator.BUNDLE_TARBALL_URL, deployedRepoUrl, installedNotDeployedRepoUrl,
+                        BundleStatusItemStubHelper.ID_NOT_FOUND, BundleStatusItemStubHelper.ID_INVALID_REPO_URL));
 
         String payload = mapper.writeValueAsString(bundlesStatusQuery);
-        final ResultActions resultActions = mockMvc.perform(post(componentsUrl + "/status/query")
-                        .content(payload)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk());
+        final ResultActions resultActions = mockMvc.perform(
+                post(componentsUrl + "/status/query").header(HttpHeaders.HOST, "example.com").content(payload)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
 
         // then he receives the expected result
         List<BundlesStatusItem> bundlesStatusItemList = List.of(
@@ -335,8 +302,7 @@ class EntandoBundleResourceControllerIntegrationTest {
                 new BundlesStatusItem(installedNotDeployedRepoUrl, null, BundleStatus.INSTALLED_NOT_DEPLOYED, "v1.1.0"),
                 new BundlesStatusItem(BundleStatusItemStubHelper.ID_NOT_FOUND, null, BundleStatus.NOT_FOUND, null),
                 new BundlesStatusItem(BundleStatusItemStubHelper.ID_INVALID_REPO_URL, null,
-                        BundleStatus.INVALID_REPO_URL,
-                        null));
+                        BundleStatus.INVALID_REPO_URL, null));
 
         BundleStatusItemAssertionHelper.assertOnBundlesStatusItemList(resultActions, bundlesStatusItemList);
     }
@@ -362,8 +328,8 @@ class EntandoBundleResourceControllerIntegrationTest {
     @Test
     void shouldReceiveTheExpectedBundleStatusItemForADeployedBundle() throws Exception {
 
-        BundlesStatusItem expected = new BundlesStatusItem(deployedRepoUrl,
-                BundleStatusItemStubHelper.NAME_DEPLOYED, BundleStatus.DEPLOYED, null);
+        BundlesStatusItem expected = new BundlesStatusItem(deployedRepoUrl, BundleStatusItemStubHelper.NAME_DEPLOYED,
+                BundleStatus.DEPLOYED, null);
 
         execGetBundleStatusItemByNameTest(BundleStatusItemStubHelper.NAME_DEPLOYED, expected);
     }
@@ -383,10 +349,9 @@ class EntandoBundleResourceControllerIntegrationTest {
         prepareInMemoryBundlesAndDbForBundleStatusTests();
 
         // when the user requests for the status of one bundle by name
-        final ResultActions resultActions = mockMvc.perform(get(componentsUrl + "/status/" + bundleName)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk());
+        final ResultActions resultActions = mockMvc.perform(
+                get(componentsUrl + "/status/" + bundleName).header(HttpHeaders.HOST, "example.com")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)).andDo(print()).andExpect(status().isOk());
 
         // then he receives the expected result
         BundleStatusItemAssertionHelper.assertOnBundlesStatusItem(resultActions,

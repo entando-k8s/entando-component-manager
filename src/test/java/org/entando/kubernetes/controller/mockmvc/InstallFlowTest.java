@@ -215,6 +215,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andDo(print()).andExpect(status().isNotFound());
     }
@@ -225,6 +226,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andDo(print()).andExpect(status().isNotFound());
     }
@@ -633,7 +635,7 @@ public class InstallFlowTest {
 
         // All jobs should be available via the API
         mockMvc.perform(get("/jobs?filters[0].attribute=componentId&filters[0].operator=eq&filters[0].value="
-                        + MOCK_BUNDLE_NAME))
+                        + MOCK_BUNDLE_NAME).header(HttpHeaders.HOST, "example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").isArray())
                 .andExpect(jsonPath("$.payload.*.id", hasSize(3)))
@@ -674,6 +676,7 @@ public class InstallFlowTest {
 
         // I should get a conflict when trying to install or uninstall the same component
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("JOB ID: " + jobId)));
@@ -700,6 +703,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -742,6 +746,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -814,10 +819,12 @@ public class InstallFlowTest {
 
         // I should get a conflict error when trying to install/uninstall the same component
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andDo(print())
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
         waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
@@ -831,9 +838,11 @@ public class InstallFlowTest {
 
         // I should get a conflict error when trying to install/uninstall the same component
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
         mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
         waitForUninstallStatus(mockMvc, MOCK_BUNDLE_NAME, JobStatus.UNINSTALL_COMPLETED);
@@ -860,6 +869,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -890,6 +900,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         MvcResult result = mockMvc.perform(put(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -929,6 +940,7 @@ public class InstallFlowTest {
 
         InstallPlan expected = TestInstallUtils.mockInstallPlanV1();
         MvcResult response = mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -971,9 +983,9 @@ public class InstallFlowTest {
     public void shouldThrowInternalServerErrorWhenActingOnPreviousInstallErrorState() throws Exception {
         simulateFailingInstall();
 
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()).header(HttpHeaders.HOST, "example.com"))
                 .andExpect(status().isInternalServerError());
-        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()).header(HttpHeaders.HOST, "example.com"))
                 .andExpect(status().isInternalServerError());
 
     }
@@ -984,9 +996,9 @@ public class InstallFlowTest {
         simulateSuccessfullyCompletedInstall();
         simulateFailingUninstall();
 
-        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build()).header(HttpHeaders.HOST, "example.com"))
                 .andExpect(status().isInternalServerError());
-        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()))
+        mockMvc.perform(post(UNINSTALL_COMPONENT_ENDPOINT.build()).header(HttpHeaders.HOST, "example.com"))
                 .andExpect(status().isInternalServerError());
     }
 
@@ -1028,6 +1040,7 @@ public class InstallFlowTest {
         when(bundleOperationsConcurrencyManager.manageStartOperation()).thenReturn(false);
 
         mockMvc.perform(post(INSTALL_COMPONENT_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
     }
@@ -1044,6 +1057,7 @@ public class InstallFlowTest {
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
         mockMvc.perform(post(INSTALL_PLANS_ENDPOINT.build())
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isConflict());
     }
@@ -1068,6 +1082,7 @@ public class InstallFlowTest {
         final UriBuilder uriBuilder = UriComponentsBuilder.newInstance()
                 .pathSegment("components", compId, "install");
         mockMvc.perform(post(uriBuilder.build())
+                        .header(HttpHeaders.HOST, "example.com")
                 .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().isCreated());
 
