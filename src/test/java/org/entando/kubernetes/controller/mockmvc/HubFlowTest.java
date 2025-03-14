@@ -116,6 +116,7 @@ class HubFlowTest {
 
         mockMvc.perform(post(DEPLOY_COMPONENT_ENDPOINT.build()).contentType(APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(BundleInfoStubHelper.stubBunbleInfo()))
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().json("{\"payload\":{\"code\":\"something-77b2b10e\",\"title\":"

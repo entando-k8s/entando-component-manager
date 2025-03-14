@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.kubernetes.config.tenant.routing.VirtualContextHelper;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -29,16 +30,24 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String headerXEntandoTenantCode = request.getHeader(X_ENTANDO_TENANTCODE);
         String headerXForwardedHost = request.getHeader(X_FORWARDED_HOST);
-        String headerHost = request.getHeader(HOST);
+        String fqdn = request.getHeader(HOST).replaceFirst(":.*", "");
         String headerServerName = request.getServerName();
 
+        HttpServletRequest customizedRequest = VirtualContextHelper.customizeRequest(request);
+        String context = VirtualContextHelper.contextPathToContext(customizedRequest.getContextPath());
+
         String tenantCode = TenantFilterUtils.fetchTenantCode(tenantConfigs, headerXEntandoTenantCode, headerXForwardedHost,
-                headerHost, headerServerName);
+                fqdn, headerServerName, context);
 
         TenantContextHolder.setCurrentTenantCode(tenantCode);
+        if (tenantCode.equals("primary")) {
+            TenantContextHolder.setCurrentVirtualContext(null);
+        } else {
+            TenantContextHolder.setCurrentVirtualContext(context);
+        }
 
         try {
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(customizedRequest, response);
         } finally {
             TenantContextHolder.destroy();
             log.debug("Remove custom context from thread local.");

@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteRequest;
 import org.entando.kubernetes.client.model.EntandoCoreComponentDeleteResponse;
@@ -72,6 +73,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
@@ -138,6 +140,17 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         restTemplate.getInterceptors().add(new RestTemplateHeaderTenantCodeInterceptor());
 
         return restTemplate;
+    }
+
+    public static String pathConcat(String a, String b) {
+        if (b == null) return a;
+        if (a == null) a = "";
+        String res = a, trailer = "";
+        if (res.endsWith("/")) {
+            res = res.substring(0, res.length() - 1);
+            trailer = "/";
+        }
+        return res + ((b.startsWith("/") ? "" : "/") + b + trailer);
     }
 
     @Override
@@ -621,6 +634,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private UriComponentsBuilder resolvePathSegments(String... segments) {
         return UriComponentsBuilder
                 .fromUriString(entandoUrl)
+                .pathSegment(TenantContextHolder.getCurrentVirtualContext())
                 .pathSegment(segments);
     }
 

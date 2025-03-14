@@ -155,6 +155,7 @@ class EntandoHubRegistryIntegrationTest {
         // when the user sends the request
         final ResultActions resultAdd = mockMvc.perform(
                 post(baseUrl)
+                        .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .content(mapper.writeValueAsString(registryToAdd))
                         .contentType(MediaType.APPLICATION_JSON_VALUE));
@@ -165,7 +166,7 @@ class EntandoHubRegistryIntegrationTest {
         assertOnSuccessfulSimpleRestResponse(resultAdd);
 
         // and an updated list of registries is returned
-        ResultActions resultList = mockMvc.perform(get(baseUrl));
+        ResultActions resultList = mockMvc.perform(get(baseUrl).header(HttpHeaders.HOST, "example.com"));
         EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntityList(resultList,
                 Arrays.asList(savedRegistryList.get(0), savedRegistryList.get(1), registryToAdd));
         assertOnSuccessfulSimpleRestResponse(resultList);
@@ -227,8 +228,8 @@ class EntandoHubRegistryIntegrationTest {
                 .setId(JsonPath.parse(response).read("$.payload.[0].id").toString())
                 .setName(newName)
                 .setUrl(newUrl);
-        final ResultActions resultUpdate = mockMvc.perform(
-                put(baseUrl)
+        final ResultActions resultUpdate = mockMvc.perform(put(baseUrl)
+                .header(HttpHeaders.HOST, "example.com")
                         .header(HttpHeaders.AUTHORIZATION, "jwt")
                         .content(mapper.writeValueAsString(registryToUpdate))
                         .contentType(MediaType.APPLICATION_JSON_VALUE));
@@ -239,7 +240,7 @@ class EntandoHubRegistryIntegrationTest {
         assertOnSuccessfulSimpleRestResponse(resultUpdate);
 
         // and an updated list of registries is returned
-        resultList = mockMvc.perform(get(baseUrl));
+        resultList = mockMvc.perform(get(baseUrl).header(HttpHeaders.HOST, "example.com"));
         EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntityList(resultList,
                 Arrays.asList(savedRegistryList.get(1), registryToUpdate));
         assertOnSuccessfulSimpleRestResponse(resultList);
@@ -259,13 +260,14 @@ class EntandoHubRegistryIntegrationTest {
 
         // then a successful response is returned
         final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + idToDelete)
+                .header(HttpHeaders.HOST, "example.com")
                 .header(HttpHeaders.AUTHORIZATION, "jwt"));
         resultDelete
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.name", is(nameToDelete)));
 
         // and the new present list of registries does contain only one record
-        resultList = mockMvc.perform(get(baseUrl));
+        resultList = mockMvc.perform(get(baseUrl).header(HttpHeaders.HOST, "example.com"));
         EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntityList(resultList,
                 List.of(savedRegistryList.get(1)));
     }
@@ -279,6 +281,7 @@ class EntandoHubRegistryIntegrationTest {
         // when the user sends a request to delete a registry not present
         // then a successful response is returned
         final ResultActions resultDelete = mockMvc.perform(delete(baseUrl + "/" + UUID.randomUUID())
+                .header(HttpHeaders.HOST, "example.com")
                 .header(HttpHeaders.AUTHORIZATION, "jwt"));
         resultDelete
                 .andExpect(status().isOk())
@@ -287,7 +290,7 @@ class EntandoHubRegistryIntegrationTest {
 
 
     private ResultActions getAndValidateRegistryListWithTheTwoStartingRegistries() throws Exception {
-        ResultActions resultList = mockMvc.perform(get(baseUrl));
+        ResultActions resultList = mockMvc.perform(get(baseUrl).header(HttpHeaders.HOST, "example.com"));
         resultList.andExpect(jsonPath("$.payload", hasSize(2)));
         EntandoHubRegistryAssertionHelper.assertOnEntandoHubRegistryEntityList(resultList,
                 Arrays.asList(savedRegistryList.get(0), savedRegistryList.get(1)));
@@ -335,6 +338,7 @@ class EntandoHubRegistryIntegrationTest {
         // when the user sends the request
         ResultActions result = mockMvc.perform(
                 httpMethodFn.apply(baseUrl)
+                        .header(HttpHeaders.HOST, "example.com")
                         .content(mapper.writeValueAsString(registry))
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .header(HttpHeaders.AUTHORIZATION, "jwt"));

@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -45,7 +46,8 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class,
+        TenantSecurityKeycloakMockServerJunitExt.class})
 public class EntandoBundleJobControllerTest {
 
     MockMvc mvc;
@@ -75,7 +77,8 @@ public class EntandoBundleJobControllerTest {
     @Test
     public void shouldReturnAllJobsSortedByStartTime() throws Exception {
 
-        mvc.perform(get("/jobs?sort=startedAt&direction=DESC").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/jobs?sort=startedAt&direction=DESC")
+                        .header(HttpHeaders.HOST, "example.com").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload").value(hasSize(4)))
                 .andExpect(jsonPath("$.payload[0].componentId").value("id1"))
@@ -97,7 +100,8 @@ public class EntandoBundleJobControllerTest {
 
         EntandoBundleJobEntity job = jobs.entrySet().stream().findFirst().map(Entry::getValue).get();
 
-        mvc.perform(get("/jobs/{id}", job.getId()).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/jobs/{id}", job.getId())
+                        .header(HttpHeaders.HOST, "example.com").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.componentId").value(job.getComponentId()))
                 .andExpect(jsonPath("$.payload.status").value(job.getStatus().toString()));
@@ -108,7 +112,8 @@ public class EntandoBundleJobControllerTest {
 
         UUID jobId = UUID.randomUUID();
 
-        mvc.perform(get("/jobs/{id}", jobId).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/jobs/{id}", jobId)
+                        .header(HttpHeaders.HOST, "example.com").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
@@ -118,12 +123,13 @@ public class EntandoBundleJobControllerTest {
         String componentId = "id1";
 
         mvc.perform(
-                get("/jobs"
-                        + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
-                        + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].allowedValues=INSTALL_COMPLETED,"
-                        + "INSTALL_IN_PROGRESS"
-                        + "&pageSize=1&sort=startedAt&direction=DESC")
-                        .accept(MediaType.APPLICATION_JSON))
+                        get("/jobs"
+                                + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
+                                + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].allowedValues=INSTALL_COMPLETED,"
+                                + "INSTALL_IN_PROGRESS"
+                                + "&pageSize=1&sort=startedAt&direction=DESC")
+                                .header(HttpHeaders.HOST, "example.com")
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.[0].componentId").value(componentId))
                 .andExpect(jsonPath("$.payload.[0].status").value(JobStatus.INSTALL_COMPLETED.toString()))
@@ -136,10 +142,11 @@ public class EntandoBundleJobControllerTest {
         String componentId = "id1";
 
         mvc.perform(get("/jobs"
-                + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
-                + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].value=UNINSTALL_COMPLETED"
-                + "&pageSize=1&sort=startedAt&direction=DESC")
-                .accept(MediaType.APPLICATION_JSON))
+                        + "?filters[0].attribute=componentId&filters[0].value=id1&filters[0].operator=eq"
+                        + "&filters[1].attribute=status&filters[1].operator=eq&filters[1].value=UNINSTALL_COMPLETED"
+                        + "&pageSize=1&sort=startedAt&direction=DESC")
+                        .header(HttpHeaders.HOST, "example.com")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.[0].componentId").value(componentId))
                 .andExpect(jsonPath("$.payload.[0].status").value("UNINSTALL_COMPLETED"))

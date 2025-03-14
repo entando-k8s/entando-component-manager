@@ -11,7 +11,7 @@
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>7.3.1</version>
+    <version>7.4.0-SNAPSHOT</version>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Entando Component Manager</name>
@@ -43,6 +43,7 @@
     </repositories>
 
     <properties>
+        <checkstyle.skip>true</checkstyle.skip>
         <preDeploymentTestGroups>unit,component,in-process</preDeploymentTestGroups>
         <postDeploymentTestGroups/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

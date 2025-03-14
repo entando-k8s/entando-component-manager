@@ -3,12 +3,8 @@ package org.entando.kubernetes.validator;
 import static org.entando.kubernetes.validator.ValidationFunctions.validateFQDN;
 import static org.entando.kubernetes.validator.ValidationFunctions.validateURL;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.kubernetes.config.tenant.TenantConfigDTO;
@@ -59,7 +55,7 @@ public class TenantValidator {
 
                     if (isDuplicated) {
                         getErrorListForTenant(cfg.getTenantCode())
-                                .add("tenant with FQDNs' " + cfg.getFqdns() + "' is using the same tenant id (" + cfg.getTenantCode() + ")");
+                                .add("tenant with the couple FQDNs: '" + cfg.getFqdns() + "' - context: '" + cfg.getContext() + "' is using the same tenant id (" + cfg.getTenantCode() + ")");
                     }
                     return !isDuplicated;
                 })
@@ -70,7 +66,7 @@ public class TenantValidator {
         if (StringUtils.isNotBlank(fqdnsValueString)) {
             String[] fqdns = fqdnsValueString.split(",");
             Arrays.asList(fqdns).forEach(fqdn -> {
-                if (!validateFQDN(fqdn)) {
+                if (!Objects.equals(fqdn, "localhost") && !validateFQDN(fqdn)) {
                     getErrorListForTenant(tenantCode).add("fqdns: invalid value detected '" + fqdn + "'");
                 }
             });
@@ -78,19 +74,21 @@ public class TenantValidator {
     }
 
     private void validateFqdnsUniqueness(List<TenantConfigDTO> tenants) {
-        final Map<String, String> fqdns = new HashMap<>();
+        final Map<String, String> tenantsMap = new HashMap<>();
 
         tenants.forEach(config -> {
             final String tenantCode = config.getTenantCode();
             final String fqdnsStr = config.getFqdns();
+            final String context = config.getContext();
             if (StringUtils.isNotBlank(fqdnsStr)) {
-                String[] fqdnsarr = fqdnsStr.split(",");
+                String[] fqdnsArray = fqdnsStr.split(",");
 
-                Arrays.asList(fqdnsarr).forEach(fqdn -> {
-                    if (!fqdns.containsKey(fqdn)) {
-                        fqdns.put(fqdn, tenantCode);
+                Arrays.asList(fqdnsArray).forEach(fqdn -> {
+                    String tenantKey = fqdn + (StringUtils.isBlank(context) ? "" : ("|" + context));
+                    if (!tenantsMap.containsKey(tenantKey)) {
+                        tenantsMap.put(tenantKey, tenantCode);
                     } else {
-                        getErrorListForTenant(tenantCode).add("fqdns: '" + fqdn + "' already used by tenant '" + fqdns.get(fqdn) + "'");
+                        getErrorListForTenant(tenantCode).add("The couple fqdns: '" + fqdn + "' - context: '" + context + "' already used by tenant '" + tenantsMap.get(tenantKey) + "'");
                     }
                 });
             }

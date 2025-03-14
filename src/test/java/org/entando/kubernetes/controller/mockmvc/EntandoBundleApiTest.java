@@ -34,6 +34,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -81,7 +82,8 @@ public class EntandoBundleApiTest {
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 
-        mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/components")
+                        .header(HttpHeaders.HOST, "example.com").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
                 .andExpect(jsonPath("payload[0]").isMap())
@@ -107,6 +109,7 @@ public class EntandoBundleApiTest {
         kc.addInMemoryBundle(getTestBundle());
 
         mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=widget")
+                        .header(HttpHeaders.HOST, "example.com")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
@@ -126,6 +129,7 @@ public class EntandoBundleApiTest {
         verify(k8sServiceClient, times(1)).getBundlesInObservedNamespaces(any());
 
         mockMvc.perform(get("/components?filters[0].attribute=type&filters[0].operator=eq&filters[0].value=page")
+                .header(HttpHeaders.HOST, "example.com")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
@@ -139,7 +143,8 @@ public class EntandoBundleApiTest {
         bundle.getMetadata().setNamespace("my-custom-namespace");
         kc.addInMemoryBundle(bundle);
 
-        mockMvc.perform(get("/components").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/components")
+                        .header(HttpHeaders.HOST, "example.com").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(0)));
 
@@ -149,7 +154,8 @@ public class EntandoBundleApiTest {
 
     @Test
     public void shouldReturnBadRequestForNotInstalledBundles() throws Exception {
-        mockMvc.perform(get("/components/temp/usage").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/components/temp/usage")
+                        .header(HttpHeaders.HOST, "example.com").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
@@ -160,6 +166,7 @@ public class EntandoBundleApiTest {
         kc.addInMemoryBundle(getTestBundle());
 
         mockMvc.perform(get("/components")
+                        .header(HttpHeaders.HOST, "example.com")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("payload", hasSize(1)))
