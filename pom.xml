@@ -55,6 +55,10 @@
         <!-- not working -->
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <testcontainers.version>1.17.2</testcontainers.version>
+        <logback.version>1.2.13</logback.version>
+        <okio.version>1.17.6</okio.version>
+        <guava.version>32.0.0-jre</guava.version>
+        <h2.version>2.3.232</h2.version>
     </properties>
 
     <dependencies>
@@ -250,6 +254,26 @@
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-server-mock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+            <version>${okio.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
         <dependency>
