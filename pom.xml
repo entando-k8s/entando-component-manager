@@ -48,7 +48,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
         <entando-k8s-custom-model.version>7.3.0-ENG-5269-PR-84</entando-k8s-custom-model.version>
-        <liquibase.version>4.3.1</liquibase.version>
+        <liquibase.version>4.27.0</liquibase.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <fabric8.version>5.3.2</fabric8.version>
@@ -56,6 +56,12 @@
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <testcontainers.version>1.17.2</testcontainers.version>
         <logback.version>1.2.13</logback.version>
+        <snakeyaml.version>2.4</snakeyaml.version>
+        <jackson.version>2.16.0</jackson.version>
+        <jackson-databind.version>2.16.0</jackson-databind.version>
+        <jackson-dataformat-yaml.version>2.16.0</jackson-dataformat-yaml.version>
+        <jackson-datatype.version>2.16.0</jackson-datatype.version>
+        <jackson-annotations.version>2.16.0</jackson-annotations.version>
         <okio.version>1.17.6</okio.version>
         <guava.version>32.0.0-jre</guava.version>
         <h2.version>2.3.232</h2.version>
@@ -87,7 +93,33 @@
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson-datatype.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>${jackson-datatype.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson-annotations.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-parameter-names</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -274,6 +306,16 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-cdi</artifactId>
+            <version>${liquibase.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <version>${liquibase.version}</version>
         </dependency>
 
         <dependency>
