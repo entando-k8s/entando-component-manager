@@ -36,7 +36,7 @@ public class PageConfigurationInstallable extends Installable<PageDescriptor> {
             //Configure Page Widgets
             Optional.ofNullable(representation.getWidgets())
                     .orElse(new ArrayList<>())
-                    .parallelStream()
+                    .stream()
                     .forEach(w -> engineService.configurePageWidget(representation, w));
 
             engineService.setPageStatus(representation.getCode(), representation.getStatus());
