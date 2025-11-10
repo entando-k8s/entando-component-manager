@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -22,6 +23,8 @@ import org.entando.kubernetes.model.debundle.EntandoDeBundle;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleBuilder;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpec;
 import org.entando.kubernetes.model.debundle.EntandoDeBundleSpecBuilder;
+import org.entando.kubernetes.repository.InstalledEntandoBundleRepository;
+import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
 import org.entando.kubernetes.utils.TenantSecurityKeycloakMockServerJunitExt;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,9 +36,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -47,7 +52,8 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles({"test"})
 @Tag("component")
 @WithMockUser
-@ExtendWith({TenantContextJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
+@DirtiesContext
+@ExtendWith({TenantContextJunitExt.class, TenantContextForMethodJunitExt.class, TenantSecurityKeycloakMockServerJunitExt.class})
 public class EntandoBundleApiTest {
 
     @Autowired
@@ -61,9 +67,14 @@ public class EntandoBundleApiTest {
     @SpyBean
     private K8SServiceClient k8sServiceClient;
 
+    @MockBean
+    private InstalledEntandoBundleRepository installedComponentRepo;
+
     @BeforeEach
     public void setup() {
         ((K8SServiceClientTestDouble) k8sServiceClient).cleanInMemoryDatabases();
+        clearInvocations(k8sServiceClient);
+        installedComponentRepo.deleteAll();
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .apply(springSecurity())
@@ -102,7 +113,6 @@ public class EntandoBundleApiTest {
 
     @Test
     public void apiShouldSupportFiltering() throws Exception {
-
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 
@@ -155,7 +165,6 @@ public class EntandoBundleApiTest {
 
     @Test
     void apiShouldGetTheLatestVersionFromPropertySpecDistTagsLatest() throws Exception {
-
         K8SServiceClientTestDouble kc = (K8SServiceClientTestDouble) k8sServiceClient;
         kc.addInMemoryBundle(getTestBundle());
 
