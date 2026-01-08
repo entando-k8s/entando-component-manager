@@ -264,7 +264,11 @@ public class PluginProcessor extends BaseComponentProcessor<PluginDescriptor> im
         final String customEndpoint = pluginDescriptor.isVersionEqualOrGreaterThan(DescriptorVersion.V5)
                 ? BundleUtilities.composeIngressPathFromIngressPathProperty(pluginDescriptor)
                 : null;
-        final String tenantCode = TenantContextHolder.getCurrentTenantCode();
+        // In virtual context mode, use PRIMARY tenant so operator adds path to primary ingress (shared FQDN)
+        final String virtualContext = TenantContextHolder.getCurrentVirtualContext();
+        final String tenantCode = (virtualContext != null && !virtualContext.isEmpty())
+                ? EntandoMultiTenancy.PRIMARY_TENANT
+                : TenantContextHolder.getCurrentTenantCode();
 
         pluginDescriptor.setDescriptorMetadata(
                 bundleId,
