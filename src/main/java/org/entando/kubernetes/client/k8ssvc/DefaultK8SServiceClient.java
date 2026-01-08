@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
+import org.entando.kubernetes.model.common.EntandoMultiTenancy;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
 import org.entando.kubernetes.model.bundle.ComponentType;
@@ -414,7 +415,14 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         if (plugin.getSpec().getIngressPath() == null) {
             return false;
         }
-        Ingress appIngress = getAppIngress(appName);
+
+        String virtualContext = TenantContextHolder.getCurrentVirtualContext();
+        // When virtual context is enabled, use PRIMARY ingress (shared FQDN) instead of tenant-specific ingress
+        String tenantCodeForIngress = (virtualContext != null && !virtualContext.isEmpty())
+                ? EntandoMultiTenancy.PRIMARY_TENANT
+                : TenantContextHolder.getCurrentTenantCode();
+
+        Ingress appIngress = getAppIngressForTenant(appName, tenantCodeForIngress);
         IngressRule ingressRule = appIngress.getSpec().getRules().stream().findFirst().<RuntimeException>orElseThrow(
                 () -> {
                     throw new K8SServiceClientException(
@@ -422,9 +430,13 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 });
 
         String appHost = ingressRule.getHost();
-        UriComponents pluginHealthCheck = UriComponentsBuilder.newInstance()
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.newInstance()
                 .scheme(appIngress.getSpec().getTls().isEmpty() ? "http" : "https")
-                .host(appHost)
+                .host(appHost);
+        if (virtualContext != null && !virtualContext.isEmpty()) {
+            uriBuilder.path("/" + virtualContext);
+        }
+        UriComponents pluginHealthCheck = uriBuilder
                 .path(plugin.getSpec().getIngressPath())
                 .path(plugin.getSpec().getHealthCheckPath())
                 .build();
@@ -568,12 +580,16 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     }
 
     private Ingress getAppIngress(String appName) {
+        return getAppIngressForTenant(appName, TenantContextHolder.getCurrentTenantCode());
+    }
+
+    private Ingress getAppIngressForTenant(String appName, String tenantCode) {
         Link endpoint = traverson.follow(APPS_ENDPOINT)
                 .follow(Hop.rel("app").withParameter("name", appName))
                 .follow(Hop.rel("app-ingress")).asLink();
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(endpoint.toUri())
-                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, TenantContextHolder.getCurrentTenantCode())
+                .queryParam(TENANT_CODE_REQUEST_PARAM_NAME, tenantCode)
                 .build();
 
         RequestEntity<?> request = RequestEntity
