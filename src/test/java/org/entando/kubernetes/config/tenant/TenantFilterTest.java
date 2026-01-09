@@ -4,7 +4,7 @@ import static org.mockito.Mockito.times;
 
 import java.io.IOException;
 import java.util.Collections;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

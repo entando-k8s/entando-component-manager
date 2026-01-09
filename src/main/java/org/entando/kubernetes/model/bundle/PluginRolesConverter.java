@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import org.apache.commons.lang3.StringUtils;
 
 public class PluginRolesConverter implements AttributeConverter<Set<String>, String> {
