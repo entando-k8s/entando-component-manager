@@ -88,7 +88,7 @@ public class DefaultHubClient implements HubClient {
             ResponseEntity<? extends PagedContent> response = restTemplate.exchange(endpointUrl, HttpMethod.GET, entity, typedContent);
             payload = ProxiedPayload.<T>builder()
                     .payload((T) response.getBody())
-                    .status(response.getStatusCode())
+                    .status((HttpStatus) response.getStatusCode())
                     .build();
         } catch (RuntimeException t) {
             log.error("error performing paged GET", t);

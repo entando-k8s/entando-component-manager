@@ -27,7 +27,7 @@ class TenantFilterTest {
         try (MockedStatic<TenantContextHolder> tenantContextHolder = Mockito
                 .mockStatic(TenantContextHolder.class, Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS))) {
             (new TenantFilter(Collections.emptyList())).doFilterInternal(request, response, filterChain);
-            tenantContextHolder.verify(times(1), () -> TenantContextHolder.setCurrentTenantCode("tenant2"));
+            tenantContextHolder.verify( () -> TenantContextHolder.setCurrentTenantCode("tenant2"), times(1));
         }
 
     }

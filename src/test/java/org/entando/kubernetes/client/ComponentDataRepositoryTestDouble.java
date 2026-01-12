@@ -7,9 +7,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.entando.kubernetes.model.bundle.ComponentType;
 import org.entando.kubernetes.model.job.ComponentDataEntity;
 import org.entando.kubernetes.repository.ComponentDataRepository;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery;
 
 @Profile("mockjpa")
 public class ComponentDataRepositoryTestDouble implements ComponentDataRepository {
@@ -96,6 +99,11 @@ public class ComponentDataRepositoryTestDouble implements ComponentDataRepositor
     @Override
     public <S extends ComponentDataEntity> boolean exists(Example<S> example) {
         return false;
+    }
+
+    @Override
+    public <S extends ComponentDataEntity, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+        throw new NotImplementedException();
     }
 
     @Override
@@ -203,5 +211,10 @@ public class ComponentDataRepositoryTestDouble implements ComponentDataRepositor
     @Override
     public ComponentDataEntity getById(UUID uuid) {
         return null;
+    }
+
+    @Override
+    public ComponentDataEntity getReferenceById(UUID uuid) {
+        throw new NotImplementedException();
     }
 }

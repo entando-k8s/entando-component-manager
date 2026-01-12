@@ -8,9 +8,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
 import org.entando.kubernetes.repository.EntandoBundleJobRepository;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery;
 
 @Profile("mockjpa")
 public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRepository {
@@ -255,6 +258,11 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     }
 
     @Override
+    public EntandoBundleJobEntity getReferenceById(UUID uuid) {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public <S extends EntandoBundleJobEntity> Optional<S> findOne(Example<S> example) {
         return Optional.empty();
     }
@@ -262,6 +270,11 @@ public class EntandoBundleJobRepositoryTestDouble implements EntandoBundleJobRep
     @Override
     public <S extends EntandoBundleJobEntity> boolean exists(Example<S> example) {
         return false;
+    }
+
+    @Override
+    public <S extends EntandoBundleJobEntity, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+        throw new NotImplementedException();
     }
 
 }

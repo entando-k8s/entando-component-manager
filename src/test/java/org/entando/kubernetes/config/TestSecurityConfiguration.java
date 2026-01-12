@@ -1,6 +1,7 @@
 package org.entando.kubernetes.config;
 
 import static org.mockito.Mockito.mock;
+import static org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_BASIC;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,6 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.client.web.AuthenticatedPrincipalOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 @TestConfiguration
@@ -36,8 +36,8 @@ public class TestSecurityConfiguration {
         metadata.put("end_session_endpoint", "https://jhipster.org/logout");
 
         return ClientRegistration.withRegistrationId("oidc")
-                .redirectUriTemplate("{baseUrl}/{action}/oauth2/code/{registrationId}")
-                .clientAuthenticationMethod(ClientAuthenticationMethod.BASIC)
+                .redirectUri("{baseUrl}/{action}/oauth2/code/{registrationId}")
+                .clientAuthenticationMethod(CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .scope("read:user")
                 .authorizationUri("https://jhipster.org/login/oauth/authorize")

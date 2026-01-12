@@ -38,7 +38,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.entando.kubernetes.model.bundle.BundleComponentTypesConverter;
 import org.entando.kubernetes.model.web.SystemConstants;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.validation.annotation.Validated;
 
 @Data
@@ -52,7 +53,7 @@ import org.springframework.validation.annotation.Validated;
 public class EntandoBundleEntity {
 
     @Id
-    @Type(type = "uuid-char")
+    @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
     @NotNull
