@@ -20,10 +20,11 @@ public class FromFileTokenInterceptor implements ClientHttpRequestInterceptor {
     private final Path tokenFilePath;
     private volatile String cachedToken;
     private volatile Instant lastReadTime = Instant.MIN;
-    private static final Duration CACHE_TTL = Duration.ofSeconds(60);
+    private final Duration cacheTtl;
 
-    public FromFileTokenInterceptor(Path tokenFilePath) {
+    public FromFileTokenInterceptor(Path tokenFilePath, long cacheTtlSeconds) {
         this.tokenFilePath = tokenFilePath;
+        this.cacheTtl = Duration.ofSeconds(cacheTtlSeconds);
     }
 
     @Override
@@ -62,7 +63,7 @@ public class FromFileTokenInterceptor implements ClientHttpRequestInterceptor {
     }
 
     private boolean isCacheExpired() {
-        return cachedToken == null || Instant.now().isAfter(lastReadTime.plus(CACHE_TTL));
+        return cachedToken == null || Instant.now().isAfter(lastReadTime.plus(cacheTtl));
     }
 
     private void reloadToken() {

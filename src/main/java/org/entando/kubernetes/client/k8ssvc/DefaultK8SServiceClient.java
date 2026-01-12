@@ -71,13 +71,15 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
     private Path tokenFilePath;
+    private long cacheTtlSeconds;
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
     private final String entandoAppName;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, boolean normalizeK8sServiceUrl) {
+    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, long cacheTtlSeconds, boolean normalizeK8sServiceUrl) {
         this.tokenFilePath = Paths.get(tokenFilePath);
+        this.cacheTtlSeconds = cacheTtlSeconds;
         this.restTemplate = newRestTemplate();
 
         if (normalizeK8sServiceUrl && !k8sServiceUrl.endsWith("/")) {
@@ -590,7 +592,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private RestTemplate newRestTemplate() {
         RestTemplate template = new RestTemplate();
         template.setRequestFactory(getRequestFactory());
-        template.getInterceptors().add(new FromFileTokenInterceptor(this.tokenFilePath));
+        template.getInterceptors().add(new FromFileTokenInterceptor(this.tokenFilePath, this.cacheTtlSeconds));
         return setMessageConverters(template);
     }
 
