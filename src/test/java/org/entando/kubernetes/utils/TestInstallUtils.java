@@ -77,6 +77,7 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestClientResponseException;
@@ -238,7 +239,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         stubPermissionRequestReturningSuperuser();
@@ -267,7 +268,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         stubPermissionRequestReturningSuperuser();
@@ -300,7 +301,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         stubPermissionRequestReturningSuperuser();
@@ -828,7 +829,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
@@ -856,7 +857,7 @@ public class TestInstallUtils {
         setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         stubPermissionRequestReturningSuperuser();
@@ -889,7 +890,7 @@ public class TestInstallUtils {
         setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         stubPermissionRequestReturningSuperuser();
@@ -957,7 +958,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 500, "Error", null, null, null))
@@ -1026,7 +1027,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
 
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         doThrow(new RestClientResponseException("error", 413, "Error", null, null, null))
@@ -1056,7 +1057,7 @@ public class TestInstallUtils {
         setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
 
         doThrow(new RestClientResponseException("error", 500, "error", null, null, null)).when(coreClient)
                 .deleteFolder(any());
@@ -1111,7 +1112,7 @@ public class TestInstallUtils {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
 
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createPage(any());
         doSleep(Duration.ofMillis(delayDistribution.sampleMillis())).when(coreClient).createPageTemplate(any());
@@ -1150,7 +1151,7 @@ public class TestInstallUtils {
         setupComponentUsageToAllowUninstall(coreClient);
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
 
         doSleep(Duration.ofSeconds(2L),
                 EntandoCoreComponentDeleteResponse.builder().status(
@@ -1176,20 +1177,34 @@ public class TestInstallUtils {
     /**
      * inject the de app url pointing the wiremock server port.
      */
+//    @SneakyThrows
+//    public static void injectEntandoUrlInto(AuthorizationChecker authorizationChecker, int serverPort) {
+//        // get entandoUrl field
+//        Field f = authorizationChecker.getClass().getDeclaredField("entandoUrl");
+//        // set accessible
+//        f.setAccessible(true);
+//        // remove final
+//        Field modifiersField = Field.class.getDeclaredField("modifiers");
+//        modifiersField.setAccessible(true);
+//        modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
+//        // compose and set new server port url
+//        final URL entandoUrl = new URL((String) f.get(authorizationChecker));
+//        URL finalUrl = new URL(entandoUrl.getProtocol(), entandoUrl.getHost(), serverPort, entandoUrl.getFile());
+//        f.set(authorizationChecker, finalUrl.toString());
+//    }
+
     @SneakyThrows
     public static void injectEntandoUrlInto(AuthorizationChecker authorizationChecker, int serverPort) {
-        // get entandoUrl field
-        Field f = authorizationChecker.getClass().getDeclaredField("entandoUrl");
-        // set accessible
-        f.setAccessible(true);
-        // remove final
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
-        // compose and set new server port url
-        final URL entandoUrl = new URL((String) f.get(authorizationChecker));
+        // 1. Read the current value using Spring's utility
+        String currentUrlString = (String) ReflectionTestUtils.getField(authorizationChecker, "entandoUrl");
+
+        // 2. Compose the new URL
+        assert currentUrlString != null;
+        URL entandoUrl = new URL(currentUrlString);
         URL finalUrl = new URL(entandoUrl.getProtocol(), entandoUrl.getHost(), serverPort, entandoUrl.getFile());
-        f.set(authorizationChecker, finalUrl.toString());
+
+        // 3. Write the new value using Spring's utility (handles private/final automatically)
+        ReflectionTestUtils.setField(authorizationChecker, "entandoUrl", finalUrl.toString());
     }
 
     public static void stubPermissionRequestReturningSuperuser() {

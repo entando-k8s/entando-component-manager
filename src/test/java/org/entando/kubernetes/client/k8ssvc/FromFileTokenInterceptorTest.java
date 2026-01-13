@@ -121,9 +121,8 @@ class FromFileTokenInterceptorTest {
     @Test
     void shouldThrowExceptionWhenTokenFileDoesNotExist() {
         Path nonExistentPath = Paths.get("non-existent-token-file");
-        FromFileTokenInterceptor badInterceptor = new FromFileTokenInterceptor(nonExistentPath, cacheTtlSeconds);
 
-        assertThatThrownBy(() -> badInterceptor.intercept(mockRequest, new byte[0], mockExecution))
+        assertThatThrownBy(() -> new FromFileTokenInterceptor(nonExistentPath, cacheTtlSeconds))
                 .isInstanceOf(EntandoComponentManagerException.class)
                 .hasMessageContaining("Issues retrieving service account token");
     }

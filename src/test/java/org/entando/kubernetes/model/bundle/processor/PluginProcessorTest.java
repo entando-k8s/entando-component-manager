@@ -11,9 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
@@ -39,9 +37,7 @@ import org.entando.kubernetes.stubhelper.BundleInfoStubHelper;
 import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.PluginStubHelper;
 import org.entando.kubernetes.utils.TenantContextForMethodJunitExt;
-import org.entando.kubernetes.utils.TestUtils;
 import org.entando.kubernetes.validator.descriptor.PluginDescriptorValidator;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -51,12 +47,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testcontainers.shaded.org.apache.commons.lang3.ObjectUtils;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 @Tag("unit")
-@ExtendWith(TenantContextForMethodJunitExt.class)
+@ExtendWith({TenantContextForMethodJunitExt.class, SystemStubsExtension.class})
 class PluginProcessorTest extends BaseProcessorTest {
 
     private final String pluginV2Filename = "plugins/pluginV2.yaml";
+
+    @SystemStub
+    private EnvironmentVariables environmentVariables;
 
     @Mock
     private KubernetesService kubernetesService;
@@ -73,17 +75,11 @@ class PluginProcessorTest extends BaseProcessorTest {
 
     private YAMLMapper yamlMapper = new YAMLMapper();
 
-    private static final Map<String, String> originalEnv = System.getenv();
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
-    }
-
-    @AfterAll
-    public static void reset() throws Exception {
-        TestUtils.setEnv(new HashMap<>(originalEnv));
     }
 
     @Test
@@ -376,11 +372,10 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Test
     void shouldAddTheCmEndpointEnvVarHttps() throws Exception {
 
-        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
-                "http://localhost:8899/auth/realms/entando",
-                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
-                "ENTANDO_APP_HOST_NAME", "www.myentando.com",
-                "ENTANDO_APP_USE_TLS", "true"));
+        environmentVariables.set("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI", "http://localhost:8899/auth/realms/entando");
+        environmentVariables.set("SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange");
+        environmentVariables.set("ENTANDO_APP_HOST_NAME", "www.myentando.com");
+        environmentVariables.set("ENTANDO_APP_USE_TLS", "true");
 
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
 
@@ -397,11 +392,10 @@ class PluginProcessorTest extends BaseProcessorTest {
     @Test
     void shouldAddTheCmEndpointEnvVarHttp() throws Exception {
 
-        TestUtils.setEnv(Map.of("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI",
-                "http://localhost:8899/auth/realms/entando",
-                "SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange",
-                "ENTANDO_APP_HOST_NAME", "www.myentando.com",
-                "ENTANDO_APP_USE_TLS", "false"));
+        environmentVariables.set("SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI", "http://localhost:8899/auth/realms/entando");
+        environmentVariables.set("SERVER_SERVLET_CONTEXT_PATH", "/digital-exchange");
+        environmentVariables.set("ENTANDO_APP_HOST_NAME", "www.myentando.com");
+        environmentVariables.set("ENTANDO_APP_USE_TLS", "false");
 
         processor = new PluginProcessor(kubernetesService, pluginDescriptorValidator, pluginDataRepository, craneCommand);
 

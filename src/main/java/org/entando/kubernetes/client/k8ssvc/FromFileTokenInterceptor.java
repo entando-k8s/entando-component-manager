@@ -25,6 +25,7 @@ public class FromFileTokenInterceptor implements ClientHttpRequestInterceptor {
     public FromFileTokenInterceptor(Path tokenFilePath, long cacheTtlSeconds) {
         this.tokenFilePath = tokenFilePath;
         this.cacheTtl = Duration.ofSeconds(cacheTtlSeconds);
+        getToken();
     }
 
     @Override

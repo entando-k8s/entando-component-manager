@@ -53,7 +53,7 @@ public interface EntandoBundleResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<EntandoBundle>> getBundleByRestNamedId(
-            @PathVariable @Parameter(description = "Formatted as: `repoUrl=<BASE64_URL>`",
+            @PathVariable("id") @Parameter(description = "Formatted as: `repoUrl=<BASE64_URL>`",
                     schema = @Schema(implementation = String.class)) RestNamedId restNamedId);
 
     @Operation(description = "Deploy to Kubernetes a new EntandoDeBundle")
@@ -68,7 +68,7 @@ public interface EntandoBundleResource {
     @DeleteMapping(value = "/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SimpleRestResponse<DeletedObjectResponse>> undeployBundle(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @PathVariable String component);
+            @PathVariable("component") String component);
 
     @Operation(description = "Return bundle components in use")
     @ApiResponse(responseCode = "200", description = "OK")
@@ -85,5 +85,5 @@ public interface EntandoBundleResource {
     @Operation(description = "Return the status of a single bundle")
     @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping(value = "/status/{component}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable String component);
+    ResponseEntity<SimpleRestResponse<BundlesStatusItem>> getSingleBundleStatusByName(@PathVariable("component") String component);
 }

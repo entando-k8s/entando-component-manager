@@ -6,6 +6,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@Deprecated
 public class TestUtils {
 
     /**

@@ -6,12 +6,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-spring-boot-parent</artifactId>
-        <version>7.5.0</version>
+        <version>7.5.0-ESB-808-PR58</version>
     </parent>
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>7.5.0</version>
+    <version>7.5.0-SNAPSHOT</version>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Entando Component Manager</name>
@@ -51,21 +51,16 @@
         <liquibase.version>4.27.0</liquibase.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-<!--        <fabric8.version>5.3.2</fabric8.version>-->
-        <!-- not working -->
-<!--        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>-->
         <testcontainers.version>1.17.2</testcontainers.version>
         <logback.version>1.5.18</logback.version>
         <snakeyaml.version>2.4</snakeyaml.version>
         <jackson.version>2.16.2</jackson.version>
-<!--        <jackson-databind.version>2.16.0</jackson-databind.version>-->
-<!--        <jackson-dataformat-yaml.version>2.16.0</jackson-dataformat-yaml.version>-->
         <jackson-datatype.version>2.16.2</jackson-datatype.version>
         <jackson-annotations.version>2.16.2</jackson-annotations.version>
         <okio.version>3.6.0</okio.version>
         <guava.version>33.4.8-jre</guava.version>
         <h2.version>2.3.232</h2.version>
-        <springdoc-openapi.version>2.7.0</springdoc-openapi.version>
+        <webcompere-system-stubs.version>2.0.2</webcompere-system-stubs.version>
     </properties>
 
     <dependencies>
@@ -149,7 +144,6 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>${springdoc-openapi.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -258,10 +252,6 @@
             <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
         </dependency>
@@ -343,6 +333,13 @@
             <artifactId>httpclient5</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>uk.org.webcompere</groupId>
+            <artifactId>system-stubs-jupiter</artifactId>
+            <version>${webcompere-system-stubs.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -361,7 +358,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.8.2</version>
+                <version>${maven-deploy-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

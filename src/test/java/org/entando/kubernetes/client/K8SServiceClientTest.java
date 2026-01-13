@@ -48,7 +48,6 @@ import org.entando.kubernetes.stubhelper.BundleStubHelper;
 import org.entando.kubernetes.stubhelper.ReportableStubHelper;
 import org.entando.kubernetes.utils.EntandoK8SServiceMockServer;
 import org.entando.kubernetes.utils.TenantContextJunitExt;
-import org.entando.kubernetes.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,18 +77,17 @@ public class K8SServiceClientTest {
     public void setup() throws Exception {
         //needed by DefaultK8SServiceClient constructor
         originalEnv = System.getenv();
-        TestUtils.setEnv(Map.of(DefaultK8SServiceClient.ENTANDO_APP_NAME, "my-app"));
-
         mockServer = new EntandoK8SServiceMockServer();
-        client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, cacheTtlSeconds, true);
+        client = new DefaultK8SServiceClient(mockServer.getApiRoot(), SERVICE_ACCOUNT_TOKEN_FILEPATH, cacheTtlSeconds, true, "my-app");
         client.setRestTemplate(noOAuthRestTemplate());
         client.setNoAuthRestTemplate(noOAuthRestTemplate());
     }
 
     @AfterEach
     public void reset() throws Exception {
-        mockServer.tearDown();
-        TestUtils.setEnv(new HashMap<>(originalEnv));
+        if (mockServer != null) {
+            mockServer.tearDown();
+        }
     }
 
     @Test

@@ -64,14 +64,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -102,7 +102,7 @@ class EntandoBundleResourceControllerIntegrationTest {
     @Autowired
     private WebApplicationContext context;
 
-    @SpyBean
+    @MockitoSpyBean
     private K8SServiceClient k8sServiceClient;
     @Autowired
     private EntandoBundleService bundleService;
@@ -110,7 +110,7 @@ class EntandoBundleResourceControllerIntegrationTest {
     private InstalledEntandoBundleRepository bundleEntityRepository;
     @Autowired
     private EntandoBundleJobRepository bundleJobRepository;
-    @MockBean
+    @MockitoBean
     private AuthorizationChecker authorizationChecker;
 
     final String deployedRepoUrl = "http://www.entando.bundle.git";

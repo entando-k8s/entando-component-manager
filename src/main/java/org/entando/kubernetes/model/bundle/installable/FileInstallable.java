@@ -40,7 +40,7 @@ public class FileInstallable extends Installable<FileDescriptor> {
 
     @Override
     public CompletableFuture<Void> uninstallFromEcr() {
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
             //Do nothing since Directories and Assets are uninstalled in a different way
         });
     }

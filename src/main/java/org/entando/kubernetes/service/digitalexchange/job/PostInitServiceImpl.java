@@ -174,14 +174,14 @@ public class PostInitServiceImpl implements PostInitService, InitializingBean {
                 .sorted(compareByPriorityAndThenName)
                 .collect(Collectors.toList());
 
-        // list ALL bundles installed (for update) or not
-        Map<String, EntandoBundle> bundlesInstalledOrDeployed = bundleService.listBundles().getBody().stream()
-                .collect(Collectors.toMap(
-                        EntandoBundle::getCode,
-                        Function.identity(),
-                        (item1, item2) -> item1));
-
         try {
+
+            // list ALL bundles installed (for update) or not
+            Map<String, EntandoBundle> bundlesInstalledOrDeployed = bundleService.listBundles().getBody().stream()
+                    .collect(Collectors.toMap(
+                            EntandoBundle::getCode,
+                            Function.identity(),
+                            (item1, item2) -> item1));
 
             for (PostInitItem itemFromConfig : bundleToInstall) {
                 final PostInitItem item = checkActionOrSwitchToDefault(itemFromConfig);

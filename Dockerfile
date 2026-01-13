@@ -1,4 +1,4 @@
-FROM entando/entando-java-base:v11.0.4-ENG-5550-PR-18-KB-release-2F-11.0
+FROM entando/entando-java-base:v17.0.10
 ARG VERSION
 ARG TARGETPLATFORM
 ### Required OpenShift Labels
@@ -6,7 +6,7 @@ LABEL name="Entando Component Manager" \
       maintainer="dev@entando.com" \
       vendor="Entando Inc." \
       version="v{VERSION}" \
-      release="7.2" \
+      release="7.5" \
       summary="Entando Component Manager for Entando Component Repository" \
       description="The component manager provides apis and infrastructure to support the deployment and development of bundles to an Entando Application."
 

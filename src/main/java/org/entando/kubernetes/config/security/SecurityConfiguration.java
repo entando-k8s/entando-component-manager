@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.client.request.RestTemplateHeaderTenantCodeInterceptor;
 import org.entando.kubernetes.config.tenant.TenantFilter;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,9 +26,9 @@ import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+@Configuration
 @EnableWebSecurity
-//@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@EnableMethodSecurity(securedEnabled = true)
 @Import(SecurityProblemSupport.class)
 @Slf4j
 @RequiredArgsConstructor
