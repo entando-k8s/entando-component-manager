@@ -66,10 +66,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -136,7 +136,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
      * that handles the OAuth2 Client Credentials grant using Spring Security 6 components.
      */
     private RestTemplate buildRestTemplate(TenantConfigDTO config) {
-        // 1. Build the ClientRegistration (New replacement for ClientCredentialsResourceDetails)
+        //Build the ClientRegistration (New replacement for ClientCredentialsResourceDetails)
         ClientRegistration registration = ClientRegistration.withRegistrationId(config.getTenantCode())
                 .clientId(config.getDeKcClientId())
                 .clientSecret(config.getDeKcClientSecret())
@@ -144,9 +144,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .build();
 
-        // 2. Setup the Manager infrastructure
-        // Since we are creating a specific template per tenant, we create a mini-context for each.
-        // In a larger app, you might share the repository, but this isolates the scope perfectly for your Map approach.
+        //Create in memory client service for each teanant
         ClientRegistrationRepository clientRegistrationRepository = new InMemoryClientRegistrationRepository(registration);
         InMemoryOAuth2AuthorizedClientService authorizedClientService =
                 new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
@@ -160,7 +158,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                         .build();
         authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
 
-        // 3. Create the Interceptor that injects the Bearer Token
+        //Create the Interceptor that injects the Bearer Token
         ClientHttpRequestInterceptor oauth2Interceptor = (request, body, execution) -> {
             OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
                     .withClientRegistrationId(config.getTenantCode())
@@ -176,7 +174,6 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
             return execution.execute(request, body);
         };
 
-        // 4. Configure the standard RestTemplate
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getInterceptors().add(oauth2Interceptor);
         restTemplate.getInterceptors().add(new RestTemplateHeaderTenantCodeInterceptor());

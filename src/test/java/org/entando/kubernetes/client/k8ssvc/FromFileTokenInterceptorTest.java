@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-
 import org.entando.kubernetes.exception.EntandoComponentManagerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -67,7 +66,6 @@ class FromFileTokenInterceptorTest {
     void shouldRetryRequestOn401WithRefreshedToken(@TempDir Path tempDir) throws IOException {
         Path tokenFile = tempDir.resolve("token");
         String initialToken = "initial-token";
-        String refreshedToken = "refreshed-token";
         Files.writeString(tokenFile, initialToken, StandardOpenOption.CREATE);
 
         FromFileTokenInterceptor tempInterceptor = new FromFileTokenInterceptor(tokenFile, 1);
@@ -81,6 +79,7 @@ class FromFileTokenInterceptorTest {
         ClientHttpResponse successResponse = mock(ClientHttpResponse.class);
         when(successResponse.getStatusCode()).thenReturn(HttpStatus.OK);
 
+        String refreshedToken = "refreshed-token";
         // First call returns 401, second call (after refresh) returns 200
         when(mockExecution.execute(eq(request), any()))
                 .thenAnswer(invocation -> {
@@ -144,7 +143,6 @@ class FromFileTokenInterceptorTest {
         String tokenWithWhitespace = "  my-token-value  \n";
         Files.writeString(tokenFile, tokenWithWhitespace, StandardOpenOption.CREATE);
 
-        FromFileTokenInterceptor tempInterceptor = new FromFileTokenInterceptor(tokenFile, cacheTtlSeconds);
         HttpHeaders headers = new HttpHeaders();
         HttpRequest request = mock(HttpRequest.class);
         when(request.getHeaders()).thenReturn(headers);
@@ -152,6 +150,7 @@ class FromFileTokenInterceptorTest {
         when(mockExecution.execute(eq(request), any())).thenReturn(mockResponse);
         when(mockResponse.getStatusCode()).thenReturn(HttpStatus.OK);
 
+        FromFileTokenInterceptor tempInterceptor = new FromFileTokenInterceptor(tokenFile, cacheTtlSeconds);
         tempInterceptor.intercept(request, new byte[0], mockExecution);
 
         assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isEqualTo("Bearer my-token-value");

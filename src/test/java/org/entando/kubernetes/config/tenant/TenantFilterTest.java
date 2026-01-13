@@ -2,9 +2,9 @@ package org.entando.kubernetes.config.tenant;
 
 import static org.mockito.Mockito.times;
 
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.Collections;
-import jakarta.servlet.ServletException;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class TenantFilterTest {
         try (MockedStatic<TenantContextHolder> tenantContextHolder = Mockito
                 .mockStatic(TenantContextHolder.class, Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS))) {
             (new TenantFilter(Collections.emptyList())).doFilterInternal(request, response, filterChain);
-            tenantContextHolder.verify( () -> TenantContextHolder.setCurrentTenantCode("tenant2"), times(1));
+            tenantContextHolder.verify(() -> TenantContextHolder.setCurrentTenantCode("tenant2"), times(1));
         }
 
     }

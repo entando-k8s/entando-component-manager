@@ -1,7 +1,7 @@
 package org.entando.kubernetes.model.plugin;
 
-import java.util.Map;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.Data;
 import org.springframework.validation.annotation.Validated;
 

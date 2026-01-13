@@ -194,7 +194,7 @@ class PostInitServiceTest {
 
     @Test
     void postInit_errorInputName_ShouldNotInstall() throws Exception {
-//        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
+        //EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
 
         PostInitData data = convertConfigDataToString();
         data.getItems().get(0).setName("%$qw123");

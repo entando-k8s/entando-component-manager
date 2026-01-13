@@ -1172,27 +1172,6 @@ public class TestInstallUtils {
         return JsonPath.read(result.getResponse().getContentAsString(), "$.payload.id");
     }
 
-
-    // FIXME refactor this code in order to overcome the reflection approach. https://www.baeldung.com/spring-dynamicpropertysource
-    /**
-     * inject the de app url pointing the wiremock server port.
-     */
-//    @SneakyThrows
-//    public static void injectEntandoUrlInto(AuthorizationChecker authorizationChecker, int serverPort) {
-//        // get entandoUrl field
-//        Field f = authorizationChecker.getClass().getDeclaredField("entandoUrl");
-//        // set accessible
-//        f.setAccessible(true);
-//        // remove final
-//        Field modifiersField = Field.class.getDeclaredField("modifiers");
-//        modifiersField.setAccessible(true);
-//        modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
-//        // compose and set new server port url
-//        final URL entandoUrl = new URL((String) f.get(authorizationChecker));
-//        URL finalUrl = new URL(entandoUrl.getProtocol(), entandoUrl.getHost(), serverPort, entandoUrl.getFile());
-//        f.set(authorizationChecker, finalUrl.toString());
-//    }
-
     @SneakyThrows
     public static void injectEntandoUrlInto(AuthorizationChecker authorizationChecker, int serverPort) {
         // 1. Read the current value using Spring's utility

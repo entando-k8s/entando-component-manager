@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-
 import org.apache.commons.lang3.NotImplementedException;
 import org.entando.kubernetes.model.job.PluginDataEntity;
 import org.entando.kubernetes.repository.PluginDataRepository;
