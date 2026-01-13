@@ -8,8 +8,8 @@ if ! $SKIP_TESTS; then
   #OPT1+=" -Dmaven.test.failure.ignore=false"
 
   # ~ COVERAGE setup
-  OPT2+="org.jacoco:jacoco-maven-plugin:prepare-agent"
-  OPT2+=" org.jacoco:jacoco-maven-plugin:report"
+  OPT2+="org.jacoco:jacoco-maven-plugin:0.8.12:prepare-agent"
+  OPT2+=" org.jacoco:jacoco-maven-plugin:0.8.12:report"
 fi
 
 OPT3=""
@@ -42,7 +42,7 @@ _mvn_verify() {
     echo "~> Running mvn verify with options: $*"
   fi
 
-  mvn -B verify "$@"
+  mvn -B -q verify "$@"
 }
 
 _mvn_verify $OPT1 $OPT2 $OPT3 \

@@ -43,7 +43,7 @@
     </repositories>
 
     <properties>
-        <preDeploymentTestGroups>unit,component,in-process</preDeploymentTestGroups>
+        <preDeploymentTestGroups>unit,component,in-process,external</preDeploymentTestGroups>
         <postDeploymentTestGroups/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
@@ -61,6 +61,7 @@
         <guava.version>33.4.8-jre</guava.version>
         <h2.version>2.3.232</h2.version>
         <webcompere-system-stubs.version>2.0.2</webcompere-system-stubs.version>
+        <jacoco.version>0.8.12</jacoco.version>
     </properties>
 
     <dependencies>
@@ -374,6 +375,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
