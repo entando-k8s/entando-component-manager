@@ -1152,8 +1152,9 @@ public class TestInstallUtils {
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
+        stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
-        doSleep(Duration.ofSeconds(2L),
+        doSleep(Duration.ofSeconds(4L),
                 EntandoCoreComponentDeleteResponse.builder().status(
                         EntandoCoreComponentDeleteResponseStatus.SUCCESS).build())
                 .when(coreClient).deleteComponents(any());

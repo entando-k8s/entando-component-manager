@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequestMapping(value = "/registries")
+@RequestMapping(value = { "/registries","/registries/"})
 public interface EntandoHubRegistryResource {
 
     @Operation(description = "Returns available Entando Hub registries")

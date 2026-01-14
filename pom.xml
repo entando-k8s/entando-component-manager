@@ -48,7 +48,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
 <!--        <entando-k8s-custom-model.version>7.3.0-fix.2</entando-k8s-custom-model.version>-->
-        <liquibase.version>4.27.0</liquibase.version>
+        <liquibase.version>4.31.1</liquibase.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <testcontainers.version>1.17.2</testcontainers.version>
@@ -298,6 +298,11 @@
             <artifactId>liquibase-cdi</artifactId>
             <version>${liquibase.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -329,12 +334,6 @@
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>uk.org.webcompere</groupId>
             <artifactId>system-stubs-jupiter</artifactId>
