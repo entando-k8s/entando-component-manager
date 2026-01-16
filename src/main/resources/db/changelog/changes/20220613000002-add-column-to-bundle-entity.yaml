@@ -3,6 +3,8 @@ databaseChangeLog:
   - changeSet:
       id: 20220613000001_installed_entando_bundles
       author: l.sportelli@entando.com
+      runInTransaction: false
+      validCheckSum: ANY
       preConditions:
         - onFail: HALT
         - tableExists:
