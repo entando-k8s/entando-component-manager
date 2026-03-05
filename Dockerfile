@@ -15,7 +15,8 @@ ENV PORT=8080 \
     CLASSPATH=/opt/lib \
     USER_NAME=root \
     NSS_WRAPPER_PASSWD=/tmp/passwd \
-    NSS_WRAPPER_GROUP=/tmp/group
+    NSS_WRAPPER_GROUP=/tmp/group \
+    MAX_RAM_PERCENTAGE=40
 
 COPY passwd.template entrypoint.sh /
 
@@ -31,4 +32,4 @@ COPY pom.xml target/lib* /opt/lib/
 COPY target/entando-component-manager.jar /opt/app.jar
 WORKDIR /opt
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["java", "-XX:MaxRAMPercentage=80.0", "-jar", "app.jar"]
+CMD java -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE:-40} -XshowSettings:vm -jar app.jar
