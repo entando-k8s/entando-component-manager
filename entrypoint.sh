@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $# -gt 1 ] && [ x"$1" = x"/bin/sh" ] && [ x"$2" = x"-c" ]; then
+    shift 2
+    eval "set -- $1"
+fi
+
 # $NSS_WRAPPER_PASSWD and $NSS_WRAPPER_GROUP have been set by the Dockerfile
 export USER_ID=$(id -u)
 export GROUP_ID=$(id -g)
