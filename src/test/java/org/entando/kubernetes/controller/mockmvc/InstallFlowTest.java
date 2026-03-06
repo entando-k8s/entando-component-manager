@@ -109,7 +109,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -117,6 +116,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -170,16 +170,16 @@ public class InstallFlowTest {
     @Autowired
     private TenantFilter tenantFilter;
 
-    @MockBean
+    @MockitoBean
     private K8SServiceClient k8SServiceClient;
 
-    @MockBean
+    @MockitoBean
     private EntandoCoreClient coreClient;
 
-    @MockBean
+    @MockitoBean
     private BundleOperationsConcurrencyManager bundleOperationsConcurrencyManager;
 
-    @MockBean
+    @MockitoBean
     private CraneCommand craneCommand;
 
     private InstallFlowAssertionHelper installFlowAssertionHelper;
@@ -695,7 +695,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
 
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
 
@@ -853,7 +853,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
         //        stubFor(WireMock.post(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
 
@@ -884,7 +884,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.get(urlMatching("/k8s/.*")).willReturn(aResponse().withStatus(200)));
 
         TestInstallUtils.stubPermissionRequestReturningSuperuser();
@@ -1000,7 +1000,7 @@ public class InstallFlowTest {
 
         stubFor(WireMock.post(urlEqualTo("/auth/protocol/openid-connect/auth"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                        .withBody("{ \"access_token\": \"iddqd\" }")));
+                        .withBody("{ \"access_token\": \"iddqd\", \"token_type\": \"Bearer\" }")));
         stubFor(WireMock.delete(urlMatching("/entando-app/api/.*")).willReturn(aResponse().withStatus(200)));
         stubFor(WireMock.delete(urlMatching("/entando-app/api/widgets/.*")).willReturn(aResponse().withStatus(500)));
 

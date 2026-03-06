@@ -42,7 +42,7 @@ public class PluginController implements PluginResource {
     }
 
     @Override
-    public SimpleRestResponse<EntandoPlugin> get(@PathVariable final String pluginId) {
+    public SimpleRestResponse<EntandoPlugin> get(@PathVariable("pluginId") final String pluginId) {
         log.info("Requesting plugin with identifier {}", pluginId);
         return new SimpleRestResponse<>(kubernetesService.getLinkedPlugin(pluginId));
     }

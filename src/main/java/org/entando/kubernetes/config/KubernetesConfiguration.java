@@ -33,6 +33,8 @@ public class KubernetesConfiguration {
     private long pluginReadinessTimeoutInMinutes;
     @Value("${entando.k8s.service-account.token-filepath}")
     private String serviceAccountTokenPath;
+    @Value("${entando.k8s.service-account.token-ttl}")
+    private long serviceAccountTokenTtl;
 
     @Bean
     public KubernetesClient client() {
@@ -42,7 +44,7 @@ public class KubernetesConfiguration {
 
     @Bean
     public K8SServiceClient k8SServiceClient() {
-        return new DefaultK8SServiceClient(k8sServiceUrl, serviceAccountTokenPath, normalizeK8sServiceUrl);
+        return new DefaultK8SServiceClient(k8sServiceUrl, serviceAccountTokenPath, serviceAccountTokenTtl, normalizeK8sServiceUrl);
     }
 
     @Bean

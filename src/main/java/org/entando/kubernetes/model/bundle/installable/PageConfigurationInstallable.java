@@ -45,7 +45,7 @@ public class PageConfigurationInstallable extends Installable<PageDescriptor> {
 
     @Override
     public CompletableFuture<Void> uninstallFromEcr() {
-        return CompletableFuture.runAsync(() -> {
+        return ContextCompletableFuture.runAsyncWithContext(() -> {
             // UNINSTALL IN THE PageInstallable
         });
     }

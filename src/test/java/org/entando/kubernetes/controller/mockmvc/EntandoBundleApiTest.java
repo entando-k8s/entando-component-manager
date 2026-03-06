@@ -36,12 +36,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -64,10 +64,10 @@ public class EntandoBundleApiTest {
     @Value("${entando.component.repository.namespaces}")
     private List<String> digitalExchangesNames;
 
-    @SpyBean
+    @MockitoSpyBean
     private K8SServiceClient k8sServiceClient;
 
-    @MockBean
+    @MockitoBean
     private InstalledEntandoBundleRepository installedComponentRepo;
 
     @BeforeEach

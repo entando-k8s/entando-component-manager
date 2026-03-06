@@ -194,12 +194,12 @@ class PostInitServiceTest {
 
     @Test
     void postInit_errorInputName_ShouldNotInstall() throws Exception {
-        EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
+        //EntandoBundleInstallService installServiceSpy = Mockito.spy(installService);
 
         PostInitData data = convertConfigDataToString();
         data.getItems().get(0).setName("%$qw123");
         initServiceToTest(convertConfigDataToString(data), Collections.singletonList(buildPrimaryTenantConfig()),
-                bundleService, installServiceSpy, kubernetesService,
+                bundleService, installService, kubernetesService,
                 entandoBundleJobService);
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
@@ -209,11 +209,11 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.FAILED);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(installServiceSpy, times(0)).install(any(), any(), any());
+        verify(installService, times(0)).install(any(), any(), any());
 
         data.getItems().get(0).setName("-123456.");
         initServiceToTest(convertConfigDataToString(data), Collections.singletonList(buildPrimaryTenantConfig()),
-                bundleService, installServiceSpy, kubernetesService,
+                bundleService, installService, kubernetesService,
                 entandoBundleJobService);
 
         when(kubernetesService.getCurrentAppStatusPhase()).thenReturn("successful");
@@ -223,7 +223,7 @@ class PostInitServiceTest {
         assertThat(serviceToTest.getStatus()).isEqualTo(PostInitStatus.FAILED);
         assertThat(serviceToTest.isCompleted()).isTrue();
         assertThat(serviceToTest.shouldRetry()).isFalse();
-        verify(installServiceSpy, times(0)).install(any(), any(), any());
+        verify(installService, times(0)).install(any(), any(), any());
 
     }
 

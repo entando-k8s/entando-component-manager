@@ -14,19 +14,20 @@
 
 package org.entando.kubernetes.model.entandohub;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.net.URL;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @Entity
@@ -39,7 +40,7 @@ public class EntandoHubRegistryEntity {
 
     @Id
     @Column
-    @Type(type = "uuid-char")
+    @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
     @Column
     private String name;

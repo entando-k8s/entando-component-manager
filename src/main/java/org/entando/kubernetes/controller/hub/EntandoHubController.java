@@ -43,9 +43,9 @@ public class EntandoHubController implements EntandhoHubResource {
     @Override
     public PagedContent<BundleGroupVersionFilteredResponseView, BundleGroupVersionEntityDto> getBundleGroupVersionsAndFilterThem(
             @PathVariable(name = "id") String hubRegistryId,
-            @RequestParam Integer page,
-            @RequestParam Integer pageSize,
-            @RequestParam(required = false) String[] descriptorVersions) {
+            @RequestParam(name = "page") Integer page,
+            @RequestParam(name = "pageSize") Integer pageSize,
+            @RequestParam(required = false, name = "descriptorVersions") String[] descriptorVersions) {
 
         Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
 
@@ -63,10 +63,10 @@ public class EntandoHubController implements EntandhoHubResource {
     @Override
     public PagedContent<BundleDto, BundleEntityDto> getBundles(
             @PathVariable(name = "id") String hubRegistryId,
-            @RequestParam Integer page,
-            @RequestParam Integer pageSize,
-            @RequestParam(required = false) String bundleGroupId,
-            @RequestParam(required = false) String[] descriptorVersions) {
+            @RequestParam(name = "page") Integer page,
+            @RequestParam(name = "pageSize") Integer pageSize,
+            @RequestParam(required = false, name = "bundleGroupId") String bundleGroupId,
+            @RequestParam(required = false,  name = "descriptorVersions") String[] descriptorVersions) {
 
         Map<String, Object> params = getParamsToMap(page, pageSize, descriptorVersions);
         if (StringUtils.isNotEmpty(bundleGroupId)) {

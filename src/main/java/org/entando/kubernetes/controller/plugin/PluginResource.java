@@ -42,6 +42,6 @@ public interface PluginResource {
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "404", description = "Not Found")
     @GetMapping(path = "/{pluginId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    SimpleRestResponse<EntandoPlugin> get(@PathVariable final String pluginId);
+    SimpleRestResponse<EntandoPlugin> get(@PathVariable("pluginId") final String pluginId);
 
 }

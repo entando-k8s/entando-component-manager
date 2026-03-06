@@ -1,5 +1,6 @@
 package org.entando.kubernetes.service.digitalexchange.job;
 
+import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.TimerTask;
@@ -18,7 +19,7 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
     private static final long START_DELAY = 1;
     private final PostInitService service;
     private Instant startTime;
-    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     TimerTask repeatedTask = new TimerTask() {
         public void run() {
@@ -66,7 +67,22 @@ public class PostInitProcessListener implements ApplicationListener<ApplicationR
         log.info("Waiting for the EntandoApp to get ready");
         startTime = Instant.now();
         executor.scheduleWithFixedDelay(repeatedTask, START_DELAY, service.getFrequencyInSeconds(), TimeUnit.SECONDS);
+    }
 
+    @PreDestroy
+    public void shutdown() {
+        log.debug("Shutting down PostInitProcessListener executor");
+        if (!executor.isShutdown()) {
+            executor.shutdownNow();
+            try {
+                if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                    log.warn("PostInitProcessListener executor did not terminate in time");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Interrupted while waiting for PostInitProcessListener executor to terminate");
+            }
+        }
     }
 
 }

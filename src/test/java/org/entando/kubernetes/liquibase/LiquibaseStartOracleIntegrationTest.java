@@ -58,8 +58,8 @@ class LiquibaseStartOracleIntegrationTest {
         log.debug("calculated jdbc url:'{}'", db.getJdbcUrl());
         System.setProperty("spring.datasource.url", db.getJdbcUrl());
         System.setProperty("spring.datasource.driverClassName", "oracle.jdbc.OracleDriver");
-        System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.Oracle12cDialect");
-        System.setProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
+        System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.OracleDialect");
+        System.setProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.OracleDialect");
         System.setProperty("spring.datasource.username", USERNAME);
         System.setProperty("spring.datasource.password", PASSWORD);
     }

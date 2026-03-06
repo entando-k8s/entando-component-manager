@@ -1,4 +1,3 @@
 databaseChangeLog:
   - includeAll:
-      context: standard
       path: /db/changelog/changes/

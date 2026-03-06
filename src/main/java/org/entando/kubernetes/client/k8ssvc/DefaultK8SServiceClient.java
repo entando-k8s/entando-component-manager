@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.entando.kubernetes.client.model.AnalysisReport;
+import org.entando.kubernetes.config.tenant.thread.ContextCompletableFuture;
 import org.entando.kubernetes.config.tenant.thread.TenantContextHolder;
 import org.entando.kubernetes.controller.digitalexchange.job.model.Status;
 import org.entando.kubernetes.exception.k8ssvc.K8SServiceClientException;
@@ -50,8 +51,6 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -73,13 +72,19 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultK8SServiceClient.class);
     private final String k8sServiceUrl;
     private Path tokenFilePath;
+    private long cacheTtlSeconds;
     private RestTemplate restTemplate;
     private RestTemplate noAuthRestTemplate;
     private Traverson traverson;
     private final String entandoAppName;
 
-    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, boolean normalizeK8sServiceUrl) {
+    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, long cacheTtlSeconds, boolean normalizeK8sServiceUrl) {
+        this(k8sServiceUrl, tokenFilePath, cacheTtlSeconds, normalizeK8sServiceUrl, System.getenv(ENTANDO_APP_NAME));
+    }
+
+    public DefaultK8SServiceClient(String k8sServiceUrl, String tokenFilePath, long cacheTtlSeconds, boolean normalizeK8sServiceUrl, String entandoAppName) {
         this.tokenFilePath = Paths.get(tokenFilePath);
+        this.cacheTtlSeconds = cacheTtlSeconds;
         this.restTemplate = newRestTemplate();
 
         if (normalizeK8sServiceUrl && !k8sServiceUrl.endsWith("/")) {
@@ -90,8 +95,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
         this.traverson = newTraverson();
         this.noAuthRestTemplate = newNoAuthRestTemplate();
 
-        this.entandoAppName = System.getenv(ENTANDO_APP_NAME);
-
+        this.entandoAppName = entandoAppName;
     }
 
     public Traverson newTraverson() {
@@ -209,7 +213,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 return response.getBody().getContent();
             } else {
                 throw new RestClientResponseException("Update process failed",
-                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                        response.getStatusCode().value(), ((HttpStatus) response.getStatusCode()).getReasonPhrase(),
                         null, null, null);
             }
         }, String.format("while updating plugin %s", pluginName));
@@ -270,7 +274,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                         return resp.getBody().getContent();
                     }
                     throw new RestClientResponseException("Linking process failed",
-                            resp.getStatusCodeValue(), resp.getStatusCode().getReasonPhrase(),
+                            resp.getStatusCode().value(), ((HttpStatus) resp.getStatusCode()).getReasonPhrase(),
                             null, null, null);
                 },
                 String.format("linking app %s to plugin %s", name, plugin.getMetadata().getName())
@@ -287,7 +291,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                     })
                     .getContent();
         } catch (RestClientResponseException ex) {
-            if (ex.getRawStatusCode() != 404) {
+            if (ex.getStatusCode().value() != 404) {
                 throw new KubernetesClientException(
                         "An error occurred while retrieving entando-app-plugin-link with name " + linkName, ex);
             }
@@ -339,7 +343,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
     public List<EntandoDeBundle> getBundlesInNamespaces(List<String> namespaces, Optional<String> repoUrlFilter) {
         @SuppressWarnings("unchecked")
         CompletableFuture<List<EntandoDeBundle>>[] futures = namespaces.stream()
-                .map(n -> CompletableFuture.supplyAsync(() -> getBundlesInNamespace(n, repoUrlFilter))
+                .map(n -> ContextCompletableFuture.supplyAsyncWithContext(() -> getBundlesInNamespace(n, repoUrlFilter))
                         .exceptionally(ex -> {
                             LOGGER.error("An error occurred while retrieving bundle from a namespace", ex);
                             return Collections.emptyList();
@@ -381,7 +385,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             }
 
         } catch (RestClientResponseException ex) {
-            if (ex.getRawStatusCode() != 404) {
+            if (ex.getStatusCode().value() != 404) {
                 throw new KubernetesClientException(ERROR_RETRIEVING_BUNDLE_WITH_NAME + name, ex);
             }
         } catch (Exception ex) {
@@ -444,7 +448,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
             return response.getStatusCode().is2xxSuccessful();
         } catch (RestClientResponseException e) {
-            HttpStatus status = HttpStatus.valueOf(e.getRawStatusCode());
+            HttpStatus status = HttpStatus.valueOf(e.getStatusCode().value());
             if (status.equals(HttpStatus.NOT_FOUND) || status.equals(HttpStatus.SERVICE_UNAVAILABLE)) {
                 return false;
             }
@@ -531,7 +535,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
                 return entandoDeBundle;
             }
             throw new RestClientResponseException("Deploy EntandoDeBundle process failed",
-                    response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase(),
+                    response.getStatusCode().value(), ((HttpStatus) response.getStatusCode()).getReasonPhrase(),
                     null, null, null);
         }, logMessage);
     }
@@ -590,9 +594,9 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
 
 
     private RestTemplate newRestTemplate() {
-        final OAuth2RestTemplate template = new OAuth2RestTemplate(new ClientCredentialsResourceDetails());
+        RestTemplate template = new RestTemplate();
         template.setRequestFactory(getRequestFactory());
-        template.setAccessTokenProvider(new FromFileTokenProvider(this.tokenFilePath));
+        template.getInterceptors().add(new FromFileTokenInterceptor(this.tokenFilePath, this.cacheTtlSeconds));
         return setMessageConverters(template);
     }
 
@@ -648,7 +652,7 @@ public class DefaultK8SServiceClient implements K8SServiceClient {
             throw new KubernetesClientException(
                     String.format("An error occurred while %s: %d - %s",
                             actionDescription,
-                            ex.getRawStatusCode(),
+                            ex.getStatusCode().value(),
                             ex.getResponseBodyAsString()),
                     ex);
         } catch (Exception ex) {

@@ -1,6 +1,6 @@
 package org.entando.kubernetes.model.job;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 public class ImageConverter implements AttributeConverter<String, byte[]> {
 

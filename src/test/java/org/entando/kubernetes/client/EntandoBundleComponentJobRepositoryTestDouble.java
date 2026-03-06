@@ -1,5 +1,6 @@
 package org.entando.kubernetes.client;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,9 +8,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.persistence.EntityNotFoundException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.entando.kubernetes.model.job.EntandoBundleComponentJobEntity;
 import org.entando.kubernetes.model.job.EntandoBundleJobEntity;
 import org.entando.kubernetes.model.job.JobStatus;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery;
 
 @Profile("mockjpa")
 public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBundleComponentJobRepository {
@@ -136,6 +139,11 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     }
 
     @Override
+    public <S extends EntandoBundleComponentJobEntity, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public void deleteById(UUID uuid) {
         this.database.remove(uuid);
     }
@@ -240,5 +248,10 @@ public class EntandoBundleComponentJobRepositoryTestDouble implements EntandoBun
     @Override
     public EntandoBundleComponentJobEntity getById(UUID uuid) {
         return null;
+    }
+
+    @Override
+    public EntandoBundleComponentJobEntity getReferenceById(UUID uuid) {
+        throw new NotImplementedException();
     }
 }

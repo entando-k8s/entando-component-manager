@@ -89,7 +89,7 @@ class TenantConfigurationTest {
 
     private String getValidTenantConfigMock(String tenantName) {
         return "{\"dbMaxTotal\":\"5\",\"tenantCode\":\"" + tenantName + "\",\"initializationAtStartRequired\":\"false\",\"fqdns\":\"mock-"
-                + System.currentTimeMillis() + "-fqdns.tld\""
+                + tenantName + "-" + System.nanoTime() + "-fqdns.tld\""
                 + ",\"kcEnabled\":true,\"kcAuthUrl\":\"https://tenenats.k8s-server.org/auth\",\"kcRealm\":\"tenant1\","
                 + "\"deKcClientId\":\"mock-client-id\",\"deKcClientSecret\":\"mock-client-secret\","
                 +  "\"kcPublicClientId\":\"mock\",\"kcSecureUris\":\"kcsecureuris\",\"kcDefaultAuthorizations\":\"\","

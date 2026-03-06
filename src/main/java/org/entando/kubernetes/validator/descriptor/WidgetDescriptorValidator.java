@@ -2,6 +2,7 @@ package org.entando.kubernetes.validator.descriptor;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,7 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.kubernetes.exception.digitalexchange.InvalidBundleException;
 import org.entando.kubernetes.model.bundle.descriptor.DescriptorVersion;

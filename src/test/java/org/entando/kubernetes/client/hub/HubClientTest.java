@@ -21,6 +21,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.entando.kubernetes.client.hub.domain.BundleDto;
 import org.entando.kubernetes.client.hub.domain.BundleGroupVersionFilteredResponseView;
 import org.entando.kubernetes.client.hub.domain.HubDescriptorVersion;
@@ -44,10 +48,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import wiremock.org.apache.http.HttpResponse;
-import wiremock.org.apache.http.client.methods.HttpGet;
-import wiremock.org.apache.http.impl.client.CloseableHttpClient;
-import wiremock.org.apache.http.impl.client.HttpClients;
 
 @Tag("unit")
 @AutoConfigureMockMvc
@@ -77,7 +77,7 @@ class HubClientTest {
         HttpGet request = new HttpGet(mockServer.getApiRoot()
                 + "/bundlegroups/?page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
         try {
-            HttpResponse httpResponse = httpClient.execute(request);
+            ClassicHttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
             testBundleGroupPayload(responseString);
         } catch (Throwable e) {
@@ -92,7 +92,7 @@ class HubClientTest {
         HttpGet request = new HttpGet(mockServer.getApiRoot()
                 + "/bundles/?descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
         try {
-            HttpResponse httpResponse = httpClient.execute(request);
+            ClassicHttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
             testBundlePayload(responseString);
         } catch (Throwable e) {
@@ -249,7 +249,7 @@ class HubClientTest {
         assertFalse(group.has("bundleGroupVersionId"));
     }
 
-    private String convertResponseToString(HttpResponse response) throws IOException {
+    private String convertResponseToString(ClassicHttpResponse response) throws IOException {
         InputStream responseStream = response.getEntity().getContent();
         Scanner scanner = new Scanner(responseStream, StandardCharsets.UTF_8);
         String responseString = scanner.useDelimiter("\\Z").next();
@@ -280,7 +280,7 @@ class HubClientTest {
                 + "/appbuilder/api/bundlegroups/?catalogId=1&page=1&descriptorVersions=v5&descriptorVersions=v1&pageSize=1");
         request.addHeader(HubStubHelper.API_KEY_HEADER_NAME, HubStubHelper.API_KEY_HEADER_VALUE);
         try {
-            HttpResponse httpResponse = httpClient.execute(request);
+            ClassicHttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
             testBundleGroupPayload(responseString);
         } catch (Throwable e) {
@@ -296,7 +296,7 @@ class HubClientTest {
                 + "/appbuilder/api/bundles/?catalogId=1&descriptorVersions=v1&descriptorVersions=v5&pageSize=1&page=1");
         request.addHeader(HubStubHelper.API_KEY_HEADER_NAME, HubStubHelper.API_KEY_HEADER_VALUE);
         try {
-            HttpResponse httpResponse = httpClient.execute(request);
+            ClassicHttpResponse httpResponse = httpClient.execute(request);
             String responseString = convertResponseToString(httpResponse);
             testBundlePayload(responseString);
         } catch (Throwable e) {

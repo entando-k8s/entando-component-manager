@@ -53,7 +53,6 @@ import org.entando.kubernetes.model.entandocore.EntandoCorePageWidgetConfigurati
 import org.entando.kubernetes.model.entandocore.EntandoCoreWidget;
 import org.entando.kubernetes.model.web.response.RestResponse;
 import org.entando.kubernetes.model.web.response.SimpleRestResponse;
-import org.entando.kubernetes.service.digitalexchange.entandocore.EntandoDefaultOAuth2RequestAuthenticator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -64,14 +63,22 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
-import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
-import org.springframework.security.oauth2.common.AuthenticationScheme;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
@@ -104,7 +111,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
     private static final String DIRECTORY_PATH_SEGMENT = "directory";
     private static final String FILE_PATH_SEGMENT = "file";
 
-    private final Map<String, OAuth2RestTemplate> restTemplates;
+    private final Map<String, RestTemplate> restTemplates;
     private final String entandoUrl;
     private final int retryNumber = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_RETRIES", 3);
     private final long backOffPeriod = parseIntOrDefault("ENTANDO_ECR_DEAPP_REQUEST_BACKOFF", 5);
@@ -116,28 +123,67 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
             HttpStatus.INSUFFICIENT_STORAGE, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED
     );
 
-
     public DefaultEntandoCoreClient(
             @Value("${entando.url}") final String entandoUrl,
             @Qualifier("tenantConfigs") List<TenantConfigDTO> tenantConfigs) {
         this.entandoUrl = entandoUrl;
         this.restTemplates = tenantConfigs.stream()
-                .collect(Collectors.toMap(c -> c.getTenantCode(), this::buildRestTemplate));
+                .collect(Collectors.toMap(TenantConfigDTO::getTenantCode, this::buildRestTemplate));
     }
 
-    private OAuth2RestTemplate buildRestTemplate(TenantConfigDTO config) {
-        final ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
-        resourceDetails.setAuthenticationScheme(AuthenticationScheme.header);
-        resourceDetails.setClientId(config.getDeKcClientId());
-        resourceDetails.setClientSecret(config.getDeKcClientSecret());
-        resourceDetails.setAccessTokenUri(MultipleIdps.composeIssuerUri(config) + "/protocol/openid-connect/token");
+    /**
+     * MIGRATED: Creates a standard RestTemplate configured with an Interceptor
+     * that handles the OAuth2 Client Credentials grant using Spring Security 6 components.
+     */
+    private RestTemplate buildRestTemplate(TenantConfigDTO config) {
+        //Build the ClientRegistration (New replacement for ClientCredentialsResourceDetails)
+        ClientRegistration registration = ClientRegistration.withRegistrationId(config.getTenantCode())
+                .clientId(config.getDeKcClientId())
+                .clientSecret(config.getDeKcClientSecret())
+                .tokenUri(MultipleIdps.composeIssuerUri(config) + "/protocol/openid-connect/token")
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .build();
 
-        OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(resourceDetails);
-        restTemplate.setAuthenticator(new EntandoDefaultOAuth2RequestAuthenticator());
-        restTemplate.setAccessTokenProvider(new ClientCredentialsAccessTokenProvider());
+        //Create in memory client service for each teanant
+        ClientRegistrationRepository clientRegistrationRepository = new InMemoryClientRegistrationRepository(registration);
+        InMemoryOAuth2AuthorizedClientService authorizedClientService =
+                new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
+
+        AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
+                new AuthorizedClientServiceOAuth2AuthorizedClientManager(clientRegistrationRepository, authorizedClientService);
+
+        OAuth2AuthorizedClientProvider authorizedClientProvider =
+                OAuth2AuthorizedClientProviderBuilder.builder()
+                        .clientCredentials()
+                        .build();
+        authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+
+        //Create the Interceptor that injects the Bearer Token
+        ClientHttpRequestInterceptor oauth2Interceptor = (request, body, execution) -> {
+            OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
+                    .withClientRegistrationId(config.getTenantCode())
+                    .principal(config.getTenantCode()) // Principal name is required but arbitrary for Client Credentials
+                    .build();
+
+            OAuth2AuthorizedClient authorizedClient = authorizedClientManager.authorize(authorizeRequest);
+
+            if (authorizedClient != null && authorizedClient.getAccessToken() != null) {
+                request.getHeaders().setBearerAuth(authorizedClient.getAccessToken().getTokenValue());
+            }
+
+            return execution.execute(request, body);
+        };
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(oauth2Interceptor);
         restTemplate.getInterceptors().add(new RestTemplateHeaderTenantCodeInterceptor());
 
         return restTemplate;
+    }
+
+    // CHANGED: Return type from OAuth2RestTemplate to RestTemplate
+    public RestTemplate getRestTemplate() {
+        return restTemplates.get(TenantContextHolder.getCurrentTenantCode());
     }
 
     @Override
@@ -645,7 +691,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
                             String.format("Empty response received for usage of component type %s with code %s",
                                     componentType, code)));
         } else {
-            throw new WebHttpException(usage.getStatusCode(),
+            throw new WebHttpException((HttpStatus) usage.getStatusCode(),
                     String.format("Some error occurred while retrieving %s %s usage", componentType, code));
         }
     }
@@ -680,7 +726,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
             return Optional.ofNullable(usage.getBody())
                     .map(RestResponse::getPayload)
                     .orElseThrow(() ->
-                            new WebHttpException(usage.getStatusCode(),
+                            new WebHttpException((HttpStatus) usage.getStatusCode(),
                                     "Some error occurred while retrieving components usage details"));
         } catch (Exception ex) {
             log.debug("Some error occurred while retrieving components usage details", ex);
@@ -718,7 +764,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
             EntandoCoreComponentDeleteResponse response = Optional.ofNullable(deleteResponse.getBody())
                     .map(RestResponse::getPayload)
                     .orElseThrow(() ->
-                            new WebHttpException(deleteResponse.getStatusCode(),
+                            new WebHttpException((HttpStatus) deleteResponse.getStatusCode(),
                                     "Some error occurred while deleting components"));
             log.debug("Executed delete for all components from appEngin with response:'{}'", response);
             return response;
@@ -741,9 +787,7 @@ public class DefaultEntandoCoreClient implements EntandoCoreClient {
         }
     }
 
-    public OAuth2RestTemplate getRestTemplate() {
-        return restTemplates.get(TenantContextHolder.getCurrentTenantCode());
-    }
+
 
     private boolean isSafeDeleteResponseStatus(int status) {
         HttpStatus s = HttpStatus.resolve(status);
