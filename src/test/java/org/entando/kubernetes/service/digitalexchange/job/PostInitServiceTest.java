@@ -126,7 +126,7 @@ class PostInitServiceTest {
 
         EntandoDeBundle deBundle = new EntandoDeBundle();
         EntandoDeBundleSpecBuilder deBundleBuilder = new EntandoDeBundleSpecBuilder();
-        EntandoDeBundleTag tag = (new EntandoDeBundleTagBuilder()).withVersion("1.0.5")
+        EntandoDeBundleTag tag = (new EntandoDeBundleTagBuilder()).withVersion("1.1.0")
                 .withTarball("docker://docker.io/entando/post-init-01").build();
         deBundle.setSpec(deBundleBuilder.addToTags(tag).build());
         when(kubernetesService.fetchBundleByName(any())).thenReturn(Optional.of(deBundle));
