@@ -56,7 +56,7 @@ jobs:
           java-version: 11
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2
@@ -69,23 +69,39 @@ jobs:
           server-id: internal-nexus
           server-username: NEXUS_USERNAME
           server-password: NEXUS_PASSWORD
-      #~ PUBLISH THE ARTIFACT
-      - name: "Publish package"
+      #~ BUILD THE ARTIFACT (Nexus publication disabled)
+      #~ DISABLED: "ppl-run generic PUBLISH" runs "mvn deploy" against the Entando
+      #~ Nexus ($ENTANDO_OPT_MAVEN_REPO_PROD). Re-enable by uncommenting the step below
+      #~ and removing the local build that replaces it.
+      # - name: "Publish package"
+      #   run: |
+      #     ~/ppl-run generic PUBLISH --id "PUBLICATION" \
+      #       --lcd "$LOCAL_CLONE_DIR"
+      #   env:
+      #     NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+      #     NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+      #~ The docker step below only runs "docker build", so target/ must be populated
+      #~ here: the Dockerfile needs target/entando-component-manager.jar and
+      #~ target/generated-resources/licenses (produced by the "jvm" profile).
+      - name: "Build package (no Nexus deploy)"
         run: |
-          ~/ppl-run generic PUBLISH --id "PUBLICATION" \
-            --lcd "$LOCAL_CLONE_DIR"
-        env:
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          cd "$LOCAL_CLONE_DIR"
+          mvn -B package -Pjvm \
+            -DskipTests=true \
+            -DskipPreDeploymentTests=true \
+            -DskipPostDeploymentTests=true \
+            -Ddependency-check.skip=true
       #~ UPDATE THE BOM (if required)
-      - name: "BOM Update"
-        if: steps.CHECKOUT.outputs.BOM_UPDATE_FLAG == 'true' && steps.START.outputs.BOM == 'true'
-        run: |
-          ~/ppl-run bom update-bom \
-            --id "UPDATE-BOM" \
-            --lcd "$LOCAL_CLONE_DIR" \
-            --token "$ENTANDO_BOT_TOKEN" \
-          ;
+      #~ DISABLED: this step commits and pushes a version bump to the BOM repository
+      #~ ($ENTANDO_OPT_REPO_BOM_URL). Re-enable by uncommenting the step below.
+      # - name: "BOM Update"
+      #   if: steps.CHECKOUT.outputs.BOM_UPDATE_FLAG == 'true' && steps.START.outputs.BOM == 'true'
+      #   run: |
+      #     ~/ppl-run bom update-bom \
+      #       --id "UPDATE-BOM" \
+      #       --lcd "$LOCAL_CLONE_DIR" \
+      #       --token "$ENTANDO_BOT_TOKEN" \
+      #     ;
       #~ PUBLISH TO DOCKER
       - name: "Publish docker"
         run: |
@@ -123,7 +139,7 @@ jobs:
           java-version: 11
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2
@@ -161,7 +177,7 @@ jobs:
           java-version: 11
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2
