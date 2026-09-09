@@ -2,6 +2,7 @@ package org.entando.kubernetes.validator;
 
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -80,16 +81,19 @@ public class ImageValidator {
 
     private SplitResult splitOrganization(String remain) {
         String[] split4Organization = StringUtils.split(remain, "/");
-        switch (split4Organization.length) {
-            case 1:
-                organization = DOCKER_OFFICIAL_LIBRARY;
-                return new SplitResult(true, remain);
-            case 2:
-                organization = split4Organization[0];
-                return new SplitResult(true, split4Organization[1]);
-            default:
-                return new SplitResult(false, null);
+        if (split4Organization == null || split4Organization.length == 0) {
+            return new SplitResult(false, null);
         }
+        if (split4Organization.length == 1) {
+            organization = DOCKER_OFFICIAL_LIBRARY;
+            return new SplitResult(true, remain);
+        }
+        // the docker reference grammar allows N path components after the domain registry, e.g. the Google
+        // Artifact Registry addresses an image as <domain>/<project>/<repository>/<image>: every component
+        // but the last one belongs to the organization
+        int repositoryIndex = split4Organization.length - 1;
+        organization = String.join("/", Arrays.copyOfRange(split4Organization, 0, repositoryIndex));
+        return new SplitResult(true, split4Organization[repositoryIndex]);
     }
 
     private boolean splitTag(String remain) {
