@@ -87,4 +87,100 @@ class ImageValidatorTest {
                 COMPOSED);
     }
 
+    private final String garUrl = "docker://europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle:1.0.0";
+
+    @Test
+    void parseShouldSplitOrganizationAndRepositoryWithMoreThanTwoPathComponents() {
+        final ImageValidator validator = ImageValidator.parse(garUrl);
+
+        assertThat(validator.getTransport()).isEqualTo(ImageValidator.DOCKER_TRANSPORT);
+        assertThat(validator.getDomainRegistry()).isEqualTo("europe-west8-docker.pkg.dev");
+        assertThat(validator.getOrganization()).isEqualTo("my-project/my-repo");
+        assertThat(validator.getRepository()).isEqualTo("my-bundle");
+        assertThat(validator.getTag()).isEqualTo("1.0.0");
+        assertThat(validator.isDigest()).isFalse();
+        assertThat(validator.isValidOrThrow(invalidMex)).isTrue();
+    }
+
+    @Test
+    void validationShouldBeOkWithMoreThanTwoPathComponents() {
+        Stream.of(
+                // Google Artifact Registry: <domain>/<project>/<repository>/<image>
+                garUrl,
+                "docker://europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle",
+                "docker://europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle"
+                        + "@sha256:92ae85a2740161f8b534e0b85ad267624ea88def5691742008f9353cc72ec060",
+                // GitLab container registry: <domain>/<group>/<subgroup>/<project>/<image>
+                "docker://registry.gitlab.com/my-group/my-subgroup/my-project/my-bundle:1.0.0",
+                "docker://registry.gitlab.com/my-group/my-subgroup/my-project/my-bundle"
+                        + "@sha256:92ae85a2740161f8b534e0b85ad267624ea88def5691742008f9353cc72ec060"
+        ).forEach(t -> assertThat(ImageValidator.parse(t).isValidOrThrow(invalidMex)).isTrue());
+    }
+
+    @Test
+    void deeplyNestedPathShouldKeepOnlyTheLastComponentAsRepository() {
+        final ImageValidator validator = ImageValidator.parse(
+                "docker://registry.gitlab.com/my-group/my-subgroup/my-project/my-bundle:1.0.0");
+
+        assertThat(validator.getDomainRegistry()).isEqualTo("registry.gitlab.com");
+        assertThat(validator.getOrganization()).isEqualTo("my-group/my-subgroup/my-project");
+        assertThat(validator.getRepository()).isEqualTo("my-bundle");
+        assertThat(validator.getTag()).isEqualTo("1.0.0");
+    }
+
+    @Test
+    void composeShouldPreserveAllPathComponents() {
+        assertThat(ImageValidator.parse(garUrl).composeCommonUrlOrThrow(invalidMex))
+                .isEqualTo("docker://europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle");
+
+        assertThat(ImageValidator.parse(garUrl).composeCommonUrlWithoutTransportWithoutTagOrThrow(invalidMex))
+                .isEqualTo("europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle");
+
+        assertThat(ImageValidator.parse(garUrl).composeCommonUrlWithoutTransportOrThrow(invalidMex))
+                .isEqualTo("europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle:1.0.0");
+    }
+
+    @Test
+    void validationShouldStillThrowErrorWithMoreThanTwoInvalidPathComponents() {
+        Stream.of(
+                // invalid organization
+                "docker://europe-west8-docker.pkg.dev/-my-project/my-repo/my-bundle:1.0.0",
+                "docker://europe-west8-docker.pkg.dev/my-project/my-repo-/my-bundle:1.0.0",
+                // invalid repository
+                "docker://europe-west8-docker.pkg.dev/my-project/my-repo/-my-bundle:1.0.0",
+                // invalid domain registry
+                "docker://-europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle:1.0.0",
+                // invalid tag
+                "docker://europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle:",
+                // invalid transport
+                "oci://europe-west8-docker.pkg.dev/my-project/my-repo/my-bundle:1.0.0"
+        ).forEach(t -> {
+            ImageValidator validator = ImageValidator.parse(t);
+            try {
+                validator.isValidOrThrow(invalidMex);
+                Assert.fail("validation must throw error for image url: " + t);
+            } catch (EntandoValidationException ex) {
+                assertThat(ex.getMessage()).startsWith(invalidMex);
+            }
+        });
+    }
+
+    @Test
+    void singlePathComponentShouldStillFallbackToTheOfficialLibrary() {
+        final ImageValidator validator = ImageValidator.parse("docker://docker.io/nginx:1.2.3");
+
+        assertThat(validator.getOrganization()).isEqualTo(ImageValidator.DOCKER_OFFICIAL_LIBRARY);
+        assertThat(validator.getRepository()).isEqualTo("nginx");
+        assertThat(validator.composeCommonUrlOrThrow(invalidMex)).isEqualTo("docker://docker.io/library/nginx");
+    }
+
+    @Test
+    void twoPathComponentsShouldStillBeSplitAsOrganizationAndRepository() {
+        final ImageValidator validator = ImageValidator.parse("docker://quay.io/centos7/nginx-116-centos7:1.2.3");
+
+        assertThat(validator.getOrganization()).isEqualTo("centos7");
+        assertThat(validator.getRepository()).isEqualTo("nginx-116-centos7");
+        assertThat(validator.composeCommonUrlOrThrow(invalidMex))
+                .isEqualTo("docker://quay.io/centos7/nginx-116-centos7");
+    }
 }
