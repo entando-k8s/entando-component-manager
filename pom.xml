@@ -6,12 +6,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-spring-boot-parent</artifactId>
-        <version>7.5.0</version>
+        <version>7.5.1</version>
     </parent>
 
     <groupId>org.entando</groupId>
     <artifactId>entando-component-manager</artifactId>
-    <version>7.5.0</version>
+    <version>7.5.1</version>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Entando Component Manager</name>
@@ -32,7 +32,7 @@
     <repositories>
         <repository>
             <id>jx-releases</id>
-            <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
+            <url>https://dependencies.entando.org/repository/maven-releases/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -47,7 +47,6 @@
         <postDeploymentTestGroups/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <github.organization>entando-k8s</github.organization>
-<!--        <entando-k8s-custom-model.version>7.3.0-fix.2</entando-k8s-custom-model.version>-->
         <liquibase.version>4.31.1</liquibase.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
