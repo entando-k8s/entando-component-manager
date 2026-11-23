@@ -1,4 +1,4 @@
-FROM entando/entando-java-base:v17.0.10
+FROM entando/entando-java-base:v17.0.21.1
 ARG VERSION
 ARG TARGETPLATFORM
 ### Required OpenShift Labels
